@@ -1,0 +1,30 @@
+{
+  "brand": "Example Audio",
+  "model": "EX10-PR",
+  "type": "passive-radiator",
+  "size_in": 10,
+  "params": {
+    "fs": 20,
+    "qms": 6,
+    "vas_l": 80,
+    "mms_g": 122,
+    "cms_mm_per_n": 0.518,
+    "sd_cm2": 330,
+    "xmax_mm": 18,
+    "max_added_mass_g": 300
+  },
+  "physical": {
+    "displacement_l": 0.6,
+    "cutout_mm": 232,
+    "depth_mm": 70
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://example.com/ex10-pr.pdf",
+      "retrieved": "2026-11-02"
+    }
+  ],
+  "status": "community",
+  "notes": "Fictional passive radiator used as a format example and test fixture. Not a real product."
+}

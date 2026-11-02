@@ -1,0 +1,21 @@
+name: Bug report
+description: Something is broken or a result looks wrong
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: If a simulation result looks wrong, say what you expected and where that comes from (WinISD, Hornresp, a measurement…).
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Share link
+      description: Paste the app's share link so we can open exactly what you see.
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Firefox 140 on Windows 11

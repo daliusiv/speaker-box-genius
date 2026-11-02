@@ -1,0 +1,64 @@
+name: Add a passive radiator
+description: Submit parameters for a passive radiator
+title: "[PR] <Brand> <Model>"
+labels: ["new-passive-radiator", "database"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Copy the values **exactly** from the manufacturer's datasheet. Leave a field blank if it isn't published.
+  - type: input
+    id: brand
+    attributes:
+      label: Brand
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model
+    validations:
+      required: true
+  - type: input
+    id: size_in
+    attributes:
+      label: Nominal size (inches)
+  - type: textarea
+    id: params
+    attributes:
+      label: Parameters
+      value: |
+        Fs (Hz, with no added mass):
+        Qms:
+        Vas (L):
+        Mms (g, with no added mass):
+        Cms (mm/N):
+        Sd (cm²):
+        Xmax (mm, one way):
+        Maximum added mass (g):
+    validations:
+      required: true
+  - type: textarea
+    id: physical
+    attributes:
+      label: Physical data (optional)
+      value: |
+        Displacement volume (L):
+        Cutout diameter (mm):
+        Mounting depth (mm):
+  - type: input
+    id: source_url
+    attributes:
+      label: Datasheet link
+      placeholder: https://...
+    validations:
+      required: true
+  - type: checkboxes
+    id: agreement
+    attributes:
+      label: Confirmation
+      options:
+        - label: These values come from the linked datasheet or my own measurement, not from another database or website.
+          required: true
+        - label: I agree that my submission is licensed under CC BY-NC-SA 4.0 (see LICENSE-DATA).
+          required: true

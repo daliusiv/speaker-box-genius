@@ -1,0 +1,21 @@
+{
+  "brand": "Typo Audio",
+  "model": "U8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 30,
+    "qms": 5.2,
+    "qes": 0.4,
+    "vas_l": 50,
+    "re": 3.4,
+    "mms_g": 86.9,
+    "sd_cm2": 330
+  },
+  "sources": [
+    {
+      "kind": "datasheet"
+    }
+  ],
+  "status": "community"
+}

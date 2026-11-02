@@ -1,0 +1,99 @@
+name: Add a driver
+description: Submit Thiele/Small parameters for a woofer, subwoofer or full-range driver
+title: "[Driver] <Brand> <Model>"
+labels: ["new-driver", "database"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for adding to the database! Copy the values **exactly** from the manufacturer's datasheet (or from your own measurement). Leave a field blank if it isn't published.
+  - type: input
+    id: brand
+    attributes:
+      label: Brand
+      placeholder: Dayton Audio
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      placeholder: RSS265HF-4
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Driver type
+      options:
+        - woofer
+        - subwoofer
+        - midbass
+        - midrange
+        - full-range
+        - car-audio
+        - other
+    validations:
+      required: true
+  - type: input
+    id: nominal_ohms
+    attributes:
+      label: Nominal impedance (Ω)
+      placeholder: "4"
+    validations:
+      required: true
+  - type: input
+    id: size_in
+    attributes:
+      label: Nominal size (inches)
+      placeholder: "10"
+  - type: textarea
+    id: ts
+    attributes:
+      label: Thiele/Small parameters
+      description: One per line, with units. Blank lines are fine.
+      value: |
+        Fs (Hz):
+        Qms:
+        Qes:
+        Qts:
+        Vas (L):
+        Re (Ω):
+        Le (mH):
+        Bl (T·m):
+        Mms (g):
+        Sd (cm²):
+        Xmax (mm, one way):
+        Pe (W, RMS):
+    validations:
+      required: true
+  - type: textarea
+    id: physical
+    attributes:
+      label: Physical data (optional, helps the volume calculator)
+      value: |
+        Displacement volume (L):
+        Cutout diameter (mm):
+        Mounting depth (mm):
+  - type: input
+    id: source_url
+    attributes:
+      label: Datasheet link
+      description: Link to the manufacturer's datasheet or product page
+      placeholder: https://...
+    validations:
+      required: true
+  - type: textarea
+    id: measured
+    attributes:
+      label: Your own measurements (optional)
+      description: If you measured this driver, say how (e.g. DATS v3, added mass) and attach your .zma file.
+  - type: checkboxes
+    id: agreement
+    attributes:
+      label: Confirmation
+      options:
+        - label: These values come from the linked datasheet or my own measurement, not from another database or website.
+          required: true
+        - label: I agree that my submission is licensed under CC BY-NC-SA 4.0 (see LICENSE-DATA).
+          required: true

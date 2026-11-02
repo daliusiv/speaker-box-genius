@@ -1,0 +1,34 @@
+{
+  "brand": "Example Audio",
+  "model": "EX10-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 30,
+    "qms": 5.2,
+    "qes": 0.4,
+    "vas_l": 50,
+    "re": 3.4,
+    "le_mh": 1.2,
+    "bl": 11.8,
+    "mms_g": 86.9,
+    "sd_cm2": 330,
+    "xmax_mm": 12,
+    "pe_w": 250
+  },
+  "physical": {
+    "displacement_l": 1.8,
+    "cutout_mm": 232,
+    "depth_mm": 135
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://example.com/ex10-4.pdf",
+      "retrieved": "2026-11-02"
+    }
+  ],
+  "status": "community",
+  "notes": "Fictional driver used as a format example and test fixture. Not a real product."
+}

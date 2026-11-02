@@ -1,0 +1,22 @@
+{
+  "brand": "Typo Audio",
+  "model": "T12",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 30,
+    "qms": 5.2,
+    "qes": 0.4,
+    "vas_l": 1.77,
+    "re": 3.4,
+    "mms_g": 86.9,
+    "sd_cm2": 330
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://example.com/t12.pdf"
+    }
+  ],
+  "status": "community"
+}

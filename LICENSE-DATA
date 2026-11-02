@@ -1,0 +1,25 @@
+Speaker Box Genius — data and documentation license
+
+The following directories are licensed under the Creative Commons
+Attribution-NonCommercial-ShareAlike 4.0 International License
+(CC BY-NC-SA 4.0):
+
+  drivers/
+  passive-radiators/
+  measurements/
+  gallery/
+  docs/
+
+You may copy, adapt and share this material for noncommercial purposes,
+as long as you give appropriate credit ("Speaker Box Genius contributors",
+with a link to https://github.com/daliusiv/speaker-box-genius) and
+distribute any adaptations under the same license.
+
+Full legal code:
+https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+
+SPDX-License-Identifier: CC-BY-NC-SA-4.0
+
+Note on manufacturer data: Thiele/Small parameters published by
+manufacturers are factual specifications. Each record links to its
+original source. Trademarks and product names belong to their owners.
