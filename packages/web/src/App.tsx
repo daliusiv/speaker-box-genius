@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { simulate, type DriverInput, type EnclosureInput, type SimulationResult } from "@sbg/engine";
 import { LogChart, type Series } from "./LogChart.tsx";
 import { DEFAULT_STATE, decodeState, encodeState, type AppState } from "./state.ts";
+import { loadDriver, loadIndex, loadPassiveRadiator, type DbIndex } from "./library.ts";
 
 const REPO = "https://github.com/daliusiv/speaker-box-genius";
 const COLORS = { sealed: "#3b82f6", vented: "#f97316", pr: "#22c55e" } as const;
@@ -17,6 +18,11 @@ interface Design {
 export function App() {
   const [state, setState] = useState<AppState>(() => decodeState(location.hash) ?? DEFAULT_STATE);
   const [copied, setCopied] = useState(false);
+  const [db, setDb] = useState<DbIndex | null>(null);
+
+  useEffect(() => {
+    loadIndex().then(setDb, () => setDb(null));
+  }, []);
 
   // Keep the URL in sync so the address bar is always a shareable link.
   useEffect(() => {
@@ -82,6 +88,16 @@ export function App() {
 
       <aside className="panel">
         <Card title="Driver">
+          <LibraryPicker
+            label="Load a driver from the database"
+            items={db?.drivers.map((x) => ({ id: x.id, text: `${x.brand} ${x.model} (${x.size_in ?? "?"}", ${x.ohms} Ω)` }))}
+            onPick={(id) =>
+              loadDriver(id, state.driver).then(
+                ({ name, driver }) => setState((s) => ({ ...s, driverName: name, driver })),
+                () => alert("Couldn't load that driver."),
+              )
+            }
+          />
           <input
             className="name"
             value={state.driverName}
@@ -119,6 +135,17 @@ export function App() {
         </Card>
 
         <Card title="Passive radiators" color={COLORS.pr} on={pr.on} onToggle={(on) => set("pr", { ...pr, on })}>
+          <LibraryPicker
+            label="Load a passive radiator from the database"
+            items={db?.passiveRadiators.map((x) => ({ id: x.id, text: `${x.brand} ${x.model} (${x.size_in ?? "?"}")` }))}
+            onPick={(id) =>
+              loadPassiveRadiator(id).then(
+                ({ name, params }) => setState((s) => ({ ...s, pr: { ...s.pr, name, params } })),
+                () => alert("Couldn't load that passive radiator."),
+              )
+            }
+          />
+          <p className="pr-name">{pr.name}</p>
           <div className="fields">
             <Num label="Vb" unit="L" value={pr.vb_l} onChange={(v) => set("pr", { ...pr, vb_l: v })} />
             <Num label="PRs" value={pr.count} step={1} onChange={(v) => set("pr", { ...pr, count: Math.max(1, Math.round(v)) })} />
@@ -257,6 +284,32 @@ function Summary({ designs, state }: { designs: Design[]; state: AppState }) {
         </tbody>
       </table>
       <p className="hint">Peaks are taken above 15 Hz (assumes a subsonic filter). Red means over the limit.</p>
+    </div>
+  );
+}
+
+function LibraryPicker(props: { label: string; items: { id: string; text: string }[] | undefined; onPick: (id: string) => void }) {
+  if (!props.items || props.items.length === 0) return null;
+  return (
+    <div className="picker">
+      <select
+        aria-label={props.label}
+        value=""
+        onChange={(e) => {
+          const id = e.currentTarget.value;
+          if (id) props.onPick(id);
+        }}
+      >
+        <option value="">{props.label}…</option>
+        {props.items.map((i) => (
+          <option key={i.id} value={i.id}>
+            {i.text}
+          </option>
+        ))}
+      </select>
+      <a href={`${REPO}/blob/main/CONTRIBUTING.md`} title="Add a driver or passive radiator to the database">
+        Missing one?
+      </a>
     </div>
   );
 }

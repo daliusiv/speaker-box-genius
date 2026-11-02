@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB23NRXS45-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 27,
+    "qms": 5.4,
+    "qes": 0.41,
+    "qts": 0.38,
+    "vas_l": 94,
+    "re": 5.6,
+    "le_mh": 0.6,
+    "bl": 7.5,
+    "mms_g": 24.5,
+    "sd_cm2": 216,
+    "xmax_mm": 6.5,
+    "pe_w": 60
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2026/05/8-inch-SB23NRXS45-8.pdf",
+      "retrieved": "2026-11-02",
+      "note": "Manufacturer datasheet REV.2 (04.05.2026). Xmax = half the published 13 mm peak-to-peak linear coil travel."
+    }
+  ],
+  "status": "community"
+}

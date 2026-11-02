@@ -11,6 +11,7 @@ export interface AppState {
   vented: { on: boolean; vb_l: number; diameter_cm: number; length_cm: number; count: number };
   pr: {
     on: boolean;
+    name: string;
     vb_l: number;
     count: number;
     addedMass_g: number;
@@ -29,6 +30,7 @@ export const DEFAULT_STATE: AppState = {
   vented: { on: true, vb_l: 60, diameter_cm: 10, length_cm: 30, count: 1 },
   pr: {
     on: true,
+    name: "Example Audio EX10-PR (fictional)",
     vb_l: 50,
     count: 2,
     addedMass_g: 100,

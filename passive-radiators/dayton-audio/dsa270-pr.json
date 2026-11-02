@@ -1,0 +1,35 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DSA270-PR",
+  "type": "passive-radiator",
+  "size_in": 10,
+  "params": {
+    "fs": 21.9,
+    "qms": 5.26,
+    "vas_l": 105.9,
+    "mms_g": 88.4,
+    "cms_mm_per_n": 0.6,
+    "sd_cm2": 353,
+    "xmax_mm": 11
+  },
+  "physical": {
+    "cutout_mm": 227.1,
+    "depth_mm": 72.9
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.parts-express.com/Dayton-Audio-DSA270-PR-10-Designer-Series-Aluminum-Cone-Passive-Radiator-295-552",
+      "retrieved": "2026-11-02",
+      "note": "Parts Express product specifications. Vas published as 3.74 ft³. Parameters are with no added mass; rear screw allows adding mass."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/de/dayton-audio-dsa270-pr.html",
+      "retrieved": "2026-11-02",
+      "note": "Dimensions: cutout 8.94\", depth 2.87\"."
+    }
+  ],
+  "status": "community",
+  "notes": "Maximum added mass is not published."
+}

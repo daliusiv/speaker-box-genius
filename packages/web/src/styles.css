@@ -296,3 +296,29 @@ td.over {
 footer {
   font-size: 0.85rem;
 }
+
+/* ---- library picker ---- */
+
+.picker {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.85rem;
+}
+
+select {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0.45rem;
+  font: inherit;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.pr-name {
+  margin: 0 0 0.6rem;
+  font-weight: 600;
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RSS265HF-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 25.6,
+    "qms": 3.06,
+    "qes": 0.53,
+    "qts": 0.45,
+    "vas_l": 53.8,
+    "re": 3.5,
+    "le_mh": 0.96,
+    "bl": 11.43,
+    "mms_g": 120,
+    "sd_cm2": 356.3,
+    "xmax_mm": 12.3,
+    "pe_w": 350
+  },
+  "physical": {
+    "cutout_mm": 234.9,
+    "depth_mm": 136.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.parts-express.com/Dayton-Audio-RSS265HF-4-10-Reference-Series-HF-Subwoofer-4-Ohm-295-460",
+      "retrieved": "2026-11-02",
+      "note": "Parts Express (Dayton Audio's distributor) product specifications. Vas published as 1.9 ft³; cutout 9.25\", depth 5.37\"."
+    }
+  ],
+  "status": "community"
+}
