@@ -36,6 +36,12 @@ type SiValues = Partial<Record<TsParam, number>>;
 interface Relation {
   name: string;
   vars: TsParam[];
+  /**
+   * Parameters that may be blamed for a mismatch. Qts is usually published to
+   * two decimals, and back-solving Qms from it amplifies that rounding, so only
+   * Qts itself is checked in that relation.
+   */
+  check?: TsParam[];
   /** Solve for one variable given all the others (SI units). */
   solve: (v: Required<SiValues>, target: TsParam) => number;
 }
@@ -47,6 +53,7 @@ const RELATIONS: Relation[] = [
   {
     name: "Qts = Qms·Qes / (Qms + Qes)",
     vars: ["qts", "qms", "qes"],
+    check: ["qts"],
     solve: (v, t) =>
       t === "qts" ? (v.qms * v.qes) / (v.qms + v.qes) : t === "qms" ? (v.qts * v.qes) / (v.qes - v.qts) : (v.qts * v.qms) / (v.qms - v.qts),
   },
@@ -165,7 +172,7 @@ export function solveTs(entered: TsValues, tolerance = 0.03): SolveResult {
     if (r.vars.some((p) => si[p] === undefined)) continue;
     const enteredVars = r.vars.filter((p) => source[p] === "entered");
     if (enteredVars.length < 2 && !r.vars.some((p) => source[p] === "derived")) continue;
-    for (const p of enteredVars) {
+    for (const p of enteredVars.filter((x) => !r.check || r.check.includes(x))) {
       const implied = r.solve(si as Required<SiValues>, p);
       const actual = si[p]!;
       const diff = Math.abs(actual - implied) / implied;

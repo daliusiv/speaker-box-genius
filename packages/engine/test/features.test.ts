@@ -124,6 +124,15 @@ test("T/S solver reports contradictions instead of overwriting", () => {
   assert.ok(r.conflicts.some((c) => c.param === "mms_g" && c.diff > 0.05 && c.diff < 0.1), JSON.stringify(r.conflicts));
 });
 
+test("T/S solver tolerates Qts rounded to two decimals", () => {
+  // Published RSS315HF-4: Qms 2.83, Qes 0.45 → Qts 0.388, datasheet says 0.39
+  const r = solveTs({ fs: 24.2, qms: 2.83, qes: 0.45, qts: 0.39, vas_l: 84.1, re: 3.1, sd_cm2: 514.7 });
+  assert.deepEqual(r.conflicts, []);
+  // …but a genuinely wrong Qts is still caught
+  const bad = solveTs({ qms: 2.83, qes: 0.45, qts: 0.45 });
+  assert.equal(bad.conflicts[0]?.param, "qts");
+});
+
 test("T/S solver lists what is still missing", () => {
   const r = solveTs({ fs: 30, qts: 0.4 });
   assert.ok(r.missing.includes("vas_l") && r.missing.includes("sd_cm2") && r.missing.includes("re"));

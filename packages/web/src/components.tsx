@@ -72,7 +72,7 @@ export function Select<T extends string | number>(props: {
   onChange: (v: T) => void;
 }) {
   return (
-    <label>
+    <label className="full">
       <span>{props.label}</span>
       <select
         value={String(props.value)}
@@ -87,7 +87,6 @@ export function Select<T extends string | number>(props: {
           </option>
         ))}
       </select>
-      <span className="unit" />
     </label>
   );
 }

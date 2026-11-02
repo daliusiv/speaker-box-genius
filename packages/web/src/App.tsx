@@ -164,7 +164,7 @@ export function App() {
               }))}
               onChange={(order) => set("highPass", { ...hp, order })}
             />
-            <Num label="Frequency" unit="Hz" value={hp.freq} onChange={(freq) => set("highPass", { ...hp, freq })} />
+            <Num label="Freq" unit="Hz" value={hp.freq} onChange={(freq) => set("highPass", { ...hp, freq })} />
           </div>
           <p className="hint">A subsonic filter protects ported and PR boxes from over-excursion below tuning.</p>
         </Card>
@@ -255,7 +255,14 @@ export function App() {
             )}
             <LogChart title="Maximum SPL (first limit reached)" unit="dB" freq={freq} series={series((r) => r.maxSpl)} />
             <LogChart title="Impedance" unit="Ω" freq={freq} series={series((r) => r.impedanceOhm)} yMin={0} />
-            <LogChart title="Group delay" unit="ms" freq={freq} series={series((r) => r.groupDelayMs)} />
+            <LogChart
+              title="Group delay"
+              unit="ms"
+              freq={freq}
+              series={series((r) => r.groupDelayMs)}
+              yMin={-20}
+              yMax={100}
+            />
           </>
         )}
 

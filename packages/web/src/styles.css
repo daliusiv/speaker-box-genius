@@ -75,7 +75,7 @@ p {
 
 .layout {
   display: grid;
-  grid-template-columns: 22rem 1fr;
+  grid-template-columns: 25rem 1fr;
   grid-template-areas:
     "top top"
     "panel charts";
@@ -156,7 +156,7 @@ p {
 
 label {
   display: grid;
-  grid-template-columns: 4.6rem 1fr auto;
+  grid-template-columns: 3.6rem 1fr 2.5rem;
   align-items: center;
   gap: 0.35rem;
   font-size: 0.9rem;
@@ -447,4 +447,14 @@ button.clear {
 .breakdown tr.total td {
   font-weight: 700;
   border-top: 1px solid var(--border);
+}
+
+/* Selects and anything else that needs the whole row */
+label.full {
+  grid-column: 1 / -1;
+  grid-template-columns: 3.6rem 1fr;
+}
+
+input.entered {
+  padding-right: 1.3rem;
 }

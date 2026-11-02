@@ -25,7 +25,7 @@ interface Props {
 
 const W = 640;
 const H = 260;
-const PAD = { l: 48, r: 12, t: 12, b: 28 };
+const PAD = { l: 48, r: 12, t: 22, b: 28 };
 const PW = W - PAD.l - PAD.r;
 const PH = H - PAD.t - PAD.b;
 const X_TICKS = [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000];
@@ -156,7 +156,7 @@ export function LogChart({ title, unit, freq, series, limits = [], yMin, yMax, d
             </text>
           </g>
         ))}
-        <text className="tick" x={PAD.l - 6} y={PAD.t - 2} textAnchor="end">
+        <text className="tick unit-label" x={PAD.l} y={12} textAnchor="start">
           {unit}
         </text>
 
