@@ -1,5 +1,6 @@
 import {
   netVolume,
+  type PortInput,
   simulate,
   solveTs,
   type DriverInput,
@@ -41,6 +42,12 @@ export function shapeOf(v: AppState["volume"]): Shape {
   }
 }
 
+export function portOf(v: AppState["vented"], length_cm = v.length_cm): PortInput {
+  return v.shape === "slot"
+    ? { shape: "slot", width_cm: v.slotWidth_cm, height_cm: v.slotHeight_cm, length_cm }
+    : { shape: "round", diameter_cm: v.diameter_cm, length_cm };
+}
+
 /** Net volume of the calculator's box, with deductions appropriate for the design it feeds. */
 export function volumeFor(s: AppState, target: DesignKey | "none"): VolumeResult {
   const v = s.volume;
@@ -51,7 +58,13 @@ export function volumeFor(s: AppState, target: DesignKey | "none"): VolumeResult
     passiveRadiators: target === "pr" ? { count: s.pr.count, displacement_l: v.prDisp_l } : undefined,
     ports:
       target === "vented"
-        ? { count: s.vented.count, innerDiameter_cm: s.vented.diameter_cm, length_cm: s.vented.length_cm, wall_mm: v.portWall_mm }
+        ? {
+            count: s.vented.count,
+            length_cm: s.vented.length_cm,
+            wall_mm: v.portWall_mm,
+            innerDiameter_cm: s.vented.diameter_cm,
+            slot: s.vented.shape === "slot" ? { width_cm: s.vented.slotWidth_cm, height_cm: s.vented.slotHeight_cm } : undefined,
+          }
         : undefined,
     bracing_pct: v.bracing_pct,
     other_l: v.other_l,
@@ -99,7 +112,7 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
       (vb) => ({
         kind: "vented",
         vb_l: vb,
-        port: { shape: "round", diameter_cm: s.vented.diameter_cm, length_cm: s.vented.length_cm },
+        port: portOf(s.vented),
         portCount: s.vented.count,
       }),
     ],

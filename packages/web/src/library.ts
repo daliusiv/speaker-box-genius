@@ -16,6 +16,7 @@ interface Physical {
 interface DriverRecord {
   brand: string;
   model: string;
+  nominal_ohms?: number;
   ts: Record<string, number | undefined>;
   physical?: Physical;
 }
@@ -75,6 +76,8 @@ function displacementOf(p: Physical | undefined): number | undefined {
 
 export interface LoadedDriver {
   name: string;
+  brand: string;
+  nominal_ohms?: number;
   /** Every published T/S value, as "entered" values for the solver. */
   ts: TsValues;
   le_mh?: number;
@@ -93,6 +96,8 @@ export async function loadDriver(id: string): Promise<LoadedDriver> {
   }
   return {
     name: `${rec.brand} ${rec.model}`,
+    brand: rec.brand,
+    nominal_ohms: rec.nominal_ohms,
     ts,
     le_mh: rec.ts.le_mh,
     xmax_mm: rec.ts.xmax_mm,

@@ -7,6 +7,9 @@ export type ShapeKind = "box" | "cylinder" | "sphere" | "frustum";
 export interface AppState {
   v: 2;
   driverName: string;
+  /** Brand part of driverName (for WinISD export); empty if unknown. */
+  driverBrand: string;
+  nominal_ohms: number;
   /** T/S values the user entered. Derived values are never stored. */
   ts: TsValues;
   le_mh: number;
@@ -16,13 +19,25 @@ export interface AppState {
   drivers: number;
   highPass: { on: boolean; type: HighPassType; order: number; freq: number };
   sealed: { on: boolean; vb_l: number };
-  vented: { on: boolean; vb_l: number; diameter_cm: number; length_cm: number; count: number };
+  vented: {
+    on: boolean;
+    vb_l: number;
+    shape: "round" | "slot";
+    diameter_cm: number;
+    slotWidth_cm: number;
+    slotHeight_cm: number;
+    length_cm: number;
+    count: number;
+    /** Last tuning frequency the user asked for with "Set length". */
+    targetFb: number;
+  };
   pr: {
     on: boolean;
     name: string;
     vb_l: number;
     count: number;
     addedMass_g: number;
+    targetFb: number;
     params: Required<Pick<PassiveRadiatorInput, "mms_g" | "sd_cm2" | "xmax_mm" | "qms" | "vas_l">>;
   };
   volume: {
@@ -49,6 +64,8 @@ export interface AppState {
 export const DEFAULT_STATE: AppState = {
   v: 2,
   driverName: "Example Audio EX10-4 (fictional)",
+  driverBrand: "Example Audio",
+  nominal_ohms: 4,
   ts: { fs: 30, qms: 5.2, qes: 0.4, vas_l: 50, re: 3.4, sd_cm2: 330 },
   le_mh: 1.2,
   xmax_mm: 12,
@@ -57,13 +74,24 @@ export const DEFAULT_STATE: AppState = {
   drivers: 1,
   highPass: { on: false, type: "butterworth", order: 2, freq: 18 },
   sealed: { on: true, vb_l: 40 },
-  vented: { on: true, vb_l: 60, diameter_cm: 10, length_cm: 30, count: 1 },
+  vented: {
+    on: true,
+    vb_l: 60,
+    shape: "round",
+    diameter_cm: 10,
+    slotWidth_cm: 20,
+    slotHeight_cm: 5,
+    length_cm: 30,
+    count: 1,
+    targetFb: 30,
+  },
   pr: {
     on: true,
     name: "Example Audio EX10-PR (fictional)",
     vb_l: 50,
     count: 2,
     addedMass_g: 100,
+    targetFb: 30,
     params: { mms_g: 122, sd_cm2: 330, xmax_mm: 18, qms: 6, vas_l: 80 },
   },
   volume: {
@@ -136,6 +164,8 @@ export function decodeState(hash: string): AppState | null {
     return {
       v: 2,
       driverName: typeof raw.driverName === "string" ? raw.driverName : d.driverName,
+      driverBrand: typeof raw.driverBrand === "string" ? raw.driverBrand : "",
+      nominal_ohms: raw.nominal_ohms ?? d.nominal_ohms,
       ts: raw.ts ?? d.ts,
       le_mh: raw.le_mh ?? d.le_mh,
       xmax_mm: raw.xmax_mm ?? d.xmax_mm,

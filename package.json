@@ -14,7 +14,8 @@
     "build:db": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/bundle.ts --out packages/web/public/db",
     "validate:db": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts",
     "test": "node --experimental-strip-types --disable-warning=ExperimentalWarning --test \"packages/*/test/*.test.ts\"",
-    "typecheck": "tsc -p packages/schema && tsc -p packages/engine && tsc -p packages/db-tools && tsc -p packages/web"
+    "typecheck": "tsc -p packages/schema && tsc -p packages/engine && tsc -p packages/db-tools && tsc -p packages/web",
+    "db:import-wdr": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/import-wdr.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

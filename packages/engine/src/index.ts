@@ -9,3 +9,4 @@ export * from "./volume.ts";
 export * from "./tsSolver.ts";
 export * from "./units.ts";
 export * from "./datasheet.ts";
+export * from "./wdr.ts";

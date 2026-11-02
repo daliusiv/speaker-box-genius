@@ -458,3 +458,11 @@ label.full {
 input.entered {
   padding-right: 1.3rem;
 }
+
+.tune {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+}

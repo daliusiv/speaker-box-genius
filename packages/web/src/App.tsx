@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import type { HighPassType, SimulationResult } from "@sbg/engine";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { parseWdr, writeWdr, type HighPassType, type SimulationResult } from "@sbg/engine";
 import { LogChart, type Series } from "./LogChart.tsx";
 import { DEFAULT_STATE, decodeState, encodeState, type AppState, type DesignKey } from "./state.ts";
 import { loadDriver, loadIndex, loadPassiveRadiator, type DbIndex } from "./library.ts";
@@ -7,6 +7,7 @@ import { Card, Fixed, LibraryPicker, Num, REPO, Select } from "./components.tsx"
 import { TsEditor } from "./TsEditor.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
 import { COLORS, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
+import { PrCard, VentedCard } from "./Designs.tsx";
 
 const LIMIT_RED = "#dc2626";
 const PORT_LIMIT = 17;
@@ -15,6 +16,8 @@ export function App() {
   const [state, setState] = useState<AppState>(() => decodeState(location.hash) ?? DEFAULT_STATE);
   const [copied, setCopied] = useState(false);
   const [db, setDb] = useState<DbIndex | null>(null);
+  const [wdrMsg, setWdrMsg] = useState("");
+  const wdrInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadIndex().then(setDb, () => setDb(null));
@@ -52,6 +55,54 @@ export function App() {
     } catch {
       prompt("Copy this link:", url);
     }
+  };
+
+  const importWdr = async (file: File) => {
+    try {
+      // WinISD saves in the Windows code page; latin1 keeps most names intact.
+      const text = new TextDecoder("latin1").decode(await file.arrayBuffer());
+      const d = parseWdr(text);
+      setState((s) => ({
+        ...s,
+        driverName: [d.brand, d.model].filter(Boolean).join(" ") || file.name.replace(/\.wdr$/i, ""),
+        driverBrand: d.brand,
+        nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
+        ts: d.ts,
+        le_mh: d.le_mh ?? 0,
+        xmax_mm: d.xmax_mm ?? s.xmax_mm,
+        pe_w: d.pe_w ?? s.pe_w,
+        volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: Math.round(d.displacement_l * 100) / 100 } : s.volume,
+      }));
+      setWdrMsg(`Imported ${file.name}.`);
+    } catch (e) {
+      setWdrMsg(`Couldn't read ${file.name}: ${(e as Error).message}`);
+    }
+  };
+
+  const exportWdr = () => {
+    if (solved.missing.length > 0) {
+      setWdrMsg("Enter enough parameters to simulate before exporting.");
+      return;
+    }
+    const name = state.driverName.trim();
+    const brand = state.driverBrand && name.startsWith(state.driverBrand) ? state.driverBrand : "";
+    const text = writeWdr({
+      brand,
+      model: name.slice(brand.length).trim() || name,
+      nominal_ohms: state.nominal_ohms,
+      ts: solved.values,
+      le_mh: state.le_mh,
+      xmax_mm: state.xmax_mm,
+      pe_w: state.pe_w,
+      displacement_l: state.volume.driverDisp_l,
+    });
+    const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${state.driverName.replace(/[^\w.-]+/g, " ").trim() || "driver"}.wdr`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setWdrMsg("Exported a WinISD driver file.");
   };
 
   const pr = state.pr;
@@ -101,6 +152,8 @@ export function App() {
                   setState((s) => ({
                     ...s,
                     driverName: d.name,
+                    driverBrand: d.brand,
+                    nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
                     ts: d.ts,
                     le_mh: d.le_mh ?? 0,
                     xmax_mm: d.xmax_mm ?? s.xmax_mm,
@@ -125,6 +178,7 @@ export function App() {
               setState((s) => ({
                 ...s,
                 driverName: "Pasted driver",
+                driverBrand: "",
                 ts,
                 le_mh: x.le_mh ?? s.le_mh,
                 xmax_mm: x.xmax_mm ?? s.xmax_mm,
@@ -132,8 +186,29 @@ export function App() {
               }))
             }
           />
+          <div className="row">
+            <button className="secondary" onClick={() => wdrInput.current?.click()}>
+              Import WinISD .wdr
+            </button>
+            <button className="secondary" onClick={exportWdr}>
+              Export .wdr
+            </button>
+            <input
+              ref={wdrInput}
+              type="file"
+              accept=".wdr,.txt"
+              hidden
+              onChange={(e) => {
+                const f = e.currentTarget.files?.[0];
+                if (f) importWdr(f);
+                e.currentTarget.value = "";
+              }}
+            />
+          </div>
+          {wdrMsg && <p className="hint">{wdrMsg}</p>}
           <h3>Large signal and system</h3>
           <div className="fields">
+            <Num label="Znom" unit="Ω" value={state.nominal_ohms} onChange={(v) => set("nominal_ohms", v)} />
             <Num label="Le" unit="mH" value={state.le_mh} min={0} onChange={(v) => set("le_mh", v)} />
             <Num label="Xmax" unit="mm" value={state.xmax_mm} onChange={(v) => set("xmax_mm", v)} />
             <Num label="Pe" unit="W" value={state.pe_w} onChange={(v) => set("pe_w", v)} />
@@ -173,43 +248,36 @@ export function App() {
           <div className="fields">{vbField("sealed", state.sealed.vb_l, (v) => set("sealed", { ...state.sealed, vb_l: v }))}</div>
         </Card>
 
-        <Card title="Ported" color={COLORS.vented} on={state.vented.on} onToggle={(on) => set("vented", { ...state.vented, on })}>
-          <div className="fields">
-            {vbField("vented", state.vented.vb_l, (v) => set("vented", { ...state.vented, vb_l: v }))}
-            <Num label="Port Ø" unit="cm" value={state.vented.diameter_cm} onChange={(v) => set("vented", { ...state.vented, diameter_cm: v })} />
-            <Num label="Length" unit="cm" value={state.vented.length_cm} min={0} onChange={(v) => set("vented", { ...state.vented, length_cm: v })} />
-            <Num label="Ports" value={state.vented.count} onChange={(v) => set("vented", { ...state.vented, count: Math.max(1, Math.round(v)) })} />
-          </div>
-        </Card>
+        <VentedCard
+          v={state.vented}
+          vb_l={vbOf(state, "vented")}
+          vbField={vbField("vented", state.vented.vb_l, (v) => set("vented", { ...state.vented, vb_l: v }))}
+          onChange={(v) => set("vented", v)}
+        />
 
-        <Card title="Passive radiators" color={COLORS.pr} on={pr.on} onToggle={(on) => set("pr", { ...pr, on })}>
-          <LibraryPicker
-            label="Load a passive radiator from the database"
-            items={db?.passiveRadiators.map((x) => ({ id: x.id, text: `${x.brand} ${x.model} (${x.size_in ?? "?"}")` }))}
-            onPick={(id) =>
-              loadPassiveRadiator(id).then(
-                ({ name, params, displacement_l }) =>
-                  setState((s) => ({
-                    ...s,
-                    pr: { ...s.pr, name, params },
-                    volume: displacement_l !== undefined ? { ...s.volume, prDisp_l: displacement_l } : s.volume,
-                  })),
-                () => alert("Couldn't load that passive radiator."),
-              )
-            }
-          />
-          <p className="pr-name">{pr.name}</p>
-          <div className="fields">
-            {vbField("pr", pr.vb_l, (v) => set("pr", { ...pr, vb_l: v }))}
-            <Num label="PRs" value={pr.count} onChange={(v) => set("pr", { ...pr, count: Math.max(1, Math.round(v)) })} />
-            <Num label="Added mass" unit="g" value={pr.addedMass_g} min={0} onChange={(v) => set("pr", { ...pr, addedMass_g: v })} />
-            <Num label="PR Mms" unit="g" value={pr.params.mms_g} onChange={(v) => set("pr", { ...pr, params: { ...pr.params, mms_g: v } })} />
-            <Num label="PR Vas" unit="L" value={pr.params.vas_l} onChange={(v) => set("pr", { ...pr, params: { ...pr.params, vas_l: v } })} />
-            <Num label="PR Qms" value={pr.params.qms} onChange={(v) => set("pr", { ...pr, params: { ...pr.params, qms: v } })} />
-            <Num label="PR Sd" unit="cm²" value={pr.params.sd_cm2} onChange={(v) => set("pr", { ...pr, params: { ...pr.params, sd_cm2: v } })} />
-            <Num label="PR Xmax" unit="mm" value={pr.params.xmax_mm} onChange={(v) => set("pr", { ...pr, params: { ...pr.params, xmax_mm: v } })} />
-          </div>
-        </Card>
+        <PrCard
+          pr={pr}
+          vb_l={vbOf(state, "pr")}
+          vbField={vbField("pr", pr.vb_l, (v) => set("pr", { ...pr, vb_l: v }))}
+          onChange={(p) => set("pr", p)}
+          picker={
+            <LibraryPicker
+              label="Load a passive radiator from the database"
+              items={db?.passiveRadiators.map((x) => ({ id: x.id, text: `${x.brand} ${x.model} (${x.size_in ?? "?"}")` }))}
+              onPick={(id) =>
+                loadPassiveRadiator(id).then(
+                  ({ name, params, displacement_l }) =>
+                    setState((s) => ({
+                      ...s,
+                      pr: { ...s.pr, name, params },
+                      volume: displacement_l !== undefined ? { ...s.volume, prDisp_l: displacement_l } : s.volume,
+                    })),
+                  () => alert("Couldn't load that passive radiator."),
+                )
+              }
+            />
+          }
+        />
 
         <VolumePanel state={state} onChange={(v) => set("volume", v)} />
       </aside>

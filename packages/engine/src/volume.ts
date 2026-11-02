@@ -64,6 +64,12 @@ export function estimateDriverDisplacement(cutout_mm: number, depth_mm: number):
   return (0.33 * Math.PI * (cutout_mm / 2) ** 2 * depth_mm) / 1e6;
 }
 
+/** Volume (litres) taken by slot ports inside the box (inner size plus walls on all four sides). */
+export function slotPortDisplacement(width_cm: number, height_cm: number, length_cm: number, wall_mm: number, count = 1): number {
+  const t = wall_mm / 10;
+  return (count * (width_cm + 2 * t) * (height_cm + 2 * t) * length_cm) / 1000;
+}
+
 /** Volume (litres) taken by round port tubes inside the box. */
 export function portTubeDisplacement(
   innerDiameter_cm: number,
@@ -80,7 +86,14 @@ export interface VolumeInput {
   wall_mm: number;
   drivers?: { count: number; displacement_l: number };
   passiveRadiators?: { count: number; displacement_l: number };
-  ports?: { count: number; innerDiameter_cm: number; length_cm: number; wall_mm: number };
+  /** Round ports use innerDiameter_cm; slot ports give `slot` instead. */
+  ports?: {
+    count: number;
+    length_cm: number;
+    wall_mm: number;
+    innerDiameter_cm?: number;
+    slot?: { width_cm: number; height_cm: number };
+  };
   /** Bracing as a percentage of the gross internal volume. */
   bracing_pct?: number;
   /** Crossover board, plate amp, terminal cup and anything else (litres). */
@@ -111,8 +124,10 @@ export function netVolume(v: VolumeInput): VolumeResult {
   }
   if (v.ports && v.ports.count > 0 && v.ports.length_cm > 0) {
     deductions.push({
-      label: `Port tubes (${v.ports.count}×)`,
-      litres: portTubeDisplacement(v.ports.innerDiameter_cm, v.ports.length_cm, v.ports.wall_mm, v.ports.count),
+      label: `${v.ports.slot ? "Slot ports" : "Port tubes"} (${v.ports.count}×)`,
+      litres: v.ports.slot
+        ? slotPortDisplacement(v.ports.slot.width_cm, v.ports.slot.height_cm, v.ports.length_cm, v.ports.wall_mm, v.ports.count)
+        : portTubeDisplacement(v.ports.innerDiameter_cm ?? 0, v.ports.length_cm, v.ports.wall_mm, v.ports.count),
     });
   }
   if (v.bracing_pct && v.bracing_pct > 0) {

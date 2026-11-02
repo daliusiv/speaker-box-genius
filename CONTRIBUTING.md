@@ -17,6 +17,9 @@ Open a [new driver issue](../../issues/new?template=new-driver.yml) or a [new pa
 4. Run `pnpm validate:db` and fix anything it reports.
 5. Open a pull request.
 
+### Got a folder of WinISD drivers?
+`pnpm db:import-wdr path/to/folder` converts every `.wdr` file into a database entry (use `--dry-run` first to preview). Imported entries have no datasheet link yet, so before opening a pull request, add the manufacturer's link to `sources` and set the right `type`.
+
 ### Rules for data
 - **Every record needs at least one source.** A datasheet URL, or your own measurement with the method you used (e.g. "DATS v3, added mass"). Measured `.zma` files are welcome in `measurements/`.
 - **Copy numbers exactly as published.** Don't "fix" datasheet values. If the datasheet doesn't add up (the validator will tell you), note it in the PR and add a measured source if you have one.
