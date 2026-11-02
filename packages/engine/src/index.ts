@@ -4,3 +4,8 @@ export * from "./ts.ts";
 export * from "./sealed.ts";
 export * from "./model.ts";
 export * from "./simulate.ts";
+export * from "./filters.ts";
+export * from "./volume.ts";
+export * from "./tsSolver.ts";
+export * from "./units.ts";
+export * from "./datasheet.ts";

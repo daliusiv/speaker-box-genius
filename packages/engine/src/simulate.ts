@@ -1,5 +1,6 @@
 import { abs, add, arg, cx, div, mul, parallel, scale, type Complex } from "./complex.ts";
 import { RHO } from "./constants.ts";
+import { highPassResponse, type HighPass } from "./filters.ts";
 import {
   boxCompliance,
   DEFAULT_END_CORRECTION,
@@ -52,6 +53,8 @@ export interface SimulationOptions {
   space?: "half" | "full";
   /** Port air velocity limit (m/s, peak) used for the max-SPL curve. Default 17. */
   portVelocityLimit?: number;
+  /** Electrical high-pass filter ahead of the amplifier (e.g. a subsonic filter). */
+  highPass?: HighPass | null;
 }
 
 export interface SimulationResult {
@@ -185,7 +188,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const w = 2 * Math.PI * f;
 
     const ze = cx(d.re, w * d.le);
-    const pg = div(cx((vDriver * d.bl) / d.sd), ze);
+    const filter = opts.highPass ? highPassResponse(opts.highPass, f) : cx(1);
+    const filterGain2 = filter.re * filter.re + filter.im * filter.im;
+    const pg = div(mul(filter, cx((vDriver * d.bl) / d.sd)), ze);
     const zae = div(cx((d.bl * d.bl) / sd2), ze);
     const zas = cx(d.rms / sd2, (w * d.mms - 1 / (w * d.cms)) / sd2);
 
@@ -233,7 +238,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
 
     // Power limits: SPL ∝ V², excursion and velocity ∝ V.
     const limits: [SimulationResult["limitedBy"][number], number][] = [];
-    if (d.pe !== null) limits.push(["thermal", d.pe * n]);
+    // Thermal: the filter reduces the voltage reaching the coil at this frequency.
+    if (d.pe !== null) limits.push(["thermal", (d.pe * n) / Math.max(filterGain2, 1e-12)]);
     if (d.xmax !== null) limits.push(["xmax", power * (d.xmax / x) ** 2]);
     if (prXmax !== null && xpr > 0) limits.push(["pr-xmax", power * (prXmax / xpr) ** 2]);
     if (out.vport && vport > 0) limits.push(["port", power * (vLimit / vport) ** 2]);

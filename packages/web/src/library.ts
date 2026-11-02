@@ -1,4 +1,4 @@
-import { C, RHO } from "@sbg/engine";
+import { C, RHO, estimateDriverDisplacement, TS_PARAMS, type TsParam, type TsValues } from "@sbg/engine";
 import type { AppState } from "./state.ts";
 
 /** Shape of db/index.json produced by packages/db-tools/src/bundle.ts */
@@ -7,25 +7,23 @@ export interface DbIndex {
   passiveRadiators: { id: string; brand: string; model: string; size_in?: number }[];
 }
 
+interface Physical {
+  displacement_l?: number;
+  cutout_mm?: number;
+  depth_mm?: number;
+}
+
 interface DriverRecord {
   brand: string;
   model: string;
-  ts: {
-    fs: number;
-    qms: number;
-    qes: number;
-    vas_l: number;
-    re: number;
-    sd_cm2: number;
-    le_mh?: number;
-    xmax_mm?: number;
-    pe_w?: number;
-  };
+  ts: Record<string, number | undefined>;
+  physical?: Physical;
 }
 
 interface PrRecord {
   brand: string;
   model: string;
+  physical?: Physical;
   params: {
     mms_g: number;
     sd_cm2: number;
@@ -65,28 +63,47 @@ function loadShard(brandSlug: string): Promise<Shard> {
 
 const brandOf = (id: string) => id.split("/")[0]!;
 
-/** Fetch a driver and convert it to the app's driver state, keeping current values for anything unpublished. */
-export async function loadDriver(id: string, current: AppState["driver"]): Promise<{ name: string; driver: AppState["driver"] }> {
+/** Published displacement, or a rough estimate from cutout and depth. */
+function displacementOf(p: Physical | undefined): number | undefined {
+  if (!p) return undefined;
+  if (p.displacement_l !== undefined) return p.displacement_l;
+  if (p.cutout_mm !== undefined && p.depth_mm !== undefined) {
+    return Math.round(estimateDriverDisplacement(p.cutout_mm, p.depth_mm) * 100) / 100;
+  }
+  return undefined;
+}
+
+export interface LoadedDriver {
+  name: string;
+  /** Every published T/S value, as "entered" values for the solver. */
+  ts: TsValues;
+  le_mh?: number;
+  xmax_mm?: number;
+  pe_w?: number;
+  displacement_l?: number;
+}
+
+export async function loadDriver(id: string): Promise<LoadedDriver> {
   const rec = (await loadShard(brandOf(id))).drivers[id];
   if (!rec) throw new Error(`Driver ${id} not found`);
-  const t = rec.ts;
+  const ts: TsValues = {};
+  for (const k of Object.keys(TS_PARAMS) as TsParam[]) {
+    const v = rec.ts[k];
+    if (typeof v === "number") ts[k] = v;
+  }
   return {
     name: `${rec.brand} ${rec.model}`,
-    driver: {
-      fs: t.fs,
-      qms: t.qms,
-      qes: t.qes,
-      vas_l: t.vas_l,
-      re: t.re,
-      sd_cm2: t.sd_cm2,
-      le_mh: t.le_mh ?? 0,
-      xmax_mm: t.xmax_mm ?? current.xmax_mm,
-      pe_w: t.pe_w ?? current.pe_w,
-    },
+    ts,
+    le_mh: rec.ts.le_mh,
+    xmax_mm: rec.ts.xmax_mm,
+    pe_w: rec.ts.pe_w,
+    displacement_l: displacementOf(rec.physical),
   };
 }
 
-export async function loadPassiveRadiator(id: string): Promise<{ name: string; params: AppState["pr"]["params"] }> {
+export async function loadPassiveRadiator(
+  id: string,
+): Promise<{ name: string; params: AppState["pr"]["params"]; displacement_l?: number }> {
   const rec = (await loadShard(brandOf(id))).passiveRadiators[id];
   if (!rec) throw new Error(`Passive radiator ${id} not found`);
   const p = rec.params;
@@ -100,5 +117,6 @@ export async function loadPassiveRadiator(id: string): Promise<{ name: string; p
   return {
     name: `${rec.brand} ${rec.model}`,
     params: { mms_g: p.mms_g, sd_cm2: p.sd_cm2, xmax_mm: p.xmax_mm, qms: p.qms ?? 10, vas_l: Math.round(vas * 10) / 10 },
+    displacement_l: displacementOf(rec.physical),
   };
 }
