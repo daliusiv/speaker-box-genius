@@ -25,6 +25,13 @@ jobs:
           get "https://www.daytonaudio.com/category/121/subwoofers?pagenum=2" category-121-p2.html
           get https://www.daytonaudio.com/ home.html
           ls -la
+      - name: Show samples in the log
+        run: |
+          cd out
+          echo "===== robots.txt"; cat robots.txt
+          for f in product-121.html category-121.html; do
+            echo "===== $f (base64 gzip)"; gzip -9c "$f" | base64 -w0; echo
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: dayton-samples
