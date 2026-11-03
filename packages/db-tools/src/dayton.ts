@@ -142,8 +142,16 @@ const NOT_A_BOX_DRIVER = /tweeter|compression|horn|exciter|transducer|shaker|mid
 export function parseProduct(html: string, url: string, retrieved: string): Parsed {
   const rows = parseRows(html);
   const title = decode(html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)?.[1] ?? "");
-  const model = get(rows, "Model Number") ?? title.split(" ")[0] ?? "";
   const notes: string[] = [];
+  const rowModel = get(rows, "Model Number");
+  const titleModel = title.split(" ")[0] ?? "";
+  const urlSlug = url.match(/\/product\/\d+\/([^/?#]+)/)?.[1] ?? "";
+  let model = rowModel ?? titleModel;
+  if (rowModel && titleModel && slugOf(rowModel) !== slugOf(titleModel) && !urlSlug.startsWith(slugOf(rowModel)) && urlSlug.startsWith(slugOf(titleModel))) {
+    // e.g. the E150HE-44 page lists "E180HE-44" as its model number.
+    notes.push(`The page's Model Number field says ${rowModel}; the product title and address say ${titleModel}, which is used.`);
+    model = titleModel;
+  }
   const base = { notes, model, title };
   const type = get(rows, "Speaker Type") ?? "";
   const isPr = /passive/i.test(type) || /passive radiator/i.test(title);
@@ -175,7 +183,11 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
 
   if (isPr) {
     if (mms === undefined || sd === undefined || xmax === undefined) {
-      return { kind: "skip", reason: "passive radiator without Mms, Sd and Xmax", ...base };
+      return {
+        kind: "skip",
+        reason: `passive radiator without Mms, Sd and Xmax (labels on the page: ${[...rows.keys()].join(" | ") || "none"})`,
+        ...base,
+      };
     }
     const params: PassiveRadiator["params"] = { mms_g: mms, sd_cm2: sd, xmax_mm: xmax };
     if (fs !== undefined) params.fs = fs;
@@ -193,6 +205,7 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
       ...(Object.keys(physical).length ? { physical } : {}),
       sources,
       status: "community",
+      ...(notes.length ? { notes: notes.join(" ") } : {}),
     };
     return { kind: "passive-radiator", pr, ...base };
   }
@@ -215,17 +228,29 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
   const dvc = perCoil !== undefined || /\bDVC\b|dual voice coil|dual \d+ ?ohm/i.test(title);
   let nominal = firstNumber(zText) ?? 4;
   let wiring: "series" | "parallel" | undefined;
-  if (dvc) {
-    const coil = perCoil !== undefined ? Number(perCoil) : (firstNumber(title.match(/(\d+(?:\.\d+)?)\s*ohms? per coil/i)?.[0]) ?? nominal);
+  const suffixCoil = model.match(/-(\d)\1$/)?.[1]; // Dayton: -22, -44, -88 = two 2, 4 or 8 Ω coils
+  if (dvc || suffixCoil) {
+    const coil =
+      perCoil !== undefined
+        ? Number(perCoil)
+        : suffixCoil !== undefined
+          ? Number(suffixCoil)
+          : (firstNumber(title.match(/(\d+(?:\.\d+)?)\s*ohms? per coil/i)?.[0]) ?? nominal);
+    const single = perCoil === undefined ? firstNumber(zText) : undefined; // e.g. "4 ohms" on an 8+8 driver
     const stated = html.match(/measured with the voice coils? (?:wires |wired )?in (series|parallel)/i)?.[1]?.toLowerCase();
     if (stated === "series" || stated === "parallel") wiring = stated;
+    else if (single !== undefined && single === coil * 2) wiring = "series";
+    else if (single !== undefined && single === coil / 2) wiring = "parallel";
     else if (re! > 1.3 * coil) wiring = "series";
     else if (re! < 0.7 * coil) wiring = "parallel";
     if (!wiring) {
       return { kind: "skip", reason: `dual voice coil, but Re ${re} Ω doesn't show how the coils were wired`, ...base };
     }
     nominal = wiring === "series" ? coil * 2 : coil / 2;
-    if (!stated) notes.push(`Coil wiring for the published values (${wiring}) inferred from Re ${re} Ω with ${coil} Ω coils.`);
+    if (!stated) {
+      const how = single !== undefined && (single === coil * 2 || single === coil / 2) ? `the ${single} Ω impedance` : `Re ${re} Ω`;
+      notes.push(`Coil wiring for the published values (${wiring}) inferred from ${how} with ${coil} Ω coils.`);
+    }
   }
 
   const ts: Driver["ts"] = { fs: fs!, qms: qms!, qes: qes!, vas_l: vas!, re: re!, sd_cm2: sd! };
@@ -251,6 +276,8 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
     };
   }
 
+  dropImplausible(ts, physical, notes);
+
   const typeName = TYPE_MAP.find(([re]) => re.test(type || title))?.[1] ?? "woofer";
   const driver: Driver = {
     brand: "Dayton Audio",
@@ -262,10 +289,40 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
     ...(Object.keys(physical).length ? { physical } : {}),
     sources,
     status: "community",
-    ...(dvc ? { voice_coils: 2 as const, ts_wiring: wiring } : {}),
+    ...(wiring ? { voice_coils: 2 as const, ts_wiring: wiring } : {}),
     ...(notes.length ? { notes: notes.join(" ") } : {}),
   };
   return { kind: "driver", driver, ...base };
+}
+
+const OPTIONAL_TS = ["qts", "le_mh", "bl", "mms_g", "xmax_mm", "pe_w"] as const;
+
+/**
+ * Datasheet slips in optional values (a negative Le, Qts 79, a cutout in inches
+ * with no unit) shouldn't throw away the whole entry: convert obvious inch values,
+ * drop the rest, and say so.
+ */
+export function dropImplausible(ts: Driver["ts"], physical: NonNullable<Driver["physical"]>, notes: string[]) {
+  const probe = (patch: object) =>
+    validateDriver({ brand: "x", model: "x", type: "woofer", nominal_ohms: 4, ts, physical, sources: [{ kind: "community" }], status: "community", ...patch });
+  for (const key of ["cutout_mm", "depth_mm"] as const) {
+    const v = physical[key];
+    if (v === undefined || !probe({}).some((e) => e.startsWith(`physical.${key}`))) continue;
+    const mm = round(v * 25.4, 1);
+    physical[key] = mm;
+    if (probe({}).some((e) => e.startsWith(`physical.${key}`))) {
+      delete physical[key];
+      notes.push(`Published ${key === "cutout_mm" ? "cutout" : "depth"} ${v} is implausible, so it's left out.`);
+    } else {
+      notes.push(`Published ${key === "cutout_mm" ? "cutout" : "depth"} ${v} has no unit; read as inches (${mm} mm).`);
+    }
+  }
+  for (const key of OPTIONAL_TS) {
+    const v = ts[key];
+    if (v === undefined || !probe({}).some((e) => e.startsWith(`ts.${key}`))) continue;
+    delete ts[key];
+    notes.push(`Published ${key.replace(/_.*/, "")} ${v} is implausible, so it's left out.`);
+  }
 }
 
 /**
@@ -329,14 +386,18 @@ async function main() {
 
   const productUrls = new Map<string, string>(); // id → url
   for (const c of CATEGORIES) {
+    let lastPage = "";
     for (let page = 1; page <= 30; page++) {
       const url = `${SITE}/category/${c.id}/${c.slug}${page > 1 ? `?pagenum=${page}` : ""}`;
       const links = parseCategory(await fetchText(url));
       await sleep(delay);
       const before = productUrls.size;
+      const key = links.join(" ");
       for (const l of links) productUrls.set(l.match(/\/product\/(\d+)\//)![1]!, l);
       console.log(`${c.slug} p${page}: ${links.length} links, ${productUrls.size - before} new`);
-      if (productUrls.size === before) break;
+      // Past the last page the site returns nothing (or the same page again).
+      if (links.length === 0 || key === lastPage) break;
+      lastPage = key;
     }
   }
 

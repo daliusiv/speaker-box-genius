@@ -10,6 +10,7 @@ import {
   parseLitres,
   parseMm,
   parseProduct,
+  dropImplausible,
   reconcile,
   slugOf,
 } from "../src/dayton.ts";
@@ -127,4 +128,34 @@ test("reconcile: drops a lone bad Mms; nothing to compare means no change", () =
   const notes: string[] = [];
   assert.equal(reconcile(ts2, undefined, notes), true);
   assert.equal(ts2.mms_g, undefined);
+});
+
+test("model number: title and address win over a wrong details-table entry", () => {
+  const rows = MX12.map(([k, v]): [string, string] => (k === "Model Number" ? [k, "E180HE-44"] : [k, v]));
+  const p = parseProduct(page("E150HE-44 5-1/2&quot; DVC Subwoofer", rows), "https://www.daytonaudio.com/product/1911/e150he-44-5-1-2-dvc", "d");
+  assert.equal(p.model, "E150HE-44");
+  assert.match(p.driver!.notes!, /Model Number field says E180HE-44/);
+  // A multi-word model whose first title word differs is left alone.
+  const q = parseProduct(page("PRO Neo-8 woofer", MX12.map(([k, v]): [string, string] => (k === "Model Number" ? [k, "PRO Neo-8"] : [k, v]))), "https://www.daytonaudio.com/product/1/pro-neo-8-woofer", "d");
+  assert.equal(q.model, "PRO Neo-8");
+});
+
+test("dual voice coil from Dayton's -88 suffix and a single impedance figure", () => {
+  const rows = MX12.map(([k, v]): [string, string] => (k === "Impedance" ? [k, "4 ohms"] : k === "Model Number" ? [k, "SD270A-88"] : [k, v]));
+  const p = parseProduct(page("SD270A-88 10&quot; DVC Subwoofer 4 Ohm", rows), URL, "d");
+  assert.equal(p.kind, "driver");
+  assert.equal(p.driver!.ts_wiring, "parallel");
+  assert.equal(p.driver!.nominal_ohms, 4);
+  assert.match(p.driver!.notes!, /inferred from the 4 Ω impedance with 8 Ω coils/);
+});
+
+test("implausible optional values are dropped or read as inches", () => {
+  const ts = { fs: 50, qms: 3, qes: 0.5, vas_l: 10, re: 6, sd_cm2: 50, le_mh: -0.55, qts: 79 };
+  const physical = { cutout_mm: 3.77, depth_mm: 1389.4 };
+  const notes: string[] = [];
+  dropImplausible(ts, physical, notes);
+  assert.equal(ts.le_mh, undefined);
+  assert.equal(ts.qts, undefined);
+  assert.deepEqual(physical, { cutout_mm: 95.8 });
+  assert.equal(notes.length, 4);
 });
