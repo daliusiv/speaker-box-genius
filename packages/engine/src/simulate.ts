@@ -101,8 +101,8 @@ export interface SimulationResult {
   /** Peak one-way excursion per passive radiator (mm), PR designs only. With mixed PRs: the first group. */
   prExcursionMm: Float64Array | null;
   /** PR designs: excursion of each group of identical PRs, with its Xmax (mm). Group 0 = prExcursionMm. */
-  prGroups: { excursionMm: Float64Array; xmax_mm: number | null }[] | null;
-  /** Peak air velocity per port (m/s), vented designs only. For bandpass: the front chamber's port. */
+  prGroups: { excursionMm: Float64Array; xmax_mm: number | null; chamber?: "front" | "rear" }[] | null;
+  /** Peak air velocity per port (m/s), vented designs only. For bandpass: the front chamber's port (null if it has PRs). */
   portVelocity: Float64Array | null;
   /** Bandpass only: peak air velocity in the rear chamber's port (to the outside, or into the front chamber). */
   rearPortVelocity: Float64Array | null;
@@ -231,9 +231,13 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     phase: new Float64Array(N),
     gd: new Float64Array(N),
     x: new Float64Array(N),
-    xpr: box.kind === "passive-radiator" ? new Float64Array(N) : null,
-    xprGroups: prModels ? prModels.map(() => new Float64Array(N)) : null,
-    vport: box.kind === "vented" || bp ? new Float64Array(N) : null,
+    xpr: box.kind === "passive-radiator" || (bp && bp.frontPrs.length + bp.rearPrs.length > 0) ? new Float64Array(N) : null,
+    xprGroups: prModels
+      ? prModels.map(() => new Float64Array(N))
+      : bp && bp.frontPrs.length + bp.rearPrs.length > 0
+        ? [...bp.frontPrs, ...bp.rearPrs].map(() => new Float64Array(N))
+        : null,
+    vport: box.kind === "vented" || bp?.front ? new Float64Array(N) : null,
     vport2: bp?.rear ? new Float64Array(N) : null,
     zmag: new Float64Array(N),
     zph: new Float64Array(N),
@@ -271,13 +275,25 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       const ud = scale(ui, n);
       const flows = bp.flows(w, scale(unit.pF, 1), scale(unit.pR, 1));
       u0 = mul(ud, flows.radiated);
-      const vF = abs(mul(ud, flows.frontPortEach)) * Math.SQRT2 / bp.front.area;
-      out.vport![i] = vF;
-      vport = vF;
+      if (bp.front && out.vport) {
+        const vF = abs(mul(ud, flows.frontPortEach)) * Math.SQRT2 / bp.front.area;
+        out.vport[i] = vF;
+        vport = vF;
+      }
       if (bp.rear && out.vport2) {
         const vR = abs(mul(ud, flows.rearPortEach)) * Math.SQRT2 / bp.rear.area;
         out.vport2[i] = vR;
         vport = Math.max(vport, vR);
+      }
+      if (out.xprGroups) {
+        const groups = [...bp.frontPrs, ...bp.rearPrs];
+        const each = [...flows.frontPrEach, ...flows.rearPrEach];
+        groups.forEach((g, k) => {
+          const xk = (Math.SQRT2 * abs(mul(ud, each[k]!))) / (g.m.sd * w);
+          out.xprGroups![k]![i] = xk * 1000;
+          if (g.m.xmax !== null && xk > 0) prLimitPower = Math.min(prLimitPower, power * (g.m.xmax / xk) ** 2);
+        });
+        out.xpr![i] = out.xprGroups[0]![i]!;
       }
     } else {
       const zAir = cx(rab, -1 / (w * cab));
@@ -336,7 +352,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     // Thermal: the filter reduces the voltage reaching the coil at this frequency.
     if (d.pe !== null) limits.push(["thermal", (d.pe * n) / Math.max(filterGain2, 1e-12)]);
     if (d.xmax !== null) limits.push(["xmax", power * (d.xmax / x) ** 2]);
-    if (prModels) {
+    if (prModels || out.xprGroups) {
       if (Number.isFinite(prLimitPower)) limits.push(["pr-xmax", prLimitPower]);
     } else if (prXmax !== null && xpr > 0) limits.push(["pr-xmax", power * (prXmax / xpr) ** 2]);
     if (out.vport && vport > 0) limits.push(["port", power * (vLimit / vport) ** 2]);
@@ -376,7 +392,14 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     groupDelayMs: out.gd,
     excursionMm: out.x,
     prExcursionMm: out.xpr,
-    prGroups: prModels ? prModels.map((g, k) => ({ excursionMm: out.xprGroups![k]!, xmax_mm: g.m.xmax === null ? null : g.m.xmax * 1000 })) : null,
+    prGroups: prModels
+      ? prModels.map((g, k) => ({ excursionMm: out.xprGroups![k]!, xmax_mm: g.m.xmax === null ? null : g.m.xmax * 1000 }))
+      : bp && out.xprGroups
+        ? [
+            ...bp.frontPrs.map((g) => ({ chamber: "front" as const, g })),
+            ...bp.rearPrs.map((g) => ({ chamber: "rear" as const, g })),
+          ].map(({ chamber, g }, k) => ({ chamber, excursionMm: out.xprGroups![k]!, xmax_mm: g.m.xmax === null ? null : g.m.xmax * 1000 }))
+        : null,
     portVelocity: out.vport,
     rearPortVelocity: out.vport2,
     impedanceOhm: out.zmag,
@@ -441,6 +464,11 @@ interface PortElements {
  * rear chamber into the front one; each chamber has an air spring (with
  * absorption), leakage to the outside and optional ports.
  */
+/** A bandpass chamber's opening: a port, or groups of passive radiators. */
+type Vent =
+  | { kind: "port"; port: PortElements }
+  | { kind: "pr"; groups: { m: PassiveRadiatorModel; count: number }[] };
+
 function bandpassNetwork(
   box: BandpassInput,
   d: ReturnType<typeof driverModel>,
@@ -454,7 +482,18 @@ function bandpassNetwork(
     const map = portAcousticMass(p, ec, air);
     return { map, rap: Number.isFinite(qp) ? (2 * Math.PI * fRef * map) / qp : 0, count, area: portArea(p) };
   };
-  const helmholtz = (vb: number, p: PortInput, count: number) => ventedFb(vb, p, count, ec, air);
+  const hasPrs = (c: BandpassChamber) => (c.prs?.length ?? 0) > 0;
+  /** Tuning of a chamber's opening: Helmholtz for a port, PR mass against the air spring for PRs. */
+  const tuningOf = (c: BandpassChamber) =>
+    hasPrs(c)
+      ? c.prs!.length === 1
+        ? prFb(c.vb_l, c.prs![0]!.pr, c.prs![0]!.count, c.prs![0]!.addedMass_g ?? 0, air)
+        : prGroupsFb(c.vb_l, c.prs!, air)
+      : ventedFb(c.vb_l, c.port!, c.portCount ?? 1, ec, air);
+  const ventOf = (c: BandpassChamber, fRef: number): Vent =>
+    hasPrs(c)
+      ? { kind: "pr", groups: c.prs!.map((g) => ({ m: passiveRadiatorModel(g.pr, g.addedMass_g ?? 0, air), count: g.count })) }
+      : { kind: "port", port: portOf(c.port!, c.portCount ?? 1, fRef, finiteOr(c.qp, DEFAULT_LOSSES.qp)) };
   const chamberOf = (c: BandpassChamber, fRef: number): ChamberElements => {
     const cab = boxCompliance(c.vb_l, air);
     const w = 2 * Math.PI * fRef;
@@ -467,13 +506,16 @@ function bandpassNetwork(
     };
   };
 
-  // Tunings: each chamber with its own port(s). A closed rear chamber is referred to
+  if (!box.front.port && !hasPrs(box.front)) throw new Error("A bandpass front chamber needs a port or passive radiators");
+
+  // Tunings: each chamber with its own opening. A closed rear chamber is referred to
   // the driver's resonance in that volume (like a sealed box's fc).
-  const fFront = helmholtz(box.front.vb_l, box.front.port, box.front.portCount ?? 1);
+  const fFront = tuningOf(box.front);
   summary.fb = fFront;
+  const rearOpen = !!box.rear.port || hasPrs(box.rear);
   let fRear: number;
-  if (box.rear.port) {
-    fRear = helmholtz(box.rear.vb_l, box.rear.port, box.rear.portCount ?? 1);
+  if (rearOpen) {
+    fRear = tuningOf(box.rear);
     summary.fbRear = fRear;
   } else {
     const alpha = (d.cms * d.sd * d.sd) / boxCompliance(box.rear.vb_l, air);
@@ -483,10 +525,8 @@ function bandpassNetwork(
 
   const F = chamberOf(box.front, fFront);
   const R = chamberOf(box.rear, fRear);
-  const front = portOf(box.front.port, box.front.portCount ?? 1, fFront, finiteOr(box.front.qp, DEFAULT_LOSSES.qp));
-  const rear = box.rear.port
-    ? portOf(box.rear.port, box.rear.portCount ?? 1, fRear, finiteOr(box.rear.qp, DEFAULT_LOSSES.qp))
-    : null;
+  const frontVent = ventOf(box.front, fFront);
+  const rearVent = rearOpen ? ventOf(box.rear, fRear) : null;
 
   // Leakage between the chambers, referred to the driver like WinISD's Qiclfr:
   // R = Q / (ωs·Cas), with ωs the free-air resonance and Cas = Cms·Sd².
@@ -494,7 +534,15 @@ function bandpassNetwork(
   const ricl = Number.isFinite(qicl) ? (qicl * Math.sqrt(d.mms * d.cms)) / (d.cms * d.sd * d.sd) : Infinity;
   const yIcl = Number.isFinite(ricl) ? cx(1 / ricl) : cx(0);
 
-  const zPortTotal = (p: PortElements, w: number) => scale(cx(p.rap, w * p.map), 1 / p.count);
+  /** Acoustic impedance of one PR (mass, suspension and damping referred to its Sd). */
+  const zPrEach = (m: PassiveRadiatorModel, w: number) => {
+    const s2 = m.sd * m.sd;
+    return cx(m.rmp / s2, (w * m.mmp - 1 / (w * m.cmp)) / s2);
+  };
+  const zVentTotal = (v: Vent, w: number): Complex =>
+    v.kind === "port"
+      ? scale(cx(v.port.rap, w * v.port.map), 1 / v.port.count)
+      : parallel(...v.groups.map((g) => scale(zPrEach(g.m, w), 1 / g.count)))!;
   const zAirOf = (c: ChamberElements, w: number) => cx(c.rab, -1 / (w * c.cab));
   const yChamber = (c: ChamberElements, w: number) => {
     let y = inv(zAirOf(c, w));
@@ -502,17 +550,27 @@ function bandpassNetwork(
     return y;
   };
 
+  /** Per-element flows through a vent for a pressure difference dp: per port, or per PR of each group. */
+  const ventFlows = (v: Vent, dp: Complex, w: number) =>
+    v.kind === "port"
+      ? { port: scale(div(dp, zVentTotal(v, w)), 1 / v.port.count), prs: [] as Complex[] }
+      : { port: cx(0), prs: v.groups.map((g) => div(dp, zPrEach(g.m, w))) };
+
   return {
-    front,
-    rear,
+    /** The port of each chamber (null when that chamber has PRs or is closed). */
+    front: frontVent.kind === "port" ? frontVent.port : null,
+    rear: rearVent?.kind === "port" ? rearVent.port : null,
+    /** PR groups of each chamber (empty when it has a port or is closed). */
+    frontPrs: frontVent.kind === "pr" ? frontVent.groups : [],
+    rearPrs: rearVent?.kind === "pr" ? rearVent.groups : [],
     /** Chamber pressures for a unit total cone volume velocity (rear → front). */
     solve(w: number) {
-      let yF = add(yChamber(F, w), inv(zPortTotal(front, w)));
+      let yF = add(yChamber(F, w), inv(zVentTotal(frontVent, w)));
       let yR = yChamber(R, w);
       let yI = yIcl;
-      if (rear) {
-        if (series) yI = add(yI, inv(zPortTotal(rear, w)));
-        else yR = add(yR, inv(zPortTotal(rear, w)));
+      if (rearVent) {
+        if (series) yI = add(yI, inv(zVentTotal(rearVent, w)));
+        else yR = add(yR, inv(zVentTotal(rearVent, w)));
       }
       yF = add(yF, yI);
       yR = add(yR, yI);
@@ -527,13 +585,9 @@ function bandpassNetwork(
     flows(w: number, pF: Complex, pR: Complex) {
       // Air leaving the system = −(rate of compression of both air springs).
       const radiated = scale(add(div(pF, zAirOf(F, w)), div(pR, zAirOf(R, w))), -1);
-      const frontPortEach = scale(div(pF, zPortTotal(front, w)), 1 / front.count);
-      let rearPortEach = cx(0);
-      if (rear) {
-        const dp = series ? sub(pR, pF) : pR;
-        rearPortEach = scale(div(dp, zPortTotal(rear, w)), 1 / rear.count);
-      }
-      return { radiated, frontPortEach, rearPortEach };
+      const f = ventFlows(frontVent, pF, w);
+      const r = rearVent ? ventFlows(rearVent, series ? sub(pR, pF) : pR, w) : { port: cx(0), prs: [] as Complex[] };
+      return { radiated, frontPortEach: f.port, rearPortEach: r.port, frontPrEach: f.prs, rearPrEach: r.prs };
     },
   };
 }

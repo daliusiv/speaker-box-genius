@@ -258,9 +258,11 @@ export const DEFAULT_LOSSES = { ql: 10, qa: 100, qp: 100 } as const;
 /** One chamber of a bandpass box. */
 export interface BandpassChamber extends Losses {
   vb_l: number;
-  /** Omit for a closed chamber. */
+  /** The chamber's opening: a port, or passive radiators (`prs`). Omit both for a closed chamber. */
   port?: PortInput;
   portCount?: number;
+  /** Passive radiators instead of a port: one or more groups of identical PRs. */
+  prs?: PrGroup[];
 }
 
 /**
@@ -273,7 +275,8 @@ export interface BandpassChamber extends Losses {
 export interface BandpassInput {
   kind: "bandpass";
   rear: BandpassChamber;
-  front: BandpassChamber & { port: PortInput };
+  /** Must have a port or passive radiators: all the sound comes out of the front chamber. */
+  front: BandpassChamber;
   rearPortTo?: "outside" | "front";
   endCorrection?: number;
   /**

@@ -16,7 +16,7 @@ import {
   type SolveResult,
   type VolumeResult,
 } from "@sbg/engine";
-import type { AppState, DesignState, PortFields, PrDesign, Settings } from "./state.ts";
+import type { AppState, DesignState, PortFields, PrDesign, PrGroupState, Settings } from "./state.ts";
 
 /** One colour per design slot; distinguishable in light and dark mode. */
 export const PALETTE = ["#3b82f6", "#f97316", "#22c55e", "#a855f7", "#e11d48", "#0d9488", "#ca8a04", "#64748b"];
@@ -68,9 +68,14 @@ export function volumeFor(s: AppState, d: DesignState | undefined): VolumeResult
     shape: shapeOf(v),
     wall_mm: v.wall_mm,
     drivers: { count: s.drivers * (s.isobaric ? 2 : 1), displacement_l: v.driverDisp_l },
-    passiveRadiators: d?.kind === "pr" ? { count: prTotal(d), displacement_l: v.prDisp_l } : undefined,
+    passiveRadiators:
+      d?.kind === "pr"
+        ? { count: prTotal(d), displacement_l: v.prDisp_l }
+        : d?.kind === "bandpass" && d.order !== "4" && d.rearOpening === "pr"
+          ? { count: d.rearPrs.reduce((n, g) => n + g.count, 0), displacement_l: v.prDisp_l }
+          : undefined,
     ports:
-      d?.kind === "bandpass" && d.order !== "4"
+      d?.kind === "bandpass" && d.order !== "4" && d.rearOpening === "port"
         ? {
             count: d.rear.count,
             length_cm: d.rear.length_cm,
@@ -157,8 +162,16 @@ function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"]): En
     case "bandpass":
       return {
         kind: "bandpass",
-        rear: { vb_l: vb, port: d.order === "4" ? undefined : portOf(d.rear), portCount: d.rear.count, ql, qa, qp },
-        front: { vb_l: d.frontVb_l, port: portOf(d.front), portCount: d.front.count, ql, qa, qp },
+        rear:
+          d.order === "4"
+            ? { vb_l: vb, ql, qa }
+            : d.rearOpening === "pr"
+              ? { vb_l: vb, prs: groupsOf(d.rearPrs), ql, qa }
+              : { vb_l: vb, port: portOf(d.rear), portCount: d.rear.count, ql, qa, qp },
+        front:
+          d.frontOpening === "pr"
+            ? { vb_l: d.frontVb_l, prs: groupsOf(d.frontPrs), ql, qa }
+            : { vb_l: d.frontVb_l, port: portOf(d.front), portCount: d.front.count, ql, qa, qp },
         rearPortTo: d.order === "6s" ? "front" : "outside",
       };
   }
@@ -223,6 +236,30 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
 
 /** Number of passive radiators in a PR design, all groups together. */
 export const prTotal = (d: PrDesign) => d.count + d.extra.reduce((n, g) => n + g.count, 0);
+
+const groupsOf = (gs: PrGroupState[]) => gs.map((g) => ({ pr: g.params, count: g.count, addedMass_g: g.addedMass_g }));
+
+/** What each entry of a result's prGroups is, in the same order: for chart labels and CSV columns. */
+export function prGroupLabels(d: DesignState): string[] {
+  if (d.kind === "pr") return [d.prName, ...d.extra.map((g) => g.prName)];
+  if (d.kind !== "bandpass") return [];
+  const out: string[] = [];
+  const add = (where: string, gs: PrGroupState[]) =>
+    gs.forEach((g) => out.push(gs.length > 1 ? `${where} PRs, ${g.prName}` : `${where} PRs`));
+  if (d.frontOpening === "pr") add("front", d.frontPrs);
+  if (d.order !== "4" && d.rearOpening === "pr") add("rear", d.rearPrs);
+  return out;
+}
+
+/** Every PR Xmax used by a design, for redlines. */
+export function prXmaxes(d: DesignState): number[] {
+  if (d.kind === "pr") return [d.params.xmax_mm, ...d.extra.map((g) => g.params.xmax_mm)];
+  if (d.kind !== "bandpass") return [];
+  return [
+    ...(d.frontOpening === "pr" ? d.frontPrs : []),
+    ...(d.order !== "4" && d.rearOpening === "pr" ? d.rearPrs : []),
+  ].map((g) => g.params.xmax_mm);
+}
 
 /** PR groups of a design in engine form (first group + extras). */
 export const prGroupsOf = (d: PrDesign) => [

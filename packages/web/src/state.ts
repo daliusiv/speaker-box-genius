@@ -66,12 +66,21 @@ export type BandpassOrder = "4" | "6p" | "6s";
  * "4": closed rear, ported front. "6p": both ported to the outside.
  * "6s": series-tuned, the rear chamber's port opens into the front chamber.
  */
+/** What a bandpass chamber opens through. */
+export type ChamberOpening = "port" | "pr";
+
 export interface BandpassDesign extends DesignBase {
   kind: "bandpass";
   order: BandpassOrder;
   frontVb_l: number;
   front: PortFields;
   rear: PortFields;
+  /** Port or passive radiators, per chamber (the rear one only matters for 6th order). */
+  frontOpening: ChamberOpening;
+  rearOpening: ChamberOpening;
+  /** Passive radiator groups used when that chamber's opening is "pr" (at least one). */
+  frontPrs: PrGroupState[];
+  rearPrs: PrGroupState[];
 }
 
 export type DesignState = SealedDesign | VentedDesign | PrDesign | BandpassDesign;
@@ -196,6 +205,10 @@ export function newDesign(kind: DesignKind, existing: DesignState[]): DesignStat
         frontVb_l: 25,
         front: { shape: "round", diameter_cm: 10, slotWidth_cm: 20, slotHeight_cm: 5, length_cm: 25, count: 1, targetFb: 50 },
         rear: { shape: "round", diameter_cm: 7.5, slotWidth_cm: 15, slotHeight_cm: 4, length_cm: 30, count: 1, targetFb: 35 },
+        frontOpening: "port",
+        rearOpening: "port",
+        frontPrs: [{ prName: "Example Audio EX10-PR (fictional)", count: 1, addedMass_g: 0, params: { ...EXAMPLE_PR } }],
+        rearPrs: [{ prName: "Example Audio EX10-PR (fictional)", count: 1, addedMass_g: 0, params: { ...EXAMPLE_PR } }],
       };
     case "pr":
       return {
@@ -320,28 +333,38 @@ function migrate(raw: Raw): Raw {
   return raw;
 }
 
+/** Passive radiator groups from a share link or saved project, with anything odd fixed. */
+function prGroupsFrom(raw: unknown): PrGroupState[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((g: unknown) => g && typeof g === "object")
+    .map((g: Raw) => ({
+      prName: typeof g.prName === "string" ? g.prName : "Passive radiator",
+      count: Number.isFinite(g.count) && g.count >= 1 ? Math.round(g.count) : 1,
+      addedMass_g: Number.isFinite(g.addedMass_g) && g.addedMass_g >= 0 ? g.addedMass_g : 0,
+      params: { ...EXAMPLE_PR, ...(g.params ?? {}) },
+    }));
+}
+
 function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
   if (!["sealed", "vented", "pr", "bandpass"].includes(d?.kind)) return null;
   const base = newDesign(d.kind, all);
   const merged = { ...base, ...d } as DesignState;
   if (merged.kind === "pr") {
     merged.params = { ...(base as PrDesign).params, ...(d.params ?? {}) };
-    merged.extra = Array.isArray(d.extra)
-      ? d.extra
-          .filter((g: unknown) => g && typeof g === "object")
-          .map((g: Raw) => ({
-            prName: typeof g.prName === "string" ? g.prName : "Passive radiator",
-            count: Number.isFinite(g.count) && g.count >= 1 ? Math.round(g.count) : 1,
-            addedMass_g: Number.isFinite(g.addedMass_g) && g.addedMass_g >= 0 ? g.addedMass_g : 0,
-            params: { ...EXAMPLE_PR, ...(g.params ?? {}) },
-          }))
-      : [];
+    merged.extra = prGroupsFrom(d.extra);
   }
   if (merged.kind === "bandpass") {
     const b = base as BandpassDesign;
     merged.front = { ...b.front, ...(d.front ?? {}) };
     merged.rear = { ...b.rear, ...(d.rear ?? {}) };
     if (!["4", "6p", "6s"].includes(merged.order)) merged.order = b.order;
+    if (merged.frontOpening !== "pr") merged.frontOpening = "port";
+    if (merged.rearOpening !== "pr") merged.rearOpening = "port";
+    const fp = prGroupsFrom(d.frontPrs);
+    const rp = prGroupsFrom(d.rearPrs);
+    merged.frontPrs = fp.length ? fp : b.frontPrs;
+    merged.rearPrs = rp.length ? rp : b.rearPrs;
   }
   if (typeof merged.id !== "string" || all.some((x) => x.id === merged.id)) merged.id = base.id;
   return merged;

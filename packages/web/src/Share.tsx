@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { PORT_LIMIT, prPeak, type Design } from "./sim.ts";
+import { PORT_LIMIT, prGroupLabels, prPeak, type Design } from "./sim.ts";
 import { fmtQ } from "./units.ts";
 import type { AppState } from "./state.ts";
 
@@ -104,10 +104,9 @@ export function curvesCsv(state: AppState, designs: Design[]): string {
     const add = (what: string, data: Float64Array | null) => data && cols.push({ head: `${d.name}: ${what}`, data });
     add("SPL (dB)", r.spl);
     add("Cone excursion (mm peak)", r.excursionMm);
-    if (r.prGroups && r.prGroups.length > 1 && d.kind === "pr") {
-      r.prGroups.forEach((g, k) =>
-        add(`PR excursion, ${k === 0 ? d.prName : (d.extra[k - 1]?.prName ?? `group ${k + 1}`)} (mm peak)`, g.excursionMm),
-      );
+    if (r.prGroups && (r.prGroups.length > 1 || d.kind === "bandpass")) {
+      const names = prGroupLabels(d);
+      r.prGroups.forEach((g, k) => add(`PR excursion, ${names[k] ?? `group ${k + 1}`} (mm peak)`, g.excursionMm));
     } else add("PR excursion (mm peak)", r.prExcursionMm);
     add(d.kind === "bandpass" ? `Front port velocity (m/s ${vel})` : `Port velocity (m/s ${vel})`, r.portVelocity);
     add(`Rear port velocity (m/s ${vel})`, r.rearPortVelocity);

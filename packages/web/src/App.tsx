@@ -25,7 +25,21 @@ import { DriverBrowser } from "./Library.tsx";
 import { PwaStatus } from "./Pwa.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
-import { airOf, alignmentDriver, colorOf, dvcFactors, PORT_LIMIT, prPeak, roomGainOf, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
+import {
+  airOf,
+  alignmentDriver,
+  colorOf,
+  dvcFactors,
+  PORT_LIMIT,
+  prGroupLabels,
+  prPeak,
+  prXmaxes,
+  roomGainOf,
+  runDesigns,
+  solveDriver,
+  vbOf,
+  type Design,
+} from "./sim.ts";
 import { RoomGainPanel } from "./RoomGain.tsx";
 import { AddDesign, DesignCard } from "./Designs.tsx";
 import { ShareMenu } from "./Share.tsx";
@@ -279,23 +293,23 @@ export function App() {
       volume: s.volume.link === d.id ? { ...s.volume, link: "none" } : s.volume,
     }));
 
-  const prDesigns = designs.filter((d) => d.design.kind === "pr");
-  const prLimits = [
-    ...new Set(prDesigns.flatMap((d) => (d.design.kind === "pr" ? [d.design.params.xmax_mm, ...d.design.extra.map((g) => g.params.xmax_mm)] : []))),
-  ].map((x) => ({
+  // Every design with passive radiators (PR boxes, and bandpass chambers that use them).
+  const prDesigns = designs.filter((d) => d.result.prGroups);
+  const prLimits = [...new Set(prDesigns.flatMap((d) => prXmaxes(d.design)))].map((x) => ({
     value: x,
     label: `PR Xmax ${x} mm`,
     color: LIMIT_RED,
   }));
   // One curve per PR group; groups after the first are dashed and named after their PR.
-  const prSeries: Series[] = prDesigns.flatMap((d) =>
-    (d.result.prGroups ?? []).map((g, k) => ({
-      label: k === 0 ? d.design.name : `${d.design.name}: ${d.design.kind === "pr" ? (d.design.extra[k - 1]?.prName ?? `group ${k + 1}`) : ""}`,
+  const prSeries: Series[] = prDesigns.flatMap((d) => {
+    const names = prGroupLabels(d.design);
+    return (d.result.prGroups ?? []).map((g, k) => ({
+      label: d.design.kind === "pr" && k === 0 ? d.design.name : `${d.design.name}: ${names[k] ?? `group ${k + 1}`}`,
       color: d.color,
       dash: k === 0 ? undefined : k === 1 ? "6 3" : "2 3",
       y: g.excursionMm,
-    })),
-  );
+    }));
+  });
 
   return (
     <UnitsContext.Provider value={state.settings.units}>
@@ -671,7 +685,7 @@ export function App() {
                 yMin={0}
               />
             )}
-            {designs.some((d) => d.design.kind === "vented" || d.design.kind === "bandpass") && (
+            {designs.some((d) => d.result.portVelocity || d.result.rearPortVelocity) && (
               <LogChart
                 title={`Port air velocity (${state.settings.velocity === "rms" ? "RMS" : "peak"})`}
                 unit="m/s"
@@ -816,7 +830,7 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
                 <td className={x !== null && x > state.xmax_mm ? "over" : ""}>{fmt(x)} mm</td>
                 <td
                   className={xpr?.over ? "over" : ""}
-                  title={d.kind === "pr" && d.extra.length > 0 ? "The PR group closest to (or furthest past) its own Xmax" : undefined}
+                  title={(r.prGroups?.length ?? 0) > 1 ? "The PR group closest to (or furthest past) its own Xmax" : undefined}
                 >
                   {xpr === null ? "–" : `${fmt(xpr.mm)} mm`}
                 </td>

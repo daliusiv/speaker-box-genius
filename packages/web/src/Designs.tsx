@@ -17,7 +17,17 @@ import { PassiveRadiatorBrowser } from "./Library.tsx";
 import { loadPassiveRadiator, type DbIndex } from "./library.ts";
 import { KIND_LABEL, PORT_LIMIT, portOf, prGroupsOf } from "./sim.ts";
 import { useUnits } from "./units.ts";
-import type { BandpassDesign, BandpassOrder, DesignKind, DesignState, PortFields, PrDesign, PrGroupState, VentedDesign } from "./state.ts";
+import type {
+  BandpassDesign,
+  BandpassOrder,
+  ChamberOpening,
+  DesignKind,
+  DesignState,
+  PortFields,
+  PrDesign,
+  PrGroupState,
+  VentedDesign,
+} from "./state.ts";
 
 const f1 = (v: number) => (Number.isFinite(v) ? v.toFixed(1) : "–");
 
@@ -369,35 +379,14 @@ function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacemen
       </div>
 
       {pr.extra.map((g, i) => (
-        <div className="pr-group" key={i}>
-          <div className="pr-group-head">
-            <h3>Passive radiator group {i + 2}</h3>
-            <button
-              type="button"
-              className="icon"
-              aria-label={`Remove passive radiator group ${i + 2}`}
-              title="Remove this group"
-              onClick={() => set({ extra: pr.extra.filter((_, k) => k !== i) })}
-            >
-              ×
-            </button>
-          </div>
-          <PassiveRadiatorBrowser
-            rows={p.db?.passiveRadiators}
-            onPick={(id) =>
-              loadPassiveRadiator(id).then(
-                ({ name, params }) => setGroup(i, { prName: name, params }),
-                () => alert("Couldn't load that passive radiator."),
-              )
-            }
-          />
-          <p className="pr-name">{g.prName}</p>
-          <div className="fields">
-            <Num label="PRs" value={g.count} onChange={(v) => setGroup(i, { count: Math.max(1, Math.round(v)) })} />
-            <Num label="Added mass" unit="g" value={g.addedMass_g} min={0} onChange={(v) => setGroup(i, { addedMass_g: v })} />
-            <PrParamFields params={g.params} onChange={(patch) => setGroup(i, { params: { ...g.params, ...patch } })} />
-          </div>
-        </div>
+        <PrGroupCard
+          key={i}
+          title={`Passive radiator group ${i + 2}`}
+          group={g}
+          db={p.db}
+          onChange={(patch) => setGroup(i, patch)}
+          onRemove={() => set({ extra: pr.extra.filter((_, k) => k !== i) })}
+        />
       ))}
       <div className="add-design">
         <button
@@ -454,6 +443,119 @@ function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacemen
         {t.mixed &&
           " With mixed PRs each group gets its own excursion curve and Xmax line; the tuning helpers adjust group 1's added mass."}
       </p>
+    </>
+  );
+}
+
+/** One group of identical passive radiators: database picker, count, added mass and parameters. */
+function PrGroupCard(props: {
+  title?: string;
+  group: PrGroupState;
+  db: DbIndex | null;
+  onChange: (patch: Partial<PrGroupState>) => void;
+  onRemove?: () => void;
+}) {
+  const g = props.group;
+  return (
+    <div className={props.title ? "pr-group" : undefined}>
+      {props.title && (
+        <div className="pr-group-head">
+          <h3>{props.title}</h3>
+          {props.onRemove && (
+            <button type="button" className="icon" aria-label={`Remove ${props.title}`} title="Remove this group" onClick={props.onRemove}>
+              ×
+            </button>
+          )}
+        </div>
+      )}
+      <PassiveRadiatorBrowser
+        rows={props.db?.passiveRadiators}
+        onPick={(id) =>
+          loadPassiveRadiator(id).then(
+            ({ name, params }) => props.onChange({ prName: name, params }),
+            () => alert("Couldn't load that passive radiator."),
+          )
+        }
+      />
+      <p className="pr-name">{g.prName}</p>
+      <div className="fields">
+        <Num label="PRs" value={g.count} onChange={(v) => props.onChange({ count: Math.max(1, Math.round(v)) })} />
+        <Num label="Added mass" unit="g" value={g.addedMass_g} min={0} onChange={(v) => props.onChange({ addedMass_g: v })} />
+        <PrParamFields params={g.params} onChange={(patch) => props.onChange({ params: { ...g.params, ...patch } })} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A bandpass chamber that opens through passive radiators: one or more groups,
+ * the chamber's tuning, and a helper that sets group 1's added mass.
+ */
+function ChamberPrs(props: {
+  groups: PrGroupState[];
+  vb_l: number;
+  air: Air;
+  target: number;
+  db: DbIndex | null;
+  onTarget: (fb: number) => void;
+  onChange: (groups: PrGroupState[]) => void;
+}) {
+  const [msg, setMsg] = useState("");
+  const gs = props.groups;
+  const engine = gs.map((g) => ({ pr: g.params, count: g.count, addedMass_g: g.addedMass_g }));
+  const mixed = gs.length > 1;
+  const fb = mixed ? prGroupsFb(props.vb_l, engine, props.air) : prFb(props.vb_l, gs[0]!.params, gs[0]!.count, gs[0]!.addedMass_g, props.air);
+  const setGroup = (i: number, patch: Partial<PrGroupState>) => props.onChange(gs.map((g, k) => (k === i ? { ...g, ...patch } : g)));
+  const tune = () => {
+    const add = mixed
+      ? prGroupsAddedMassForFb(props.vb_l, engine, props.target, 0, props.air)
+      : prAddedMassForFb(props.vb_l, gs[0]!.params, props.target, gs[0]!.count, props.air);
+    if (add === Infinity) {
+      return setMsg(
+        `Added mass on group 1 can't bring this chamber down to ${props.target} Hz: past a point those PRs stop moving and the other group sets the tuning.`,
+      );
+    }
+    if (add < 0) return setMsg(`With no added mass these PRs already tune this chamber below ${props.target} Hz. Use a lighter or stiffer PR, fewer PRs, or a smaller chamber.`);
+    setMsg("");
+    setGroup(0, { addedMass_g: Math.round(add) });
+  };
+  return (
+    <>
+      {gs.map((g, i) => (
+        <PrGroupCard
+          key={i}
+          title={mixed ? `Group ${i + 1}` : undefined}
+          group={g}
+          db={props.db}
+          onChange={(patch) => setGroup(i, patch)}
+          onRemove={mixed ? () => props.onChange(gs.filter((_, k) => k !== i)) : undefined}
+        />
+      ))}
+      <div className="fields">
+        <Fixed
+          label={mixed ? "Fb ≈" : "Fb"}
+          unit="Hz"
+          value={f1(fb)}
+          title={mixed ? "Approximate tuning of all this chamber's PRs together; the charts show the real behaviour." : "Tuning of this chamber's PRs"}
+        />
+      </div>
+      <div className="add-design">
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => props.onChange([...gs, { ...gs[gs.length - 1]!, count: 1, params: { ...gs[gs.length - 1]!.params } }])}
+        >
+          + Add a different passive radiator
+        </button>
+      </div>
+      <TuneRow
+        target={props.target}
+        onTarget={props.onTarget}
+        button="Set added mass"
+        title={mixed ? "Sets the added mass on group 1's PRs" : undefined}
+        onApply={tune}
+      />
+      {msg && <p className="warn">{msg}</p>}
     </>
   );
 }
@@ -523,15 +625,21 @@ function PortEditor(props: {
 }
 
 const BP_ORDERS: { value: BandpassOrder; text: string }[] = [
-  { value: "4", text: "4th order (closed rear, ported front)" },
-  { value: "6p", text: "6th order (both chambers ported out)" },
-  { value: "6s", text: "6th order series-tuned (rear ports into front)" },
+  { value: "4", text: "4th order (closed rear, open front)" },
+  { value: "6p", text: "6th order (both chambers open to the outside)" },
+  { value: "6s", text: "6th order series-tuned (rear opens into front)" },
 ];
 
-function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext }) {
+const OPENINGS: { value: ChamberOpening; text: string }[] = [
+  { value: "port", text: "Port" },
+  { value: "pr", text: "Passive radiators" },
+];
+
+function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; db: DbIndex | null }) {
   const b = p.design;
   const set = (patch: Partial<BandpassDesign>) => p.onChange({ ...b, ...patch });
-  const rearPorted = b.order !== "4";
+  const rearOpen = b.order !== "4";
+  const into = b.order === "6s" ? "into the front chamber" : "to the outside";
   return (
     <>
       <div className="fields">
@@ -539,24 +647,61 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext })
         <VbField label="Rear Vb" vb_l={p.vb_l} value={b.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
         <Num label="Front Vb" q="vol" value={b.frontVb_l} onChange={(frontVb_l) => set({ frontVb_l })} />
       </div>
-      <h3>Front chamber port (to the outside)</h3>
-      <PortEditor port={b.front} vb_l={b.frontVb_l} air={p.air} onChange={(front) => set({ front })} />
-      <PortChecks v={b.front} vb_l={b.frontVb_l} air={p.air} ctx={{ portVelocity: p.portCtx.portVelocity, internalMax_cm: null }} />
-      {rearPorted && (
+      <h3>Front chamber (to the outside)</h3>
+      <div className="fields">
+        <Select label="Opening" value={b.frontOpening} options={OPENINGS} onChange={(frontOpening) => set({ frontOpening })} />
+      </div>
+      {b.frontOpening === "port" ? (
         <>
-          <h3>{b.order === "6s" ? "Rear chamber port (into the front chamber)" : "Rear chamber port (to the outside)"}</h3>
-          <PortEditor port={b.rear} vb_l={p.vb_l} air={p.air} onChange={(rear) => set({ rear })} />
-          <PortChecks
-            v={b.rear}
-            vb_l={p.vb_l}
-            air={p.air}
-            ctx={{ portVelocity: p.portCtx.rearPortVelocity, internalMax_cm: p.portCtx.internalMax_cm }}
-          />
+          <PortEditor port={b.front} vb_l={b.frontVb_l} air={p.air} onChange={(front) => set({ front })} />
+          <PortChecks v={b.front} vb_l={b.frontVb_l} air={p.air} ctx={{ portVelocity: p.portCtx.portVelocity, internalMax_cm: null }} />
+        </>
+      ) : (
+        <ChamberPrs
+          groups={b.frontPrs}
+          vb_l={b.frontVb_l}
+          air={p.air}
+          target={b.front.targetFb}
+          db={p.db}
+          onTarget={(targetFb) => set({ front: { ...b.front, targetFb } })}
+          onChange={(frontPrs) => set({ frontPrs })}
+        />
+      )}
+      {rearOpen && (
+        <>
+          <h3>Rear chamber ({into})</h3>
+          <div className="fields">
+            <Select label="Opening" value={b.rearOpening} options={OPENINGS} onChange={(rearOpening) => set({ rearOpening })} />
+          </div>
+          {b.rearOpening === "port" ? (
+            <>
+              <PortEditor port={b.rear} vb_l={p.vb_l} air={p.air} onChange={(rear) => set({ rear })} />
+              <PortChecks
+                v={b.rear}
+                vb_l={p.vb_l}
+                air={p.air}
+                ctx={{ portVelocity: p.portCtx.rearPortVelocity, internalMax_cm: p.portCtx.internalMax_cm }}
+              />
+            </>
+          ) : (
+            <ChamberPrs
+              groups={b.rearPrs}
+              vb_l={p.vb_l}
+              air={p.air}
+              target={b.rear.targetFb}
+              db={p.db}
+              onTarget={(targetFb) => set({ rear: { ...b.rear, targetFb } })}
+              onChange={(rearPrs) => set({ rearPrs })}
+            />
+          )}
         </>
       )}
       <p className="hint">
-        The driver sits in the wall between the chambers{rearPorted ? "" : ", firing into the ported front chamber"}. All the
-        sound comes out of the {rearPorted && b.order === "6p" ? "ports" : "front port"}, so expect a band-limited response.
+        The driver sits in the wall between the chambers{rearOpen ? "" : ", firing into the front chamber"}. All the sound
+        comes out of the {rearOpen && b.order === "6p" ? "two chambers' openings" : "front chamber's opening"}, so expect a
+        band-limited response.
+        {(b.frontOpening === "pr" || (rearOpen && b.rearOpening === "pr")) &&
+          " Passive radiators replace a port's air mass with a cone: no port noise, and a small box can tune low."}
         {p.linked && " The volume calculator feeds the rear chamber."}
       </p>
     </>
@@ -599,7 +744,9 @@ export function DesignCard(props: {
     >
       {d.kind === "sealed" && <SealedBody {...common} design={d} onChange={props.onChange} />}
       {d.kind === "vented" && <VentedBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} />}
-      {d.kind === "bandpass" && <BandpassBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} />}
+      {d.kind === "bandpass" && (
+        <BandpassBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} db={props.db} />
+      )}
       {d.kind === "pr" && (
         <PrBody {...common} design={d} onChange={props.onChange} db={props.db} onPrDisplacement={props.onPrDisplacement} />
       )}
