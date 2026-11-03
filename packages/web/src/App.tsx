@@ -9,6 +9,7 @@ import {
   type SimulationResult,
 } from "@sbg/engine";
 import { LogChart, type Series } from "./LogChart.tsx";
+import { useUndoable } from "./useUndoable.ts";
 import {
   DEFAULT_STATE,
   decodeStateAny,
@@ -55,7 +56,35 @@ import { submitDriverUrl } from "./submit.ts";
 const LIMIT_RED = "#dc2626";
 
 export function App(props: { initial: AppState | null }) {
-  const [state, setState] = useState<AppState>(() => props.initial ?? DEFAULT_STATE);
+  const { state, setState, undo, redo, canUndo, canRedo } = useUndoable<AppState>(() => props.initial ?? DEFAULT_STATE);
+  /** A discrete action (load, import, delete…): its own undo step, never merged with typing around it. */
+  const setStep = (v: AppState | ((s: AppState) => AppState)) => setState(v, { step: true });
+  // A short message with an Undo button after changes that replace or remove work.
+  const [toast, setToast] = useState<{ text: string; id: number } | null>(null);
+  const notify = (text: string) => setToast({ text, id: Date.now() });
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 7000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  // Ctrl/⌘+Z undoes, Ctrl/⌘+Shift+Z or Ctrl+Y redoes. The paste box keeps the browser's own text undo.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+      const k = e.key.toLowerCase();
+      if (k !== "z" && k !== "y") return;
+      if (e.target instanceof HTMLTextAreaElement) return;
+      e.preventDefault();
+      // Let a number box being edited commit its text first, so undo takes back the whole edit.
+      (document.activeElement as HTMLElement | null)?.blur?.();
+      if (k === "y" || e.shiftKey) redo();
+      else undo();
+      setToast(null);
+    };
+    addEventListener("keydown", onKey);
+    return () => removeEventListener("keydown", onKey);
+  }, [undo, redo]);
   // The short link for the current state, once compressed (compression is asynchronous).
   const link = useRef<{ state: AppState; hash: string } | null>(null);
   const [db, setDb] = useState<DbIndex | null>(null);
@@ -89,7 +118,10 @@ export function App(props: { initial: AppState | null }) {
     const onHash = () => {
       // Our own replaceState doesn't fire hashchange; this is a pasted or edited link.
       decodeStateAny(location.hash).then((s) => {
-        if (s) setState(s);
+        if (s) {
+          setStep(s);
+          notify("Opened the design from the link.");
+        }
       });
     };
     addEventListener("hashchange", onHash);
@@ -114,7 +146,8 @@ export function App(props: { initial: AppState | null }) {
       const text = new TextDecoder("latin1").decode(await file.arrayBuffer());
       if (/^\[Box\]/im.test(text)) return importWpr(file.name, text);
       const d = parseWdr(text);
-      setState((s) => ({
+      notify(`Imported ${file.name}.`);
+      setStep((s) => ({
         ...s,
         driverName: [d.brand, d.model].filter(Boolean).join(" ") || file.name.replace(/\.wdr$/i, ""),
         driverBrand: d.brand,
@@ -143,7 +176,8 @@ export function App(props: { initial: AppState | null }) {
       const p = parseWpr(text);
       const d = p.driver;
       const label = [d.brand, d.model].filter(Boolean).join(" ") || fileName.replace(/\.wpr$/i, "");
-      setState((s) => {
+      notify(`Imported ${fileName}.`);
+      setStep((s) => {
         let design: DesignState | null = null;
         if (p.box.type === "vented" && p.port) {
           const v = newDesign("vented", s.designs);
@@ -307,21 +341,23 @@ export function App(props: { initial: AppState | null }) {
   const updateDesign = (d: DesignState) =>
     setState((s) => ({ ...s, designs: s.designs.map((x) => (x.id === d.id ? d : x)) }));
   const addDesign = (kind: DesignState["kind"]) =>
-    setState((s) => (s.designs.length >= MAX_DESIGNS ? s : { ...s, designs: [...s.designs, newDesign(kind, s.designs)] }));
+    setStep((s) => (s.designs.length >= MAX_DESIGNS ? s : { ...s, designs: [...s.designs, newDesign(kind, s.designs)] }));
   const duplicateDesign = (d: DesignState) =>
-    setState((s) => {
+    setStep((s) => {
       if (s.designs.length >= MAX_DESIGNS) return s;
       const copy = { ...structuredClone(d), id: newId(s.designs), name: `${d.name} (copy)` };
       const i = s.designs.findIndex((x) => x.id === d.id);
       return { ...s, designs: [...s.designs.slice(0, i + 1), copy, ...s.designs.slice(i + 1)] };
     });
-  const deleteDesign = (d: DesignState) =>
-    setState((s) => ({
+  const deleteDesign = (d: DesignState) => {
+    setStep((s) => ({
       ...s,
       eq: s.eq.map((e) => (e.target === d.id ? { ...e, target: "all", on: false } : e)),
       designs: s.designs.filter((x) => x.id !== d.id),
       volume: s.volume.link === d.id ? { ...s.volume, link: "none" } : s.volume,
     }));
+    notify(`Deleted “${d.name}”.`);
+  };
 
   // Every design with passive radiators (PR boxes, and bandpass chambers that use them).
   const prDesigns = designs.filter((d) => d.result.prGroups);
@@ -364,7 +400,21 @@ export function App(props: { initial: AppState | null }) {
             />
             <b>{state.power} W</b>
           </label>
-          <ProjectsMenu state={state} onOpen={(s) => setState(s)} />
+          <div className="undo-redo" role="group" aria-label="History">
+            <button className="secondary icon" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo (Ctrl+Z)">
+              ↶
+            </button>
+            <button className="secondary icon" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo (Ctrl+Shift+Z)">
+              ↷
+            </button>
+          </div>
+          <ProjectsMenu
+            state={state}
+            onOpen={(s) => {
+              setStep(s);
+              notify(`Opened “${s.driverName}”.`);
+            }}
+          />
           <ShareMenu state={state} designs={designs} shareUrl={shareUrl} />
           <PwaStatus />
         </div>
@@ -377,7 +427,7 @@ export function App(props: { initial: AppState | null }) {
             onPick={(id) =>
               loadDriver(id).then(
                 (d) =>
-                  setState((s) => ({
+                  setStep((s) => ({
                     ...s,
                     driverName: d.name,
                     driverBrand: d.brand,
@@ -411,7 +461,7 @@ export function App(props: { initial: AppState | null }) {
             pasting={pasting}
             onPastingChange={setPasting}
             onPaste={(ts, x) =>
-              setState((s) => ({
+              setStep((s) => ({
                 ...s,
                 driverName: "Pasted driver",
                 driverBrand: "",
@@ -428,7 +478,10 @@ export function App(props: { initial: AppState | null }) {
             <DriverMenu
               pasting={pasting}
               onPaste={() => setPasting(!pasting)}
-              onClear={() => set("ts", {})}
+              onClear={() => {
+                setStep((s) => ({ ...s, ts: {} }));
+                notify("Cleared the T/S values.");
+              }}
               onImport={() => wdrInput.current?.click()}
               onExport={exportWdr}
               submitUrl={submitDriverUrl(state)}
@@ -558,7 +611,7 @@ export function App(props: { initial: AppState | null }) {
           onMeasurement={setMeasurement}
           sd_cm2={solved.values.sd_cm2}
           onUse={(ts, coil) =>
-            setState((s) => {
+            setStep((s) => {
               // Keep Vas / Sd the user had, unless the measurement provides them; drop values it supersedes.
               const keep: typeof s.ts = {};
               if (s.ts.vas_l !== undefined && ts.mms_g === undefined) keep.vas_l = s.ts.vas_l;
@@ -807,6 +860,25 @@ export function App(props: { initial: AppState | null }) {
           )}
         </footer>
       </main>
+      {toast && (
+        <div className="toast" role="status" key={toast.id}>
+          <span>{toast.text}</span>
+          {canUndo && (
+            <button
+              className="link"
+              onClick={() => {
+                undo();
+                setToast(null);
+              }}
+            >
+              Undo
+            </button>
+          )}
+          <button className="link toast-close" onClick={() => setToast(null)} aria-label="Dismiss">
+            ×
+          </button>
+        </div>
+      )}
     </div>
     </UnitsContext.Provider>
   );
