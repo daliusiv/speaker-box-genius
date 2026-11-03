@@ -871,8 +871,6 @@ export function App(props: { initial: AppState | null }) {
               <LogChart
                 forum
                 hidden={chartTab !== "pr"}
-                chartTab
-                pr
                 title="Passive radiator excursion (peak, one way)"
                 unit="mm"
                 freq={freq}
@@ -885,8 +883,6 @@ export function App(props: { initial: AppState | null }) {
               <LogChart
                 forum
                 hidden={chartTab !== "port"}
-                chartTab
-                port
                 title={`Port air velocity (${state.settings.velocity === "rms" ? "RMS" : "peak"})`}
                 unit="m/s"
                 freq={freq}
@@ -916,8 +912,6 @@ export function App(props: { initial: AppState | null }) {
             />
             <LogChart
               hidden={chartTab !== "impedance"}
-              chartTab
-              impedance
               title="Impedance"
               unit="Ω"
               freq={freq}
@@ -939,8 +933,6 @@ export function App(props: { initial: AppState | null }) {
             />
             <LogChart
               hidden={chartTab !== "delay"}
-              chartTab
-              delay
               title="Group delay"
               unit="ms"
               freq={freq}
