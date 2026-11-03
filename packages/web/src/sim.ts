@@ -127,11 +127,12 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
     vas_l: t.vas_l!,
     re: t.re!,
     sd_cm2: t.sd_cm2!,
-    le_mh: s.le_mh,
+    le_mh: s.settings.inductance ? s.le_mh : 0,
     xmax_mm: s.xmax_mm,
     pe_w: s.pe_w,
   };
   const opts = {
+    rg: s.settings.rg,
     power: s.power,
     drivers: s.drivers,
     fMin: 10,

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   impedanceMagnitude,
   parseWdr,
+  parseWpr,
   resampleMagnitude,
   writeWdr,
   type HighPassType,
@@ -73,6 +74,7 @@ export function App() {
     try {
       // WinISD saves in the Windows code page; latin1 keeps most names intact.
       const text = new TextDecoder("latin1").decode(await file.arrayBuffer());
+      if (/^\[Box\]/im.test(text)) return importWpr(file.name, text);
       const d = parseWdr(text);
       setState((s) => ({
         ...s,
@@ -88,6 +90,59 @@ export function App() {
       setWdrMsg(`Imported ${file.name}.`);
     } catch (e) {
       setWdrMsg(`Couldn't read ${file.name}: ${(e as Error).message}`);
+    }
+  };
+
+  /** A WinISD project: driver, settings that affect the result, and the box as a new design. */
+  const importWpr = (fileName: string, text: string) => {
+    try {
+      const p = parseWpr(text);
+      const d = p.driver;
+      const label = [d.brand, d.model].filter(Boolean).join(" ") || fileName.replace(/\.wpr$/i, "");
+      setState((s) => {
+        let design: DesignState | null = null;
+        if (p.box.type === "vented" && p.port) {
+          const v = newDesign("vented", s.designs);
+          if (v.kind === "vented") {
+            design = {
+              ...v,
+              name: `WinISD: ${fileName.replace(/\.wpr$/i, "")}`,
+              vb_l: Number(p.box.vb_l.toFixed(3)),
+              shape: "round",
+              diameter_cm: Number(p.port.diameter_cm.toFixed(3)),
+              length_cm: Number(p.port.length_cm.toFixed(3)),
+              count: p.port.count,
+              targetFb: Number((p.box.fb ?? v.targetFb).toFixed(2)),
+            };
+          }
+        } else if (p.box.vb_l > 0) {
+          const sd = newDesign("sealed", s.designs);
+          design = { ...sd, name: `WinISD: ${fileName.replace(/\.wpr$/i, "")}`, vb_l: Number(p.box.vb_l.toFixed(3)) };
+        }
+        const designs = design && s.designs.length < MAX_DESIGNS ? [...s.designs, design] : s.designs;
+        return {
+          ...s,
+          driverName: label,
+          driverBrand: d.brand,
+          nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
+          ts: d.ts,
+          le_mh: d.le_mh ?? 0,
+          xmax_mm: d.xmax_mm ?? s.xmax_mm,
+          pe_w: d.pe_w ?? s.pe_w,
+          power: Number(p.power.toFixed(2)),
+          settings: { ...s.settings, air: "winisd", rg: p.rg, inductance: p.simulateLe },
+          designs,
+          volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: Math.round(d.displacement_l * 100) / 100 } : s.volume,
+        };
+      });
+      const lossNote =
+        p.box.ql !== 10 || p.box.qa !== 100 || p.box.qp !== 100
+          ? ` Note: the project uses losses Ql ${p.box.ql}, Qa ${p.box.qa}, Qp ${p.box.qp}; the app uses 10 / 100 / 100.`
+          : "";
+      const boxNote = p.box.type === "other" ? " This box type isn't supported yet, so only the driver was imported." : "";
+      setWdrMsg(`Imported WinISD project ${fileName} with its power, amplifier resistance and air settings.${boxNote}${lossNote}`);
+    } catch (e) {
+      setWdrMsg(`Couldn't read ${fileName}: ${(e as Error).message}`);
     }
   };
 
@@ -220,7 +275,7 @@ export function App() {
           />
           <div className="row">
             <button className="secondary" onClick={() => wdrInput.current?.click()}>
-              Import WinISD .wdr
+              Import WinISD .wdr / .wpr
             </button>
             <button className="secondary" onClick={exportWdr}>
               Export .wdr
@@ -237,7 +292,7 @@ export function App() {
             <input
               ref={wdrInput}
               type="file"
-              accept=".wdr,.txt"
+              accept=".wdr,.wpr,.txt"
               hidden
               onChange={(e) => {
                 const f = e.currentTarget.files?.[0];
@@ -350,6 +405,22 @@ export function App() {
               ]}
               onChange={(air) => set("settings", { ...state.settings, air })}
             />
+            <Num
+              label="Amp + cable"
+              unit="Ω"
+              value={state.settings.rg}
+              min={0}
+              onChange={(rg) => set("settings", { ...state.settings, rg })}
+            />
+            <Select<"yes" | "no">
+              label="Include Le"
+              value={state.settings.inductance ? "yes" : "no"}
+              options={[
+                { value: "yes", text: "Yes (more realistic above ~100 Hz)" },
+                { value: "no", text: "No (WinISD's default)" },
+              ]}
+              onChange={(x) => set("settings", { ...state.settings, inductance: x === "yes" })}
+            />
             <Select<"peak" | "rms">
               label="Port speed"
               value={state.settings.velocity}
@@ -361,7 +432,8 @@ export function App() {
             />
           </div>
           <p className="hint">
-            For like-for-like checks against WinISD, choose its air values. The {PORT_LIMIT} m/s chuffing line applies to
+            For like-for-like checks against WinISD, choose its air values, its amplifier resistance (Signal tab,
+            Rg) and leave out Le, or simply import the WinISD project (.wpr). The {PORT_LIMIT} m/s chuffing line applies to
             whichever port-speed convention you pick.
           </p>
         </Card>

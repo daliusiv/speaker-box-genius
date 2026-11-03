@@ -51,6 +51,10 @@ export interface Settings {
   air: "standard" | "winisd";
   /** Port air velocity shown as peak (default) or RMS. */
   velocity: "peak" | "rms";
+  /** Amplifier output + cable resistance (Ω). */
+  rg: number;
+  /** Include voice-coil inductance (Le) in the simulation. WinISD leaves it out by default. */
+  inductance: boolean;
 }
 
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
@@ -158,7 +162,7 @@ export const DEFAULT_STATE: AppState = {
   power: 100,
   drivers: 1,
   highPass: { on: false, type: "butterworth", order: 2, freq: 18 },
-  settings: { units: "metric", air: "standard", velocity: "peak" },
+  settings: { units: "metric", air: "standard", velocity: "peak", rg: 0, inductance: true },
   eq: [],
   designs: defaultDesigns(),
   volume: {

@@ -131,3 +131,88 @@ export function writeWdr(d: WdrExport): string {
   ];
   return "[Driver]\r\n" + lines.map(([k, v]) => `${k}=${v}`).join("\r\n") + "\r\n";
 }
+
+// ---------------------------------------------------------------------------
+// WinISD projects (.wpr)
+// ---------------------------------------------------------------------------
+
+export interface WprPort {
+  count: number;
+  /** Round ports only (WinISD Shape=1). */
+  diameter_cm: number;
+  length_cm: number;
+  endCorrection: number;
+}
+
+export interface WprProject {
+  driver: WdrDriver;
+  /** "vented" is the only box type read so far; anything else imports the driver and Vb only. */
+  box: { type: "vented" | "sealed" | "other"; bType: number; vb_l: number; fb?: number; ql: number; qa: number; qp: number };
+  port?: WprPort;
+  /** Amplifier output resistance (Ω). */
+  rg: number;
+  /** Input power (W). */
+  power: number;
+  /** WinISD's "voice coil inductance" simulator option (VCInd); 0 = Le not simulated. */
+  simulateLe: boolean;
+  air?: { rho: number; c: number };
+}
+
+function iniSections(text: string): Map<string, Record<string, string>> {
+  const out = new Map<string, Record<string, string>>();
+  let cur: Record<string, string> | null = null;
+  for (const line of text.replace(/^﻿/, "").split(/\r?\n/)) {
+    const t = line.trim();
+    const sec = /^\[(.+)\]$/.exec(t);
+    if (sec) {
+      cur = {};
+      out.set(sec[1]!.toLowerCase(), cur);
+      continue;
+    }
+    const eq = t.indexOf("=");
+    if (cur && eq > 0) cur[t.slice(0, eq).trim().toLowerCase()] = t.slice(eq + 1).trim();
+  }
+  return out;
+}
+
+const n0 = (sec: Record<string, string> | undefined, key: string): number => {
+  const v = Number((sec?.[key.toLowerCase()] ?? "").replace(",", "."));
+  return Number.isFinite(v) ? v : 0;
+};
+
+/**
+ * Read a WinISD project. Verified against WinISD 0.7.0.950 for single-chamber
+ * vented boxes with round rear ports (BType=1); other box types import the
+ * driver and rear-chamber volume only.
+ */
+export function parseWpr(text: string): WprProject {
+  const s = iniSections(text);
+  if (!s.has("driver") || !s.has("box")) throw new Error("Not a WinISD project file (needs [Driver] and [Box])");
+  const driverText = text.slice(text.search(/^\[Driver\]/im));
+  const driver = parseWdr(driverText.split(/^\[(?!Driver\])/im)[0]!);
+  const box = s.get("box")!;
+  const bType = n0(box, "BType");
+  const vent = s.get("ventrear");
+  const vb_l = n0(box, "Vr") * 1000;
+  const type: WprProject["box"]["type"] = bType === 1 ? "vented" : bType === 0 ? "sealed" : "other";
+  const d = s.get("driver");
+  const rho = n0(d, "roo");
+  const c = n0(d, "c");
+  return {
+    driver,
+    box: { type, bType, vb_l, fb: type === "vented" ? n0(box, "Fr") : undefined, ql: n0(box, "Qlr") || 10, qa: n0(box, "Qar") || 100, qp: n0(box, "Qpr") || 100 },
+    port:
+      type === "vented" && vent
+        ? {
+            count: n0(vent, "Num") || 1,
+            diameter_cm: n0(vent, "dia1") * 100,
+            length_cm: n0(vent, "len") * 100,
+            endCorrection: n0(vent, "endcorrection") || 0.732,
+          }
+        : undefined,
+    rg: n0(s.get("signalsource"), "Rg"),
+    power: n0(s.get("signalsource"), "P") || 1,
+    simulateLe: n0(s.get("simulatoroptions"), "VCInd") !== 0,
+    air: rho > 0 && c > 0 ? { rho, c } : undefined,
+  };
+}

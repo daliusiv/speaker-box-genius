@@ -59,6 +59,8 @@ export interface SimulationOptions {
   eq?: EqStage[];
   /** Air properties. Default: 20 °C. Use WINISD_AIR to match WinISD exactly. */
   air?: Air;
+  /** Amplifier output + cable resistance (Ω), shared by the whole driver bank. Default 0. */
+  rg?: number;
 }
 
 export interface SimulationResult {
@@ -125,6 +127,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       ? power
       : Math.sqrt(power * (opts.convention === "nominal" ? nominalTotal : reTotal));
   const vDriver = wiring === "parallel" ? volts : volts / n;
+  // A source resistance shared by N parallel drivers looks like N·Rg to each one (Rg/N in series).
+  const rgTotal = opts.rg ?? 0;
+  const rgDriver = wiring === "parallel" ? rgTotal * n : rgTotal / n;
 
   // Box elements
   const cab = boxCompliance(box.vb_l, air);
@@ -192,7 +197,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const f = freq[i]!;
     const w = 2 * Math.PI * f;
 
-    const ze = cx(d.re, w * d.le);
+    const ze = cx(d.re + rgDriver, w * d.le);
     let filter = opts.highPass ? highPassResponse(opts.highPass, f) : cx(1);
     if (opts.eq && opts.eq.length > 0) filter = mul(filter, eqResponse(opts.eq, f));
     const filterGain2 = filter.re * filter.re + filter.im * filter.im;
@@ -237,7 +242,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     }
 
     // Electrical input impedance of the whole bank
-    const zDriver = add(ze, div(cx((d.bl * d.bl) / sd2), zMech));
+    const zDriver = add(cx(d.re, w * d.le), div(cx((d.bl * d.bl) / sd2), zMech));
     const zIn = wiring === "parallel" ? scale(zDriver, 1 / n) : scale(zDriver, n);
     out.zmag[i] = abs(zIn);
     out.zph[i] = (arg(zIn) * 180) / Math.PI;
@@ -272,7 +277,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   }
 
   // Passband reference: mass-controlled asymptote  p = ρ·N·V·Bl·Sd / (Re·Mms·k·π·r)
-  const pRef = (air.rho * n * vDriver * d.bl * d.sd) / (d.re * d.mms * space * Math.PI * r);
+  const pRef = (air.rho * n * vDriver * d.bl * d.sd) / ((d.re + rgDriver) * d.mms * space * Math.PI * r);
   summary.referenceSpl = 20 * Math.log10(pRef / 2e-5);
   summary.f3 = crossing(freq, out.spl, summary.referenceSpl - 3);
   summary.f6 = crossing(freq, out.spl, summary.referenceSpl - 6);
