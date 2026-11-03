@@ -73,7 +73,9 @@ body:
       label: Physical data (optional, helps the volume calculator)
       description: >-
         Units are converted, e.g. "3.5 in" or "89 mm". Driver displacement is the space the
-        driver takes up inside the box, NOT the datasheet's Vd (air moved at Xmax).
+        driver takes up inside the box, NOT the datasheet's Vd (air moved at Xmax). Mounting
+        depth is from the back of the flange to the back of the magnet, NOT the flush-mount
+        recess depth. Leave any line blank if the datasheet doesn't give it.
       value: |
         Driver displacement inside the box (L):
         Cutout diameter (mm):

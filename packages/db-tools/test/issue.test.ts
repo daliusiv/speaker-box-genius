@@ -168,7 +168,7 @@ https://example.com/x.pdf`;
 test("inches in a mm field: the error says so", () => {
   const r = parseIssue(REAL, opts);
   const errs = validateDriver(r.record);
-  assert.ok(errs.some((e) => /depth_mm: 3.5 .*looks like inches: 3.5 in is 88.9 mm/.test(e)), errs.join("\n"));
+  assert.ok(errs.some((e) => /depth_mm: 3.5 .*if that.s inches, 3.5 in is 88.9 mm/.test(e)), errs.join("\n"));
 });
 
 test("units typed after the value are converted", () => {
