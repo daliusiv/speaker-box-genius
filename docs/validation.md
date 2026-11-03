@@ -200,6 +200,20 @@ voltage:
 
 The same 0.01–0.015 dB as the plain sealed box.
 
+## Isobaric pairs in a ported box (Test 10)
+
+Two pairs in the 18 L box tuned to 41.67 Hz, 100 W, same conventions:
+
+| Graph | Frequency | WinISD | Speaker Box Genius | Difference |
+|---|---|---|---|---|
+| Transfer function | 20.09 Hz | −25.034 dB | −25.040 dB | −0.006 dB |
+| Transfer function | 40.88 Hz | −5.328 dB | −5.326 dB | +0.002 dB |
+| Transfer function | 79.64 Hz | −0.152 dB | −0.152 dB | 0 |
+| Port air velocity | 35.03 Hz | 7.357 m/s | 7.331 m/s | −0.35 % |
+| Cone excursion (graph) | 20 Hz | ≈ 7.4 mm | 7.18 mm | within graph-reading accuracy |
+| Impedance | 19.91 Hz | 28.545 Ω | 28.772 Ω | +0.8 % |
+| Impedance | 101.01 Hz | 11.602 Ω | 11.674 Ω | +0.6 % |
+
 ## Passive radiator: 1× DSA270-PR
 
 | Box | Frequency | WinISD | Speaker Box Genius | Difference |

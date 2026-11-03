@@ -415,3 +415,22 @@ test("an isobaric pair keeps Fs and Qts and halves Vas", () => {
   near(iso.summary.qtc!, half.summary.qtc!, 1e-9, "Qtc");
   for (let i = 0; i < iso.spl.length; i++) near(iso.spl[i]!, half.spl[i]!, 1e-9, "SPL");
 });
+
+// Test 10: two isobaric pairs in the 18 L ported box, same conventions as Test 9.
+test("DSA215-8 isobaric pairs in a ported box match WinISD at the same voltage (Test 10)", () => {
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215-iso-ported.wpr"), "utf8"));
+  assert.equal(p.isobaric, true);
+  const t = p.driver.ts;
+  const drv = { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: 0 };
+  const box = { kind: "vented" as const, vb_l: p.box.vb_l, port: { shape: "round" as const, diameter_cm: p.port!.diameter_cm, length_cm: p.port!.length_cm }, ql: p.box.ql, qa: p.box.qa, qp: p.box.qp };
+  const volts = Math.sqrt((p.power * t.re!) / p.drivers);
+  const at = (f: number) =>
+    simulate(drv, box, { convention: "volts", power: volts, rg: (2 * p.rg) / p.drivers, drivers: p.drivers, isobaric: { coils: "series" }, air: p.air, fMin: f, fMax: f, points: 1 });
+  for (const [f, db] of [[20.09, -25.034], [40.88, -5.328], [79.64, -0.152]] as const) {
+    const r = at(f);
+    near(r.spl[0]! - r.summary.referenceSpl, db, 0.015, `TF at ${f} Hz`);
+  }
+  near(at(35.03).portVelocity![0]! / 7.357 - 1, 0, 0.006, "port velocity at 35.03 Hz");
+  near(at(20.09).excursionMm[0]! / 7.4 - 1, 0, 0.05, "excursion at 20 Hz (read off the graph)");
+  for (const [f, z] of [[19.91, 28.545], [101.01, 11.602]] as const) near(at(f).impedanceOhm[0]! / z - 1, 0, 0.01, `impedance at ${f} Hz`);
+});
