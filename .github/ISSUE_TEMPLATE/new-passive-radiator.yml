@@ -42,8 +42,11 @@ body:
     id: physical
     attributes:
       label: Physical data (optional)
+      description: >-
+        Units are converted, e.g. "3.5 in" or "89 mm". Driver displacement is the space the
+        driver takes up inside the box, NOT the datasheet's Vd (air moved at Xmax).
       value: |
-        Displacement volume (L):
+        Driver displacement inside the box (L):
         Cutout diameter (mm):
         Mounting depth (mm):
   - type: input

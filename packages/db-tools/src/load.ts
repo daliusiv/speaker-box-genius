@@ -99,6 +99,18 @@ function loadTree(root: string, kind: Kind, result: LoadResult) {
             result.warnings.push(`${rel}: ${issue.message}`);
           }
         }
+        // A "displacement" equal to Sd × Xmax is the datasheet's Vd, not the driver's size.
+        const disp = d.physical?.displacement_l;
+        if (disp !== undefined && d.ts.xmax_mm !== undefined) {
+          const vd = (d.ts.sd_cm2 * d.ts.xmax_mm) / 10000; // litres
+          if (Math.abs(disp - vd) <= 0.05 * vd) {
+            consistent = false;
+            result.errors.push(
+              `${rel}: physical.displacement_l (${disp} L) equals Vd = Sd × Xmax (${vd.toFixed(3)} L), the air the cone moves. ` +
+                `It should be the space the driver takes up inside the box; leave it blank if the datasheet doesn't give it.`,
+            );
+          }
+        }
         if (consistent) result.drivers.push({ id, file: rel, data: d });
       } else {
         const errs = validatePassiveRadiator(data);

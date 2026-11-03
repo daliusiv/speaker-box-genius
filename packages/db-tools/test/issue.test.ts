@@ -128,3 +128,53 @@ test("own measurements become a second source", () => {
 test("missing brand or model is reported", () => {
   assert.throws(() => parseIssue("### Model\n\nX", opts), /Brand and a Model/);
 });
+
+const REAL = `### Brand
+
+Dayton Audio
+
+### Model
+
+DSA215-8
+
+### Driver type
+
+woofer
+
+### Nominal impedance (Ω)
+
+8
+
+### Thiele/Small parameters
+
+Fs (Hz):35
+Qms:1.87
+Qes:0.40
+Vas (L):37.4
+Re (Ω):5.9
+Sd (cm²):211.2
+Xmax (mm, one way):5.5
+
+### Physical data (optional, helps the volume calculator)
+
+Displacement volume (L):0.1162
+Cutout diameter (mm):216.5
+Mounting depth (mm):3.5
+
+### Datasheet link
+
+https://example.com/x.pdf`;
+
+test("inches in a mm field: the error says so", () => {
+  const r = parseIssue(REAL, opts);
+  const errs = validateDriver(r.record);
+  assert.ok(errs.some((e) => /depth_mm: 3.5 .*looks like inches: 3.5 in is 88.9 mm/.test(e)), errs.join("\n"));
+});
+
+test("units typed after the value are converted", () => {
+  const r = parseIssue(REAL.replace("Mounting depth (mm):3.5", "Mounting depth (mm): 3.5 in").replace("Cutout diameter (mm):216.5", 'Cutout diameter (mm): 7.25"'), opts);
+  const ph = r.record.physical as Record<string, number>;
+  assert.equal(ph.depth_mm, 88.9);
+  assert.equal(ph.cutout_mm, 184.15);
+  assert.deepEqual(validateDriver(r.record), []);
+});

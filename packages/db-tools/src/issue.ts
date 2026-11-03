@@ -13,6 +13,7 @@
  *   ...
  */
 import { parseDatasheet } from "../../engine/src/datasheet.ts";
+import { parseQuantity, type Quantity } from "../../engine/src/units.ts";
 import { SLUG_RE } from "../../schema/src/index.ts";
 
 export interface IssueRecord {
@@ -53,13 +54,20 @@ function num(text: string): number | undefined {
   return text.trim() !== "" && Number.isFinite(v) && v > 0 ? v : undefined;
 }
 
-/** "Displacement volume (L): 1.8" style lines → number by label prefix. */
-function labelled(text: string, label: RegExp): number | undefined {
+/**
+ * "Cutout diameter (mm): 216.5" or "Mounting depth (mm): 3.5 in" → number in
+ * the label's unit, converting any unit the user typed after the value.
+ */
+function labelled(text: string, label: RegExp, q: Quantity = "plain"): number | undefined {
   for (const line of text.split("\n")) {
-    if (label.test(line.toLowerCase())) {
-      const m = /:\s*([-+]?\d+(?:[.,]\d+)?)/.exec(line);
-      if (m) return num(m[1]!);
-    }
+    if (!label.test(line.toLowerCase())) continue;
+    const i = line.indexOf(":");
+    if (i < 0) continue;
+    const value = line.slice(i + 1).trim().replace(/″/g, '"');
+    if (!value) return undefined;
+    const v = parseQuantity(value, q);
+    if (v !== null && v > 0) return Number(v.toPrecision(6)); // drop float noise from unit conversion
+    return num(value.replace(/[^\d.,]/g, ""));
   }
   return undefined;
 }
@@ -93,9 +101,9 @@ export function parseIssue(body: string, opts: { issue: number; author: string; 
 
   const physicalText = find(sec, "physical data");
   const physical = clean({
-    displacement_l: labelled(physicalText, /^displacement/),
-    cutout_mm: labelled(physicalText, /^cutout/),
-    depth_mm: labelled(physicalText, /^mounting depth|^depth/),
+    displacement_l: labelled(physicalText, /^(driver displacement|displacement)/, "volume"),
+    cutout_mm: labelled(physicalText, /^cutout/, "length"),
+    depth_mm: labelled(physicalText, /^mounting depth|^depth/, "length"),
   });
   const size_in = num(find(sec, "nominal size"));
 

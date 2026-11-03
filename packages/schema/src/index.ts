@@ -155,7 +155,13 @@ function num(obj: Record<string, unknown>, key: string, path: string, errors: Er
   }
   const range = RANGES[key];
   if (range && (v < range[0] || v > range[1])) {
-    errors.push(`${path}.${key}: ${v} is outside the plausible range ${range[0]}–${range[1]} (check units)`);
+    let hint = "check units";
+    if (key.endsWith("_mm") && v * 25.4 >= range[0] && v * 25.4 <= range[1]) {
+      hint = `looks like inches: ${v} in is ${(v * 25.4).toFixed(1)} mm`;
+    } else if (key.endsWith("_l") && v * 28.3168 >= range[0] && v < range[0]) {
+      hint = `if that's cubic feet, it's ${(v * 28.3168).toFixed(1)} L`;
+    }
+    errors.push(`${path}.${key}: ${v} is outside the plausible range ${range[0]}–${range[1]} (${hint})`);
   }
 }
 

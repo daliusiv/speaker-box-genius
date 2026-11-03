@@ -31,6 +31,11 @@ test("bad entries are reported with useful messages", () => {
   assert.equal(db.drivers.length, 0);
 });
 
+test("a displacement equal to Vd is caught", () => {
+  const db = loadDatabase(join(import.meta.dirname, "fixtures/bad"));
+  assert.ok(db.errors.some((e) => e.includes("vd.json") && e.includes("equals Vd")), db.errors.join("\n"));
+});
+
 test("unit mix-ups fail the consistency check", () => {
   const db = loadDatabase(join(import.meta.dirname, "fixtures/bad"));
   assert.ok(
