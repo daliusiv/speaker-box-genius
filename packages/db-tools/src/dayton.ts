@@ -233,6 +233,12 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
     notes.push(`Vas ${round(v, 3)} L calculated from the published Cms and Sd (the page gives ${vas === undefined ? "no Vas" : `Vas ${vas}`}).`);
     vas = round(v, 3);
   }
+  if ((vas === undefined || vas <= 0) && fs !== undefined && mms !== undefined && mms > 0 && sd !== undefined) {
+    const cmsFromMms = mmsFromFsCms(fs, mms / 1000); // the same formula gives Cms from Fs and Mms
+    const v = cmsFromMms * 1.184 * 346.1 * 346.1 * (sd / 1e4) ** 2 * 1000;
+    notes.push(`Vas ${round(v, 3)} L calculated from the published Fs, Mms and Sd (the page gives ${vas === undefined ? "no Vas" : `Vas ${vas}`}).`);
+    vas = round(v, 3);
+  }
   const missing = Object.entries({ fs, qms, qes, vas, re, sd })
     .filter(([, v]) => v === undefined)
     .map(([k]) => k);
