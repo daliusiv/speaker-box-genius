@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "Apollo 8N",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 94,
+    "qms": 4.43,
+    "qes": 0.35,
+    "vas_l": 8.8,
+    "re": 6,
+    "sd_cm2": 200.96,
+    "qts": 0.32,
+    "le_mh": 0.17,
+    "bl": 14.41,
+    "mms_g": 20.89,
+    "xmax_mm": 3.91,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 182,
+    "depth_mm": 86.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1774/pro-8-in-8-ohm-neodymium-midbass-woofer-odeum-8n",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-639-dayton-audio-apollo-8n-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Check the model name: the page's Model Number field says Apollo 8N, but the product title is \"Pro 8 in. 8 Ohm Neodymium Midbass Woofer Odeum 8N\"."
+}

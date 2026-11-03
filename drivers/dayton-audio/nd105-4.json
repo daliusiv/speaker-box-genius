@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "ND105-4",
+  "type": "midrange",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 78.7,
+    "qms": 7.42,
+    "qes": 0.66,
+    "vas_l": 1.97,
+    "re": 3.7,
+    "sd_cm2": 51.5,
+    "qts": 0.61,
+    "le_mh": 0.76,
+    "bl": 4.52,
+    "mms_g": 7.4,
+    "xmax_mm": 4,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 93,
+    "depth_mm": 67
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/55/nd105-4-4-aluminum-cone-midbass-driver-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/290-212-dayton-audio-nd105-4-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

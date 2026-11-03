@@ -1,0 +1,39 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PM180-8",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 53.2,
+    "qms": 4.13,
+    "qes": 0.3,
+    "vas_l": 28,
+    "re": 6.4,
+    "sd_cm2": 130.69,
+    "qts": 0.28,
+    "le_mh": 0.68,
+    "bl": 7.7,
+    "mms_g": 8.2,
+    "xmax_mm": 4.6,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 145,
+    "depth_mm": 77.7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1151/pm180-8-6-1-2-neo-wideband-midbass-driver",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-343-Dayton-Audio-PM180-8-Specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

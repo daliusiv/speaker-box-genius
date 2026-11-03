@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS52AN-8",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 2,
+  "ts": {
+    "fs": 341,
+    "qms": 3.16,
+    "qes": 1.18,
+    "vas_l": 0.13,
+    "re": 6,
+    "sd_cm2": 26.4,
+    "qts": 0.86,
+    "le_mh": 0.13,
+    "bl": 4.26,
+    "mms_g": 1.7,
+    "xmax_mm": 1,
+    "pe_w": 60
+  },
+  "physical": {
+    "cutout_mm": 100,
+    "depth_mm": 57
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/114/rs52an-8-2-dome-midrange-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-020--dayton-audio-rs52an-8-spec-sheet-2.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

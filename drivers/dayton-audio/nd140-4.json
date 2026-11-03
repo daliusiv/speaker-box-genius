@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "ND140-4",
+  "type": "midrange",
+  "nominal_ohms": 4,
+  "size_in": 5,
+  "ts": {
+    "fs": 59.2,
+    "qms": 5.35,
+    "qes": 0.72,
+    "vas_l": 7.22,
+    "re": 3.7,
+    "sd_cm2": 86.6,
+    "qts": 0.63,
+    "le_mh": 0.79,
+    "bl": 3.9,
+    "mms_g": 10.1,
+    "xmax_mm": 4,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 120,
+    "depth_mm": 70.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/57/nd140-4-5-1-4-aluminum-cone-midbass-driver-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/290-216-dayton-audio-nd140-4-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

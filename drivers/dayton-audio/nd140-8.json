@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "ND140-8",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 56.5,
+    "qms": 5.01,
+    "qes": 0.79,
+    "vas_l": 7.74,
+    "re": 7.8,
+    "sd_cm2": 86.6,
+    "qts": 0.68,
+    "le_mh": 1.44,
+    "bl": 6.05,
+    "mms_g": 10.4,
+    "xmax_mm": 4,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 120,
+    "depth_mm": 70.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/58/nd140-8-5-1-4-aluminum-cone-midbass-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/290-218-dayton-audio-nd140-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}
