@@ -1,0 +1,37 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PCS115-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 88,
+    "qms": 3.11,
+    "qes": 1.5,
+    "vas_l": 625,
+    "re": 3.6,
+    "sd_cm2": 51.5,
+    "xmax_mm": 2.75,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 93.98,
+    "depth_mm": 57.15
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2201/pcs115-4-4-poly-cone-woofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-660--dayton-audio-pcs115-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 6.95 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it). Published Bl 3.6 T·m disagrees with Fs, Mms, Re and Qes, so it's left out (the app derives it). Published qts 79 is implausible, so it's left out. Published le 37 is implausible, so it's left out."
+}

@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "Apollo 18N",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 32,
+    "qms": 10.02,
+    "qes": 0.35,
+    "vas_l": 253.6,
+    "re": 6.1,
+    "sd_cm2": 1200,
+    "qts": 0.33,
+    "le_mh": 0.61,
+    "bl": 27.57,
+    "mms_g": 217.8,
+    "xmax_mm": 9.1,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 414,
+    "depth_mm": 183.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1772/pro-18-in-8-ohm-neodymium-subwoofer-odeum-18n",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-644-dayton-audio-apollo-18n-specfications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Check the model name: the page's Model Number field says Apollo 18N, but the product title is \"Pro 18 in. 8 Ohm Neodymium Subwoofer Odeum 18N\"."
+}

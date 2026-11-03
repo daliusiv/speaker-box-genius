@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PCS175-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 56,
+    "qms": 2.85,
+    "qes": 1.494,
+    "vas_l": 13.6,
+    "re": 3.7,
+    "sd_cm2": 143,
+    "qts": 0.98,
+    "le_mh": 0.8,
+    "mms_g": 17.2,
+    "xmax_mm": 2,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 146.05,
+    "depth_mm": 69.85
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2203/pcs175-4-6-1-2-poly-cone-woofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-664--dayton-audio-pcs175-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Qes 1.494 calculated from the published Qts and Qms. Published Vas 0.484 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 13.6 L from Cms. Published Bl 4.78 T·m disagrees with Fs, Mms, Re and Qes, so it's left out (the app derives it)."
+}

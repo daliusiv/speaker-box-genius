@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS180P-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 7,
+  "ts": {
+    "fs": 37.7,
+    "qms": 1.98,
+    "qes": 0.48,
+    "vas_l": 27.3,
+    "re": 3.1,
+    "sd_cm2": 126.7,
+    "qts": 0.39,
+    "le_mh": 0.47,
+    "bl": 4.67,
+    "mms_g": 14.8,
+    "xmax_mm": 6,
+    "pe_w": 60
+  },
+  "physical": {
+    "cutout_mm": 146,
+    "depth_mm": 81
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1225/rs180p-4-7-reference-paper-woofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-375--dayton-audio-rs180p-4-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DC200-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 30.3,
+    "qms": 3.06,
+    "qes": 0.49,
+    "vas_l": 45.7,
+    "re": 6.41,
+    "sd_cm2": 211.2,
+    "qts": 0.42,
+    "le_mh": 2.32,
+    "bl": 9.5,
+    "mms_g": 36.1,
+    "xmax_mm": 4.5,
+    "pe_w": 60
+  },
+  "physical": {
+    "cutout_mm": 183,
+    "depth_mm": 93.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/25/dc200-8-8-classic-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/DC200-8%208_%20Classic%20Woofer%208%20Ohm%20Specification%20Sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

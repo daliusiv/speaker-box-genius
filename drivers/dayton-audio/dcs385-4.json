@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DCS385-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 17.5,
+    "qms": 5.27,
+    "qes": 0.42,
+    "vas_l": 311,
+    "re": 3.3,
+    "sd_cm2": 850.1,
+    "qts": 0.39,
+    "le_mh": 2.2,
+    "bl": 15.4,
+    "mms_g": 273,
+    "xmax_mm": 9.3,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 350,
+    "depth_mm": 185.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/41/dcs385-4-15-classic-subwoofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-206-dayton-audio-dcs385-4-specifications-46581.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

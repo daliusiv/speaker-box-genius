@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PC83-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 3,
+  "ts": {
+    "fs": 80.1,
+    "qms": 3.41,
+    "qes": 0.64,
+    "vas_l": 2,
+    "re": 3.9,
+    "sd_cm2": 30.2,
+    "qts": 0.54,
+    "le_mh": 0.38,
+    "bl": 2.9,
+    "mms_g": 2.7,
+    "xmax_mm": 2,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 77,
+    "depth_mm": 50
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1540/pc83-4-3-full-range-poly-cone-driver",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-154-dayton-audio-pc83-4-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

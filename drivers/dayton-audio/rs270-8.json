@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS270-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 29.6,
+    "qms": 2.08,
+    "qes": 0.61,
+    "vas_l": 96.5,
+    "re": 6.8,
+    "sd_cm2": 346.4,
+    "qts": 0.47,
+    "le_mh": 0.93,
+    "bl": 10.3,
+    "mms_g": 50.5,
+    "xmax_mm": 6.6,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 236,
+    "depth_mm": 113
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/106/rs270-8-10-reference-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-357--rs270-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

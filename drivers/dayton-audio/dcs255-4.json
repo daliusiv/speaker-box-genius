@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DCS255-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 37.7,
+    "qms": 7.42,
+    "qes": 0.5,
+    "vas_l": 32.1,
+    "re": 3.45,
+    "sd_cm2": 346.4,
+    "qts": 0.46,
+    "le_mh": 1.8,
+    "bl": 12.6,
+    "mms_g": 95.5,
+    "xmax_mm": 8.3,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 232,
+    "depth_mm": 140.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/38/dcs255-4-10-classic-subwoofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-202-dayton-audio-dcs255-4-specifications-46583.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

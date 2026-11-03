@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CFC100-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 3.5,
+  "ts": {
+    "fs": 107,
+    "qms": 3.22,
+    "qes": 1.02,
+    "vas_l": 0.75,
+    "re": 7.1,
+    "sd_cm2": 28,
+    "qts": 0.78,
+    "le_mh": 0.28,
+    "bl": 3.9,
+    "mms_g": 3.25,
+    "xmax_mm": 2.5,
+    "pe_w": 15
+  },
+  "physical": {
+    "cutout_mm": 70,
+    "depth_mm": 48.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2223/cfc100-8-3-1-2-carbon-fiber-full-range-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-602--dayton-audio-cfc100-8-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

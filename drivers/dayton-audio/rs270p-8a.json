@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS270P-8A",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 22.9,
+    "qms": 1.33,
+    "qes": 0.42,
+    "vas_l": 110.5,
+    "re": 6.8,
+    "sd_cm2": 346.4,
+    "qts": 0.32,
+    "le_mh": 0.88,
+    "bl": 13,
+    "mms_g": 73.2,
+    "xmax_mm": 6,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 236,
+    "depth_mm": 113
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1423/rs270p-8a-10-reference-paper-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-579--dayton-audio-rs270p-8a-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

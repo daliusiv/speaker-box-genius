@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DC130A-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 53.2,
+    "qms": 1.9,
+    "qes": 0.51,
+    "vas_l": 11.8,
+    "re": 5.7,
+    "sd_cm2": 91.6,
+    "qts": 0.41,
+    "le_mh": 0.75,
+    "bl": 5.88,
+    "mms_g": 9.3,
+    "xmax_mm": 2.5,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 120,
+    "depth_mm": 69.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1083/dc130a-8-5-1-4-classic-woofer-speaker-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-303-dayton-audio-dc130a-8-specifications-9352.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

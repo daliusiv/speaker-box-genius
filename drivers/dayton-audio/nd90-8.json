@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "ND90-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 3,
+  "ts": {
+    "fs": 70.7,
+    "qms": 4.71,
+    "qes": 0.75,
+    "vas_l": 1.77,
+    "re": 7.5,
+    "sd_cm2": 31.2,
+    "qts": 0.65,
+    "le_mh": 1.08,
+    "bl": 4.3,
+    "mms_g": 4.2,
+    "xmax_mm": 4,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 85,
+    "depth_mm": 60.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/66/nd90-8-3-1-2-aluminum-cone-full-range-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/ND90-8%203-1_2_%20Aluminum%20Cone%20Full-Range%20Driver%208%20Ohm%20Specification%20Sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

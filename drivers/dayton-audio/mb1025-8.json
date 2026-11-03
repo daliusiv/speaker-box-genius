@@ -1,0 +1,39 @@
+{
+  "brand": "Dayton Audio",
+  "model": "MB1025-8",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 45,
+    "qms": 6.47,
+    "qes": 0.36,
+    "vas_l": 50.7,
+    "re": 5.3,
+    "sd_cm2": 346.36,
+    "qts": 0.34,
+    "le_mh": 1.2,
+    "bl": 13.18,
+    "mms_g": 41.1,
+    "xmax_mm": 3,
+    "pe_w": 350
+  },
+  "physical": {
+    "cutout_mm": 232.2,
+    "depth_mm": 108
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1809/mb1025-8-10-professional-high-power-midbass-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-637--dayton-audio-mb1025-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

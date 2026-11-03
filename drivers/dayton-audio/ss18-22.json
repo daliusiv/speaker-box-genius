@@ -1,0 +1,42 @@
+{
+  "brand": "Dayton Audio",
+  "model": "SS18-22",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 21,
+    "qms": 3.4,
+    "qes": 0.42,
+    "vas_l": 224,
+    "re": 5.4,
+    "sd_cm2": 1188,
+    "qts": 0.37,
+    "le_mh": 2.1,
+    "bl": 29.2,
+    "mms_g": 497,
+    "xmax_mm": 26,
+    "pe_w": 1300
+  },
+  "physical": {
+    "cutout_mm": 426.7,
+    "depth_mm": 259.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2130/ss18-22-18-signature-series-dvc-subwoofer-2-ohms-per-coil",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-736--dayton-audio-ss18-22-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series"
+}

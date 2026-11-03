@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DS175-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 6,
+  "ts": {
+    "fs": 37,
+    "qms": 1.63,
+    "qes": 0.32,
+    "vas_l": 17,
+    "re": 5.7,
+    "sd_cm2": 128.7,
+    "qts": 0.27,
+    "le_mh": 1.06,
+    "bl": 10.4,
+    "mms_g": 26,
+    "xmax_mm": 5.25,
+    "pe_w": 70
+  },
+  "physical": {
+    "cutout_mm": 144,
+    "depth_mm": 80.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1056/ds175-8-6-1-2-designer-series-woofer-speaker-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-428--dayton-audio-ds175-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

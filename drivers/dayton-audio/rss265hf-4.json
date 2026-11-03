@@ -8,26 +8,32 @@
     "fs": 25.6,
     "qms": 3.06,
     "qes": 0.53,
-    "qts": 0.45,
-    "vas_l": 53.8,
+    "vas_l": 54,
     "re": 3.5,
+    "sd_cm2": 356.3,
+    "qts": 0.45,
     "le_mh": 0.96,
     "bl": 11.43,
     "mms_g": 120,
-    "sd_cm2": 356.3,
     "xmax_mm": 12.3,
     "pe_w": 350
   },
   "physical": {
-    "cutout_mm": 234.9,
-    "depth_mm": 136.4
+    "cutout_mm": 235,
+    "depth_mm": 136.5
   },
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.parts-express.com/Dayton-Audio-RSS265HF-4-10-Reference-Series-HF-Subwoofer-4-Ohm-295-460",
-      "retrieved": "2026-11-02",
-      "note": "Parts Express (Dayton Audio's distributor) product specifications. Vas published as 1.9 ft³; cutout 9.25\", depth 5.37\"."
+      "url": "https://www.daytonaudio.com/product/118/rss265hf-4-10-reference-hf-subwoofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-460-dayton-audio-rss265hf-4-specifications-46172.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
   "status": "community"

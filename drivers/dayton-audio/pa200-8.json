@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PA200-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 55.2,
+    "qms": 6.17,
+    "qes": 0.51,
+    "vas_l": 26.6,
+    "re": 6.2,
+    "sd_cm2": 210.4,
+    "qts": 0.48,
+    "le_mh": 1.09,
+    "bl": 9.28,
+    "mms_g": 20.5,
+    "xmax_mm": 3,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 182,
+    "depth_mm": 108
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1154/pa200-8-8-pa-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-025-dayton-audio-pa200-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

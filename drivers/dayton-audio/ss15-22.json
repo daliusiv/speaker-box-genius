@@ -1,0 +1,42 @@
+{
+  "brand": "Dayton Audio",
+  "model": "SS15-22",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 27,
+    "qms": 3.27,
+    "qes": 0.44,
+    "vas_l": 98,
+    "re": 5,
+    "sd_cm2": 800,
+    "qts": 0.38,
+    "le_mh": 1.9,
+    "bl": 24.9,
+    "mms_g": 317,
+    "xmax_mm": 22,
+    "pe_w": 1100
+  },
+  "physical": {
+    "cutout_mm": 353,
+    "depth_mm": 233
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2129/ss15-22-15-signature-series-dvc-subwoofer-2-ohms-per-coil",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-734--dayton-audio-ss15-22-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series"
+}

@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DC130B-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 52.5,
+    "qms": 1.85,
+    "qes": 0.48,
+    "vas_l": 12.4,
+    "re": 5.7,
+    "sd_cm2": 91.6,
+    "qts": 0.38,
+    "le_mh": 0.77,
+    "bl": 5.94,
+    "mms_g": 9.1,
+    "xmax_mm": 2.5,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 120,
+    "depth_mm": 67.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1084/dc130b-8-5-1-4-classic-woofer-speaker-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-304-dayton-audio-dc130b-8-specifications-9385.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

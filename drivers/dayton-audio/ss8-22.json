@@ -1,0 +1,42 @@
+{
+  "brand": "Dayton Audio",
+  "model": "SS8-22",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 38,
+    "qms": 4.37,
+    "qes": 0.5,
+    "vas_l": 9.7,
+    "re": 4.4,
+    "sd_cm2": 200,
+    "qts": 0.45,
+    "le_mh": 1.6,
+    "bl": 14.6,
+    "mms_g": 101,
+    "xmax_mm": 17,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 184.7,
+    "depth_mm": 157
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2126/ss8-22-8-signature-series-dvc-subwoofer-2-ohms-per-coil",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-728--dayton-audio-ss8-22-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series"
+}

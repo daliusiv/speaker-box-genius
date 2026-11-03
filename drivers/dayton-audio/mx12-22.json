@@ -8,29 +8,35 @@
     "fs": 28.8,
     "qms": 3.25,
     "qes": 0.39,
-    "qts": 0.35,
     "vas_l": 45.6,
     "re": 3.95,
+    "sd_cm2": 514.7,
+    "qts": 0.35,
     "le_mh": 5.09,
     "bl": 21.5,
     "mms_g": 252,
-    "sd_cm2": 514.7,
     "xmax_mm": 15.5,
     "pe_w": 600
   },
-  "voice_coils": 2,
-  "ts_wiring": "series",
   "physical": {
-    "cutout_mm": 284.0,
+    "cutout_mm": 284,
     "depth_mm": 197.6
   },
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.soundimports.eu/en/dayton-audio-mx12-22.html",
+      "url": "https://www.daytonaudio.com/product/1792/mx12-22-12-max-x-high-excursion-dvc-subwoofer-2-ohms-per-coil",
       "retrieved": "2026-11-03",
-      "note": "SoundImports (official distributor) product specifications table. Dual 2 Ω coils; page notes all specifications are measured with the coils in series (4 Ω). Vas published as 1.61 ft³; cutout 11.18\", depth 7.78\"."
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-166--dayton-audio-mx12-22-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series"
 }

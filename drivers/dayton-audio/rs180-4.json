@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS180-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 7,
+  "ts": {
+    "fs": 38.4,
+    "qms": 2.13,
+    "qes": 0.59,
+    "vas_l": 21.2,
+    "re": 3.1,
+    "sd_cm2": 124.7,
+    "qts": 0.46,
+    "le_mh": 0.45,
+    "bl": 4.71,
+    "mms_g": 17.8,
+    "xmax_mm": 6,
+    "pe_w": 60
+  },
+  "physical": {
+    "cutout_mm": 146,
+    "depth_mm": 82
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/100/rs180-4-7-reference-woofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-374--dayton-audio-rs180-4-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

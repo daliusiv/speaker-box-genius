@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PC68-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 109,
+    "qms": 2.27,
+    "qes": 0.88,
+    "vas_l": 0.7,
+    "re": 6.8,
+    "sd_cm2": 21.2,
+    "qts": 0.64,
+    "le_mh": 0.47,
+    "bl": 3.3,
+    "mms_g": 2,
+    "xmax_mm": 2,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 64,
+    "depth_mm": 37
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1539/pc68-8-2-1-2-full-range-poly-cone-driver",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-152-dayton-audio-pc68-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 1.3 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 0.7 L from Cms."
+}

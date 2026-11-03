@@ -8,18 +8,16 @@
     "fs": 21.5,
     "qms": 3.7,
     "qes": 0.41,
-    "qts": 0.37,
     "vas_l": 61.3,
     "re": 6.5,
+    "sd_cm2": 507.1,
+    "qts": 0.37,
     "le_mh": 3.17,
     "bl": 26.5,
     "mms_g": 327.7,
-    "sd_cm2": 507.1,
     "xmax_mm": 14,
     "pe_w": 700
   },
-  "voice_coils": 2,
-  "ts_wiring": "series",
   "physical": {
     "cutout_mm": 282,
     "depth_mm": 146
@@ -27,10 +25,19 @@
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.soundimports.eu/en/dayton-audio-rss315ho-44.html",
+      "url": "https://www.daytonaudio.com/product/125/rss315ho-44-12-reference-ho-dvc-subwoofer-4-ohms-per-coil",
       "retrieved": "2026-11-03",
-      "note": "SoundImports (official distributor) product specifications table. Dual 4 Ω coils. The page doesn't say how the coils were wired, but Re 6.5 Ω (and the Qes/Bl/Mms balance) means series."
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-467--rss315ho-44-reference-ho-dvc-subwoofer-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "notes": "Coil wiring for the published values (series) inferred from Re 6.5 Ω with 4 Ω coils."
 }

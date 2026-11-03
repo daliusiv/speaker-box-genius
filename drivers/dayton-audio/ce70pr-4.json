@@ -1,0 +1,41 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE70PR-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 2,
+  "ts": {
+    "fs": 109,
+    "qms": 3.5,
+    "qes": 0.77,
+    "vas_l": 0.523,
+    "re": 3.13,
+    "sd_cm2": 24.6,
+    "qts": 0.63,
+    "le_mh": 0.31,
+    "bl": 3.11,
+    "mms_g": 3.5,
+    "xmax_mm": 4,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 63.8,
+    "depth_mm": 41.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1930/ce70pr-4-2-5-full-range-speaker-driver-20w-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-175--dayton-audio-ce70pr-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "The page's Model Number field says CE70PR-6; the product title and address say CE70PR-4, which is used."
+}

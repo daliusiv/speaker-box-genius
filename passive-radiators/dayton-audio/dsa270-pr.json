@@ -4,32 +4,31 @@
   "type": "passive-radiator",
   "size_in": 10,
   "params": {
+    "mms_g": 88.4,
+    "sd_cm2": 353,
+    "xmax_mm": 11,
     "fs": 21.9,
     "qms": 5.26,
-    "vas_l": 105.9,
-    "mms_g": 88.4,
-    "cms_mm_per_n": 0.6,
-    "sd_cm2": 353,
-    "xmax_mm": 11
+    "vas_l": 105.8,
+    "cms_mm_per_n": 0.6
   },
   "physical": {
-    "cutout_mm": 227.1,
+    "cutout_mm": 227.08,
     "depth_mm": 72.9
   },
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.parts-express.com/Dayton-Audio-DSA270-PR-10-Designer-Series-Aluminum-Cone-Passive-Radiator-295-552",
-      "retrieved": "2026-11-02",
-      "note": "Parts Express product specifications. Vas published as 3.74 ft³. Parameters are with no added mass; rear screw allows adding mass."
+      "url": "https://www.daytonaudio.com/product/1592/dsa270-pr-10-designer-series-aluminum-cone-passive-radiator",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
     },
     {
       "kind": "datasheet",
-      "url": "https://www.soundimports.eu/de/dayton-audio-dsa270-pr.html",
-      "retrieved": "2026-11-02",
-      "note": "Dimensions: cutout 8.94\", depth 2.87\"."
+      "url": "https://www.daytonaudio.com/images/resources/295-552--dayton-audio-dsa70-pr-Spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
-  "status": "community",
-  "notes": "Maximum added mass is not published."
+  "status": "community"
 }

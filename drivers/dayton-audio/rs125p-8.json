@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS125P-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 70,
+    "qms": 2.56,
+    "qes": 0.53,
+    "vas_l": 3.98,
+    "re": 6.2,
+    "sd_cm2": 52.8,
+    "qts": 0.44,
+    "le_mh": 0.62,
+    "bl": 5.08,
+    "mms_g": 5.1,
+    "xmax_mm": 4,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 94,
+    "depth_mm": 55
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1204/rs125p-8-5-reference-paper-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-361--rs125p-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

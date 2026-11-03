@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DSA90-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 3,
+  "ts": {
+    "fs": 66.62,
+    "qms": 2.15,
+    "qes": 0.45,
+    "vas_l": 2.27,
+    "re": 6.6,
+    "sd_cm2": 31.2,
+    "qts": 0.37,
+    "le_mh": 0.53,
+    "bl": 4.61,
+    "mms_g": 3.5,
+    "xmax_mm": 2.5,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 70,
+    "depth_mm": 44.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1311/dsa90-8-3-designer-series-aluminum-cone-full-range-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-522--dayton-audio-DSA90-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

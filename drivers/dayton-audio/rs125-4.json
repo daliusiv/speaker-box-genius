@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS125-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 5,
+  "ts": {
+    "fs": 57.2,
+    "qms": 2.04,
+    "qes": 0.45,
+    "vas_l": 5.29,
+    "re": 2.9,
+    "sd_cm2": 52.8,
+    "qts": 0.37,
+    "le_mh": 0.28,
+    "bl": 3.63,
+    "mms_g": 5.7,
+    "xmax_mm": 4,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 94,
+    "depth_mm": 54.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/93/rs125-4-5-reference-woofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-370-dayton-audio-rs125-4-spec-sheet-revised.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

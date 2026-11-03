@@ -1,0 +1,39 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE38MB-32",
+  "type": "woofer",
+  "nominal_ohms": 32,
+  "size_in": 1,
+  "ts": {
+    "fs": 137.9,
+    "qms": 0.66,
+    "qes": 1.15,
+    "vas_l": 0.72,
+    "re": 31.98,
+    "sd_cm2": 4.91,
+    "qts": 0.42,
+    "le_mh": 1.31,
+    "bl": 1.23,
+    "mms_g": 0.06,
+    "xmax_mm": 0.1,
+    "pe_w": 0.25
+  },
+  "physical": {
+    "depth_mm": 5.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1186/ce38mb-32-1-1-2-mini-speaker-driver-black-32-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-131-dayton-audio-ce38mb-32-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

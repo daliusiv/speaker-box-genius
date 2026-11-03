@@ -1,0 +1,39 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE70-30P-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 370.8,
+    "qms": 5.65,
+    "qes": 5.67,
+    "vas_l": 0.04,
+    "re": 7.2,
+    "sd_cm2": 11.04,
+    "qts": 2.83,
+    "le_mh": 0.214,
+    "bl": 1.56,
+    "mms_g": 0.82,
+    "xmax_mm": 0.8,
+    "pe_w": 2
+  },
+  "physical": {
+    "cutout_mm": 67,
+    "depth_mm": 19.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1146/ce70-30p-8-1-1-4-x-2-3-4-full-range-speaker-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-119-dayton-audio-ce70-30p-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

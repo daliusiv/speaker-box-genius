@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE48-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 2,
+  "ts": {
+    "fs": 151,
+    "qms": 11.03,
+    "qes": 1.04,
+    "vas_l": 0.068,
+    "re": 3.5,
+    "sd_cm2": 9.1,
+    "qts": 0.95,
+    "le_mh": 0.37,
+    "bl": 2.48,
+    "mms_g": 1.9,
+    "xmax_mm": 1.2,
+    "pe_w": 5
+  },
+  "physical": {
+    "cutout_mm": 45,
+    "depth_mm": 35.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1924/ce48-4-2-full-range-speaker-driver-5w-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-163--dayton-audio-ce48-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

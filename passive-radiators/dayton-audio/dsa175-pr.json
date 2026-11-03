@@ -1,0 +1,35 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DSA175-PR",
+  "type": "passive-radiator",
+  "size_in": 6,
+  "params": {
+    "mms_g": 30.7,
+    "sd_cm2": 128.7,
+    "xmax_mm": 8,
+    "fs": 26.8,
+    "qms": 4.3,
+    "vas_l": 27.1,
+    "cms_mm_per_n": 1.15
+  },
+  "physical": {
+    "cutout_mm": 144.02,
+    "depth_mm": 101.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1590/dsa175-pr-6-1-2-designer-series-aluminum-cone-passive-radiator",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-548--dayton-audio-dsa75-pr-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published depth 4 has no unit; read as inches (101.6 mm)."
+}

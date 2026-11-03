@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE140-30S-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 1,
+  "ts": {
+    "fs": 105,
+    "qms": 4.64,
+    "qes": 1.35,
+    "vas_l": 0.41,
+    "re": 7.75,
+    "sd_cm2": 25.1,
+    "qts": 1.04,
+    "le_mh": 0.78,
+    "bl": 4.34,
+    "mms_g": 5.08,
+    "xmax_mm": 2,
+    "pe_w": 10
+  },
+  "physical": {
+    "cutout_mm": 124.81,
+    "depth_mm": 36.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1192/ce140-30s-8-1-x-5-extended-range-speaker-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-145-dayton-audio-ce140-30s-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

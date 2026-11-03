@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS270P-4A",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 22.9,
+    "qms": 1.35,
+    "qes": 0.34,
+    "vas_l": 110.5,
+    "re": 3.9,
+    "sd_cm2": 346.4,
+    "qts": 0.27,
+    "le_mh": 0.55,
+    "bl": 10.9,
+    "mms_g": 73.2,
+    "xmax_mm": 6,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 236,
+    "depth_mm": 113
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1422/rs270p-4a-10-reference-paper-woofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-569--dayton-audio-rs270P-4a-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

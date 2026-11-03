@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PN395-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 44.1,
+    "qms": 8.82,
+    "qes": 0.36,
+    "vas_l": 96.8,
+    "re": 5.5,
+    "sd_cm2": 890.3,
+    "qts": 0.35,
+    "le_mh": 2.2,
+    "bl": 25.3,
+    "mms_g": 150,
+    "xmax_mm": 6.5,
+    "pe_w": 800
+  },
+  "physical": {
+    "cutout_mm": 355.6,
+    "depth_mm": 162.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1561/pn395-8-15-neo-series-pro-woofer-with-4-voice-coil-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-044--dayton-audio-pn395-8--spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

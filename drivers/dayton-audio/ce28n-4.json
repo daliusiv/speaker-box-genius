@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE28N-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 1,
+  "ts": {
+    "fs": 456,
+    "qms": 2.73,
+    "qes": 1.24,
+    "vas_l": 0.006,
+    "re": 3.79,
+    "sd_cm2": 3.1,
+    "qts": 0.85,
+    "le_mh": 6,
+    "bl": 1.56,
+    "xmax_mm": 0.35,
+    "pe_w": 2
+  },
+  "physical": {
+    "cutout_mm": 21.5,
+    "depth_mm": 9.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1917/ce28n-4-1-neo-extended-range-speaker-driver-2w-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-149--dayton-audio-ce28n-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 0.42 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}

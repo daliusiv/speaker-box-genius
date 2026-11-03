@@ -1,0 +1,39 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PC105-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 81.4,
+    "qms": 2.17,
+    "qes": 0.67,
+    "vas_l": 3.7,
+    "re": 3.3,
+    "sd_cm2": 52.8,
+    "qts": 0.51,
+    "le_mh": 0.32,
+    "mms_g": 4.2,
+    "xmax_mm": 2,
+    "pe_w": 40
+  },
+  "physical": {
+    "depth_mm": 102
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1542/pc105-4-4-full-range-poly-cone-driver",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-158-dayton-audio-pc105-4-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published cutout 60 mm can't fit a 4\" driver, so it's left out."
+}

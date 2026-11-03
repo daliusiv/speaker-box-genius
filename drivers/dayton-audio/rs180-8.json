@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS180-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 7,
+  "ts": {
+    "fs": 35.7,
+    "qms": 1.22,
+    "qes": 0.42,
+    "vas_l": 24.4,
+    "re": 6.4,
+    "sd_cm2": 124.7,
+    "qts": 0.31,
+    "le_mh": 0.73,
+    "bl": 7.82,
+    "mms_g": 17.9,
+    "xmax_mm": 6,
+    "pe_w": 60
+  },
+  "physical": {
+    "cutout_mm": 146,
+    "depth_mm": 81
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/101/rs180-8-7-reference-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-355--dayton-audio-rs180-8-reference-woofer-8-ohm-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

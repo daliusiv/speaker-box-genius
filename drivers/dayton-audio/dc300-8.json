@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DC300-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 22.9,
+    "qms": 3.21,
+    "qes": 0.37,
+    "vas_l": 181.5,
+    "re": 6.8,
+    "sd_cm2": 498.8,
+    "qts": 0.33,
+    "le_mh": 2.93,
+    "bl": 16.3,
+    "mms_g": 100.7,
+    "xmax_mm": 4.3,
+    "pe_w": 80
+  },
+  "physical": {
+    "cutout_mm": 279.5,
+    "depth_mm": 131.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/34/dc300-8-12-classic-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/DC300-8%2012_%20Classic%20Woofer%208%20Ohm%20Specification%20Sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,43 @@
+{
+  "brand": "Dayton Audio",
+  "model": "SD215A-88",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 31,
+    "qms": 3.1,
+    "qes": 0.45,
+    "vas_l": 38.2,
+    "re": 3.2,
+    "sd_cm2": 208.7,
+    "qts": 0.39,
+    "le_mh": 1.16,
+    "bl": 7.7,
+    "mms_g": 42.4,
+    "xmax_mm": 6,
+    "pe_w": 80
+  },
+  "physical": {
+    "cutout_mm": 180,
+    "depth_mm": 95
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/130/sd215a-88-8-dvc-subwoofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-484-dayton-audio-sd215a-88-specifications-47084.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "parallel",
+  "notes": "Coil wiring for the published values (parallel) inferred from Re 3.2 Ω with 8 Ω coils."
+}

@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DSA175-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 6,
+  "ts": {
+    "fs": 38.36,
+    "qms": 1.66,
+    "qes": 0.35,
+    "vas_l": 18.7,
+    "re": 5.8,
+    "sd_cm2": 128.7,
+    "qts": 0.29,
+    "le_mh": 0.85,
+    "bl": 9.75,
+    "mms_g": 24.2,
+    "xmax_mm": 5.3,
+    "pe_w": 70
+  },
+  "physical": {
+    "cutout_mm": 144,
+    "depth_mm": 80.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1314/dsa175-8-6-1-2-designer-series-aluminum-cone-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-528--dayton-audio-DSA175-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

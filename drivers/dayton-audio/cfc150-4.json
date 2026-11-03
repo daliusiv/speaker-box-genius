@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CFC150-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 77,
+    "qms": 4.13,
+    "qes": 0.84,
+    "vas_l": 4.18,
+    "re": 3.6,
+    "sd_cm2": 85.1,
+    "qts": 0.7,
+    "le_mh": 0.35,
+    "bl": 4.7,
+    "mms_g": 10.5,
+    "xmax_mm": 3.5,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 120.2,
+    "depth_mm": 68
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2226/cfc150-4-5-1-4-carbon-fiber-woofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-606--dayton-audio-cfc150-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

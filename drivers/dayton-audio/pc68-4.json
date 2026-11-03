@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PC68-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 2,
+  "ts": {
+    "fs": 117.1,
+    "qms": 2.49,
+    "qes": 0.87,
+    "vas_l": 0.7,
+    "re": 3.8,
+    "sd_cm2": 21.2,
+    "qts": 0.65,
+    "le_mh": 0.29,
+    "bl": 2.4,
+    "mms_g": 1.7,
+    "xmax_mm": 2,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 64,
+    "depth_mm": 37
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1538/pc68-4-2-1-2-full-range-poly-cone-driver",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-150-dayton-audio-pc68-4-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

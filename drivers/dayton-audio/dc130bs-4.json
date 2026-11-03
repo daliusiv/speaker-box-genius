@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DC130BS-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 5,
+  "ts": {
+    "fs": 51.8,
+    "qms": 1.86,
+    "qes": 0.44,
+    "vas_l": 13.2,
+    "re": 3.55,
+    "sd_cm2": 93.3,
+    "qts": 0.35,
+    "le_mh": 0.5,
+    "bl": 4.8,
+    "mms_g": 8.8,
+    "xmax_mm": 2.5,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 120,
+    "depth_mm": 77.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/20/dc130bs-4-5-1-4-classic-shielded-woofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-302-dayton-audio-dc130bs-4-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

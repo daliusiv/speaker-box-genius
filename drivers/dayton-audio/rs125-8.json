@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS125-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 59.2,
+    "qms": 1.74,
+    "qes": 0.42,
+    "vas_l": 4.77,
+    "re": 6.2,
+    "sd_cm2": 52.8,
+    "qts": 0.34,
+    "le_mh": 0.57,
+    "bl": 5.69,
+    "mms_g": 5.9,
+    "xmax_mm": 4,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 94,
+    "depth_mm": 55
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/94/rs125-8-5-reference-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-353--rs125-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

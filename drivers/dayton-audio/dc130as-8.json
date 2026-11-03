@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DC130AS-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 57.2,
+    "qms": 2.01,
+    "qes": 0.58,
+    "vas_l": 9.73,
+    "re": 5.6,
+    "sd_cm2": 91.6,
+    "qts": 0.45,
+    "le_mh": 0.84,
+    "bl": 5.83,
+    "mms_g": 9.7,
+    "xmax_mm": 2.5,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 120,
+    "depth_mm": 78.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/19/dc130as-8-5-1-4-classic-shielded-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-300-dayton-audio-dc130as-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

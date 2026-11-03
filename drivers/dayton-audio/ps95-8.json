@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PS95-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 3,
+  "ts": {
+    "fs": 119.8,
+    "qms": 7.33,
+    "qes": 0.8,
+    "vas_l": 0.94,
+    "re": 7.1,
+    "sd_cm2": 28.3,
+    "qts": 0.72,
+    "le_mh": 0.63,
+    "bl": 3.83,
+    "mms_g": 2.2,
+    "xmax_mm": 2.5,
+    "pe_w": 10
+  },
+  "physical": {
+    "cutout_mm": 69.8,
+    "depth_mm": 52.3
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1241/ps95-8-3-1-2-point-source-full-range-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-349--dayton-audio-ps95-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

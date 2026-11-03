@@ -1,0 +1,36 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DMA105-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 72.7,
+    "qms": 2.6,
+    "qes": 0.63,
+    "vas_l": 4.2,
+    "re": 3.4,
+    "sd_cm2": 54.1,
+    "qts": 0.51,
+    "le_mh": 0.3,
+    "bl": 3.4,
+    "mms_g": 4.5,
+    "xmax_mm": 2.5,
+    "pe_w": 35
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1622/dma105-4-4-dual-magnet-aluminum-cone-full-range-driver-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-590--dayton-audio-dma105-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

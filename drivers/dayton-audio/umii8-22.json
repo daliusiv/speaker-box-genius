@@ -8,29 +8,35 @@
     "fs": 46,
     "qms": 3.1,
     "qes": 0.99,
-    "qts": 0.75,
     "vas_l": 8.4,
     "re": 3.9,
+    "sd_cm2": 200,
+    "qts": 0.75,
     "le_mh": 0.75,
     "bl": 9.7,
     "mms_g": 82,
-    "sd_cm2": 200,
     "xmax_mm": 18,
     "pe_w": 400
   },
-  "voice_coils": 2,
-  "ts_wiring": "series",
   "physical": {
-    "cutout_mm": 184.7,
-    "depth_mm": 143.4
+    "cutout_mm": 145,
+    "depth_mm": 144
   },
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.soundimports.eu/nl/dayton-audio-umii8-22.html",
+      "url": "https://www.daytonaudio.com/product/2062/umii8-22-ultimax-ii-8-dvc-subwoofer-2-ohms-per-coil",
       "retrieved": "2026-11-03",
-      "note": "SoundImports (official distributor) product specifications table. Dual 2 Ω coils. Dayton states all parameters are measured with the voice coils wired in series (4 Ω load). Power: table says 400 W RMS, page text says 300 W; 400 W matches Parts Express's listing."
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-708--dayton-audio-UMII8-22-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series"
 }

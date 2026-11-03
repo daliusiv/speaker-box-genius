@@ -1,0 +1,42 @@
+{
+  "brand": "Dayton Audio",
+  "model": "SS12-22",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 12,
+  "ts": {
+    "fs": 27,
+    "qms": 3.47,
+    "qes": 0.39,
+    "vas_l": 49.4,
+    "re": 4.9,
+    "sd_cm2": 528,
+    "qts": 0.35,
+    "le_mh": 1.8,
+    "bl": 24.3,
+    "mms_g": 275,
+    "xmax_mm": 23,
+    "pe_w": 900
+  },
+  "physical": {
+    "cutout_mm": 285.3,
+    "depth_mm": 194.3
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2128/ss12-22-12-signature-series-dvc-subwoofer-2-ohms-per-coil",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-732--dayton-audio-ss12-22-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series"
+}

@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PA460-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 28.3,
+    "qms": 11.2,
+    "qes": 0.34,
+    "vas_l": 402,
+    "re": 5.6,
+    "sd_cm2": 1241.1,
+    "qts": 0.33,
+    "le_mh": 3.9,
+    "bl": 22.3,
+    "mms_g": 171,
+    "xmax_mm": 6,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 425,
+    "depth_mm": 198
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/78/pa460-8-18-pro-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-036-dayton-audio-pa460-8-specifications-46885.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

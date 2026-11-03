@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DS215-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 34.3,
+    "qms": 1.75,
+    "qes": 0.38,
+    "vas_l": 43.1,
+    "re": 5.8,
+    "sd_cm2": 211.2,
+    "qts": 0.31,
+    "le_mh": 1.25,
+    "bl": 9.89,
+    "mms_g": 29.7,
+    "xmax_mm": 5.5,
+    "pe_w": 80
+  },
+  "physical": {
+    "cutout_mm": 180,
+    "depth_mm": 95.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1057/ds215-8-8-designer-series-woofer-speaker-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-430--dayton-audio-ds215-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

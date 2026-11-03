@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DS115-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 4,
+  "ts": {
+    "fs": 55.2,
+    "qms": 2.1,
+    "qes": 0.46,
+    "vas_l": 4.33,
+    "re": 5.8,
+    "sd_cm2": 54.1,
+    "qts": 0.38,
+    "le_mh": 0.8,
+    "bl": 5.88,
+    "mms_g": 7.9,
+    "xmax_mm": 4.1,
+    "pe_w": 35
+  },
+  "physical": {
+    "cutout_mm": 93.6,
+    "depth_mm": 54.7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1054/ds115-8-4-designer-series-woofer-speaker-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-424--dayton-audio-ds115-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

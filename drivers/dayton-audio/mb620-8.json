@@ -1,0 +1,39 @@
+{
+  "brand": "Dayton Audio",
+  "model": "MB620-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 104,
+    "qms": 4.29,
+    "qes": 0.69,
+    "vas_l": 6.77,
+    "re": 5.47,
+    "sd_cm2": 132.73,
+    "qts": 0.59,
+    "le_mh": 0.93,
+    "bl": 6.68,
+    "mms_g": 8.59,
+    "xmax_mm": 2,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 147.3,
+    "depth_mm": 80
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1807/mb620-8-6-1-2-professional-high-power-midbass-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-635--dayton-audio-mb620-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

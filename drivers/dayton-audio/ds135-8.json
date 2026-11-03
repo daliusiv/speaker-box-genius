@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DS135-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 3,
+  "ts": {
+    "fs": 52.5,
+    "qms": 2.02,
+    "qes": 0.48,
+    "vas_l": 7.27,
+    "re": 5.9,
+    "sd_cm2": 75.4,
+    "qts": 0.39,
+    "le_mh": 0.84,
+    "bl": 6.23,
+    "mms_g": 9.7,
+    "xmax_mm": 4.85,
+    "pe_w": 50
+  },
+  "physical": {
+    "depth_mm": 68.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1055/ds135-8-5-designer-series-woofer-speaker-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-426--dayton-audio-ds135-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published cutout 111.5 mm can't fit a 3\" driver, so it's left out."
+}

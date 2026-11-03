@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "GF180-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 53,
+    "qms": 3.07,
+    "qes": 0.6,
+    "vas_l": 15.5,
+    "re": 8,
+    "sd_cm2": 130.2,
+    "qts": 0.5,
+    "le_mh": 1.9,
+    "bl": 7.9,
+    "mms_g": 13.9,
+    "xmax_mm": 4,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 144,
+    "depth_mm": 81
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1806/gf180-8-6-1-2-glass-fiber-cone-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-418--dayton-audio-gf180-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

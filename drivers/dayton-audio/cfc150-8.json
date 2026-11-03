@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CFC150-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 80,
+    "qms": 4.05,
+    "qes": 1.11,
+    "vas_l": 4.12,
+    "re": 7.2,
+    "sd_cm2": 86,
+    "qts": 0.87,
+    "bl": 5.74,
+    "mms_g": 10.1,
+    "xmax_mm": 3.5,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 120.2,
+    "depth_mm": 68
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2227/cfc150-8-5-1-4-carbon-fiber-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-607--dayton-audio-cfc150-8-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published le -0.55 is implausible, so it's left out."
+}

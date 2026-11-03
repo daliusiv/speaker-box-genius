@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE45N-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 1,
+  "ts": {
+    "fs": 178,
+    "qms": 4.23,
+    "qes": 1.12,
+    "vas_l": 0.084,
+    "re": 3.68,
+    "sd_cm2": 8.04,
+    "qts": 0.89,
+    "le_mh": 0.07,
+    "bl": 1.78,
+    "mms_g": 0.86,
+    "xmax_mm": 1.1,
+    "pe_w": 5
+  },
+  "physical": {
+    "cutout_mm": 22,
+    "depth_mm": 24.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1923/ce45n-4-1-75-dual-neo-full-range-speaker-driver-8w-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-161--dayton-audio-ce45n-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

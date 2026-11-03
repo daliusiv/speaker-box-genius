@@ -8,13 +8,13 @@
     "fs": 19.5,
     "qms": 3.02,
     "qes": 0.5,
-    "qts": 0.43,
     "vas_l": 212,
-    "re": 3.0,
+    "re": 3,
+    "sd_cm2": 829.6,
+    "qts": 0.43,
     "le_mh": 0.92,
     "bl": 15,
     "mms_g": 306,
-    "sd_cm2": 829.6,
     "xmax_mm": 14,
     "pe_w": 500
   },
@@ -25,9 +25,15 @@
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.soundimports.eu/en/dayton-audio-rss390hf-4.html",
+      "url": "https://www.daytonaudio.com/product/126/rss390hf-4-15-reference-hf-subwoofer-4-ohm",
       "retrieved": "2026-11-03",
-      "note": "SoundImports (official distributor) product specifications table."
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-468-dayton-audio-rss390hf-4-specifications-46176.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
   "status": "community"
