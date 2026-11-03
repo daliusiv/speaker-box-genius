@@ -102,6 +102,8 @@ export function App() {
         nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
         ts: d.ts,
         le_mh: d.le_mh ?? 0,
+        l2_mh: 0,
+        r2_ohm: 0,
         xmax_mm: d.xmax_mm ?? s.xmax_mm,
         pe_w: d.pe_w ?? s.pe_w,
         dvc:
@@ -193,6 +195,8 @@ export function App() {
           nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
           ts: d.ts,
           le_mh: d.le_mh ?? 0,
+          l2_mh: 0,
+          r2_ohm: 0,
           xmax_mm: d.xmax_mm ?? s.xmax_mm,
           pe_w: d.pe_w ?? s.pe_w,
           // WinISD drives isobaric pairs at V = √(P·Re/N), which is only half of P in the coils.
@@ -356,6 +360,8 @@ export function App() {
                     nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
                     ts: d.ts,
                     le_mh: d.le_mh ?? 0,
+                    l2_mh: d.l2_mh ?? 0,
+                    r2_ohm: d.r2_ohm ?? 0,
                     xmax_mm: d.xmax_mm ?? s.xmax_mm,
                     pe_w: d.pe_w ?? s.pe_w,
                     volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: d.displacement_l } : s.volume,
@@ -385,6 +391,8 @@ export function App() {
                 driverBrand: "",
                 ts,
                 le_mh: x.le_mh ?? s.le_mh,
+                l2_mh: 0,
+                r2_ohm: 0,
                 xmax_mm: x.xmax_mm ?? s.xmax_mm,
                 pe_w: x.pe_w ?? s.pe_w,
               }))
@@ -423,6 +431,22 @@ export function App() {
           <div className="fields">
             <Num label="Znom" unit="Ω" value={state.nominal_ohms} onChange={(v) => set("nominal_ohms", v)} />
             <Num label="Le" unit="mH" value={state.le_mh} min={0} onChange={(v) => set("le_mh", v)} />
+            <Num
+              label="L2"
+              unit="mH"
+              value={state.l2_mh}
+              min={0}
+              title="Optional: second, lossy inductance (L2R2 coil model). 0 = plain Le. Fill in from a measured sweep."
+              onChange={(v) => set("l2_mh", v)}
+            />
+            <Num
+              label="R2"
+              unit="Ω"
+              value={state.r2_ohm}
+              min={0}
+              title="Optional: resistance across L2 (eddy-current losses). Used only when L2 is also set."
+              onChange={(v) => set("r2_ohm", v)}
+            />
             <Num label="Xmax" unit="mm" value={state.xmax_mm} onChange={(v) => set("xmax_mm", v)} />
             <Num label="Pe" unit="W" value={state.pe_w} onChange={(v) => set("pe_w", v)} />
             <Num
@@ -514,7 +538,7 @@ export function App() {
           measurement={measurement}
           onMeasurement={setMeasurement}
           sd_cm2={solved.values.sd_cm2}
-          onUse={(ts, le_mh) =>
+          onUse={(ts, coil) =>
             setState((s) => {
               // Keep Vas / Sd the user had, unless the measurement provides them; drop values it supersedes.
               const keep: typeof s.ts = {};
@@ -524,7 +548,7 @@ export function App() {
                 ...s,
                 driverName: s.driverName.endsWith("(measured)") ? s.driverName : `${s.driverName} (measured)`,
                 ts: { ...keep, ...ts },
-                le_mh,
+                ...coil,
               };
             })
           }
@@ -612,11 +636,14 @@ export function App() {
               onChange={(rg) => set("settings", { ...state.settings, rg })}
             />
             <Select<"yes" | "no">
-              label="Include Le"
+              label="Coil inductance"
               value={state.settings.inductance ? "yes" : "no"}
               options={[
-                { value: "yes", text: "Yes (more realistic above ~100 Hz)" },
-                { value: "no", text: "No (WinISD's default)" },
+                {
+                  value: "yes",
+                  text: state.l2_mh > 0 && state.r2_ohm > 0 ? "Le + L2/R2 (most realistic)" : "Le (more realistic above ~100 Hz)",
+                },
+                { value: "no", text: "Off (WinISD's default)" },
               ]}
               onChange={(x) => set("settings", { ...state.settings, inductance: x === "yes" })}
             />

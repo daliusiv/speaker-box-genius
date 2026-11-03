@@ -49,6 +49,9 @@ export interface DriverTS {
   vas_l: number; // litres
   re: number; // ohms
   le_mh?: number;
+  /** Optional L2R2 voice-coil model: Le + (L2 ∥ R2). Both or neither. */
+  l2_mh?: number;
+  r2_ohm?: number;
   bl?: number; // T·m
   mms_g?: number;
   sd_cm2: number;
@@ -124,6 +127,8 @@ const RANGES: Record<string, [number, number]> = {
   vas_l: [0.001, 10000],
   re: [0.1, 64],
   le_mh: [0, 20],
+  l2_mh: [0.001, 50],
+  r2_ohm: [0.01, 1000],
   bl: [0.1, 100],
   mms_g: [0.05, 2000],
   sd_cm2: [1, 10000],
@@ -248,10 +253,11 @@ export function validateDriver(data: unknown): Errors {
     errors.push("ts: required object with Thiele/Small parameters");
   } else {
     const required = ["fs", "qms", "qes", "vas_l", "re", "sd_cm2"];
-    const optional = ["qts", "le_mh", "bl", "mms_g", "xmax_mm", "pe_w"];
+    const optional = ["qts", "le_mh", "l2_mh", "r2_ohm", "bl", "mms_g", "xmax_mm", "pe_w"];
     checkKeys(ts, [...required, ...optional], "ts", errors);
     for (const k of required) num(ts, k, "ts", errors, true);
     for (const k of optional) num(ts, k, "ts", errors, false);
+    if ((ts.l2_mh === undefined) !== (ts.r2_ohm === undefined)) errors.push("ts: l2_mh and r2_ohm go together (give both or neither)");
   }
   return errors.map((e) => e.replace(/^\./, ""));
 }

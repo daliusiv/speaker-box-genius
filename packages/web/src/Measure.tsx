@@ -7,7 +7,12 @@ import {
   type ImpedanceData,
   type TsValues,
 } from "@sbg/engine";
-import { Card, Num } from "./components.tsx";
+import { Card, Num, Select } from "./components.tsx";
+
+type CoilModel = "le" | "lr2";
+/** L2R2 keeps fs, Qms and Qes from the fit around the resonance, so the T/S values don't depend on the coil model. */
+const fit = (d: ImpedanceData, reDc: number, coil: CoilModel) =>
+  fitImpedance(d, reDc > 0 ? reDc : undefined, { inductance: coil, holdTs: true });
 
 export interface Measurement {
   name: string;
@@ -20,7 +25,7 @@ interface Props {
   onMeasurement: (m: Measurement | null) => void;
   /** Current Sd, needed to turn an added-mass result into Vas. */
   sd_cm2: number | undefined;
-  onUse: (ts: TsValues, le_mh: number) => void;
+  onUse: (ts: TsValues, coil: { le_mh: number; l2_mh: number; r2_ohm: number }) => void;
 }
 
 async function readFile(f: File): Promise<string> {
@@ -35,6 +40,7 @@ const pct = (v: number) => `${(v * 100).toFixed(1)} %`;
  */
 export function MeasurePanel(props: Props) {
   const [reDc, setReDc] = useState(0);
+  const [coil, setCoil] = useState<CoilModel>("lr2");
   const [msg, setMsg] = useState("");
   const [mass, setMass] = useState(20);
   const [massFit, setMassFit] = useState<FitResult | null>(null);
@@ -45,8 +51,7 @@ export function MeasurePanel(props: Props) {
   const load = async (f: File) => {
     try {
       const data = parseImpedance(await readFile(f));
-      const fit = fitImpedance(data, reDc > 0 ? reDc : undefined);
-      props.onMeasurement({ name: f.name, data, fit });
+      props.onMeasurement({ name: f.name, data, fit: fit(data, reDc, coil) });
       setMassFit(null);
       setMsg("");
     } catch (e) {
@@ -54,13 +59,15 @@ export function MeasurePanel(props: Props) {
     }
   };
 
-  const refit = (re: number) => {
+  const refit = (re: number, c: CoilModel) => {
     setReDc(re);
-    if (m) props.onMeasurement({ ...m, fit: fitImpedance(m.data, re > 0 ? re : undefined) });
+    setCoil(c);
+    if (m) props.onMeasurement({ ...m, fit: fit(m.data, re, c) });
   };
 
   const loadMass = async (f: File) => {
     try {
+      // Only fs matters here, so the plain fit is enough.
       setMassFit(fitImpedance(parseImpedance(await readFile(f)), reDc > 0 ? reDc : undefined));
       setMsg("");
     } catch (e) {
@@ -92,7 +99,12 @@ export function MeasurePanel(props: Props) {
       ts.mms_g = round(added.mms_g, 2);
       if (added.vas_l === undefined) ts.cms_mm_per_n = round(added.cms_mm_per_n, 4);
     }
-    props.onUse(ts, round(f.le_mh, 2));
+    const lr2 = f.l2_mh !== undefined && f.r2_ohm !== undefined;
+    props.onUse(ts, {
+      le_mh: round(f.le_mh, 3),
+      l2_mh: lr2 ? round(f.l2_mh!, 3) : 0,
+      r2_ohm: lr2 ? round(f.r2_ohm!, 2) : 0,
+    });
   };
 
   return (
@@ -101,9 +113,21 @@ export function MeasurePanel(props: Props) {
         Load a free-air sweep from DATS, REW, ARTA, etc. (.zma, .txt or .csv: frequency, ohms and phase if you have it).
       </p>
       <div className="fields">
-        <Num label="Re (DC)" unit="Ω" value={reDc} min={0} onChange={refit} />
+        <Num label="Re (DC)" unit="Ω" value={reDc} min={0} onChange={(re) => refit(re, coil)} />
+        <Select<CoilModel>
+          label="Coil model"
+          value={coil}
+          options={[
+            { value: "lr2", text: "Le + L2/R2 (fits the whole sweep)" },
+            { value: "le", text: "Le only (like WinISD)" },
+          ]}
+          onChange={(c) => refit(reDc, c)}
+        />
       </div>
-      <p className="hint">Optional: your meter's DC resistance reading. Leave at 0 to fit it.</p>
+      <p className="hint">
+        Re (DC): optional, your meter's reading; leave at 0 to fit it. Le + L2/R2 follows the impedance rise of real
+        voice coils up to 20 kHz; Fs, Qms and Qes come out the same either way.
+      </p>
       <div className="row">
         <label className="file-button secondary">
           {m ? "Load a different sweep" : "Load free-air sweep"}
@@ -130,7 +154,13 @@ export function MeasurePanel(props: Props) {
               <tr><th>Qes</th><td>{m.fit.qes.toFixed(3)}</td></tr>
               <tr><th>Qts</th><td>{m.fit.qts.toFixed(3)}</td></tr>
               <tr><th>Re</th><td>{m.fit.re.toFixed(2)} Ω{reDc > 0 ? " (fixed)" : ""}</td></tr>
-              <tr><th>Le</th><td>{m.fit.le_mh.toFixed(2)} mH</td></tr>
+              <tr><th>Le</th><td>{m.fit.le_mh.toFixed(3)} mH</td></tr>
+              {m.fit.l2_mh !== undefined && m.fit.r2_ohm !== undefined && (
+                <>
+                  <tr><th>L2</th><td>{m.fit.l2_mh.toFixed(3)} mH</td></tr>
+                  <tr><th>R2</th><td>{m.fit.r2_ohm.toFixed(2)} Ω</td></tr>
+                </>
+              )}
               <tr className="total"><th>Fit error</th><td>{pct(m.fit.rmsError)}</td></tr>
             </tbody>
           </table>
@@ -167,7 +197,7 @@ export function MeasurePanel(props: Props) {
             <button onClick={use}>Use these values</button>
           </div>
           <p className="hint">
-            Replaces the driver's Fs, Qms, Qes, Re and Le{added ? ", and adds Mms from the added-mass test" : ""}. Without an
+            Replaces the driver's Fs, Qms, Qes, Re and Le{m.fit.l2_mh !== undefined ? " (with L2 and R2)" : ""}{added ? ", and adds Mms from the added-mass test" : ""}. Without an
             added-mass sweep, keep the datasheet's Vas or Sd and Mms so the editor can work out the rest.
           </p>
         </>

@@ -42,6 +42,8 @@ export function Num(props: {
   q?: Quantity;
   value: number;
   min?: number;
+  /** Tooltip for the field. */
+  title?: string;
   onChange: (v: number) => void;
 }) {
   const units = useUnits();
@@ -58,7 +60,7 @@ export function Num(props: {
   }, [shown]);
   const min = (props.min ?? Number.MIN_VALUE) * u.k;
   return (
-    <label>
+    <label title={props.title}>
       <span>{props.label}</span>
       <input
         inputMode="decimal"

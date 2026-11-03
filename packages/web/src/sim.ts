@@ -189,6 +189,8 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
     re: t.re! * k.re,
     sd_cm2: t.sd_cm2!,
     le_mh: s.settings.inductance ? s.le_mh * k.re : 0,
+    // L2 and R2 are coil impedances too, so they scale with DVC wiring like Re and Le.
+    ...(s.settings.inductance && s.l2_mh > 0 && s.r2_ohm > 0 ? { l2_mh: s.l2_mh * k.re, r2_ohm: s.r2_ohm * k.re } : {}),
     xmax_mm: s.xmax_mm,
     pe_w: s.pe_w,
   };

@@ -105,7 +105,7 @@ export interface Settings {
   velocity: "peak" | "rms";
   /** Amplifier output + cable resistance (Ω). */
   rg: number;
-  /** Include voice-coil inductance (Le) in the simulation. WinISD leaves it out by default. */
+  /** Include voice-coil inductance (Le, and L2/R2 when entered) in the simulation. WinISD leaves it out by default. */
   inductance: boolean;
   /** Box losses as Q values at the tuning frequency: leakage, absorption, port. WinISD's defaults are 10 / 100 / 100. */
   losses: { ql: number; qa: number; qp: number };
@@ -121,6 +121,9 @@ export interface AppState {
   /** T/S values the user entered. Derived values are never stored. */
   ts: TsValues;
   le_mh: number;
+  /** L2R2 voice-coil model: Le + (L2 ∥ R2). 0 = plain Le. */
+  l2_mh: number;
+  r2_ohm: number;
   xmax_mm: number;
   pe_w: number;
   power: number;
@@ -241,6 +244,8 @@ export const DEFAULT_STATE: AppState = {
   nominal_ohms: 4,
   ts: { fs: 30, qms: 5.2, qes: 0.4, vas_l: 50, re: 3.4, sd_cm2: 330 },
   le_mh: 1.2,
+  l2_mh: 0,
+  r2_ohm: 0,
   xmax_mm: 12,
   pe_w: 250,
   power: 100,
@@ -290,6 +295,8 @@ function fromBase64Url(s: string): string {
   const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
   return new TextDecoder().decode(bytes);
 }
+
+const nonNeg = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : 0);
 
 export function encodeState(s: AppState): string {
   return "s=" + toBase64Url(JSON.stringify(s));
@@ -390,6 +397,8 @@ export function decodeState(hash: string): AppState | null {
       nominal_ohms: raw.nominal_ohms ?? d.nominal_ohms,
       ts: raw.ts ?? d.ts,
       le_mh: raw.le_mh ?? d.le_mh,
+      l2_mh: nonNeg(raw.l2_mh),
+      r2_ohm: nonNeg(raw.r2_ohm),
       xmax_mm: raw.xmax_mm ?? d.xmax_mm,
       pe_w: raw.pe_w ?? d.pe_w,
       power: raw.power ?? d.power,

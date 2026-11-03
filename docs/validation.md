@@ -93,6 +93,40 @@ WinISD's "Simulate voice coil inductance" on, Le = 1 mH.
 WinISD models Le as a plain series inductor, as we do. The setting is read from the
 project's `VCInd` option on import.
 
+## L2R2 voice-coil model against measured drivers
+
+WinISD has only a plain series Le, and that can't follow a real voice coil above a few
+hundred hertz: eddy currents make the coil look less inductive and more resistive as
+frequency rises. The optional L2R2 model adds a second inductor L2 with a resistor R2
+across it: Ze = Re + jωLe + (jωL2 ∥ R2).
+
+We fitted both models to the free-air impedance measurements Dayton Audio publishes for
+12 of its drivers (November 2026). The T/S values were the same for both (fitted around
+the resonance); only the coil differed. Below is the RMS error of the fitted impedance
+against the measurement:
+
+| Driver | 1–5 kHz, Le | 1–5 kHz, L2R2 | 5–20 kHz, Le | 5–20 kHz, L2R2 |
+|---|---|---|---|---|
+| DC160-8 | 38.9 % | 6.2 % | 99.3 % | 8.0 % |
+| DSA215-8 | 31.6 % | 4.4 % | 93.8 % | 7.3 % |
+| MX12-22 | 76.1 % | 7.9 % | 131.6 % | 8.6 % |
+| ND91-4 | 11.5 % | 4.1 % | 47.5 % | 6.6 % |
+| PS95-8 | 9.7 % | 2.7 % | 66.9 % | 2.9 % |
+| RS150-8 | 13.4 % | 3.7 % | 70.5 % | 5.3 % |
+| RS180-8 | 18.7 % | 3.8 % | 83.5 % | 5.6 % |
+| RS225-8 | 27.2 % | 4.6 % | 95.1 % | 6.1 % |
+| RSS315HF-4 | 84.2 % | 6.1 % | 152.3 % | 10.1 % |
+| SD270A-88 | 44.7 % | 6.4 % | 100.4 % | 8.2 % |
+| TCP115-8 | 22.8 % | 4.9 % | 73.0 % | 6.6 % |
+| UMII12-22 | 58.3 % | 5.5 % | 115.0 % | 7.8 % |
+
+Below 200 Hz both models are within 1.5–6.3 %, since the resonance dominates there. The
+plain Le is fitted around the resonance like WinISD's, so it gets the low end right but
+can be off by 2× or more in the treble. With L2R2 the impedance stays within about 10 %
+up to 20 kHz, and so does the response above the resonance of a driver with a lossy coil.
+The comparison script is `packages/db-tools/src/le-check.ts`. Dayton's measurement files
+aren't kept in the repository.
+
 ## Two drivers in parallel (Test 5)
 
 Same ported box with WinISD's "Num. of drivers" set to 2 (parallel), 100 W.

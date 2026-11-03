@@ -88,3 +88,15 @@ test("on a lossy coil, L2R2 fits the whole sweep far better than plain Le", () =
   assert.ok(plain.range[1] < 1000);
   assert.equal(plain.l2_mh, undefined);
 });
+
+test("holding the T/S values keeps fs, Qms and Qes from the resonance fit and still fits the coil", () => {
+  const truth = { re: 3.3, fs: 28, qms: 4, qes: 0.45, le_mh: 0.25, l2_mh: 1.1, r2_ohm: 3.5 };
+  const data = sweep(truth, true);
+  const plain = fitImpedance(data);
+  const held = fitImpedance(data, undefined, { inductance: "lr2", holdTs: true });
+  assert.equal(held.fs, plain.fs);
+  assert.equal(held.qms, plain.qms);
+  assert.equal(held.qes, plain.qes);
+  assert.ok(held.l2_mh! > 0 && held.r2_ohm! > 0);
+  assert.ok(impedanceFitError(data, held, 10, 20000) < impedanceFitError(data, plain, 10, 20000) / 5);
+});

@@ -106,6 +106,8 @@ export interface LoadedDriver {
   /** Every published T/S value, as "entered" values for the solver. */
   ts: TsValues;
   le_mh?: number;
+  l2_mh?: number;
+  r2_ohm?: number;
   xmax_mm?: number;
   pe_w?: number;
   displacement_l?: number;
@@ -127,6 +129,8 @@ export async function loadDriver(id: string): Promise<LoadedDriver> {
     nominal_ohms: rec.nominal_ohms,
     ts,
     le_mh: rec.ts.le_mh,
+    l2_mh: rec.ts.l2_mh,
+    r2_ohm: rec.ts.r2_ohm,
     xmax_mm: rec.ts.xmax_mm,
     pe_w: rec.ts.pe_w,
     displacement_l: displacementOf(rec.physical),

@@ -55,3 +55,12 @@ test("dual voice coil fields are checked", async () => {
   const { voice_coils: _, ...single } = base;
   assert.match(validateDriver(single).join("\n"), /ts_wiring: only for dual voice coil drivers/);
 });
+
+test("L2 and R2 go together", async () => {
+  const { validateDriver } = await import("../../schema/src/index.ts");
+  const base = JSON.parse(
+    (await import("node:fs")).readFileSync(join(REPO_ROOT, "drivers/dayton-audio/rss315hf-4.json"), "utf8"),
+  );
+  assert.deepEqual(validateDriver({ ...base, ts: { ...base.ts, l2_mh: 0.88, r2_ohm: 4.8 } }), []);
+  assert.match(validateDriver({ ...base, ts: { ...base.ts, l2_mh: 0.88 } }).join("\n"), /l2_mh and r2_ohm go together/);
+});
