@@ -421,6 +421,17 @@ export function App(props: { initial: AppState | null }) {
   ];
   const chartTab: ChartId = chartTabs.some((t) => t.id === chartPick) ? chartPick : chartTabs[0]!.id;
 
+  // Passive radiators put a deep notch in the response at their own resonance, where the
+  // group delay swings far negative; mark it instead of drawing a cliff off the chart.
+  const notchMarkers = designs.flatMap((d) => {
+    const gd = d.result.groupDelayMs;
+    let i0 = -1;
+    for (let i = 0; i < gd.length; i++) if (gd[i]! < -20 && (i0 < 0 || gd[i]! < gd[i0]!)) i0 = i;
+    if (i0 < 0) return [];
+    const f = d.result.freq[i0]!;
+    return [{ f, label: `${d.design.name}: notch ${f < 100 ? f.toFixed(1) : f.toFixed(0)} Hz`, color: d.color }];
+  });
+
   const signalOn = (state.highPass.on ? 1 : 0) + state.eq.filter((e) => e.on).length + (state.roomGain.mode !== "off" ? 1 : 0);
   const tabBadges: Partial<Record<PanelId, string>> = {
     boxes: String(state.designs.filter((d) => d.on).length),
@@ -937,6 +948,7 @@ export function App(props: { initial: AppState | null }) {
               unit="ms"
               freq={freq}
               series={series((r) => r.groupDelayMs)}
+              markers={notchMarkers}
               yMin={-20}
               yMax={100}
             />

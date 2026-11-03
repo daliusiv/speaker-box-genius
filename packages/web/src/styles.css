@@ -1387,3 +1387,14 @@ figure.chart[hidden] {
     display: none;
   }
 }
+
+.marker {
+  stroke-dasharray: 2 3;
+}
+
+.marker-label {
+  paint-order: stroke;
+  stroke: var(--card);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}

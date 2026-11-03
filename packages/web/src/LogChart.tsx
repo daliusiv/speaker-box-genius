@@ -19,6 +19,13 @@ export interface Series {
   dash?: string;
 }
 
+/** A labelled vertical line at one frequency (e.g. a passive radiator's notch). */
+export interface Marker {
+  f: number;
+  label: string;
+  color: string;
+}
+
 export interface Limit {
   value: number;
   label: string;
@@ -31,6 +38,7 @@ interface Props {
   freq: Float64Array;
   series: Series[];
   limits?: Limit[];
+  markers?: Marker[];
   yMin?: number;
   yMax?: number;
   digits?: number;
@@ -54,7 +62,7 @@ function niceStep(range: number): number {
 }
 
 /** Line chart with a logarithmic frequency axis, horizontal limit lines and a hover readout. */
-export function LogChart({ title, unit, freq, series, limits = [], yMin, yMax, digits = 1, hidden, forum }: Props) {
+export function LogChart({ title, unit, freq, series, limits = [], markers = [], yMin, yMax, digits = 1, hidden, forum }: Props) {
   const clipId = useId();
   const shared = useContext(Crosshair);
   const [ownF, setOwnF] = useState<number | null>(null);
@@ -127,9 +135,12 @@ export function LogChart({ title, unit, freq, series, limits = [], yMin, yMax, d
   const pathOf = (y: Float64Array) => {
     let d = "";
     let pen = false;
+    // Far outside the axis range (a notch's group delay, say) the curve is left out rather
+    // than drawn as a cliff to the edge of the chart and back.
+    const far = hi - lo;
     for (let i = 0; i < y.length; i++) {
       const v = y[i]!;
-      if (!Number.isFinite(v)) {
+      if (!Number.isFinite(v) || v < lo - far || v > hi + far) {
         pen = false;
         continue;
       }
@@ -214,6 +225,16 @@ export function LogChart({ title, unit, freq, series, limits = [], yMin, yMax, d
               </text>
             </g>
           ))}
+          {markers
+            .filter((m) => m.f >= fMin && m.f <= fMax)
+            .map((m, i) => (
+              <g key={m.label}>
+                <line className="marker" x1={xOf(m.f)} x2={xOf(m.f)} y1={PAD.t} y2={PAD.t + PH} stroke={m.color} {...sw(1)} />
+                <text className="marker-label" x={xOf(m.f) + 4 * k} y={PAD.t + 14 * k + i * 14 * k} fill={m.color} {...fs(11)}>
+                  {m.label}
+                </text>
+              </g>
+            ))}
           {visible.map((s) => (
             <path key={s.label} d={pathOf(s.y!)} fill="none" stroke={s.color} strokeDasharray={s.dash} {...sw(2)} />
           ))}
