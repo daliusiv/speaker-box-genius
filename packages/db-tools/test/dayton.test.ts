@@ -12,6 +12,8 @@ import {
   parseMm,
   parseProduct,
   dropImplausible,
+  fixPhysical,
+  keepExisting,
   reconcile,
   slugOf,
 } from "../src/dayton.ts";
@@ -177,4 +179,32 @@ test("Vas of 0 is calculated from Cms; a -55 model without DVC in its title stay
   assert.ok(Math.abs(p.driver!.ts.vas_l - 45.6) < 1.5, String(p.driver!.ts.vas_l));
   assert.equal(p.driver!.voice_coils, undefined);
   assert.equal(p.driver!.nominal_ohms, 4);
+});
+
+test("a cutout that can't fit the driver is dropped", () => {
+  const physical = { cutout_mm: 200, depth_mm: 179 };
+  const notes: string[] = [];
+  fixPhysical(physical, notes, 12);
+  assert.deepEqual(physical, { depth_mm: 179 });
+  assert.match(notes[0]!, /can't fit a 12" driver/);
+  const ok = { cutout_mm: 285 };
+  fixPhysical(ok, [], 12);
+  assert.equal(ok.cutout_mm, 285);
+});
+
+test("re-import keeps displacement, submissions and verified status, drops dealer sources", () => {
+  const fresh = parseProduct(fx("rss315hf-4.html"), URL, "2026-11-03").driver!;
+  keepExisting(fresh, {
+    status: "verified",
+    physical: { displacement_l: 2.4 },
+    sources: [
+      { kind: "datasheet" as const, url: "https://www.soundimports.eu/x", note: "SoundImports" },
+      { kind: "datasheet" as const, url: "https://www.daytonaudio.com/x.pdf", note: "Submitted in issue #1 by @someone." },
+      { kind: "measured" as const, method: "DATS v3", by: "github:alice" },
+    ],
+  });
+  assert.equal(fresh.status, "verified");
+  assert.equal(fresh.physical?.displacement_l, 2.4);
+  assert.equal(fresh.sources.length, 4); // two from the importer + the submission + the measurement
+  assert.ok(!fresh.sources.some((x) => x.url?.includes("soundimports")));
 });

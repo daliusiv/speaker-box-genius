@@ -206,7 +206,7 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
     if (cms !== undefined) params.cms_mm_per_n = cms;
     const maxAdd = firstNumber(get(rows, "Max Added Mass", "Maximum Added Mass"));
     if (maxAdd !== undefined) params.max_added_mass_g = maxAdd;
-    fixPhysical(physical, notes);
+    fixPhysical(physical, notes, size_in);
     const pr: PassiveRadiator = {
       brand: "Dayton Audio",
       model,
@@ -298,7 +298,7 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
     };
   }
 
-  dropImplausible(ts, physical, notes);
+  dropImplausible(ts, physical, notes, size_in);
 
   const typeName = TYPE_MAP.find(([re]) => re.test(type || title))?.[1] ?? "woofer";
   const driver: Driver = {
@@ -324,10 +324,10 @@ const OPTIONAL_TS = ["qts", "le_mh", "bl", "mms_g", "xmax_mm", "pe_w"] as const;
  * with no unit) shouldn't throw away the whole entry: convert obvious inch values,
  * drop the rest, and say so.
  */
-export function dropImplausible(ts: Driver["ts"], physical: NonNullable<Driver["physical"]>, notes: string[]) {
+export function dropImplausible(ts: Driver["ts"], physical: NonNullable<Driver["physical"]>, notes: string[], size_in?: number) {
   const probe = () =>
     validateDriver({ brand: "x", model: "x", type: "woofer", nominal_ohms: 4, ts, physical, sources: [{ kind: "community" }], status: "community" });
-  fixPhysical(physical, notes);
+  fixPhysical(physical, notes, size_in);
   for (const key of OPTIONAL_TS) {
     const v = ts[key];
     if (v === undefined || !probe().some((e) => e.startsWith(`ts.${key}`))) continue;
@@ -337,7 +337,7 @@ export function dropImplausible(ts: Driver["ts"], physical: NonNullable<Driver["
 }
 
 /** Cutout and depth: read unit-less small numbers as inches, drop the impossible. */
-export function fixPhysical(physical: NonNullable<Driver["physical"]>, notes: string[]) {
+export function fixPhysical(physical: NonNullable<Driver["physical"]>, notes: string[], size_in?: number) {
   const ok = (key: "cutout_mm" | "depth_mm", v: number) => (key === "cutout_mm" ? v >= 10 && v <= 1000 : v >= 5 && v <= 600);
   for (const key of ["cutout_mm", "depth_mm"] as const) {
     const v = physical[key];
@@ -350,6 +350,15 @@ export function fixPhysical(physical: NonNullable<Driver["physical"]>, notes: st
     } else {
       delete physical[key];
       notes.push(`Published ${name} ${v} is implausible, so it's left out.`);
+    }
+  }
+  // A cutout is roughly 70–105 % of the nominal diameter; anything else is another dimension.
+  const c = physical.cutout_mm;
+  if (c !== undefined && size_in !== undefined && size_in >= 3) {
+    const ratio = c / (size_in * 25.4);
+    if (ratio < 0.7 || ratio > 1.05) {
+      delete physical.cutout_mm;
+      notes.push(`Published cutout ${c} mm can't fit a ${size_in}" driver, so it's left out.`);
     }
   }
 }
@@ -389,6 +398,22 @@ export function reconcile(ts: Driver["ts"], cmsMmPerN: number | undefined, notes
 // ---------------------------------------------------------------------------
 // Crawling and writing
 // ---------------------------------------------------------------------------
+
+/**
+ * On re-import, keep what this importer doesn't produce: a contributed
+ * displacement, measurements and community submissions (their sources), and
+ * a "verified" status. Dealer-page sources are replaced by Dayton's own.
+ */
+export function keepExisting(
+  fresh: Driver | PassiveRadiator,
+  old: { physical?: Driver["physical"]; sources?: Driver["sources"]; status?: string },
+) {
+  const disp = old.physical?.displacement_l;
+  if (disp !== undefined && fresh.physical?.displacement_l === undefined) fresh.physical = { ...fresh.physical, displacement_l: disp };
+  const extra = (old.sources ?? []).filter((x) => x.kind !== "datasheet" || /issue #\d+/i.test(x.note ?? ""));
+  if (extra.length) fresh.sources = [...fresh.sources, ...extra];
+  if (old.status === "verified") fresh.status = "verified";
+}
 
 const UA = "SpeakerBoxGenius-importer/1.0 (+https://github.com/daliusiv/speaker-box-genius; with Dayton Audio's permission)";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -467,6 +492,7 @@ async function main() {
     if (!dry) {
       mkdirSync(dir, { recursive: true });
       const file = join(dir, `${slug}.json`);
+      if (existsSync(file)) keepExisting(data, JSON.parse(readFileSync(file, "utf8")));
       if (!existsSync(join(dir, "_brand.json")) && p.kind === "passive-radiator") {
         writeFileSync(join(dir, "_brand.json"), readFileSync(join(REPO_ROOT, "drivers/dayton-audio/_brand.json")));
       }
