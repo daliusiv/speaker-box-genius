@@ -1538,3 +1538,55 @@ button.check-chip.open {
   padding-top: 0.5rem;
   border-top: 1px dashed var(--border);
 }
+
+/* Chart values: a floating box over the plot (no layout shift while hovering or dragging) */
+.chart-body {
+  position: relative;
+}
+
+.chart-hint {
+  font-size: 0.8rem;
+}
+
+.chart-tip {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  gap: 0.15rem;
+  max-width: min(22rem, 70%);
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.12);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+.chart-tip .readout-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.chart-tip .tip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.chart-tip .tip-value {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .chart-tip {
+    font-size: 0.72rem;
+    max-width: 75%;
+  }
+}

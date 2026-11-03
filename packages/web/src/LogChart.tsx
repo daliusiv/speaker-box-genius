@@ -8,6 +8,15 @@ const Crosshair = createContext<{ f: number | null; set: (f: number | null) => v
 
 export function CrosshairProvider({ children }: { children: ReactNode }) {
   const [f, set] = useState<number | null>(null);
+  // On touch screens the values stay after a tap; tapping anywhere outside a chart clears them.
+  useEffect(() => {
+    if (f === null) return;
+    const clear = (e: globalThis.PointerEvent) => {
+      if (!(e.target instanceof Element) || !e.target.closest("figure.chart svg")) set(null);
+    };
+    addEventListener("pointerdown", clear);
+    return () => removeEventListener("pointerdown", clear);
+  }, [f]);
   return <Crosshair.Provider value={{ f, set }}>{children}</Crosshair.Provider>;
 }
 
@@ -234,24 +243,34 @@ export function LogChart({
     <figure className="chart" hidden={hidden} data-forum={forum ? "" : undefined}>
       <figcaption>
         <span className="chart-title">{title}</span>
-        <span className="chart-readout">
-          {hover !== null ? (
-            <>
-              <b>{freq[hover]!.toFixed(1)} Hz</b>
-              {visible.map((s) => (
-                <span key={s.label} className="readout-item">
-                  {" "}
-                  <span className="swatch" style={{ background: s.color }} aria-hidden="true" />
-                  {s.label}: {Number.isFinite(s.y![hover]!) ? s.y![hover]!.toFixed(digits) : "–"} {unit}
-                  {s.notes?.[hover] ? ` (${s.notes[hover]})` : ""}
-                </span>
-              ))}
-            </>
-          ) : (
-            <span className="muted">Hover or tap the chart for values</span>
-          )}
-        </span>
+        <span className="chart-hint muted">Hover or tap for values</span>
       </figcaption>
+      {/* The values float over the plot, on the side away from the cursor, so nothing
+          around the chart moves while you hover or drag (the caption never changes size). */}
+      <div className="chart-body">
+      {hover !== null && (
+        <div
+          className="chart-tip"
+          role="status"
+          style={
+            xOf(freq[hover]!) > W / 2
+              ? { left: `${((PAD.l + 6) / W) * 100}%`, top: `${((PAD.t + 4) / (H + ribbonH)) * 100}%` }
+              : { right: `${((PAD.r + 6) / W) * 100}%`, top: `${((PAD.t + 4) / (H + ribbonH)) * 100}%` }
+          }
+        >
+          <b>{freq[hover]!.toFixed(1)} Hz</b>
+          {visible.map((s) => (
+            <span key={s.label} className="readout-item">
+              <span className="swatch" style={{ background: s.color }} aria-hidden="true" />
+              <span className="tip-label">{s.label}</span>
+              <span className="tip-value">
+                {Number.isFinite(s.y![hover!]!) ? s.y![hover!]!.toFixed(digits) : "–"} {unit}
+                {s.notes?.[hover!] ? ` · ${s.notes[hover!]}` : ""}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H + ribbonH}`}
@@ -259,7 +278,8 @@ export function LogChart({
         aria-label={title}
         onPointerMove={onMove}
         onPointerDown={onMove}
-        onPointerLeave={() => setHoverF(null)}
+        // A finger lifting also "leaves"; keep the values up after a tap (a tap elsewhere clears them).
+        onPointerLeave={(e) => e.pointerType === "mouse" && setHoverF(null)}
       >
         <defs>
           <clipPath id={clipId}>
@@ -382,6 +402,7 @@ export function LogChart({
           </g>
         )}
       </svg>
+      </div>
     </figure>
   );
 }
