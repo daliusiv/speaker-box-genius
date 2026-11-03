@@ -149,9 +149,30 @@ the tuning; with it:
 | Impedance | 60.50 Hz | 8.526 Ω | 8.554 Ω | +0.3 % |
 
 WinISD's rear-chamber "Frc" (65.42 Hz) is the driver's resonance in the closed rear
-chamber, which we report as Fc. The inter-chamber leak's reference (driver compliance
-at Fs, or front-chamber compliance at Frc, which are almost equal for this box) is
-being pinned down with the 6th-order projects.
+chamber, which we report as Fc. The inter-chamber leak is referred to the driver,
+R = Q / (2π·Fs·Cas), as the 6th-order test below confirms.
+
+## 6th-order bandpass (Test 8)
+
+WinISD BType=3: 20 L rear chamber tuned to 35 Hz and 15 L front chamber tuned to 70 Hz,
+both with a 7.5 cm port to the outside, 100.1 W.
+
+| Graph | Frequency | WinISD | Speaker Box Genius | Difference |
+|---|---|---|---|---|
+| Transfer function | 30.58 Hz | −11.089 dB | −11.087 dB | +0.002 dB |
+| Transfer function | 50.27 Hz | 0.935 dB | 0.935 dB | 0 |
+| Transfer function | 81.13 Hz | 0.476 dB | 0.475 dB | −0.001 dB |
+| Transfer function | 120.82 Hz | −7.857 dB | −7.857 dB | 0 |
+| Cone excursion | 30.20 Hz | 5.369 mm | 5.354 mm | −0.28 % |
+| Rear port air velocity | 35.25 Hz | 16.516 m/s | 16.458 m/s | −0.35 % |
+| Rear port air velocity | 70.38 Hz | 0.904 m/s | 0.901 m/s | −0.31 % |
+| Front port air velocity | 35.25 Hz | 2.680 m/s | 2.672 m/s | −0.29 % |
+| Front port air velocity | 69.73 Hz | 22.982 m/s | 22.904 m/s | −0.34 % |
+| Impedance | 30.48 Hz | 7.265 Ω | 7.282 Ω | +0.2 % |
+| Impedance | 60.13 Hz | 8.832 Ω | 8.865 Ω | +0.4 % |
+
+Referring the inter-chamber leak to the front chamber instead put the response 0.16 dB
+off, which rules that reading out.
 
 ## Passive radiator: 1× DSA270-PR
 

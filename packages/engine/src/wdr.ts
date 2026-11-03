@@ -152,7 +152,7 @@ export interface WprProject {
   box: { type: "vented" | "sealed" | "passive-radiator" | "bandpass" | "other"; bType: number; vb_l: number; fb?: number; ql: number; qa: number; qp: number };
   port?: WprPort;
   /**
-   * Bandpass box (BType=2 is 4th order). Front chamber: Vf, Ff, Qlf/Qaf/Qpf and [VentFront].
+   * Bandpass box (BType=2: 4th order; BType=3: 6th order, both chambers ported out). Front chamber: Vf, Ff, Qlf/Qaf/Qpf and [VentFront].
    * Rear chamber: Vr, Qlr/Qar/Qpr, and [VentRear] (to the outside) or [VentIntra] (into the
    * front chamber) for 6th order. Qiclfr is the leakage between the chambers.
    */
@@ -250,7 +250,7 @@ export function parseWpr(text: string): WprProject {
   const frontVent = ventOf(s.get("ventfront"));
   const rearVent = ventOf(vent);
   const intraVent = ventOf(s.get("ventintra"));
-  // BType 2 is the 4th-order bandpass. Other bandpass codes are recognised by their vents.
+  // BType 2 / 3 are the 4th- and 6th-order bandpass; other codes are recognised by their vents.
   const isBandpass = bType === 2 || (frontVent !== undefined && n0(box, "Vf") > 0 && bType !== 1 && bType !== 0 && bType !== 4);
   const type: WprProject["box"]["type"] = isBandpass
     ? "bandpass"

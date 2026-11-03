@@ -214,16 +214,11 @@ export interface BandpassInput {
   rearPortTo?: "outside" | "front";
   endCorrection?: number;
   /**
-   * Leakage between the chambers (around the driver and through the baffle), as a Q.
-   * WinISD's default is 100 (Qiclfr). Infinity = no inter-chamber leak.
+   * Leakage between the chambers (around the driver and through the baffle), as a Q
+   * referred to the driver: R = Q / (2π·Fs·Cas). WinISD's default is 100 (Qiclfr).
+   * Infinity = no inter-chamber leak.
    */
   qicl?: number;
-}
-
-/** Reference for the inter-chamber leakage Q (under validation against WinISD). */
-export let BANDPASS_ICL_REF: "driver" | "front-at-rear" = "driver";
-export function setBandpassIclRef(r: typeof BANDPASS_ICL_REF) {
-  BANDPASS_ICL_REF = r;
 }
 
 export type EnclosureInput =

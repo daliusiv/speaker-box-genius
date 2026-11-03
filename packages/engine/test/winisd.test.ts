@@ -341,3 +341,35 @@ test("DSA215-8 4th-order bandpass: project read and graphs match WinISD (Test 7)
   near(at(49.81).portVelocity![0]! / 21.993 - 1, 0, 0.006, "front port velocity at 49.81 Hz");
   for (const [f, z] of [[30.11, 11.046], [60.5, 8.526]] as const) near(at(f).impedanceOhm[0]! / z - 1, 0, 0.01, `impedance at ${f} Hz`);
 });
+
+// Test 8: 6th-order bandpass (BType=3), both chambers ported to the outside: 20 L rear
+// tuned to 35 Hz, 15 L front tuned to 70 Hz, 7.5 cm ports. This case pins the
+// inter-chamber leak's reference to the driver (R = Q / (ωs·Cas)).
+test("DSA215-8 6th-order bandpass: project read and graphs match WinISD (Test 8)", () => {
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215-bp6.wpr"), "utf8"));
+  assert.equal(p.box.type, "bandpass");
+  const bp = p.bandpass!;
+  assert.equal(bp.order, "6p");
+  const t = p.driver.ts;
+  const drv = { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: 0 };
+  const port = (w: { diameter_cm: number; length_cm: number }) => ({ shape: "round" as const, diameter_cm: w.diameter_cm, length_cm: w.length_cm });
+  const box = {
+    kind: "bandpass" as const,
+    rear: { vb_l: bp.rear.vb_l, port: port(bp.rear.port!), ql: bp.rear.ql, qa: bp.rear.qa, qp: bp.rear.qp },
+    front: { vb_l: bp.front.vb_l, port: port(bp.front.port), ql: bp.front.ql, qa: bp.front.qa, qp: bp.front.qp },
+    qicl: bp.qicl,
+  };
+  const at = (f: number) => simulate(drv, box, { power: p.power, rg: p.rg, air: p.air, fMin: f, fMax: f, points: 1 });
+  const r = at(50);
+  near(r.summary.fb!, 70, 1e-6, "front tuning");
+  near(r.summary.fbRear!, 35, 1e-6, "rear tuning");
+  for (const [f, db] of [[30.58, -11.089], [50.27, 0.935], [81.13, 0.476], [120.82, -7.857]] as const) {
+    const x = at(f);
+    near(x.spl[0]! - x.summary.referenceSpl, db, 0.01, `TF at ${f} Hz`);
+  }
+  const rel = (a: number, b: number, tol: number, what: string) => near(a / b - 1, 0, tol, what);
+  rel(at(30.2).excursionMm[0]!, 5.369, 0.006, "excursion at 30.2 Hz");
+  for (const [f, v] of [[35.25, 16.516], [70.38, 0.904]] as const) rel(at(f).rearPortVelocity![0]!, v, 0.006, `rear port velocity at ${f} Hz`);
+  for (const [f, v] of [[35.25, 2.68], [69.73, 22.982]] as const) rel(at(f).portVelocity![0]!, v, 0.006, `front port velocity at ${f} Hz`);
+  for (const [f, z] of [[30.48, 7.265], [60.13, 8.832]] as const) rel(at(f).impedanceOhm[0]!, z, 0.01, `impedance at ${f} Hz`);
+});
