@@ -210,6 +210,12 @@ export interface FitOptions {
    * rising impedance above the resonance is captured too.
    */
   inductance?: "le" | "lr2";
+  /**
+   * With "lr2": keep fs, Qms and Qes from the fit around the resonance and fit only
+   * the voice coil (Re, Le, L2, R2) over the whole sweep. The T/S parameters then
+   * match the plain fit; only the coil model changes.
+   */
+  holdTs?: boolean;
 }
 
 /**
@@ -220,7 +226,7 @@ export interface FitOptions {
  * @param reDc measured DC resistance; if given, Re is held fixed at this value.
  */
 export function fitImpedance(d: ImpedanceData, reDc?: number, opts: FitOptions = {}): FitResult {
-  if (opts.inductance === "lr2") return fitLr2(d, reDc);
+  if (opts.inductance === "lr2") return fitLr2(d, reDc, opts.holdTs ?? false);
   const start = estimateFromPeak(d, reDc);
   // Fit range: around the resonance, where the lumped model is good.
   const lo = Math.max(d.freq[0]!, start.fs / 4);
@@ -353,14 +359,16 @@ function pointsIn(d: ImpedanceData, lo: number, hi: number, maxPts = 400) {
  * L2R2 fit over the whole sweep (from fs/4 up to 20 kHz or the end of the data).
  * Starts from the plain-Le fit around the resonance, then frees L2 and R2.
  */
-function fitLr2(d: ImpedanceData, reDc?: number): FitResult {
+function fitLr2(d: ImpedanceData, reDc: number | undefined, holdTs: boolean): FitResult {
   const base = fitImpedance(d, reDc);
   const lo = Math.max(d.freq[0]!, base.fs / 4);
   const hi = Math.min(d.freq[d.freq.length - 1]!, 20000);
   const meas = pointsIn(d, lo, hi);
   const usedPhase = d.phase !== null;
   const names = ["re", "fs", "qms", "qes", "le_mh", "l2_mh", "r2_ohm"] as const;
-  const free = names.filter((n) => !(n === "re" && reDc !== undefined));
+  const held = new Set<string>(holdTs ? ["fs", "qms", "qes"] : []);
+  if (reDc !== undefined) held.add("re");
+  const free = names.filter((n) => !held.has(n));
   const start: Required<ImpedanceParams> = { ...base, le_mh: base.le_mh * 0.5, l2_mh: base.le_mh, r2_ohm: 3 * base.re };
   const toParams = (x: number[]): Required<ImpedanceParams> => {
     const p = { ...start };

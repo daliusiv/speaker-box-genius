@@ -33,15 +33,17 @@ for (const file of process.argv.slice(2)) {
   }
   const plain = fitImpedance(d);
   const lr2 = fitImpedance(d, undefined, { inductance: "lr2" });
+  const held = fitImpedance(d, undefined, { inductance: "lr2", holdTs: true });
   const top = d.freq[d.freq.length - 1]!;
-  for (const [name, p] of [["Le", plain], ["L2R2", lr2]] as const) {
+  for (const [name, p] of [["Le", plain], ["L2R2", lr2], ["L2R2 held", held]] as const) {
     const errs = bands.map(([, lo, hi]) => {
       const a = Math.max(lo || plain.fs / 2, d.freq[0]!);
       const b = Math.min(hi, top);
       return b > a * 1.2 ? pct(impedanceFitError(d, p, a, b)) : "–";
     });
     const ind = name === "Le" ? `${p.le_mh.toFixed(2)} mH` : `${p.le_mh.toFixed(2)} mH / ${p.l2_mh!.toFixed(2)} mH / ${p.r2_ohm!.toFixed(2)} Ω`;
-    rows.push(`| ${name === "Le" ? basename(file) : ""} | ${name} | ${errs.join(" | ")} | ${ind} |`);
+    const ts = `fs ${p.fs.toFixed(1)} Qms ${p.qms.toFixed(2)} Qes ${p.qes.toFixed(3)}`;
+    rows.push(`| ${name === "Le" ? basename(file) : ""} | ${name} | ${errs.join(" | ")} | ${ind}; ${ts} |`);
   }
 }
 console.log(rows.join("\n"));
