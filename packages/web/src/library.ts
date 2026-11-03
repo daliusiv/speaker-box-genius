@@ -1,5 +1,5 @@
 import { C, RHO, estimateDriverDisplacement, TS_PARAMS, type TsParam, type TsValues } from "@sbg/engine";
-import type { AppState } from "./state.ts";
+import type { PrParams } from "./state.ts";
 
 /** Shape of db/index.json produced by packages/db-tools/src/bundle.ts */
 export interface DbIndex {
@@ -108,7 +108,7 @@ export async function loadDriver(id: string): Promise<LoadedDriver> {
 
 export async function loadPassiveRadiator(
   id: string,
-): Promise<{ name: string; params: AppState["pr"]["params"]; displacement_l?: number }> {
+): Promise<{ name: string; params: PrParams; displacement_l?: number }> {
   const rec = (await loadShard(brandOf(id))).passiveRadiators[id];
   if (!rec) throw new Error(`Passive radiator ${id} not found`);
   const p = rec.params;
