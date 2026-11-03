@@ -153,7 +153,13 @@ export function App() {
           power: Number(p.power.toFixed(2)),
           drivers: p.drivers,
           // WinISD's Rg is per driver; our setting is the shared amplifier output.
-          settings: { ...s.settings, air: "winisd", rg: Number((p.rg / p.drivers).toPrecision(6)), inductance: p.simulateLe },
+          settings: {
+            ...s.settings,
+            air: "winisd",
+            rg: Number((p.rg / p.drivers).toPrecision(6)),
+            inductance: p.simulateLe,
+            losses: { ql: p.box.ql, qa: p.box.qa, qp: p.box.qp },
+          },
           highPass: p.highPass ? { on: true, ...p.highPass } : { ...s.highPass, on: false },
           designs,
           volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: Math.round(d.displacement_l * 100) / 100 } : s.volume,
@@ -161,7 +167,7 @@ export function App() {
       });
       const lossNote =
         p.box.ql !== 10 || p.box.qa !== 100 || p.box.qp !== 100
-          ? ` Note: the project uses losses Ql ${p.box.ql}, Qa ${p.box.qa}, Qp ${p.box.qp}; the app uses 10 / 100 / 100.`
+          ? ` Box losses set to the project's Ql ${p.box.ql}, Qa ${p.box.qa}, Qp ${p.box.qp}.`
           : "";
       const boxNote = p.box.type === "other" ? " This box type isn't supported yet, so only the driver was imported." : "";
       const driversNote =
@@ -457,6 +463,24 @@ export function App() {
               ]}
               onChange={(x) => set("settings", { ...state.settings, inductance: x === "yes" })}
             />
+            <Num
+              label="Leakage Ql"
+              value={state.settings.losses.ql}
+              min={1}
+              onChange={(ql) => set("settings", { ...state.settings, losses: { ...state.settings.losses, ql } })}
+            />
+            <Num
+              label="Absorption Qa"
+              value={state.settings.losses.qa}
+              min={1}
+              onChange={(qa) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qa } })}
+            />
+            <Num
+              label="Port loss Qp"
+              value={state.settings.losses.qp}
+              min={1}
+              onChange={(qp) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qp } })}
+            />
             <Select<"peak" | "rms">
               label="Port speed"
               value={state.settings.velocity}
@@ -468,8 +492,10 @@ export function App() {
             />
           </div>
           <p className="hint">
-            For like-for-like checks against WinISD, choose its air values, its amplifier resistance (Signal tab,
-            Rg) and leave out Le, or simply import the WinISD project (.wpr). The {PORT_LIMIT} m/s chuffing line applies to
+            Box losses are Q values at the tuning frequency: lower means more loss. 10 / 100 / 100 matches WinISD's
+            defaults. For like-for-like checks against WinISD,
+            choose its air values, its amplifier resistance (Signal tab, Rg) and leave out Le, or simply import the
+            WinISD project (.wpr). The {PORT_LIMIT} m/s chuffing line applies to
             whichever port-speed convention you pick.
           </p>
         </Card>

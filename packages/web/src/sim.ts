@@ -14,7 +14,7 @@ import {
   type SolveResult,
   type VolumeResult,
 } from "@sbg/engine";
-import type { AppState, DesignState, VentedDesign } from "./state.ts";
+import type { AppState, DesignState, Settings, VentedDesign } from "./state.ts";
 
 /** One colour per design slot; distinguishable in light and dark mode. */
 export const PALETTE = ["#3b82f6", "#f97316", "#22c55e", "#a855f7", "#e11d48", "#0d9488", "#ca8a04", "#64748b"];
@@ -106,14 +106,15 @@ export function alignmentDriver(solved: SolveResult) {
   return { fs: v.fs!, qms: v.qms!, qes: v.qes!, vas_l: v.vas_l! };
 }
 
-function enclosureOf(d: DesignState, vb: number): EnclosureInput {
+function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"]): EnclosureInput {
+  const { ql, qa, qp } = losses;
   switch (d.kind) {
     case "sealed":
-      return { kind: "sealed", vb_l: vb };
+      return { kind: "sealed", vb_l: vb, ql, qa };
     case "vented":
-      return { kind: "vented", vb_l: vb, port: portOf(d), portCount: d.count };
+      return { kind: "vented", vb_l: vb, port: portOf(d), portCount: d.count, ql, qa, qp };
     case "pr":
-      return { kind: "passive-radiator", vb_l: vb, pr: d.params, prCount: d.count, addedMass_g: d.addedMass_g };
+      return { kind: "passive-radiator", vb_l: vb, pr: d.params, prCount: d.count, addedMass_g: d.addedMass_g, ql, qa };
   }
 }
 
@@ -152,7 +153,7 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
       .filter((e) => e.on && (e.target === "all" || e.target === d.id))
       .map(({ id: _id, on: _on, target: _t, ...stage }) => stage as EqStage);
     try {
-      const result = simulate(driver, enclosureOf(d, vb), { ...opts, eq });
+      const result = simulate(driver, enclosureOf(d, vb, s.settings.losses), { ...opts, eq });
       if (s.settings.velocity === "rms" && result.portVelocity) {
         result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
       }

@@ -293,3 +293,18 @@ test("DSA215-8 ×2 in parallel: matches WinISD with its per-driver Rg (Test 5)",
   // WinISD plots a single driver's impedance: N × what the amplifier sees.
   for (const [f, z] of [[19.91, 16.451], [100.39, 18.553]] as const) near((at(f).impedanceOhm[0]! * p.drivers) / z - 1, 0, 0.01, `impedance at ${f} Hz`);
 });
+
+// Test 6: the ported project with leakage Ql 7 (instead of WinISD's default 10).
+test("DSA215-8 vented with Ql 7: losses read from the project and matched (Test 6)", () => {
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215-ql7.wpr"), "utf8"));
+  assert.equal(p.box.ql, 7);
+  const t = p.driver.ts;
+  const drv = { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: 0 };
+  const box = { kind: "vented" as const, vb_l: p.box.vb_l, port: { shape: "round" as const, diameter_cm: p.port!.diameter_cm, length_cm: p.port!.length_cm }, endCorrection: 0.732, ql: p.box.ql, qa: p.box.qa, qp: p.box.qp };
+  const at = (f: number) => simulate(drv, box, { power: p.power, rg: p.rg, air: p.air, fMin: f, fMax: f, points: 1 });
+  for (const [f, db] of [[19.91, -25.422], [40.25, -6.154], [80.38, -0.275]] as const) {
+    const r = at(f);
+    near(r.spl[0]! - r.summary.referenceSpl, db, 0.01, `TF at ${f} Hz`);
+  }
+  for (const [f, z] of [[20.03, 27.68], [41.13, 7.193], [100.7, 11.662]] as const) near(at(f).impedanceOhm[0]! / z - 1, 0, 0.01, `impedance at ${f} Hz`);
+});

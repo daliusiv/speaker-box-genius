@@ -55,6 +55,8 @@ export interface Settings {
   rg: number;
   /** Include voice-coil inductance (Le) in the simulation. WinISD leaves it out by default. */
   inductance: boolean;
+  /** Box losses as Q values at the tuning frequency: leakage, absorption, port. WinISD's defaults are 10 / 100 / 100. */
+  losses: { ql: number; qa: number; qp: number };
 }
 
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
@@ -162,7 +164,7 @@ export const DEFAULT_STATE: AppState = {
   power: 100,
   drivers: 1,
   highPass: { on: false, type: "butterworth", order: 2, freq: 18 },
-  settings: { units: "metric", air: "standard", velocity: "peak", rg: 0, inductance: true },
+  settings: { units: "metric", air: "standard", velocity: "peak", rg: 0, inductance: true, losses: { ql: 10, qa: 100, qp: 100 } },
   eq: [],
   designs: defaultDesigns(),
   volume: {
@@ -278,7 +280,7 @@ export function decodeState(hash: string): AppState | null {
       power: raw.power ?? d.power,
       drivers: raw.drivers ?? d.drivers,
       highPass: { ...d.highPass, ...raw.highPass },
-      settings: { ...d.settings, ...raw.settings },
+      settings: { ...d.settings, ...raw.settings, losses: { ...d.settings.losses, ...raw.settings?.losses } },
       eq: Array.isArray(raw.eq)
         ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf"].includes(e.type)).slice(0, 12)
         : [],

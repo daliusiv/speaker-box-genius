@@ -116,6 +116,20 @@ ours shows what the amplifier sees, which is half that for two in parallel.
 With a shared 0.1 Ω instead, the response differs from WinISD by up to 0.1 dB around
 80 Hz.
 
+## Ported with leakage Ql 7 (Test 6)
+
+| Graph | Frequency | WinISD | Speaker Box Genius | Difference |
+|---|---|---|---|---|
+| Transfer function | 19.91 Hz | −25.422 dB | −25.419 dB | +0.003 dB |
+| Transfer function | 40.25 Hz | −6.154 dB | −6.154 dB | 0 |
+| Transfer function | 80.38 Hz | −0.275 dB | −0.275 dB | 0 |
+| Impedance | 20.03 Hz | 27.680 Ω | 27.896 Ω | +0.8 % |
+| Impedance | 41.13 Hz | 7.193 Ω | 7.206 Ω | +0.2 % |
+| Impedance | 100.70 Hz | 11.662 Ω | 11.733 Ω | +0.6 % |
+
+Box losses (Ql, Qa, Qp) are now set in the app's Settings and read from imported
+projects. With the default Ql 10 instead, the response would be 0.5 dB off at Fb.
+
 ## Passive radiator: 1× DSA270-PR
 
 | Box | Frequency | WinISD | Speaker Box Genius | Difference |
