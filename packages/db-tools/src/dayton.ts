@@ -9,6 +9,8 @@
  *   node … dayton.ts            crawl the site and write drivers/dayton-audio/*.json
  *   node … dayton.ts --dry-run  crawl and report only
  *
+ * Midranges are included: their sealed back chamber is a box like any other.
+ *
  * Only numbers are taken. Every entry links to its product page. Values that
  * contradict each other are fixed only when one published value is clearly the
  * odd one out (it's dropped or recomputed, and the entry says so); anything
@@ -28,6 +30,7 @@ export const CATEGORIES: { id: number; slug: string }[] = [
   { id: 121, slug: "subwoofers" },
   { id: 118, slug: "woofers" },
   { id: 123, slug: "full-range" },
+  { id: 120, slug: "midrange-drivers" },
   { id: 125, slug: "passive-radiators" },
   { id: 161, slug: "pro-audio-drivers" },
   { id: 178, slug: "mini-micro-speakers" },
@@ -140,11 +143,13 @@ const TYPE_MAP: [RegExp, Driver["type"]][] = [
   [/sub/i, "subwoofer"],
   [/mid.?bass|mid.?woofer/i, "midbass"],
   [/full.?range|extended range/i, "full-range"],
+  // "Woofer/Midrange" stays a woofer; only pure midranges get their own type.
+  [/^(?!.*(?:woofer|bass)).*mid.?range/i, "midrange"],
   [/woofer|bass/i, "woofer"],
 ];
 
 /** Speaker types that aren't box-design material. */
-const NOT_A_BOX_DRIVER = /tweeter|compression|horn|exciter|transducer|shaker|midrange|replacement|diaphragm/i;
+const NOT_A_BOX_DRIVER = /tweeter|compression|horn|exciter|transducer|shaker|replacement|diaphragm/i;
 
 export function parseProduct(html: string, url: string, retrieved: string): Parsed {
   const rows = parseRows(html);
