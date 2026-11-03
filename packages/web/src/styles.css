@@ -296,6 +296,10 @@ td.over {
   stroke-width: 1;
 }
 
+.cursor-dot {
+  stroke: var(--card);
+}
+
 footer {
   font-size: 0.85rem;
 }
@@ -1241,4 +1245,19 @@ button.icon:disabled {
     z-index: 5;
     box-shadow: 0 4px 10px -6px rgb(0 0 0 / 0.25);
   }
+}
+
+/* More charts: one at a time under a tab row */
+.chart-tabs {
+  margin-bottom: -0.5rem;
+  flex-wrap: wrap;
+}
+
+.chart-tabs [role="tab"] {
+  flex: 0 1 auto;
+  padding-inline: 0.75rem;
+}
+
+figure.chart[hidden] {
+  display: none;
 }

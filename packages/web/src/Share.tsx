@@ -175,6 +175,7 @@ function standaloneSvg(svg: SVGSVGElement, width: number, height: number): strin
   });
   clone.setAttribute("width", String(width));
   clone.setAttribute("height", String(height));
+  clone.querySelector("g.cursor")?.remove();
   clone.querySelector("line.cursor")?.remove();
   return new XMLSerializer().serializeToString(clone);
 }
@@ -198,7 +199,9 @@ export async function renderForumImage(state: AppState, designs: Design[]): Prom
   const border = col("--border", "#e7e5e4");
   const font = getComputedStyle(document.body).fontFamily || "system-ui, sans-serif";
 
-  const figures = [...document.querySelectorAll<HTMLElement>("figure.chart")].slice(0, 4);
+  // The charts marked for the image (SPL, excursion, PR excursion, port speed), shown or not.
+  const marked = [...document.querySelectorAll<HTMLElement>("figure.chart[data-forum]")];
+  const figures = (marked.length > 0 ? marked : [...document.querySelectorAll<HTMLElement>("figure.chart")]).slice(0, 4);
   const W = 1600;
   const pad = 32;
   const colW = (W - pad * 3) / 2;

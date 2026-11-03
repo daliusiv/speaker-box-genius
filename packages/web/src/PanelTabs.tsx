@@ -91,3 +91,47 @@ export function PanelTabs(props: {
     </div>
   );
 }
+
+/** A plain row of tabs (used above the charts). Arrow keys move between tabs. */
+export function TabRow<T extends string>(props: {
+  tabs: { id: T; label: string }[];
+  selected: T;
+  onSelect: (id: T) => void;
+  ariaLabel: string;
+  className?: string;
+  /** Id of the element each tab controls. */
+  controls?: (id: T) => string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const onKey = (e: KeyboardEvent) => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+    const tabs = [...(ref.current?.querySelectorAll<HTMLButtonElement>("[role=tab]") ?? [])];
+    const i = tabs.findIndex((t) => t === document.activeElement);
+    if (i < 0) return;
+    e.preventDefault();
+    const n = tabs.length;
+    const j = e.key === "Home" ? 0 : e.key === "End" ? n - 1 : (i + (e.key === "ArrowRight" ? 1 : -1) + n) % n;
+    tabs[j]!.focus();
+    tabs[j]!.click();
+  };
+  return (
+    <div className={`panel-tabs ${props.className ?? ""}`} role="tablist" aria-label={props.ariaLabel} ref={ref} onKeyDown={onKey}>
+      {props.tabs.map((t) => {
+        const on = t.id === props.selected;
+        return (
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={on}
+            aria-controls={props.controls?.(t.id)}
+            tabIndex={on ? 0 : -1}
+            className={on ? "on" : ""}
+            onClick={() => props.onSelect(t.id)}
+          >
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}

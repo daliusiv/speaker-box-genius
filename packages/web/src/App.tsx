@@ -8,9 +8,9 @@ import {
   type HighPassType,
   type SimulationResult,
 } from "@sbg/engine";
-import { LogChart, type Series } from "./LogChart.tsx";
+import { CrosshairProvider, LogChart, type Series } from "./LogChart.tsx";
 import { useUndoable } from "./useUndoable.ts";
-import { initialPanel, PanelTabs, rememberPanel, type PanelId } from "./PanelTabs.tsx";
+import { initialPanel, PanelTabs, rememberPanel, TabRow, type PanelId } from "./PanelTabs.tsx";
 import {
   DEFAULT_STATE,
   decodeStateAny,
@@ -56,6 +56,8 @@ import { submitDriverUrl } from "./submit.ts";
 
 const LIMIT_RED = "#dc2626";
 
+type ChartId = "pr" | "port" | "maxspl" | "impedance" | "delay";
+
 export function App(props: { initial: AppState | null }) {
   const { state, setState, undo, redo, canUndo, canRedo } = useUndoable<AppState>(() => props.initial ?? DEFAULT_STATE);
   /** A discrete action (load, import, delete…): its own undo step, never merged with typing around it. */
@@ -94,6 +96,21 @@ export function App(props: { initial: AppState | null }) {
   const wdrInput = useRef<HTMLInputElement>(null);
   const [pasting, setPasting] = useState(false);
   const [measureOpen, setMeasureOpen] = useState(false);
+  const [chartPick, setChartPick] = useState<ChartId>(() => {
+    try {
+      return (localStorage.getItem("sbg.chart") as ChartId | null) ?? "maxspl";
+    } catch {
+      return "maxspl";
+    }
+  });
+  const chooseChart = (c: ChartId) => {
+    setChartPick(c);
+    try {
+      localStorage.setItem("sbg.chart", c);
+    } catch {
+      // not remembered
+    }
+  };
   // Which group of controls the left column shows.
   const [panel, setPanel] = useState<PanelId>(initialPanel);
   const choosePanel = (p: PanelId) => {
@@ -384,6 +401,18 @@ export function App(props: { initial: AppState | null }) {
       y: g.excursionMm,
     }));
   });
+
+  // The charts under the tab row: one at a time, the choice remembered; unavailable ones are left out.
+  const hasPr = prDesigns.length > 0;
+  const hasPort = designs.some((d) => d.result.portVelocity || d.result.rearPortVelocity);
+  const chartTabs: { id: ChartId; label: string }[] = [
+    ...(hasPr ? [{ id: "pr" as const, label: "PR excursion" }] : []),
+    ...(hasPort ? [{ id: "port" as const, label: "Port speed" }] : []),
+    { id: "maxspl", label: "Max SPL" },
+    { id: "impedance", label: "Impedance" },
+    { id: "delay", label: "Group delay" },
+  ];
+  const chartTab: ChartId = chartTabs.some((t) => t.id === chartPick) ? chartPick : chartTabs[0]!.id;
 
   const signalOn = (state.highPass.on ? 1 : 0) + state.eq.filter((e) => e.on).length + (state.roomGain.mode !== "off" ? 1 : 0);
   const tabBadges: Partial<Record<PanelId, string>> = {
@@ -807,14 +836,16 @@ export function App(props: { initial: AppState | null }) {
         <Summary designs={designs} state={state} missing={solved.missing.length > 0} />
 
         {designs.length > 0 && (
-          <>
+          <CrosshairProvider>
             <LogChart
+              forum
               title={`SPL at ${state.power} W, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
               unit="dB"
               freq={freq}
               series={series((r) => r.spl)}
             />
             <LogChart
+              forum
               title="Cone excursion (peak, one way)"
               unit="mm"
               freq={freq}
@@ -822,8 +853,19 @@ export function App(props: { initial: AppState | null }) {
               limits={[{ value: state.xmax_mm, label: `Xmax ${state.xmax_mm} mm`, color: LIMIT_RED }]}
               yMin={0}
             />
-            {prDesigns.length > 0 && (
+            <TabRow<ChartId>
+              tabs={chartTabs}
+              selected={chartTab}
+              onSelect={chooseChart}
+              ariaLabel="More charts"
+              className="chart-tabs"
+            />
+            {hasPr && (
               <LogChart
+                forum
+                hidden={chartTab !== "pr"}
+                chartTab
+                pr
                 title="Passive radiator excursion (peak, one way)"
                 unit="mm"
                 freq={freq}
@@ -832,8 +874,12 @@ export function App(props: { initial: AppState | null }) {
                 yMin={0}
               />
             )}
-            {designs.some((d) => d.result.portVelocity || d.result.rearPortVelocity) && (
+            {hasPort && (
               <LogChart
+                forum
+                hidden={chartTab !== "port"}
+                chartTab
+                port
                 title={`Port air velocity (${state.settings.velocity === "rms" ? "RMS" : "peak"})`}
                 unit="m/s"
                 freq={freq}
@@ -854,8 +900,17 @@ export function App(props: { initial: AppState | null }) {
                 yMin={0}
               />
             )}
-            <LogChart title="Maximum SPL (first limit reached)" unit="dB" freq={freq} series={series((r) => r.maxSpl)} />
             <LogChart
+              hidden={chartTab !== "maxspl"}
+              title="Maximum SPL (first limit reached)"
+              unit="dB"
+              freq={freq}
+              series={series((r) => r.maxSpl)}
+            />
+            <LogChart
+              hidden={chartTab !== "impedance"}
+              chartTab
+              impedance
               title="Impedance"
               unit="Ω"
               freq={freq}
@@ -876,6 +931,9 @@ export function App(props: { initial: AppState | null }) {
               yMin={0}
             />
             <LogChart
+              hidden={chartTab !== "delay"}
+              chartTab
+              delay
               title="Group delay"
               unit="ms"
               freq={freq}
@@ -883,7 +941,7 @@ export function App(props: { initial: AppState | null }) {
               yMin={-20}
               yMax={100}
             />
-          </>
+          </CrosshairProvider>
         )}
 
         <footer className="muted">
