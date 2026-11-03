@@ -6,7 +6,6 @@ import {
   prGroupsAddedMassForFb,
   prGroupsFb,
   portLengthForFb,
-  qb3Alignment,
   sealedVolumeForAlignment,
   ventedFb,
   type AlignmentDriver,
@@ -15,9 +14,16 @@ import {
 import { Fixed, Num, Select } from "./components.tsx";
 import { PassiveRadiatorBrowser } from "./Library.tsx";
 import { loadPassiveRadiator, type DbIndex } from "./library.ts";
-import { KIND_LABEL, PORT_LIMIT, portOf, prGroupsOf } from "./sim.ts";
+import { KIND_LABEL, PORT_LIMIT, portOf } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { bandpassLossesFrom } from "./state.ts";
+import { prTuning, renamed, ventedAlignmentFor } from "./presets.ts";
+
+/** The preset chip's label: which flat vented alignment this driver gets. */
+const alignLabel = (a: AlignmentDriver | null, drivers: number) => {
+  const v = a && ventedAlignmentFor(a, drivers);
+  return v ? v.name : "QB3 / B4";
+};
 import type {
   BandpassDesign,
   BandpassLosses,
@@ -159,9 +165,6 @@ const QTC_TITLES: Record<number, string> = {
 };
 
 /** Only replace a default name, so the user's own names survive presets. */
-function renamed(current: string, defaultPrefix: string, next: string): string {
-  return current.startsWith(defaultPrefix) ? next : current;
-}
 
 interface PortContext {
   /** Peak port velocity in the displayed convention (above the subsonic cut-off), if simulated. */
@@ -299,11 +302,11 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
         <button
           className="chip"
           disabled={!p.align || p.linked}
-          title="Quasi-Butterworth 3rd order (B4 when Qts ≈ 0.38): flat response, smallest box for its extension"
+          title="Flat vented alignment: QB3 (B4 at Qts ≈ 0.38) for low-Qts drivers, Keele's alignment for Qts 0.38–0.6"
           onClick={() => {
-            const a = p.align && qb3Alignment(p.align, p.drivers);
+            const a = p.align && ventedAlignmentFor(p.align, p.drivers);
             if (!a) {
-              setMsg("QB3 needs a driver Qts below about 0.38. This driver suits a sealed box (or a larger, lower-tuned vented box).");
+              setMsg("This driver's Qts is above 0.6: it suits a sealed box better than a vented one.");
               return;
             }
             const len = portLengthForFb(a.vb_l, portOf(v, 0), a.fb, v.count, undefined, p.air);
@@ -320,7 +323,7 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
             });
           }}
         >
-          QB3 / B4
+          {alignLabel(p.align, p.drivers)}
         </button>
       </Presets>
       {msg && <p className="warn">{msg}</p>}
@@ -334,19 +337,6 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
 }
 
 /** Combined tuning and the added mass (on the first group) that reaches a target. */
-function prTuning(d: PrDesign, vb_l: number, air: Air) {
-  const groups = prGroupsOf(d);
-  const mixed = groups.length > 1;
-  return {
-    mixed,
-    fb: mixed ? prGroupsFb(vb_l, groups, air) : prFb(vb_l, d.params, d.count, d.addedMass_g, air),
-    /** Added mass per PR in the first group for `fb` (NaN-free; may be negative or Infinity). */
-    massFor: (fb: number, vb = vb_l) =>
-      mixed ? prGroupsAddedMassForFb(vb, groups, fb, 0, air) : prAddedMassForFb(vb, d.params, fb, d.count, air),
-    bare: (vb = vb_l) =>
-      mixed ? prGroupsFb(vb, groups.map((g, i) => (i === 0 ? { ...g, addedMass_g: 0 } : g)), air) : prFb(vb, d.params, d.count, 0, air),
-  };
-}
 
 function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacement: (l: number) => void }) {
   const pr = p.design;
@@ -438,11 +428,11 @@ function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacemen
         <button
           className="chip"
           disabled={!p.align || p.linked}
-          title="Box size and tuning of the QB3 / B4 vented alignment, reached with added mass"
+          title="Box size and tuning of the flat vented alignment (QB3/B4, or Keele's for Qts 0.38–0.6), reached with added mass"
           onClick={() => {
-            const a = p.align && qb3Alignment(p.align, p.drivers);
+            const a = p.align && ventedAlignmentFor(p.align, p.drivers);
             if (!a) {
-              setMsg("QB3 needs a driver Qts below about 0.38. This driver suits a sealed box better.");
+              setMsg("This driver's Qts is above 0.6: it suits a sealed box better than a vented one.");
               return;
             }
             const add = t.massFor(a.fb, a.vb_l);
@@ -460,7 +450,7 @@ function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacemen
             });
           }}
         >
-          QB3 / B4
+          {alignLabel(p.align, p.drivers)}
         </button>
       </Presets>
       {msg && <p className="warn">{msg}</p>}

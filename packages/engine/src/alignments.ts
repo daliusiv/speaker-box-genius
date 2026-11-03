@@ -57,3 +57,19 @@ export function qb3Alignment(d: AlignmentDriver, drivers = 1): VentedAlignment |
     fb: h * d.fs,
   };
 }
+
+/**
+ * Keele's vented alignment for drivers with Qts above the QB3/B4 range (about 0.2–0.6):
+ * Vb = 15·Vas·Qts^2.87, Fb = 0.42·Fs·Qts^−0.9, giving a near-flat response with
+ * F3 ≈ 0.26·Fs·Qts^−1.4 (D. B. Keele Jr., "A New Set of Sixth-Order Vented-Box Loudspeaker
+ * System Alignments", JAES 1975, and his closed-form approximations).
+ */
+export function keeleAlignment(d: AlignmentDriver, drivers = 1): VentedAlignment | null {
+  const q = qtsOf(d.qms, d.qes);
+  if (!(q >= 0.2 && q <= 0.6)) return null;
+  return {
+    name: "Keele",
+    vb_l: 15 * d.vas_l * drivers * q ** 2.87,
+    fb: 0.42 * d.fs * q ** -0.9,
+  };
+}

@@ -10,6 +10,7 @@ import {
 } from "@sbg/engine";
 import { CrosshairProvider, LogChart, type Series } from "./LogChart.tsx";
 import { useUndoable } from "./useUndoable.ts";
+import { sizeAllForDriver } from "./presets.ts";
 import { initialPanel, PanelTabs, rememberPanel, TabRow, type PanelId } from "./PanelTabs.tsx";
 import {
   DEFAULT_STATE,
@@ -72,8 +73,21 @@ export function App(props: { initial: AppState | null }) {
   /** A discrete action (load, import, delete…): its own undo step, never merged with typing around it. */
   const setStep = (v: AppState | ((s: AppState) => AppState)) => setState(v, { step: true });
   // A short message with an Undo button after changes that replace or remove work.
-  const [toast, setToast] = useState<{ text: string; id: number } | null>(null);
-  const notify = (text: string) => setToast({ text, id: Date.now() });
+  const [toast, setToast] = useState<{ text: string; id: number; action?: { label: string; run: () => void } } | null>(null);
+  const notify = (text: string, action?: { label: string; run: () => void }) => setToast({ text, id: Date.now(), action });
+  // Handlers that run later (a toast's button) read the state as it is then.
+  const latest = useRef(state);
+  latest.current = state;
+  // Resize every box for the current driver with its card's preset (sealed Qtc 0.707, ported/PR QB3).
+  const [sizeReport, setSizeReport] = useState<{ changed: string[]; skipped: string[] } | null>(null);
+  const sizeBoxes = () => {
+    const r = sizeAllForDriver(latest.current);
+    if (r.changed.length > 0) setStep(r.state);
+    setSizeReport({ changed: r.changed, skipped: r.skipped });
+    notify(r.changed.length > 0 ? `Sized ${r.changed.length} box${r.changed.length > 1 ? "es" : ""} for this driver.` : "No box could take its preset with this driver.");
+  };
+  /** After a new driver arrives: offer to size the boxes for it. */
+  const offerSizing = (name: string) => notify(`Loaded “${name}”.`, { label: "Size boxes for it", run: sizeBoxes });
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 7000);
@@ -187,7 +201,7 @@ export function App(props: { initial: AppState | null }) {
       const text = new TextDecoder("latin1").decode(await file.arrayBuffer());
       if (/^\[Box\]/im.test(text)) return importWpr(file.name, text);
       const d = parseWdr(text);
-      notify(`Imported ${file.name}.`);
+      offerSizing([d.brand, d.model].filter(Boolean).join(" ") || file.name);
       setStep((s) => ({
         ...s,
         driverName: [d.brand, d.model].filter(Boolean).join(" ") || file.name.replace(/\.wdr$/i, ""),
@@ -527,7 +541,8 @@ export function App(props: { initial: AppState | null }) {
                 rows={db?.drivers}
                 onPick={(id) =>
                   loadDriver(id).then(
-                    (d) =>
+                    (d) => {
+                      offerSizing(d.name);
                       setStep((s) => ({
                         ...s,
                         driverName: d.name,
@@ -544,7 +559,8 @@ export function App(props: { initial: AppState | null }) {
                         dvc: d.dvcWiring
                           ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring }
                           : { ...s.dvc, on: false },
-                      })),
+                      }));
+                    },
                     () => alert("Couldn't load that driver."),
                   )
                 }
@@ -561,7 +577,8 @@ export function App(props: { initial: AppState | null }) {
                 onChange={(ts) => set("ts", ts)}
                 pasting={pasting}
                 onPastingChange={setPasting}
-                onPaste={(ts, x) =>
+                onPaste={(ts, x) => {
+                  offerSizing("Pasted driver");
                   setStep((s) => ({
                     ...s,
                     driverName: "Pasted driver",
@@ -572,8 +589,8 @@ export function App(props: { initial: AppState | null }) {
                     r2_ohm: 0,
                     xmax_mm: x.xmax_mm ?? s.xmax_mm,
                     pe_w: x.pe_w ?? s.pe_w,
-                  }))
-                }
+                  }));
+                }}
               />
               <div className="row">
                 <DriverMenu
@@ -742,6 +759,33 @@ export function App(props: { initial: AppState | null }) {
         )}
         {panel === "boxes" && (
           <div className="tab-panel" role="tabpanel" id="panel-boxes" aria-labelledby="tab-boxes">
+            <div className="size-all">
+              <button className="secondary" onClick={sizeBoxes} disabled={solved.missing.length > 0}>
+                Size all boxes for this driver
+              </button>
+              <span className="hint">Sealed Qtc 0.707; ported and PR a flat alignment (QB3, or Keele for higher Qts). Undo takes it back.</span>
+            </div>
+            {sizeReport && (
+              <div className="size-report">
+                {sizeReport.changed.length > 0 && (
+                  <ul>
+                    {sizeReport.changed.map((c) => (
+                      <li key={c}>{c}</li>
+                    ))}
+                  </ul>
+                )}
+                {sizeReport.skipped.length > 0 && (
+                  <ul className="muted">
+                    {sizeReport.skipped.map((c) => (
+                      <li key={c}>Left as is: {c}</li>
+                    ))}
+                  </ul>
+                )}
+                <button className="link" onClick={() => setSizeReport(null)}>
+                  Hide
+                </button>
+              </div>
+            )}
             {state.designs.map((d) => (
               <DesignCard
                 key={d.id}
@@ -1031,6 +1075,18 @@ export function App(props: { initial: AppState | null }) {
       {toast && (
         <div className="toast" role="status" key={toast.id}>
           <span>{toast.text}</span>
+          {toast.action && (
+            <button
+              className="link"
+              onClick={() => {
+                const run = toast.action!.run;
+                setToast(null);
+                run();
+              }}
+            >
+              {toast.action.label}
+            </button>
+          )}
           {canUndo && (
             <button
               className="link"

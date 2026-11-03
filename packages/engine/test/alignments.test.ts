@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { B4_QTS, qb3Alignment, sealedVolumeForAlignment } from "../src/alignments.ts";
+import { B4_QTS, keeleAlignment, qb3Alignment, sealedVolumeForAlignment } from "../src/alignments.ts";
 import { WINISD_AIR } from "../src/constants.ts";
 import { portLengthForFb } from "../src/model.ts";
 import { simulate } from "../src/simulate.ts";
@@ -67,4 +67,28 @@ test("WinISD air constants change results only slightly", () => {
   const b = simulate(d, box, { air: WINISD_AIR });
   assert.notEqual(a.summary.fb, b.summary.fb);
   near(b.summary.fb! / a.summary.fb!, 1, 0.005, "fb within 0.5%");
+});
+
+test("Keele alignment for a higher-Qts driver: near flat, F3 close to Keele's estimate", () => {
+  // Qts 0.45: outside QB3/B4, inside Keele's range.
+  const d = { fs: 25, qms: 4, qes: 0.507, vas_l: 120 };
+  const q = qts(d.qms, d.qes);
+  assert.equal(qb3Alignment(d), null);
+  const a = keeleAlignment(d)!;
+  near(a.vb_l, 15 * 120 * q ** 2.87, 1e-9);
+  const len = portLengthForFb(a.vb_l, port, a.fb);
+  const r = simulate(
+    { ...d, re: 3.5, sd_cm2: 500 },
+    { kind: "vented", vb_l: a.vb_l, port: { ...port, length_cm: len }, ...LOSSLESS },
+    { fMin: 10, fMax: 400, points: 400 },
+  );
+  const ref = r.summary.referenceSpl;
+  // No peaking above the passband level, and F3 within 15 % of Keele's estimate.
+  let peak = -Infinity;
+  for (let i = 0; i < r.freq.length; i++) if (r.freq[i]! > a.fb) peak = Math.max(peak, r.spl[i]! - ref);
+  assert.ok(peak < 1.5, `peak ${peak.toFixed(2)} dB`);
+  const f3Keele = 0.26 * d.fs * q ** -1.4;
+  assert.ok(Math.abs(r.summary.f3! / f3Keele - 1) < 0.15, `F3 ${r.summary.f3} vs ${f3Keele}`);
+  // Outside its range there is no answer.
+  assert.equal(keeleAlignment({ ...d, qes: 2 }), null);
 });

@@ -1507,3 +1507,28 @@ button.check-chip.open {
     width: 10rem;
   }
 }
+
+/* Size all boxes for the driver */
+.size-all {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.75rem;
+}
+
+.size-all .hint {
+  margin: 0;
+}
+
+.size-report {
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  font-size: 0.85rem;
+}
+
+.size-report ul {
+  margin: 0 0 0.3rem;
+  padding-left: 1.1rem;
+}
