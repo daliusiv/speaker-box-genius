@@ -257,3 +257,18 @@ test("DSA215-8 vented + Butterworth HPF: filter imported, graphs match WinISD (T
   assert.equal(m.limitedBy[0], "xmax");
   near(m.maxSpl[0]!, 70.559, 0.03, "max SPL at 19.6 Hz");
 });
+
+// Test 4: the ported project with "Simulate voice coil inductance" on (Le 1 mH).
+test("DSA215-8 vented with Le simulated: response and impedance match WinISD (Test 4)", () => {
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215-le.wpr"), "utf8"));
+  assert.equal(p.simulateLe, true);
+  const t = p.driver.ts;
+  const drv = { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: p.driver.le_mh };
+  const box = { kind: "vented" as const, vb_l: p.box.vb_l, port: { shape: "round" as const, diameter_cm: p.port!.diameter_cm, length_cm: p.port!.length_cm }, endCorrection: 0.732, ql: p.box.ql, qa: p.box.qa, qp: p.box.qp };
+  const at = (f: number) => simulate(drv, box, { power: p.power, rg: p.rg, air: p.air, fMin: f, fMax: f, points: 1 });
+  for (const [f, db] of [[99.77, 0.243], [201.71, 0.516], [500, -0.39]] as const) {
+    const r = at(f);
+    near(r.spl[0]! - r.summary.referenceSpl, db, 0.02, `TF at ${f} Hz`);
+  }
+  for (const [f, z] of [[99.77, 11.452], [199.85, 6.394], [500, 6.303]] as const) near(at(f).impedanceOhm[0]! / z - 1, 0, 0.01, `impedance at ${f} Hz`);
+});

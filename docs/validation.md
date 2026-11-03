@@ -77,6 +77,22 @@ measurable and is locked in by a golden test.
 
 The filter is read from the project's `[Filters]` section on import.
 
+## Ported with voice coil inductance simulated (Test 4)
+
+WinISD's "Simulate voice coil inductance" on, Le = 1 mH.
+
+| Graph | Frequency | WinISD | Speaker Box Genius | Difference |
+|---|---|---|---|---|
+| Transfer function | 99.77 Hz | 0.243 dB | 0.240 dB | −0.003 dB |
+| Transfer function | 201.71 Hz | 0.516 dB | 0.512 dB | −0.004 dB |
+| Transfer function | 500 Hz | −0.390 dB | −0.376 dB | +0.014 dB |
+| Impedance | 99.77 Hz | 11.452 Ω | 11.525 Ω | +0.6 % |
+| Impedance | 199.85 Hz | 6.394 Ω | 6.404 Ω | +0.2 % |
+| Impedance | 500 Hz | 6.303 Ω | 6.300 Ω | −0.05 % |
+
+WinISD models Le as a plain series inductor, as we do. The setting is read from the
+project's `VCInd` option on import.
+
 ## Passive radiator: 1× DSA270-PR
 
 | Box | Frequency | WinISD | Speaker Box Genius | Difference |
