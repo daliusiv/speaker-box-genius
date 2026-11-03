@@ -45,6 +45,14 @@ export interface Ribbon {
 
 export const OVER_RED = "#dc2626";
 
+/** A labelled dot on the plot (e.g. each design's F3). */
+export interface Point {
+  f: number;
+  y: number;
+  color: string;
+  label: string;
+}
+
 /** A labelled vertical line at one frequency (e.g. a passive radiator's notch). */
 export interface Marker {
   f: number;
@@ -65,10 +73,17 @@ interface Props {
   series: Series[];
   limits?: Limit[];
   markers?: Marker[];
+  points?: Point[];
   ribbons?: Ribbon[];
   ribbonKinds?: Record<string, { label: string; color: string }>;
   yMin?: number;
   yMax?: number;
+  /** Fixed spacing of the y grid (e.g. 6 dB); otherwise a round step is chosen. */
+  yStep?: number;
+  /** Lines the limits draw (default red, dashed); "guide" draws them faint, for reference levels. */
+  limitStyle?: "limit" | "guide";
+  /** Controls shown in the caption beside the title (e.g. a view switch). */
+  actions?: ReactNode;
   digits?: number;
   /** Hidden charts stay rendered (the forum image can still use them). */
   hidden?: boolean;
@@ -100,10 +115,14 @@ export function LogChart({
   series,
   limits = [],
   markers = [],
+  points = [],
   ribbons = [],
   ribbonKinds = {},
   yMin,
   yMax,
+  yStep,
+  limitStyle = "limit",
+  actions,
   digits = 1,
   hidden,
   forum,
@@ -162,7 +181,7 @@ export function LogChart({
   if (yMin !== undefined) lo = yMin;
   if (yMax !== undefined) hi = yMax;
   if (hi - lo < 1e-9) hi = lo + 1;
-  const step = niceStep(hi - lo);
+  const step = yStep ?? niceStep(hi - lo);
   lo = Math.floor(lo / step) * step;
   hi = Math.ceil(hi / step) * step;
   const yOf = (v: number) => PAD.t + (1 - (v - lo) / (hi - lo)) * PH;
@@ -246,6 +265,7 @@ export function LogChart({
     <figure className="chart" hidden={hidden} data-forum={forum ? "" : undefined}>
       <figcaption>
         <span className="chart-title">{title}</span>
+        {actions}
         <span className="chart-hint muted">Hover or tap for values</span>
       </figcaption>
       {/* The values float over the plot, on the side away from the cursor, so nothing
@@ -312,10 +332,26 @@ export function LogChart({
         </text>
 
         <g clipPath={`url(#${clipId})`}>
-          {limits.map((l) => (
+          {limits.map((l, li) => (
             <g key={l.label}>
-              <line className="limit" x1={PAD.l} x2={W - PAD.r} y1={yOf(l.value)} y2={yOf(l.value)} stroke={l.color} {...sw(1.5)} />
-              <text className="limit-label" x={W - PAD.r - 4} y={yOf(l.value) - 4} textAnchor="end" fill={l.color} {...fs(11)}>
+              <line
+                className={limitStyle === "guide" ? "guide" : "limit"}
+                x1={PAD.l}
+                x2={W - PAD.r}
+                y1={yOf(l.value)}
+                y2={yOf(l.value)}
+                stroke={l.color}
+                {...sw(limitStyle === "guide" ? 1 : 1.5)}
+              />
+              <text
+                className={limitStyle === "guide" ? "limit-label guide-label" : "limit-label"}
+                // Guides alternate ends so labels of nearby levels (−3 / −6 dB) don't overlap.
+                x={limitStyle === "guide" && li % 2 === 0 ? PAD.l + 4 : W - PAD.r - 4}
+                y={yOf(l.value) - 4}
+                textAnchor={limitStyle === "guide" && li % 2 === 0 ? "start" : "end"}
+                fill={l.color}
+                {...fs(11)}
+              >
                 {l.label}
               </text>
             </g>
@@ -347,6 +383,22 @@ export function LogChart({
           {visible.map((s) => (
             <path key={s.label} d={pathOf(s.y!)} fill="none" stroke={s.color} strokeDasharray={s.dash} {...sw(2)} />
           ))}
+          {points
+            .filter((pt) => pt.f >= fMin && pt.f <= fMax && Number.isFinite(pt.y))
+            .map((pt, i) => (
+              <g key={`${pt.label}-${i}`} className="chart-point">
+                <circle cx={xOf(pt.f)} cy={yOf(pt.y)} r={4 * k} fill={pt.color} stroke="var(--card)" {...sw(1.5)} />
+                <text
+                  className="point-label"
+                  x={xOf(pt.f) + 6 * k}
+                  y={yOf(pt.y) + 14 * k + i * 13 * k}
+                  fill={pt.color}
+                  {...fs(11)}
+                >
+                  {pt.label}
+                </text>
+              </g>
+            ))}
           {hover !== null && (
             <g className="cursor">
               <line className="cursor" x1={xOf(freq[hover]!)} x2={xOf(freq[hover]!)} y1={PAD.t} y2={PAD.t + PH} />

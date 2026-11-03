@@ -139,6 +139,23 @@ export function App(props: { initial: AppState | null }) {
   const wdrInput = useRef<HTMLInputElement>(null);
   const [pasting, setPasting] = useState(false);
   const [measureOpen, setMeasureOpen] = useState(false);
+  // SPL chart scale: relative to each design's passband (default) or absolute dB SPL. A view
+  // preference of this browser, not part of the design.
+  const [splMode, setSplMode] = useState<"relative" | "absolute">(() => {
+    try {
+      return localStorage.getItem("sbg.spl") === "absolute" ? "absolute" : "relative";
+    } catch {
+      return "relative";
+    }
+  });
+  const chooseSplMode = (m: "relative" | "absolute") => {
+    setSplMode(m);
+    try {
+      localStorage.setItem("sbg.spl", m);
+    } catch {
+      // not remembered
+    }
+  };
   const [chartPick, setChartPick] = useState<ChartId>(() => {
     try {
       return (localStorage.getItem("sbg.chart") as ChartId | null) ?? "maxspl";
@@ -969,10 +986,48 @@ export function App(props: { initial: AppState | null }) {
           <CrosshairProvider>
             <LogChart
               forum
-              title={`SPL at ${driveLabel(state)}, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
+              title={`${splMode === "relative" ? "Relative response" : "SPL"} at ${driveLabel(state)}, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
               unit="dB"
               freq={freq}
-              series={series((r) => r.spl)}
+              actions={
+                <div className="unit-switch" role="group" aria-label="SPL scale">
+                  <button aria-pressed={splMode === "relative"} onClick={() => chooseSplMode("relative")} title="Each design's passband at 0 dB, with −3 and −6 dB lines">
+                    Relative
+                  </button>
+                  <button aria-pressed={splMode === "absolute"} onClick={() => chooseSplMode("absolute")} title="Sound pressure level in dB SPL">
+                    dB SPL
+                  </button>
+                </div>
+              }
+              {...(splMode === "relative"
+                ? {
+                    series: designs.map((d) => {
+                      const ref = d.result.summary.referenceSpl;
+                      return {
+                        label: d.design.name,
+                        color: d.color,
+                        y: d.result.spl.map((v) => v - ref),
+                        notes: Array.from(d.result.spl, (v) => `${v.toFixed(1)} dB SPL`),
+                      };
+                    }),
+                    limits: [
+                      { value: -3, label: "−3 dB", color: "var(--muted)" },
+                      { value: -6, label: "−6 dB", color: "var(--muted)" },
+                    ],
+                    limitStyle: "guide" as const,
+                    yStep: 6,
+                    yMin: -30,
+                    points: designs.flatMap((d) => {
+                      const ref = d.result.summary.referenceSpl;
+                      return minus3Points(d.result.freq, d.result.spl.map((v) => v - ref), d.design.kind === "bandpass").map((f) => ({
+                        f,
+                        y: -3,
+                        color: d.color,
+                        label: `F3 ${f < 100 ? f.toFixed(1) : f.toFixed(0)}`,
+                      }));
+                    }),
+                  }
+                : { series: series((r) => r.spl) })}
             />
             <LogChart
               forum
@@ -1249,4 +1304,32 @@ const lossesOf = (c: WprChamberLosses) => ({ ql: c.ql, qa: c.qa, qp: c.qp });
 /** Does a WinISD bandpass need per-chamber losses (chambers differ, or a non-default leak between them)? */
 function bandpassOwnLosses(b: { front: WprChamberLosses; rear: WprChamberLosses; qicl: number }): boolean {
   return b.front.ql !== b.rear.ql || b.front.qa !== b.rear.qa || b.front.qp !== b.rear.qp || b.qicl !== 100;
+}
+
+/**
+ * Where a relative response (0 dB = passband) crosses −3 dB, read off the curve as shown:
+ * below its peak, and for a bandpass above it too. Interpolated in log f.
+ */
+function minus3Points(freq: Float64Array, rel: ArrayLike<number>, bandLimited: boolean): number[] {
+  let peak = 0;
+  for (let i = 1; i < rel.length; i++) if (rel[i]! > rel[peak]!) peak = i;
+  if (!(rel[peak]! >= -3)) return [];
+  const at = (i: number, j: number) => {
+    const t = (-3 - rel[i]!) / (rel[j]! - rel[i]!);
+    return freq[i]! * (freq[j]! / freq[i]!) ** t;
+  };
+  const out: number[] = [];
+  for (let i = peak; i > 0; i--) {
+    if (rel[i - 1]! < -3) {
+      out.push(at(i - 1, i));
+      break;
+    }
+  }
+  for (let i = peak; bandLimited && i + 1 < rel.length; i++) {
+    if (rel[i + 1]! < -3) {
+      out.push(at(i, i + 1));
+      break;
+    }
+  }
+  return out;
 }

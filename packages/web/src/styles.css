@@ -1685,3 +1685,25 @@ button.check-chip.open {
     display: none;
   }
 }
+
+/* Reference levels (−3 / −6 dB) and labelled points */
+.guide {
+  stroke-dasharray: 3 4;
+  opacity: 0.8;
+}
+
+.guide-label {
+  font-weight: 500;
+}
+
+.point-label {
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--card);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.chart figcaption .unit-switch {
+  margin-left: auto;
+}
