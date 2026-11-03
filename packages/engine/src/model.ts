@@ -1,4 +1,4 @@
-import { C, RHO } from "./constants.ts";
+import { STANDARD_AIR, type Air } from "./constants.ts";
 import { blFromQes, cmsFromVas, mmsFromFsCms } from "./ts.ts";
 
 /**
@@ -38,8 +38,8 @@ export interface DriverModel {
  * Derive mechanical parameters from the small-signal set, the way WinISD does:
  * Cms from Vas and Sd, Mms from fs and Cms, Bl from Qes, Rms from Qms.
  */
-export function driverModel(d: DriverInput): DriverModel {
-  const cms = cmsFromVas(d.vas_l, d.sd_cm2);
+export function driverModel(d: DriverInput, air: Air = STANDARD_AIR): DriverModel {
+  const cms = cmsFromVas(d.vas_l, d.sd_cm2, air);
   const mms = mmsFromFsCms(d.fs, cms);
   return {
     re: d.re,
@@ -79,17 +79,23 @@ export function portEffectiveLength(p: PortInput, endCorrection = DEFAULT_END_CO
 }
 
 /** Acoustic mass of one port (kg/m⁴). */
-export function portAcousticMass(p: PortInput, endCorrection = DEFAULT_END_CORRECTION): number {
-  return (RHO * portEffectiveLength(p, endCorrection)) / portArea(p);
+export function portAcousticMass(p: PortInput, endCorrection = DEFAULT_END_CORRECTION, air: Air = STANDARD_AIR): number {
+  return (air.rho * portEffectiveLength(p, endCorrection)) / portArea(p);
 }
 
 /** Acoustic compliance of a box (m⁵/N). */
-export const boxCompliance = (vb_l: number) => vb_l / 1000 / (RHO * C * C);
+export const boxCompliance = (vb_l: number, air: Air = STANDARD_AIR) => vb_l / 1000 / (air.rho * air.c * air.c);
 
 /** Tuning frequency of a vented box with `count` identical ports. */
-export function ventedFb(vb_l: number, port: PortInput, count = 1, endCorrection = DEFAULT_END_CORRECTION): number {
-  const map = portAcousticMass(port, endCorrection) / count;
-  return 1 / (2 * Math.PI * Math.sqrt(map * boxCompliance(vb_l)));
+export function ventedFb(
+  vb_l: number,
+  port: PortInput,
+  count = 1,
+  endCorrection = DEFAULT_END_CORRECTION,
+  air: Air = STANDARD_AIR,
+): number {
+  const map = portAcousticMass(port, endCorrection, air) / count;
+  return 1 / (2 * Math.PI * Math.sqrt(map * boxCompliance(vb_l, air)));
 }
 
 /** Physical port length (cm) needed to tune to `fb`. Can be negative if the port is too small. */
@@ -99,10 +105,11 @@ export function portLengthForFb(
   fb: number,
   count = 1,
   endCorrection = DEFAULT_END_CORRECTION,
+  air: Air = STANDARD_AIR,
 ): number {
   const w = 2 * Math.PI * fb;
-  const mapTotal = 1 / (w * w * boxCompliance(vb_l));
-  const leff = (mapTotal * count * portArea(port)) / RHO;
+  const mapTotal = 1 / (w * w * boxCompliance(vb_l, air));
+  const leff = (mapTotal * count * portArea(port)) / air.rho;
   return (leff - endCorrection * portEquivalentDiameter(port)) * 100;
 }
 
@@ -131,12 +138,12 @@ export interface PassiveRadiatorModel {
 
 export const DEFAULT_PR_QMS = 10;
 
-export function passiveRadiatorModel(p: PassiveRadiatorInput, addedMass_g = 0): PassiveRadiatorModel {
+export function passiveRadiatorModel(p: PassiveRadiatorInput, addedMass_g = 0, air: Air = STANDARD_AIR): PassiveRadiatorModel {
   const sd = p.sd_cm2 / 1e4;
   const m0 = p.mms_g / 1000;
   let cmp: number;
   if (p.cms_mm_per_n !== undefined) cmp = p.cms_mm_per_n / 1000;
-  else if (p.vas_l !== undefined) cmp = cmsFromVas(p.vas_l, p.sd_cm2);
+  else if (p.vas_l !== undefined) cmp = cmsFromVas(p.vas_l, p.sd_cm2, air);
   else if (p.fs !== undefined) cmp = 1 / ((2 * Math.PI * p.fs) ** 2 * m0);
   else throw new Error("Passive radiator needs cms_mm_per_n, vas_l or fs");
   // Mechanical damping is a property of the suspension, so derive it from the bare PR.
@@ -149,16 +156,22 @@ export function passiveRadiatorModel(p: PassiveRadiatorInput, addedMass_g = 0): 
  * Box tuning frequency with `count` identical PRs: the frequency at which the
  * PR mass resonates against its own suspension plus the box air spring.
  */
-export function prFb(vb_l: number, pr: PassiveRadiatorInput, count = 1, addedMass_g = 0): number {
-  const m = passiveRadiatorModel(pr, addedMass_g);
-  const k = 1 / m.cmp + (count * m.sd * m.sd) / boxCompliance(vb_l);
+export function prFb(vb_l: number, pr: PassiveRadiatorInput, count = 1, addedMass_g = 0, air: Air = STANDARD_AIR): number {
+  const m = passiveRadiatorModel(pr, addedMass_g, air);
+  const k = 1 / m.cmp + (count * m.sd * m.sd) / boxCompliance(vb_l, air);
   return Math.sqrt(k / m.mmp) / (2 * Math.PI);
 }
 
 /** Added mass (g) per PR needed to reach `fb`. Negative means the PR is already too heavy. */
-export function prAddedMassForFb(vb_l: number, pr: PassiveRadiatorInput, fb: number, count = 1): number {
-  const m = passiveRadiatorModel(pr, 0);
-  const k = 1 / m.cmp + (count * m.sd * m.sd) / boxCompliance(vb_l);
+export function prAddedMassForFb(
+  vb_l: number,
+  pr: PassiveRadiatorInput,
+  fb: number,
+  count = 1,
+  air: Air = STANDARD_AIR,
+): number {
+  const m = passiveRadiatorModel(pr, 0, air);
+  const k = 1 / m.cmp + (count * m.sd * m.sd) / boxCompliance(vb_l, air);
   const mTotal = k / (2 * Math.PI * fb) ** 2;
   return (mTotal - m.mmp) * 1000;
 }

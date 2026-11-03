@@ -41,6 +41,15 @@ export type DesignState = SealedDesign | VentedDesign | PrDesign;
 
 export const MAX_DESIGNS = 8;
 
+export interface Settings {
+  /** Unit system for box sizes and volumes. */
+  units: "metric" | "imperial";
+  /** Air constants: 20 °C standard, or WinISD's values for like-for-like comparison. */
+  air: "standard" | "winisd";
+  /** Port air velocity shown as peak (default) or RMS. */
+  velocity: "peak" | "rms";
+}
+
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
 export interface AppState {
   v: 3;
@@ -56,6 +65,7 @@ export interface AppState {
   power: number;
   drivers: number;
   highPass: { on: boolean; type: HighPassType; order: number; freq: number };
+  settings: Settings;
   designs: DesignState[];
   volume: {
     /** Id of the design whose Vb follows the calculator, or "none". */
@@ -144,6 +154,7 @@ export const DEFAULT_STATE: AppState = {
   power: 100,
   drivers: 1,
   highPass: { on: false, type: "butterworth", order: 2, freq: 18 },
+  settings: { units: "metric", air: "standard", velocity: "peak" },
   designs: defaultDesigns(),
   volume: {
     link: "none",
@@ -258,6 +269,7 @@ export function decodeState(hash: string): AppState | null {
       power: raw.power ?? d.power,
       drivers: raw.drivers ?? d.drivers,
       highPass: { ...d.highPass, ...raw.highPass },
+      settings: { ...d.settings, ...raw.settings },
       designs,
       volume: { ...d.volume, ...raw.volume },
     };

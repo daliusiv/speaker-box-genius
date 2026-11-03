@@ -1,4 +1,4 @@
-import { C, RHO } from "./constants.ts";
+import { STANDARD_AIR, type Air } from "./constants.ts";
 
 /**
  * Thiele/Small helper maths (SI units internally).
@@ -20,10 +20,10 @@ export interface SmallSignal {
 export const qts = (qms: number, qes: number) => (qms * qes) / (qms + qes);
 
 /** Suspension compliance Cms (m/N) from Vas and Sd. */
-export function cmsFromVas(vas_l: number, sd_cm2: number): number {
+export function cmsFromVas(vas_l: number, sd_cm2: number, air: Air = STANDARD_AIR): number {
   const vas = vas_l / 1000;
   const sd = sd_cm2 / 10000;
-  return vas / (RHO * C * C * sd * sd);
+  return vas / (air.rho * air.c * air.c * sd * sd);
 }
 
 /** Moving mass Mms (kg) from fs and Cms. */
@@ -51,9 +51,9 @@ export interface ConsistencyIssue {
  * Datasheets often disagree by a few percent through rounding, so callers
  * decide which tolerance counts as a warning and which as an error.
  */
-export function checkConsistency(p: SmallSignal): ConsistencyIssue[] {
+export function checkConsistency(p: SmallSignal, air: Air = STANDARD_AIR): ConsistencyIssue[] {
   const issues: ConsistencyIssue[] = [];
-  const cms = cmsFromVas(p.vas_l, p.sd_cm2);
+  const cms = cmsFromVas(p.vas_l, p.sd_cm2, air);
   const mmsImplied = mmsFromFsCms(p.fs, cms); // kg
 
   if (p.mms_g !== undefined) {

@@ -15,12 +15,11 @@ import { loadDriver, loadIndex, type DbIndex } from "./library.ts";
 import { Card, LibraryPicker, Num, REPO, Select } from "./components.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
-import { colorOf, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
+import { airOf, alignmentDriver, colorOf, PORT_LIMIT, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
 import { AddDesign, DesignCard } from "./Designs.tsx";
 import { ShareMenu } from "./Share.tsx";
 
 const LIMIT_RED = "#dc2626";
-const PORT_LIMIT = 17;
 
 export function App() {
   const [state, setState] = useState<AppState>(() => decodeState(location.hash) ?? DEFAULT_STATE);
@@ -47,7 +46,7 @@ export function App() {
     return () => removeEventListener("hashchange", onHash);
   }, []);
 
-  const solved = useMemo(() => solveDriver(state), [state.ts]); // eslint-disable-line react-hooks/exhaustive-deps
+  const solved = useMemo(() => solveDriver(state), [state.ts, state.settings.air]); // eslint-disable-line react-hooks/exhaustive-deps
   const designs = useMemo(() => runDesigns(state, solved), [state, solved]);
   const freq = designs[0]?.result.freq ?? new Float64Array();
 
@@ -270,6 +269,9 @@ export function App() {
             linked={state.volume.link === d.id}
             canDelete={state.designs.length > 1}
             db={db}
+            air={airOf(state)}
+            align={alignmentDriver(solved)}
+            drivers={state.drivers}
             onChange={updateDesign}
             onDuplicate={() => duplicateDesign(d)}
             onDelete={() => deleteDesign(d)}
@@ -279,6 +281,42 @@ export function App() {
         <AddDesign disabled={state.designs.length >= MAX_DESIGNS} onAdd={addDesign} />
 
         <VolumePanel state={state} onChange={(v) => set("volume", v)} />
+
+        <Card title="Settings">
+          <div className="fields">
+            <Select<"metric" | "imperial">
+              label="Units"
+              value={state.settings.units}
+              options={[
+                { value: "metric", text: "Metric (L, cm)" },
+                { value: "imperial", text: "Imperial (ft³, in)" },
+              ]}
+              onChange={(units) => set("settings", { ...state.settings, units })}
+            />
+            <Select<"standard" | "winisd">
+              label="Air"
+              value={state.settings.air}
+              options={[
+                { value: "standard", text: "Standard (20 °C, ρ 1.204, c 343.2)" },
+                { value: "winisd", text: "WinISD defaults (ρ 1.201, c 343.7)" },
+              ]}
+              onChange={(air) => set("settings", { ...state.settings, air })}
+            />
+            <Select<"peak" | "rms">
+              label="Port speed"
+              value={state.settings.velocity}
+              options={[
+                { value: "peak", text: "Peak" },
+                { value: "rms", text: "RMS" },
+              ]}
+              onChange={(velocity) => set("settings", { ...state.settings, velocity })}
+            />
+          </div>
+          <p className="hint">
+            For like-for-like checks against WinISD, choose its air values. The {PORT_LIMIT} m/s chuffing line applies to
+            whichever port-speed convention you pick.
+          </p>
+        </Card>
       </aside>
 
       <main className="charts">
@@ -312,7 +350,7 @@ export function App() {
             )}
             {designs.some((d) => d.design.kind === "vented") && (
               <LogChart
-                title="Port air velocity (peak)"
+                title={`Port air velocity (${state.settings.velocity === "rms" ? "RMS" : "peak"})`}
                 unit="m/s"
                 freq={freq}
                 series={series((r) => r.portVelocity).filter((s) => s.y)}

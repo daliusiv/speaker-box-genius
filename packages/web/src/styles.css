@@ -573,3 +573,28 @@ button:disabled {
   margin: 0.3rem 0.5rem 0.2rem;
   max-width: 15rem;
 }
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.presets .hint {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+button.chip {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+}

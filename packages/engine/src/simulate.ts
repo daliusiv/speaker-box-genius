@@ -1,5 +1,5 @@
 import { abs, add, arg, cx, div, mul, parallel, scale, type Complex } from "./complex.ts";
-import { RHO } from "./constants.ts";
+import { STANDARD_AIR, type Air } from "./constants.ts";
 import { highPassResponse, type HighPass } from "./filters.ts";
 import {
   boxCompliance,
@@ -55,6 +55,8 @@ export interface SimulationOptions {
   portVelocityLimit?: number;
   /** Electrical high-pass filter ahead of the amplifier (e.g. a subsonic filter). */
   highPass?: HighPass | null;
+  /** Air properties. Default: 20 °C. Use WINISD_AIR to match WinISD exactly. */
+  air?: Air;
 }
 
 export interface SimulationResult {
@@ -103,7 +105,8 @@ export function logFrequencies(fMin: number, fMax: number, points: number): Floa
 const finiteOr = (v: number | undefined, d: number) => (v === undefined ? d : v);
 
 export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: SimulationOptions = {}): SimulationResult {
-  const d = driverModel(driverIn);
+  const air = opts.air ?? STANDARD_AIR;
+  const d = driverModel(driverIn, air);
   const n = opts.drivers ?? 1;
   const wiring = opts.wiring ?? "parallel";
   const power = opts.power ?? 1;
@@ -122,7 +125,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const vDriver = wiring === "parallel" ? volts : volts / n;
 
   // Box elements
-  const cab = boxCompliance(box.vb_l);
+  const cab = boxCompliance(box.vb_l, air);
   const ql = finiteOr(box.ql, DEFAULT_LOSSES.ql);
   const qa = finiteOr(box.qa, DEFAULT_LOSSES.qa);
 
@@ -143,17 +146,17 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   } else if (box.kind === "vented") {
     ventCount = box.portCount ?? 1;
     const ec = box.endCorrection ?? DEFAULT_END_CORRECTION;
-    fRef = ventedFb(box.vb_l, box.port, ventCount, ec);
+    fRef = ventedFb(box.vb_l, box.port, ventCount, ec, air);
     summary.fb = fRef;
-    const map = portAcousticMass(box.port, ec);
+    const map = portAcousticMass(box.port, ec, air);
     const qp = finiteOr(box.qp, DEFAULT_LOSSES.qp);
     const rap = Number.isFinite(qp) ? (2 * Math.PI * fRef * map) / qp : 0;
     ventArea = portArea(box.port);
     ventZ = (w) => scale(cx(rap, w * map), 1 / ventCount);
   } else {
     ventCount = box.prCount ?? 1;
-    const pr = passiveRadiatorModel(box.pr, box.addedMass_g ?? 0);
-    fRef = prFb(box.vb_l, box.pr, ventCount, box.addedMass_g ?? 0);
+    const pr = passiveRadiatorModel(box.pr, box.addedMass_g ?? 0, air);
+    fRef = prFb(box.vb_l, box.pr, ventCount, box.addedMass_g ?? 0, air);
     summary.fb = fRef;
     ventArea = pr.sd;
     prXmax = pr.xmax;
@@ -208,7 +211,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     // Radiated volume velocity = −(flow into the box air spring).
     const u0 = scale(div(pBox, zAir), -1);
     // Far-field pressure (RMS): p = jωρ·U0 / (k·π·r)
-    const p = mul(cx(0, (w * RHO) / (space * Math.PI * r)), u0);
+    const p = mul(cx(0, (w * air.rho) / (space * Math.PI * r)), u0);
     out.spl[i] = 20 * Math.log10(abs(p) / 2e-5);
     unwrapped[i] = arg(p);
 
@@ -266,7 +269,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   }
 
   // Passband reference: mass-controlled asymptote  p = ρ·N·V·Bl·Sd / (Re·Mms·k·π·r)
-  const pRef = (RHO * n * vDriver * d.bl * d.sd) / (d.re * d.mms * space * Math.PI * r);
+  const pRef = (air.rho * n * vDriver * d.bl * d.sd) / (d.re * d.mms * space * Math.PI * r);
   summary.referenceSpl = 20 * Math.log10(pRef / 2e-5);
   summary.f3 = crossing(freq, out.spl, summary.referenceSpl - 3);
   summary.f6 = crossing(freq, out.spl, summary.referenceSpl - 6);

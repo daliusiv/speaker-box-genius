@@ -1,5 +1,14 @@
 import { useState, type ReactNode } from "react";
-import { prAddedMassForFb, prFb, portLengthForFb, ventedFb } from "@sbg/engine";
+import {
+  prAddedMassForFb,
+  prFb,
+  portLengthForFb,
+  qb3Alignment,
+  sealedVolumeForAlignment,
+  ventedFb,
+  type AlignmentDriver,
+  type Air,
+} from "@sbg/engine";
 import { Fixed, LibraryPicker, Num, Select } from "./components.tsx";
 import { loadPassiveRadiator, type DbIndex } from "./library.ts";
 import { KIND_LABEL, portOf } from "./sim.ts";
@@ -13,7 +22,23 @@ interface CommonProps<D extends DesignState> {
   /** Effective Vb (from the volume calculator when linked). */
   vb_l: number;
   linked: boolean;
+  air: Air;
+  /** Solved driver for alignment presets; null while parameters are incomplete. */
+  align: AlignmentDriver | null;
+  drivers: number;
   onChange: (d: D) => void;
+}
+
+const LINKED_NOTE = "Presets change the box volume, so they're off while the volume calculator feeds this design.";
+
+function Presets(props: { children: ReactNode; note?: string }) {
+  return (
+    <div className="presets">
+      <span>Presets:</span>
+      {props.children}
+      {props.note && <p className="hint">{props.note}</p>}
+    </div>
+  );
 }
 
 /** Card shell shared by all design types: colour, editable name, on/off, duplicate, delete. */
@@ -79,21 +104,53 @@ function TuneRow(props: { target: number; onTarget: (v: number) => void; button:
 }
 
 function SealedBody(p: CommonProps<DesignState & { kind: "sealed" }>) {
+  const [msg, setMsg] = useState("");
+  const apply = (qtc: number) => {
+    if (!p.align) return;
+    const vb = sealedVolumeForAlignment(p.align, qtc, p.drivers);
+    if (vb === null) {
+      setMsg(`This driver's Qts is already above ${qtc}; no sealed box can reach it.`);
+      return;
+    }
+    setMsg("");
+    p.onChange({ ...p.design, vb_l: Math.round(vb * 10) / 10, name: renamed(p.design.name, "Sealed", `Sealed Qtc ${qtc}`) });
+  };
   return (
-    <div className="fields">
-      <VbField vb_l={p.vb_l} value={p.design.vb_l} linked={p.linked} onChange={(vb_l) => p.onChange({ ...p.design, vb_l })} />
-    </div>
+    <>
+      <div className="fields">
+        <VbField vb_l={p.vb_l} value={p.design.vb_l} linked={p.linked} onChange={(vb_l) => p.onChange({ ...p.design, vb_l })} />
+      </div>
+      <Presets note={p.linked ? LINKED_NOTE : undefined}>
+        {[0.5, 0.577, 0.707].map((q) => (
+          <button key={q} className="chip" disabled={!p.align || p.linked} onClick={() => apply(q)} title={QTC_TITLES[q]}>
+            Qtc {q}
+          </button>
+        ))}
+      </Presets>
+      {msg && <p className="warn">{msg}</p>}
+    </>
   );
+}
+
+const QTC_TITLES: Record<number, string> = {
+  0.5: "Critically damped: best transient response, gentle roll-off",
+  0.577: "Bessel: flattest group delay",
+  0.707: "Butterworth: flattest amplitude, smallest box for the extension",
+};
+
+/** Only replace a default name, so the user's own names survive presets. */
+function renamed(current: string, defaultPrefix: string, next: string): string {
+  return current.startsWith(defaultPrefix) ? next : current;
 }
 
 function VentedBody(p: CommonProps<VentedDesign>) {
   const v = p.design;
   const [msg, setMsg] = useState("");
   const set = (patch: Partial<VentedDesign>) => p.onChange({ ...v, ...patch });
-  const fb = ventedFb(p.vb_l, portOf(v), v.count);
+  const fb = ventedFb(p.vb_l, portOf(v), v.count, undefined, p.air);
 
   const tune = () => {
-    const len = portLengthForFb(p.vb_l, portOf(v, 0), v.targetFb, v.count);
+    const len = portLengthForFb(p.vb_l, portOf(v, 0), v.targetFb, v.count, undefined, p.air);
     if (!(len > 0)) {
       setMsg(`Even a zero-length port tunes below ${v.targetFb} Hz with this port area. Use a bigger port (or more ports), or a lower tuning.`);
       return;
@@ -128,6 +185,34 @@ function VentedBody(p: CommonProps<VentedDesign>) {
         <Fixed label="Fb" unit="Hz" value={f1(fb)} title="Box tuning frequency" />
       </div>
       <TuneRow target={v.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set port length" onApply={tune} />
+      <Presets note={p.linked ? LINKED_NOTE : undefined}>
+        <button
+          className="chip"
+          disabled={!p.align || p.linked}
+          title="Quasi-Butterworth 3rd order (B4 when Qts ≈ 0.38): flat response, smallest box for its extension"
+          onClick={() => {
+            const a = p.align && qb3Alignment(p.align, p.drivers);
+            if (!a) {
+              setMsg("QB3 needs a driver Qts below about 0.38. This driver suits a sealed box (or a larger, lower-tuned vented box).");
+              return;
+            }
+            const len = portLengthForFb(a.vb_l, portOf(v, 0), a.fb, v.count, undefined, p.air);
+            if (!(len > 0)) {
+              setMsg(`${a.name}: ${a.vb_l.toFixed(1)} L tuned to ${a.fb.toFixed(1)} Hz, but this port is too small for that tuning. Increase the port size and try again.`);
+              return;
+            }
+            setMsg("");
+            set({
+              vb_l: Math.round(a.vb_l * 10) / 10,
+              targetFb: Math.round(a.fb * 10) / 10,
+              length_cm: Math.round(len * 10) / 10,
+              name: renamed(v.name, "Ported", `Ported ${a.name}`),
+            });
+          }}
+        >
+          QB3 / B4
+        </button>
+      </Presets>
       {msg && <p className="warn">{msg}</p>}
       <p className="hint">
         Physical port length; end correction (0.732 × diameter, like WinISD) is added automatically.
@@ -142,12 +227,12 @@ function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacemen
   const [msg, setMsg] = useState("");
   const set = (patch: Partial<PrDesign>) => p.onChange({ ...pr, ...patch });
   const setP = (patch: Partial<PrDesign["params"]>) => set({ params: { ...pr.params, ...patch } });
-  const fb = prFb(p.vb_l, pr.params, pr.count, pr.addedMass_g);
+  const fb = prFb(p.vb_l, pr.params, pr.count, pr.addedMass_g, p.air);
 
   const tune = () => {
-    const add = prAddedMassForFb(p.vb_l, pr.params, pr.targetFb, pr.count);
+    const add = prAddedMassForFb(p.vb_l, pr.params, pr.targetFb, pr.count, p.air);
     if (add < 0) {
-      const bare = prFb(p.vb_l, pr.params, pr.count, 0);
+      const bare = prFb(p.vb_l, pr.params, pr.count, 0, p.air);
       setMsg(
         `With no added mass these PRs already tune to ${f1(bare)} Hz, below ${pr.targetFb} Hz. Use a lighter or stiffer PR, fewer PRs, or a smaller box.`,
       );
@@ -185,6 +270,34 @@ function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacemen
         <Num label="PR Xmax" unit="mm" value={pr.params.xmax_mm} onChange={(v) => setP({ xmax_mm: v })} />
       </div>
       <TuneRow target={pr.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set added mass" onApply={tune} />
+      <Presets note={p.linked ? LINKED_NOTE : undefined}>
+        <button
+          className="chip"
+          disabled={!p.align || p.linked}
+          title="Box size and tuning of the QB3 / B4 vented alignment, reached with added mass"
+          onClick={() => {
+            const a = p.align && qb3Alignment(p.align, p.drivers);
+            if (!a) {
+              setMsg("QB3 needs a driver Qts below about 0.38. This driver suits a sealed box better.");
+              return;
+            }
+            const add = prAddedMassForFb(a.vb_l, pr.params, a.fb, pr.count, p.air);
+            if (add < 0) {
+              setMsg(`${a.name} wants ${a.vb_l.toFixed(1)} L at ${a.fb.toFixed(1)} Hz, but these PRs tune lower than that even with no added mass. Try a lighter or stiffer PR, or fewer PRs.`);
+              return;
+            }
+            setMsg("");
+            set({
+              vb_l: Math.round(a.vb_l * 10) / 10,
+              targetFb: Math.round(a.fb * 10) / 10,
+              addedMass_g: Math.round(add),
+              name: renamed(pr.name, "Passive radiators", `PR ${a.name}`),
+            });
+          }}
+        >
+          QB3 / B4
+        </button>
+      </Presets>
       {msg && <p className="warn">{msg}</p>}
       <p className="hint">Added mass is per passive radiator. PR Mms is the bare moving mass from the datasheet.</p>
     </>
@@ -198,13 +311,23 @@ export function DesignCard(props: {
   linked: boolean;
   canDelete: boolean;
   db: DbIndex | null;
+  air: Air;
+  align: AlignmentDriver | null;
+  drivers: number;
   onChange: (d: DesignState) => void;
   onDuplicate: () => void;
   onDelete: () => void;
   onPrDisplacement: (l: number) => void;
 }) {
   const d = props.design;
-  const common = { color: props.color, vb_l: props.vb_l, linked: props.linked };
+  const common = {
+    color: props.color,
+    vb_l: props.vb_l,
+    linked: props.linked,
+    air: props.air,
+    align: props.align,
+    drivers: props.drivers,
+  };
   return (
     <DesignShell
       design={d}

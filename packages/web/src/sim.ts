@@ -1,4 +1,7 @@
 import {
+  STANDARD_AIR,
+  WINISD_AIR,
+  type Air,
   netVolume,
   simulate,
   solveTs,
@@ -86,8 +89,20 @@ export function vbOf(s: AppState, d: DesignState): number {
   return s.volume.link === d.id ? volumeFor(s, d).effective_l : d.vb_l;
 }
 
+export const airOf = (s: AppState): Air => (s.settings.air === "winisd" ? WINISD_AIR : STANDARD_AIR);
+
+/** Chuffing guideline, in whichever convention (peak or RMS) the user chose to display. */
+export const PORT_LIMIT = 17;
+
 export function solveDriver(s: AppState): SolveResult {
-  return solveTs(s.ts);
+  return solveTs(s.ts, 0.03, airOf(s));
+}
+
+/** The solved driver in the form the alignment helpers need, or null if incomplete. */
+export function alignmentDriver(solved: SolveResult) {
+  const v = solved.values;
+  if (solved.missing.length > 0) return null;
+  return { fs: v.fs!, qms: v.qms!, qes: v.qes!, vas_l: v.vas_l! };
 }
 
 function enclosureOf(d: DesignState, vb: number): EnclosureInput {
@@ -122,6 +137,9 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
     fMax: 500,
     points: 300,
     highPass: s.highPass.on ? { type: s.highPass.type, order: s.highPass.order, freq: s.highPass.freq } : null,
+    air: airOf(s),
+    // The limit is in the displayed convention; the engine works in peak.
+    portVelocityLimit: s.settings.velocity === "rms" ? PORT_LIMIT * Math.SQRT2 : PORT_LIMIT,
   };
   const out: Design[] = [];
   for (const d of s.designs) {
@@ -129,7 +147,11 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
     const vb = vbOf(s, d);
     if (!(vb > 0)) continue;
     try {
-      out.push({ design: d, color: colorOf(s, d.id), vb_l: vb, result: simulate(driver, enclosureOf(d, vb), opts) });
+      const result = simulate(driver, enclosureOf(d, vb), opts);
+      if (s.settings.velocity === "rms" && result.portVelocity) {
+        result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
+      }
+      out.push({ design: d, color: colorOf(s, d.id), vb_l: vb, result });
     } catch {
       // Invalid input mid-edit: skip this design until the numbers make sense again.
     }

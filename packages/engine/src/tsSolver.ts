@@ -1,4 +1,4 @@
-import { C, RHO } from "./constants.ts";
+import { STANDARD_AIR, type Air } from "./constants.ts";
 
 /**
  * Thiele/Small parameter solver.
@@ -43,10 +43,10 @@ interface Relation {
    */
   check?: TsParam[];
   /** Solve for one variable given all the others (SI units). */
-  solve: (v: Required<SiValues>, target: TsParam) => number;
+  /** k = ρc² (air stiffness), needed by the Vas relation. */
+  solve: (v: Required<SiValues>, target: TsParam, k: number) => number;
 }
 
-const K = RHO * C * C;
 const tau = 2 * Math.PI;
 
 const RELATIONS: Relation[] = [
@@ -60,7 +60,7 @@ const RELATIONS: Relation[] = [
   {
     name: "Vas = ρc²·Sd²·Cms",
     vars: ["vas_l", "sd_cm2", "cms_mm_per_n"],
-    solve: (v, t) =>
+    solve: (v, t, K) =>
       t === "vas_l"
         ? K * v.sd_cm2 ** 2 * v.cms_mm_per_n
         : t === "cms_mm_per_n"
@@ -138,7 +138,8 @@ const fromSi = (p: TsParam, v: number) => v / TS_PARAMS[p].si;
  * @param entered values typed by the user (datasheet units). Never modified.
  * @param tolerance relative difference above which entered values are reported as conflicting
  */
-export function solveTs(entered: TsValues, tolerance = 0.03): SolveResult {
+export function solveTs(entered: TsValues, tolerance = 0.03, air: Air = STANDARD_AIR): SolveResult {
+  const K = air.rho * air.c * air.c;
   const si: SiValues = {};
   const source: SolveResult["source"] = {};
   for (const [k, v] of Object.entries(entered) as [TsParam, number | undefined][]) {
@@ -156,7 +157,7 @@ export function solveTs(entered: TsValues, tolerance = 0.03): SolveResult {
       const unknown = r.vars.filter((p) => si[p] === undefined);
       if (unknown.length !== 1) continue;
       const t = unknown[0]!;
-      const val = r.solve(si as Required<SiValues>, t);
+      const val = r.solve(si as Required<SiValues>, t, K);
       if (Number.isFinite(val) && val > 0) {
         si[t] = val;
         source[t] = "derived";
@@ -173,7 +174,7 @@ export function solveTs(entered: TsValues, tolerance = 0.03): SolveResult {
     const enteredVars = r.vars.filter((p) => source[p] === "entered");
     if (enteredVars.length < 2 && !r.vars.some((p) => source[p] === "derived")) continue;
     for (const p of enteredVars.filter((x) => !r.check || r.check.includes(x))) {
-      const implied = r.solve(si as Required<SiValues>, p);
+      const implied = r.solve(si as Required<SiValues>, p, K);
       const actual = si[p]!;
       const diff = Math.abs(actual - implied) / implied;
       if (!(diff > tolerance)) continue;

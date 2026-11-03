@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Design } from "./sim.ts";
+import { PORT_LIMIT, type Design } from "./sim.ts";
 import type { AppState } from "./state.ts";
 
 const SITE = "daliusiv.github.io/speaker-box-genius";
@@ -39,7 +39,7 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
         false,
         x !== null && x > state.xmax_mm,
         xpr !== null && d.kind === "pr" && xpr > d.params.xmax_mm,
-        vp !== null && vp > 17,
+        vp !== null && vp > PORT_LIMIT,
       ],
     };
   });
@@ -80,6 +80,39 @@ export function bbcodePost(state: AppState, designs: Design[], url: string): str
     "[/list]",
     `[url=${url}]Open the live simulation in Speaker Box Genius[/url]`,
   ].join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// CSV
+// ---------------------------------------------------------------------------
+
+/** Every curve of every design, one row per frequency. Opens in Excel / Sheets / LibreOffice. */
+export function curvesCsv(state: AppState, designs: Design[]): string {
+  if (designs.length === 0) return "";
+  const vel = state.settings.velocity === "rms" ? "RMS" : "peak";
+  const cols: { head: string; data: Float64Array }[] = [];
+  for (const { design: d, result: r } of designs) {
+    const add = (what: string, data: Float64Array | null) => data && cols.push({ head: `${d.name}: ${what}`, data });
+    add("SPL (dB)", r.spl);
+    add("Cone excursion (mm peak)", r.excursionMm);
+    add("PR excursion (mm peak)", r.prExcursionMm);
+    add(`Port velocity (m/s ${vel})`, r.portVelocity);
+    add("Impedance (ohm)", r.impedanceOhm);
+    add("Impedance phase (deg)", r.impedancePhaseDeg);
+    add("Group delay (ms)", r.groupDelayMs);
+    add("Max SPL (dB)", r.maxSpl);
+    add("Max power (W)", r.maxPowerW);
+  }
+  const q = (s: string) => `"${s.replace(/"/g, '""')}"`;
+  const freq = designs[0]!.result.freq;
+  const lines = [
+    `# ${state.driverName}, ${subtitle(state)}, 1 m half space, air: ${state.settings.air}`,
+    ["Frequency (Hz)", ...cols.map((c) => c.head)].map(q).join(","),
+  ];
+  for (let i = 0; i < freq.length; i++) {
+    lines.push([freq[i]!.toFixed(3), ...cols.map((c) => (Number.isFinite(c.data[i]!) ? c.data[i]!.toPrecision(6) : ""))].join(","));
+  }
+  return lines.join("\r\n") + "\r\n";
 }
 
 // ---------------------------------------------------------------------------
@@ -274,6 +307,19 @@ export function ShareMenu(props: { state: AppState; designs: Design[]; shareUrl:
     }
   };
 
+  const downloadCsv = () => {
+    setOpen(false);
+    const csv = curvesCsv(props.state, props.designs);
+    if (!csv) return flash("Nothing to export yet");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${props.state.driverName.replace(/[^\w.-]+/g, " ").trim() || "speaker-box"}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    flash("Data downloaded ✓");
+  };
+
   return (
     <div className="share" ref={ref}>
       <button onClick={() => setOpen(!open)} aria-expanded={open}>
@@ -292,6 +338,9 @@ export function ShareMenu(props: { state: AppState; designs: Design[]; shareUrl:
           </button>
           <button role="menuitem" onClick={download}>
             Download image (PNG)
+          </button>
+          <button role="menuitem" onClick={downloadCsv}>
+            Download data (CSV)
           </button>
           <p className="hint">Post the image and paste the text under it: the text carries the live link.</p>
         </div>
