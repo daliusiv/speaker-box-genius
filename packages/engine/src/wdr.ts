@@ -1,3 +1,4 @@
+import type { HighPass } from "./filters.ts";
 import type { TsValues } from "./tsSolver.ts";
 import { STANDARD_AIR } from "./constants.ts";
 
@@ -163,6 +164,28 @@ export interface WprProject {
   /** WinISD's "voice coil inductance" simulator option (VCInd); 0 = Le not simulated. */
   simulateLe: boolean;
   air?: { rho: number; c: number };
+  /**
+   * [Filters]. Only a Butterworth high-pass is recognised so far (filterNtype=1,
+   * params "0;1;order;fc;Q"); anything else is counted in `unsupportedFilters`.
+   */
+  highPass?: HighPass;
+  unsupportedFilters: number;
+}
+
+function parseFilters(sec: Record<string, string> | undefined): { highPass?: HighPass; unsupportedFilters: number } {
+  const count = n0(sec, "Count");
+  let highPass: HighPass | undefined;
+  let unsupported = 0;
+  for (let i = 0; i < count; i++) {
+    const type = n0(sec, `filter${i}type`);
+    const params = (sec?.[`filter${i}params`] ?? "").split(";").map(Number);
+    const order = params[2] ?? NaN;
+    const fc = params[3] ?? NaN;
+    if (!highPass && type === 1 && params[0] === 0 && params[1] === 1 && order >= 1 && order <= 4 && fc > 0) {
+      highPass = { type: "butterworth", order: Math.round(order), freq: fc };
+    } else unsupported++;
+  }
+  return { highPass, unsupportedFilters: unsupported };
 }
 
 function iniSections(text: string): Map<string, Record<string, string>> {
@@ -238,5 +261,6 @@ export function parseWpr(text: string): WprProject {
     power: n0(s.get("signalsource"), "P") || 1,
     simulateLe: n0(s.get("simulatoroptions"), "VCInd") !== 0,
     air: rho > 0 && c > 0 ? { rho, c } : undefined,
+    ...parseFilters(s.get("filters")),
   };
 }

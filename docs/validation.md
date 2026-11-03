@@ -63,6 +63,20 @@ stored in the .wpr instead of deriving them from Fs/Qes/Qms/Vas made the agreeme
 worse, so WinISD derives them as we do. The remaining offset is far below anything
 measurable and is locked in by a golden test.
 
+## Ported + 2nd-order Butterworth high-pass at 25 Hz (Test 3)
+
+| Graph | Frequency | WinISD | Speaker Box Genius | Difference |
+|---|---|---|---|---|
+| Transfer function | 15.12 Hz | −43.222 dB | −43.237 dB | −0.015 dB |
+| Transfer function | 25.41 Hz | −20.808 dB | −20.804 dB | +0.004 dB |
+| Transfer function | 40.13 Hz | −6.326 dB | −6.324 dB | +0.002 dB |
+| Cone excursion | 15.22 Hz | 8.894 mm | 8.864 mm | −0.34 % |
+| Cone excursion | 20.22 Hz | 11.081 mm | 11.043 mm | −0.34 % |
+| Cone excursion | 40.13 Hz | 1.959 mm | 1.951 mm | −0.43 % |
+| Maximum SPL (Xmax-limited) | 19.60 Hz | 70.559 dB | 70.553 dB | −0.006 dB |
+
+The filter is read from the project's `[Filters]` section on import.
+
 ## Passive radiator: 1× DSA270-PR
 
 | Box | Frequency | WinISD | Speaker Box Genius | Difference |

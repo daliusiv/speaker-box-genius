@@ -238,3 +238,22 @@ test("DSA215-8 + DSA270-PR: cone and PR excursion match WinISD's graphs (Test 2)
   near(d.freq[dip]!, 46.11, 0.15, "cone dip frequency");
   near(d.freq[bump]!, 65.36, 0.3, "cone bump frequency");
 });
+
+// Test 3: the ported project with a 2nd-order Butterworth high-pass at 25 Hz.
+test("DSA215-8 vented + Butterworth HPF: filter imported, graphs match WinISD (Test 3)", () => {
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215-hpf.wpr"), "utf8"));
+  assert.deepEqual(p.highPass, { type: "butterworth", order: 2, freq: 25 });
+  assert.equal(p.unsupportedFilters, 0);
+  const t = p.driver.ts;
+  const drv = { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: 0, xmax_mm: p.driver.xmax_mm, pe_w: p.driver.pe_w };
+  const box = { kind: "vented" as const, vb_l: p.box.vb_l, port: { shape: "round" as const, diameter_cm: p.port!.diameter_cm, length_cm: p.port!.length_cm }, endCorrection: 0.732, ql: p.box.ql, qa: p.box.qa, qp: p.box.qp };
+  const at = (f: number) => simulate(drv, box, { power: p.power, rg: p.rg, air: p.air, highPass: p.highPass, fMin: f, fMax: f, points: 1 });
+  for (const [f, db] of [[15.12, -43.222], [25.41, -20.808], [40.13, -6.326]] as const) {
+    const r = at(f);
+    near(r.spl[0]! - r.summary.referenceSpl, db, 0.03, `TF at ${f} Hz`);
+  }
+  for (const [f, mm] of [[15.22, 8.894], [20.22, 11.081], [40.13, 1.959]] as const) near(at(f).excursionMm[0]! / mm - 1, 0, 0.006, `excursion at ${f} Hz`);
+  const m = at(19.6);
+  assert.equal(m.limitedBy[0], "xmax");
+  near(m.maxSpl[0]!, 70.559, 0.03, "max SPL at 19.6 Hz");
+});
