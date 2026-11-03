@@ -34,6 +34,35 @@ accuracy. WinISD plots **peak** port velocity.
 WinISD's sealed-box "Fsc" field (79.03 Hz) is the −3 dB frequency; our F3 is
 78.94 Hz. The box resonance Fc is 75.0 Hz.
 
+## Ported at 100 W: every graph (Test 1)
+
+Same ported project, 100.08 W (24.3 V), read from each WinISD graph's cursor.
+
+| Graph | Frequency | WinISD | Speaker Box Genius | Difference |
+|---|---|---|---|---|
+| SPL | 20.03 Hz | 82.822 dB | 82.789 dB | −0.033 dB |
+| SPL | 40.13 Hz | 102.235 dB | 102.207 dB | −0.028 dB |
+| SPL | 80.63 Hz | 107.808 dB | 107.778 dB | −0.030 dB |
+| Cone excursion | 20.16 Hz | 20.311 mm | 20.236 mm | −0.37 % |
+| Cone excursion | 60.32 Hz | 5.930 mm | 5.910 mm | −0.34 % |
+| Port air velocity | 20.03 Hz | 8.616 m/s | 8.586 m/s | −0.35 % |
+| Port air velocity | 35.14 Hz | 10.406 m/s | 10.370 m/s | −0.34 % |
+| Impedance | 20.22 Hz | 28.769 Ω | 28.997 Ω | +0.79 % |
+| Impedance | 42.29 Hz | 6.886 Ω | 6.896 Ω | +0.14 % |
+| Impedance | 100.39 Hz | 11.729 Ω | 11.802 Ω | +0.62 % |
+| Group delay | 30.67 Hz | 11.268 ms | 11.268 ms | 0 |
+| Group delay | 60.32 Hz | 6.584 ms | 6.568 ms | −0.24 % |
+| Maximum SPL (Xmax-limited) | 20.16 Hz | 71.664 dB | 71.673 dB | +0.009 dB |
+| Maximum SPL (thermal-limited) | 40.13 Hz | 101.262 dB | 101.234 dB | −0.028 dB |
+| Maximum power (Xmax-limited) | 19.79 Hz | 7.062 W | 7.114 W | +0.74 % |
+| Maximum power (thermal-limited) | 40.25 Hz | 80 W | 80 W | 0 |
+
+The shapes match; absolute level sits a uniform ~0.03 dB (0.35 %) below WinISD and
+the impedance peaks are up to 0.8 % higher. Simulating from the Bl/Mms/Cms/Rms values
+stored in the .wpr instead of deriving them from Fs/Qes/Qms/Vas made the agreement
+worse, so WinISD derives them as we do. The remaining offset is far below anything
+measurable and is locked in by a golden test.
+
 ## Passive radiator: 1× DSA270-PR
 
 | Box | Frequency | WinISD | Speaker Box Genius | Difference |

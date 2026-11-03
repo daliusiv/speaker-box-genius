@@ -182,3 +182,32 @@ test("DSA215-8 + DSA270-PR in 50 L: tuning exact, passband and dip within 0.05 d
   // standard loss model (−1.213 vs −1.70 dB). See docs/validation.md.
   near(run(40.13).tf, -1.213, 0.55, "TF at 40.13 Hz (tuning peak)");
 });
+
+// Test 1: DSA215-8 vented project, every graph at 100.08 W (24.3 V), read from
+// WinISD's cursor. Absolute level is ~0.03 dB (0.35 %) below WinISD across the
+// board; impedance peaks are within 0.8 %. See docs/validation.md.
+test("DSA215-8 vented: all WinISD graphs at 100 W within tolerance (Test 1)", () => {
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215.wpr"), "utf8"));
+  const t = p.driver.ts;
+  const drv = { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: 0, xmax_mm: p.driver.xmax_mm, pe_w: p.driver.pe_w };
+  const box = { kind: "vented" as const, vb_l: p.box.vb_l, port: { shape: "round" as const, diameter_cm: p.port!.diameter_cm, length_cm: p.port!.length_cm }, endCorrection: 0.732, ql: p.box.ql, qa: p.box.qa, qp: p.box.qp };
+  const opts = { power: p.power, rg: p.rg, air: p.air };
+  const at = (f: number) => simulate(drv, box, { ...opts, fMin: f, fMax: f, points: 1 });
+  const dense = simulate(drv, box, { ...opts, fMin: 10, fMax: 500, points: 4000 });
+  const gd = (f: number) => dense.groupDelayMs[dense.freq.findIndex((x) => x >= f)]!;
+  const rel = (a: number, b: number, tol: number, what: string) => near(a / b - 1, 0, tol, what);
+
+  for (const [f, db] of [[20.03, 82.822], [40.13, 102.235], [80.63, 107.808]] as const) near(at(f).spl[0]!, db, 0.06, `SPL at ${f} Hz`);
+  for (const [f, mm] of [[20.16, 20.311], [60.32, 5.93]] as const) rel(at(f).excursionMm[0]!, mm, 0.006, `excursion at ${f} Hz`);
+  for (const [f, v] of [[20.03, 8.616], [35.14, 10.406]] as const) rel(at(f).portVelocity![0]!, v, 0.006, `port velocity at ${f} Hz`);
+  for (const [f, z] of [[20.22, 28.769], [42.29, 6.886], [100.39, 11.729]] as const) rel(at(f).impedanceOhm[0]!, z, 0.01, `impedance at ${f} Hz`);
+  for (const [f, ms] of [[30.67, 11.268], [60.32, 6.584]] as const) rel(gd(f), ms, 0.005, `group delay at ${f} Hz`);
+
+  const lo = at(20.16), mid = at(40.13);
+  assert.equal(lo.limitedBy[0], "xmax");
+  assert.equal(mid.limitedBy[0], "thermal");
+  near(lo.maxSpl[0]!, 71.664, 0.06, "max SPL at 20.16 Hz");
+  near(mid.maxSpl[0]!, 101.262, 0.06, "max SPL at 40.13 Hz");
+  rel(at(19.79).maxPowerW[0]!, 7.062, 0.01, "max power at 19.79 Hz");
+  near(at(40.25).maxPowerW[0]!, 80, 1e-6, "max power at 40.25 Hz (thermal = Pe)");
+});
