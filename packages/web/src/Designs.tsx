@@ -804,6 +804,10 @@ export function DesignCard(props: {
   portCtx: PortContext;
   /** Box losses from Settings (a bandpass can override them per chamber). */
   losses: ChamberLosses;
+  /** Open the volume calculator for this design (linking it). */
+  onDimensions: () => void;
+  /** Stop taking the volume from the calculator (keeping the current volume). */
+  onUnlink: () => void;
   onChange: (d: DesignState) => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -835,6 +839,24 @@ export function DesignCard(props: {
       {d.kind === "pr" && (
         <PrBody {...common} design={d} onChange={props.onChange} db={props.db} onPrDisplacement={props.onPrDisplacement} />
       )}
+      <p className="dims-link hint">
+        {props.linked ? (
+          <>
+            {d.kind === "bandpass" ? "Rear chamber volume" : "Box volume"} comes from the volume calculator ·{" "}
+            <button className="link" onClick={props.onDimensions}>
+              Edit dimensions
+            </button>{" "}
+            ·{" "}
+            <button className="link" onClick={props.onUnlink}>
+              Unlink
+            </button>
+          </>
+        ) : (
+          <button className="link" onClick={props.onDimensions}>
+            {d.kind === "bandpass" ? "Size the rear chamber from dimensions…" : "Size from dimensions…"}
+          </button>
+        )}
+      </p>
     </DesignShell>
   );
 }

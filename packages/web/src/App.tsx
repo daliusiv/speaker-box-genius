@@ -40,6 +40,7 @@ import {
   prGroupLabels,
   prPeak,
   prXmaxes,
+  dimensionsFor,
   driveLabel,
   roomGainOf,
   runDesigns,
@@ -86,6 +87,25 @@ export function App(props: { initial: AppState | null }) {
     setSizeReport({ changed: r.changed, skipped: r.skipped });
     notify(r.changed.length > 0 ? `Sized ${r.changed.length} box${r.changed.length > 1 ? "es" : ""} for this driver.` : "No box could take its preset with this driver.");
   };
+  /**
+   * Open the volume calculator for a design. Linking starts from dimensions that give the
+   * design's current volume (same proportions), so the simulation doesn't jump.
+   */
+  const openDimensions = (d: DesignState) => {
+    if (state.volume.link !== d.id) {
+      const dims = dimensionsFor(state, d, d.vb_l, "keep");
+      setStep((s) => ({ ...s, volume: { ...(dims ?? s.volume), link: d.id } }));
+      notify(
+        dims
+          ? `“${d.name}” now takes its volume from the calculator, sized for its ${d.vb_l} L.`
+          : `“${d.name}” now takes its volume from the calculator.`,
+      );
+    }
+    choosePanel("build");
+    setPhoneView("panel");
+    window.scrollTo({ top: 0 });
+  };
+
   /** After a new driver arrives: offer to size the boxes for it. */
   const offerSizing = (name: string) => notify(`Loaded “${name}”.`, { label: "Size boxes for it", run: sizeBoxes });
   useEffect(() => {
@@ -800,6 +820,15 @@ export function App(props: { initial: AppState | null }) {
                 drivers={state.drivers}
                 portCtx={portContext(state, designs, d.id)}
                 losses={state.settings.losses}
+                onDimensions={() => openDimensions(d)}
+                onUnlink={() => {
+                  const vb = Math.round(vbOf(state, d) * 10) / 10;
+                  setStep((s) => ({
+                    ...s,
+                    designs: s.designs.map((x) => (x.id === d.id ? { ...x, vb_l: vb } : x)),
+                    volume: { ...s.volume, link: "none" },
+                  }));
+                }}
                 onChange={updateDesign}
                 onDuplicate={() => duplicateDesign(d)}
                 onDelete={() => deleteDesign(d)}

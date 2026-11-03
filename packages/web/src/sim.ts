@@ -293,3 +293,60 @@ export function prPeak(r: SimulationResult, fMin: number): { mm: number; xmax: n
 
 /** The drive level as people read it: "100 W" or "2.83 V". */
 export const driveLabel = (s: Pick<AppState, "drive" | "power" | "volts">) => (s.drive === "volts" ? `${s.volts} V` : `${s.power} W`);
+
+/** Golden-ratio box proportions (width : height : depth), a common choice to spread standing waves. */
+const GOLDEN = { w: 1, h: 1.618, d: 0.618 };
+
+/**
+ * Outside dimensions that give a design the target box volume (the calculator's
+ * effective volume: net after every deduction, plus the stuffing gain). The shape is
+ * scaled as a whole, keeping its proportions, or for a box set to golden-ratio
+ * proportions first. Wall thickness and deductions stay as they are. Null when no
+ * size reaches the target (deductions alone exceed it).
+ */
+export function dimensionsFor(
+  s: AppState,
+  d: DesignState | undefined,
+  target_l: number,
+  proportions: "keep" | "golden" = "keep",
+): AppState["volume"] | null {
+  const v0 = s.volume;
+  let base = v0;
+  if (proportions === "golden" && v0.shape === "box") {
+    const unit = Math.cbrt(v0.width_cm * v0.height_cm * v0.depth_cm / (GOLDEN.w * GOLDEN.h * GOLDEN.d));
+    base = { ...v0, width_cm: unit * GOLDEN.w, height_cm: unit * GOLDEN.h, depth_cm: unit * GOLDEN.d };
+  }
+  const scaled = (k: number): AppState["volume"] => ({
+    ...base,
+    width_cm: base.width_cm * k,
+    height_cm: base.height_cm * k,
+    depth_cm: base.depth_cm * k,
+    diameter_cm: base.diameter_cm * k,
+    topWidth_cm: base.topWidth_cm * k,
+    topDepth_cm: base.topDepth_cm * k,
+  });
+  const vol = (k: number) => volumeFor({ ...s, volume: scaled(k) }, d).effective_l;
+  if (!(target_l > 0)) return null;
+  let lo = 0.02;
+  let hi = 1;
+  while (vol(hi) < target_l && hi < 1e4) hi *= 2;
+  if (vol(hi) < target_l) return null;
+  for (let i = 0; i < 80; i++) {
+    const mid = (lo + hi) / 2;
+    if (vol(mid) < target_l) lo = mid;
+    else hi = mid;
+  }
+  if (vol(hi) <= 0) return null;
+  // Round to 0.1 cm: what someone would cut.
+  const r = (x: number) => Math.round(x * 10) / 10;
+  const out = scaled(hi);
+  return {
+    ...out,
+    width_cm: r(out.width_cm),
+    height_cm: r(out.height_cm),
+    depth_cm: r(out.depth_cm),
+    diameter_cm: r(out.diameter_cm),
+    topWidth_cm: r(out.topWidth_cm),
+    topDepth_cm: r(out.topDepth_cm),
+  };
+}
