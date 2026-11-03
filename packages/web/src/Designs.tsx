@@ -14,7 +14,7 @@ import { Fixed, LibraryPicker, Num, Select } from "./components.tsx";
 import { loadPassiveRadiator, type DbIndex } from "./library.ts";
 import { KIND_LABEL, PORT_LIMIT, portOf } from "./sim.ts";
 import { useUnits } from "./units.ts";
-import type { DesignKind, DesignState, PrDesign, VentedDesign } from "./state.ts";
+import type { BandpassDesign, BandpassOrder, DesignKind, DesignState, PortFields, PrDesign, VentedDesign } from "./state.ts";
 
 const f1 = (v: number) => (Number.isFinite(v) ? v.toFixed(1) : "–");
 
@@ -86,11 +86,12 @@ function DesignShell(props: {
   );
 }
 
-function VbField(props: { vb_l: number; value: number; linked: boolean; onChange: (v: number) => void }) {
+function VbField(props: { vb_l: number; value: number; linked: boolean; label?: string; onChange: (v: number) => void }) {
+  const label = props.label ?? "Vb";
   return props.linked ? (
-    <Fixed label="Vb" num={props.vb_l} q="vol" title="From the volume calculator" />
+    <Fixed label={label} num={props.vb_l} q="vol" title="From the volume calculator" />
   ) : (
-    <Num label="Vb" q="vol" value={props.value} onChange={props.onChange} />
+    <Num label={label} q="vol" value={props.value} onChange={props.onChange} />
   );
 }
 
@@ -148,12 +149,14 @@ function renamed(current: string, defaultPrefix: string, next: string): string {
 interface PortContext {
   /** Peak port velocity in the displayed convention (above the subsonic cut-off), if simulated. */
   portVelocity: number | null;
+  /** Bandpass: the same for the rear chamber's port. */
+  rearPortVelocity: number | null;
   /** Largest internal box dimension (cm) when the volume calculator feeds this design. */
   internalMax_cm: number | null;
 }
 
 /** Warnings and suggestions about the port itself: does it fit, will it chuff, where does it resonate. */
-function PortChecks(props: { v: VentedDesign; vb_l: number; air: Air; ctx: PortContext }) {
+function PortChecks(props: { v: PortFields; vb_l: number; air: Air; ctx: Pick<PortContext, "portVelocity" | "internalMax_cm"> }) {
   const { v, vb_l, air, ctx } = props;
   const { fmt } = useUnits();
   const port = portOf(v);
@@ -373,6 +376,98 @@ function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacemen
   );
 }
 
+/** Shape, size, length and count of one port, with its tuning and a "set length" helper. */
+function PortEditor(props: {
+  port: PortFields;
+  /** Volume of the chamber the port tunes. */
+  vb_l: number;
+  air: Air;
+  onChange: (p: PortFields) => void;
+}) {
+  const v = props.port;
+  const [msg, setMsg] = useState("");
+  const set = (patch: Partial<PortFields>) => props.onChange({ ...v, ...patch });
+  const fb = ventedFb(props.vb_l, portOf(v), v.count, undefined, props.air);
+  const tune = () => {
+    const len = portLengthForFb(props.vb_l, portOf(v, 0), v.targetFb, v.count, undefined, props.air);
+    if (!(len > 0)) {
+      setMsg(`Even a zero-length port tunes below ${v.targetFb} Hz with this port area. Use a bigger port (or more ports), or a lower tuning.`);
+      return;
+    }
+    setMsg("");
+    set({ length_cm: Math.round(len * 10) / 10 });
+  };
+  return (
+    <>
+      <div className="fields">
+        <Select
+          label="Port"
+          value={v.shape}
+          options={[
+            { value: "round", text: "Round tube" },
+            { value: "slot", text: "Slot (rectangular)" },
+          ]}
+          onChange={(shape) => set({ shape })}
+        />
+        {v.shape === "round" ? (
+          <Num label="Port Ø" q="len" value={v.diameter_cm} onChange={(x) => set({ diameter_cm: x })} />
+        ) : (
+          <>
+            <Num label="Width" q="len" value={v.slotWidth_cm} onChange={(x) => set({ slotWidth_cm: x })} />
+            <Num label="Height" q="len" value={v.slotHeight_cm} onChange={(x) => set({ slotHeight_cm: x })} />
+          </>
+        )}
+        <Num label="Length" q="len" value={v.length_cm} min={0} onChange={(x) => set({ length_cm: x })} />
+        <Num label="Ports" value={v.count} onChange={(x) => set({ count: Math.max(1, Math.round(x)) })} />
+        <Fixed label="Fb" unit="Hz" value={f1(fb)} title="Tuning of this chamber with its port" />
+      </div>
+      <TuneRow target={v.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set port length" onApply={tune} />
+      {msg && <p className="warn">{msg}</p>}
+    </>
+  );
+}
+
+const BP_ORDERS: { value: BandpassOrder; text: string }[] = [
+  { value: "4", text: "4th order (closed rear, ported front)" },
+  { value: "6p", text: "6th order (both chambers ported out)" },
+  { value: "6s", text: "6th order series-tuned (rear ports into front)" },
+];
+
+function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext }) {
+  const b = p.design;
+  const set = (patch: Partial<BandpassDesign>) => p.onChange({ ...b, ...patch });
+  const rearPorted = b.order !== "4";
+  return (
+    <>
+      <div className="fields">
+        <Select label="Type" value={b.order} options={BP_ORDERS} onChange={(order) => set({ order })} />
+        <VbField label="Rear Vb" vb_l={p.vb_l} value={b.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
+        <Num label="Front Vb" q="vol" value={b.frontVb_l} onChange={(frontVb_l) => set({ frontVb_l })} />
+      </div>
+      <h3>Front chamber port (to the outside)</h3>
+      <PortEditor port={b.front} vb_l={b.frontVb_l} air={p.air} onChange={(front) => set({ front })} />
+      <PortChecks v={b.front} vb_l={b.frontVb_l} air={p.air} ctx={{ portVelocity: p.portCtx.portVelocity, internalMax_cm: null }} />
+      {rearPorted && (
+        <>
+          <h3>{b.order === "6s" ? "Rear chamber port (into the front chamber)" : "Rear chamber port (to the outside)"}</h3>
+          <PortEditor port={b.rear} vb_l={p.vb_l} air={p.air} onChange={(rear) => set({ rear })} />
+          <PortChecks
+            v={b.rear}
+            vb_l={p.vb_l}
+            air={p.air}
+            ctx={{ portVelocity: p.portCtx.rearPortVelocity, internalMax_cm: p.portCtx.internalMax_cm }}
+          />
+        </>
+      )}
+      <p className="hint">
+        The driver sits in the wall between the chambers{rearPorted ? "" : ", firing into the ported front chamber"}. All the
+        sound comes out of the {rearPorted && b.order === "6p" ? "ports" : "front port"}, so expect a band-limited response.
+        {p.linked && " The volume calculator feeds the rear chamber."}
+      </p>
+    </>
+  );
+}
+
 export function DesignCard(props: {
   design: DesignState;
   color: string;
@@ -409,6 +504,7 @@ export function DesignCard(props: {
     >
       {d.kind === "sealed" && <SealedBody {...common} design={d} onChange={props.onChange} />}
       {d.kind === "vented" && <VentedBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} />}
+      {d.kind === "bandpass" && <BandpassBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} />}
       {d.kind === "pr" && (
         <PrBody {...common} design={d} onChange={props.onChange} db={props.db} onPrDisplacement={props.onPrDisplacement} />
       )}
@@ -420,7 +516,7 @@ export function AddDesign(props: { disabled: boolean; onAdd: (k: DesignKind) => 
   return (
     <div className="add-design">
       <span>Add design:</span>
-      {(["sealed", "vented", "pr"] as const).map((k) => (
+      {(["sealed", "vented", "pr", "bandpass"] as const).map((k) => (
         <button key={k} className="secondary" disabled={props.disabled} onClick={() => props.onAdd(k)}>
           + {KIND_LABEL[k]}
         </button>

@@ -1,6 +1,6 @@
 import type { EqStage, HighPassType, PassiveRadiatorInput, TsValues } from "@sbg/engine";
 
-export type DesignKind = "sealed" | "vented" | "pr";
+export type DesignKind = "sealed" | "vented" | "pr" | "bandpass";
 export type ShapeKind = "box" | "cylinder" | "sphere" | "frustum";
 export type PrParams = Required<Pick<PassiveRadiatorInput, "mms_g" | "sd_cm2" | "xmax_mm" | "qms" | "vas_l">>;
 
@@ -37,7 +37,34 @@ export interface PrDesign extends DesignBase {
   params: PrParams;
 }
 
-export type DesignState = SealedDesign | VentedDesign | PrDesign;
+/** A port's size and count, shared by ported and bandpass designs. */
+export interface PortFields {
+  shape: "round" | "slot";
+  diameter_cm: number;
+  slotWidth_cm: number;
+  slotHeight_cm: number;
+  length_cm: number;
+  count: number;
+  /** Last tuning frequency asked for with "Set port length". */
+  targetFb: number;
+}
+
+export type BandpassOrder = "4" | "6p" | "6s";
+
+/**
+ * Bandpass box. `vb_l` is the rear chamber (the one the volume calculator feeds).
+ * "4": closed rear, ported front. "6p": both ported to the outside.
+ * "6s": series-tuned, the rear chamber's port opens into the front chamber.
+ */
+export interface BandpassDesign extends DesignBase {
+  kind: "bandpass";
+  order: BandpassOrder;
+  frontVb_l: number;
+  front: PortFields;
+  rear: PortFields;
+}
+
+export type DesignState = SealedDesign | VentedDesign | PrDesign | BandpassDesign;
 
 /** An EQ stage plus where it applies: every design, or one design by id. */
 export type EqItem = EqStage & { id: string; on: boolean; target: string };
@@ -128,6 +155,18 @@ export function newDesign(kind: DesignKind, existing: DesignState[]): DesignStat
         length_cm: 30,
         count: 1,
         targetFb: 30,
+      };
+    case "bandpass":
+      return {
+        id,
+        kind,
+        name: `Bandpass${suffix}`,
+        on: true,
+        order: "4",
+        vb_l: 20,
+        frontVb_l: 25,
+        front: { shape: "round", diameter_cm: 10, slotWidth_cm: 20, slotHeight_cm: 5, length_cm: 25, count: 1, targetFb: 50 },
+        rear: { shape: "round", diameter_cm: 7.5, slotWidth_cm: 15, slotHeight_cm: 4, length_cm: 30, count: 1, targetFb: 35 },
       };
     case "pr":
       return {
@@ -247,10 +286,16 @@ function migrate(raw: Raw): Raw {
 }
 
 function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
-  if (d?.kind !== "sealed" && d?.kind !== "vented" && d?.kind !== "pr") return null;
+  if (!["sealed", "vented", "pr", "bandpass"].includes(d?.kind)) return null;
   const base = newDesign(d.kind, all);
   const merged = { ...base, ...d } as DesignState;
   if (merged.kind === "pr") merged.params = { ...(base as PrDesign).params, ...(d.params ?? {}) };
+  if (merged.kind === "bandpass") {
+    const b = base as BandpassDesign;
+    merged.front = { ...b.front, ...(d.front ?? {}) };
+    merged.rear = { ...b.rear, ...(d.rear ?? {}) };
+    if (!["4", "6p", "6s"].includes(merged.order)) merged.order = b.order;
+  }
   if (typeof merged.id !== "string" || all.some((x) => x.id === merged.id)) merged.id = base.id;
   return merged;
 }

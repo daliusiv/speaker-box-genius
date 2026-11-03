@@ -29,11 +29,17 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
   return designs.map(({ design: d, color, vb_l, result: r }) => {
     const x = peak(r.excursionMm, r.freq);
     const xpr = peak(r.prExcursionMm, r.freq);
-    const vp = peak(r.portVelocity, r.freq);
+    const vpFront = peak(r.portVelocity, r.freq);
+    const vpRear = peak(r.rearPortVelocity, r.freq);
+    const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
+    const vol =
+      d.kind === "bandpass"
+        ? `${fmtQ(vb_l, "vol", state.settings.units)} + ${fmtQ(d.frontVb_l, "vol", state.settings.units)}`
+        : fmtQ(vb_l, "vol", state.settings.units);
     return {
       name: d.name,
       color,
-      cells: [fmtQ(vb_l, "vol", state.settings.units), n(r.summary.fb ?? r.summary.fc, "Hz"), n(r.summary.f3, "Hz"), n(x, "mm"), n(xpr, "mm"), n(vp, "m/s")],
+      cells: [vol, n(r.summary.fb ?? r.summary.fc, "Hz"), n(r.summary.f3, "Hz"), n(x, "mm"), n(xpr, "mm"), n(vp, "m/s")],
       over: [
         false,
         false,
@@ -97,7 +103,8 @@ export function curvesCsv(state: AppState, designs: Design[]): string {
     add("SPL (dB)", r.spl);
     add("Cone excursion (mm peak)", r.excursionMm);
     add("PR excursion (mm peak)", r.prExcursionMm);
-    add(`Port velocity (m/s ${vel})`, r.portVelocity);
+    add(d.kind === "bandpass" ? `Front port velocity (m/s ${vel})` : `Port velocity (m/s ${vel})`, r.portVelocity);
+    add(`Rear port velocity (m/s ${vel})`, r.rearPortVelocity);
     add("Impedance (ohm)", r.impedanceOhm);
     add("Impedance phase (deg)", r.impedancePhaseDeg);
     add("Group delay (ms)", r.groupDelayMs);

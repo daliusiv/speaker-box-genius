@@ -192,7 +192,31 @@ export interface Losses {
 
 export const DEFAULT_LOSSES = { ql: 10, qa: 100, qp: 100 } as const;
 
+/** One chamber of a bandpass box. */
+export interface BandpassChamber extends Losses {
+  vb_l: number;
+  /** Omit for a closed chamber. */
+  port?: PortInput;
+  portCount?: number;
+}
+
+/**
+ * Bandpass box: the driver sits between a rear and a front chamber.
+ * - 4th order: closed rear chamber, ported front chamber.
+ * - 6th order (parallel): both chambers ported to the outside.
+ * - 6th order (series-tuned): the rear chamber's port opens into the front chamber
+ *   (`rearPortTo: "front"`) and only the front chamber is ported to the outside.
+ */
+export interface BandpassInput {
+  kind: "bandpass";
+  rear: BandpassChamber;
+  front: BandpassChamber & { port: PortInput };
+  rearPortTo?: "outside" | "front";
+  endCorrection?: number;
+}
+
 export type EnclosureInput =
+  | BandpassInput
   | ({ kind: "sealed"; vb_l: number } & Losses)
   | ({ kind: "vented"; vb_l: number; port: PortInput; portCount?: number; endCorrection?: number } & Losses)
   | ({

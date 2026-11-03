@@ -14,12 +14,12 @@ import {
   type SolveResult,
   type VolumeResult,
 } from "@sbg/engine";
-import type { AppState, DesignState, Settings, VentedDesign } from "./state.ts";
+import type { AppState, DesignState, PortFields, Settings } from "./state.ts";
 
 /** One colour per design slot; distinguishable in light and dark mode. */
 export const PALETTE = ["#3b82f6", "#f97316", "#22c55e", "#a855f7", "#e11d48", "#0d9488", "#ca8a04", "#64748b"];
 
-export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators" } as const;
+export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators", bandpass: "Bandpass" } as const;
 
 export function colorOf(s: AppState, id: string): string {
   const i = s.designs.findIndex((d) => d.id === id);
@@ -53,7 +53,7 @@ export function shapeOf(v: AppState["volume"]): Shape {
   }
 }
 
-export function portOf(v: VentedDesign, length_cm = v.length_cm): PortInput {
+export function portOf(v: Omit<PortFields, "count" | "targetFb">, length_cm = v.length_cm): PortInput {
   return v.shape === "slot"
     ? { shape: "slot", width_cm: v.slotWidth_cm, height_cm: v.slotHeight_cm, length_cm }
     : { shape: "round", diameter_cm: v.diameter_cm, length_cm };
@@ -68,7 +68,15 @@ export function volumeFor(s: AppState, d: DesignState | undefined): VolumeResult
     drivers: { count: s.drivers, displacement_l: v.driverDisp_l },
     passiveRadiators: d?.kind === "pr" ? { count: d.count, displacement_l: v.prDisp_l } : undefined,
     ports:
-      d?.kind === "vented"
+      d?.kind === "bandpass" && d.order !== "4"
+        ? {
+            count: d.rear.count,
+            length_cm: d.rear.length_cm,
+            wall_mm: v.portWall_mm,
+            innerDiameter_cm: d.rear.diameter_cm,
+            slot: d.rear.shape === "slot" ? { width_cm: d.rear.slotWidth_cm, height_cm: d.rear.slotHeight_cm } : undefined,
+          }
+        : d?.kind === "vented"
         ? {
             count: d.count,
             length_cm: d.length_cm,
@@ -115,6 +123,13 @@ function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"]): En
       return { kind: "vented", vb_l: vb, port: portOf(d), portCount: d.count, ql, qa, qp };
     case "pr":
       return { kind: "passive-radiator", vb_l: vb, pr: d.params, prCount: d.count, addedMass_g: d.addedMass_g, ql, qa };
+    case "bandpass":
+      return {
+        kind: "bandpass",
+        rear: { vb_l: vb, port: d.order === "4" ? undefined : portOf(d.rear), portCount: d.rear.count, ql, qa, qp },
+        front: { vb_l: d.frontVb_l, port: portOf(d.front), portCount: d.front.count, ql, qa, qp },
+        rearPortTo: d.order === "6s" ? "front" : "outside",
+      };
   }
 }
 
@@ -154,8 +169,9 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
       .map(({ id: _id, on: _on, target: _t, ...stage }) => stage as EqStage);
     try {
       const result = simulate(driver, enclosureOf(d, vb, s.settings.losses), { ...opts, eq });
-      if (s.settings.velocity === "rms" && result.portVelocity) {
-        result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
+      if (s.settings.velocity === "rms") {
+        if (result.portVelocity) result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
+        if (result.rearPortVelocity) result.rearPortVelocity = result.rearPortVelocity.map((v) => v / Math.SQRT2);
       }
       out.push({ design: d, color: colorOf(s, d.id), vb_l: vb, result });
     } catch {

@@ -530,12 +530,24 @@ export function App() {
                 yMin={0}
               />
             )}
-            {designs.some((d) => d.design.kind === "vented") && (
+            {designs.some((d) => d.design.kind === "vented" || d.design.kind === "bandpass") && (
               <LogChart
                 title={`Port air velocity (${state.settings.velocity === "rms" ? "RMS" : "peak"})`}
                 unit="m/s"
                 freq={freq}
-                series={series((r) => r.portVelocity).filter((s) => s.y)}
+                series={[
+                  ...designs.map((d) => ({
+                    label: d.design.kind === "bandpass" ? `${d.design.name} (front port)` : d.design.name,
+                    color: d.color,
+                    y: d.result.portVelocity,
+                  })),
+                  ...designs.map((d) => ({
+                    label: `${d.design.name} (rear port)`,
+                    color: d.color,
+                    dash: "5 3",
+                    y: d.result.rearPortVelocity,
+                  })),
+                ].filter((s) => s.y)}
                 limits={[{ value: PORT_LIMIT, label: `Chuffing risk ${PORT_LIMIT} m/s`, color: LIMIT_RED }]}
                 yMin={0}
               />
@@ -573,8 +585,8 @@ export function App() {
         )}
 
         <footer className="muted">
-          Small-signal lumped model: no voice-coil or port compression, no Bl/Cms non-linearity. Losses Ql 10, Qa 100,
-          Qp 100. Free for non-commercial use · <a href={`${REPO}/blob/main/LICENSE`}>Licence</a>
+          Small-signal lumped model: no voice-coil or port compression, no Bl/Cms non-linearity. Box losses Ql{" "}
+          {state.settings.losses.ql}, Qa {state.settings.losses.qa}, Qp {state.settings.losses.qp}. Free for non-commercial use · <a href={`${REPO}/blob/main/LICENSE`}>Licence</a>
         </footer>
       </main>
     </div>
@@ -586,11 +598,14 @@ export function App() {
 function portContext(state: AppState, designs: Design[], id: string) {
   const r = designs.find((x) => x.design.id === id)?.result;
   const fMin = state.highPass.on ? 10 : 15;
-  let peak: number | null = null;
-  if (r?.portVelocity) {
-    peak = 0;
-    for (let i = 0; i < r.freq.length; i++) if (r.freq[i]! >= fMin && r.portVelocity[i]! > peak) peak = r.portVelocity[i]!;
-  }
+  const peakOf = (a: Float64Array | null | undefined) => {
+    if (!r || !a) return null;
+    let m = 0;
+    for (let i = 0; i < r.freq.length; i++) if (r.freq[i]! >= fMin && a[i]! > m) m = a[i]!;
+    return m;
+  };
+  const peak = peakOf(r?.portVelocity);
+  const rearPeak = peakOf(r?.rearPortVelocity);
   const v = state.volume;
   let internalMax_cm: number | null = null;
   if (v.link === id) {
@@ -602,7 +617,7 @@ function portContext(state: AppState, designs: Design[], id: string) {
           ? Math.max(v.diameter_cm, v.height_cm) - t
           : v.diameter_cm - t;
   }
-  return { portVelocity: peak, internalMax_cm };
+  return { portVelocity: peak, rearPortVelocity: rearPeak, internalMax_cm };
 }
 
 function Summary({ designs, state, missing }: { designs: Design[]; state: AppState; missing: boolean }) {
@@ -636,13 +651,26 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
           {designs.map(({ design: d, color, vb_l, result: r }) => {
             const x = peak(r.excursionMm, r.freq, fMin);
             const xpr = peak(r.prExcursionMm, r.freq, fMin);
-            const vp = peak(r.portVelocity, r.freq, fMin);
+            const vpFront = peak(r.portVelocity, r.freq, fMin);
+            const vpRear = peak(r.rearPortVelocity, r.freq, fMin);
+            const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
             return (
               <tr key={d.id}>
                 <th style={{ color }}>{d.name}</th>
-                <td>{fmtQ(vb_l, "vol", state.settings.units)}</td>
-                <td>{fmt(r.summary.f3)} Hz</td>
-                <td>{fmt(r.summary.fb ?? r.summary.fc)} Hz</td>
+                <td>
+                  {fmtQ(vb_l, "vol", state.settings.units)}
+                  {d.kind === "bandpass" && ` + ${fmtQ(d.frontVb_l, "vol", state.settings.units)}`}
+                </td>
+                <td>
+                  {fmt(r.summary.f3)}
+                  {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
+                </td>
+                <td>
+                  {d.kind === "bandpass"
+                    ? `${fmt(r.summary.fbRear ?? r.summary.fc)} / ${fmt(r.summary.fb)}`
+                    : fmt(r.summary.fb ?? r.summary.fc)}{" "}
+                  Hz
+                </td>
                 <td>{fmt(r.summary.qtc, 2)}</td>
                 <td className={x !== null && x > state.xmax_mm ? "over" : ""}>{fmt(x)} mm</td>
                 <td className={xpr !== null && d.kind === "pr" && xpr > d.params.xmax_mm ? "over" : ""}>
