@@ -44,8 +44,18 @@ export function ProjectsMenu(props: { state: AppState; onOpen: (s: AppState) => 
     const close = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
+    // Escape closes the menu and puts focus back on its button.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      ref.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    };
     addEventListener("mousedown", close);
-    return () => removeEventListener("mousedown", close);
+    addEventListener("keydown", onKey);
+    return () => {
+      removeEventListener("mousedown", close);
+      removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   const flash = (m: string) => {

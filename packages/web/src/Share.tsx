@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { PORT_LIMIT, prGroupLabels, prPeak, type Design } from "./sim.ts";
+import { REPO } from "./components.tsx";
 import { fmtQ } from "./units.ts";
 import type { AppState } from "./state.ts";
 
@@ -166,6 +167,12 @@ function standaloneSvg(svg: SVGSVGElement, width: number, height: number): strin
       if (ref.getAttribute("clip-path") === `url(#${old})`) ref.setAttribute("clip-path", `url(#${id})`);
     });
   });
+  // Undo the on-screen size boost for narrow screens: the image is always desktop-sized.
+  clone.querySelectorAll<SVGElement>("[data-base-fs]").forEach((el) => el.style.setProperty("font-size", el.dataset.baseFs!));
+  clone.querySelectorAll<SVGElement>("[data-base-sw]").forEach((el) => {
+    el.style.setProperty("stroke-width", el.dataset.baseSw!);
+    el.setAttribute("stroke-width", el.dataset.baseSw!);
+  });
   clone.setAttribute("width", String(width));
   clone.setAttribute("height", String(height));
   clone.querySelector("line.cursor")?.remove();
@@ -283,8 +290,18 @@ export function ShareMenu(props: { state: AppState; designs: Design[]; shareUrl:
     const close = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
+    // Escape closes the menu and puts focus back on its button.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      ref.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    };
     addEventListener("mousedown", close);
-    return () => removeEventListener("mousedown", close);
+    addEventListener("keydown", onKey);
+    return () => {
+      removeEventListener("mousedown", close);
+      removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   const flash = (m: string) => {
@@ -356,8 +373,46 @@ export function ShareMenu(props: { state: AppState; designs: Design[]; shareUrl:
             Download data (CSV)
           </button>
           <p className="hint">Post the image and paste the text under it: the text carries the live link.</p>
+          <hr />
+          <a role="menuitem" className="menu-link" href={reportUrl(props.shareUrl())} target="_blank" rel="noopener">
+            Report a problem with this design
+          </a>
         </div>
       )}
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Bug reports
+// ---------------------------------------------------------------------------
+
+/** Short browser and OS description, e.g. "Chrome 142 on Windows, 1400×900". */
+export function browserInfo(): string {
+  const ua = navigator.userAgent;
+  // Order matters: Edge also says "Chrome", and Chrome also says "Safari".
+  const browsers: [string, RegExp][] = [
+    ["Edge", /Edg\/(\d+)/],
+    ["Firefox", /Firefox\/(\d+)/],
+    ["Chrome", /Chrome\/(\d+)/],
+    ["Safari", /Version\/(\d+).*Safari/],
+  ];
+  const hit = browsers.map(([name, re]) => [name, re.exec(ua)?.[1]] as const).find(([, v]) => v);
+  const systems: [string, RegExp][] = [
+    ["iOS", /iPhone|iPad/],
+    ["Android", /Android/],
+    ["Windows", /Windows/],
+    ["macOS", /Mac OS X/],
+    ["Linux", /Linux/],
+  ];
+  const os = systems.find(([, re]) => re.test(ua))?.[0] ?? "unknown OS";
+  return `${hit ? `${hit[0]} ${hit[1]}` : "Unknown browser"} on ${os}, ${innerWidth}×${innerHeight}`;
+}
+
+/** New-issue link with the bug form's share-link and browser fields filled in. */
+export function reportUrl(shareUrl: string): string {
+  const q = new URLSearchParams({ template: "bug.yml", browser: browserInfo() });
+  // GitHub refuses very long addresses; a huge design is better pasted by hand.
+  if (shareUrl.length < 6000) q.set("link", shareUrl);
+  return `${REPO}/issues/new?${q}`;
 }

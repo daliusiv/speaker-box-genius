@@ -189,7 +189,14 @@ function TsField(props: {
           }}
         />
         {props.entered !== undefined && (
-          <button className="clear" title={`Clear ${meta.label} (let it be calculated)`} onClick={() => props.onChange(undefined)}>
+          <button
+            className="clear"
+            title={`Clear ${meta.label} (let it be calculated)`}
+            aria-label={`Clear ${meta.label}`}
+            // Mouse convenience: keyboard users can simply delete the text, so keep it out of the tab order.
+            tabIndex={-1}
+            onClick={() => props.onChange(undefined)}
+          >
             ×
           </button>
         )}

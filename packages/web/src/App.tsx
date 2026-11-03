@@ -23,6 +23,7 @@ import { loadDriver, loadIndex, type DbIndex } from "./library.ts";
 import { Card, Num, REPO, Select } from "./components.tsx";
 import { DriverBrowser } from "./Library.tsx";
 import { PwaStatus } from "./Pwa.tsx";
+import { GettingStarted, LinkNote, useWelcome } from "./Welcome.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
 import {
@@ -42,7 +43,7 @@ import {
 } from "./sim.ts";
 import { RoomGainPanel } from "./RoomGain.tsx";
 import { AddDesign, DesignCard } from "./Designs.tsx";
-import { ShareMenu } from "./Share.tsx";
+import { reportUrl, ShareMenu } from "./Share.tsx";
 import { EqPanel } from "./Eq.tsx";
 import { MeasurePanel, type Measurement } from "./Measure.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
@@ -57,6 +58,7 @@ export function App() {
   const [wdrMsg, setWdrMsg] = useState("");
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const wdrInput = useRef<HTMLInputElement>(null);
+  const welcome = useWelcome();
 
   useEffect(() => {
     loadIndex().then(setDb, () => setDb(null));
@@ -619,19 +621,19 @@ export function App() {
               onChange={(x) => set("settings", { ...state.settings, inductance: x === "yes" })}
             />
             <Num
-              label="Leakage Ql"
+              label="Leak Ql"
               value={state.settings.losses.ql}
               min={1}
               onChange={(ql) => set("settings", { ...state.settings, losses: { ...state.settings.losses, ql } })}
             />
             <Num
-              label="Absorption Qa"
+              label="Absorb Qa"
               value={state.settings.losses.qa}
               min={1}
               onChange={(qa) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qa } })}
             />
             <Num
-              label="Port loss Qp"
+              label="Port Qp"
               value={state.settings.losses.qp}
               min={1}
               onChange={(qp) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qp } })}
@@ -657,6 +659,8 @@ export function App() {
       </aside>
 
       <main className="charts">
+        {welcome.linkNote && <LinkNote onDismiss={welcome.dismissLinkNote} onTips={welcome.showTips} />}
+        {welcome.tips && <GettingStarted onDismiss={welcome.dismissTips} />}
         <Summary designs={designs} state={state} missing={solved.missing.length > 0} />
 
         {designs.length > 0 && (
@@ -742,6 +746,18 @@ export function App() {
         <footer className="muted">
           Small-signal lumped model: no voice-coil or port compression, no Bl/Cms non-linearity. Box losses Ql{" "}
           {state.settings.losses.ql}, Qa {state.settings.losses.qa}, Qp {state.settings.losses.qp}. Free for non-commercial use · <a href={`${REPO}/blob/main/LICENSE`}>Licence</a>
+          {" · "}
+          <a href={reportUrl(shareUrl())} target="_blank" rel="noopener">
+            Report a problem
+          </a>
+          {!welcome.tips && (
+            <>
+              {" · "}
+              <button type="button" className="link" onClick={welcome.showTips}>
+                Getting started tips
+              </button>
+            </>
+          )}
         </footer>
       </main>
     </div>
@@ -789,6 +805,7 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
   const fMin = state.highPass.on ? 10 : 15;
   return (
     <div className="summary">
+      <div className="summary-scroll">
       <table>
         <thead>
           <tr>
@@ -811,7 +828,10 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
             const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
             return (
               <tr key={d.id}>
-                <th style={{ color }}>{d.name}</th>
+                <th>
+                  <span className="swatch" style={{ background: color }} aria-hidden="true" />
+                  {d.name}
+                </th>
                 <td>
                   {fmtQ(vb_l, "vol", state.settings.units)}
                   {d.kind === "bandpass" && ` + ${fmtQ(d.frontVb_l, "vol", state.settings.units)}`}
@@ -840,6 +860,8 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
           })}
         </tbody>
       </table>
+      </div>
+      <p className="hint swipe-hint">Swipe the table sideways for peak excursion and port speed.</p>
       <p className="hint">
         Peaks are taken above {fMin} Hz{state.highPass.on ? "" : " (turn on the high-pass filter to model a subsonic filter)"}.
         Red means over the limit.
