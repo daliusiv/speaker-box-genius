@@ -1,0 +1,39 @@
+{
+  "brand": "Dayton Audio",
+  "model": "E150MR-4",
+  "type": "midrange",
+  "nominal_ohms": 4,
+  "size_in": 5.5,
+  "ts": {
+    "fs": 75,
+    "qms": 3.62,
+    "qes": 0.61,
+    "vas_l": 7.4,
+    "re": 3.6,
+    "sd_cm2": 100.3,
+    "qts": 0.52,
+    "le_mh": 0.08,
+    "bl": 4.9,
+    "mms_g": 8.5,
+    "xmax_mm": 2.7,
+    "pe_w": 60
+  },
+  "physical": {
+    "depth_mm": 74.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2199/e150mr-4-5-1-2-wide-band-carbon-fiber-midrange-driver-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-500--epique-e150mr-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

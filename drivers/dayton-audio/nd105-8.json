@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "ND105-8",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 4,
+  "ts": {
+    "fs": 66.6,
+    "qms": 5.57,
+    "qes": 0.74,
+    "vas_l": 2.97,
+    "re": 7.7,
+    "sd_cm2": 51.5,
+    "qts": 0.66,
+    "le_mh": 1.25,
+    "bl": 5.44,
+    "mms_g": 6.8,
+    "xmax_mm": 4,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 93,
+    "depth_mm": 67
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/56/nd105-8-4-aluminum-cone-midbass-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/290-214--dayton-audio-nd105-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

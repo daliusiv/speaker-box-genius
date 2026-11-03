@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PA165-8",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 6,
+  "ts": {
+    "fs": 80.8,
+    "qms": 2.19,
+    "qes": 0.6,
+    "vas_l": 9.2,
+    "re": 5.15,
+    "sd_cm2": 120.8,
+    "qts": 0.47,
+    "le_mh": 0.54,
+    "bl": 6.33,
+    "mms_g": 9.2,
+    "pe_w": 75
+  },
+  "physical": {
+    "cutout_mm": 144.6,
+    "depth_mm": 75.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/74/pa165-8-6-pa-driver-speaker-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-015--dayton-audio-pa165-8--pa-driver-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published xmax 0 is implausible, so it's left out."
+}

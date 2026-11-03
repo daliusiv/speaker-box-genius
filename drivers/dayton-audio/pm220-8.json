@@ -1,0 +1,39 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PM220-8",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 49.1,
+    "qms": 5.08,
+    "qes": 0.41,
+    "vas_l": 63,
+    "re": 6.5,
+    "sd_cm2": 205.3,
+    "qts": 0.38,
+    "le_mh": 0.8,
+    "bl": 7.21,
+    "mms_g": 10.7,
+    "xmax_mm": 4.6,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 181,
+    "depth_mm": 94
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1152/pm220-8-8-neo-wideband-midbass-driver",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-345-Dayton-Audio-PM220-8-Specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

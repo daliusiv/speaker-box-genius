@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS100P-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 84.8,
+    "qms": 2.67,
+    "qes": 0.67,
+    "vas_l": 1.86,
+    "re": 3,
+    "sd_cm2": 36.3,
+    "qts": 0.54,
+    "le_mh": 0.26,
+    "bl": 2.95,
+    "mms_g": 3.7,
+    "xmax_mm": 4,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 77.2,
+    "depth_mm": 51
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1222/rs100p-4-4-reference-paper-woofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-369--rsp100p-4-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}
