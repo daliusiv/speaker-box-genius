@@ -1,0 +1,35 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DSA215-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 35,
+    "qms": 1.87,
+    "qes": 0.4,
+    "qts": 0.33,
+    "vas_l": 37.4,
+    "re": 5.9,
+    "le_mh": 1,
+    "bl": 10.6,
+    "mms_g": 34.6,
+    "sd_cm2": 211.2,
+    "xmax_mm": 5.5,
+    "pe_w": 80
+  },
+  "physical": {
+    "displacement_l": 0.87,
+    "cutout_mm": 216.5,
+    "depth_mm": 95.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-530--dayton-audio-DSA215-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Submitted in issue #1 by @daliusiv."
+    }
+  ],
+  "status": "community"
+}
