@@ -1402,3 +1402,40 @@ figure.chart[hidden] {
 .over-glow {
   opacity: 0.28;
 }
+
+/* Design checks as chips */
+.checks {
+  margin-top: 0.6rem;
+}
+
+.check-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+button.check-chip {
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+button.check-chip.warn {
+  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+  color: var(--warn);
+}
+
+button.check-chip.open {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+.check-detail {
+  margin: 0.45rem 0 0;
+  font-size: 0.85rem;
+}

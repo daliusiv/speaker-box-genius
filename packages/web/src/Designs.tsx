@@ -179,7 +179,7 @@ function PortChecks(props: { v: PortFields; vb_l: number; air: Air; ctx: Pick<Po
   const port = portOf(v);
   const leff = portEffectiveLength(port); // m
   const pipe = air.c / (2 * leff);
-  const notes: { warn: boolean; text: string }[] = [];
+  const notes: { warn: boolean; chip: string; text: string }[] = [];
 
   // Will it fit? Keep at least one port diameter (or slot height) clear of the opposite wall.
   const clearance = v.shape === "round" ? v.diameter_cm : v.slotHeight_cm;
@@ -188,6 +188,7 @@ function PortChecks(props: { v: PortFields; vb_l: number; air: Air; ctx: Pick<Po
   if (v.length_cm > room) {
     notes.push({
       warn: true,
+      chip: "Port too long to fit",
       text:
         `The port is ${fmt(v.length_cm, "len")} long, but ${ctx.internalMax_cm ? "this box" : "a cube-shaped box of this volume"} ` +
         `only has room for about ${fmt(Math.max(0, room), "len")} in a straight line. Use a bent (L-shaped) port, a slot along a wall, or a bigger port area with a shorter length.`,
@@ -207,6 +208,7 @@ function PortChecks(props: { v: PortFields; vb_l: number; air: Air; ctx: Pick<Po
     const ports = Math.ceil(v.count * k);
     notes.push({
       warn: true,
+      chip: `Chuffing: ${ctx.portVelocity.toFixed(1)} m/s`,
       text:
         `Port air speed reaches ${ctx.portVelocity.toFixed(1)} m/s. To stay under ${PORT_LIMIT} m/s at this power: about ${size} ` +
         `(length ≈ ${fmt(newLen, "len")} for the same tuning)${ports > v.count ? `, or ${ports} ports of the current size` : ""}.`,
@@ -215,19 +217,39 @@ function PortChecks(props: { v: PortFields; vb_l: number; air: Air; ctx: Pick<Po
 
   notes.push({
     warn: pipe < 300,
+    chip: `Pipe resonance ${pipe.toFixed(0)} Hz`,
     text:
       `Port pipe resonance ≈ ${pipe.toFixed(0)} Hz` +
       (pipe < 300 ? ". That's low enough to leak midrange through the port; line the port's surroundings or cross over well below it." : "."),
   });
 
+  return <CheckChips notes={notes} />;
+}
+
+/**
+ * Checks as one-line chips (amber = a problem, plain = information); tapping a chip
+ * opens its explanation and advice underneath.
+ */
+function CheckChips({ notes }: { notes: { warn: boolean; chip: string; text: string }[] }) {
+  const [open, setOpen] = useState<string | null>(null);
+  const shown = notes.find((n) => n.chip === open);
   return (
-    <ul className="port-checks">
-      {notes.map((n) => (
-        <li key={n.text} className={n.warn ? "warn" : "hint"}>
-          {n.text}
-        </li>
-      ))}
-    </ul>
+    <div className="checks">
+      <div className="check-chips">
+        {notes.map((n) => (
+          <button
+            key={n.chip}
+            className={`check-chip${n.warn ? " warn" : ""}${open === n.chip ? " open" : ""}`}
+            aria-expanded={open === n.chip}
+            onClick={() => setOpen(open === n.chip ? null : n.chip)}
+          >
+            {n.warn && <span aria-hidden="true">⚠ </span>}
+            {n.chip}
+          </button>
+        ))}
+      </div>
+      {shown && <p className={shown.warn ? "warn check-detail" : "hint check-detail"}>{shown.text}</p>}
+    </div>
   );
 }
 
