@@ -145,6 +145,9 @@ export interface AppState {
   xmax_mm: number;
   pe_w: number;
   power: number;
+  /** Drive level as power (W, V = √(P·Re) like WinISD) or as a voltage (e.g. 2.83 V, as datasheets quote). */
+  drive: "watts" | "volts";
+  volts: number;
   drivers: number;
   /** How several drivers (or isobaric pairs) are wired to the amplifier. */
   wiring: "parallel" | "series";
@@ -268,6 +271,8 @@ export const DEFAULT_STATE: AppState = {
   xmax_mm: 12,
   pe_w: 250,
   power: 100,
+  drive: "watts",
+  volts: 2.83,
   drivers: 1,
   wiring: "parallel",
   isobaric: false,
@@ -510,6 +515,8 @@ export function decodeState(hash: string): AppState | null {
       xmax_mm: raw.xmax_mm ?? d.xmax_mm,
       pe_w: raw.pe_w ?? d.pe_w,
       power: raw.power ?? d.power,
+      drive: raw.drive === "volts" ? "volts" : "watts",
+      volts: typeof raw.volts === "number" && raw.volts > 0 && Number.isFinite(raw.volts) ? raw.volts : d.volts,
       drivers: raw.drivers ?? d.drivers,
       wiring: raw.wiring === "series" ? "series" : "parallel",
       isobaric: raw.isobaric === true,

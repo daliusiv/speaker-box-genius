@@ -166,6 +166,10 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       ? power
       : Math.sqrt(power * (opts.convention === "nominal" ? nominalTotal : reTotal));
   const vDriver = wiring === "parallel" ? volts : volts / n;
+  // Power the limits are scaled from, in watts as the thermal limit counts them. In "volts"
+  // mode the input is a voltage, so take the power it puts into the coils (V²/Re); every limit
+  // below is then "how far the drive can rise", and SPL and excursion follow from that.
+  const pNow = opts.convention === "volts" ? (volts * volts) / reTotal : power;
   // A source resistance shared by N parallel drivers looks like N·Rg to each one (Rg/N in series).
   const rgTotal = opts.rg ?? 0;
   const rgDriver = wiring === "parallel" ? rgTotal * n : rgTotal / n;
@@ -295,7 +299,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         groups.forEach((g, k) => {
           const xk = (Math.SQRT2 * abs(mul(ud, each[k]!))) / (g.m.sd * w);
           out.xprGroups![k]![i] = xk * 1000;
-          if (g.m.xmax !== null && xk > 0) prLimitPower = Math.min(prLimitPower, power * (g.m.xmax / xk) ** 2);
+          if (g.m.xmax !== null && xk > 0) prLimitPower = Math.min(prLimitPower, pNow * (g.m.xmax / xk) ** 2);
         });
         out.xpr![i] = out.xprGroups[0]![i]!;
       }
@@ -320,7 +324,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
           const uEach = scale(div(pBox, g.z(w)), 1 / g.count);
           const xk = (Math.SQRT2 * abs(uEach)) / (g.m.sd * w);
           out.xprGroups![k]![i] = xk * 1000;
-          if (g.m.xmax !== null && xk > 0) prLimitPower = Math.min(prLimitPower, power * (g.m.xmax / xk) ** 2);
+          if (g.m.xmax !== null && xk > 0) prLimitPower = Math.min(prLimitPower, pNow * (g.m.xmax / xk) ** 2);
         });
         xpr = out.xprGroups[0]![i]! / 1000;
         out.xpr![i] = out.xprGroups[0]![i]!;
@@ -355,16 +359,16 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const limits: [SimulationResult["limitedBy"][number], number][] = [];
     // Thermal: the filter reduces the voltage reaching the coil at this frequency.
     if (d.pe !== null) limits.push(["thermal", (d.pe * n) / Math.max(filterGain2, 1e-12)]);
-    if (d.xmax !== null) limits.push(["xmax", power * (d.xmax / x) ** 2]);
+    if (d.xmax !== null) limits.push(["xmax", pNow * (d.xmax / x) ** 2]);
     if (prModels || out.xprGroups) {
       if (Number.isFinite(prLimitPower)) limits.push(["pr-xmax", prLimitPower]);
-    } else if (prXmax !== null && xpr > 0) limits.push(["pr-xmax", power * (prXmax / xpr) ** 2]);
-    if (out.vport && vport > 0) limits.push(["port", power * (vLimit / vport) ** 2]);
+    } else if (prXmax !== null && xpr > 0) limits.push(["pr-xmax", pNow * (prXmax / xpr) ** 2]);
+    if (out.vport && vport > 0) limits.push(["port", pNow * (vLimit / vport) ** 2]);
     let best: [SimulationResult["limitedBy"][number], number] = ["none", Infinity];
     for (const l of limits) if (l[1] < best[1]) best = l;
     limitedBy.push(best[0]);
     out.pmax[i] = best[1];
-    out.splmax[i] = Number.isFinite(best[1]) ? out.spl[i]! + 10 * Math.log10(best[1] / power) : NaN;
+    out.splmax[i] = Number.isFinite(best[1]) ? out.spl[i]! + 10 * Math.log10(best[1] / pNow) : NaN;
   }
 
   // Phase unwrap and group delay

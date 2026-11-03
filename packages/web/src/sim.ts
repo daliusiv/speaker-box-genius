@@ -201,7 +201,8 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
   };
   const opts = {
     rg: s.settings.rg,
-    power: s.power,
+    power: s.drive === "volts" ? s.volts : s.power,
+    convention: s.drive === "volts" ? ("volts" as const) : undefined,
     drivers: s.drivers,
     wiring: s.wiring,
     isobaric: s.isobaric ? { coils: s.isoCoils } : null,
@@ -289,3 +290,6 @@ export function prPeak(r: SimulationResult, fMin: number): { mm: number; xmax: n
   }
   return best && { mm: best.mm, xmax: best.xmax, over: best.xmax !== null && best.mm > best.xmax };
 }
+
+/** The drive level as people read it: "100 W" or "2.83 V". */
+export const driveLabel = (s: Pick<AppState, "drive" | "power" | "volts">) => (s.drive === "volts" ? `${s.volts} V` : `${s.power} W`);

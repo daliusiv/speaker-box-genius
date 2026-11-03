@@ -168,3 +168,20 @@ test("power scaling: 4× power is +6 dB and 2× excursion", () => {
   near(b.spl[50]! - a.spl[50]!, 10 * Math.log10(4), 1e-9);
   near(b.excursionMm[50]! / a.excursionMm[50]!, 2, 1e-9);
 });
+
+test("driving by voltage gives the same limits and maximum SPL as the equivalent power", () => {
+  const box = { kind: "vented" as const, vb_l: 50, port: { shape: "round" as const, diameter_cm: 7, length_cm: 25 } };
+  const drv = { ...DRIVER, xmax_mm: 8, pe_w: 150 };
+  for (const [drivers, wiring] of [[1, "parallel"], [2, "parallel"], [2, "series"]] as const) {
+    const watts = 40;
+    const re = wiring === "parallel" ? drv.re / drivers : drv.re * drivers;
+    const a = simulate(drv, box, { power: watts, drivers, wiring });
+    const b = simulate(drv, box, { convention: "volts", power: Math.sqrt(watts * re), drivers, wiring });
+    for (let i = 0; i < a.freq.length; i++) {
+      assert.ok(Math.abs(a.spl[i]! - b.spl[i]!) < 1e-9);
+      assert.ok(Math.abs(a.maxSpl[i]! - b.maxSpl[i]!) < 1e-9, `maxSpl at ${a.freq[i]} Hz`);
+      assert.ok(Math.abs(a.maxPowerW[i]! / b.maxPowerW[i]! - 1) < 1e-9);
+      assert.equal(a.limitedBy[i], b.limitedBy[i]);
+    }
+  }
+});

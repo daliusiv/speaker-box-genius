@@ -1324,8 +1324,8 @@ figure.chart[hidden] {
     display: grid;
     grid-template-columns: 1fr auto auto;
     grid-template-areas:
-      "title title history"
-      "power projects share";
+      "title projects share"
+      "power power history";
     gap: 0.6rem 0.5rem;
     align-items: center;
   }
@@ -1336,7 +1336,37 @@ figure.chart[hidden] {
   }
 
   .top h1 {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The GitHub and roadmap links are in the footer too; the header stays two rows. */
+  .top > div:first-child > p {
+    display: none;
+  }
+
+  .unit-switch {
+    flex: none;
+  }
+
+  .power input[type="range"] {
+    min-width: 3rem;
+  }
+
+  /* The slider, its value and the W/V switch say what it is; keep the word for screen readers. */
+  .power > span:first-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .power b {
+    min-width: 0;
   }
 
   .top-actions {
@@ -1438,4 +1468,42 @@ button.check-chip.open {
 .check-detail {
   margin: 0.45rem 0 0;
   font-size: 0.85rem;
+}
+
+/* Drive level: watts or volts */
+.power {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.power b {
+  min-width: 4.2rem;
+  white-space: nowrap;
+}
+
+.unit-switch {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.unit-switch button {
+  padding: 0.15rem 0.5rem;
+  border-radius: 0;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.unit-switch button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+@media (min-width: 861px) {
+  .power input[type="range"] {
+    width: 10rem;
+  }
 }

@@ -39,6 +39,7 @@ import {
   prGroupLabels,
   prPeak,
   prXmaxes,
+  driveLabel,
   roomGainOf,
   runDesigns,
   solveDriver,
@@ -297,6 +298,7 @@ export function App(props: { initial: AppState | null }) {
           pe_w: d.pe_w ?? s.pe_w,
           // WinISD drives isobaric pairs at V = √(P·Re/N), which is only half of P in the coils.
           power: Number((p.isobaric ? p.power / 2 : p.power).toFixed(2)),
+          drive: "watts",
           drivers: p.drivers,
           wiring: "parallel",
           isobaric: p.isobaric,
@@ -458,18 +460,44 @@ export function App(props: { initial: AppState | null }) {
           </p>
         </div>
         <div className="top-actions">
-          <label className="power">
-            <span>Power</span>
-            <input
-              type="range"
-              min={0}
-              max={4}
-              step={0.01}
-              value={Math.log10(state.power)}
-              onChange={(e) => set("power", Math.round(10 ** e.currentTarget.valueAsNumber * 10) / 10)}
-            />
-            <b>{state.power} W</b>
-          </label>
+          <div className="power">
+            <span id="drive-label">{state.drive === "volts" ? "Voltage" : "Power"}</span>
+            {state.drive === "volts" ? (
+              <input
+                type="range"
+                aria-labelledby="drive-label"
+                min={-1}
+                max={2}
+                step={0.005}
+                value={Math.log10(state.volts)}
+                onChange={(e) => set("volts", Number((10 ** e.currentTarget.valueAsNumber).toPrecision(3)))}
+              />
+            ) : (
+              <input
+                type="range"
+                aria-labelledby="drive-label"
+                min={0}
+                max={4}
+                step={0.01}
+                value={Math.log10(state.power)}
+                onChange={(e) => set("power", Math.round(10 ** e.currentTarget.valueAsNumber * 10) / 10)}
+              />
+            )}
+            <b>{driveLabel(state)}</b>
+            <div
+              className="unit-switch"
+              role="group"
+              aria-label="Drive by"
+              title="Watts: V = √(P·Re), like WinISD. Volts: a fixed voltage, like the 2.83 V datasheets quote."
+            >
+              <button aria-pressed={state.drive === "watts"} onClick={() => setStep((s) => ({ ...s, drive: "watts" }))}>
+                W
+              </button>
+              <button aria-pressed={state.drive === "volts"} onClick={() => setStep((s) => ({ ...s, drive: "volts" }))}>
+                V
+              </button>
+            </div>
+          </div>
           <div className="undo-redo" role="group" aria-label="History">
             <button className="secondary icon" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo (Ctrl+Z)">
               ↶
@@ -866,7 +894,7 @@ export function App(props: { initial: AppState | null }) {
           <CrosshairProvider>
             <LogChart
               forum
-              title={`SPL at ${state.power} W, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
+              title={`SPL at ${driveLabel(state)}, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
               unit="dB"
               freq={freq}
               series={series((r) => r.spl)}
@@ -975,7 +1003,7 @@ export function App(props: { initial: AppState | null }) {
 
         <footer className="muted">
           Small-signal lumped model: no voice-coil or port compression, no Bl/Cms non-linearity. Box losses Ql{" "}
-          {state.settings.losses.ql}, Qa {state.settings.losses.qa}, Qp {state.settings.losses.qp}. Free for non-commercial use · <a href={`${REPO}/blob/main/LICENSE`}>Licence</a>
+          {state.settings.losses.ql}, Qa {state.settings.losses.qa}, Qp {state.settings.losses.qp}. Free for non-commercial use · <a href={`${REPO}/blob/main/LICENSE`}>Licence</a> · <a href={REPO}>GitHub</a>
           {" · "}
           <a href={reportUrl(shareUrl())} target="_blank" rel="noopener">
             Report a problem
