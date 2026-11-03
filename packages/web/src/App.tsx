@@ -115,6 +115,27 @@ export function App() {
               targetFb: Number((p.box.fb ?? v.targetFb).toFixed(2)),
             };
           }
+        } else if (p.box.type === "passive-radiator" && p.pr) {
+          const pd = newDesign("pr", s.designs);
+          if (pd.kind === "pr") {
+            const x = p.pr.params;
+            design = {
+              ...pd,
+              name: `WinISD: ${fileName.replace(/\.wpr$/i, "")}`,
+              vb_l: Number(p.box.vb_l.toFixed(3)),
+              prName: "From WinISD project",
+              count: p.pr.count,
+              addedMass_g: Number(p.pr.addedMass_g.toFixed(2)),
+              targetFb: Number((p.box.fb ?? pd.targetFb).toFixed(2)),
+              params: {
+                mms_g: Number(x.mms_g.toFixed(3)),
+                sd_cm2: Number(x.sd_cm2.toFixed(2)),
+                vas_l: Number(x.vas_l.toFixed(3)),
+                qms: x.qms,
+                xmax_mm: Number(x.xmax_mm.toFixed(2)),
+              },
+            };
+          }
         } else if (p.box.vb_l > 0) {
           const sd = newDesign("sealed", s.designs);
           design = { ...sd, name: `WinISD: ${fileName.replace(/\.wpr$/i, "")}`, vb_l: Number(p.box.vb_l.toFixed(3)) };

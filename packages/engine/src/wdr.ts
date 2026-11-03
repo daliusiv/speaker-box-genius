@@ -1,4 +1,5 @@
 import type { TsValues } from "./tsSolver.ts";
+import { STANDARD_AIR } from "./constants.ts";
 
 /**
  * WinISD driver files (.wdr): an INI file with a [Driver] section, values in
@@ -146,9 +147,15 @@ export interface WprPort {
 
 export interface WprProject {
   driver: WdrDriver;
-  /** "vented" is the only box type read so far; anything else imports the driver and Vb only. */
-  box: { type: "vented" | "sealed" | "other"; bType: number; vb_l: number; fb?: number; ql: number; qa: number; qp: number };
+  /** Box types read: sealed (BType 0), vented (1), passive radiator (4). Others import the driver and Vb only. */
+  box: { type: "vented" | "sealed" | "passive-radiator" | "other"; bType: number; vb_l: number; fb?: number; ql: number; qa: number; qp: number };
   port?: WprPort;
+  /** Passive radiator box (BType=4). WinISD stores Fs and Vas; Mms is derived from them. */
+  pr?: {
+    count: number;
+    addedMass_g: number;
+    params: { mms_g: number; sd_cm2: number; vas_l: number; fs: number; qms: number; xmax_mm: number };
+  };
   /** Amplifier output resistance (Ω). */
   rg: number;
   /** Input power (W). */
@@ -194,13 +201,30 @@ export function parseWpr(text: string): WprProject {
   const bType = n0(box, "BType");
   const vent = s.get("ventrear");
   const vb_l = n0(box, "Vr") * 1000;
-  const type: WprProject["box"]["type"] = bType === 1 ? "vented" : bType === 0 ? "sealed" : "other";
+  const type: WprProject["box"]["type"] =
+    bType === 1 ? "vented" : bType === 0 ? "sealed" : bType === 4 ? "passive-radiator" : "other";
   const d = s.get("driver");
   const rho = n0(d, "roo");
   const c = n0(d, "c");
+  const air = rho > 0 && c > 0 ? { rho, c } : STANDARD_AIR;
+  const prSec = s.get("passiveradiator");
+  let pr: WprProject["pr"];
+  if (type === "passive-radiator" && prSec) {
+    const vas = n0(prSec, "Vas"); // m³
+    const sd = n0(prSec, "Sd"); // m²
+    const fs = n0(prSec, "Fs");
+    const cms = vas / (air.rho * air.c * air.c * sd * sd);
+    const mms = 1 / ((2 * Math.PI * fs) ** 2 * cms);
+    pr = {
+      count: n0(box, "Npr") || 1,
+      addedMass_g: n0(prSec, "Me") * 1000,
+      params: { mms_g: mms * 1000, sd_cm2: sd * 1e4, vas_l: vas * 1000, fs, qms: n0(prSec, "Qms") || 10, xmax_mm: n0(prSec, "Xmax") * 1000 },
+    };
+  }
   return {
     driver,
-    box: { type, bType, vb_l, fb: type === "vented" ? n0(box, "Fr") : undefined, ql: n0(box, "Qlr") || 10, qa: n0(box, "Qar") || 100, qp: n0(box, "Qpr") || 100 },
+    pr,
+    box: { type, bType, vb_l, fb: type === "vented" || type === "passive-radiator" ? n0(box, "Fr") : undefined, ql: n0(box, "Qlr") || 10, qa: n0(box, "Qar") || 100, qp: n0(box, "Qpr") || 100 },
     port:
       type === "vented" && vent
         ? {

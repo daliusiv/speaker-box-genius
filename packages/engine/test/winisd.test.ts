@@ -118,3 +118,45 @@ test("DSA215-8 sealed: WinISD's 'Fsc' (79.03 Hz) is the −3 dB point, matched b
   near(r.summary.f3!, 79.03, 0.15, "F3 vs WinISD Fsc");
   near(r.summary.qtc!, 0.709, 0.005, "Qtc");
 });
+
+// ---------------------------------------------------------------------------
+// Passive radiator (WinISD BType=4): DSA215-8 + 1× DSA270-PR (+50 g) in 18 L
+// ---------------------------------------------------------------------------
+
+import { prFb } from "../src/model.ts";
+
+function runPr(f: number) {
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215-dsa270pr.wpr"), "utf8"));
+  const t = p.driver.ts;
+  const r = simulate(
+    { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: p.simulateLe ? p.driver.le_mh : 0 },
+    { kind: "passive-radiator", vb_l: p.box.vb_l, pr: p.pr!.params, prCount: p.pr!.count, addedMass_g: p.pr!.addedMass_g, ql: p.box.ql, qa: p.box.qa },
+    { power: p.power, rg: p.rg, air: p.air, fMin: f, fMax: f, points: 1 },
+  );
+  return { p, r, tf: r.spl[0]! - r.summary.referenceSpl };
+}
+
+test("DSA215-8 + DSA270-PR: project is read as a passive radiator box", () => {
+  const { p } = runPr(40);
+  assert.equal(p.box.type, "passive-radiator");
+  assert.equal(p.pr!.count, 1);
+  near(p.pr!.addedMass_g, 50, 1e-9, "added mass");
+  near(p.pr!.params.mms_g, 88.16, 0.05, "PR Mms derived from Fs and Vas");
+});
+
+test("DSA215-8 + DSA270-PR: tuning matches WinISD exactly (Fh 45.897 Hz, 17.49 Hz with mass)", () => {
+  const { p } = runPr(40);
+  near(prFb(p.box.vb_l, p.pr!.params, p.pr!.count, p.pr!.addedMass_g, p.air), p.box.fb!, 1e-3, "Fb");
+});
+
+test("DSA215-8 + DSA270-PR: transfer function within 0.15 dB of WinISD", () => {
+  // Known gap (≈0.1 dB near tuning): WinISD appears to reference box losses to a
+  // different frequency for PR boxes. Tighten once a second PR project pins it down.
+  for (const [f, db] of [
+    [20.09, -38.84],
+    [40, -7.79],
+    [61.25, -0.315],
+  ] as const) {
+    near(runPr(f).tf, db, 0.15, `TF at ${f} Hz`);
+  }
+});
