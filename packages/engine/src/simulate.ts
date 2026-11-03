@@ -11,6 +11,7 @@ import {
   portArea,
   prFb,
   ventedFb,
+  BANDPASS_ICL_REF,
   type BandpassChamber,
   type BandpassInput,
   type DriverInput,
@@ -437,6 +438,15 @@ function bandpassNetwork(
     ? portOf(box.rear.port, box.rear.portCount ?? 1, fRear, finiteOr(box.rear.qp, DEFAULT_LOSSES.qp))
     : null;
 
+  // Leakage between the chambers, referred like a box leak: R = Q / (ω·C).
+  const qicl = finiteOr(box.qicl, 100);
+  const ricl = Number.isFinite(qicl)
+    ? BANDPASS_ICL_REF === "driver"
+      ? qicl / (2 * Math.PI * (1 / (2 * Math.PI * Math.sqrt(d.mms * d.cms))) * d.cms * d.sd * d.sd)
+      : qicl / (2 * Math.PI * fRear * F.cab)
+    : Infinity;
+  const yIcl = Number.isFinite(ricl) ? cx(1 / ricl) : cx(0);
+
   const zPortTotal = (p: PortElements, w: number) => scale(cx(p.rap, w * p.map), 1 / p.count);
   const zAirOf = (c: ChamberElements, w: number) => cx(c.rab, -1 / (w * c.cab));
   const yChamber = (c: ChamberElements, w: number) => {
@@ -452,9 +462,9 @@ function bandpassNetwork(
     solve(w: number) {
       let yF = add(yChamber(F, w), inv(zPortTotal(front, w)));
       let yR = yChamber(R, w);
-      let yI = cx(0);
+      let yI = yIcl;
       if (rear) {
-        if (series) yI = inv(zPortTotal(rear, w));
+        if (series) yI = add(yI, inv(zPortTotal(rear, w)));
         else yR = add(yR, inv(zPortTotal(rear, w)));
       }
       yF = add(yF, yI);

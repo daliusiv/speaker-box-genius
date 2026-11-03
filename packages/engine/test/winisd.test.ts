@@ -308,3 +308,36 @@ test("DSA215-8 vented with Ql 7: losses read from the project and matched (Test 
   }
   for (const [f, z] of [[20.03, 27.68], [41.13, 7.193], [100.7, 11.662]] as const) near(at(f).impedanceOhm[0]! / z - 1, 0, 0.01, `impedance at ${f} Hz`);
 });
+
+// Test 7: 4th-order bandpass (BType=2): 15 L closed rear, 20 L front tuned to 50 Hz,
+// 7.5 cm port. WinISD includes leakage between the chambers (Qiclfr = 100).
+test("DSA215-8 4th-order bandpass: project read and graphs match WinISD (Test 7)", () => {
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215-bp4.wpr"), "utf8"));
+  assert.equal(p.box.type, "bandpass");
+  const bp = p.bandpass!;
+  assert.equal(bp.order, "4");
+  near(bp.front.vb_l, 20, 1e-9, "front Vb");
+  near(bp.rear.vb_l, 15, 1e-9, "rear Vb");
+  near(bp.front.port.diameter_cm, 7.5, 1e-9, "front port Ø");
+  assert.equal(bp.rear.port, undefined);
+  assert.equal(bp.qicl, 100);
+  const t = p.driver.ts;
+  const drv = { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: 0 };
+  const box = {
+    kind: "bandpass" as const,
+    rear: { vb_l: bp.rear.vb_l, ql: bp.rear.ql, qa: bp.rear.qa },
+    front: { vb_l: bp.front.vb_l, port: { shape: "round" as const, diameter_cm: bp.front.port.diameter_cm, length_cm: bp.front.port.length_cm }, ql: bp.front.ql, qa: bp.front.qa, qp: bp.front.qp },
+    qicl: bp.qicl,
+  };
+  const at = (f: number) => simulate(drv, box, { power: p.power, rg: p.rg, air: p.air, fMin: f, fMax: f, points: 1 });
+  const r50 = at(50);
+  near(r50.summary.fb!, bp.front.fb, 1e-3, "front tuning (Ff)");
+  near(r50.summary.fc!, bp.rear.fb!, 1e-3, "rear chamber resonance (Frc)");
+  for (const [f, db] of [[30.67, -9.702], [49.65, -1.758], [80.88, -7.529], [120.45, -14.039]] as const) {
+    const r = at(f);
+    near(r.spl[0]! - r.summary.referenceSpl, db, 0.015, `TF at ${f} Hz`);
+  }
+  near(at(30.39).excursionMm[0]! / 10.017 - 1, 0, 0.006, "excursion at 30.39 Hz");
+  near(at(49.81).portVelocity![0]! / 21.993 - 1, 0, 0.006, "front port velocity at 49.81 Hz");
+  for (const [f, z] of [[30.11, 11.046], [60.5, 8.526]] as const) near(at(f).impedanceOhm[0]! / z - 1, 0, 0.01, `impedance at ${f} Hz`);
+});

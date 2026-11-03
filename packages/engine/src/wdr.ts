@@ -149,8 +149,19 @@ export interface WprPort {
 export interface WprProject {
   driver: WdrDriver;
   /** Box types read: sealed (BType 0), vented (1), passive radiator (4). Others import the driver and Vb only. */
-  box: { type: "vented" | "sealed" | "passive-radiator" | "other"; bType: number; vb_l: number; fb?: number; ql: number; qa: number; qp: number };
+  box: { type: "vented" | "sealed" | "passive-radiator" | "bandpass" | "other"; bType: number; vb_l: number; fb?: number; ql: number; qa: number; qp: number };
   port?: WprPort;
+  /**
+   * Bandpass box (BType=2 is 4th order). Front chamber: Vf, Ff, Qlf/Qaf/Qpf and [VentFront].
+   * Rear chamber: Vr, Qlr/Qar/Qpr, and [VentRear] (to the outside) or [VentIntra] (into the
+   * front chamber) for 6th order. Qiclfr is the leakage between the chambers.
+   */
+  bandpass?: {
+    order: "4" | "6p" | "6s";
+    front: { vb_l: number; fb: number; port: WprPort; ql: number; qa: number; qp: number };
+    rear: { vb_l: number; fb?: number; port?: WprPort; ql: number; qa: number; qp: number };
+    qicl: number;
+  };
   /** Passive radiator box (BType=4). WinISD stores Fs and Vas; Mms is derived from them. */
   pr?: {
     count: number;
@@ -232,8 +243,34 @@ export function parseWpr(text: string): WprProject {
   const bType = n0(box, "BType");
   const vent = s.get("ventrear");
   const vb_l = n0(box, "Vr") * 1000;
-  const type: WprProject["box"]["type"] =
-    bType === 1 ? "vented" : bType === 0 ? "sealed" : bType === 4 ? "passive-radiator" : "other";
+  const ventOf = (sec: Record<string, string> | undefined): WprPort | undefined =>
+    sec && n0(sec, "len") > 0 && n0(sec, "dia1") > 0
+      ? { count: n0(sec, "Num") || 1, diameter_cm: n0(sec, "dia1") * 100, length_cm: n0(sec, "len") * 100, endCorrection: n0(sec, "endcorrection") || 0.732 }
+      : undefined;
+  const frontVent = ventOf(s.get("ventfront"));
+  const rearVent = ventOf(vent);
+  const intraVent = ventOf(s.get("ventintra"));
+  // BType 2 is the 4th-order bandpass. Other bandpass codes are recognised by their vents.
+  const isBandpass = bType === 2 || (frontVent !== undefined && n0(box, "Vf") > 0 && bType !== 1 && bType !== 0 && bType !== 4);
+  const type: WprProject["box"]["type"] = isBandpass
+    ? "bandpass"
+    : bType === 1
+      ? "vented"
+      : bType === 0
+        ? "sealed"
+        : bType === 4
+          ? "passive-radiator"
+          : "other";
+  let bandpass: WprProject["bandpass"];
+  if (type === "bandpass" && frontVent) {
+    const rearPort = bType === 2 ? undefined : (intraVent ?? rearVent);
+    bandpass = {
+      order: rearPort === undefined ? "4" : intraVent ? "6s" : "6p",
+      front: { vb_l: n0(box, "Vf") * 1000, fb: n0(box, "Ff"), port: frontVent, ql: n0(box, "Qlf") || 10, qa: n0(box, "Qaf") || 100, qp: n0(box, "Qpf") || 100 },
+      rear: { vb_l: n0(box, "Vr") * 1000, fb: n0(box, "Fr") || undefined, port: rearPort, ql: n0(box, "Qlr") || 10, qa: n0(box, "Qar") || 100, qp: n0(box, "Qpr") || 100 },
+      qicl: n0(box, "Qiclfr") || 100,
+    };
+  }
   const d = s.get("driver");
   const rho = n0(d, "roo");
   const c = n0(d, "c");
@@ -255,6 +292,7 @@ export function parseWpr(text: string): WprProject {
   return {
     driver,
     pr,
+    bandpass,
     box: { type, bType, vb_l, fb: type === "vented" || type === "passive-radiator" ? n0(box, "Fr") : undefined, ql: n0(box, "Qlr") || 10, qa: n0(box, "Qar") || 100, qp: n0(box, "Qpr") || 100 },
     port:
       type === "vented" && vent

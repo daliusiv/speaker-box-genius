@@ -136,6 +136,28 @@ export function App() {
               },
             };
           }
+        } else if (p.box.type === "bandpass" && p.bandpass) {
+          const bd = newDesign("bandpass", s.designs);
+          if (bd.kind === "bandpass") {
+            const b = p.bandpass;
+            const portFrom = (w: { count: number; diameter_cm: number; length_cm: number }, fb: number | undefined, base: typeof bd.front) => ({
+              ...base,
+              shape: "round" as const,
+              diameter_cm: Number(w.diameter_cm.toFixed(3)),
+              length_cm: Number(w.length_cm.toFixed(3)),
+              count: w.count,
+              targetFb: Number((fb ?? base.targetFb).toFixed(2)),
+            });
+            design = {
+              ...bd,
+              name: `WinISD: ${fileName.replace(/\.wpr$/i, "")}`,
+              order: b.order,
+              vb_l: Number(b.rear.vb_l.toFixed(3)),
+              frontVb_l: Number(b.front.vb_l.toFixed(3)),
+              front: portFrom(b.front.port, b.front.fb, bd.front),
+              rear: b.rear.port ? portFrom(b.rear.port, b.rear.fb, bd.rear) : bd.rear,
+            };
+          }
         } else if (p.box.vb_l > 0) {
           const sd = newDesign("sealed", s.designs);
           design = { ...sd, name: `WinISD: ${fileName.replace(/\.wpr$/i, "")}`, vb_l: Number(p.box.vb_l.toFixed(3)) };
@@ -158,16 +180,19 @@ export function App() {
             air: "winisd",
             rg: Number((p.rg / p.drivers).toPrecision(6)),
             inductance: p.simulateLe,
-            losses: { ql: p.box.ql, qa: p.box.qa, qp: p.box.qp },
+            losses: p.bandpass
+              ? { ql: p.bandpass.front.ql, qa: p.bandpass.front.qa, qp: p.bandpass.front.qp }
+              : { ql: p.box.ql, qa: p.box.qa, qp: p.box.qp },
           },
           highPass: p.highPass ? { on: true, ...p.highPass } : { ...s.highPass, on: false },
           designs,
           volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: Math.round(d.displacement_l * 100) / 100 } : s.volume,
         };
       });
+      const lossSrc = p.bandpass?.front ?? p.box;
       const lossNote =
-        p.box.ql !== 10 || p.box.qa !== 100 || p.box.qp !== 100
-          ? ` Box losses set to the project's Ql ${p.box.ql}, Qa ${p.box.qa}, Qp ${p.box.qp}.`
+        lossSrc.ql !== 10 || lossSrc.qa !== 100 || lossSrc.qp !== 100
+          ? ` Box losses set to the project's Ql ${lossSrc.ql}, Qa ${lossSrc.qa}, Qp ${lossSrc.qp}.`
           : "";
       const boxNote = p.box.type === "other" ? " This box type isn't supported yet, so only the driver was imported." : "";
       const driversNote =

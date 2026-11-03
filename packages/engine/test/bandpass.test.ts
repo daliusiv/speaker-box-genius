@@ -13,7 +13,7 @@ const maxDiff = (a: Float64Array, b: Float64Array) => a.reduce((m, v, i) => Math
 const maxRel = (a: Float64Array, b: Float64Array) => a.reduce((m, v, i) => Math.max(m, Math.abs(v / b[i]! - 1)), 0);
 
 test("bandpass with a transparent front chamber reduces to a sealed box", () => {
-  const bp = simulate(drv, { kind: "bandpass", rear: { vb_l: 20 }, front: open }, opts);
+  const bp = simulate(drv, { kind: "bandpass", rear: { vb_l: 20 }, front: open, qicl: Infinity }, opts);
   const sealed = simulate(drv, { kind: "sealed", vb_l: 20 }, opts);
   assert.ok(maxDiff(bp.spl, sealed.spl) < 0.015, `SPL ${maxDiff(bp.spl, sealed.spl)}`);
   assert.ok(maxRel(bp.excursionMm, sealed.excursionMm) < 0.002);
@@ -25,7 +25,7 @@ test("6th-order bandpass with a transparent front chamber reduces to a vented bo
   const rp = port(7.5, 30);
   const vented = simulate(drv, { kind: "vented", vb_l: 25, port: rp }, opts);
   for (const rearPortTo of ["outside", "front"] as const) {
-    const bp = simulate(drv, { kind: "bandpass", rear: { vb_l: 25, port: rp }, front: open, rearPortTo }, opts);
+    const bp = simulate(drv, { kind: "bandpass", rear: { vb_l: 25, port: rp }, front: open, rearPortTo, qicl: Infinity }, opts);
     assert.ok(maxDiff(bp.spl, vented.spl) < 0.015, `${rearPortTo}: SPL ${maxDiff(bp.spl, vented.spl)}`);
     assert.ok(maxRel(bp.excursionMm, vented.excursionMm) < 0.005, `${rearPortTo}: x ${maxRel(bp.excursionMm, vented.excursionMm)}`);
     assert.ok(maxDiff(bp.rearPortVelocity!, vented.portVelocity!) < 0.05, `${rearPortTo}: v ${maxDiff(bp.rearPortVelocity!, vented.portVelocity!)}`);

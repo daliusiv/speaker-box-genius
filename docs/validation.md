@@ -130,6 +130,29 @@ With a shared 0.1 Ω instead, the response differs from WinISD by up to 0.1 dB a
 Box losses (Ql, Qa, Qp) are now set in the app's Settings and read from imported
 projects. With the default Ql 10 instead, the response would be 0.5 dB off at Fb.
 
+## 4th-order bandpass (Test 7)
+
+15 L closed rear chamber, 20 L front chamber tuned to 50 Hz with one 7.5 cm port, 100.1 W.
+WinISD stores this as BType=2 and includes **leakage between the two chambers**
+(`Qiclfr`, default Q 100). Without that leak our response was up to 0.21 dB high near
+the tuning; with it:
+
+| Graph | Frequency | WinISD | Speaker Box Genius | Difference |
+|---|---|---|---|---|
+| Transfer function | 30.67 Hz | −9.702 dB | −9.695 dB | +0.007 dB |
+| Transfer function | 49.65 Hz | −1.758 dB | −1.755 dB | +0.003 dB |
+| Transfer function | 80.88 Hz | −7.529 dB | −7.522 dB | +0.007 dB |
+| Transfer function | 120.45 Hz | −14.039 dB | −14.043 dB | −0.004 dB |
+| Cone excursion | 30.39 Hz | 10.017 mm | 9.990 mm | −0.27 % |
+| Front port air velocity | 49.81 Hz | 21.993 m/s | 21.922 m/s | −0.32 % |
+| Impedance | 30.11 Hz | 11.046 Ω | 11.100 Ω | +0.5 % |
+| Impedance | 60.50 Hz | 8.526 Ω | 8.554 Ω | +0.3 % |
+
+WinISD's rear-chamber "Frc" (65.42 Hz) is the driver's resonance in the closed rear
+chamber, which we report as Fc. The inter-chamber leak's reference (driver compliance
+at Fs, or front-chamber compliance at Frc, which are almost equal for this box) is
+being pinned down with the 6th-order projects.
+
 ## Passive radiator: 1× DSA270-PR
 
 | Box | Frequency | WinISD | Speaker Box Genius | Difference |
