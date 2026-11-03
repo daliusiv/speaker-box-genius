@@ -5,8 +5,22 @@ import type { PrParams } from "./state.ts";
 export interface DbIndex {
   /** Build timestamp; used to make sure brand files match this index. */
   generated?: string;
-  drivers: { id: string; brand: string; model: string; type: string; ohms: number; coil_ohms?: number; size_in?: number }[];
-  passiveRadiators: { id: string; brand: string; model: string; size_in?: number }[];
+  drivers: {
+    id: string;
+    brand: string;
+    model: string;
+    type: string;
+    ohms: number;
+    /** DVC drivers: impedance of one coil. */
+    coil_ohms?: number;
+    size_in?: number;
+    fs?: number;
+    qts?: number;
+    vas_l?: number;
+    xmax_mm?: number;
+    pe_w?: number;
+  }[];
+  passiveRadiators: { id: string; brand: string; model: string; size_in?: number; sd_cm2?: number; xmax_mm?: number }[];
 }
 
 interface Physical {

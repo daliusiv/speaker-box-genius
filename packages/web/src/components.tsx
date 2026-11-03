@@ -114,33 +114,3 @@ export function Select<T extends string | number>(props: {
     </label>
   );
 }
-
-export function LibraryPicker(props: {
-  label: string;
-  items: { id: string; text: string }[] | undefined;
-  onPick: (id: string) => void;
-}) {
-  if (!props.items || props.items.length === 0) return null;
-  return (
-    <div className="picker">
-      <select
-        aria-label={props.label}
-        value=""
-        onChange={(e) => {
-          const id = e.currentTarget.value;
-          if (id) props.onPick(id);
-        }}
-      >
-        <option value="">{props.label}…</option>
-        {props.items.map((i) => (
-          <option key={i.id} value={i.id}>
-            {i.text}
-          </option>
-        ))}
-      </select>
-      <a href={`${REPO}/blob/main/CONTRIBUTING.md`} title="Add a driver or passive radiator to the database">
-        Missing one?
-      </a>
-    </div>
-  );
-}

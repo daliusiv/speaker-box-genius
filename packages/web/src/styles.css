@@ -318,6 +318,260 @@ select {
   color: var(--fg);
 }
 
+button.browse {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  font-weight: 500;
+  text-align: left;
+}
+
+button.browse::before {
+  content: "⌕";
+  margin-right: 0.45rem;
+  color: var(--muted);
+}
+
+button.browse .count {
+  margin-left: auto;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: var(--border);
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+/* ---- database browser (modal) ---- */
+
+dialog.library {
+  width: min(960px, calc(100vw - 2rem));
+  height: min(760px, calc(100vh - 2rem));
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--fg);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 0.3);
+}
+
+dialog.library::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.lib-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem 1.1rem 0;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.lib-inner header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lib-inner h2 {
+  margin: 0;
+}
+
+.lib-inner button.icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+input.lib-search {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+input.lib-search:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.lib-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.4rem;
+  align-items: flex-start;
+}
+
+.lib-filter,
+label.lib-filter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.lib-filter > span {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.lib-filter select {
+  min-width: 10rem;
+}
+
+.lib-filter .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.lib-filter button.chip {
+  color: var(--fg);
+  border-color: var(--border);
+  font-weight: 500;
+}
+
+.lib-filter button.chip.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.lib-status {
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.lib-table {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 0 -1.1rem;
+  border-top: 1px solid var(--border);
+}
+
+.lib-table table {
+  margin: 0;
+}
+
+.lib-table th,
+.lib-table td {
+  text-align: left;
+}
+
+.lib-table th {
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.lib-table th button {
+  padding: 0.45rem 0.3rem;
+  background: none;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.lib-table th[aria-sort] button {
+  color: var(--fg);
+}
+
+.lib-table th .arrow {
+  display: inline-block;
+  width: 0.9em;
+  font-size: 0.65em;
+}
+
+.lib-table th.num,
+.lib-table td.num {
+  text-align: right;
+}
+
+.lib-table th:first-child,
+.lib-table td:first-child {
+  padding-left: 1.1rem;
+}
+
+.lib-table th:last-child,
+.lib-table td:last-child {
+  padding-right: 1.1rem;
+}
+
+.lib-table td {
+  padding: 0.45rem 0.3rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.lib-table tbody tr {
+  cursor: pointer;
+}
+
+.lib-table tr.cursor-row td {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.lib-brand {
+  color: var(--muted);
+}
+
+.lib-empty {
+  padding: 1.5rem 1.1rem;
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  dialog.library {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+  }
+
+  .lib-table .wide {
+    display: none;
+  }
+
+  .lib-table td,
+  .lib-table th button {
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+    font-size: 0.82rem;
+  }
+
+  .lib-table th:first-child,
+  .lib-table td:first-child {
+    padding-left: 0.8rem;
+  }
+
+  .lib-table th:last-child,
+  .lib-table td:last-child {
+    padding-right: 0.8rem;
+  }
+
+  /* Brand above model so the numbers fit on a phone. */
+  .lib-table .lib-brand {
+    display: block;
+    font-size: 0.75rem;
+  }
+}
+
 .pr-name {
   margin: 0 0 0.6rem;
   font-weight: 600;

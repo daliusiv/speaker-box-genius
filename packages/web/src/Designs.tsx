@@ -10,7 +10,8 @@ import {
   type AlignmentDriver,
   type Air,
 } from "@sbg/engine";
-import { Fixed, LibraryPicker, Num, Select } from "./components.tsx";
+import { Fixed, Num, Select } from "./components.tsx";
+import { PassiveRadiatorBrowser } from "./Library.tsx";
 import { loadPassiveRadiator, type DbIndex } from "./library.ts";
 import { KIND_LABEL, PORT_LIMIT, portOf } from "./sim.ts";
 import { useUnits } from "./units.ts";
@@ -316,9 +317,8 @@ function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacemen
 
   return (
     <>
-      <LibraryPicker
-        label="Load a passive radiator from the database"
-        items={p.db?.passiveRadiators.map((x) => ({ id: x.id, text: `${x.brand} ${x.model} (${x.size_in ?? "?"}")` }))}
+      <PassiveRadiatorBrowser
+        rows={p.db?.passiveRadiators}
         onPick={(id) =>
           loadPassiveRadiator(id).then(
             ({ name, params, displacement_l }) => {

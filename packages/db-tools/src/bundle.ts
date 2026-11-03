@@ -41,6 +41,7 @@ const index = {
     qts: d.ts.qts ?? (d.ts.qms * d.ts.qes) / (d.ts.qms + d.ts.qes),
     vas_l: d.ts.vas_l,
     xmax_mm: d.ts.xmax_mm,
+    pe_w: d.ts.pe_w,
     status: d.status,
   })),
   passiveRadiators: db.passiveRadiators.map(({ id, data: p }) => ({

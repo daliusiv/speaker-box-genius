@@ -20,7 +20,8 @@ import {
   type DesignState,
 } from "./state.ts";
 import { loadDriver, loadIndex, type DbIndex } from "./library.ts";
-import { Card, LibraryPicker, Num, REPO, Select } from "./components.tsx";
+import { Card, Num, REPO, Select } from "./components.tsx";
+import { DriverBrowser } from "./Library.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
 import { airOf, alignmentDriver, colorOf, dvcFactors, PORT_LIMIT, roomGainOf, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
@@ -314,9 +315,8 @@ export function App() {
 
       <aside className="panel">
         <Card title="Driver">
-          <LibraryPicker
-            label="Load a driver from the database"
-            items={db?.drivers.map((x) => ({ id: x.id, text: `${x.brand} ${x.model} (${x.size_in ?? "?"}", ${x.coil_ohms ? `DVC ${x.coil_ohms}+${x.coil_ohms}` : x.ohms} Ω)` }))}
+          <DriverBrowser
+            rows={db?.drivers}
             onPick={(id) =>
               loadDriver(id).then(
                 (d) =>
