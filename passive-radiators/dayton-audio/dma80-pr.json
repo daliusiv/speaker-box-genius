@@ -1,0 +1,30 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DMA80-PR",
+  "type": "passive-radiator",
+  "size_in": 3,
+  "params": {
+    "mms_g": 13.7,
+    "sd_cm2": 31.2,
+    "xmax_mm": 7,
+    "fs": 34.6,
+    "qms": 8.91,
+    "vas_l": 2.14,
+    "cms_mm_per_n": 1.41
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1627/dma80-pr-3-dma-series-passive-radiator",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-595--dayton-audio-dma80-pr-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

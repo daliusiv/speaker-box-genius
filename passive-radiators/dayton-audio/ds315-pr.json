@@ -1,0 +1,34 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DS315-PR",
+  "type": "passive-radiator",
+  "size_in": 12,
+  "params": {
+    "mms_g": 147.1,
+    "sd_cm2": 480,
+    "xmax_mm": 13,
+    "fs": 18.6,
+    "qms": 4.27,
+    "vas_l": 162.4,
+    "cms_mm_per_n": 0.5
+  },
+  "physical": {
+    "cutout_mm": 272,
+    "depth_mm": 89
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/135/ds315-pr-12-designer-series-passive-radiator",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-496--dayton-audio-ds315-pr-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

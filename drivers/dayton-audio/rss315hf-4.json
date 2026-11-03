@@ -8,27 +8,33 @@
     "fs": 24.2,
     "qms": 2.83,
     "qes": 0.45,
-    "qts": 0.39,
     "vas_l": 84.1,
     "re": 3.1,
-    "le_mh": 0.96,
-    "bl": 13.99,
-    "mms_g": 188,
     "sd_cm2": 514.7,
+    "qts": 0.39,
+    "le_mh": 0.96,
+    "mms_g": 188,
     "xmax_mm": 14.3,
     "pe_w": 400
   },
   "physical": {
-    "cutout_mm": 281.9,
-    "depth_mm": 146.0
+    "cutout_mm": 282,
+    "depth_mm": 146
   },
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.parts-express.com/Dayton-Audio-RSS315HF-4-12-Reference-Series-HF-Subwoofer-4-Ohm-295-464",
-      "retrieved": "2026-11-02",
-      "note": "Parts Express (Dayton Audio's distributor) product specifications. Vas published as 2.97 ft³; cutout 11.1\", depth 5.75\"."
+      "url": "https://www.daytonaudio.com/product/121/rss315hf-4-12-reference-hf-subwoofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-464-dayton-audio-rss315hf-4-specifications-46174.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "notes": "Published Bl 1 T·m disagrees with Fs, Mms, Re and Qes, so it's left out (the app derives it)."
 }

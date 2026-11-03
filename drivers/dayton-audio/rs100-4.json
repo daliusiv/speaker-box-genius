@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS100-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 84.8,
+    "qms": 2.55,
+    "qes": 0.66,
+    "vas_l": 1.45,
+    "re": 3,
+    "sd_cm2": 35.3,
+    "qts": 0.53,
+    "le_mh": 0.28,
+    "bl": 3.18,
+    "mms_g": 4.3,
+    "xmax_mm": 4,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 77.2,
+    "depth_mm": 51
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/89/rs100-4-4-reference-full-range-driver-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-378-dayton-audio-rs100-4-spec-sheet-revised.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

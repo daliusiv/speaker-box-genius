@@ -1,0 +1,39 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE38M-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 1,
+  "ts": {
+    "fs": 191.8,
+    "qms": 1.59,
+    "qes": 4.45,
+    "vas_l": 0.33,
+    "re": 7.72,
+    "sd_cm2": 4.91,
+    "qts": 1.17,
+    "le_mh": 0.172,
+    "bl": 0.39,
+    "mms_g": 0.07,
+    "xmax_mm": 0.1,
+    "pe_w": 0.25
+  },
+  "physical": {
+    "depth_mm": 7.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1185/ce38m-8-1-1-2-mini-speaker-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-129-dayton-audio-ce38m-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

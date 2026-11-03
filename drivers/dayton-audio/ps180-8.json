@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PS180-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 6,
+  "ts": {
+    "fs": 58.5,
+    "qms": 3.64,
+    "qes": 0.36,
+    "vas_l": 27.6,
+    "re": 6.4,
+    "sd_cm2": 132.7,
+    "qts": 0.33,
+    "le_mh": 0.63,
+    "bl": 6.82,
+    "mms_g": 7,
+    "xmax_mm": 4.6,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 145,
+    "depth_mm": 77.7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/82/ps180-8-6-1-2-point-source-full-range-neo-driver",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/PS180-8%206-1_2_%20Point%20Source%20Full-Range%20Neo%20Driver%20Specification%20Sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

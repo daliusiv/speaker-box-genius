@@ -1,0 +1,36 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DMA70-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 2,
+  "ts": {
+    "fs": 113.7,
+    "qms": 2.06,
+    "qes": 0.73,
+    "vas_l": 0.6,
+    "re": 7.5,
+    "sd_cm2": 22.9,
+    "qts": 0.5,
+    "le_mh": 0.5,
+    "bl": 4.7,
+    "mms_g": 2.6,
+    "xmax_mm": 2,
+    "pe_w": 20
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1617/dma70-8-2-1-2-dual-magnet-aluminum-cone-full-range-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-585--dayton-audio-dma70-8-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,43 @@
+{
+  "brand": "Dayton Audio",
+  "model": "LS10-44",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 34.3,
+    "qms": 5.15,
+    "qes": 0.47,
+    "vas_l": 30.8,
+    "re": 7.4,
+    "sd_cm2": 366.4,
+    "qts": 0.43,
+    "le_mh": 5.25,
+    "bl": 21.1,
+    "mms_g": 132,
+    "xmax_mm": 10,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 238.5,
+    "depth_mm": 84.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1257/ls10-44-10-low-profile-subwoofer-dual-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-251--dayton-audio-ls10-44-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "notes": "Coil wiring for the published values (series) inferred from Re 7.4 Ω with 4 Ω coils."
+}

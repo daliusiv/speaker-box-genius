@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PS65LP-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 6,
+  "ts": {
+    "fs": 67.3,
+    "qms": 3.85,
+    "qes": 0.26,
+    "vas_l": 17.3,
+    "re": 3.2,
+    "sd_cm2": 122.7,
+    "qts": 0.24,
+    "le_mh": 0.39,
+    "bl": 6,
+    "mms_g": 6.8,
+    "xmax_mm": 4,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 144,
+    "depth_mm": 63
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1470/ps65lp-4-6-1-2-ultra-efficient-low-profile-full-range-driver-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-348--dayton-audio-ps65lp-4-low-profile-full-range-driver-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

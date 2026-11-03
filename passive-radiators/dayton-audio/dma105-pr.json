@@ -1,0 +1,30 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DMA105-PR",
+  "type": "passive-radiator",
+  "size_in": 4,
+  "params": {
+    "mms_g": 29.3,
+    "sd_cm2": 54.1,
+    "xmax_mm": 9,
+    "fs": 37.9,
+    "qms": 7.8,
+    "vas_l": 2.5,
+    "cms_mm_per_n": 0.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1629/dma105-pr-4-dma-series-passive-radiator",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-597--dayton-audio-dma105-pr-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

@@ -8,29 +8,35 @@
     "fs": 39,
     "qms": 2.67,
     "qes": 0.73,
-    "qts": 0.57,
     "vas_l": 21.2,
-    "re": 4.0,
+    "re": 4,
+    "sd_cm2": 345,
+    "qts": 0.57,
     "le_mh": 0.74,
     "bl": 13.4,
     "mms_g": 134,
-    "sd_cm2": 345,
     "xmax_mm": 20,
     "pe_w": 600
   },
-  "voice_coils": 2,
-  "ts_wiring": "series",
   "physical": {
-    "cutout_mm": 236,
-    "depth_mm": 184
+    "cutout_mm": 180,
+    "depth_mm": 164
   },
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.soundimports.eu/en/dayton-audio-umii10-22.html",
+      "url": "https://www.daytonaudio.com/product/2063/umii10-22-ultimax-ii-10-dvc-subwoofer-2-ohms-per-coil",
       "retrieved": "2026-11-03",
-      "note": "SoundImports (official distributor) product specifications table. Dual 2 Ω coils. Dayton states all parameters are measured with the voice coils wired in series (4 Ω load). Power: table says 600 W RMS, page text says 500 W; 600 W matches Parts Express's listing."
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-710--dayton-audio-UMII10-22-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series"
 }

@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE4249N-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 1,
+  "ts": {
+    "fs": 184,
+    "qms": 6.67,
+    "qes": 0.53,
+    "vas_l": 0.039,
+    "re": 3.3,
+    "sd_cm2": 6.6,
+    "qts": 0.49,
+    "le_mh": 0.13,
+    "bl": 2.94,
+    "mms_g": 1.2,
+    "xmax_mm": 1.6,
+    "pe_w": 5
+  },
+  "physical": {
+    "cutout_mm": 23,
+    "depth_mm": 25
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1922/ce4249n-4-1-5-dual-neo-full-range-speaker-driver-5w-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-159--dayton-audio-ce4249n-4%20-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

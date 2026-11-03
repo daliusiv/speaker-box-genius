@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DC250-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 24.9,
+    "qms": 3.16,
+    "qes": 0.44,
+    "vas_l": 104,
+    "re": 6.6,
+    "sd_cm2": 343.1,
+    "qts": 0.38,
+    "le_mh": 2.63,
+    "bl": 12.64,
+    "mms_g": 67.5,
+    "xmax_mm": 4.5,
+    "pe_w": 70
+  },
+  "physical": {
+    "cutout_mm": 234,
+    "depth_mm": 112.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/26/dc250-8-10-classic-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-315-dayton-audio-dc250-8-specifications-46150.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

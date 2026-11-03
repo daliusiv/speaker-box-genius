@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DS90-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 3,
+  "ts": {
+    "fs": 81.4,
+    "qms": 2.19,
+    "qes": 0.53,
+    "vas_l": 1.31,
+    "re": 6.3,
+    "sd_cm2": 31.2,
+    "qts": 0.43,
+    "le_mh": 0.56,
+    "bl": 4.76,
+    "mms_g": 3.8,
+    "xmax_mm": 2.5,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 70,
+    "depth_mm": 44.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1053/ds90-8-3-designer-series-extended-range-speaker-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-422--dayton-audio-ds90-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

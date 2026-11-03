@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CFC120-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 4.5,
+  "ts": {
+    "fs": 60,
+    "qms": 2.91,
+    "qes": 0.69,
+    "vas_l": 4.61,
+    "re": 7.2,
+    "sd_cm2": 55.6,
+    "qts": 0.56,
+    "le_mh": 0.49,
+    "bl": 5.13,
+    "mms_g": 6.7,
+    "xmax_mm": 2.5,
+    "pe_w": 30
+  },
+  "physical": {
+    "depth_mm": 61.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2225/cfc120-8-4-1-2-carbon-fiber-extended-range-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-604--dayton-audio-cfc120-8-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published cutout 80 mm can't fit a 4.5\" driver, so it's left out."
+}

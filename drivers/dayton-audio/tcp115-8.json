@@ -1,0 +1,41 @@
+{
+  "brand": "Dayton Audio",
+  "model": "TCP115-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 4,
+  "ts": {
+    "fs": 59.2,
+    "qms": 2.3,
+    "qes": 0.54,
+    "vas_l": 2.52,
+    "re": 7.8,
+    "sd_cm2": 50,
+    "qts": 0.43,
+    "le_mh": 1.9,
+    "bl": 7.4,
+    "mms_g": 10.16,
+    "xmax_mm": 4,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 95.8,
+    "depth_mm": 58.9
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1563/tcp115-8-4-treated-paper-cone-midbass-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-416--dayton-audio-tcp115-8-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published cutout 3.77 has no unit; read as inches (95.8 mm)."
+}

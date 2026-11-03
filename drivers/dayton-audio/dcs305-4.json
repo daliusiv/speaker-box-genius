@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DCS305-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 12,
+  "ts": {
+    "fs": 24.2,
+    "qms": 5.07,
+    "qes": 0.43,
+    "vas_l": 92.3,
+    "re": 3.3,
+    "sd_cm2": 498.8,
+    "qts": 0.4,
+    "le_mh": 2.06,
+    "bl": 13.7,
+    "mms_g": 160,
+    "xmax_mm": 9.3,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 275,
+    "depth_mm": 153
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/39/dcs305-4-12-classic-subwoofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-204-dayton-audio-dcs305-4-specifications-46582.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

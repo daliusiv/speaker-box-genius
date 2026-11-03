@@ -1,0 +1,30 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DMA45-PR",
+  "type": "passive-radiator",
+  "size_in": 1,
+  "params": {
+    "mms_g": 2.8,
+    "sd_cm2": 8.6,
+    "xmax_mm": 5,
+    "fs": 60,
+    "qms": 2.75,
+    "vas_l": 0.3,
+    "cms_mm_per_n": 2.12
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1624/dma45-pr-1-1-2-dma-series-passive-radiator",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-592--dayton-audio-dma45-pr-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

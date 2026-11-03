@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CF120-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 53.2,
+    "qms": 1.89,
+    "qes": 0.32,
+    "vas_l": 4.87,
+    "re": 3.4,
+    "sd_cm2": 51.5,
+    "qts": 0.28,
+    "le_mh": 0.45,
+    "bl": 4.94,
+    "mms_g": 6.9,
+    "xmax_mm": 3.5,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 101.6,
+    "depth_mm": 50.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1274/cf120-4-4-1-2-woven-carbon-fiber-midwoofer-4-ohms",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-298--dayton-audio-cf120-4-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

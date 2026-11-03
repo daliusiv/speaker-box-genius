@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE4876-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 2,
+  "ts": {
+    "fs": 203,
+    "qms": 8.13,
+    "qes": 1.72,
+    "vas_l": 0.37,
+    "re": 7.2,
+    "sd_cm2": 26.3,
+    "qts": 1.42,
+    "le_mh": 0.17,
+    "bl": 2.94,
+    "mms_g": 1.6,
+    "xmax_mm": 2.2,
+    "pe_w": 15
+  },
+  "physical": {
+    "cutout_mm": 71.1,
+    "depth_mm": 44
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1935/ce4876-8-2-x-3-racetrack-full-range-speaker-driver-15w-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-185--dayton-audio-ce4876-8-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

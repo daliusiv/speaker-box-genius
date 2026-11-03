@@ -1,0 +1,41 @@
+{
+  "brand": "Dayton Audio",
+  "model": "ND65-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 2,
+  "ts": {
+    "fs": 89.5,
+    "qms": 5.56,
+    "qes": 0.68,
+    "vas_l": 0.4,
+    "re": 3.5,
+    "sd_cm2": 15.6,
+    "qts": 0.61,
+    "le_mh": 0.44,
+    "bl": 2.68,
+    "mms_g": 2.5,
+    "xmax_mm": 3.5,
+    "pe_w": 15
+  },
+  "physical": {
+    "cutout_mm": 52,
+    "depth_mm": 48
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/63/nd65-4-2-1-2-aluminum-cone-full-range-driver-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/290-204-dayton-audio-nd65-4-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 0.53 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 0.4 L from Cms."
+}

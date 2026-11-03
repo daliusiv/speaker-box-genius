@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PCS10-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 33,
+    "qms": 4.91,
+    "qes": 0.73,
+    "vas_l": 49,
+    "re": 4,
+    "sd_cm2": 328,
+    "qts": 0.64,
+    "le_mh": 1.9,
+    "bl": 9.1,
+    "mms_g": 72.7,
+    "xmax_mm": 5.6,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 231.4,
+    "depth_mm": 122.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2206/pcs10-4-10-paper-cone-subwoofer-driver-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-672--dayton-audio-pcs10-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

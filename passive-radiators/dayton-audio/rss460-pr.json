@@ -1,0 +1,34 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RSS460-PR",
+  "type": "passive-radiator",
+  "size_in": 18,
+  "params": {
+    "mms_g": 500,
+    "sd_cm2": 1164,
+    "xmax_mm": 34,
+    "fs": 14.7,
+    "qms": 5.03,
+    "vas_l": 449,
+    "cms_mm_per_n": 0.23
+  },
+  "physical": {
+    "cutout_mm": 424,
+    "depth_mm": 157
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1428/rss460-pr-18-aluminum-cone-passive-radiator",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-506--rss460-pr-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

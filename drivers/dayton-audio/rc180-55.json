@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RC180-55",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 2,
+  "ts": {
+    "fs": 52,
+    "qms": 3.31,
+    "qes": 1.23,
+    "vas_l": 2.04,
+    "re": 3.3,
+    "sd_cm2": 56.4,
+    "qts": 0.89,
+    "le_mh": 0.1,
+    "bl": 4.23,
+    "mms_g": 20.1,
+    "xmax_mm": 4.7,
+    "pe_w": 35
+  },
+  "physical": {
+    "cutout_mm": 159,
+    "depth_mm": 77
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1949/rc180-55-2-x-7-res-core-neodymium-woofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-248--dayton-audio-rc180-55-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

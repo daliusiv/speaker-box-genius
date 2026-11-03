@@ -8,13 +8,13 @@
     "fs": 29.6,
     "qms": 3.25,
     "qes": 0.69,
-    "qts": 0.57,
     "vas_l": 23.7,
     "re": 3.1,
+    "sd_cm2": 219,
+    "qts": 0.57,
     "le_mh": 0.7,
     "bl": 8.12,
     "mms_g": 78.4,
-    "sd_cm2": 219.0,
     "xmax_mm": 9,
     "pe_w": 280
   },
@@ -25,9 +25,15 @@
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.soundimports.eu/en/rss210hf-4.html",
+      "url": "https://www.daytonaudio.com/product/117/rss210hf-4-8-reference-hf-subwoofer-4-ohm",
       "retrieved": "2026-11-03",
-      "note": "SoundImports (official distributor) product specifications table."
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-456-dayton-audio-rss210hf-4-specifications-46171.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
   "status": "community"

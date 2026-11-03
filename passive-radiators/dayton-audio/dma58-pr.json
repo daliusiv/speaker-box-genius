@@ -1,0 +1,30 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DMA58-PR",
+  "type": "passive-radiator",
+  "size_in": 2,
+  "params": {
+    "mms_g": 6.7,
+    "sd_cm2": 14.5,
+    "xmax_mm": 7,
+    "fs": 39.8,
+    "qms": 3.93,
+    "vas_l": 0.71,
+    "cms_mm_per_n": 2.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1625/dma58-pr-2-dma-series-passive-radiator",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-593--dayton-audio-dma58-pr-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

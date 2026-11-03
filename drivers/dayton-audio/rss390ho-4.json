@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RSS390HO-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 21.5,
+    "qms": 3.69,
+    "qes": 0.35,
+    "vas_l": 168,
+    "re": 3.2,
+    "sd_cm2": 829.6,
+    "qts": 0.32,
+    "le_mh": 1.79,
+    "bl": 19.8,
+    "mms_g": 319,
+    "xmax_mm": 12,
+    "pe_w": 800
+  },
+  "physical": {
+    "cutout_mm": 355.6,
+    "depth_mm": 178
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/127/rss390ho-4-15-reference-ho-subwoofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-469-dayton-audio-rss390ho-4-specifications-46177.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

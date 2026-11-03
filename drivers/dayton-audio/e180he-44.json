@@ -1,0 +1,42 @@
+{
+  "brand": "Dayton Audio",
+  "model": "E180HE-44",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 35,
+    "qms": 2.93,
+    "qes": 0.54,
+    "vas_l": 16.14,
+    "re": 6.8,
+    "sd_cm2": 136.1,
+    "qts": 0.46,
+    "le_mh": 1.5,
+    "bl": 9.6,
+    "mms_g": 32.5,
+    "xmax_mm": 14.7,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 122,
+    "depth_mm": 116
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1910/e180he-44-7-dvc-mmag-extended-range-subwoofer-4-ohms-per-coil",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-104--epique-e180he-44-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "notes": "Coil wiring for the published values (series) inferred from the 8 Ω impedance with 4 Ω coils."
+}

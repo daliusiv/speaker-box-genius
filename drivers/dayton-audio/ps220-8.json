@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PS220-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 46.4,
+    "qms": 5.73,
+    "qes": 0.4,
+    "vas_l": 90.2,
+    "re": 6.2,
+    "sd_cm2": 216.4,
+    "qts": 0.38,
+    "le_mh": 0.73,
+    "bl": 6.15,
+    "mms_g": 8.4,
+    "xmax_mm": 4.8,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 181,
+    "depth_mm": 94
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/83/ps220-8-8-point-source-full-range-neo-driver",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/PS220-8%208_%20Point%20Source%20Full-Range%20Neo%20Driver%20Specification%20Sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

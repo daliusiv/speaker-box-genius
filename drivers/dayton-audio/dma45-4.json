@@ -1,0 +1,36 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DMA45-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 1,
+  "ts": {
+    "fs": 151.4,
+    "qms": 5.23,
+    "qes": 0.62,
+    "vas_l": 0.1,
+    "re": 3.7,
+    "sd_cm2": 8.6,
+    "qts": 0.56,
+    "le_mh": 0.3,
+    "mms_g": 1.3,
+    "xmax_mm": 2,
+    "pe_w": 10
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1612/dma45-4-1-1-2-dual-magnet-aluminum-cone-full-range-driver-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-580--dayton-audio-dma45-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Bl 2.2 T·m disagrees with Fs, Mms, Re and Qes, so it's left out (the app derives it)."
+}

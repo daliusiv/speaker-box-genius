@@ -1,0 +1,33 @@
+{
+  "brand": "Dayton Audio",
+  "model": "HARB252-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 172.11,
+    "qms": 4.23,
+    "qes": 2.98,
+    "vas_l": 0.19,
+    "re": 7.2,
+    "sd_cm2": 21.2,
+    "qts": 1.74,
+    "le_mh": 0.09,
+    "bl": 3.04,
+    "mms_g": 3.2,
+    "xmax_mm": 1.3,
+    "pe_w": 10
+  },
+  "physical": {
+    "cutout_mm": 20.8,
+    "depth_mm": 29
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1282/harb252-8-1-x-5-dual-motor-high-aspect-ratio-bmt-8-ohms",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "LW150-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 6,
+  "ts": {
+    "fs": 62.6,
+    "qms": 6.01,
+    "qes": 0.72,
+    "vas_l": 3.49,
+    "re": 3.6,
+    "sd_cm2": 91.6,
+    "qts": 0.64,
+    "le_mh": 0.86,
+    "bl": 6.52,
+    "mms_g": 21.9,
+    "xmax_mm": 4,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 127,
+    "depth_mm": 25.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1275/lw150-4-6-low-profile-woofer-4-ohms",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-255--dayton-audio-lw150-4-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

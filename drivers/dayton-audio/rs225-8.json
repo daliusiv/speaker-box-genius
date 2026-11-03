@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS225-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 28.3,
+    "qms": 1.46,
+    "qes": 0.51,
+    "vas_l": 56.8,
+    "re": 6.5,
+    "sd_cm2": 213.8,
+    "qts": 0.38,
+    "le_mh": 0.86,
+    "bl": 9.05,
+    "mms_g": 35.8,
+    "xmax_mm": 7,
+    "pe_w": 80
+  },
+  "physical": {
+    "cutout_mm": 184,
+    "depth_mm": 89
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/104/rs225-8-8-reference-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-356--rs225-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

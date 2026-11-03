@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PCS8-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 43,
+    "qms": 3.96,
+    "qes": 0.56,
+    "vas_l": 20.5,
+    "re": 3.4,
+    "sd_cm2": 213,
+    "qts": 0.49,
+    "le_mh": 1.55,
+    "bl": 8.4,
+    "mms_g": 43,
+    "xmax_mm": 5,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 177,
+    "depth_mm": 100.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2205/pcs8-4-8-paper-cone-subwoofer-driver-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-670--dayton-audio-pcs8-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

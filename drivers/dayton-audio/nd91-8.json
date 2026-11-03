@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "ND91-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 3,
+  "ts": {
+    "fs": 70.7,
+    "qms": 4.29,
+    "qes": 0.53,
+    "vas_l": 1.53,
+    "re": 7.8,
+    "sd_cm2": 30.4,
+    "qts": 0.47,
+    "le_mh": 1.24,
+    "bl": 5.63,
+    "mms_g": 4.8,
+    "xmax_mm": 5.1,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 85,
+    "depth_mm": 56.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1045/nd91-8-3-1-2-aluminum-cone-full-range-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/290-226--dayton-audio-nd91-8-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

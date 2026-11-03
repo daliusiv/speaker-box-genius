@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "ND64-16",
+  "type": "full-range",
+  "nominal_ohms": 16,
+  "size_in": 2,
+  "ts": {
+    "fs": 100.9,
+    "qms": 4.1,
+    "qes": 0.45,
+    "vas_l": 0.53,
+    "re": 14.5,
+    "sd_cm2": 15.6,
+    "qts": 0.41,
+    "le_mh": 1.21,
+    "bl": 6.54,
+    "xmax_mm": 1.9,
+    "pe_w": 15
+  },
+  "physical": {
+    "cutout_mm": 53,
+    "depth_mm": 39
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1451/nd64-16-2-1-2-aluminum-magnesium-cone-full-range-driver-16-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-519--dayton-audio-nd64-16-aluminum-magnesium-cone-full-range-driver-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 2.11 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}

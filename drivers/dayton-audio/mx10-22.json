@@ -5,21 +5,19 @@
   "nominal_ohms": 4,
   "size_in": 10,
   "ts": {
-    "fs": 32.5,
+    "fs": 32.6,
     "qms": 3.59,
     "qes": 0.53,
-    "qts": 0.46,
     "vas_l": 23.8,
-    "re": 4.8,
+    "re": 4.76,
+    "sd_cm2": 356.7,
+    "qts": 0.46,
     "le_mh": 4.33,
     "bl": 18.2,
     "mms_g": 179,
-    "sd_cm2": 356.7,
     "xmax_mm": 11.6,
     "pe_w": 400
   },
-  "voice_coils": 2,
-  "ts_wiring": "series",
   "physical": {
     "cutout_mm": 229.9,
     "depth_mm": 159.3
@@ -27,10 +25,18 @@
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.soundimports.eu/en/dayton-audio-mx10-22.html",
+      "url": "https://www.daytonaudio.com/product/1791/mx10-22-10-max-x-high-excursion-dvc-subwoofer-2-ohms-per-coil",
       "retrieved": "2026-11-03",
-      "note": "SoundImports (official distributor) product specifications table. Dual 2 Ω coils; page notes all specifications are measured with the coils in series (4 Ω). Vas published as 0.84 ft³; cutout 9.05\", depth 6.27\"."
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-164--dayton-audio-mx10-22-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series"
 }

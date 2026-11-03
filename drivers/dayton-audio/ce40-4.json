@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE40-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 1,
+  "ts": {
+    "fs": 194,
+    "qms": 5,
+    "qes": 1.45,
+    "vas_l": 0.064,
+    "re": 3.6,
+    "sd_cm2": 7.07,
+    "qts": 1.12,
+    "le_mh": 0.06,
+    "bl": 1.5,
+    "mms_g": 0.73,
+    "xmax_mm": 0.7,
+    "pe_w": 10
+  },
+  "physical": {
+    "cutout_mm": 36.5,
+    "depth_mm": 23.3
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1920/ce40-4-1-full-range-speaker-driver-10w-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-155--dayton-audio-ce40-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

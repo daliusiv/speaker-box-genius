@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE40-20F-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 1,
+  "ts": {
+    "fs": 695,
+    "qms": 1.67,
+    "qes": 11.9,
+    "vas_l": 0.008,
+    "re": 6.76,
+    "sd_cm2": 3.5,
+    "qts": 1.46,
+    "le_mh": 0.36,
+    "bl": 0.53,
+    "mms_g": 0.11,
+    "xmax_mm": 0.1,
+    "pe_w": 1
+  },
+  "physical": {
+    "cutout_mm": 35.3,
+    "depth_mm": 6.1
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1189/ce40-20f-8-1-1-2-x-3-4-mini-speaker-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-137-dayton-audio-ce40-20f-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

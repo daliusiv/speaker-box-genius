@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS125T-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 76,
+    "qms": 2.62,
+    "qes": 0.61,
+    "vas_l": 3.56,
+    "re": 6.4,
+    "sd_cm2": 54.1,
+    "qts": 0.5,
+    "le_mh": 0.58,
+    "bl": 5.04,
+    "mms_g": 5.1,
+    "xmax_mm": 2.8,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 94,
+    "depth_mm": 55
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/96/rs125t-8-5-reference-woofer-truncated-frame-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-340-dayton-audio-rs125t-8-spec%20-sheet-revised.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

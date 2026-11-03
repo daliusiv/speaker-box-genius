@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE67PR-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 2,
+  "ts": {
+    "fs": 218,
+    "qms": 5.52,
+    "qes": 1.11,
+    "vas_l": 0.11,
+    "re": 4.54,
+    "sd_cm2": 16.62,
+    "qts": 0.92,
+    "le_mh": 0.14,
+    "bl": 3.22,
+    "mms_g": 1.8,
+    "xmax_mm": 2.2,
+    "pe_w": 15
+  },
+  "physical": {
+    "cutout_mm": 53,
+    "depth_mm": 37.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1929/ce67pr-4-2-neo-extended-range-speaker-driver-15w-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-173--dayton-audio-ce67pr-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DS90-PR",
+  "type": "passive-radiator",
+  "size_in": 3,
+  "params": {
+    "mms_g": 5.5,
+    "sd_cm2": 31.2,
+    "xmax_mm": 4,
+    "fs": 42.4,
+    "qms": 5.9,
+    "vas_l": 3.5,
+    "cms_mm_per_n": 2.55
+  },
+  "physical": {
+    "cutout_mm": 70.1,
+    "depth_mm": 21.84
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1584/ds90-pr-3-designer-series-passive-radiator",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-491--dayton-audio-ds90-pr-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CFC180-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 52,
+    "qms": 3.33,
+    "qes": 0.5,
+    "vas_l": 11.5,
+    "re": 3.6,
+    "sd_cm2": 129.8,
+    "qts": 0.43,
+    "le_mh": 0.84,
+    "bl": 6.8,
+    "mms_g": 19.5,
+    "xmax_mm": 4,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 144,
+    "depth_mm": 81
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2228/cfc180-4-6-1-2-carbon-fiber-woofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-608--dayton-audio-cfc180-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

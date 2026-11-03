@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE41N-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 1,
+  "ts": {
+    "fs": 170,
+    "qms": 5.6,
+    "qes": 0.58,
+    "vas_l": 0.078,
+    "re": 3.6,
+    "sd_cm2": 7.1,
+    "qts": 0.53,
+    "le_mh": 0.06,
+    "bl": 2.3,
+    "mms_g": 0.8,
+    "xmax_mm": 0.7,
+    "pe_w": 5
+  },
+  "physical": {
+    "cutout_mm": 23.5,
+    "depth_mm": 25.1
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1921/ce41n-4-1-5-dual-neo-full-range-speaker-driver-5w-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-157--dayton-audio-ce41n-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

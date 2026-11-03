@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "CE54N-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 2,
+  "ts": {
+    "fs": 168,
+    "qms": 6.77,
+    "qes": 0.63,
+    "vas_l": 0.111,
+    "re": 3.6,
+    "sd_cm2": 14.5,
+    "qts": 0.58,
+    "le_mh": 0.11,
+    "bl": 3.82,
+    "mms_g": 2.4,
+    "xmax_mm": 1.4,
+    "pe_w": 15
+  },
+  "physical": {
+    "cutout_mm": 49,
+    "depth_mm": 32
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1926/ce54n-4-2-dual-neo-full-range-speaker-driver-1-vc-15w-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/285-167--dayton-audio-ce54n-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

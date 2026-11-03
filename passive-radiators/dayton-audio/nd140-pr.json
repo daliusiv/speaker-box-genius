@@ -1,0 +1,34 @@
+{
+  "brand": "Dayton Audio",
+  "model": "ND140-PR",
+  "type": "passive-radiator",
+  "size_in": 5,
+  "params": {
+    "mms_g": 16.4,
+    "sd_cm2": 86.6,
+    "xmax_mm": 9,
+    "fs": 44.2,
+    "qms": 4.02,
+    "vas_l": 8.4,
+    "cms_mm_per_n": 0.79
+  },
+  "physical": {
+    "cutout_mm": 120.7,
+    "depth_mm": 63.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1555/nd140-pr-5-1-4-aluminum-cone-passive-radiator",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/290-217--dayton-audio-nd140-pr-5-1-4-inch-aluminum-cone-passive-radiator-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

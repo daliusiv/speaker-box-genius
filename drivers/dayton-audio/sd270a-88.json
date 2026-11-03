@@ -8,18 +8,16 @@
     "fs": 26.2,
     "qms": 3.23,
     "qes": 0.5,
-    "qts": 0.43,
     "vas_l": 107.5,
     "re": 3.16,
+    "sd_cm2": 346.4,
+    "qts": 0.43,
     "le_mh": 1.12,
     "bl": 7.8,
     "mms_g": 57.7,
-    "sd_cm2": 346.4,
     "xmax_mm": 6,
     "pe_w": 80
   },
-  "voice_coils": 2,
-  "ts_wiring": "parallel",
   "physical": {
     "cutout_mm": 227,
     "depth_mm": 109
@@ -27,10 +25,19 @@
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://soundimports.eu/en/dayton-audio-sd270a-88.html",
+      "url": "https://www.daytonaudio.com/product/133/sd270a-88-10-dvc-subwoofer-4-ohm",
       "retrieved": "2026-11-03",
-      "note": "SoundImports (official distributor) product specifications table. Dual 8 Ω coils. The page doesn't say how the coils were wired, but Re 3.16 Ω (and the Qes/Bl/Mms balance) means parallel."
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-484-dayton-audio-sd215a-88-specifications-47084.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "parallel",
+  "notes": "Coil wiring for the published values (parallel) inferred from the 4 Ω impedance with 8 Ω coils."
 }

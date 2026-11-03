@@ -1,0 +1,43 @@
+{
+  "brand": "Dayton Audio",
+  "model": "SS10-22",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 34,
+    "qms": 3.8,
+    "qes": 0.45,
+    "vas_l": 20.6,
+    "re": 4.4,
+    "sd_cm2": 344.5,
+    "qts": 0.4,
+    "le_mh": 1.6,
+    "bl": 19.4,
+    "mms_g": 180,
+    "xmax_mm": 21,
+    "pe_w": 700
+  },
+  "physical": {
+    "cutout_mm": 236.7,
+    "depth_mm": 179
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2127/ss10-22-10-signature-series-dvc-subwoofer-2-ohms-per-coil",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-730--dayton-audio-ss10-22-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "notes": "Coil wiring for the published values (series) inferred from Re 4.4 Ω with 2 Ω coils."
+}

@@ -1,0 +1,41 @@
+{
+  "brand": "Dayton Audio",
+  "model": "ND64-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 2,
+  "ts": {
+    "fs": 103,
+    "qms": 4.36,
+    "qes": 0.36,
+    "vas_l": 0.3,
+    "re": 3.7,
+    "sd_cm2": 15.6,
+    "qts": 0.33,
+    "le_mh": 0.37,
+    "bl": 4.13,
+    "mms_g": 2.56,
+    "xmax_mm": 1.9,
+    "pe_w": 15
+  },
+  "physical": {
+    "cutout_mm": 53,
+    "depth_mm": 39
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1452/nd64-4-2-1-2-aluminum-magnesium-cone-full-range-driver-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-520--dayton-audio-nd64-4-aluminum-magnesium-cone-full-range-driver-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 0.42 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 0.3 L from Cms."
+}

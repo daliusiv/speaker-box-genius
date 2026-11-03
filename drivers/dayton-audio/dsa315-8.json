@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DSA315-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 24.23,
+    "qms": 1.89,
+    "qes": 0.4,
+    "vas_l": 147,
+    "re": 6,
+    "sd_cm2": 506.7,
+    "qts": 0.33,
+    "le_mh": 1.11,
+    "bl": 16.1,
+    "mms_g": 113.1,
+    "xmax_mm": 5.5,
+    "pe_w": 120
+  },
+  "physical": {
+    "cutout_mm": 272,
+    "depth_mm": 130
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1317/dsa315-8-12-designer-series-aluminum-cone-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-534--dayton-audio-DSA315-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

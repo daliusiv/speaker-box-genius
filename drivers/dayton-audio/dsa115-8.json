@@ -1,0 +1,37 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DSA115-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 4,
+  "ts": {
+    "fs": 63.25,
+    "qms": 2,
+    "qes": 0.53,
+    "vas_l": 3.96,
+    "re": 5.9,
+    "sd_cm2": 54.1,
+    "qts": 0.42,
+    "le_mh": 0.63,
+    "bl": 5.44,
+    "mms_g": 6.7,
+    "xmax_mm": 4.1,
+    "pe_w": 35
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1312/dsa115-8-4-designer-series-aluminum-cone-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-524--dayton-audio-DSA115-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published cutout 2377.4 is implausible, so it's left out. Published depth 1389.4 is implausible, so it's left out."
+}

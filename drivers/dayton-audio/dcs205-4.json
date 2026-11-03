@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DCS205-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 32.3,
+    "qms": 6.28,
+    "qes": 0.4,
+    "vas_l": 27,
+    "re": 3.9,
+    "sd_cm2": 213.8,
+    "qts": 0.37,
+    "le_mh": 1.78,
+    "bl": 10.7,
+    "mms_g": 57.7,
+    "xmax_mm": 8.8,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 180,
+    "depth_mm": 107.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/37/dcs205-4-8-classic-subwoofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-200-dayton-audio-dcs205-4-specifications-46584.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

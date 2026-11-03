@@ -1,0 +1,37 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DMA80-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 3,
+  "ts": {
+    "fs": 97.6,
+    "qms": 2.06,
+    "qes": 0.61,
+    "vas_l": 1.4,
+    "re": 7.5,
+    "sd_cm2": 31.2,
+    "qts": 0.47,
+    "le_mh": 0.5,
+    "bl": 5.1,
+    "mms_g": 2.7,
+    "xmax_mm": 2.5,
+    "pe_w": 25
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1619/dma80-8-3-dual-magnet-aluminum-cone-full-range-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-587--dayton-audio-dma80-8-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 1.1 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 1.4 L from Cms."
+}

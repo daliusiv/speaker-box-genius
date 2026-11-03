@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RS225P-4A",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 37.7,
+    "qms": 1.85,
+    "qes": 0.48,
+    "vas_l": 45.8,
+    "re": 3.3,
+    "sd_cm2": 213.8,
+    "qts": 0.38,
+    "le_mh": 0.51,
+    "bl": 6.4,
+    "mms_g": 25,
+    "xmax_mm": 6,
+    "pe_w": 80
+  },
+  "physical": {
+    "cutout_mm": 184,
+    "depth_mm": 84
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1226/rs225p-4a-8-reference-paper-woofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-567--dayton-audio-rs225p-4a-reference-series-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

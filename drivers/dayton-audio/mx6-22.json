@@ -1,0 +1,42 @@
+{
+  "brand": "Dayton Audio",
+  "model": "MX6-22",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 30,
+    "qms": 2.99,
+    "qes": 0.37,
+    "vas_l": 10,
+    "re": 4.7,
+    "sd_cm2": 126.3,
+    "qts": 0.33,
+    "le_mh": 1.5,
+    "bl": 12.3,
+    "mms_g": 63.8,
+    "xmax_mm": 12,
+    "pe_w": 70
+  },
+  "physical": {
+    "cutout_mm": 141.5,
+    "depth_mm": 101
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2153/mx6-22-6-1-2-max-x-high-excursion-dvc-subwoofer-driver-2-ohms-per-coil",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-744--dayton-audio-MX6-22-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series"
+}

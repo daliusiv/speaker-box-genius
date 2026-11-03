@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "MB820-8",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 69,
+    "qms": 3.83,
+    "qes": 0.52,
+    "vas_l": 21.3,
+    "re": 5.26,
+    "sd_cm2": 244.24,
+    "qts": 0.46,
+    "le_mh": 1.04,
+    "bl": 9.6,
+    "mms_g": 20.9,
+    "xmax_mm": 4,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 181.1,
+    "depth_mm": 91.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1808/mb820-8-8-professional-high-power-midbass-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-636--dayton-audio-mb820-8-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 15.77 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 21.3 L from Cms."
+}

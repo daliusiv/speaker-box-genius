@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RSS210HO-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 29.6,
+    "qms": 3.33,
+    "qes": 0.46,
+    "vas_l": 18.7,
+    "re": 3.6,
+    "sd_cm2": 213.8,
+    "qts": 0.4,
+    "le_mh": 0.99,
+    "bl": 12,
+    "mms_g": 99.3,
+    "xmax_mm": 11,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 185,
+    "depth_mm": 126
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1097/rss210ho-4-8-reference-ho-subwoofer-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-458-dayton-audio-rss210ho-4-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

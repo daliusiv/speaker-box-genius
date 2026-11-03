@@ -1,0 +1,36 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DMA80-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 3,
+  "ts": {
+    "fs": 93.5,
+    "qms": 1.97,
+    "qes": 0.51,
+    "vas_l": 1.4,
+    "re": 4,
+    "sd_cm2": 31.2,
+    "qts": 0.41,
+    "le_mh": 0.2,
+    "bl": 3.7,
+    "mms_g": 3.02,
+    "xmax_mm": 2.5,
+    "pe_w": 25
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1618/dma80-4-3-dual-magnet-aluminum-cone-full-range-driver-4-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-586--dayton-audio-dma80-4-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

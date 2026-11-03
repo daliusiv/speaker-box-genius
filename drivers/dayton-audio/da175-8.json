@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DA175-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 7,
+  "ts": {
+    "fs": 39,
+    "qms": 3.31,
+    "qes": 0.7,
+    "vas_l": 16.3,
+    "re": 5.9,
+    "sd_cm2": 132.7,
+    "qts": 0.58,
+    "le_mh": 1.14,
+    "bl": 7.17,
+    "mms_g": 25.17,
+    "xmax_mm": 4.25,
+    "pe_w": 50
+  },
+  "physical": {
+    "cutout_mm": 144,
+    "depth_mm": 81.1
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/11/da175-8-7-aluminum-cone-woofer",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-335-dayton-audio-da175-8-specifications-46154.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

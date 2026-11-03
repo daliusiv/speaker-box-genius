@@ -1,0 +1,41 @@
+{
+  "brand": "Dayton Audio",
+  "model": "PCS175-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 56,
+    "qms": 3,
+    "qes": 1.15,
+    "vas_l": 15.1,
+    "re": 6.6,
+    "sd_cm2": 143,
+    "qts": 0.83,
+    "le_mh": 1.25,
+    "bl": 5.6,
+    "mms_g": 15.5,
+    "xmax_mm": 2.25,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 146.05,
+    "depth_mm": 69.85
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2204/pcs175-8-6-1-2-poly-cone-woofer-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-668--dayton-audio-pcs175-8-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 0.523 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 15.1 L from Cms."
+}

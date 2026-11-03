@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "Apollo 15LF",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 25.5,
+    "qms": 6.7,
+    "qes": 0.27,
+    "vas_l": 331.3,
+    "re": 6.4,
+    "sd_cm2": 837.4,
+    "qts": 0.26,
+    "le_mh": 1.74,
+    "bl": 21.1,
+    "mms_g": 117,
+    "xmax_mm": 9.25,
+    "pe_w": 700
+  },
+  "physical": {
+    "cutout_mm": 356,
+    "depth_mm": 178
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/2005/pro-15-in-8-ohm-subwoofer-odeum-15lf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-648--dayton-audio-odeum-apollo-15lf-spec-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Check the model name: the page's Model Number field says Apollo 15LF, but the product title is \"Pro 15 in. 8 Ohm Subwoofer Odeum 15LF\"."
+}

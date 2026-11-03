@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DA215-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 34.9,
+    "qms": 1.95,
+    "qes": 0.45,
+    "vas_l": 42.7,
+    "re": 6.8,
+    "sd_cm2": 211.2,
+    "qts": 0.37,
+    "le_mh": 1.44,
+    "bl": 10,
+    "mms_g": 30.3,
+    "xmax_mm": 5.3,
+    "pe_w": 60
+  },
+  "physical": {
+    "cutout_mm": 180,
+    "depth_mm": 94.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/12/da215-8-8-aluminum-cone-woofer",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-332-dayton-audio-da215-8-specifications-46942%20(2).pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

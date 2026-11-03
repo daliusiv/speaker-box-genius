@@ -1,0 +1,40 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DS270-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 31.6,
+    "qms": 2.4,
+    "qes": 0.54,
+    "vas_l": 87.7,
+    "re": 5.4,
+    "sd_cm2": 353,
+    "qts": 0.44,
+    "le_mh": 1.25,
+    "bl": 10.1,
+    "mms_g": 51.5,
+    "xmax_mm": 5.5,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 227,
+    "depth_mm": 112
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1058/ds270-8-10-designer-series-woofer-speaker-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-432--dayton-audio-ds270-8-specifications.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}

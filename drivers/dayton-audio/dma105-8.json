@@ -1,0 +1,36 @@
+{
+  "brand": "Dayton Audio",
+  "model": "DMA105-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 4,
+  "ts": {
+    "fs": 72,
+    "qms": 2.64,
+    "qes": 0.83,
+    "vas_l": 4.2,
+    "re": 7.5,
+    "sd_cm2": 54.1,
+    "qts": 0.63,
+    "le_mh": 0.6,
+    "bl": 4.5,
+    "mms_g": 4.9,
+    "xmax_mm": 2.5,
+    "pe_w": 35
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/product/1623/dma105-8-4-dual-magnet-aluminum-cone-full-range-driver-8-ohm",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio product page specifications, used with Dayton Audio's permission (3 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.daytonaudio.com/images/resources/295-591--dayton-audio-dma105-8-specification-sheet.pdf",
+      "retrieved": "2026-11-03",
+      "note": "Dayton Audio specification sheet (PDF)."
+    }
+  ],
+  "status": "community"
+}
