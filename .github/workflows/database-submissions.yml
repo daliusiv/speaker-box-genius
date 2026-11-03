@@ -73,4 +73,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           NUMBER: ${{ github.event.issue.number }}
           PR: ${{ steps.pr.outputs.pull-request-number }}
-        run: gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body "Thanks! I've opened #$PR with this entry. A maintainer will check it against the datasheet and merge it."
+        # Block scalar: in a plain YAML value, " #" would start a comment and cut the command short.
+        run: |
+          gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" \
+            --body "Thanks! I've opened #$PR with this entry. A maintainer will check it against the datasheet and merge it."
