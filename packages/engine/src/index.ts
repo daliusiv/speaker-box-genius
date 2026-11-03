@@ -13,3 +13,4 @@ export * from "./wdr.ts";
 export * from "./alignments.ts";
 export * from "./impedance.ts";
 export * from "./roomgain.ts";
+export * from "./prfinder.ts";
