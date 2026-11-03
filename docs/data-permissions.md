@@ -18,3 +18,4 @@ Manufacturers who have given permission for their published data to be used in t
 - Link every entry to the manufacturer's page or spec sheet in `sources`.
 - Never import from other aggregated databases (loudspeakerdatabase.com, speakerboxlite.com, etc.) unless they are published under a licence that allows it and is compatible with CC BY-NC-SA (CC0, CC BY, CC BY-SA, public domain), and then credit them as the licence requires. Currently: driver-base (CC BY 4.0), see [`data-sources.md`](data-sources.md).
 - A brand that grants permission directly is imported from its own pages, not through driver-base.
+- Act on manufacturer correction or removal requests (the `data-request` issue form) promptly, normally within 7 days.
