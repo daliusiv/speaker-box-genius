@@ -1,0 +1,39 @@
+name: Driver data correction or removal
+description: For manufacturers and anyone who spots wrong driver data. Ask for a correction or for entries to be removed.
+title: "Data request: "
+labels: ["data-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for getting in touch. Manufacturer requests to correct or remove their data are handled promptly, normally within 7 days. If you'd rather not post publicly, say so here and leave a way to reach you, and we'll continue privately.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What would you like?
+      options:
+        - Correct values for a driver
+        - Remove one or more drivers
+        - Remove all of a brand's drivers
+        - Something else
+    validations:
+      required: true
+  - type: input
+    id: who
+    attributes:
+      label: Who you are
+      description: e.g. "Product manager at <brand>", or "a user who noticed an error".
+    validations:
+      required: true
+  - type: textarea
+    id: entries
+    attributes:
+      label: Which drivers
+      description: Brand and model, or the page address in the app's driver database (e.g. drivers/18-sound/15nd840).
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: For corrections, the right values and where they're published (a link to the datasheet is ideal).

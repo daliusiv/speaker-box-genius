@@ -1186,7 +1186,7 @@ export function App(props: { initial: AppState | null }) {
 
         <footer className="muted">
           Small-signal lumped model: no voice-coil or port compression, no Bl/Cms non-linearity. Box losses Ql{" "}
-          {state.settings.losses.ql}, Qa {state.settings.losses.qa}, Qp {state.settings.losses.qp}. Free for non-commercial use · <a href={`${REPO}/blob/main/LICENSE`}>Licence</a> · <a href={`${REPO}/blob/main/docs/data-sources.md`}>Driver data credits</a> · <a href={REPO}>GitHub</a>
+          {state.settings.losses.ql}, Qa {state.settings.losses.qa}, Qp {state.settings.losses.qp}. Free for non-commercial use · <a href={`${REPO}/blob/main/LICENSE`}>Licence</a> · <a href={`${REPO}/blob/main/docs/data-sources.md`}>Driver data: credits, corrections</a> · <a href={REPO}>GitHub</a>
           {" · "}
           <a href={reportUrl(shareUrl())} target="_blank" rel="noopener">
             Report a problem

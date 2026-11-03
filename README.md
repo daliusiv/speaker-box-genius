@@ -15,7 +15,7 @@
 - **High-pass filter, Linkwitz Transform and EQ**, alignment presets (Qtc 0.5–0.707, QB3/B4), port fit and chuffing checks
 - **Metric or imperial**, and a WinISD mode (air constants, peak/RMS port speed) for like-for-like comparisons
 - **Shareable links**: the whole simulation lives in the URL. **Share** gives you a forum image plus ready-to-paste Reddit / diyAudio text, and CSV of every curve
-- **A community driver database** that lives right here in the repo: about 1,340 drivers from 15 brands (sources and credits in [`docs/data-sources.md`](docs/data-sources.md))
+- **A community driver database** that lives right here in the repo: about 1,340 drivers from 15 brands (sources and credits in [`docs/data-sources.md`](docs/data-sources.md)). Not affiliated with or endorsed by any manufacturer; [ask for a correction or removal](../../issues/new?template=data-correction.yml)
 
 Everything runs in your browser. No accounts, no server, works offline.
 

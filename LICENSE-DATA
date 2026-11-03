@@ -22,7 +22,9 @@ SPDX-License-Identifier: CC-BY-NC-SA-4.0
 
 Note on manufacturer data: Thiele/Small parameters published by
 manufacturers are factual specifications. Each record links to its
-original source. Trademarks and product names belong to their owners.
+original source. Trademarks and product names belong to their owners;
+this project is not affiliated with or endorsed by any manufacturer.
+Corrections and removal requests: see docs/data-sources.md.
 
 Third-party data: many entries in drivers/ come from driver-base
 (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0
