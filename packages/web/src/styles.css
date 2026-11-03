@@ -1010,8 +1010,11 @@ a.button-link {
     z-index: 1;
     background: var(--card);
     text-align: left;
-    max-width: 9rem;
-    white-space: normal;
+    /* One line, colour square beside the name; long names end in "…" (full name on hover). */
+    max-width: 8.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .swipe-hint {
@@ -1388,6 +1391,16 @@ figure.chart[hidden] {
 
   .top-actions > :nth-child(4) {
     grid-area: share;
+  }
+
+  /* No room in the two-row header: phones install from the Projects menu instead. */
+  .top-actions > .install-button {
+    display: none;
+  }
+
+  .top-actions > .offline-badge {
+    grid-column: 1 / -1;
+    justify-self: start;
   }
 
   .power {

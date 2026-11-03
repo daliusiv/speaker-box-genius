@@ -8,7 +8,7 @@ import {
   type HighPassType,
   type SimulationResult,
 } from "@sbg/engine";
-import { CrosshairProvider, LogChart, type Series } from "./LogChart.tsx";
+import { CrosshairProvider, LogChart, shortName, type Series } from "./LogChart.tsx";
 import { useUndoable } from "./useUndoable.ts";
 import { sizeAllForDriver } from "./presets.ts";
 import { initialPanel, PanelTabs, rememberPanel, TabRow, type PanelId } from "./PanelTabs.tsx";
@@ -26,7 +26,7 @@ import {
 import { loadDriver, loadIndex, type DbIndex } from "./library.ts";
 import { Card, Num, REPO, Select } from "./components.tsx";
 import { DriverBrowser } from "./Library.tsx";
-import { PwaStatus } from "./Pwa.tsx";
+import { PwaStatus, usePwa } from "./Pwa.tsx";
 import { GettingStarted, LinkNote, useWelcome } from "./Welcome.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { DriverMenu } from "./DriverMenu.tsx";
@@ -168,6 +168,7 @@ export function App(props: { initial: AppState | null }) {
     window.scrollTo({ top: 0 });
   };
   const welcome = useWelcome();
+  const pwa = usePwa();
 
   useEffect(() => {
     loadIndex().then(setDb, () => setDb(null));
@@ -541,6 +542,7 @@ export function App(props: { initial: AppState | null }) {
             </button>
           </div>
           <ProjectsMenu
+            install={pwa.install}
             state={state}
             onOpen={(s) => {
               setStep(s);
@@ -548,7 +550,7 @@ export function App(props: { initial: AppState | null }) {
             }}
           />
           <ShareMenu state={state} designs={designs} shareUrl={shareUrl} />
-          <PwaStatus />
+          <PwaStatus pwa={pwa} />
         </div>
       </header>
 
@@ -1202,7 +1204,7 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
               <tr key={d.id}>
                 <th>
                   <span className="swatch" style={{ background: color }} aria-hidden="true" />
-                  {d.name}
+                  <span title={d.name}>{shortName(d.name)}</span>
                 </th>
                 <td>
                   {fmtQ(vb_l, "vol", state.settings.units)}

@@ -31,7 +31,12 @@ function writeSaved(list: Saved[]): boolean {
 
 const fileName = (s: string) => s.replace(/[^\w.-]+/g, " ").trim() || "speaker-box";
 
-export function ProjectsMenu(props: { state: AppState; onOpen: (s: AppState) => void }) {
+export function ProjectsMenu(props: {
+  state: AppState;
+  onOpen: (s: AppState) => void;
+  /** Set while the browser offers to install the app. */
+  install?: (() => Promise<void>) | null;
+}) {
   const [open, setOpen] = useState(false);
   const [saved, setSaved] = useState<Saved[]>(readSaved);
   const [msg, setMsg] = useState("");
@@ -155,6 +160,20 @@ export function ProjectsMenu(props: { state: AppState; onOpen: (s: AppState) => 
               e.currentTarget.value = "";
             }}
           />
+          {props.install && (
+            <>
+              <hr />
+              <button
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false);
+                  props.install?.();
+                }}
+              >
+                Install as an app
+              </button>
+            </>
+          )}
           <p className="hint">Browser saves stay on this device. Project files and share links work anywhere.</p>
         </div>
       )}

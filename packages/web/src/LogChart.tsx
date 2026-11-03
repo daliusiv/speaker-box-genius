@@ -89,8 +89,8 @@ function niceStep(range: number): number {
   return (n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10) * mag;
 }
 
-/** Shorter names for the floating values box, so it covers less of the plot. */
-const tipLabel = (label: string) => label.replace(/passive radiators?/gi, "PR").replace(/\bPRs?:/g, "PR:");
+/** Shorter design names where space is tight (the values box, the summary table): "Passive radiators" → "PR". */
+export const shortName = (label: string) => label.replace(/passive radiators?/gi, "PR").replace(/\bPRs?:/g, "PR:");
 
 /** Line chart with a logarithmic frequency axis, horizontal limit lines and a hover readout. */
 export function LogChart({
@@ -265,7 +265,7 @@ export function LogChart({
           {visible.map((s) => (
             <span key={s.label} className="readout-item">
               <span className="swatch" style={{ background: s.color }} aria-hidden="true" />
-              <span className="tip-label">{tipLabel(s.label)}</span>
+              <span className="tip-label">{shortName(s.label)}</span>
               <span className="tip-value">
                 {Number.isFinite(s.y![hover!]!) ? s.y![hover!]!.toFixed(digits) : "–"} {unit}
                 {s.notes?.[hover!] ? ` · ${s.notes[hover!]}` : ""}
