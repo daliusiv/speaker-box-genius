@@ -66,3 +66,35 @@ test("bandpass impedance and excursion respond to both tunings (6th order)", () 
   assert.ok(Math.abs(minNear(fr) / fr - 1) < 0.2, `rear dip ${minNear(fr)} vs ${fr}`);
   assert.ok(r.portVelocity && r.rearPortVelocity);
 });
+
+test("each chamber's losses act on that chamber: a transparent front leaves the rear's losses = a plain box's", () => {
+  const losses = { ql: 5, qa: 15, qp: 30 };
+  const rp = port(7.5, 30);
+  const cases = [
+    { bp: { vb_l: 20, ql: losses.ql, qa: losses.qa }, box: { kind: "sealed" as const, vb_l: 20, ql: losses.ql, qa: losses.qa } },
+    { bp: { vb_l: 25, port: rp, ...losses }, box: { kind: "vented" as const, vb_l: 25, port: rp, ...losses } },
+  ];
+  for (const { bp, box } of cases) {
+    const a = simulate(drv, { kind: "bandpass", rear: bp, front: open, qicl: Infinity }, opts);
+    const b = simulate(drv, box, opts);
+    assert.ok(maxDiff(a.spl, b.spl) < 0.015, `${box.kind}: SPL ${maxDiff(a.spl, b.spl)}`);
+    assert.ok(maxRel(a.impedanceOhm, b.impedanceOhm) < 0.005, `${box.kind}: Z ${maxRel(a.impedanceOhm, b.impedanceOhm)}`);
+    // …and they really are in effect: the default losses give a different answer.
+    const dflt = simulate(drv, { kind: "bandpass", rear: { ...bp, ql: undefined, qa: undefined, qp: undefined }, front: open, qicl: Infinity }, opts);
+    assert.ok(maxDiff(a.spl, dflt.spl) > 0.3, `${box.kind}: losses changed nothing`);
+  }
+});
+
+test("front chamber losses change a 4th-order bandpass only through the front chamber", () => {
+  const fp = port(7.5, 20);
+  const base = { kind: "bandpass" as const, rear: { vb_l: 15 }, front: { vb_l: 20, port: fp } };
+  const ref = simulate(drv, base, opts);
+  const stuffedFront = simulate(drv, { ...base, front: { ...base.front, qa: 5 } }, opts);
+  const leakyRear = simulate(drv, { ...base, rear: { vb_l: 15, ql: 3 } }, opts);
+  // Stuffing the front lowers the peak around the front tuning.
+  const peak = (r: typeof ref) => Math.max(...r.spl);
+  assert.ok(peak(stuffedFront) < peak(ref) - 0.5, `${peak(stuffedFront)} vs ${peak(ref)}`);
+  // A leaky rear chamber mostly costs output below the passband, as in a sealed box.
+  assert.ok(leakyRear.spl[0]! < ref.spl[0]!);
+  assert.ok(maxDiff(stuffedFront.spl, leakyRear.spl) > 0.3);
+});

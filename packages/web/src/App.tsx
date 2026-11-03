@@ -181,6 +181,9 @@ export function App() {
               frontVb_l: Number(b.front.vb_l.toFixed(3)),
               front: portFrom(b.front.port, b.front.fb, bd.front),
               rear: b.rear.port ? portFrom(b.rear.port, b.rear.fb, bd.rear) : bd.rear,
+              // Shared losses (Settings) take the front chamber's values; the design keeps its own
+              // only when the chambers differ or the leak between them isn't WinISD's default.
+              losses: bandpassOwnLosses(b) ? { front: lossesOf(b.front), rear: lossesOf(b.rear), qicl: b.qicl } : null,
             };
           }
         } else if (p.box.vb_l > 0) {
@@ -228,9 +231,11 @@ export function App() {
       });
       const lossSrc = p.bandpass?.front ?? p.box;
       const lossNote =
-        lossSrc.ql !== 10 || lossSrc.qa !== 100 || lossSrc.qp !== 100
-          ? ` Box losses set to the project's Ql ${lossSrc.ql}, Qa ${lossSrc.qa}, Qp ${lossSrc.qp}.`
-          : "";
+        p.bandpass && bandpassOwnLosses(p.bandpass)
+          ? ` The bandpass keeps the project's own losses for each chamber (Front Ql ${p.bandpass.front.ql}, Qa ${p.bandpass.front.qa}, Qp ${p.bandpass.front.qp}; Rear Ql ${p.bandpass.rear.ql}, Qa ${p.bandpass.rear.qa}, Qp ${p.bandpass.rear.qp}; baffle leak ${p.bandpass.qicl}).`
+          : lossSrc.ql !== 10 || lossSrc.qa !== 100 || lossSrc.qp !== 100
+            ? ` Box losses set to the project's Ql ${lossSrc.ql}, Qa ${lossSrc.qa}, Qp ${lossSrc.qp}.`
+            : "";
       const boxNote = p.box.type === "other" ? " This box type isn't supported yet, so only the driver was imported." : "";
       const driversNote =
         p.drivers > 1 && !p.isobaric
@@ -596,6 +601,7 @@ export function App() {
             align={alignmentDriver(solved, state)}
             drivers={state.drivers}
             portCtx={portContext(state, designs, d.id)}
+            losses={state.settings.losses}
             onChange={updateDesign}
             onDuplicate={() => duplicateDesign(d)}
             onDelete={() => deleteDesign(d)}
@@ -677,7 +683,7 @@ export function App() {
           </div>
           <p className="hint">
             Box losses are Q values at the tuning frequency: lower means more loss. 10 / 100 / 100 matches WinISD's
-            defaults. For like-for-like checks against WinISD,
+            defaults. A bandpass can also set its own losses for each chamber. For like-for-like checks against WinISD,
             choose its air values, its amplifier resistance (Signal tab, Rg) and leave out Le, or simply import the
             WinISD project (.wpr). The {PORT_LIMIT} m/s chuffing line applies to
             whichever port-speed convention you pick.
@@ -895,4 +901,11 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
       </p>
     </div>
   );
+}
+
+type WprChamberLosses = { ql: number; qa: number; qp: number };
+const lossesOf = (c: WprChamberLosses) => ({ ql: c.ql, qa: c.qa, qp: c.qp });
+/** Does a WinISD bandpass need per-chamber losses (chambers differ, or a non-default leak between them)? */
+function bandpassOwnLosses(b: { front: WprChamberLosses; rear: WprChamberLosses; qicl: number }): boolean {
+  return b.front.ql !== b.rear.ql || b.front.qa !== b.rear.qa || b.front.qp !== b.rear.qp || b.qicl !== 100;
 }

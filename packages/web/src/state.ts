@@ -81,7 +81,25 @@ export interface BandpassDesign extends DesignBase {
   /** Passive radiator groups used when that chamber's opening is "pr" (at least one). */
   frontPrs: PrGroupState[];
   rearPrs: PrGroupState[];
+  /** Box losses for each chamber, or null to use the ones in Settings (and WinISD's 100 between the chambers). */
+  losses: BandpassLosses | null;
 }
+
+export interface ChamberLosses {
+  ql: number;
+  qa: number;
+  qp: number;
+}
+
+export interface BandpassLosses {
+  front: ChamberLosses;
+  rear: ChamberLosses;
+  /** Leakage between the chambers, as a Q referred to the driver (WinISD's Qiclfr, default 100). */
+  qicl: number;
+}
+
+/** Per-chamber losses starting from the shared ones. */
+export const bandpassLossesFrom = (l: ChamberLosses): BandpassLosses => ({ front: { ...l }, rear: { ...l }, qicl: 100 });
 
 export type DesignState = SealedDesign | VentedDesign | PrDesign | BandpassDesign;
 
@@ -212,6 +230,7 @@ export function newDesign(kind: DesignKind, existing: DesignState[]): DesignStat
         rearOpening: "port",
         frontPrs: [{ prName: "Example Audio EX10-PR (fictional)", count: 1, addedMass_g: 0, params: { ...EXAMPLE_PR } }],
         rearPrs: [{ prName: "Example Audio EX10-PR (fictional)", count: 1, addedMass_g: 0, params: { ...EXAMPLE_PR } }],
+        losses: null,
       };
     case "pr":
       return {
@@ -340,6 +359,16 @@ function migrate(raw: Raw): Raw {
   return raw;
 }
 
+const qOr = (v: unknown, fallback: number) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : fallback);
+
+/** Per-chamber bandpass losses from a share link or saved project; null (use Settings) if absent. */
+function bandpassLossesOf(raw: unknown): BandpassLosses | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Raw;
+  const ch = (c: Raw | undefined): ChamberLosses => ({ ql: qOr(c?.ql, 10), qa: qOr(c?.qa, 100), qp: qOr(c?.qp, 100) });
+  return { front: ch(r.front), rear: ch(r.rear), qicl: qOr(r.qicl, 100) };
+}
+
 /** Passive radiator groups from a share link or saved project, with anything odd fixed. */
 function prGroupsFrom(raw: unknown): PrGroupState[] {
   if (!Array.isArray(raw)) return [];
@@ -372,6 +401,7 @@ function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
     const rp = prGroupsFrom(d.rearPrs);
     merged.frontPrs = fp.length ? fp : b.frontPrs;
     merged.rearPrs = rp.length ? rp : b.rearPrs;
+    merged.losses = bandpassLossesOf(d.losses);
   }
   if (typeof merged.id !== "string" || all.some((x) => x.id === merged.id)) merged.id = base.id;
   return merged;

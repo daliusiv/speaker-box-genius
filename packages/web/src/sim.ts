@@ -159,21 +159,26 @@ function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"]): En
         ql,
         qa,
       };
-    case "bandpass":
+    case "bandpass": {
+      // Each chamber has its own losses when the design sets them; otherwise both use Settings.
+      const fl = d.losses?.front ?? losses;
+      const rl = d.losses?.rear ?? losses;
       return {
         kind: "bandpass",
         rear:
           d.order === "4"
-            ? { vb_l: vb, ql, qa }
+            ? { vb_l: vb, ql: rl.ql, qa: rl.qa }
             : d.rearOpening === "pr"
-              ? { vb_l: vb, prs: groupsOf(d.rearPrs), ql, qa }
-              : { vb_l: vb, port: portOf(d.rear), portCount: d.rear.count, ql, qa, qp },
+              ? { vb_l: vb, prs: groupsOf(d.rearPrs), ql: rl.ql, qa: rl.qa }
+              : { vb_l: vb, port: portOf(d.rear), portCount: d.rear.count, ...rl },
         front:
           d.frontOpening === "pr"
-            ? { vb_l: d.frontVb_l, prs: groupsOf(d.frontPrs), ql, qa }
-            : { vb_l: d.frontVb_l, port: portOf(d.front), portCount: d.front.count, ql, qa, qp },
+            ? { vb_l: d.frontVb_l, prs: groupsOf(d.frontPrs), ql: fl.ql, qa: fl.qa }
+            : { vb_l: d.frontVb_l, port: portOf(d.front), portCount: d.front.count, ...fl },
         rearPortTo: d.order === "6s" ? "front" : "outside",
+        qicl: d.losses?.qicl ?? 100,
       };
+    }
   }
 }
 

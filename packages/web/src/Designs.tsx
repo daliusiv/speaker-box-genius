@@ -17,9 +17,12 @@ import { PassiveRadiatorBrowser } from "./Library.tsx";
 import { loadPassiveRadiator, type DbIndex } from "./library.ts";
 import { KIND_LABEL, PORT_LIMIT, portOf, prGroupsOf } from "./sim.ts";
 import { useUnits } from "./units.ts";
+import { bandpassLossesFrom } from "./state.ts";
 import type {
   BandpassDesign,
+  BandpassLosses,
   BandpassOrder,
+  ChamberLosses,
   ChamberOpening,
   DesignKind,
   DesignState,
@@ -635,7 +638,67 @@ const OPENINGS: { value: ChamberOpening; text: string }[] = [
   { value: "pr", text: "Passive radiators" },
 ];
 
-function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; db: DbIndex | null }) {
+/**
+ * Box losses for a bandpass: the shared values from Settings, or each chamber's own.
+ * Qp only shows for a chamber that opens through a port.
+ */
+function BandpassLossesEditor(p: {
+  losses: BandpassLosses | null;
+  shared: ChamberLosses;
+  frontPort: boolean;
+  /** null: closed rear chamber (4th order). */
+  rearPort: boolean | null;
+  onChange: (l: BandpassLosses | null) => void;
+}) {
+  const l = p.losses;
+  const chamber = (which: "front" | "rear", label: string, port: boolean) => {
+    const c = l![which];
+    const setC = (patch: Partial<ChamberLosses>) => p.onChange({ ...l!, [which]: { ...c, ...patch } });
+    return (
+      <>
+        <Num label={`${label} Ql`} value={c.ql} onChange={(ql) => setC({ ql })} title="Leakage: lower means a leakier chamber" />
+        <Num label={`${label} Qa`} value={c.qa} onChange={(qa) => setC({ qa })} title="Absorption: lower means more stuffing" />
+        {port && <Num label={`${label} Qp`} value={c.qp} onChange={(qp) => setC({ qp })} title="Port friction: lower means a lossier port" />}
+      </>
+    );
+  };
+  return (
+    <>
+      <h3>Box losses</h3>
+      <div className="fields">
+        <Select<"shared" | "own">
+          label="Losses"
+          value={l ? "own" : "shared"}
+          options={[
+            { value: "shared", text: `Same as Settings (Ql ${p.shared.ql}, Qa ${p.shared.qa}, Qp ${p.shared.qp})` },
+            { value: "own", text: "Per chamber" },
+          ]}
+          onChange={(v) => p.onChange(v === "own" ? bandpassLossesFrom(p.shared) : null)}
+        />
+      </div>
+      {l && (
+        <>
+          <div className="fields">
+            {chamber("front", "Front", p.frontPort)}
+            {chamber("rear", "Rear", p.rearPort === true)}
+            <Num
+              label="Baffle Q"
+              value={l.qicl}
+              onChange={(qicl) => p.onChange({ ...l, qicl })}
+              title="Leakage between the chambers, around the driver and through the baffle (WinISD's Qiclfr)"
+            />
+          </div>
+          <p className="hint">
+            Q values at each chamber's tuning: lower means more loss. Stuffing one chamber lowers its Qa; a leaky rear
+            chamber lowers its Ql. Baffle Q is the leak between the chambers, around the driver and through the baffle (WinISD's default 100).
+          </p>
+        </>
+      )}
+    </>
+  );
+}
+
+function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; db: DbIndex | null; losses: ChamberLosses }) {
   const b = p.design;
   const set = (patch: Partial<BandpassDesign>) => p.onChange({ ...b, ...patch });
   const rearOpen = b.order !== "4";
@@ -704,6 +767,13 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
           " Passive radiators replace a port's air mass with a cone: no port noise, and a small box can tune low."}
         {p.linked && " The volume calculator feeds the rear chamber."}
       </p>
+      <BandpassLossesEditor
+        losses={b.losses}
+        shared={p.losses}
+        frontPort={b.frontOpening === "port"}
+        rearPort={rearOpen ? b.rearOpening === "port" : null}
+        onChange={(losses) => set({ losses })}
+      />
     </>
   );
 }
@@ -719,6 +789,8 @@ export function DesignCard(props: {
   align: AlignmentDriver | null;
   drivers: number;
   portCtx: PortContext;
+  /** Box losses from Settings (a bandpass can override them per chamber). */
+  losses: ChamberLosses;
   onChange: (d: DesignState) => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -745,7 +817,7 @@ export function DesignCard(props: {
       {d.kind === "sealed" && <SealedBody {...common} design={d} onChange={props.onChange} />}
       {d.kind === "vented" && <VentedBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} />}
       {d.kind === "bandpass" && (
-        <BandpassBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} db={props.db} />
+        <BandpassBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} db={props.db} losses={props.losses} />
       )}
       {d.kind === "pr" && (
         <PrBody {...common} design={d} onChange={props.onChange} db={props.db} onPrDisplacement={props.onPrDisplacement} />
