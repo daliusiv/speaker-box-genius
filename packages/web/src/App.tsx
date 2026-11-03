@@ -32,6 +32,7 @@ import { GettingStarted, LinkNote, useWelcome } from "./Welcome.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { DriverMenu } from "./DriverMenu.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
+import { BuildSheet } from "./BuildSheet.tsx";
 import {
   airOf,
   alignmentDriver,
@@ -260,7 +261,11 @@ export function App(props: { initial: AppState | null }) {
           (d.voiceCoils ?? 1) > 1
             ? { on: true, entered: d.raw.vccon === "2" ? "series" : "parallel", wired: d.raw.vccon === "2" ? "series" : "parallel" }
             : { ...s.dvc, on: false },
-        volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: Math.round(d.displacement_l * 100) / 100 } : s.volume,
+        volume: {
+          ...s.volume,
+          ...(d.displacement_l !== undefined ? { driverDisp_l: Math.round(d.displacement_l * 100) / 100 } : {}),
+          driverCutout_mm: 0,
+        },
       }));
       setWdrMsg(`Imported ${file.name}.`);
     } catch (e) {
@@ -378,7 +383,11 @@ export function App(props: { initial: AppState | null }) {
           },
           highPass: p.highPass ? { on: true, ...p.highPass } : { ...s.highPass, on: false },
           designs,
-          volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: Math.round(d.displacement_l * 100) / 100 } : s.volume,
+          volume: {
+          ...s.volume,
+          ...(d.displacement_l !== undefined ? { driverDisp_l: Math.round(d.displacement_l * 100) / 100 } : {}),
+          driverCutout_mm: 0,
+        },
         };
       });
       const lossSrc = p.bandpass?.front ?? p.box;
@@ -612,7 +621,11 @@ export function App(props: { initial: AppState | null }) {
                         r2_ohm: d.r2_ohm ?? 0,
                         xmax_mm: d.xmax_mm ?? s.xmax_mm,
                         pe_w: d.pe_w ?? s.pe_w,
-                        volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: d.displacement_l } : s.volume,
+                        volume: {
+                          ...s.volume,
+                          ...(d.displacement_l !== undefined ? { driverDisp_l: d.displacement_l } : {}),
+                          driverCutout_mm: d.cutout_mm ?? 0,
+                        },
                         // DVC drivers start wired the way their published values were measured.
                         dvc: d.dvcWiring
                           ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring }
@@ -665,6 +678,7 @@ export function App(props: { initial: AppState | null }) {
                     ...s,
                     driverName: "Pasted driver",
                     driverBrand: "",
+                    volume: { ...s.volume, driverCutout_mm: 0 },
                     ts,
                     le_mh: x.le_mh ?? s.le_mh,
                     l2_mh: 0,
@@ -884,12 +898,18 @@ export function App(props: { initial: AppState | null }) {
                 losses={state.settings.losses}
                 onDimensions={() => openDimensions(d)}
                 finder={finderCtx}
-                onFound={(d, patch, summary, displacement_l) => {
-                  // One undo step: the design and the PR's displacement for the volume calculator.
+                onFound={(d, patch, summary, physical) => {
+                  // One undo step: the design, and the PR's displacement and cutout for the volume calculator and build sheet.
                   setStep((s) => ({
                     ...s,
                     designs: s.designs.map((x) => (x.id === d.id ? ({ ...x, ...patch } as DesignState) : x)),
-                    volume: displacement_l !== undefined ? { ...s.volume, prDisp_l: displacement_l } : s.volume,
+                    volume: physical
+                      ? {
+                          ...s.volume,
+                          ...(physical.displacement_l !== undefined ? { prDisp_l: physical.displacement_l } : {}),
+                          prCutout_mm: physical.cutout_mm ?? 0,
+                        }
+                      : s.volume,
                   }));
                   notify(`“${d.name}” now uses ${summary}.`);
                 }}
@@ -904,7 +924,16 @@ export function App(props: { initial: AppState | null }) {
                 onChange={updateDesign}
                 onDuplicate={() => duplicateDesign(d)}
                 onDelete={() => deleteDesign(d)}
-                onPrDisplacement={(l) => setState((s) => ({ ...s, volume: { ...s.volume, prDisp_l: l } }))}
+                onPrPhysical={(x) =>
+                  setState((s) => ({
+                    ...s,
+                    volume: {
+                      ...s.volume,
+                      ...(x.displacement_l !== undefined ? { prDisp_l: x.displacement_l } : {}),
+                      prCutout_mm: x.cutout_mm ?? 0,
+                    },
+                  }))
+                }
               />
             ))}
             <AddDesign disabled={state.designs.length >= MAX_DESIGNS} onAdd={addDesign} />
@@ -947,6 +976,13 @@ export function App(props: { initial: AppState | null }) {
         {panel === "build" && (
           <div className="tab-panel" role="tabpanel" id="panel-build" aria-labelledby="tab-build">
             <VolumePanel state={state} onChange={(v) => set("volume", v)} />
+            <BuildSheet
+              state={state}
+              designs={designs}
+              driverName={state.driverName}
+              driverSd_cm2={finderCtx.driver?.sd_cm2}
+              onChange={(v) => set("volume", v)}
+            />
           </div>
         )}
         {panel === "settings" && (

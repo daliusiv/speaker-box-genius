@@ -115,6 +115,8 @@ export interface LoadedDriver {
   displacement_l?: number;
   /** DVC drivers: the wiring the published T/S values were measured with. */
   dvcWiring?: "series" | "parallel";
+  /** Baffle cutout (mm), if the database has it. */
+  cutout_mm?: number;
   /** Where the values came from, for the credit line under the driver name. */
   source?: { url?: string; via?: "driver-base" };
 }
@@ -146,6 +148,7 @@ export async function loadDriver(id: string): Promise<LoadedDriver> {
     pe_w: rec.ts.pe_w,
     displacement_l: displacementOf(rec.physical),
     dvcWiring: rec.voice_coils === 2 ? (rec.ts_wiring ?? "parallel") : undefined,
+    cutout_mm: rec.physical?.cutout_mm,
     source: sourceOf(rec.sources),
   };
 }

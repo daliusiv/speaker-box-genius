@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { driveLabel, PORT_LIMIT, prGroupLabels, prPeak, type Design } from "./sim.ts";
 import { REPO } from "./components.tsx";
 import { fmtQ } from "./units.ts";
-import type { AppState } from "./state.ts";
+import { encodeStateShort, type AppState } from "./state.ts";
+import { drawQr } from "./qrDraw.ts";
 
 const SITE = "daliusiv.github.io/speaker-box-genius";
 
@@ -189,7 +190,7 @@ function loadImage(svgText: string): Promise<HTMLImageElement> {
   });
 }
 
-export async function renderForumImage(state: AppState, designs: Design[]): Promise<Blob> {
+export async function renderForumImage(state: AppState, designs: Design[], url?: string): Promise<Blob> {
   const css = getComputedStyle(document.documentElement);
   const col = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
   const bg = col("--bg", "#f5f5f4");
@@ -222,13 +223,31 @@ export async function renderForumImage(state: AppState, designs: Design[]): Prom
   g.fillStyle = bg;
   g.fillRect(0, 0, W, H);
 
-  // Header
+  // Header, with a QR code to the live design in the top-right corner.
+  const qr = 170;
+  if (url) {
+    try {
+      g.fillStyle = "#fff";
+      g.beginPath();
+      g.roundRect(W - pad - qr - 8, 16, qr + 16, qr + 36, 12);
+      g.fill();
+      drawQr(g, url, W - pad - qr, 20, qr, scale);
+      g.fillStyle = "#1c1917";
+      g.font = `600 15px ${font}`;
+      g.textAlign = "center";
+      g.fillText("Scan: live design", W - pad - qr / 2, 20 + qr + 22);
+      g.textAlign = "left";
+    } catch {
+      // Too long for a QR code: the link in the post still works.
+    }
+  }
   g.fillStyle = fg;
   g.font = `700 34px ${font}`;
-  g.fillText(state.driverName, pad, 58);
+  const textW = W - 2 * pad - (url ? qr + 40 : 0);
+  g.fillText(state.driverName, pad, 58, textW);
   g.fillStyle = muted;
   g.font = `400 20px ${font}`;
-  g.fillText(`${subtitle(state)} · 1 m, half space`, pad, 92);
+  g.fillText(`${subtitle(state)} · 1 m, half space`, pad, 92, textW);
 
   // Summary table
   const colX = [pad, pad + 380, pad + 540, pad + 700, pad + 860, pad + 1040, pad + 1220];
@@ -272,7 +291,7 @@ export async function renderForumImage(state: AppState, designs: Design[]): Prom
   // Footer
   g.fillStyle = muted;
   g.font = `400 18px ${font}`;
-  g.fillText(`Live, editable simulation (link in post): ${SITE}`, pad, H - 20);
+  g.fillText(`Live, editable simulation: ${url ? "scan the code or use " : ""}the link in the post · ${SITE}`, pad, H - 20);
   g.textAlign = "right";
   g.fillText("Made with Speaker Box Genius", W - pad, H - 20);
 
@@ -327,7 +346,9 @@ export function ShareMenu(props: { state: AppState; designs: Design[]; shareUrl:
     if (props.designs.length === 0) return flash("Nothing to export yet");
     flash("Rendering image…");
     try {
-      const blob = await renderForumImage(props.state, props.designs);
+      // Always the short link: it keeps the QR code small enough to scan from a forum post.
+      const live = location.origin + location.pathname + "#" + (await encodeStateShort(props.state));
+      const blob = await renderForumImage(props.state, props.designs, live);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
