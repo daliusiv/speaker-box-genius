@@ -830,6 +830,11 @@ button:disabled {
   box-shadow: 0 8px 24px rgb(0 0 0 / 0.15);
 }
 
+.share-menu.menu-left {
+  right: auto;
+  left: 0;
+}
+
 .share-menu .menu-link {
   display: block;
   padding: 0.45rem 0.9rem;

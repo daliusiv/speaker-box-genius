@@ -47,8 +47,11 @@ export function TsEditor(props: {
   solved: SolveResult;
   onChange: (ts: TsValues) => void;
   onPaste: (ts: TsValues, extras: Extras) => void;
+  /** The datasheet paste box is opened from the driver card's menu. */
+  pasting: boolean;
+  onPastingChange: (open: boolean) => void;
 }) {
-  const [pasting, setPasting] = useState(false);
+  const { pasting, onPastingChange: setPasting } = props;
   const [pasteText, setPasteText] = useState("");
   const [pasteMsg, setPasteMsg] = useState("");
   const { solved } = props;
@@ -120,23 +123,22 @@ export function TsEditor(props: {
         </div>
       )}
 
-      <div className="row">
-        <button className="secondary" onClick={() => setPasting(!pasting)}>
-          {pasting ? "Cancel paste" : "Paste from datasheet"}
-        </button>
-        <button className="secondary" onClick={() => props.onChange({})}>
-          Clear all
-        </button>
-      </div>
       {pasting && (
         <div className="paste">
           <textarea
             rows={7}
+            autoFocus
+            aria-label="Datasheet text"
             value={pasteText}
             onChange={(e) => setPasteText(e.currentTarget.value)}
             placeholder={"Paste the spec table from a datasheet or shop page, e.g.\nFs 25.6 Hz\nVas 1.9 ft³\nSd 356.3 cm²\nXmax 12.3 mm"}
           />
-          <button onClick={applyPaste}>Use these values</button>
+          <div className="row">
+            <button onClick={applyPaste}>Use these values</button>
+            <button className="secondary" onClick={() => setPasting(false)}>
+              Cancel
+            </button>
+          </div>
           {pasteMsg && <p className="warn">{pasteMsg}</p>}
         </div>
       )}

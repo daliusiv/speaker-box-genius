@@ -25,6 +25,7 @@ import { DriverBrowser } from "./Library.tsx";
 import { PwaStatus } from "./Pwa.tsx";
 import { GettingStarted, LinkNote, useWelcome } from "./Welcome.tsx";
 import { TsEditor } from "./TsEditor.tsx";
+import { DriverMenu } from "./DriverMenu.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
 import {
   airOf,
@@ -58,6 +59,7 @@ export function App() {
   const [wdrMsg, setWdrMsg] = useState("");
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const wdrInput = useRef<HTMLInputElement>(null);
+  const [pasting, setPasting] = useState(false);
   const welcome = useWelcome();
 
   useEffect(() => {
@@ -389,6 +391,8 @@ export function App() {
             entered={state.ts}
             solved={solved}
             onChange={(ts) => set("ts", ts)}
+            pasting={pasting}
+            onPastingChange={setPasting}
             onPaste={(ts, x) =>
               setState((s) => ({
                 ...s,
@@ -404,21 +408,14 @@ export function App() {
             }
           />
           <div className="row">
-            <button className="secondary" onClick={() => wdrInput.current?.click()}>
-              Import WinISD .wdr / .wpr
-            </button>
-            <button className="secondary" onClick={exportWdr}>
-              Export .wdr
-            </button>
-            <a
-              className="button-link secondary"
-              href={submitDriverUrl(state)}
-              target="_blank"
-              rel="noopener"
-              title="Opens a pre-filled GitHub form; you add the datasheet link"
-            >
-              Submit to database
-            </a>
+            <DriverMenu
+              pasting={pasting}
+              onPaste={() => setPasting(!pasting)}
+              onClear={() => set("ts", {})}
+              onImport={() => wdrInput.current?.click()}
+              onExport={exportWdr}
+              submitUrl={submitDriverUrl(state)}
+            />
             <input
               ref={wdrInput}
               type="file"
