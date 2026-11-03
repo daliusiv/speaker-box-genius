@@ -190,6 +190,9 @@ test("a cutout that can't fit the driver is dropped", () => {
   const ok = { cutout_mm: 285 };
   fixPhysical(ok, [], 12);
   assert.equal(ok.cutout_mm, 285);
+  const small = { cutout_mm: 85 }; // a 3" full-range driver's frame is wider than 3"
+  fixPhysical(small, [], 3);
+  assert.equal(small.cutout_mm, 85);
 });
 
 test("re-import keeps displacement, submissions and verified status, drops dealer sources", () => {

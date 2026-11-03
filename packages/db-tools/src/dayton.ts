@@ -352,11 +352,12 @@ export function fixPhysical(physical: NonNullable<Driver["physical"]>, notes: st
       notes.push(`Published ${name} ${v} is implausible, so it's left out.`);
     }
   }
-  // A cutout is roughly 70–105 % of the nominal diameter; anything else is another dimension.
+  // A cutout is roughly 65–130 % of the nominal diameter (small drivers have wide frames);
+  // anything else is another dimension, such as the magnet.
   const c = physical.cutout_mm;
   if (c !== undefined && size_in !== undefined && size_in >= 3) {
     const ratio = c / (size_in * 25.4);
-    if (ratio < 0.7 || ratio > 1.05) {
+    if (ratio < 0.65 || ratio > 1.3) {
       delete physical.cutout_mm;
       notes.push(`Published cutout ${c} mm can't fit a ${size_in}" driver, so it's left out.`);
     }
