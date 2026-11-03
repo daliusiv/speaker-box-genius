@@ -22,6 +22,7 @@ import {
 import { loadDriver, loadIndex, type DbIndex } from "./library.ts";
 import { Card, Num, REPO, Select } from "./components.tsx";
 import { DriverBrowser } from "./Library.tsx";
+import { PwaStatus } from "./Pwa.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
 import { airOf, alignmentDriver, colorOf, dvcFactors, PORT_LIMIT, roomGainOf, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
@@ -310,6 +311,7 @@ export function App() {
           </label>
           <ProjectsMenu state={state} onOpen={(s) => setState(s)} />
           <ShareMenu state={state} designs={designs} shareUrl={shareUrl} />
+          <PwaStatus />
         </div>
       </header>
 

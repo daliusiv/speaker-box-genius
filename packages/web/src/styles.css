@@ -939,3 +939,14 @@ a.button-link {
 .row {
   flex-wrap: wrap;
 }
+
+/* ---- offline / install ---- */
+
+.offline-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--border);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
