@@ -37,6 +37,7 @@ interface DriverRecord {
   ts_wiring?: "series" | "parallel";
   ts: Record<string, number | undefined>;
   physical?: Physical;
+  sources?: { url?: string; note?: string }[];
 }
 
 interface PrRecord {
