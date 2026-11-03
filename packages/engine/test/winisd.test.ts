@@ -160,3 +160,25 @@ test("DSA215-8 + DSA270-PR: transfer function within 0.15 dB of WinISD", () => {
     near(runPr(f).tf, db, 0.15, `TF at ${f} Hz`);
   }
 });
+
+// DSA215-8 + 1× DSA270-PR (no added mass) in 50 L: a high-Q tuning with a dip above it.
+test("DSA215-8 + DSA270-PR in 50 L: tuning exact, passband and dip within 0.05 dB", () => {
+  const run = (f: number) => {
+    const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215-dsa270pr-50l.wpr"), "utf8"));
+    const t = p.driver.ts;
+    const r = simulate(
+      { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: 0 },
+      { kind: "passive-radiator", vb_l: p.box.vb_l, pr: p.pr!.params, prCount: p.pr!.count, addedMass_g: p.pr!.addedMass_g, ql: p.box.ql, qa: p.box.qa },
+      { power: p.power, rg: p.rg, air: p.air, fMin: f, fMax: f, points: 1 },
+    );
+    return { p, tf: r.spl[0]! - r.summary.referenceSpl };
+  };
+  const { p } = run(40);
+  near(prFb(p.box.vb_l, p.pr!.params, p.pr!.count, p.pr!.addedMass_g, p.air), p.box.fb!, 1e-3, "Fb");
+  near(run(80.13).tf, -1.741, 0.05, "TF at 80.13 Hz (the dip)");
+  near(run(120.08).tf, -1.082, 0.05, "TF at 120.08 Hz");
+  near(run(25.33).tf, -25.974, 0.1, "TF at 25.33 Hz");
+  // Known difference: right at the tuning peak WinISD shows less damping than our
+  // standard loss model (−1.213 vs −1.70 dB). See docs/validation.md.
+  near(run(40.13).tf, -1.213, 0.55, "TF at 40.13 Hz (tuning peak)");
+});

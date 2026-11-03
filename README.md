@@ -19,6 +19,10 @@
 
 Everything runs in your browser. No accounts, no server, works offline.
 
+## Accuracy
+
+Results match **WinISD** to within 0.01 dB for ported and sealed boxes, and box tuning matches exactly for passive radiator boxes. See [`docs/validation.md`](docs/validation.md) for the comparisons, all of which run as automated tests.
+
 ## Contributing
 
 There are two ways to help:
