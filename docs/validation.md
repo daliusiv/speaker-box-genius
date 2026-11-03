@@ -86,6 +86,24 @@ evidently treats passive-radiator losses differently internally. In practice
 real box leakage varies far more than this (Ql 5–20 is typical), so both
 results are within normal build-to-build variation.
 
+### Excursion at 100 W (Test 2)
+
+18 L + 50 g project, 100.1 W.
+
+| Graph | Frequency | WinISD | Speaker Box Genius | Difference |
+|---|---|---|---|---|
+| PR excursion | 10 Hz | 13.445 mm | 13.379 mm | −0.5 % |
+| PR excursion | 20.16 Hz | 12.134 mm | 12.077 mm | −0.5 % |
+| PR excursion | 40.50 Hz | 9.274 mm | 9.106 mm | −1.8 % |
+| Cone excursion | 20.03 Hz | 19.373 mm | 19.305 mm | −0.35 % |
+| Cone excursion | 40.50 Hz | 4.646 mm | 4.654 mm | +0.2 % |
+| Cone excursion, dip | 46.11 Hz (ours 46.15) | 2.183 mm | 2.301 mm | +5.4 % |
+| Cone excursion, bump | 65.36 Hz (ours 65.32) | 5.695 mm | 5.636 mm | −1.0 % |
+
+Away from the tuning the agreement matches the ported box (0.35–0.5 %). Close to Fb,
+WinISD's lighter PR damping shows up again: a slightly deeper cone dip and a little more
+PR travel. The dip and bump frequencies agree within 0.05 Hz.
+
 ## Reproduce
 
 ```bash

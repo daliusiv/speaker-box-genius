@@ -211,3 +211,30 @@ test("DSA215-8 vented: all WinISD graphs at 100 W within tolerance (Test 1)", ()
   rel(at(19.79).maxPowerW[0]!, 7.062, 0.01, "max power at 19.79 Hz");
   near(at(40.25).maxPowerW[0]!, 80, 1e-6, "max power at 40.25 Hz (thermal = Pe)");
 });
+
+// Test 2: DSA215-8 + 1× DSA270-PR (+50 g) in 18 L at 100.1 W — cone and PR
+// excursion graphs. Shapes and the cone dip/bump frequencies match; the cone's
+// minimum at Fb is 5 % shallower in our model, the same PR damping difference
+// seen in the transfer function (docs/validation.md).
+test("DSA215-8 + DSA270-PR: cone and PR excursion match WinISD's graphs (Test 2)", () => {
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215-dsa270pr-test2.wpr"), "utf8"));
+  const t = p.driver.ts;
+  const drv = { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: 0 };
+  const box = { kind: "passive-radiator" as const, vb_l: p.box.vb_l, pr: p.pr!.params, prCount: p.pr!.count, addedMass_g: p.pr!.addedMass_g, ql: p.box.ql, qa: p.box.qa };
+  const opts = { power: p.power, rg: p.rg, air: p.air };
+  const at = (f: number) => simulate(drv, box, { ...opts, fMin: f, fMax: f, points: 1 });
+  const rel = (a: number, b: number, tol: number, what: string) => near(a / b - 1, 0, tol, what);
+
+  for (const [f, mm, tol] of [[10, 13.445, 0.01], [20.16, 12.134, 0.01], [40.5, 9.274, 0.025]] as const) rel(at(f).prExcursionMm![0]!, mm, tol, `PR excursion at ${f} Hz`);
+  for (const [f, mm, tol] of [[20.03, 19.373, 0.01], [40.5, 4.646, 0.01], [65.36, 5.695, 0.015], [46.11, 2.183, 0.07]] as const) rel(at(f).excursionMm[0]!, mm, tol, `cone excursion at ${f} Hz`);
+
+  // Where the cone's dip (at Fb) and the bump above it sit.
+  const d = simulate(drv, box, { ...opts, fMin: 30, fMax: 120, points: 2000 });
+  let dip = 0, bump = 0;
+  d.freq.forEach((f, i) => {
+    if (f < 60 && d.excursionMm[i]! < d.excursionMm[dip]!) dip = i;
+    if (f > 55 && (d.freq[bump]! <= 55 || d.excursionMm[i]! > d.excursionMm[bump]!)) bump = i;
+  });
+  near(d.freq[dip]!, 46.11, 0.15, "cone dip frequency");
+  near(d.freq[bump]!, 65.36, 0.3, "cone bump frequency");
+});
