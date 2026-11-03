@@ -56,6 +56,14 @@ import { submitDriverUrl } from "./submit.ts";
 
 const LIMIT_RED = "#dc2626";
 
+/** What sets the maximum SPL at each frequency, as shown in the strip under the Max SPL chart. */
+const LIMIT_KINDS: Record<string, { label: string; short: string; color: string }> = {
+  xmax: { label: "Cone Xmax", short: "cone Xmax", color: "#dc2626" },
+  "pr-xmax": { label: "PR Xmax", short: "PR Xmax", color: "#9333ea" },
+  port: { label: "Port speed", short: "port speed", color: "#d97706" },
+  thermal: { label: "Power (Pe)", short: "power handling", color: "#78716c" },
+};
+
 type ChartId = "pr" | "port" | "maxspl" | "impedance" | "delay";
 
 export function App(props: { initial: AppState | null }) {
@@ -406,6 +414,7 @@ export function App(props: { initial: AppState | null }) {
       color: d.color,
       dash: k === 0 ? undefined : k === 1 ? "6 3" : "2 3",
       y: g.excursionMm,
+      over: g.xmax_mm ?? undefined,
     }));
   });
 
@@ -867,7 +876,7 @@ export function App(props: { initial: AppState | null }) {
               title="Cone excursion (peak, one way)"
               unit="mm"
               freq={freq}
-              series={series((r) => r.excursionMm)}
+              series={series((r) => r.excursionMm).map((x) => ({ ...x, over: state.xmax_mm }))}
               limits={[{ value: state.xmax_mm, label: `Xmax ${state.xmax_mm} mm`, color: LIMIT_RED }]}
               yMin={0}
             />
@@ -902,12 +911,14 @@ export function App(props: { initial: AppState | null }) {
                     label: d.design.kind === "bandpass" ? `${d.design.name} (front port)` : d.design.name,
                     color: d.color,
                     y: d.result.portVelocity,
+                    over: PORT_LIMIT,
                   })),
                   ...designs.map((d) => ({
                     label: `${d.design.name} (rear port)`,
                     color: d.color,
                     dash: "5 3",
                     y: d.result.rearPortVelocity,
+                    over: PORT_LIMIT,
                   })),
                 ].filter((s) => s.y)}
                 limits={[{ value: PORT_LIMIT, label: `Chuffing risk ${PORT_LIMIT} m/s`, color: LIMIT_RED }]}
@@ -919,7 +930,14 @@ export function App(props: { initial: AppState | null }) {
               title="Maximum SPL (first limit reached)"
               unit="dB"
               freq={freq}
-              series={series((r) => r.maxSpl)}
+              series={designs.map((d) => ({
+                label: d.design.name,
+                color: d.color,
+                y: d.result.maxSpl,
+                notes: d.result.limitedBy.map((l) => LIMIT_KINDS[l]?.short ?? ""),
+              }))}
+              ribbons={designs.map((d) => ({ label: d.design.name, color: d.color, kinds: d.result.limitedBy }))}
+              ribbonKinds={LIMIT_KINDS}
             />
             <LogChart
               hidden={chartTab !== "impedance"}

@@ -17,7 +17,24 @@ export interface Series {
   y: Float64Array | null;
   /** SVG dash pattern, e.g. "6 4", for measured or reference curves. */
   dash?: string;
+  /** This curve's own limit: where it runs above it, a red glow is drawn behind it. */
+  over?: number;
+  /** A short note per point, shown in the hover readout (e.g. what limits the design there). */
+  notes?: readonly string[];
 }
+
+/**
+ * A strip under the plot, one row per design: which of several kinds applies at
+ * each frequency (e.g. what limits the maximum SPL), coloured by kind.
+ */
+export interface Ribbon {
+  label: string;
+  color: string;
+  /** One kind per frequency point; kinds missing from `ribbonKinds` are left blank. */
+  kinds: readonly string[];
+}
+
+export const OVER_RED = "#dc2626";
 
 /** A labelled vertical line at one frequency (e.g. a passive radiator's notch). */
 export interface Marker {
@@ -39,6 +56,8 @@ interface Props {
   series: Series[];
   limits?: Limit[];
   markers?: Marker[];
+  ribbons?: Ribbon[];
+  ribbonKinds?: Record<string, { label: string; color: string }>;
   yMin?: number;
   yMax?: number;
   digits?: number;
@@ -62,7 +81,21 @@ function niceStep(range: number): number {
 }
 
 /** Line chart with a logarithmic frequency axis, horizontal limit lines and a hover readout. */
-export function LogChart({ title, unit, freq, series, limits = [], markers = [], yMin, yMax, digits = 1, hidden, forum }: Props) {
+export function LogChart({
+  title,
+  unit,
+  freq,
+  series,
+  limits = [],
+  markers = [],
+  ribbons = [],
+  ribbonKinds = {},
+  yMin,
+  yMax,
+  digits = 1,
+  hidden,
+  forum,
+}: Props) {
   const clipId = useId();
   const shared = useContext(Crosshair);
   const [ownF, setOwnF] = useState<number | null>(null);
@@ -132,6 +165,26 @@ export function LogChart({ title, unit, freq, series, limits = [], markers = [],
   const yTicks: number[] = [];
   for (let v = lo; v <= hi + step / 2; v += step) yTicks.push(v);
 
+  /** The parts of a curve above `limit`, as a path (for the over-limit glow). */
+  const overPathOf = (y: Float64Array, limit: number) => {
+    let d = "";
+    let pen = false;
+    for (let i = 0; i < y.length; i++) {
+      const v = y[i]!;
+      const prev = i > 0 ? y[i - 1]! : NaN;
+      const next = i + 1 < y.length ? y[i + 1]! : NaN;
+      // Include the neighbours of over-limit points so the glow reaches the crossing.
+      const on = Number.isFinite(v) && (v > limit || prev > limit || next > limit);
+      if (!on) {
+        pen = false;
+        continue;
+      }
+      d += `${pen ? "L" : "M"}${xOf(freq[i]!).toFixed(1)},${yOf(Math.min(v, hi + (hi - lo))).toFixed(1)}`;
+      pen = true;
+    }
+    return d;
+  };
+
   const pathOf = (y: Float64Array) => {
     let d = "";
     let pen = false;
@@ -159,6 +212,24 @@ export function LogChart({ title, unit, freq, series, limits = [], markers = [],
 
   const visible = series.filter((s) => s.y);
 
+  // Limit strip under the plot: one row per design, then a legend of the kinds shown.
+  const ROW = 11 * k;
+  const usedKinds = Object.keys(ribbonKinds).filter((kind) => ribbons.some((r) => r.kinds.includes(kind)));
+  const ribbonH = ribbons.length > 0 ? 8 * k + ribbons.length * ROW + 20 * k : 0;
+  const edge = (i: number) =>
+    i <= 0 ? PAD.l : i >= freq.length ? W - PAD.r : (xOf(freq[i - 1]!) + xOf(freq[i]!)) / 2;
+  const runsOf = (kinds: readonly string[]) => {
+    const out: { kind: string; from: number; to: number }[] = [];
+    for (let i = 0; i < kinds.length; ) {
+      let j = i;
+      while (j + 1 < kinds.length && kinds[j + 1] === kinds[i]) j++;
+      if (ribbonKinds[kinds[i]!]) out.push({ kind: kinds[i]!, from: edge(i), to: edge(j + 1) });
+      i = j + 1;
+    }
+    return out;
+  };
+  let legendX = PAD.l;
+
   return (
     <figure className="chart" hidden={hidden} data-forum={forum ? "" : undefined}>
       <figcaption>
@@ -172,6 +243,7 @@ export function LogChart({ title, unit, freq, series, limits = [], markers = [],
                   {" "}
                   <span className="swatch" style={{ background: s.color }} aria-hidden="true" />
                   {s.label}: {Number.isFinite(s.y![hover]!) ? s.y![hover]!.toFixed(digits) : "–"} {unit}
+                  {s.notes?.[hover] ? ` (${s.notes[hover]})` : ""}
                 </span>
               ))}
             </>
@@ -182,7 +254,7 @@ export function LogChart({ title, unit, freq, series, limits = [], markers = [],
       </figcaption>
       <svg
         ref={svgRef}
-        viewBox={`0 0 ${W} ${H}`}
+        viewBox={`0 0 ${W} ${H + ribbonH}`}
         role="img"
         aria-label={title}
         onPointerMove={onMove}
@@ -235,6 +307,20 @@ export function LogChart({ title, unit, freq, series, limits = [], markers = [],
                 </text>
               </g>
             ))}
+          {visible.map((s) =>
+            s.over !== undefined ? (
+              <path
+                key={`over-${s.label}`}
+                className="over-glow"
+                d={overPathOf(s.y!, s.over)}
+                fill="none"
+                stroke={OVER_RED}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                {...sw(7)}
+              />
+            ) : null,
+          )}
           {visible.map((s) => (
             <path key={s.label} d={pathOf(s.y!)} fill="none" stroke={s.color} strokeDasharray={s.dash} {...sw(2)} />
           ))}
@@ -257,6 +343,44 @@ export function LogChart({ title, unit, freq, series, limits = [], markers = [],
             </g>
           )}
         </g>
+
+        {ribbons.length > 0 && (
+          <g className="ribbons">
+            {ribbons.map((r, row) => {
+              const y = H + 6 * k + row * ROW;
+              return (
+                <g key={r.label}>
+                  <title>{r.label}</title>
+                  <rect x={PAD.l - 12 * k} y={y} width={7 * k} height={7 * k} rx={1.5 * k} fill={r.color} />
+                  {runsOf(r.kinds).map((run) => (
+                    <rect
+                      key={run.from}
+                      x={run.from}
+                      y={y}
+                      width={Math.max(0.5, run.to - run.from)}
+                      height={7 * k}
+                      fill={ribbonKinds[run.kind]!.color}
+                    />
+                  ))}
+                </g>
+              );
+            })}
+            {usedKinds.map((kind) => {
+              const x = legendX;
+              const { label, color } = ribbonKinds[kind]!;
+              legendX += 16 * k + label.length * 6.2 * k + 14 * k;
+              const y = H + 6 * k + ribbons.length * ROW + 10 * k;
+              return (
+                <g key={kind}>
+                  <rect x={x} y={y - 7 * k} width={9 * k} height={9 * k} rx={1.5 * k} fill={color} />
+                  <text className="tick" x={x + 14 * k} y={y + 1 * k} {...fs(11)}>
+                    {label}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        )}
       </svg>
     </figure>
   );

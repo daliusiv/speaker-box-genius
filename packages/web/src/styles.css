@@ -1398,3 +1398,7 @@ figure.chart[hidden] {
   stroke-width: 4px;
   stroke-linejoin: round;
 }
+
+.over-glow {
+  opacity: 0.28;
+}
