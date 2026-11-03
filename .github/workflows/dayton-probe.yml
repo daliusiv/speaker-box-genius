@@ -1,0 +1,25 @@
+name: Dayton probe (temporary)
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch samples
+        run: |
+          which pdftotext || (sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null)
+          mkdir out && cd out
+          UA="SpeakerBoxGenius-importer/1.0 (+https://github.com/daliusiv/speaker-box-genius; with Dayton Audio's permission)"
+          get() { curl -sSL -A "$UA" -o "$2" -w "%{http_code} %{size_download} $1\n" "$1" || true; sleep 2; }
+          get "https://www.daytonaudio.com/category/123/full-range" fr1.html
+          get "https://www.daytonaudio.com/category/123/full-range?pagenum=2" fr2.html
+          get "https://www.daytonaudio.com/product/2132/ss10-pr-10-signature-series-passive-radiator" ss10.html
+          get "https://www.daytonaudio.com/product/1912/e150he-pr-5-5-carbon-fiber-cone-passive-radiator" e150pr.html
+          echo "== full-range pagination links"; grep -oE 'href="[^"]*(pagenum|page)[^"]*"' fr1.html | sort -u | head -20
+          echo "== fr1 vs fr2 product links identical?"; diff <(grep -oE '/product/[0-9]+' fr1.html | sort -u) <(grep -oE '/product/[0-9]+' fr2.html | sort -u) && echo SAME
+          echo "== product count text"; grep -oE '[0-9]+ (items|products|results)[^<]{0,40}' fr1.html | head -5
+          for p in ss10 e150pr; do
+            pdf=$(grep -oE '/images/resources/[^"]+\.pdf' $p.html | head -1); echo "== $p pdf: $pdf"
+            [ -n "$pdf" ] && get "https://www.daytonaudio.com$pdf" $p.pdf && pdftotext -layout $p.pdf - | head -80
+          done
