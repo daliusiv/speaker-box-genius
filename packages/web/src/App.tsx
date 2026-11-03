@@ -23,7 +23,8 @@ import { loadDriver, loadIndex, type DbIndex } from "./library.ts";
 import { Card, LibraryPicker, Num, REPO, Select } from "./components.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
-import { airOf, alignmentDriver, colorOf, dvcFactors, PORT_LIMIT, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
+import { airOf, alignmentDriver, colorOf, dvcFactors, PORT_LIMIT, roomGainOf, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
+import { RoomGainPanel } from "./RoomGain.tsx";
 import { AddDesign, DesignCard } from "./Designs.tsx";
 import { ShareMenu } from "./Share.tsx";
 import { EqPanel } from "./Eq.tsx";
@@ -548,6 +549,8 @@ export function App() {
 
         <VolumePanel state={state} onChange={(v) => set("volume", v)} />
 
+        <RoomGainPanel value={state.roomGain} room={roomGainOf(state)} onChange={(r) => set("roomGain", r)} />
+
         <Card title="Settings">
           <div className="fields">
             <Select<"metric" | "imperial">
@@ -628,7 +631,7 @@ export function App() {
         {designs.length > 0 && (
           <>
             <LogChart
-              title={`SPL at ${state.power} W, 1 m, half space${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
+              title={`SPL at ${state.power} W, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
               unit="dB"
               freq={freq}
               series={series((r) => r.spl)}

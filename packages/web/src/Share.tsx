@@ -57,6 +57,7 @@ function subtitle(state: AppState): string {
   if (state.isobaric) parts.push(`${state.drivers} isobaric pair${state.drivers > 1 ? "s" : ""}`);
   else if (state.drivers > 1) parts.push(`${state.drivers} drivers (${state.wiring})`);
   if (state.highPass.on) parts.push(`${state.highPass.order * 6} dB/oct high-pass at ${state.highPass.freq} Hz`);
+  if (state.roomGain.mode !== "off") parts.push(`${state.roomGain.mode === "car" ? "cabin" : "room"} gain from ${(34320 / (2 * state.roomGain.length_cm)).toFixed(0)} Hz`);
   parts.push(`Xmax ${state.xmax_mm} mm`);
   return parts.join(" · ");
 }

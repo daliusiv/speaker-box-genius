@@ -3,7 +3,9 @@ import {
   WINISD_AIR,
   type Air,
   netVolume,
+  roomGainDb,
   simulate,
+  transitionFrequency,
   solveTs,
   type DriverInput,
   type EqStage,
@@ -115,6 +117,13 @@ export function dvcFactors(s: AppState): { re: number; qes: number } {
   return { re: reOne * (s.dvc.wired === "parallel" ? 0.5 : 2), qes: qesOne * 0.5 };
 }
 
+/** Room / cabin gain settings in engine form, or null when off. */
+export function roomGainOf(s: AppState) {
+  const g = s.roomGain;
+  if (g.mode === "off" || !(g.length_cm > 0)) return null;
+  return { f0: transitionFrequency(g.length_cm / 100, airOf(s).c), slopeDbPerOct: g.slope, maxDb: g.max_db };
+}
+
 export function solveDriver(s: AppState): SolveResult {
   return solveTs(s.ts, 0.03, airOf(s));
 }
@@ -188,6 +197,12 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
       if (s.settings.velocity === "rms") {
         if (result.portVelocity) result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
         if (result.rearPortVelocity) result.rearPortVelocity = result.rearPortVelocity.map((v) => v / Math.SQRT2);
+      }
+      const room = roomGainOf(s);
+      if (room) {
+        const lift = result.freq.map((f) => roomGainDb(f, room));
+        result.spl = result.spl.map((v, i) => v + lift[i]!);
+        result.maxSpl = result.maxSpl.map((v, i) => v + lift[i]!);
       }
       out.push({ design: d, color: colorOf(s, d.id), vb_l: vb, result });
     } catch {

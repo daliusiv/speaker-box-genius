@@ -71,6 +71,12 @@ export type EqItem = EqStage & { id: string; on: boolean; target: string };
 
 export const MAX_DESIGNS = 8;
 
+/** Starting points for the room / cabin gain presets. */
+export const ROOM_PRESETS = {
+  car: { length_cm: 250, slope: 12, max_db: 18 },
+  room: { length_cm: 500, slope: 6, max_db: 10 },
+} as const;
+
 export interface Settings {
   /** Unit system for box sizes and volumes. */
   units: "metric" | "imperial";
@@ -111,6 +117,8 @@ export interface AppState {
    * or both coils wired in parallel or series) and how the coils are actually wired.
    */
   dvc: { on: boolean; entered: "one" | "parallel" | "series"; wired: "parallel" | "series" };
+  /** Low-frequency lift of the listening space, added to the SPL curves. */
+  roomGain: { mode: "off" | "car" | "room"; length_cm: number; slope: 6 | 12; max_db: number };
   highPass: { on: boolean; type: HighPassType; order: number; freq: number };
   settings: Settings;
   eq: EqItem[];
@@ -217,6 +225,7 @@ export const DEFAULT_STATE: AppState = {
   isobaric: false,
   isoCoils: "parallel",
   dvc: { on: false, entered: "parallel", wired: "parallel" },
+  roomGain: { mode: "off", length_cm: 250, slope: 12, max_db: 18 },
   highPass: { on: false, type: "butterworth", order: 2, freq: 18 },
   settings: { units: "metric", air: "standard", velocity: "peak", rg: 0, inductance: true, losses: { ql: 10, qa: 100, qp: 100 } },
   eq: [],
@@ -342,6 +351,12 @@ export function decodeState(hash: string): AppState | null {
       wiring: raw.wiring === "series" ? "series" : "parallel",
       isobaric: raw.isobaric === true,
       isoCoils: raw.isoCoils === "series" ? "series" : "parallel",
+      roomGain: {
+        ...d.roomGain,
+        ...(raw.roomGain ?? {}),
+        mode: ["off", "car", "room"].includes(raw.roomGain?.mode) ? raw.roomGain.mode : "off",
+        slope: raw.roomGain?.slope === 6 ? 6 : 12,
+      },
       dvc: {
         on: raw.dvc?.on === true,
         entered: ["one", "parallel", "series"].includes(raw.dvc?.entered) ? raw.dvc.entered : "parallel",

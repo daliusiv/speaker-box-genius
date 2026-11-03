@@ -12,3 +12,4 @@ export * from "./datasheet.ts";
 export * from "./wdr.ts";
 export * from "./alignments.ts";
 export * from "./impedance.ts";
+export * from "./roomgain.ts";
