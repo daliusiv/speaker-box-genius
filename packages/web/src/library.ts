@@ -140,7 +140,7 @@ export async function loadDriver(id: string): Promise<LoadedDriver> {
 
 export async function loadPassiveRadiator(
   id: string,
-): Promise<{ name: string; params: PrParams; displacement_l?: number }> {
+): Promise<{ name: string; params: PrParams; displacement_l?: number; cutout_mm?: number }> {
   const rec = (await loadShard(brandOf(id))).passiveRadiators[id];
   if (!rec) throw new Error(`Passive radiator ${id} not found`);
   const p = rec.params;
@@ -155,5 +155,6 @@ export async function loadPassiveRadiator(
     name: `${rec.brand} ${rec.model}`,
     params: { mms_g: p.mms_g, sd_cm2: p.sd_cm2, xmax_mm: p.xmax_mm, qms: p.qms ?? 10, vas_l: Math.round(vas * 10) / 10 },
     displacement_l: displacementOf(rec.physical),
+    cutout_mm: rec.physical?.cutout_mm,
   };
 }

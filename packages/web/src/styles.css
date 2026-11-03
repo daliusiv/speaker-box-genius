@@ -1707,3 +1707,111 @@ button.check-chip.open {
 .chart figcaption .unit-switch {
   margin-left: auto;
 }
+
+/* Passive radiator finder */
+dialog.library.finder {
+  height: auto;
+  max-height: min(820px, calc(100dvh - 2rem));
+}
+
+dialog.finder .lib-inner {
+  padding-bottom: 1rem;
+}
+
+.finder-mode {
+  align-self: flex-start;
+}
+
+.finder-mode button {
+  padding: 0.3rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.finder-target,
+.finder-note {
+  margin: 0;
+}
+
+.finder-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.finder-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.finder-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 0.5rem;
+  min-width: 0;
+}
+
+.finder-facts,
+.finder-use {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.finder-use {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.finder-use .meter {
+  flex: none;
+  width: 4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.finder-use .meter > span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.finder-best {
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.finder-why summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.finder-why ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.82rem;
+}
+
+.finder-why li + li {
+  margin-top: 0.2rem;
+}
+
+.finder-row-button {
+  margin-top: 0.4rem;
+}

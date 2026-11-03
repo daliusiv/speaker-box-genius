@@ -11,6 +11,7 @@ import {
 import { CrosshairProvider, LogChart, shortName, type Series } from "./LogChart.tsx";
 import { useUndoable } from "./useUndoable.ts";
 import { sizeAllForDriver } from "./presets.ts";
+import type { FinderContext } from "./PrFinder.tsx";
 import { initialPanel, PanelTabs, rememberPanel, TabRow, type PanelId } from "./PanelTabs.tsx";
 import {
   DEFAULT_STATE,
@@ -42,6 +43,8 @@ import {
   prXmaxes,
   dimensionsFor,
   driveLabel,
+  driverInputOf,
+  simOptionsOf,
   roomGainOf,
   runDesigns,
   solveDriver,
@@ -495,6 +498,19 @@ export function App(props: { initial: AppState | null }) {
     return [{ f, label: `${d.design.name}: notch ${f < 100 ? f.toFixed(1) : f.toFixed(0)} Hz`, color: d.color }];
   });
 
+  // Passive radiator finder: the driver and drive as the charts use them.
+  const finderCtx = useMemo<FinderContext>(
+    () => ({
+      driver: solved.missing.length > 0 ? null : driverInputOf(state, solved),
+      sim: simOptionsOf(state),
+      losses: { ql: state.settings.losses.ql, qa: state.settings.losses.qa },
+      fMin: state.highPass.on ? 10 : 15,
+      align: alignmentDriver(solved, state),
+      drivers: state.drivers,
+    }),
+    [state, solved],
+  );
+
   const signalOn = (state.highPass.on ? 1 : 0) + state.eq.filter((e) => e.on).length + (state.roomGain.mode !== "off" ? 1 : 0);
   const tabBadges: Partial<Record<PanelId, string>> = {
     boxes: String(state.designs.filter((d) => d.on).length),
@@ -840,6 +856,16 @@ export function App(props: { initial: AppState | null }) {
                 portCtx={portContext(state, designs, d.id)}
                 losses={state.settings.losses}
                 onDimensions={() => openDimensions(d)}
+                finder={finderCtx}
+                onFound={(d, patch, summary, displacement_l) => {
+                  // One undo step: the design and the PR's displacement for the volume calculator.
+                  setStep((s) => ({
+                    ...s,
+                    designs: s.designs.map((x) => (x.id === d.id ? ({ ...x, ...patch } as DesignState) : x)),
+                    volume: displacement_l !== undefined ? { ...s.volume, prDisp_l: displacement_l } : s.volume,
+                  }));
+                  notify(`“${d.name}” now uses ${summary}.`);
+                }}
                 onUnlink={() => {
                   const vb = Math.round(vbOf(state, d) * 10) / 10;
                   setStep((s) => ({

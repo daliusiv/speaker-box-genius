@@ -182,11 +182,11 @@ function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"]): En
   }
 }
 
-export function runDesigns(s: AppState, solved: SolveResult): Design[] {
-  if (solved.missing.length > 0) return [];
+/** The driver as the engine sees it (DVC wiring and coil model applied). Needs a complete solve. */
+export function driverInputOf(s: AppState, solved: SolveResult): DriverInput {
   const t = solved.values;
   const k = dvcFactors(s);
-  const driver: DriverInput = {
+  return {
     fs: t.fs!,
     qms: t.qms!,
     qes: t.qes! * k.qes,
@@ -199,7 +199,11 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
     xmax_mm: s.xmax_mm,
     pe_w: s.pe_w,
   };
-  const opts = {
+}
+
+/** How every design is driven and simulated (drive level, wiring, filters, air…), without EQ. */
+export function simOptionsOf(s: AppState) {
+  return {
     rg: s.settings.rg,
     power: s.drive === "volts" ? s.volts : s.power,
     convention: s.drive === "volts" ? ("volts" as const) : undefined,
@@ -214,6 +218,12 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
     // The limit is in the displayed convention; the engine works in peak.
     portVelocityLimit: s.settings.velocity === "rms" ? PORT_LIMIT * Math.SQRT2 : PORT_LIMIT,
   };
+}
+
+export function runDesigns(s: AppState, solved: SolveResult): Design[] {
+  if (solved.missing.length > 0) return [];
+  const driver = driverInputOf(s, solved);
+  const opts = simOptionsOf(s);
   const out: Design[] = [];
   for (const d of s.designs) {
     if (!d.on) continue;

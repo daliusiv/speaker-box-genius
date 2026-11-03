@@ -18,6 +18,7 @@ import { KIND_LABEL, PORT_LIMIT, portOf } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { bandpassLossesFrom } from "./state.ts";
 import { prTuning, renamed, ventedAlignmentFor } from "./presets.ts";
+import { PrFinder, type FinderContext } from "./PrFinder.tsx";
 
 /** The preset chip's label: which flat vented alignment this driver gets. */
 const alignLabel = (a: AlignmentDriver | null, drivers: number) => {
@@ -338,7 +339,14 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
 
 /** Combined tuning and the added mass (on the first group) that reaches a target. */
 
-function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacement: (l: number) => void }) {
+function PrBody(
+  p: CommonProps<PrDesign> & {
+    db: DbIndex | null;
+    onPrDisplacement: (l: number) => void;
+    finder: FinderContext;
+    onFound: (patch: Partial<PrDesign>, summary: string, displacement_l?: number) => void;
+  },
+) {
   const pr = p.design;
   const [msg, setMsg] = useState("");
   const set = (patch: Partial<PrDesign>) => p.onChange({ ...pr, ...patch });
@@ -376,6 +384,16 @@ function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacemen
           )
         }
       />
+      <div className="row finder-row-button">
+        <PrFinder
+          ctx={p.finder}
+          design={pr}
+          vb_l={p.vb_l}
+          linked={p.linked}
+          db={p.db}
+          onUse={(patch, summary, displacement_l) => p.onFound(patch, summary, displacement_l)}
+        />
+      </div>
       <p className="pr-name">{pr.prName}</p>
       <div className="fields">
         <VbField vb_l={p.vb_l} value={pr.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
@@ -806,6 +824,10 @@ export function DesignCard(props: {
   losses: ChamberLosses;
   /** Open the volume calculator for this design (linking it). */
   onDimensions: () => void;
+  /** For the passive radiator finder. */
+  finder: FinderContext;
+  /** A finder result applied to a PR design (an undoable step). */
+  onFound: (d: DesignState, patch: Partial<PrDesign>, summary: string, displacement_l?: number) => void;
   /** Stop taking the volume from the calculator (keeping the current volume). */
   onUnlink: () => void;
   onChange: (d: DesignState) => void;
@@ -837,7 +859,15 @@ export function DesignCard(props: {
         <BandpassBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} db={props.db} losses={props.losses} />
       )}
       {d.kind === "pr" && (
-        <PrBody {...common} design={d} onChange={props.onChange} db={props.db} onPrDisplacement={props.onPrDisplacement} />
+        <PrBody
+          {...common}
+          design={d}
+          onChange={props.onChange}
+          db={props.db}
+          onPrDisplacement={props.onPrDisplacement}
+          finder={props.finder}
+          onFound={(patch, summary, displacement_l) => props.onFound(d, patch, summary, displacement_l)}
+        />
       )}
       <p className="dims-link hint">
         {props.linked ? (
