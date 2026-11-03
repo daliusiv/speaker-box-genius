@@ -3,6 +3,8 @@ import {
   portEffectiveLength,
   prAddedMassForFb,
   prFb,
+  prGroupsAddedMassForFb,
+  prGroupsFb,
   portLengthForFb,
   qb3Alignment,
   sealedVolumeForAlignment,
@@ -13,9 +15,9 @@ import {
 import { Fixed, Num, Select } from "./components.tsx";
 import { PassiveRadiatorBrowser } from "./Library.tsx";
 import { loadPassiveRadiator, type DbIndex } from "./library.ts";
-import { KIND_LABEL, PORT_LIMIT, portOf } from "./sim.ts";
+import { KIND_LABEL, PORT_LIMIT, portOf, prGroupsOf } from "./sim.ts";
 import { useUnits } from "./units.ts";
-import type { BandpassDesign, BandpassOrder, DesignKind, DesignState, PortFields, PrDesign, VentedDesign } from "./state.ts";
+import type { BandpassDesign, BandpassOrder, DesignKind, DesignState, PortFields, PrDesign, PrGroupState, VentedDesign } from "./state.ts";
 
 const f1 = (v: number) => (Number.isFinite(v) ? v.toFixed(1) : "–");
 
@@ -96,11 +98,11 @@ function VbField(props: { vb_l: number; value: number; linked: boolean; label?: 
   );
 }
 
-function TuneRow(props: { target: number; onTarget: (v: number) => void; button: string; onApply: () => void }) {
+function TuneRow(props: { target: number; onTarget: (v: number) => void; button: string; title?: string; onApply: () => void }) {
   return (
     <div className="tune">
       <Num label="Tune to" unit="Hz" value={props.target} onChange={props.onTarget} />
-      <button className="secondary" onClick={props.onApply}>
+      <button className="secondary" onClick={props.onApply} title={props.title}>
         {props.button}
       </button>
     </div>
@@ -295,19 +297,38 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
   );
 }
 
+/** Combined tuning and the added mass (on the first group) that reaches a target. */
+function prTuning(d: PrDesign, vb_l: number, air: Air) {
+  const groups = prGroupsOf(d);
+  const mixed = groups.length > 1;
+  return {
+    mixed,
+    fb: mixed ? prGroupsFb(vb_l, groups, air) : prFb(vb_l, d.params, d.count, d.addedMass_g, air),
+    /** Added mass per PR in the first group for `fb` (NaN-free; may be negative or Infinity). */
+    massFor: (fb: number, vb = vb_l) =>
+      mixed ? prGroupsAddedMassForFb(vb, groups, fb, 0, air) : prAddedMassForFb(vb, d.params, fb, d.count, air),
+    bare: (vb = vb_l) =>
+      mixed ? prGroupsFb(vb, groups.map((g, i) => (i === 0 ? { ...g, addedMass_g: 0 } : g)), air) : prFb(vb, d.params, d.count, 0, air),
+  };
+}
+
 function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacement: (l: number) => void }) {
   const pr = p.design;
   const [msg, setMsg] = useState("");
   const set = (patch: Partial<PrDesign>) => p.onChange({ ...pr, ...patch });
   const setP = (patch: Partial<PrDesign["params"]>) => set({ params: { ...pr.params, ...patch } });
-  const fb = prFb(p.vb_l, pr.params, pr.count, pr.addedMass_g, p.air);
+  const setGroup = (i: number, patch: Partial<PrGroupState>) =>
+    set({ extra: pr.extra.map((g, k) => (k === i ? { ...g, ...patch } : g)) });
+  const t = prTuning(pr, p.vb_l, p.air);
+  const unreachable = (target: number) =>
+    `Added mass on the first group can't bring the tuning down to ${target} Hz: past a point those PRs just stop moving and the other group sets the tuning. Add mass to the other group, use fewer of them, or a bigger box.`;
 
   const tune = () => {
-    const add = prAddedMassForFb(p.vb_l, pr.params, pr.targetFb, pr.count, p.air);
+    const add = t.massFor(pr.targetFb);
+    if (add === Infinity) return setMsg(unreachable(pr.targetFb));
     if (add < 0) {
-      const bare = prFb(p.vb_l, pr.params, pr.count, 0, p.air);
       setMsg(
-        `With no added mass these PRs already tune to ${f1(bare)} Hz, below ${pr.targetFb} Hz. Use a lighter or stiffer PR, fewer PRs, or a smaller box.`,
+        `With no added mass on the first group these PRs already tune to ${f1(t.bare())} Hz, below ${pr.targetFb} Hz. Use a lighter or stiffer PR, fewer PRs, or a smaller box.`,
       );
       return;
     }
@@ -334,14 +355,70 @@ function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacemen
         <VbField vb_l={p.vb_l} value={pr.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
         <Num label="PRs" value={pr.count} onChange={(v) => set({ count: Math.max(1, Math.round(v)) })} />
         <Num label="Added mass" unit="g" value={pr.addedMass_g} min={0} onChange={(v) => set({ addedMass_g: v })} />
-        <Fixed label="Fb" unit="Hz" value={f1(fb)} title="Box tuning frequency with the added mass" />
-        <Num label="PR Mms" unit="g" value={pr.params.mms_g} onChange={(v) => setP({ mms_g: v })} />
-        <Num label="PR Vas" unit="L" value={pr.params.vas_l} onChange={(v) => setP({ vas_l: v })} />
-        <Num label="PR Qms" value={pr.params.qms} onChange={(v) => setP({ qms: v })} />
-        <Num label="PR Sd" unit="cm²" value={pr.params.sd_cm2} onChange={(v) => setP({ sd_cm2: v })} />
-        <Num label="PR Xmax" unit="mm" value={pr.params.xmax_mm} onChange={(v) => setP({ xmax_mm: v })} />
+        <Fixed
+          label={t.mixed ? "Fb ≈" : "Fb"}
+          unit="Hz"
+          value={f1(t.fb)}
+          title={
+            t.mixed
+              ? "Approximate tuning of all the PRs together. With different PRs the response has more than one resonance; this sits between them. The charts show the real behaviour."
+              : "Box tuning frequency with the added mass"
+          }
+        />
+        <PrParamFields params={pr.params} onChange={setP} />
       </div>
-      <TuneRow target={pr.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set added mass" onApply={tune} />
+
+      {pr.extra.map((g, i) => (
+        <div className="pr-group" key={i}>
+          <div className="pr-group-head">
+            <h3>Passive radiator group {i + 2}</h3>
+            <button
+              type="button"
+              className="icon"
+              aria-label={`Remove passive radiator group ${i + 2}`}
+              title="Remove this group"
+              onClick={() => set({ extra: pr.extra.filter((_, k) => k !== i) })}
+            >
+              ×
+            </button>
+          </div>
+          <PassiveRadiatorBrowser
+            rows={p.db?.passiveRadiators}
+            onPick={(id) =>
+              loadPassiveRadiator(id).then(
+                ({ name, params }) => setGroup(i, { prName: name, params }),
+                () => alert("Couldn't load that passive radiator."),
+              )
+            }
+          />
+          <p className="pr-name">{g.prName}</p>
+          <div className="fields">
+            <Num label="PRs" value={g.count} onChange={(v) => setGroup(i, { count: Math.max(1, Math.round(v)) })} />
+            <Num label="Added mass" unit="g" value={g.addedMass_g} min={0} onChange={(v) => setGroup(i, { addedMass_g: v })} />
+            <PrParamFields params={g.params} onChange={(patch) => setGroup(i, { params: { ...g.params, ...patch } })} />
+          </div>
+        </div>
+      ))}
+      <div className="add-design">
+        <button
+          type="button"
+          className="secondary"
+          title="Put a second kind of passive radiator in the same box (or the same PR with a different added mass)"
+          onClick={() =>
+            set({ extra: [...pr.extra, { prName: pr.prName, count: 1, addedMass_g: pr.addedMass_g, params: { ...pr.params } }] })
+          }
+        >
+          + Add a different passive radiator
+        </button>
+      </div>
+
+      <TuneRow
+        target={pr.targetFb}
+        onTarget={(x) => set({ targetFb: x })}
+        button="Set added mass"
+        title={t.mixed ? "Sets the added mass on group 1's PRs; the other groups stay as they are" : undefined}
+        onApply={tune}
+      />
       <Presets note={p.linked ? LINKED_NOTE : undefined}>
         <button
           className="chip"
@@ -353,7 +430,8 @@ function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacemen
               setMsg("QB3 needs a driver Qts below about 0.38. This driver suits a sealed box better.");
               return;
             }
-            const add = prAddedMassForFb(a.vb_l, pr.params, a.fb, pr.count, p.air);
+            const add = t.massFor(a.fb, a.vb_l);
+            if (add === Infinity) return setMsg(unreachable(Math.round(a.fb * 10) / 10));
             if (add < 0) {
               setMsg(`${a.name} wants ${a.vb_l.toFixed(1)} L at ${a.fb.toFixed(1)} Hz, but these PRs tune lower than that even with no added mass. Try a lighter or stiffer PR, or fewer PRs.`);
               return;
@@ -371,7 +449,24 @@ function PrBody(p: CommonProps<PrDesign> & { db: DbIndex | null; onPrDisplacemen
         </button>
       </Presets>
       {msg && <p className="warn">{msg}</p>}
-      <p className="hint">Added mass is per passive radiator. PR Mms is the bare moving mass from the datasheet.</p>
+      <p className="hint">
+        Added mass is per passive radiator. PR Mms is the bare moving mass from the datasheet.
+        {t.mixed &&
+          " With mixed PRs each group gets its own excursion curve and Xmax line; the tuning helpers adjust group 1's added mass."}
+      </p>
+    </>
+  );
+}
+
+function PrParamFields(props: { params: PrDesign["params"]; onChange: (patch: Partial<PrDesign["params"]>) => void }) {
+  const { params, onChange } = props;
+  return (
+    <>
+      <Num label="PR Mms" unit="g" value={params.mms_g} onChange={(v) => onChange({ mms_g: v })} />
+      <Num label="PR Vas" unit="L" value={params.vas_l} onChange={(v) => onChange({ vas_l: v })} />
+      <Num label="PR Qms" value={params.qms} onChange={(v) => onChange({ qms: v })} />
+      <Num label="PR Sd" unit="cm²" value={params.sd_cm2} onChange={(v) => onChange({ sd_cm2: v })} />
+      <Num label="PR Xmax" unit="mm" value={params.xmax_mm} onChange={(v) => onChange({ xmax_mm: v })} />
     </>
   );
 }

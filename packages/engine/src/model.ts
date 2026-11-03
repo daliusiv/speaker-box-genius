@@ -162,6 +162,69 @@ export function prFb(vb_l: number, pr: PassiveRadiatorInput, count = 1, addedMas
   return Math.sqrt(k / m.mmp) / (2 * Math.PI);
 }
 
+/** One group of identical passive radiators in a box that may hold several kinds. */
+export interface PrGroup {
+  pr: PassiveRadiatorInput;
+  count: number;
+  addedMass_g?: number;
+}
+
+/**
+ * Approximate tuning of a box with several kinds of passive radiator: all the PRs
+ * lumped into one equivalent (masses in parallel, suspensions in parallel) resonating
+ * with the box air spring. Exact when every group is identical; with different
+ * groups the real response has more than one resonance, and this sits between them.
+ */
+export function prGroupsFb(vb_l: number, groups: PrGroup[], air: Air = STANDARD_AIR): number {
+  let invMass = 0; // Σ count / Map  (acoustic masses in parallel)
+  let cas = 0; // Σ count × Cap  (acoustic compliances in parallel)
+  for (const g of groups) {
+    const m = passiveRadiatorModel(g.pr, g.addedMass_g ?? 0, air);
+    const s2 = m.sd * m.sd;
+    invMass += g.count / (m.mmp / s2);
+    cas += g.count * m.cmp * s2;
+  }
+  const map = 1 / invMass;
+  const k = 1 / cas + 1 / boxCompliance(vb_l, air);
+  return Math.sqrt(k / map) / (2 * Math.PI);
+}
+
+/**
+ * Added mass (g) per PR in group `index` that brings the combined tuning to `fb`,
+ * keeping the other groups as they are. Negative when even no added mass tunes too low.
+ * Infinity when the target can't be reached this way: a very heavy group just stops
+ * moving, so the other groups set a floor that added mass on this group can't go below.
+ */
+export function prGroupsAddedMassForFb(
+  vb_l: number,
+  groups: PrGroup[],
+  fb: number,
+  index = 0,
+  air: Air = STANDARD_AIR,
+): number {
+  const fbWith = (add: number) => prGroupsFb(vb_l, groups.map((g, i) => (i === index ? { ...g, addedMass_g: add } : g)), air);
+  if (fbWith(0) < fb) {
+    // Already too low: report how far, as a negative mass, like prAddedMassForFb.
+    let lo = -groups[index]!.pr.mms_g * 0.999, hi = 0;
+    if (fbWith(lo) < fb) return lo;
+    for (let i = 0; i < 80; i++) {
+      const mid = (lo + hi) / 2;
+      if (fbWith(mid) > fb) lo = mid;
+      else hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+  if (groups.length > 1 && fbWith(1e9) > fb) return Infinity;
+  let lo = 0, hi = 1;
+  while (fbWith(hi) > fb && hi < 1e9) hi *= 2;
+  for (let i = 0; i < 80; i++) {
+    const mid = (lo + hi) / 2;
+    if (fbWith(mid) > fb) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
 /** Added mass (g) per PR needed to reach `fb`. Negative means the PR is already too heavy. */
 export function prAddedMassForFb(
   vb_l: number,
@@ -231,4 +294,6 @@ export type EnclosureInput =
       pr: PassiveRadiatorInput;
       prCount?: number;
       addedMass_g?: number;
+      /** Further groups of a different PR (or the same PR with a different added mass). */
+      extraPrs?: PrGroup[];
     } & Losses);

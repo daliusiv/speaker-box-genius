@@ -16,7 +16,7 @@ import {
   type SolveResult,
   type VolumeResult,
 } from "@sbg/engine";
-import type { AppState, DesignState, PortFields, Settings } from "./state.ts";
+import type { AppState, DesignState, PortFields, PrDesign, Settings } from "./state.ts";
 
 /** One colour per design slot; distinguishable in light and dark mode. */
 export const PALETTE = ["#3b82f6", "#f97316", "#22c55e", "#a855f7", "#e11d48", "#0d9488", "#ca8a04", "#64748b"];
@@ -68,7 +68,7 @@ export function volumeFor(s: AppState, d: DesignState | undefined): VolumeResult
     shape: shapeOf(v),
     wall_mm: v.wall_mm,
     drivers: { count: s.drivers * (s.isobaric ? 2 : 1), displacement_l: v.driverDisp_l },
-    passiveRadiators: d?.kind === "pr" ? { count: d.count, displacement_l: v.prDisp_l } : undefined,
+    passiveRadiators: d?.kind === "pr" ? { count: prTotal(d), displacement_l: v.prDisp_l } : undefined,
     ports:
       d?.kind === "bandpass" && d.order !== "4"
         ? {
@@ -144,7 +144,16 @@ function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"]): En
     case "vented":
       return { kind: "vented", vb_l: vb, port: portOf(d), portCount: d.count, ql, qa, qp };
     case "pr":
-      return { kind: "passive-radiator", vb_l: vb, pr: d.params, prCount: d.count, addedMass_g: d.addedMass_g, ql, qa };
+      return {
+        kind: "passive-radiator",
+        vb_l: vb,
+        pr: d.params,
+        prCount: d.count,
+        addedMass_g: d.addedMass_g,
+        extraPrs: d.extra.map((g) => ({ pr: g.params, count: g.count, addedMass_g: g.addedMass_g })),
+        ql,
+        qa,
+      };
     case "bandpass":
       return {
         kind: "bandpass",
@@ -210,4 +219,29 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
     }
   }
   return out;
+}
+
+/** Number of passive radiators in a PR design, all groups together. */
+export const prTotal = (d: PrDesign) => d.count + d.extra.reduce((n, g) => n + g.count, 0);
+
+/** PR groups of a design in engine form (first group + extras). */
+export const prGroupsOf = (d: PrDesign) => [
+  { pr: d.params, count: d.count, addedMass_g: d.addedMass_g },
+  ...d.extra.map((g) => ({ pr: g.params, count: g.count, addedMass_g: g.addedMass_g })),
+];
+
+/**
+ * Worst passive radiator excursion of a design from `fMin` up: the group that comes
+ * closest to (or furthest past) its own Xmax, so one figure can be shown and flagged.
+ */
+export function prPeak(r: SimulationResult, fMin: number): { mm: number; xmax: number | null; over: boolean } | null {
+  if (!r.prGroups) return null;
+  let best: { mm: number; xmax: number | null; ratio: number } | null = null;
+  for (const g of r.prGroups) {
+    let m = 0;
+    for (let i = 0; i < g.excursionMm.length; i++) if (r.freq[i]! >= fMin && g.excursionMm[i]! > m) m = g.excursionMm[i]!;
+    const ratio = g.xmax_mm ? m / g.xmax_mm : 0;
+    if (!best || ratio > best.ratio || (ratio === best.ratio && m > best.mm)) best = { mm: m, xmax: g.xmax_mm, ratio };
+  }
+  return best && { mm: best.mm, xmax: best.xmax, over: best.xmax !== null && best.mm > best.xmax };
 }

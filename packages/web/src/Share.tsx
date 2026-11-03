@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { PORT_LIMIT, type Design } from "./sim.ts";
+import { PORT_LIMIT, prPeak, type Design } from "./sim.ts";
 import { fmtQ } from "./units.ts";
 import type { AppState } from "./state.ts";
 
@@ -28,7 +28,7 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
     v === null || v === undefined || !Number.isFinite(v) ? "–" : `${v.toFixed(digits)} ${unit}`;
   return designs.map(({ design: d, color, vb_l, result: r }) => {
     const x = peak(r.excursionMm, r.freq);
-    const xpr = peak(r.prExcursionMm, r.freq);
+    const xpr = prPeak(r, fMin);
     const vpFront = peak(r.portVelocity, r.freq);
     const vpRear = peak(r.rearPortVelocity, r.freq);
     const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
@@ -39,13 +39,13 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
     return {
       name: d.name,
       color,
-      cells: [vol, n(r.summary.fb ?? r.summary.fc, "Hz"), n(r.summary.f3, "Hz"), n(x, "mm"), n(xpr, "mm"), n(vp, "m/s")],
+      cells: [vol, n(r.summary.fb ?? r.summary.fc, "Hz"), n(r.summary.f3, "Hz"), n(x, "mm"), n(xpr?.mm, "mm"), n(vp, "m/s")],
       over: [
         false,
         false,
         false,
         x !== null && x > state.xmax_mm,
-        xpr !== null && d.kind === "pr" && xpr > d.params.xmax_mm,
+        xpr?.over ?? false,
         vp !== null && vp > PORT_LIMIT,
       ],
     };
@@ -104,7 +104,11 @@ export function curvesCsv(state: AppState, designs: Design[]): string {
     const add = (what: string, data: Float64Array | null) => data && cols.push({ head: `${d.name}: ${what}`, data });
     add("SPL (dB)", r.spl);
     add("Cone excursion (mm peak)", r.excursionMm);
-    add("PR excursion (mm peak)", r.prExcursionMm);
+    if (r.prGroups && r.prGroups.length > 1 && d.kind === "pr") {
+      r.prGroups.forEach((g, k) =>
+        add(`PR excursion, ${k === 0 ? d.prName : (d.extra[k - 1]?.prName ?? `group ${k + 1}`)} (mm peak)`, g.excursionMm),
+      );
+    } else add("PR excursion (mm peak)", r.prExcursionMm);
     add(d.kind === "bandpass" ? `Front port velocity (m/s ${vel})` : `Port velocity (m/s ${vel})`, r.portVelocity);
     add(`Rear port velocity (m/s ${vel})`, r.rearPortVelocity);
     add("Impedance (ohm)", r.impedanceOhm);

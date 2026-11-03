@@ -28,6 +28,14 @@ export interface VentedDesign extends DesignBase {
   targetFb: number;
 }
 
+/** A further group of passive radiators in the same box (a different model, or the same with other added mass). */
+export interface PrGroupState {
+  prName: string;
+  count: number;
+  addedMass_g: number;
+  params: PrParams;
+}
+
 export interface PrDesign extends DesignBase {
   kind: "pr";
   prName: string;
@@ -35,6 +43,8 @@ export interface PrDesign extends DesignBase {
   addedMass_g: number;
   targetFb: number;
   params: PrParams;
+  /** Mixed passive radiators: groups after the first. */
+  extra: PrGroupState[];
 }
 
 /** A port's size and count, shared by ported and bandpass designs. */
@@ -144,7 +154,7 @@ export interface AppState {
   };
 }
 
-const EXAMPLE_PR: PrParams = { mms_g: 122, sd_cm2: 330, xmax_mm: 18, qms: 6, vas_l: 80 };
+export const EXAMPLE_PR: PrParams = { mms_g: 122, sd_cm2: 330, xmax_mm: 18, qms: 6, vas_l: 80 };
 
 export function newId(existing: { id: string }[]): string {
   let i = existing.length + 1;
@@ -199,6 +209,7 @@ export function newDesign(kind: DesignKind, existing: DesignState[]): DesignStat
         addedMass_g: 100,
         targetFb: 30,
         params: { ...EXAMPLE_PR },
+        extra: [],
       };
   }
 }
@@ -313,7 +324,19 @@ function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
   if (!["sealed", "vented", "pr", "bandpass"].includes(d?.kind)) return null;
   const base = newDesign(d.kind, all);
   const merged = { ...base, ...d } as DesignState;
-  if (merged.kind === "pr") merged.params = { ...(base as PrDesign).params, ...(d.params ?? {}) };
+  if (merged.kind === "pr") {
+    merged.params = { ...(base as PrDesign).params, ...(d.params ?? {}) };
+    merged.extra = Array.isArray(d.extra)
+      ? d.extra
+          .filter((g: unknown) => g && typeof g === "object")
+          .map((g: Raw) => ({
+            prName: typeof g.prName === "string" ? g.prName : "Passive radiator",
+            count: Number.isFinite(g.count) && g.count >= 1 ? Math.round(g.count) : 1,
+            addedMass_g: Number.isFinite(g.addedMass_g) && g.addedMass_g >= 0 ? g.addedMass_g : 0,
+            params: { ...EXAMPLE_PR, ...(g.params ?? {}) },
+          }))
+      : [];
+  }
   if (merged.kind === "bandpass") {
     const b = base as BandpassDesign;
     merged.front = { ...b.front, ...(d.front ?? {}) };

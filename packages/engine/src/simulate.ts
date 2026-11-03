@@ -10,8 +10,11 @@ import {
   portAcousticMass,
   portArea,
   prFb,
+  prGroupsFb,
   ventedFb,
   type BandpassChamber,
+  type PassiveRadiatorModel,
+  type PrGroup,
   type BandpassInput,
   type DriverInput,
   type EnclosureInput,
@@ -95,8 +98,10 @@ export interface SimulationResult {
   groupDelayMs: Float64Array;
   /** Peak one-way cone excursion per driver (mm). */
   excursionMm: Float64Array;
-  /** Peak one-way excursion per passive radiator (mm), PR designs only. */
+  /** Peak one-way excursion per passive radiator (mm), PR designs only. With mixed PRs: the first group. */
   prExcursionMm: Float64Array | null;
+  /** PR designs: excursion of each group of identical PRs, with its Xmax (mm). Group 0 = prExcursionMm. */
+  prGroups: { excursionMm: Float64Array; xmax_mm: number | null }[] | null;
   /** Peak air velocity per port (m/s), vented designs only. For bandpass: the front chamber's port. */
   portVelocity: Float64Array | null;
   /** Bandpass only: peak air velocity in the rear chamber's port (to the outside, or into the front chamber). */
@@ -176,6 +181,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   let ventCount = 1;
   let ventArea = 0;
   let prXmax: number | null = null;
+  let prModels: { m: PassiveRadiatorModel; count: number; z: (w: number) => Complex }[] | null = null;
 
   if (!single) {
     // bandpass: handled by `bp`
@@ -196,14 +202,22 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     ventArea = portArea(single.port);
     ventZ = (w) => scale(cx(rap, w * map), 1 / ventCount);
   } else {
-    ventCount = single.prCount ?? 1;
-    const pr = passiveRadiatorModel(single.pr, single.addedMass_g ?? 0, air);
-    fRef = prFb(single.vb_l, single.pr, ventCount, single.addedMass_g ?? 0, air);
+    const groups: PrGroup[] = [
+      { pr: single.pr, count: single.prCount ?? 1, addedMass_g: single.addedMass_g ?? 0 },
+      ...(single.extraPrs ?? []),
+    ];
+    fRef = groups.length === 1 ? prFb(single.vb_l, single.pr, groups[0]!.count, groups[0]!.addedMass_g, air) : prGroupsFb(single.vb_l, groups, air);
     summary.fb = fRef;
-    ventArea = pr.sd;
-    prXmax = pr.xmax;
-    const s2 = pr.sd * pr.sd;
-    ventZ = (w) => scale(cx(pr.rmp / s2, (w * pr.mmp - 1 / (w * pr.cmp)) / s2), 1 / ventCount);
+    prModels = groups.map((g) => {
+      const m = passiveRadiatorModel(g.pr, g.addedMass_g ?? 0, air);
+      const s2 = m.sd * m.sd;
+      // Branch impedance of the whole group (count identical PRs in parallel).
+      return { m, count: g.count, z: (w: number) => scale(cx(m.rmp / s2, (w * m.mmp - 1 / (w * m.cmp)) / s2), 1 / g.count) };
+    });
+    ventCount = groups[0]!.count;
+    ventArea = prModels[0]!.m.sd;
+    prXmax = prModels[0]!.m.xmax;
+    ventZ = (w) => parallel(...prModels!.map((g) => g.z(w)))!;
   }
 
   const wRef = 2 * Math.PI * fRef;
@@ -218,6 +232,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     gd: new Float64Array(N),
     x: new Float64Array(N),
     xpr: box.kind === "passive-radiator" ? new Float64Array(N) : null,
+    xprGroups: prModels ? prModels.map(() => new Float64Array(N)) : null,
     vport: box.kind === "vented" || bp ? new Float64Array(N) : null,
     vport2: bp?.rear ? new Float64Array(N) : null,
     zmag: new Float64Array(N),
@@ -247,6 +262,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     let zMech: Complex;
     let xpr = 0;
     let vport = 0;
+    let prLimitPower = Infinity;
     if (bp) {
       const unit = bp.solve(w); // chamber pressures for unit total cone volume velocity
       zLoad = sub(unit.pF, unit.pR);
@@ -278,7 +294,17 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       // Radiated volume velocity = −(flow into the box air spring).
       u0 = scale(div(pBox, zAir), -1);
 
-      if (zVent) {
+      if (prModels && out.xprGroups) {
+        // Each group sees the box pressure; flow per PR = p / (group impedance × count).
+        prModels.forEach((g, k) => {
+          const uEach = scale(div(pBox, g.z(w)), 1 / g.count);
+          const xk = (Math.SQRT2 * abs(uEach)) / (g.m.sd * w);
+          out.xprGroups![k]![i] = xk * 1000;
+          if (g.m.xmax !== null && xk > 0) prLimitPower = Math.min(prLimitPower, power * (g.m.xmax / xk) ** 2);
+        });
+        xpr = out.xprGroups[0]![i]! / 1000;
+        out.xpr![i] = out.xprGroups[0]![i]!;
+      } else if (zVent) {
         const uVentEach = scale(div(pBox, zVent), 1 / ventCount);
         if (out.xpr) {
           xpr = (Math.SQRT2 * abs(uVentEach)) / (ventArea * w);
@@ -310,7 +336,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     // Thermal: the filter reduces the voltage reaching the coil at this frequency.
     if (d.pe !== null) limits.push(["thermal", (d.pe * n) / Math.max(filterGain2, 1e-12)]);
     if (d.xmax !== null) limits.push(["xmax", power * (d.xmax / x) ** 2]);
-    if (prXmax !== null && xpr > 0) limits.push(["pr-xmax", power * (prXmax / xpr) ** 2]);
+    if (prModels) {
+      if (Number.isFinite(prLimitPower)) limits.push(["pr-xmax", prLimitPower]);
+    } else if (prXmax !== null && xpr > 0) limits.push(["pr-xmax", power * (prXmax / xpr) ** 2]);
     if (out.vport && vport > 0) limits.push(["port", power * (vLimit / vport) ** 2]);
     let best: [SimulationResult["limitedBy"][number], number] = ["none", Infinity];
     for (const l of limits) if (l[1] < best[1]) best = l;
@@ -348,6 +376,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     groupDelayMs: out.gd,
     excursionMm: out.x,
     prExcursionMm: out.xpr,
+    prGroups: prModels ? prModels.map((g, k) => ({ excursionMm: out.xprGroups![k]!, xmax_mm: g.m.xmax === null ? null : g.m.xmax * 1000 })) : null,
     portVelocity: out.vport,
     rearPortVelocity: out.vport2,
     impedanceOhm: out.zmag,

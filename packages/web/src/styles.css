@@ -572,6 +572,22 @@ label.lib-filter {
   }
 }
 
+.pr-group {
+  margin-top: 0.8rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--border);
+}
+
+.pr-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pr-group-head h3 {
+  margin: 0 0 0.4rem;
+}
+
 .pr-name {
   margin: 0 0 0.6rem;
   font-weight: 600;

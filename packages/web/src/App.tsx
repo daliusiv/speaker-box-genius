@@ -25,7 +25,7 @@ import { DriverBrowser } from "./Library.tsx";
 import { PwaStatus } from "./Pwa.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
-import { airOf, alignmentDriver, colorOf, dvcFactors, PORT_LIMIT, roomGainOf, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
+import { airOf, alignmentDriver, colorOf, dvcFactors, PORT_LIMIT, prPeak, roomGainOf, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
 import { RoomGainPanel } from "./RoomGain.tsx";
 import { AddDesign, DesignCard } from "./Designs.tsx";
 import { ShareMenu } from "./Share.tsx";
@@ -280,11 +280,22 @@ export function App() {
     }));
 
   const prDesigns = designs.filter((d) => d.design.kind === "pr");
-  const prLimits = [...new Set(prDesigns.map((d) => (d.design.kind === "pr" ? d.design.params.xmax_mm : 0)))].map((x) => ({
+  const prLimits = [
+    ...new Set(prDesigns.flatMap((d) => (d.design.kind === "pr" ? [d.design.params.xmax_mm, ...d.design.extra.map((g) => g.params.xmax_mm)] : []))),
+  ].map((x) => ({
     value: x,
     label: `PR Xmax ${x} mm`,
     color: LIMIT_RED,
   }));
+  // One curve per PR group; groups after the first are dashed and named after their PR.
+  const prSeries: Series[] = prDesigns.flatMap((d) =>
+    (d.result.prGroups ?? []).map((g, k) => ({
+      label: k === 0 ? d.design.name : `${d.design.name}: ${d.design.kind === "pr" ? (d.design.extra[k - 1]?.prName ?? `group ${k + 1}`) : ""}`,
+      color: d.color,
+      dash: k === 0 ? undefined : k === 1 ? "6 3" : "2 3",
+      y: g.excursionMm,
+    })),
+  );
 
   return (
     <UnitsContext.Provider value={state.settings.units}>
@@ -655,7 +666,7 @@ export function App() {
                 title="Passive radiator excursion (peak, one way)"
                 unit="mm"
                 freq={freq}
-                series={series((r) => r.prExcursionMm).filter((s) => s.y)}
+                series={prSeries}
                 limits={prLimits}
                 yMin={0}
               />
@@ -780,7 +791,7 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
         <tbody>
           {designs.map(({ design: d, color, vb_l, result: r }) => {
             const x = peak(r.excursionMm, r.freq, fMin);
-            const xpr = peak(r.prExcursionMm, r.freq, fMin);
+            const xpr = prPeak(r, fMin);
             const vpFront = peak(r.portVelocity, r.freq, fMin);
             const vpRear = peak(r.rearPortVelocity, r.freq, fMin);
             const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
@@ -803,8 +814,11 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
                 </td>
                 <td>{fmt(r.summary.qtc, 2)}</td>
                 <td className={x !== null && x > state.xmax_mm ? "over" : ""}>{fmt(x)} mm</td>
-                <td className={xpr !== null && d.kind === "pr" && xpr > d.params.xmax_mm ? "over" : ""}>
-                  {xpr === null ? "–" : `${fmt(xpr)} mm`}
+                <td
+                  className={xpr?.over ? "over" : ""}
+                  title={d.kind === "pr" && d.extra.length > 0 ? "The PR group closest to (or furthest past) its own Xmax" : undefined}
+                >
+                  {xpr === null ? "–" : `${fmt(xpr.mm)} mm`}
                 </td>
                 <td className={vp !== null && vp > PORT_LIMIT ? "over" : ""}>{vp === null ? "–" : `${fmt(vp)} m/s`}</td>
               </tr>
