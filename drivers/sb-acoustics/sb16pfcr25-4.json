@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB16PFCR25-4",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 6,
+  "ts": {
+    "fs": 35,
+    "qms": 2.76,
+    "qes": 0.39,
+    "vas_l": 32.7,
+    "re": 3.2,
+    "sd_cm2": 124,
+    "qts": 0.34,
+    "le_mh": 0.56,
+    "bl": 5,
+    "mms_g": 13.8,
+    "xmax_mm": 4.5,
+    "pe_w": 40
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/6-sb16pfcr25-4-paper/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

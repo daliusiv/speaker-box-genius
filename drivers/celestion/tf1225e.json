@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "TF1225e",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 52.6,
+    "qms": 3.513,
+    "qes": 0.368,
+    "vas_l": 67.71,
+    "re": 6.42,
+    "sd_cm2": 530.93,
+    "qts": 0.333,
+    "le_mh": 1.32,
+    "bl": 17.66,
+    "mms_g": 54.04,
+    "xmax_mm": 5.25,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 283,
+    "depth_mm": 139
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/tf1225e/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

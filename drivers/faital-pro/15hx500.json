@@ -1,0 +1,35 @@
+{
+  "brand": "Faital Pro",
+  "model": "15HX500",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 40,
+    "qms": 5.5,
+    "qes": 0.29,
+    "vas_l": 150.1,
+    "re": 5,
+    "sd_cm2": 864,
+    "qts": 0.28,
+    "le_mh": 0.84,
+    "bl": 22.2,
+    "mms_g": 110,
+    "xmax_mm": 9.4,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 352,
+    "depth_mm": 200
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/Coaxial_Loudspeakers/product_details/index.php?id=351060010",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

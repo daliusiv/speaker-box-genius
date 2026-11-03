@@ -1,0 +1,31 @@
+{
+  "brand": "Beyma",
+  "model": "3FR30V2",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 3,
+  "ts": {
+    "fs": 133,
+    "qms": 5.9,
+    "qes": 0.56,
+    "vas_l": 0.8,
+    "re": 5.8,
+    "sd_cm2": 30,
+    "qts": 0.51,
+    "le_mh": 0.16,
+    "bl": 4.5,
+    "mms_g": 2.3,
+    "xmax_mm": 2,
+    "pe_w": 30
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/full-range/103FR30V2M8/altavoz-3fr30v2-8-oh-emb-mult-32/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 1 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 0.8 L from Cms."
+}

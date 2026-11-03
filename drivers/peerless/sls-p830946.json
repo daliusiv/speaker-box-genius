@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "SLS-P830946",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 47,
+    "qms": 7.42,
+    "qes": 0.454,
+    "vas_l": 6.03,
+    "re": 2.7,
+    "sd_cm2": 124,
+    "qts": 0.43,
+    "le_mh": 0.678,
+    "bl": 8.51,
+    "mms_g": 40.6,
+    "xmax_mm": 10.9,
+    "pe_w": 75
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/168",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

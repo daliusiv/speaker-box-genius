@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "19RS115 (4 Ω)",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 18,
+  "ts": {
+    "fs": 30,
+    "qms": 7.1,
+    "qes": 0.21,
+    "vas_l": 198,
+    "re": 3.1,
+    "sd_cm2": 1450,
+    "qts": 0.2,
+    "le_mh": 3.3,
+    "bl": 34.9,
+    "mms_g": 432,
+    "xmax_mm": 23.3,
+    "pe_w": 2000
+  },
+  "physical": {
+    "cutout_mm": 455,
+    "depth_mm": 285
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/19/4/19RS115",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

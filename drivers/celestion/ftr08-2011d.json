@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "FTR08-2011D",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 86.1,
+    "qms": 2.238,
+    "qes": 0.541,
+    "vas_l": 8.99,
+    "re": 5.82,
+    "sd_cm2": 226.98,
+    "qts": 0.436,
+    "le_mh": 0.38,
+    "bl": 12.71,
+    "mms_g": 27.75,
+    "xmax_mm": 5.5,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 187,
+    "depth_mm": 102
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/ftr08-2011d/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

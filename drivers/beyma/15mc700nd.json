@@ -1,0 +1,33 @@
+{
+  "brand": "Beyma",
+  "model": "15MC700Nd",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 49,
+    "qms": 3.6,
+    "qes": 0.34,
+    "vas_l": 105,
+    "re": 5.2,
+    "sd_cm2": 880,
+    "qts": 0.31,
+    "le_mh": 0.8,
+    "bl": 22.6,
+    "mms_g": 107,
+    "xmax_mm": 7,
+    "pe_w": 700
+  },
+  "physical": {
+    "depth_mm": 175
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/115MC70ND8/altavoz-15mc700nd-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

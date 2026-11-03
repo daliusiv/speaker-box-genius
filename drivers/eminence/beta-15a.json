@@ -1,0 +1,34 @@
+{
+  "brand": "Eminence",
+  "model": "Beta 15A",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 35,
+    "qms": 8.1,
+    "qes": 0.63,
+    "vas_l": 334.6,
+    "re": 6.32,
+    "sd_cm2": 823.7,
+    "qts": 0.58,
+    "le_mh": 1.1,
+    "bl": 11.5,
+    "mms_g": 60,
+    "xmax_mm": 4,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 352.3,
+    "depth_mm": 153.7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://eminence.com/products/beta_15a",
+      "retrieved": "2026-11-02",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

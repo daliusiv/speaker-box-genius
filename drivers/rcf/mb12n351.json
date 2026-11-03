@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "MB12N351",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 55,
+    "qms": 4.5,
+    "qes": 0.21,
+    "vas_l": 61,
+    "re": 5.6,
+    "sd_cm2": 500,
+    "qts": 0.2,
+    "le_mh": 1.65,
+    "bl": 22.5,
+    "mms_g": 54,
+    "xmax_mm": 6,
+    "pe_w": 650
+  },
+  "physical": {
+    "cutout_mm": 282
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/mb12n351",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

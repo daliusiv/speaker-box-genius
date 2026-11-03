@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "MW19TX-4",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 7,
+  "ts": {
+    "fs": 32,
+    "qms": 5.43,
+    "qes": 0.28,
+    "vas_l": 53.2,
+    "re": 3.4,
+    "sd_cm2": 158,
+    "qts": 0.27,
+    "le_mh": 0.14,
+    "bl": 6.3,
+    "mms_g": 16.2,
+    "xmax_mm": 6.8,
+    "pe_w": 70
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/7%C2%BD-satori-mw19tx-4-textreme/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

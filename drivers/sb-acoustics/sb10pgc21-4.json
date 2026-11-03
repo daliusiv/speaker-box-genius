@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB10PGC21-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 3,
+  "ts": {
+    "fs": 89,
+    "qms": 11.2,
+    "qes": 1.01,
+    "vas_l": 1.2,
+    "re": 3.4,
+    "sd_cm2": 27,
+    "qts": 0.92,
+    "le_mh": 0.15,
+    "bl": 2.3,
+    "mms_g": 2.8,
+    "xmax_mm": 2.25,
+    "pe_w": 20
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/3in-sb10pgc21-4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

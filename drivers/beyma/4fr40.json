@@ -1,0 +1,30 @@
+{
+  "brand": "Beyma",
+  "model": "4FR40",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 4,
+  "ts": {
+    "fs": 92,
+    "qms": 11.3,
+    "qes": 0.96,
+    "vas_l": 2.8,
+    "re": 6.4,
+    "sd_cm2": 55,
+    "qts": 0.88,
+    "le_mh": 0.2,
+    "bl": 4.2,
+    "mms_g": 4.4,
+    "xmax_mm": 3,
+    "pe_w": 40
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/full-range/104FR408/altavoz-4fr40-8-oh-emb-mult-20/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

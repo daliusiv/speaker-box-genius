@@ -1,0 +1,34 @@
+{
+  "brand": "Eminence",
+  "model": "Kappa 15A",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 33,
+    "qms": 8.9,
+    "qes": 0.33,
+    "vas_l": 321.3,
+    "re": 5.22,
+    "sd_cm2": 856.3,
+    "qts": 0.32,
+    "le_mh": 1.05,
+    "bl": 15.7,
+    "mms_g": 76,
+    "xmax_mm": 4,
+    "pe_w": 450
+  },
+  "physical": {
+    "cutout_mm": 352.3,
+    "depth_mm": 155.7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://eminence.com/products/kappa_15a",
+      "retrieved": "2026-11-02",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

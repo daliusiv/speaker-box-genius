@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "LF18G400",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 28,
+    "qms": 4.6,
+    "qes": 0.29,
+    "vas_l": 360,
+    "re": 5.1,
+    "sd_cm2": 1200,
+    "qts": 0.27,
+    "le_mh": 1.2,
+    "bl": 24.2,
+    "mms_g": 190,
+    "xmax_mm": 9,
+    "pe_w": 1000
+  },
+  "physical": {
+    "cutout_mm": 424
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/lf18g400",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

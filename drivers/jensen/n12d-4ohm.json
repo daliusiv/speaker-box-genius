@@ -1,0 +1,30 @@
+{
+  "brand": "Jensen",
+  "model": "N12D (4 Ω)",
+  "type": "other",
+  "nominal_ohms": 4,
+  "size_in": 12,
+  "ts": {
+    "fs": 62.5,
+    "qms": 3.3,
+    "qes": 0.45,
+    "vas_l": 63.8,
+    "re": 3.1,
+    "sd_cm2": 490.9,
+    "qts": 0.37,
+    "le_mh": 0.22,
+    "bl": 10.12,
+    "mms_g": 34.8,
+    "pe_w": 150
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/d-series/n12d",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "15NBX100 (4 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 37,
+    "qms": 4.77,
+    "qes": 0.3,
+    "vas_l": 109.6,
+    "re": 3.6,
+    "sd_cm2": 855,
+    "qts": 0.27,
+    "le_mh": 1.58,
+    "bl": 22.69,
+    "mms_g": 176,
+    "xmax_mm": 10,
+    "pe_w": 1000
+  },
+  "physical": {
+    "cutout_mm": 353,
+    "depth_mm": 179
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/15/4/15NBX100",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

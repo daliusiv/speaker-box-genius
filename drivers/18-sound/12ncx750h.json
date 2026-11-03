@@ -1,0 +1,35 @@
+{
+  "brand": "18 Sound",
+  "model": "12NCX750H",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 58,
+    "qms": 6.42,
+    "qes": 0.31,
+    "vas_l": 63,
+    "re": 5.4,
+    "sd_cm2": 531,
+    "qts": 0.29,
+    "le_mh": 0.62,
+    "bl": 17.5,
+    "mms_g": 47,
+    "xmax_mm": 5.5,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 280,
+    "depth_mm": 148
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/coaxial/12-0/8/12NCX750H",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

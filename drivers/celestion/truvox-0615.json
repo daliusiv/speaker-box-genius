@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "Truvox 0615",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 89.6,
+    "qms": 5.535,
+    "qes": 0.516,
+    "vas_l": 10.1,
+    "re": 5.59,
+    "sd_cm2": 154.54,
+    "qts": 0.472,
+    "le_mh": 0.369,
+    "bl": 8.032,
+    "mms_g": 10.584,
+    "xmax_mm": 3.5,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 143.5,
+    "depth_mm": 65.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/truvox-0615/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 7.44 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 10.1 L from Cms."
+}

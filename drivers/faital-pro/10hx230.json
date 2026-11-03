@@ -1,0 +1,35 @@
+{
+  "brand": "Faital Pro",
+  "model": "10HX230",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 65,
+    "qms": 5.8,
+    "qes": 0.42,
+    "vas_l": 30.5,
+    "re": 5.3,
+    "sd_cm2": 347,
+    "qts": 0.39,
+    "le_mh": 0.54,
+    "bl": 13.1,
+    "mms_g": 33,
+    "xmax_mm": 7.37,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 230,
+    "depth_mm": 136.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/Coaxial_Loudspeakers/product_details/index.php?id=351040010",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "6ND410 (8 Ω)",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6,
+  "ts": {
+    "fs": 120,
+    "qms": 2.2,
+    "qes": 0.27,
+    "vas_l": 6.2,
+    "re": 5.9,
+    "sd_cm2": 143,
+    "qts": 0.24,
+    "le_mh": 0.67,
+    "bl": 11.6,
+    "mms_g": 8.2,
+    "xmax_mm": 2,
+    "pe_w": 180
+  },
+  "physical": {
+    "cutout_mm": 148,
+    "depth_mm": 60
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/6-5/8/6ND410",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

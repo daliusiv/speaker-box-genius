@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "GBS-85N25PR07-04",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 3.5,
+  "ts": {
+    "fs": 130,
+    "qms": 5.37,
+    "qes": 0.807,
+    "vas_l": 0.465,
+    "re": 3.5,
+    "sd_cm2": 35.3,
+    "qts": 0.7,
+    "le_mh": 0.308,
+    "bl": 4.48,
+    "mms_g": 5.74,
+    "xmax_mm": 2.95,
+    "pe_w": 12
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/41",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

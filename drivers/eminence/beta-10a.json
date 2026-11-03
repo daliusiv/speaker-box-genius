@@ -1,0 +1,34 @@
+{
+  "brand": "Eminence",
+  "model": "Beta 10A",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 53,
+    "qms": 8.14,
+    "qes": 0.52,
+    "vas_l": 60.1,
+    "re": 5.75,
+    "sd_cm2": 344.9,
+    "qts": 0.49,
+    "le_mh": 0.67,
+    "bl": 9.6,
+    "mms_g": 25,
+    "xmax_mm": 3,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 231.9,
+    "depth_mm": 101.1
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://eminence.com/products/beta_10a",
+      "retrieved": "2026-11-02",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

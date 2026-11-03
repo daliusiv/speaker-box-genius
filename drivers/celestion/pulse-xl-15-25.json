@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "PULSE XL 15.25",
+  "type": "other",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 39.9,
+    "qms": 12.216,
+    "qes": 0.72,
+    "vas_l": 193.23,
+    "re": 6.66,
+    "sd_cm2": 855.3,
+    "qts": 0.68,
+    "le_mh": 1.14,
+    "bl": 14.1,
+    "mms_g": 85.273,
+    "xmax_mm": 8,
+    "pe_w": 700
+  },
+  "physical": {
+    "cutout_mm": 353,
+    "depth_mm": 168
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/pulse-xl-15-25/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

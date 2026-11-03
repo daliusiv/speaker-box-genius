@@ -1,0 +1,30 @@
+{
+  "brand": "Beyma",
+  "model": "8NMFW",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 37,
+    "qms": 7.6,
+    "qes": 0.36,
+    "vas_l": 27,
+    "re": 5.7,
+    "sd_cm2": 227.00000000000003,
+    "qts": 0.34,
+    "le_mh": 1.1,
+    "bl": 13.4,
+    "mms_g": 48,
+    "xmax_mm": 9,
+    "pe_w": 200
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/208NMFW8/altavoz-8nmfw-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

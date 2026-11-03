@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "LF21X451",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 21,
+  "ts": {
+    "fs": 28,
+    "qms": 6.9,
+    "qes": 0.39,
+    "vas_l": 385,
+    "re": 5.4,
+    "sd_cm2": 1700.0000000000002,
+    "qts": 0.37,
+    "le_mh": 2.9,
+    "bl": 30.5,
+    "mms_g": 355,
+    "xmax_mm": 14,
+    "pe_w": 2000
+  },
+  "physical": {
+    "cutout_mm": 512
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/lf21x451",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

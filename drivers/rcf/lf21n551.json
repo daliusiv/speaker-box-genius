@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "LF21N551",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 21,
+  "ts": {
+    "fs": 35,
+    "qms": 6.2,
+    "qes": 0.35,
+    "vas_l": 200,
+    "re": 5.2,
+    "sd_cm2": 1700.0000000000002,
+    "qts": 0.33,
+    "le_mh": 3.2,
+    "bl": 39,
+    "mms_g": 434,
+    "xmax_mm": 15,
+    "pe_w": 2000
+  },
+  "physical": {
+    "cutout_mm": 512
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/lf21n551",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

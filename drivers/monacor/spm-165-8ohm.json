@@ -1,0 +1,35 @@
+{
+  "brand": "Monacor",
+  "model": "SPM-165 (8 Ω)",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 49,
+    "qms": 2.7,
+    "qes": 0.67,
+    "vas_l": 27.8,
+    "re": 7.2,
+    "sd_cm2": 140,
+    "qts": 0.55,
+    "le_mh": 0.6,
+    "bl": 5.8,
+    "mms_g": 10.3,
+    "xmax_mm": 3,
+    "pe_w": 60
+  },
+  "physical": {
+    "cutout_mm": 145,
+    "depth_mm": 78
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/hi-fi-midrange-speakers-/spm-165-8/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 33 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 27.8 L from Cms."
+}

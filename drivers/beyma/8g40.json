@@ -1,0 +1,33 @@
+{
+  "brand": "Beyma",
+  "model": "8G40",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 70,
+    "qms": 6.8,
+    "qes": 0.38,
+    "vas_l": 17,
+    "re": 6.1,
+    "sd_cm2": 220,
+    "qts": 0.36,
+    "le_mh": 1.3,
+    "bl": 12.2,
+    "mms_g": 21,
+    "xmax_mm": 6.5,
+    "pe_w": 250
+  },
+  "physical": {
+    "depth_mm": 96
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/108G48/altavoz-8g40-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

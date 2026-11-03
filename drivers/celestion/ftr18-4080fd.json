@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "FTR18-4080FD",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 25.2,
+    "qms": 4.75,
+    "qes": 0.304,
+    "vas_l": 408.72,
+    "re": 5.62,
+    "sd_cm2": 1134.12,
+    "qts": 0.286,
+    "le_mh": 1.5,
+    "bl": 22.81,
+    "mms_g": 177.81,
+    "xmax_mm": 8.5,
+    "pe_w": 1000
+  },
+  "physical": {
+    "cutout_mm": 416,
+    "depth_mm": 205
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/ftr18-4080fd/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

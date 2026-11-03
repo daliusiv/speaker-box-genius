@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "HDS-P830874",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 61,
+    "qms": 3.68,
+    "qes": 0.595,
+    "vas_l": 10.6,
+    "re": 6.3,
+    "sd_cm2": 143,
+    "qts": 0.51,
+    "le_mh": 0.418,
+    "bl": 8.71,
+    "mms_g": 18.8,
+    "xmax_mm": 7.34,
+    "pe_w": 75
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/80",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

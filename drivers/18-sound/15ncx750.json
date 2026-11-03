@@ -1,0 +1,35 @@
+{
+  "brand": "18 Sound",
+  "model": "15NCX750",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 49,
+    "qms": 6.32,
+    "qes": 0.4,
+    "vas_l": 141,
+    "re": 5.4,
+    "sd_cm2": 881,
+    "qts": 0.37,
+    "le_mh": 0.66,
+    "bl": 18.4,
+    "mms_g": 81,
+    "xmax_mm": 5.5,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 360,
+    "depth_mm": 185
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/coaxial/15-0/8/15NCX750",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

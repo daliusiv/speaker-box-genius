@@ -1,0 +1,30 @@
+{
+  "brand": "Beyma",
+  "model": "12GA50",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 90,
+    "qms": 14.8,
+    "qes": 1.26,
+    "vas_l": 34,
+    "re": 6.2,
+    "sd_cm2": 530,
+    "qts": 1.16,
+    "le_mh": 0.6,
+    "bl": 10,
+    "mms_g": 34,
+    "xmax_mm": 3,
+    "pe_w": 250
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/full-range/112GA508/altavoz-12ga50-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

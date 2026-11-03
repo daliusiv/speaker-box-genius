@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "GBS-115N25AL01-04",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 4.5,
+  "ts": {
+    "fs": 90,
+    "qms": 3.46,
+    "qes": 0.772,
+    "vas_l": 1.79,
+    "re": 3.3,
+    "sd_cm2": 58.1,
+    "qts": 0.63,
+    "le_mh": 0.344,
+    "bl": 4.53,
+    "mms_g": 8.45,
+    "xmax_mm": 4.85,
+    "pe_w": 20
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/72",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

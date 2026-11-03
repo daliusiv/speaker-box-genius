@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "P10Q (16 Ω)",
+  "type": "other",
+  "nominal_ohms": 16,
+  "size_in": 10,
+  "ts": {
+    "fs": 91.8,
+    "qms": 8.44,
+    "qes": 2.42,
+    "vas_l": 26.6,
+    "re": 12.03,
+    "sd_cm2": 330,
+    "qts": 1.88,
+    "le_mh": 0.79,
+    "bl": 7.04,
+    "mms_g": 17.2,
+    "xmax_mm": 1,
+    "pe_w": 40
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/vintage-alnico/p10q",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

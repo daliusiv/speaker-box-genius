@@ -1,0 +1,34 @@
+{
+  "brand": "Faital Pro",
+  "model": "2FE24",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 2.5,
+  "ts": {
+    "fs": 170,
+    "qms": 4.1,
+    "qes": 1.22,
+    "vas_l": 0.3,
+    "re": 6.5,
+    "sd_cm2": 20.1,
+    "qts": 0.94,
+    "le_mh": 0.11,
+    "bl": 3.5,
+    "mms_g": 1.9,
+    "xmax_mm": 1.75,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 60.5,
+    "depth_mm": 32.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=40900010",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

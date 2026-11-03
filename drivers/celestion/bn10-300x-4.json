@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "BN10-300X(4)",
+  "type": "other",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 64.2,
+    "qms": 3.33,
+    "qes": 0.5,
+    "vas_l": 29.2,
+    "re": 3.03,
+    "sd_cm2": 346.4,
+    "qts": 0.43,
+    "le_mh": 0.32,
+    "bl": 9.39,
+    "mms_g": 35.81,
+    "xmax_mm": 4,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 229,
+    "depth_mm": 112
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/bn10-300x4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

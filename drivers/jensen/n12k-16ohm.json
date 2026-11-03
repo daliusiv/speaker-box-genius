@@ -1,0 +1,30 @@
+{
+  "brand": "Jensen",
+  "model": "N12K (16 Ω)",
+  "type": "other",
+  "nominal_ohms": 16,
+  "size_in": 12,
+  "ts": {
+    "fs": 118,
+    "qms": 20.19,
+    "qes": 1.16,
+    "vas_l": 19.2,
+    "re": 12.1,
+    "sd_cm2": 490.9,
+    "qts": 1.1,
+    "le_mh": 1.32,
+    "bl": 15.81,
+    "mms_g": 32.5,
+    "pe_w": 100
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/vintage-neo/n12k",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

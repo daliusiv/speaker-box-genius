@@ -1,0 +1,34 @@
+{
+  "brand": "Faital Pro",
+  "model": "6PR122",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 110,
+    "qms": 3.3,
+    "qes": 0.44,
+    "vas_l": 4.7,
+    "re": 6,
+    "sd_cm2": 137.3,
+    "qts": 0.39,
+    "le_mh": 0.15,
+    "bl": 10.5,
+    "mms_g": 11.7,
+    "xmax_mm": 2.75,
+    "pe_w": 120
+  },
+  "physical": {
+    "cutout_mm": 147,
+    "depth_mm": 78
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=101020120",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

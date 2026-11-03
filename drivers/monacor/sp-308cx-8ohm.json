@@ -1,0 +1,35 @@
+{
+  "brand": "Monacor",
+  "model": "SP-308CX (8 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 80,
+    "qms": 2.21,
+    "qes": 0.43,
+    "vas_l": 15.4,
+    "re": 5.8,
+    "sd_cm2": 221,
+    "qts": 0.36,
+    "le_mh": 0.58,
+    "bl": 12.1,
+    "mms_g": 17,
+    "xmax_mm": 2.5,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 184,
+    "depth_mm": 169.3
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/pa-coaxial-speakers-and-full-range-speakers-/sp-308cx/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

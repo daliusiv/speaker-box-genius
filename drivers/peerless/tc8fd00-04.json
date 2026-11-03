@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "TC8FD00-04",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 3,
+  "ts": {
+    "fs": 140,
+    "qms": 2.8,
+    "qes": 1.4,
+    "vas_l": 0.696,
+    "re": 3.3,
+    "sd_cm2": 33.2,
+    "qts": 0.94,
+    "le_mh": 0.054,
+    "bl": 2.43,
+    "mms_g": 2.81,
+    "xmax_mm": 3.73,
+    "pe_w": 25
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/189",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

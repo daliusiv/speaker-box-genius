@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "15ND930 (8 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 36,
+    "qms": 5.3,
+    "qes": 0.23,
+    "vas_l": 206,
+    "re": 5.5,
+    "sd_cm2": 850,
+    "qts": 0.22,
+    "le_mh": 1.61,
+    "bl": 23.8,
+    "mms_g": 101,
+    "xmax_mm": 7.5,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 353,
+    "depth_mm": 177
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/15-0/8/15ND930",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

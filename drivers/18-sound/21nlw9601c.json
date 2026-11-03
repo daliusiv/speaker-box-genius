@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "21NLW9601C",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 21,
+  "ts": {
+    "fs": 38,
+    "qms": 6.28,
+    "qes": 0.31,
+    "vas_l": 140,
+    "re": 2.9,
+    "sd_cm2": 1662,
+    "qts": 0.29,
+    "le_mh": 1.61,
+    "bl": 33.2,
+    "mms_g": 460,
+    "xmax_mm": 14,
+    "pe_w": 1800
+  },
+  "physical": {
+    "cutout_mm": 492,
+    "depth_mm": 250
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/21-0/4/21NLW9601C",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

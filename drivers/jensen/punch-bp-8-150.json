@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "Punch BP 8/150",
+  "type": "other",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 74.7,
+    "qms": 3.61,
+    "qes": 0.36,
+    "vas_l": 13.1,
+    "re": 6.08,
+    "sd_cm2": 213.8,
+    "qts": 0.33,
+    "le_mh": 0.71,
+    "bl": 13.29,
+    "mms_g": 22.4,
+    "xmax_mm": 3.1,
+    "pe_w": 150
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/bass-speakers/punch-bp-8150",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

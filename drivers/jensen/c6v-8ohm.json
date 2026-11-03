@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "C6V (8 Ω)",
+  "type": "other",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 106.3,
+    "qms": 10.65,
+    "qes": 1.2,
+    "vas_l": 7,
+    "re": 6.58,
+    "sd_cm2": 122.7,
+    "qts": 1.08,
+    "le_mh": 0.48,
+    "bl": 5,
+    "mms_g": 6.8,
+    "xmax_mm": 0.5,
+    "pe_w": 20
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/vintage-ceramic/c6v",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

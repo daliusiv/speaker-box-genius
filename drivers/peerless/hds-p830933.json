@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "HDS-P830933",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 65,
+    "qms": 4.57,
+    "qes": 0.434,
+    "vas_l": 7.23,
+    "re": 6,
+    "sd_cm2": 88.3,
+    "qts": 0.4,
+    "le_mh": 0.402,
+    "bl": 7.22,
+    "mms_g": 9.3,
+    "xmax_mm": 5.46,
+    "pe_w": 40
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/86",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

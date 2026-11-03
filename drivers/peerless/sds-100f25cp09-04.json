@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "SDS-100F25CP09-04",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 80,
+    "qms": 5.34,
+    "qes": 0.584,
+    "vas_l": 1.97,
+    "re": 3.6,
+    "sd_cm2": 50.3,
+    "qts": 0.53,
+    "le_mh": 0.42,
+    "bl": 4.72,
+    "mms_g": 7.2,
+    "xmax_mm": 5.05,
+    "pe_w": 25
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/311",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

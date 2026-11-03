@@ -1,0 +1,31 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB12PACR25-4-COAX",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 55,
+    "qms": 4.84,
+    "qes": 0.38,
+    "vas_l": 4.3,
+    "re": 3.1,
+    "sd_cm2": 45,
+    "qts": 0.35,
+    "le_mh": 0.25,
+    "bl": 4,
+    "mms_g": 5.6,
+    "xmax_mm": 5,
+    "pe_w": 30
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/4-sb12pacr25-4-coax/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

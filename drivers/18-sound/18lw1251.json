@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "18LW1251",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 35,
+    "qms": 8,
+    "qes": 0.28,
+    "vas_l": 268,
+    "re": 5,
+    "sd_cm2": 1134,
+    "qts": 0.27,
+    "le_mh": 2.73,
+    "bl": 23.6,
+    "mms_g": 142,
+    "xmax_mm": 9,
+    "pe_w": 1000
+  },
+  "physical": {
+    "cutout_mm": 416,
+    "depth_mm": 207
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/18-0/8/18LW1251",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

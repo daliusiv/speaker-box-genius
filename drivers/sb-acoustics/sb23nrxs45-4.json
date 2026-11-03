@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB23NRXS45-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 27,
+    "qms": 5.55,
+    "qes": 0.32,
+    "vas_l": 87.5,
+    "re": 3.3,
+    "sd_cm2": 216,
+    "qts": 0.3,
+    "le_mh": 0.29,
+    "bl": 6.9,
+    "mms_g": 27.2,
+    "xmax_mm": 6.5,
+    "pe_w": 60
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/8-sb23nrxs45-4-norex/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

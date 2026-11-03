@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "GBS-250F38CP01-04",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 38,
+    "qms": 8.3,
+    "qes": 0.544,
+    "vas_l": 22.8,
+    "re": 3.6,
+    "sd_cm2": 314,
+    "qts": 0.51,
+    "le_mh": 2.81,
+    "bl": 12.9,
+    "mms_g": 107,
+    "xmax_mm": 9.17,
+    "pe_w": 200
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/40",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

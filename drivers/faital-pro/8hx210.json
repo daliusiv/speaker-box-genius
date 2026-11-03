@@ -1,0 +1,35 @@
+{
+  "brand": "Faital Pro",
+  "model": "8HX210",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 83,
+    "qms": 3.6,
+    "qes": 0.5,
+    "vas_l": 10.1,
+    "re": 5.3,
+    "sd_cm2": 217,
+    "qts": 0.44,
+    "le_mh": 0.5,
+    "bl": 11.86,
+    "mms_g": 24,
+    "xmax_mm": 6.53,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 181,
+    "depth_mm": 123.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/Coaxial_Loudspeakers/product_details/index.php?id=351030180",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "P10R-FEN",
+  "type": "other",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 87.3,
+    "qms": 18.99,
+    "qes": 1.98,
+    "vas_l": 28.5,
+    "re": 6.96,
+    "sd_cm2": 330.1,
+    "qts": 1.79,
+    "le_mh": 0.51,
+    "bl": 5.89,
+    "mms_g": 18,
+    "xmax_mm": 1,
+    "pe_w": 25
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/vintage-alnico/p10r-fen",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

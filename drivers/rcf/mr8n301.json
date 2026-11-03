@@ -1,0 +1,32 @@
+{
+  "brand": "RCF",
+  "model": "MR8N301",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 310,
+    "qms": 3.45,
+    "qes": 0.41,
+    "vas_l": 2,
+    "re": 6.6,
+    "sd_cm2": 200,
+    "qts": 0.37,
+    "le_mh": 1.16,
+    "xmax_mm": 4,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 202
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/mr8n301",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 10 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it). Published Bl 17.8 T·m disagrees with Fs, Mms, Re and Qes, so it's left out (the app derives it)."
+}

@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB29NRX75-6",
+  "type": "subwoofer",
+  "nominal_ohms": 6,
+  "size_in": 10,
+  "ts": {
+    "fs": 21,
+    "qms": 5.7,
+    "qes": 0.38,
+    "vas_l": 102,
+    "re": 4.2,
+    "sd_cm2": 312,
+    "qts": 0.35,
+    "le_mh": 1.8,
+    "bl": 10.7,
+    "mms_g": 78,
+    "xmax_mm": 11,
+    "pe_w": 200
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/10-sb29nrx75-6-norex/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

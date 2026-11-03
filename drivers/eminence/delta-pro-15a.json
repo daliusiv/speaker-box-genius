@@ -1,0 +1,34 @@
+{
+  "brand": "Eminence",
+  "model": "Delta Pro 15A",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 42,
+    "qms": 4.73,
+    "qes": 0.44,
+    "vas_l": 243.5,
+    "re": 5.71,
+    "sd_cm2": 856.3,
+    "qts": 0.4,
+    "le_mh": 0.83,
+    "bl": 14.5,
+    "mms_g": 61,
+    "xmax_mm": 4.3,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 355.6,
+    "depth_mm": 153.9
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://eminence.com/products/delta_pro_15a",
+      "retrieved": "2026-11-02",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

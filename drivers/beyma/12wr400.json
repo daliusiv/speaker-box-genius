@@ -1,0 +1,33 @@
+{
+  "brand": "Beyma",
+  "model": "12WR400",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 42,
+    "qms": 5.6,
+    "qes": 0.28,
+    "vas_l": 91,
+    "re": 5.6,
+    "sd_cm2": 530,
+    "qts": 0.27,
+    "le_mh": 1,
+    "bl": 18,
+    "mms_g": 63,
+    "xmax_mm": 6.3,
+    "pe_w": 400
+  },
+  "physical": {
+    "depth_mm": 131
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/112WR408/altavoz-12wr400-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "MR16P-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 32,
+    "qms": 5.11,
+    "qes": 0.32,
+    "vas_l": 44.3,
+    "re": 6.2,
+    "sd_cm2": 119,
+    "qts": 0.3,
+    "le_mh": 0.11,
+    "bl": 6.5,
+    "mms_g": 10.6,
+    "xmax_mm": 3.1,
+    "pe_w": 30
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/6%C2%BDin-satori-mr16p-8/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "CF0617M",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 116.6,
+    "qms": 6.93,
+    "qes": 0.481,
+    "vas_l": 5.39,
+    "re": 5.3,
+    "sd_cm2": 153.94,
+    "qts": 0.451,
+    "le_mh": 1.73,
+    "bl": 9.68,
+    "mms_g": 11.59,
+    "xmax_mm": 2.7,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 150,
+    "depth_mm": 78.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/cf0617m/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

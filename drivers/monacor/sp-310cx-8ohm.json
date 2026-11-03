@@ -1,0 +1,35 @@
+{
+  "brand": "Monacor",
+  "model": "SP-310CX (8 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 60,
+    "qms": 3.24,
+    "qes": 0.36,
+    "vas_l": 41,
+    "re": 5.6,
+    "sd_cm2": 346,
+    "qts": 0.32,
+    "le_mh": 0.65,
+    "bl": 13.3,
+    "mms_g": 32,
+    "xmax_mm": 2.5,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 232,
+    "depth_mm": 188
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/pa-coaxial-speakers-and-full-range-speakers-/sp-310cx/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published nominal impedance 2 Ω is below Re 5.6 Ω, so 8 Ω is estimated from Re. Coaxial driver; values are for the woofer section."
+}

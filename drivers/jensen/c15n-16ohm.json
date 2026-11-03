@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "C15N (16 Ω)",
+  "type": "other",
+  "nominal_ohms": 16,
+  "size_in": 15,
+  "ts": {
+    "fs": 73.5,
+    "qms": 8.48,
+    "qes": 1.76,
+    "vas_l": 74.4,
+    "re": 12.3,
+    "sd_cm2": 754.8,
+    "qts": 1.46,
+    "le_mh": 1.28,
+    "bl": 12.81,
+    "mms_g": 51,
+    "xmax_mm": 1,
+    "pe_w": 50
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/vintage-ceramic/c15n",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

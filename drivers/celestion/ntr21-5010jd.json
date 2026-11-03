@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "NTR21-5010JD",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 21,
+  "ts": {
+    "fs": 32.2,
+    "qms": 5.819,
+    "qes": 0.339,
+    "vas_l": 276.7,
+    "re": 5.57,
+    "sd_cm2": 1661.9,
+    "qts": 0.32,
+    "le_mh": 2.25,
+    "bl": 33.85,
+    "mms_g": 344.1,
+    "xmax_mm": 9,
+    "pe_w": 1600
+  },
+  "physical": {
+    "cutout_mm": 492,
+    "depth_mm": 254
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/ntr21-5010jd/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

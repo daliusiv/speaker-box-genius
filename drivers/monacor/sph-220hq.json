@@ -1,0 +1,34 @@
+{
+  "brand": "Monacor",
+  "model": "SPH-220HQ",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 30,
+    "qms": 3.06,
+    "qes": 0.46,
+    "vas_l": 80,
+    "re": 6.1,
+    "sd_cm2": 232,
+    "qts": 0.4,
+    "le_mh": 0.9,
+    "bl": 7.63,
+    "mms_g": 24.7,
+    "xmax_mm": 5.5,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 194,
+    "depth_mm": 94
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/hi-fi-speakers-/sph-220hq/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,31 @@
+{
+  "brand": "SB Acoustics",
+  "model": "MT19CP-8",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 7,
+  "ts": {
+    "fs": 43,
+    "qms": 6.54,
+    "qes": 0.33,
+    "vas_l": 37.1,
+    "re": 6.5,
+    "sd_cm2": 152,
+    "qts": 0.31,
+    "le_mh": 0.12,
+    "bl": 8.05,
+    "mms_g": 12.1,
+    "xmax_mm": 3.6,
+    "pe_w": 60
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/7%C2%BD-satori-mt19cp-8-paper/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

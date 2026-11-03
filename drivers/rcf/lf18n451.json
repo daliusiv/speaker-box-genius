@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "LF18N451",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 31,
+    "qms": 6,
+    "qes": 0.25,
+    "vas_l": 245,
+    "re": 5,
+    "sd_cm2": 1200,
+    "qts": 0.24,
+    "le_mh": 2.6,
+    "bl": 30.2,
+    "mms_g": 235,
+    "xmax_mm": 9,
+    "pe_w": 1500
+  },
+  "physical": {
+    "cutout_mm": 424
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/lf18n451",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

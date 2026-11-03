@@ -1,0 +1,34 @@
+{
+  "brand": "Monacor",
+  "model": "SP-45 (4 Ω)",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 3,
+  "ts": {
+    "fs": 120,
+    "qms": 2.82,
+    "qes": 0.68,
+    "vas_l": 1.5,
+    "re": 3.3,
+    "sd_cm2": 31,
+    "qts": 0.55,
+    "le_mh": 0.1,
+    "bl": 2.4,
+    "mms_g": 1.6,
+    "xmax_mm": 0.75,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 72,
+    "depth_mm": 43
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/hi-fi-midrange-speakers-/sp-45-4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "FTR15-4080F",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 38,
+    "qms": 2.855,
+    "qes": 0.273,
+    "vas_l": 163.1,
+    "re": 5.67,
+    "sd_cm2": 855.3,
+    "qts": 0.249,
+    "le_mh": 1.48,
+    "bl": 23.54,
+    "mms_g": 111.7,
+    "xmax_mm": 8.5,
+    "pe_w": 600
+  },
+  "physical": {
+    "cutout_mm": 351,
+    "depth_mm": 170
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/ftr15-4080f/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

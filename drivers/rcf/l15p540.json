@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "L15P540",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 50,
+    "qms": 9.7,
+    "qes": 0.41,
+    "vas_l": 100,
+    "re": 5.6,
+    "sd_cm2": 900,
+    "qts": 0.39,
+    "le_mh": 1.5,
+    "bl": 21.4,
+    "mms_g": 106,
+    "xmax_mm": 7,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 352
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/l15p540",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

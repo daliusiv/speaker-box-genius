@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "PLS-75F25AL02-08",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 3,
+  "ts": {
+    "fs": 100,
+    "qms": 6.71,
+    "qes": 0.836,
+    "vas_l": 1.08,
+    "re": 6.3,
+    "sd_cm2": 28.9,
+    "qts": 0.74,
+    "le_mh": 0.092,
+    "bl": 3.58,
+    "mms_g": 2.64,
+    "xmax_mm": 3.38,
+    "pe_w": 25
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/136",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

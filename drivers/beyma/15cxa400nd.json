@@ -1,0 +1,31 @@
+{
+  "brand": "Beyma",
+  "model": "15CXA400Nd",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 40,
+    "qms": 4.4,
+    "qes": 0.39,
+    "vas_l": 196,
+    "re": 6.6,
+    "sd_cm2": 880,
+    "qts": 0.36,
+    "le_mh": 1,
+    "bl": 19,
+    "mms_g": 84,
+    "xmax_mm": 6,
+    "pe_w": 400
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/coaxial/115CXA4ND8/altavoz-15cxa400nd-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

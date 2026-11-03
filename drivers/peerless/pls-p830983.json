@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "PLS-P830983",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 2,
+  "ts": {
+    "fs": 140,
+    "qms": 6.53,
+    "qes": 0.697,
+    "vas_l": 0.24,
+    "re": 3.4,
+    "sd_cm2": 15.2,
+    "qts": 0.63,
+    "le_mh": 0.034,
+    "bl": 2.72,
+    "mms_g": 1.65,
+    "xmax_mm": 2.65,
+    "pe_w": 20
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/1550",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "10NTLW2500 (4 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 61,
+    "qms": 16,
+    "qes": 0.27,
+    "vas_l": 22,
+    "re": 2.8,
+    "sd_cm2": 346.4,
+    "qts": 0.27,
+    "le_mh": 0.3,
+    "bl": 14.2,
+    "mms_g": 54,
+    "xmax_mm": 7.6,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 233,
+    "depth_mm": 157
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/10-0/4/10ntlw2500-4",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

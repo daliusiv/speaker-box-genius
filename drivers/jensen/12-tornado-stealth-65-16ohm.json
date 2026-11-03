@@ -1,0 +1,30 @@
+{
+  "brand": "Jensen",
+  "model": "12\" Tornado Stealth 65 (16 Ω)",
+  "type": "other",
+  "nominal_ohms": 16,
+  "size_in": 12,
+  "ts": {
+    "fs": 80.2,
+    "qms": 11.62,
+    "qes": 1.43,
+    "vas_l": 47.3,
+    "re": 12.2,
+    "sd_cm2": 490.9,
+    "qts": 1.27,
+    "le_mh": 1.06,
+    "bl": 11.05,
+    "mms_g": 28.4,
+    "pe_w": 65
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/jet-series/12-tornado-stealth-65",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

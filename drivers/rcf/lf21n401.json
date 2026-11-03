@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "LF21N401",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 21,
+  "ts": {
+    "fs": 30,
+    "qms": 6.8,
+    "qes": 0.4,
+    "vas_l": 374,
+    "re": 5,
+    "sd_cm2": 1729.9999999999998,
+    "qts": 0.37,
+    "le_mh": 1.7,
+    "bl": 27.6,
+    "mms_g": 318,
+    "xmax_mm": 11,
+    "pe_w": 1500
+  },
+  "physical": {
+    "cutout_mm": 512
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/lf21n401",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

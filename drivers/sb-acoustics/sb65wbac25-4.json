@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB65WBAC25-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 2,
+  "ts": {
+    "fs": 115,
+    "qms": 6,
+    "qes": 0.77,
+    "vas_l": 0.43,
+    "re": 3.6,
+    "sd_cm2": 20,
+    "qts": 0.68,
+    "le_mh": 0.15,
+    "bl": 2.9,
+    "mms_g": 2.5,
+    "xmax_mm": 2.65,
+    "pe_w": 20
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/2-5in-sb65wbac25-4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

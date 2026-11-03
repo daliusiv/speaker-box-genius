@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "Mod 10-50 (32 Ω)",
+  "type": "other",
+  "nominal_ohms": 32,
+  "size_in": 10,
+  "ts": {
+    "fs": 110.6,
+    "qms": 16.22,
+    "qes": 2.91,
+    "vas_l": 14.4,
+    "re": 24.52,
+    "sd_cm2": 330.1,
+    "qts": 2.47,
+    "le_mh": 1.6,
+    "bl": 11.18,
+    "mms_g": 20.6,
+    "xmax_mm": 2,
+    "pe_w": 50
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/mod-series/mod-10-50",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

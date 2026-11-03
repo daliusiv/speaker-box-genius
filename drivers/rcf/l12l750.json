@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "L12L750",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 62,
+    "qms": 4.1,
+    "qes": 0.29,
+    "vas_l": 52,
+    "re": 5.2,
+    "sd_cm2": 500,
+    "qts": 0.27,
+    "le_mh": 1.25,
+    "bl": 18.8,
+    "mms_g": 50,
+    "xmax_mm": 4,
+    "pe_w": 350
+  },
+  "physical": {
+    "cutout_mm": 286
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/l12l750",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

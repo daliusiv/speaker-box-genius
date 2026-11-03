@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "Smooth BS 15N/350A",
+  "type": "other",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 45,
+    "qms": 7.64,
+    "qes": 0.49,
+    "vas_l": 163.1,
+    "re": 5.1,
+    "sd_cm2": 855.3,
+    "qts": 0.46,
+    "le_mh": 0.78,
+    "bl": 15.23,
+    "mms_g": 80.9,
+    "xmax_mm": 5.5,
+    "pe_w": 350
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/bass-speakers/smooth-bs-15n350a",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

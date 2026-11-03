@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "14NDL88 (8 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 45,
+    "qms": 7.8,
+    "qes": 0.31,
+    "vas_l": 102,
+    "re": 5,
+    "sd_cm2": 707,
+    "qts": 0.3,
+    "le_mh": 1.2,
+    "bl": 19.9,
+    "mms_g": 86,
+    "xmax_mm": 8,
+    "pe_w": 700
+  },
+  "physical": {
+    "cutout_mm": 323,
+    "depth_mm": 167
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/13.5/8/14NDL88",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

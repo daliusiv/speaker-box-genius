@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "L15-554K",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 35,
+    "qms": 8.6,
+    "qes": 0.25,
+    "vas_l": 227,
+    "re": 6.6,
+    "sd_cm2": 800,
+    "qts": 0.24,
+    "le_mh": 1,
+    "bl": 23,
+    "mms_g": 91,
+    "xmax_mm": 6,
+    "pe_w": 600
+  },
+  "physical": {
+    "cutout_mm": 358
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/l15-554k",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

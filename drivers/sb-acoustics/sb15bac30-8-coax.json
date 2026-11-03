@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB15BAC30-8-COAX",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 43,
+    "qms": 4.8,
+    "qes": 0.39,
+    "vas_l": 17.5,
+    "re": 5.7,
+    "sd_cm2": 80,
+    "qts": 0.36,
+    "le_mh": 0.13,
+    "bl": 5.3,
+    "mms_g": 7.1,
+    "xmax_mm": 3,
+    "pe_w": 40
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/sb15bac30-8-coax/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Faital Pro",
+  "model": "10FE330",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 35,
+    "qms": 6.7,
+    "qes": 0.43,
+    "vas_l": 72.4,
+    "re": 5.3,
+    "sd_cm2": 382,
+    "qts": 0.4,
+    "le_mh": 1.1,
+    "bl": 12.6,
+    "mms_g": 58.2,
+    "xmax_mm": 8.32,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 233,
+    "depth_mm": 110
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=401040111",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

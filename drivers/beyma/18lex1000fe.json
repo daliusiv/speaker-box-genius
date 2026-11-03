@@ -1,0 +1,33 @@
+{
+  "brand": "Beyma",
+  "model": "18LEX1000Fe",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 34,
+    "qms": 7.3,
+    "qes": 0.39,
+    "vas_l": 250,
+    "re": 5.4,
+    "sd_cm2": 1255,
+    "qts": 0.38,
+    "le_mh": 1.9,
+    "bl": 23.8,
+    "mms_g": 196,
+    "xmax_mm": 11,
+    "pe_w": 1000
+  },
+  "physical": {
+    "depth_mm": 224
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/118LEX10FE8/altavoz-18lex1000fe-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

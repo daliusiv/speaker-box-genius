@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB15MFC30-8",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 39,
+    "qms": 4.4,
+    "qes": 0.4,
+    "vas_l": 17.7,
+    "re": 5.7,
+    "sd_cm2": 82,
+    "qts": 0.37,
+    "le_mh": 0.14,
+    "bl": 5.6,
+    "mms_g": 9,
+    "xmax_mm": 5,
+    "pe_w": 50
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/5in-sb15mfc30-8/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,7 +1,7 @@
 {
   "name": "speaker-box-genius",
   "private": true,
-  "description": "Web-based loudspeaker enclosure and passive radiator simulator — a modern WinISD.",
+  "description": "Web-based loudspeaker enclosure and passive radiator simulator \u2014 a modern WinISD.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "packageManager": "pnpm@10.28.0",
@@ -15,7 +15,8 @@
     "validate:db": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts",
     "test": "node --experimental-strip-types --disable-warning=ExperimentalWarning --test \"packages/*/test/*.test.ts\"",
     "typecheck": "tsc -p packages/schema && tsc -p packages/engine && tsc -p packages/db-tools && tsc -p packages/web",
-    "db:import-wdr": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/import-wdr.ts"
+    "db:import-wdr": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/import-wdr.ts",
+    "db:import-driverbase": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/driverbase.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

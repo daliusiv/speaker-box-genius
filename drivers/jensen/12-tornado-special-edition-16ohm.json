@@ -1,0 +1,30 @@
+{
+  "brand": "Jensen",
+  "model": "12\" Tornado Special Edition (16 Ω)",
+  "type": "other",
+  "nominal_ohms": 16,
+  "size_in": 12,
+  "ts": {
+    "fs": 87.5,
+    "qms": 9.93,
+    "qes": 0.93,
+    "vas_l": 36.1,
+    "re": 12.21,
+    "sd_cm2": 490.9,
+    "qts": 0.85,
+    "le_mh": 1.09,
+    "bl": 15.04,
+    "mms_g": 31.3,
+    "pe_w": 100
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/jet-series/12-tornado-special-edition",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

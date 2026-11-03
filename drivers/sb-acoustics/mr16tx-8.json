@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "MR16TX-8",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 35,
+    "qms": 6.47,
+    "qes": 0.32,
+    "vas_l": 38.9,
+    "re": 6.2,
+    "sd_cm2": 117,
+    "qts": 0.31,
+    "le_mh": 0.11,
+    "bl": 6.6,
+    "mms_g": 10.3,
+    "xmax_mm": 2.85,
+    "pe_w": 30
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/6%C2%BD-satori-mr16tx-8-textreme/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

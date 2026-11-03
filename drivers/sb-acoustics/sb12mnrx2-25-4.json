@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB12MNRX2-25-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 63.5,
+    "qms": 4.19,
+    "qes": 0.35,
+    "vas_l": 5.3,
+    "re": 3.2,
+    "sd_cm2": 50,
+    "qts": 0.32,
+    "le_mh": 0.15,
+    "bl": 3.9,
+    "mms_g": 4.2,
+    "xmax_mm": 2.2,
+    "pe_w": 50
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/4-sb12mnrx2-25-4-norex/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

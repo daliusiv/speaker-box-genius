@@ -1,0 +1,34 @@
+{
+  "brand": "Monacor",
+  "model": "SPH-170C (8 Ω)",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 38,
+    "qms": 7.22,
+    "qes": 0.27,
+    "vas_l": 24,
+    "re": 6,
+    "sd_cm2": 127,
+    "qts": 0.26,
+    "le_mh": 0.8,
+    "bl": 9.44,
+    "mms_g": 16.43,
+    "xmax_mm": 4,
+    "pe_w": 60
+  },
+  "physical": {
+    "cutout_mm": 145,
+    "depth_mm": 90
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/hi-fi-midrange-speakers-/sph-170c/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

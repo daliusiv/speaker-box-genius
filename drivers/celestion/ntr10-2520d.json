@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "NTR10-2520D",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 57.2,
+    "qms": 2.824,
+    "qes": 0.322,
+    "vas_l": 34.829664,
+    "re": 5.92,
+    "sd_cm2": 346.36,
+    "qts": 0.289,
+    "le_mh": 0.49,
+    "bl": 15.83,
+    "mms_g": 37.93,
+    "xmax_mm": 4,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 235,
+    "depth_mm": 113
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/ntr10-2520d/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

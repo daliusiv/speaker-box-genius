@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "10BG76",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 48,
+    "qms": 5.5,
+    "qes": 0.29,
+    "vas_l": 17.8,
+    "re": 5.2,
+    "sd_cm2": 320,
+    "qts": 0.28,
+    "le_mh": 1.36,
+    "bl": 22,
+    "mms_g": 89.7,
+    "xmax_mm": 9.6,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 233,
+    "depth_mm": 131
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/10/8/10BG76",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

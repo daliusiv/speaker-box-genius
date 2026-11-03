@@ -1,0 +1,31 @@
+{
+  "brand": "Beyma",
+  "model": "5CX200Nd/N",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 75,
+    "qms": 10,
+    "qes": 0.28,
+    "vas_l": 9.1,
+    "re": 5.2,
+    "sd_cm2": 95,
+    "qts": 0.28,
+    "le_mh": 0.2,
+    "bl": 7.32,
+    "mms_g": 6,
+    "xmax_mm": 5.7,
+    "pe_w": 150
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/coaxial/105CX2NDN8/altavoz-5cx200nd-n-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "10\" Electric Lightning 50 (16 Ω)",
+  "type": "other",
+  "nominal_ohms": 16,
+  "size_in": 10,
+  "ts": {
+    "fs": 104,
+    "qms": 8.25,
+    "qes": 0.8,
+    "vas_l": 19.7,
+    "re": 12.65,
+    "sd_cm2": 330.1,
+    "qts": 0.73,
+    "le_mh": 1.15,
+    "bl": 13.73,
+    "mms_g": 18.4,
+    "xmax_mm": 1,
+    "pe_w": 50
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/jet-series/10-electric-lightning-50",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}
