@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB29SWNRX-S75-6",
+  "type": "subwoofer",
+  "nominal_ohms": 6,
+  "size_in": 10,
+  "ts": {
+    "fs": 20,
+    "qms": 4.5,
+    "qes": 0.31,
+    "qts": 0.29,
+    "vas_l": 66,
+    "re": 4.5,
+    "le_mh": 3.0,
+    "bl": 15.4,
+    "mms_g": 132,
+    "sd_cm2": 312,
+    "xmax_mm": 11,
+    "pe_w": 200
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://soundimports.eu/en/sb-acoustics-sb29swnrx-s75-6.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. No cutout or depth listed."
+    }
+  ],
+  "status": "community"
+}

@@ -34,6 +34,8 @@ const index = {
     model: d.model,
     type: d.type,
     ohms: d.nominal_ohms,
+    // DVC: per-coil impedance, for labels like "2+2 Ω".
+    coil_ohms: d.voice_coils === 2 ? (d.ts_wiring === "series" ? d.nominal_ohms / 2 : d.nominal_ohms * 2) : undefined,
     size_in: d.size_in,
     fs: d.ts.fs,
     qts: d.ts.qts ?? (d.ts.qms * d.ts.qes) / (d.ts.qms + d.ts.qes),

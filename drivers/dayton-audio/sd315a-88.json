@@ -1,0 +1,36 @@
+{
+  "brand": "Dayton Audio",
+  "model": "SD315A-88",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 12,
+  "ts": {
+    "fs": 24.2,
+    "qms": 3.54,
+    "qes": 0.37,
+    "qts": 0.33,
+    "vas_l": 151.7,
+    "re": 3.1,
+    "le_mh": 1.5,
+    "bl": 11.86,
+    "mms_g": 109.2,
+    "sd_cm2": 522.8,
+    "xmax_mm": 7,
+    "pe_w": 120
+  },
+  "voice_coils": 2,
+  "ts_wiring": "parallel",
+  "physical": {
+    "cutout_mm": 272,
+    "depth_mm": 130
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/en/sd315a-88.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. Dual 8 Ω coils. The page doesn't say how the coils were wired, but Re 3.10 Ω (and the Qes/Bl/Mms balance) means parallel."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,36 @@
+{
+  "brand": "Scan-Speak",
+  "model": "30W/4558T00",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 12,
+  "ts": {
+    "fs": 17,
+    "qms": 5.01,
+    "qes": 0.34,
+    "qts": 0.32,
+    "vas_l": 197,
+    "re": 2.6,
+    "le_mh": 0.83,
+    "bl": 10.5,
+    "mms_g": 135,
+    "sd_cm2": 466,
+    "xmax_mm": 12.5,
+    "pe_w": 150
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/nl/scan-speak-30w-4558t00.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. SoundImports lists Re as 4 Ω (the nominal impedance); Re 2.6 Ω is from Scan-Speak's datasheet and is the value consistent with Qes, Bl and Mms."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.scan-speak.dk/product/30w-4558t00/",
+      "retrieved": "2026-11-03",
+      "note": "Manufacturer product page and datasheet (Re 2.6 Ω)."
+    }
+  ],
+  "status": "community"
+}

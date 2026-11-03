@@ -67,6 +67,13 @@ export interface Driver {
   sources: Source[];
   status: Status;
   notes?: string;
+  /** 2 for dual voice coil drivers. Omit for single-coil drivers. */
+  voice_coils?: 1 | 2;
+  /**
+   * DVC only: how the coils were wired when `ts` and `nominal_ohms` were
+   * measured (manufacturers differ — Dayton Ultimax/Max-X use series).
+   */
+  ts_wiring?: "series" | "parallel";
   /**
    * Set when published parameters genuinely disagree with each other by more
    * than 15 % (it happens). Explains why, and downgrades the CI error to a warning.
@@ -222,7 +229,15 @@ function validateCommon(d: Record<string, unknown>, errors: Errors) {
 export function validateDriver(data: unknown): Errors {
   const errors: Errors = [];
   if (!isObj(data)) return ["file must contain a JSON object"];
-  checkKeys(data, ["brand", "model", "type", "nominal_ohms", "size_in", "ts", "physical", "sources", "status", "notes", "inconsistency_reason"], "", errors);
+  checkKeys(data, ["brand", "model", "type", "nominal_ohms", "size_in", "ts", "physical", "sources", "status", "notes", "inconsistency_reason", "voice_coils", "ts_wiring"], "", errors);
+  if (data.voice_coils !== undefined && data.voice_coils !== 1 && data.voice_coils !== 2) {
+    errors.push("voice_coils: must be 1 or 2");
+  }
+  if (data.voice_coils === 2) {
+    oneOf(data, "ts_wiring", ["series", "parallel"], "", errors);
+  } else if (data.ts_wiring !== undefined) {
+    errors.push('ts_wiring: only for dual voice coil drivers (set "voice_coils": 2)');
+  }
   validateCommon(data, errors);
   str(data, "inconsistency_reason", "", errors, false);
   oneOf(data, "type", DRIVER_TYPES, "", errors);

@@ -1,0 +1,34 @@
+{
+  "brand": "GRS",
+  "model": "15SSW-4HE",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 20.7,
+    "qms": 4.27,
+    "qes": 0.55,
+    "qts": 0.49,
+    "vas_l": 196.5,
+    "re": 4.2,
+    "le_mh": 3.7,
+    "bl": 16.6,
+    "mms_g": 283.8,
+    "sd_cm2": 819.4,
+    "xmax_mm": 12.3,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 353.8,
+    "depth_mm": 188.0
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/en/grs-15ssw-4he.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. Vas published as 6.94 ft³; cutout 13.93\", depth 7.4\"."
+    }
+  ],
+  "status": "community"
+}

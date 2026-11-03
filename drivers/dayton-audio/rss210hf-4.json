@@ -1,0 +1,34 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RSS210HF-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 29.6,
+    "qms": 3.25,
+    "qes": 0.69,
+    "qts": 0.57,
+    "vas_l": 23.7,
+    "re": 3.1,
+    "le_mh": 0.7,
+    "bl": 8.12,
+    "mms_g": 78.4,
+    "sd_cm2": 219.0,
+    "xmax_mm": 9,
+    "pe_w": 280
+  },
+  "physical": {
+    "cutout_mm": 185,
+    "depth_mm": 124
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/en/rss210hf-4.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table."
+    }
+  ],
+  "status": "community"
+}

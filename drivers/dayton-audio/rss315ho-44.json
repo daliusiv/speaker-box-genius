@@ -1,0 +1,36 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RSS315HO-44",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 21.5,
+    "qms": 3.7,
+    "qes": 0.41,
+    "qts": 0.37,
+    "vas_l": 61.3,
+    "re": 6.5,
+    "le_mh": 3.17,
+    "bl": 26.5,
+    "mms_g": 327.7,
+    "sd_cm2": 507.1,
+    "xmax_mm": 14,
+    "pe_w": 700
+  },
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "physical": {
+    "cutout_mm": 282,
+    "depth_mm": 146
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/en/dayton-audio-rss315ho-44.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. Dual 4 Ω coils. The page doesn't say how the coils were wired, but Re 6.5 Ω (and the Qes/Bl/Mms balance) means series."
+    }
+  ],
+  "status": "community"
+}

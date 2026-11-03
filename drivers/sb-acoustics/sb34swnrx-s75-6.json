@@ -1,0 +1,33 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB34SWNRX-S75-6",
+  "type": "subwoofer",
+  "nominal_ohms": 6,
+  "size_in": 12,
+  "ts": {
+    "fs": 19,
+    "qms": 5.0,
+    "qes": 0.34,
+    "qts": 0.32,
+    "vas_l": 164,
+    "re": 4.5,
+    "le_mh": 3.0,
+    "bl": 15.4,
+    "mms_g": 154,
+    "sd_cm2": 508,
+    "xmax_mm": 11,
+    "pe_w": 200
+  },
+  "physical": {
+    "depth_mm": 156
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/en/sb-acoustics-sb34swnrx-s75-6.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. No cutout diameter listed."
+    }
+  ],
+  "status": "community"
+}

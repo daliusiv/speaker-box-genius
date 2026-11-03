@@ -43,3 +43,15 @@ test("unit mix-ups fail the consistency check", () => {
     "Vas entered in ft³ should be flagged",
   );
 });
+
+test("dual voice coil fields are checked", async () => {
+  const { validateDriver } = await import("../../schema/src/index.ts");
+  const base = JSON.parse(
+    (await import("node:fs")).readFileSync(join(REPO_ROOT, "drivers/dayton-audio/mx12-22.json"), "utf8"),
+  );
+  assert.deepEqual(validateDriver(base), []);
+  assert.match(validateDriver({ ...base, ts_wiring: undefined }).join("\n"), /ts_wiring: must be one of series, parallel/);
+  assert.match(validateDriver({ ...base, voice_coils: 3 }).join("\n"), /voice_coils: must be 1 or 2/);
+  const { voice_coils: _, ...single } = base;
+  assert.match(validateDriver(single).join("\n"), /ts_wiring: only for dual voice coil drivers/);
+});

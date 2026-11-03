@@ -5,7 +5,7 @@ import type { PrParams } from "./state.ts";
 export interface DbIndex {
   /** Build timestamp; used to make sure brand files match this index. */
   generated?: string;
-  drivers: { id: string; brand: string; model: string; type: string; ohms: number; size_in?: number }[];
+  drivers: { id: string; brand: string; model: string; type: string; ohms: number; coil_ohms?: number; size_in?: number }[];
   passiveRadiators: { id: string; brand: string; model: string; size_in?: number }[];
 }
 
@@ -19,6 +19,8 @@ interface DriverRecord {
   brand: string;
   model: string;
   nominal_ohms?: number;
+  voice_coils?: number;
+  ts_wiring?: "series" | "parallel";
   ts: Record<string, number | undefined>;
   physical?: Physical;
 }
@@ -93,6 +95,8 @@ export interface LoadedDriver {
   xmax_mm?: number;
   pe_w?: number;
   displacement_l?: number;
+  /** DVC drivers: the wiring the published T/S values were measured with. */
+  dvcWiring?: "series" | "parallel";
 }
 
 export async function loadDriver(id: string): Promise<LoadedDriver> {
@@ -112,6 +116,7 @@ export async function loadDriver(id: string): Promise<LoadedDriver> {
     xmax_mm: rec.ts.xmax_mm,
     pe_w: rec.ts.pe_w,
     displacement_l: displacementOf(rec.physical),
+    dvcWiring: rec.voice_coils === 2 ? (rec.ts_wiring ?? "parallel") : undefined,
   };
 }
 

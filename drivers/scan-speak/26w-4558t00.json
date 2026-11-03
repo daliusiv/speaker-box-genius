@@ -1,0 +1,29 @@
+{
+  "brand": "Scan-Speak",
+  "model": "26W/4558T00",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 21,
+    "qms": 5.56,
+    "qes": 0.33,
+    "qts": 0.31,
+    "vas_l": 94.9,
+    "re": 2.6,
+    "le_mh": 0.83,
+    "bl": 10.5,
+    "mms_g": 105,
+    "sd_cm2": 352,
+    "xmax_mm": 12.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/en/scan-speak-26w-4558t00.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. Power handling omitted: SoundImports lists 80 W, which doesn't look like Scan-Speak's IEC rating. No cutout or depth listed."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,36 @@
+{
+  "brand": "Dayton Audio",
+  "model": "MX15-22",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 21.7,
+    "qms": 4.27,
+    "qes": 0.46,
+    "qts": 0.4,
+    "vas_l": 146.1,
+    "re": 3.99,
+    "le_mh": 5.51,
+    "bl": 20.6,
+    "mms_g": 348,
+    "sd_cm2": 819.8,
+    "xmax_mm": 19,
+    "pe_w": 800
+  },
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "physical": {
+    "cutout_mm": 355.9,
+    "depth_mm": 231.9
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/en/dayton-audio-mx15-22.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. Dual 2 Ω coils; Dayton notes all specifications are measured with the coils in series (4 Ω). Vas published as 5.16 ft³; cutout 14.01\", depth 9.13\"."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RSS390HF-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 19.5,
+    "qms": 3.02,
+    "qes": 0.5,
+    "qts": 0.43,
+    "vas_l": 212,
+    "re": 3.0,
+    "le_mh": 0.92,
+    "bl": 15,
+    "mms_g": 306,
+    "sd_cm2": 829.6,
+    "xmax_mm": 14,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 355.8,
+    "depth_mm": 178
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/en/dayton-audio-rss390hf-4.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table."
+    }
+  ],
+  "status": "community"
+}

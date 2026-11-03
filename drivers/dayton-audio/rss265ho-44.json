@@ -1,0 +1,36 @@
+{
+  "brand": "Dayton Audio",
+  "model": "RSS265HO-44",
+  "type": "subwoofer",
+  "nominal_ohms": 2,
+  "size_in": 10,
+  "ts": {
+    "fs": 27.6,
+    "qms": 4.42,
+    "qes": 0.5,
+    "qts": 0.45,
+    "vas_l": 34.8,
+    "re": 1.6,
+    "le_mh": 0.77,
+    "bl": 9.39,
+    "mms_g": 161,
+    "sd_cm2": 352.3,
+    "xmax_mm": 13.25,
+    "pe_w": 600
+  },
+  "voice_coils": 2,
+  "ts_wiring": "parallel",
+  "physical": {
+    "cutout_mm": 234.9,
+    "depth_mm": 127.0
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/dayton-audio-rss265ho-44.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. Dual 4 Ω coils. The page doesn't say how the coils were wired, but Re 1.6 Ω (and the Qes/Bl/Mms balance) means parallel. Vas published as 1.23 ft³; cutout 9.25\", depth 5\"."
+    }
+  ],
+  "status": "community"
+}

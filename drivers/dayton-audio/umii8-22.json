@@ -1,0 +1,36 @@
+{
+  "brand": "Dayton Audio",
+  "model": "UMII8-22",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 46,
+    "qms": 3.1,
+    "qes": 0.99,
+    "qts": 0.75,
+    "vas_l": 8.4,
+    "re": 3.9,
+    "le_mh": 0.75,
+    "bl": 9.7,
+    "mms_g": 82,
+    "sd_cm2": 200,
+    "xmax_mm": 18,
+    "pe_w": 400
+  },
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "physical": {
+    "cutout_mm": 184.7,
+    "depth_mm": 143.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/nl/dayton-audio-umii8-22.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. Dual 2 Ω coils. Dayton states all parameters are measured with the voice coils wired in series (4 Ω load). Power: table says 400 W RMS, page text says 300 W; 400 W matches Parts Express's listing."
+    }
+  ],
+  "status": "community"
+}

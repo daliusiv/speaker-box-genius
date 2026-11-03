@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB34NRX75-6",
+  "type": "woofer",
+  "nominal_ohms": 6,
+  "size_in": 12,
+  "ts": {
+    "fs": 19,
+    "qms": 5.1,
+    "qes": 0.43,
+    "qts": 0.4,
+    "vas_l": 259.9,
+    "re": 4.2,
+    "le_mh": 1.8,
+    "bl": 10.7,
+    "mms_g": 99,
+    "sd_cm2": 508,
+    "xmax_mm": 11,
+    "pe_w": 200
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/en/sb34nrx75-6.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. Vas published as 9.18 ft³. No cutout or depth listed."
+    }
+  ],
+  "status": "community"
+}

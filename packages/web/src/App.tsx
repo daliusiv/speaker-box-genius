@@ -316,7 +316,7 @@ export function App() {
         <Card title="Driver">
           <LibraryPicker
             label="Load a driver from the database"
-            items={db?.drivers.map((x) => ({ id: x.id, text: `${x.brand} ${x.model} (${x.size_in ?? "?"}", ${x.ohms} Ω)` }))}
+            items={db?.drivers.map((x) => ({ id: x.id, text: `${x.brand} ${x.model} (${x.size_in ?? "?"}", ${x.coil_ohms ? `DVC ${x.coil_ohms}+${x.coil_ohms}` : x.ohms} Ω)` }))}
             onPick={(id) =>
               loadDriver(id).then(
                 (d) =>
@@ -330,6 +330,10 @@ export function App() {
                     xmax_mm: d.xmax_mm ?? s.xmax_mm,
                     pe_w: d.pe_w ?? s.pe_w,
                     volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: d.displacement_l } : s.volume,
+                    // DVC drivers start wired the way their published values were measured.
+                    dvc: d.dvcWiring
+                      ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring }
+                      : { ...s.dvc, on: false },
                   })),
                 () => alert("Couldn't load that driver."),
               )

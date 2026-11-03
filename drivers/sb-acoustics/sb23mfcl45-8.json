@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB23MFCL45-8",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 28.5,
+    "qms": 7.3,
+    "qes": 0.46,
+    "qts": 0.43,
+    "vas_l": 37,
+    "re": 6.2,
+    "le_mh": 1.02,
+    "bl": 11.3,
+    "mms_g": 53,
+    "sd_cm2": 210,
+    "xmax_mm": 10.5,
+    "pe_w": 150
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/en/sb-acoustics-sb23mfcl45-8.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. No cutout or depth listed."
+    }
+  ],
+  "status": "community"
+}

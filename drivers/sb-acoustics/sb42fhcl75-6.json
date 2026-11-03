@@ -1,0 +1,34 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB42FHCL75-6",
+  "type": "subwoofer",
+  "nominal_ohms": 6,
+  "size_in": 15,
+  "ts": {
+    "fs": 18.4,
+    "qms": 7.4,
+    "qes": 0.32,
+    "qts": 0.31,
+    "vas_l": 462,
+    "re": 4.6,
+    "le_mh": 2.1,
+    "bl": 16.7,
+    "mms_g": 166,
+    "sd_cm2": 850,
+    "xmax_mm": 11.5,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 377,
+    "depth_mm": 170.3
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.soundimports.eu/en/sb-aucoustics-sb42fhcl75-6.html",
+      "retrieved": "2026-11-03",
+      "note": "SoundImports (official distributor) product specifications table. Xmax listed as 11.5 mm in the table and 23 mm peak-to-peak in the text — the same figure."
+    }
+  ],
+  "status": "community"
+}
