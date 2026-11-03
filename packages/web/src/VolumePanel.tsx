@@ -1,6 +1,6 @@
 import { Card, Num, Select } from "./components.tsx";
-import { LABELS, volumeFor } from "./sim.ts";
-import type { AppState, DesignKey, ShapeKind } from "./state.ts";
+import { linkedDesign, volumeFor } from "./sim.ts";
+import type { AppState, ShapeKind } from "./state.ts";
 
 const SHAPES: { value: ShapeKind; text: string }[] = [
   { value: "box", text: "Box" },
@@ -13,18 +13,17 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
   const s = props.state;
   const v = s.volume;
   const set = <K extends keyof AppState["volume"]>(k: K, val: AppState["volume"][K]) => props.onChange({ ...v, [k]: val });
-  const r = volumeFor(s, v.link);
-  const linkOptions: { value: DesignKey | "none"; text: string }[] = [
+  const target = linkedDesign(s);
+  const r = volumeFor(s, target);
+  const linkOptions: { value: string; text: string }[] = [
     { value: "none", text: "Nothing (just calculate)" },
-    { value: "sealed", text: LABELS.sealed },
-    { value: "vented", text: LABELS.vented },
-    { value: "pr", text: LABELS.pr },
+    ...s.designs.map((d) => ({ value: d.id, text: d.name || d.id })),
   ];
 
   return (
     <Card title="Volume calculator">
       <div className="fields">
-        <Select label="Feeds" value={v.link} options={linkOptions} onChange={(x) => set("link", x)} />
+        <Select label="Feeds" value={target ? v.link : "none"} options={linkOptions} onChange={(x) => set("link", x)} />
         <Select label="Shape" value={v.shape} options={SHAPES} onChange={(x) => set("shape", x)} />
       </div>
 
@@ -93,9 +92,9 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
         </tbody>
       </table>
       <p className="hint">
-        {v.link === "none"
+        {!target
           ? "Choose a design under “Feeds” to use this volume live in the simulation."
-          : `The ${LABELS[v.link]} design uses this volume. Ports and passive radiators are only deducted for the design they belong to.`}{" "}
+          : `“${target.name}” uses this volume, including deductions for its own ports or passive radiators.`}{" "}
         Driver displacement is filled in from the database when known (an estimate from cutout and depth otherwise).
         Stuffing gain is approximate.
       </p>

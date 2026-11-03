@@ -1,20 +1,29 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { parseWdr, writeWdr, type HighPassType, type SimulationResult } from "@sbg/engine";
 import { LogChart, type Series } from "./LogChart.tsx";
-import { DEFAULT_STATE, decodeState, encodeState, type AppState, type DesignKey } from "./state.ts";
-import { loadDriver, loadIndex, loadPassiveRadiator, type DbIndex } from "./library.ts";
-import { Card, Fixed, LibraryPicker, Num, REPO, Select } from "./components.tsx";
+import {
+  DEFAULT_STATE,
+  decodeState,
+  encodeState,
+  MAX_DESIGNS,
+  newDesign,
+  newId,
+  type AppState,
+  type DesignState,
+} from "./state.ts";
+import { loadDriver, loadIndex, type DbIndex } from "./library.ts";
+import { Card, LibraryPicker, Num, REPO, Select } from "./components.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
-import { COLORS, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
-import { PrCard, VentedCard } from "./Designs.tsx";
+import { colorOf, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
+import { AddDesign, DesignCard } from "./Designs.tsx";
+import { ShareMenu } from "./Share.tsx";
 
 const LIMIT_RED = "#dc2626";
 const PORT_LIMIT = 17;
 
 export function App() {
   const [state, setState] = useState<AppState>(() => decodeState(location.hash) ?? DEFAULT_STATE);
-  const [copied, setCopied] = useState(false);
   const [db, setDb] = useState<DbIndex | null>(null);
   const [wdrMsg, setWdrMsg] = useState("");
   const wdrInput = useRef<HTMLInputElement>(null);
@@ -44,18 +53,9 @@ export function App() {
 
   const set = <K extends keyof AppState>(k: K, v: AppState[K]) => setState((s) => ({ ...s, [k]: v }));
   const series = (pick: (r: SimulationResult) => Float64Array | null): Series[] =>
-    designs.map((d) => ({ label: d.label, color: COLORS[d.key], y: pick(d.result) }));
+    designs.map((d) => ({ label: d.design.name, color: d.color, y: pick(d.result) }));
 
-  const share = async () => {
-    const url = location.origin + location.pathname + "#" + encodeState(state);
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      prompt("Copy this link:", url);
-    }
-  };
+  const shareUrl = () => location.origin + location.pathname + "#" + encodeState(state);
 
   const importWdr = async (file: File) => {
     try {
@@ -105,15 +105,32 @@ export function App() {
     setWdrMsg("Exported a WinISD driver file.");
   };
 
-  const pr = state.pr;
   const hp = state.highPass;
-  const linked = (k: DesignKey) => state.volume.link === k;
-  const vbField = (k: DesignKey, value: number, onChange: (v: number) => void) =>
-    linked(k) ? (
-      <Fixed label="Vb" unit="L" value={vbOf(state, k).toFixed(1)} title="From the volume calculator" />
-    ) : (
-      <Num label="Vb" unit="L" value={value} onChange={onChange} />
-    );
+
+  const updateDesign = (d: DesignState) =>
+    setState((s) => ({ ...s, designs: s.designs.map((x) => (x.id === d.id ? d : x)) }));
+  const addDesign = (kind: DesignState["kind"]) =>
+    setState((s) => (s.designs.length >= MAX_DESIGNS ? s : { ...s, designs: [...s.designs, newDesign(kind, s.designs)] }));
+  const duplicateDesign = (d: DesignState) =>
+    setState((s) => {
+      if (s.designs.length >= MAX_DESIGNS) return s;
+      const copy = { ...structuredClone(d), id: newId(s.designs), name: `${d.name} (copy)` };
+      const i = s.designs.findIndex((x) => x.id === d.id);
+      return { ...s, designs: [...s.designs.slice(0, i + 1), copy, ...s.designs.slice(i + 1)] };
+    });
+  const deleteDesign = (d: DesignState) =>
+    setState((s) => ({
+      ...s,
+      designs: s.designs.filter((x) => x.id !== d.id),
+      volume: s.volume.link === d.id ? { ...s.volume, link: "none" } : s.volume,
+    }));
+
+  const prDesigns = designs.filter((d) => d.design.kind === "pr");
+  const prLimits = [...new Set(prDesigns.map((d) => (d.design.kind === "pr" ? d.design.params.xmax_mm : 0)))].map((x) => ({
+    value: x,
+    label: `PR Xmax ${x} mm`,
+    color: LIMIT_RED,
+  }));
 
   return (
     <div className="layout">
@@ -137,7 +154,7 @@ export function App() {
             />
             <b>{state.power} W</b>
           </label>
-          <button onClick={share}>{copied ? "Link copied ✓" : "Copy share link"}</button>
+          <ShareMenu state={state} designs={designs} shareUrl={shareUrl} />
         </div>
       </header>
 
@@ -244,40 +261,22 @@ export function App() {
           <p className="hint">A subsonic filter protects ported and PR boxes from over-excursion below tuning.</p>
         </Card>
 
-        <Card title="Sealed" color={COLORS.sealed} on={state.sealed.on} onToggle={(on) => set("sealed", { ...state.sealed, on })}>
-          <div className="fields">{vbField("sealed", state.sealed.vb_l, (v) => set("sealed", { ...state.sealed, vb_l: v }))}</div>
-        </Card>
-
-        <VentedCard
-          v={state.vented}
-          vb_l={vbOf(state, "vented")}
-          vbField={vbField("vented", state.vented.vb_l, (v) => set("vented", { ...state.vented, vb_l: v }))}
-          onChange={(v) => set("vented", v)}
-        />
-
-        <PrCard
-          pr={pr}
-          vb_l={vbOf(state, "pr")}
-          vbField={vbField("pr", pr.vb_l, (v) => set("pr", { ...pr, vb_l: v }))}
-          onChange={(p) => set("pr", p)}
-          picker={
-            <LibraryPicker
-              label="Load a passive radiator from the database"
-              items={db?.passiveRadiators.map((x) => ({ id: x.id, text: `${x.brand} ${x.model} (${x.size_in ?? "?"}")` }))}
-              onPick={(id) =>
-                loadPassiveRadiator(id).then(
-                  ({ name, params, displacement_l }) =>
-                    setState((s) => ({
-                      ...s,
-                      pr: { ...s.pr, name, params },
-                      volume: displacement_l !== undefined ? { ...s.volume, prDisp_l: displacement_l } : s.volume,
-                    })),
-                  () => alert("Couldn't load that passive radiator."),
-                )
-              }
-            />
-          }
-        />
+        {state.designs.map((d) => (
+          <DesignCard
+            key={d.id}
+            design={d}
+            color={colorOf(state, d.id)}
+            vb_l={vbOf(state, d)}
+            linked={state.volume.link === d.id}
+            canDelete={state.designs.length > 1}
+            db={db}
+            onChange={updateDesign}
+            onDuplicate={() => duplicateDesign(d)}
+            onDelete={() => deleteDesign(d)}
+            onPrDisplacement={(l) => setState((s) => ({ ...s, volume: { ...s.volume, prDisp_l: l } }))}
+          />
+        ))}
+        <AddDesign disabled={state.designs.length >= MAX_DESIGNS} onAdd={addDesign} />
 
         <VolumePanel state={state} onChange={(v) => set("volume", v)} />
       </aside>
@@ -301,22 +300,22 @@ export function App() {
               limits={[{ value: state.xmax_mm, label: `Xmax ${state.xmax_mm} mm`, color: LIMIT_RED }]}
               yMin={0}
             />
-            {pr.on && (
+            {prDesigns.length > 0 && (
               <LogChart
                 title="Passive radiator excursion (peak, one way)"
                 unit="mm"
                 freq={freq}
-                series={series((r) => r.prExcursionMm)}
-                limits={[{ value: pr.params.xmax_mm, label: `PR Xmax ${pr.params.xmax_mm} mm`, color: LIMIT_RED }]}
+                series={series((r) => r.prExcursionMm).filter((s) => s.y)}
+                limits={prLimits}
                 yMin={0}
               />
             )}
-            {state.vented.on && (
+            {designs.some((d) => d.design.kind === "vented") && (
               <LogChart
                 title="Port air velocity (peak)"
                 unit="m/s"
                 freq={freq}
-                series={series((r) => r.portVelocity)}
+                series={series((r) => r.portVelocity).filter((s) => s.y)}
                 limits={[{ value: PORT_LIMIT, label: `Chuffing risk ${PORT_LIMIT} m/s`, color: LIMIT_RED }]}
                 yMin={0}
               />
@@ -371,19 +370,19 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
           </tr>
         </thead>
         <tbody>
-          {designs.map(({ key, label, vb_l, result: r }) => {
+          {designs.map(({ design: d, color, vb_l, result: r }) => {
             const x = peak(r.excursionMm, r.freq, fMin);
             const xpr = peak(r.prExcursionMm, r.freq, fMin);
             const vp = peak(r.portVelocity, r.freq, fMin);
             return (
-              <tr key={key}>
-                <th style={{ color: COLORS[key] }}>{label}</th>
+              <tr key={d.id}>
+                <th style={{ color }}>{d.name}</th>
                 <td>{fmt(vb_l)} L</td>
                 <td>{fmt(r.summary.f3)} Hz</td>
                 <td>{fmt(r.summary.fb ?? r.summary.fc)} Hz</td>
                 <td>{fmt(r.summary.qtc, 2)}</td>
                 <td className={x !== null && x > state.xmax_mm ? "over" : ""}>{fmt(x)} mm</td>
-                <td className={xpr !== null && xpr > state.pr.params.xmax_mm ? "over" : ""}>
+                <td className={xpr !== null && d.kind === "pr" && xpr > d.params.xmax_mm ? "over" : ""}>
                   {xpr === null ? "–" : `${fmt(xpr)} mm`}
                 </td>
                 <td className={vp !== null && vp > PORT_LIMIT ? "over" : ""}>{vp === null ? "–" : `${fmt(vp)} m/s`}</td>

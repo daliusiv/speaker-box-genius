@@ -1,23 +1,30 @@
 import {
   netVolume,
-  type PortInput,
   simulate,
   solveTs,
   type DriverInput,
   type EnclosureInput,
+  type PortInput,
   type Shape,
   type SimulationResult,
   type SolveResult,
   type VolumeResult,
 } from "@sbg/engine";
-import type { AppState, DesignKey } from "./state.ts";
+import type { AppState, DesignState, VentedDesign } from "./state.ts";
 
-export const COLORS: Record<DesignKey, string> = { sealed: "#3b82f6", vented: "#f97316", pr: "#22c55e" };
-export const LABELS: Record<DesignKey, string> = { sealed: "Sealed", vented: "Ported", pr: "PR" };
+/** One colour per design slot; distinguishable in light and dark mode. */
+export const PALETTE = ["#3b82f6", "#f97316", "#22c55e", "#a855f7", "#e11d48", "#0d9488", "#ca8a04", "#64748b"];
+
+export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators" } as const;
+
+export function colorOf(s: AppState, id: string): string {
+  const i = s.designs.findIndex((d) => d.id === id);
+  return PALETTE[(i < 0 ? 0 : i) % PALETTE.length]!;
+}
 
 export interface Design {
-  key: DesignKey;
-  label: string;
+  design: DesignState;
+  color: string;
   vb_l: number;
   result: SimulationResult;
 }
@@ -42,28 +49,28 @@ export function shapeOf(v: AppState["volume"]): Shape {
   }
 }
 
-export function portOf(v: AppState["vented"], length_cm = v.length_cm): PortInput {
+export function portOf(v: VentedDesign, length_cm = v.length_cm): PortInput {
   return v.shape === "slot"
     ? { shape: "slot", width_cm: v.slotWidth_cm, height_cm: v.slotHeight_cm, length_cm }
     : { shape: "round", diameter_cm: v.diameter_cm, length_cm };
 }
 
-/** Net volume of the calculator's box, with deductions appropriate for the design it feeds. */
-export function volumeFor(s: AppState, target: DesignKey | "none"): VolumeResult {
+/** Net volume of the calculator's box, with deductions for the design it feeds (if any). */
+export function volumeFor(s: AppState, d: DesignState | undefined): VolumeResult {
   const v = s.volume;
   return netVolume({
     shape: shapeOf(v),
     wall_mm: v.wall_mm,
     drivers: { count: s.drivers, displacement_l: v.driverDisp_l },
-    passiveRadiators: target === "pr" ? { count: s.pr.count, displacement_l: v.prDisp_l } : undefined,
+    passiveRadiators: d?.kind === "pr" ? { count: d.count, displacement_l: v.prDisp_l } : undefined,
     ports:
-      target === "vented"
+      d?.kind === "vented"
         ? {
-            count: s.vented.count,
-            length_cm: s.vented.length_cm,
+            count: d.count,
+            length_cm: d.length_cm,
             wall_mm: v.portWall_mm,
-            innerDiameter_cm: s.vented.diameter_cm,
-            slot: s.vented.shape === "slot" ? { width_cm: s.vented.slotWidth_cm, height_cm: s.vented.slotHeight_cm } : undefined,
+            innerDiameter_cm: d.diameter_cm,
+            slot: d.shape === "slot" ? { width_cm: d.slotWidth_cm, height_cm: d.slotHeight_cm } : undefined,
           }
         : undefined,
     bracing_pct: v.bracing_pct,
@@ -72,14 +79,26 @@ export function volumeFor(s: AppState, target: DesignKey | "none"): VolumeResult
   });
 }
 
+export const linkedDesign = (s: AppState) => s.designs.find((d) => d.id === s.volume.link);
+
 /** Box volume a design should use: the calculator's result if it is linked, else its own field. */
-export function vbOf(s: AppState, key: DesignKey): number {
-  if (s.volume.link === key) return volumeFor(s, key).effective_l;
-  return key === "sealed" ? s.sealed.vb_l : key === "vented" ? s.vented.vb_l : s.pr.vb_l;
+export function vbOf(s: AppState, d: DesignState): number {
+  return s.volume.link === d.id ? volumeFor(s, d).effective_l : d.vb_l;
 }
 
 export function solveDriver(s: AppState): SolveResult {
   return solveTs(s.ts);
+}
+
+function enclosureOf(d: DesignState, vb: number): EnclosureInput {
+  switch (d.kind) {
+    case "sealed":
+      return { kind: "sealed", vb_l: vb };
+    case "vented":
+      return { kind: "vented", vb_l: vb, port: portOf(d), portCount: d.count };
+    case "pr":
+      return { kind: "passive-radiator", vb_l: vb, pr: d.params, prCount: d.count, addedMass_g: d.addedMass_g };
+  }
 }
 
 export function runDesigns(s: AppState, solved: SolveResult): Design[] {
@@ -104,31 +123,13 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
     points: 300,
     highPass: s.highPass.on ? { type: s.highPass.type, order: s.highPass.order, freq: s.highPass.freq } : null,
   };
-  const boxes: [DesignKey, boolean, (vb: number) => EnclosureInput][] = [
-    ["sealed", s.sealed.on, (vb) => ({ kind: "sealed", vb_l: vb })],
-    [
-      "vented",
-      s.vented.on,
-      (vb) => ({
-        kind: "vented",
-        vb_l: vb,
-        port: portOf(s.vented),
-        portCount: s.vented.count,
-      }),
-    ],
-    [
-      "pr",
-      s.pr.on,
-      (vb) => ({ kind: "passive-radiator", vb_l: vb, pr: s.pr.params, prCount: s.pr.count, addedMass_g: s.pr.addedMass_g }),
-    ],
-  ];
   const out: Design[] = [];
-  for (const [key, on, box] of boxes) {
-    if (!on) continue;
-    const vb = vbOf(s, key);
+  for (const d of s.designs) {
+    if (!d.on) continue;
+    const vb = vbOf(s, d);
     if (!(vb > 0)) continue;
     try {
-      out.push({ key, label: LABELS[key], vb_l: vb, result: simulate(driver, box(vb), opts) });
+      out.push({ design: d, color: colorOf(s, d.id), vb_l: vb, result: simulate(driver, enclosureOf(d, vb), opts) });
     } catch {
       // Invalid input mid-edit: skip this design until the numbers make sense again.
     }
