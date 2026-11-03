@@ -1,6 +1,6 @@
 import { abs, add, arg, cx, div, mul, parallel, scale, type Complex } from "./complex.ts";
 import { STANDARD_AIR, type Air } from "./constants.ts";
-import { highPassResponse, type HighPass } from "./filters.ts";
+import { eqResponse, highPassResponse, type EqStage, type HighPass } from "./filters.ts";
 import {
   boxCompliance,
   DEFAULT_END_CORRECTION,
@@ -55,6 +55,8 @@ export interface SimulationOptions {
   portVelocityLimit?: number;
   /** Electrical high-pass filter ahead of the amplifier (e.g. a subsonic filter). */
   highPass?: HighPass | null;
+  /** EQ stages (Linkwitz Transform, peaking, shelving) ahead of the amplifier. */
+  eq?: EqStage[];
   /** Air properties. Default: 20 °C. Use WINISD_AIR to match WinISD exactly. */
   air?: Air;
 }
@@ -191,7 +193,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const w = 2 * Math.PI * f;
 
     const ze = cx(d.re, w * d.le);
-    const filter = opts.highPass ? highPassResponse(opts.highPass, f) : cx(1);
+    let filter = opts.highPass ? highPassResponse(opts.highPass, f) : cx(1);
+    if (opts.eq && opts.eq.length > 0) filter = mul(filter, eqResponse(opts.eq, f));
     const filterGain2 = filter.re * filter.re + filter.im * filter.im;
     const pg = div(mul(filter, cx((vDriver * d.bl) / d.sd)), ze);
     const zae = div(cx((d.bl * d.bl) / sd2), ze);

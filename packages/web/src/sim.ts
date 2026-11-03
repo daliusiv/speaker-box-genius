@@ -6,6 +6,7 @@ import {
   simulate,
   solveTs,
   type DriverInput,
+  type EqStage,
   type EnclosureInput,
   type PortInput,
   type Shape,
@@ -146,8 +147,11 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
     if (!d.on) continue;
     const vb = vbOf(s, d);
     if (!(vb > 0)) continue;
+    const eq = s.eq
+      .filter((e) => e.on && (e.target === "all" || e.target === d.id))
+      .map(({ id: _id, on: _on, target: _t, ...stage }) => stage as EqStage);
     try {
-      const result = simulate(driver, enclosureOf(d, vb), opts);
+      const result = simulate(driver, enclosureOf(d, vb), { ...opts, eq });
       if (s.settings.velocity === "rms" && result.portVelocity) {
         result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
       }

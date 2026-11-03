@@ -1,4 +1,4 @@
-import type { HighPassType, PassiveRadiatorInput, TsValues } from "@sbg/engine";
+import type { EqStage, HighPassType, PassiveRadiatorInput, TsValues } from "@sbg/engine";
 
 export type DesignKind = "sealed" | "vented" | "pr";
 export type ShapeKind = "box" | "cylinder" | "sphere" | "frustum";
@@ -39,6 +39,9 @@ export interface PrDesign extends DesignBase {
 
 export type DesignState = SealedDesign | VentedDesign | PrDesign;
 
+/** An EQ stage plus where it applies: every design, or one design by id. */
+export type EqItem = EqStage & { id: string; on: boolean; target: string };
+
 export const MAX_DESIGNS = 8;
 
 export interface Settings {
@@ -66,6 +69,7 @@ export interface AppState {
   drivers: number;
   highPass: { on: boolean; type: HighPassType; order: number; freq: number };
   settings: Settings;
+  eq: EqItem[];
   designs: DesignState[];
   volume: {
     /** Id of the design whose Vb follows the calculator, or "none". */
@@ -155,6 +159,7 @@ export const DEFAULT_STATE: AppState = {
   drivers: 1,
   highPass: { on: false, type: "butterworth", order: 2, freq: 18 },
   settings: { units: "metric", air: "standard", velocity: "peak" },
+  eq: [],
   designs: defaultDesigns(),
   volume: {
     link: "none",
@@ -270,6 +275,9 @@ export function decodeState(hash: string): AppState | null {
       drivers: raw.drivers ?? d.drivers,
       highPass: { ...d.highPass, ...raw.highPass },
       settings: { ...d.settings, ...raw.settings },
+      eq: Array.isArray(raw.eq)
+        ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf"].includes(e.type)).slice(0, 12)
+        : [],
       designs,
       volume: { ...d.volume, ...raw.volume },
     };

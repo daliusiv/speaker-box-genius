@@ -18,6 +18,7 @@ import { VolumePanel } from "./VolumePanel.tsx";
 import { airOf, alignmentDriver, colorOf, PORT_LIMIT, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
 import { AddDesign, DesignCard } from "./Designs.tsx";
 import { ShareMenu } from "./Share.tsx";
+import { EqPanel } from "./Eq.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
 
 const LIMIT_RED = "#dc2626";
@@ -121,6 +122,7 @@ export function App() {
   const deleteDesign = (d: DesignState) =>
     setState((s) => ({
       ...s,
+      eq: s.eq.map((e) => (e.target === d.id ? { ...e, target: "all", on: false } : e)),
       designs: s.designs.filter((x) => x.id !== d.id),
       volume: s.volume.link === d.id ? { ...s.volume, link: "none" } : s.volume,
     }));
@@ -261,6 +263,8 @@ export function App() {
           </div>
           <p className="hint">A subsonic filter protects ported and PR boxes from over-excursion below tuning.</p>
         </Card>
+
+        <EqPanel state={state} designs={designs} onChange={(eq) => set("eq", eq)} />
 
         {state.designs.map((d) => (
           <DesignCard
