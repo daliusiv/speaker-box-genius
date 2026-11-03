@@ -1,0 +1,20 @@
+name: Probe Dayton (temporary)
+on: workflow_dispatch
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          mkdir out; cd out
+          UA="SpeakerBoxGenius-importer/0.1 (+https://github.com/daliusiv/speaker-box-genius; permission from Dayton Audio)"
+          get() { curl -sS -L -A "$UA" -o "$1" -w "%{http_code} %{size_download} $2\n" "$2" || echo "FAIL $2"; sleep 2; }
+          get robots.txt https://www.daytonaudio.com/robots.txt
+          get specsheet-295-464.html "https://www.daytonaudio.com/specs/specsheet.php?prod=295-464"
+          get product-121.html https://www.daytonaudio.com/product/121/rss315hf-4-12-reference-hf-subwoofer-4-ohm
+          get cat-121.html "https://www.daytonaudio.com/category/121/subwoofers"
+          get cat-121-p2.html "https://www.daytonaudio.com/category/121/subwoofers?pagenum=2"
+          get home.html https://www.daytonaudio.com/
+          get pdf-295-464.pdf https://www.daytonaudio.com/images/resources/295-464-dayton-audio-rss315hf-4-specifications-46174.pdf
+          ls -la
+      - uses: actions/upload-artifact@v4
+        with: { name: probe, path: out }
