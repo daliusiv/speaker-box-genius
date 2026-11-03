@@ -1131,6 +1131,8 @@ button.icon:disabled {
   display: flex;
   align-items: center;
   gap: 1rem;
+  /* left: 50% would otherwise halve the room it can take before wrapping */
+  width: max-content;
   max-width: calc(100vw - 2rem);
   padding: 0.65rem 0.75rem 0.65rem 1rem;
   border-radius: 10px;
@@ -1260,4 +1262,128 @@ button.icon:disabled {
 
 figure.chart[hidden] {
   display: none;
+}
+
+/* ---- Phone and narrow tablet layout: one screen at a time, bottom tab bar ---- */
+.phone-nav {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .layout {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+
+  .layout.phone-charts > .panel,
+  .layout.phone-panel > .charts {
+    display: none;
+  }
+
+  /* The bottom bar replaces the tabs at the top of the controls. */
+  .panel > .desktop-tabs {
+    display: none;
+  }
+
+  .phone-nav {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(10px);
+  }
+
+  .phone-tabs {
+    max-width: 40rem;
+    margin: 0 auto;
+  }
+
+  .phone-tabs [role="tab"] {
+    padding: 0.6rem 0.1rem;
+    font-size: 0.8rem;
+    gap: 0.25rem;
+  }
+
+  .phone-tabs .tab-badge {
+    min-width: 1rem;
+    padding: 0 0.2rem;
+    font-size: 0.66rem;
+    line-height: 1rem;
+  }
+
+  .toast {
+    bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+
+  /* Header in two rows: title + undo/redo, then power + menus. */
+  .top {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    grid-template-areas:
+      "title title history"
+      "power projects share";
+    gap: 0.6rem 0.5rem;
+    align-items: center;
+  }
+
+  .top > div:first-child {
+    grid-area: title;
+    min-width: 0;
+  }
+
+  .top h1 {
+    font-size: 1.25rem;
+  }
+
+  .top-actions {
+    display: contents;
+  }
+
+  .top-actions > :nth-child(1) {
+    grid-area: power;
+    min-width: 0;
+  }
+
+  .top-actions > :nth-child(2) {
+    grid-area: history;
+  }
+
+  .top-actions > :nth-child(3) {
+    grid-area: projects;
+  }
+
+  .top-actions > :nth-child(4) {
+    grid-area: share;
+  }
+
+  .power {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .power input[type="range"] {
+    flex: 1 1 auto;
+    min-width: 4rem;
+    width: auto;
+  }
+
+  .power b {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 400px) {
+  .phone-tabs [role="tab"] {
+    font-size: 0.74rem;
+  }
+
+  /* Counts would crowd six tabs on the smallest phones. */
+  .phone-tabs .tab-badge {
+    display: none;
+  }
 }

@@ -117,6 +117,13 @@ export function App(props: { initial: AppState | null }) {
     setPanel(p);
     rememberPanel(p);
   };
+  // Phones show one screen at a time: the charts, or one panel of controls (bottom tab bar).
+  const [phoneView, setPhoneView] = useState<"charts" | "panel">("charts");
+  const showOnPhone = (v: "charts" | "panel", p?: PanelId) => {
+    if (p) choosePanel(p);
+    setPhoneView(v);
+    window.scrollTo({ top: 0 });
+  };
   const welcome = useWelcome();
 
   useEffect(() => {
@@ -422,7 +429,7 @@ export function App(props: { initial: AppState | null }) {
 
   return (
     <UnitsContext.Provider value={state.settings.units}>
-    <div className="layout">
+    <div className={`layout phone-${phoneView}`}>
       <header className="top">
         <div>
           <h1>Speaker Box Genius</h1>
@@ -961,6 +968,16 @@ export function App(props: { initial: AppState | null }) {
           )}
         </footer>
       </main>
+      <nav className="phone-nav" aria-label="Screens">
+        <PanelTabs
+          value={panel}
+          onChange={(p) => showOnPhone("panel", p)}
+          badges={tabBadges}
+          lead={{ id: "charts", label: "Charts", selected: phoneView === "charts", onSelect: () => showOnPhone("charts") }}
+          className="phone-tabs"
+          idPrefix="ptab-"
+        />
+      </nav>
       {toast && (
         <div className="toast" role="status" key={toast.id}>
           <span>{toast.text}</span>

@@ -42,7 +42,10 @@ export function PanelTabs(props: {
   /** Extra tab before the panels (the phone layout's Charts view). */
   lead?: { id: string; label: string; selected: boolean; onSelect: () => void };
   className?: string;
+  /** Prefix for the tab ids (two bars on one page need different ids). */
+  idPrefix?: string;
 }) {
+  const pre = props.idPrefix ?? "tab-";
   const ref = useRef<HTMLDivElement>(null);
   const onKey = (e: KeyboardEvent) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
@@ -61,7 +64,7 @@ export function PanelTabs(props: {
       {props.lead && (
         <button
           role="tab"
-          id={`tab-${props.lead.id}`}
+          id={`${pre}${props.lead.id}`}
           aria-selected={leadSelected}
           tabIndex={leadSelected ? 0 : -1}
           className={leadSelected ? "on" : ""}
@@ -76,7 +79,7 @@ export function PanelTabs(props: {
           <button
             key={p.id}
             role="tab"
-            id={`tab-${p.id}`}
+            id={`${pre}${p.id}`}
             aria-selected={on}
             aria-controls={`panel-${p.id}`}
             tabIndex={on ? 0 : -1}
