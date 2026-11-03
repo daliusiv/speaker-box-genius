@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { REPO } from "./components.tsx";
-import type { DbIndex } from "./library.ts";
+import { DRIVER_AS_PR, type DbIndex } from "./library.ts";
 import { useUnits } from "./units.ts";
 
 /**
@@ -43,11 +43,17 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
   filters: ChipFilter<R>[];
   searchText: (r: R) => string;
   onPick: (id: string) => void;
+  /** Filters set when the browser first opens (e.g. PRs only, drivers on request). */
+  initialFilters?: Filters;
+  /** Shown above the table. */
+  note?: ReactNode;
+  /** Number on the button, if not every row (e.g. real PRs, not drivers offered as PRs). */
+  count?: number;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const searchBox = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState<Filters>({});
+  const [filters, setFilters] = useState<Filters>(props.initialFilters ?? {});
   // Phones: the filters fold away behind a button (wide screens always show them).
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filterCount = Object.values(filters).reduce((n, v) => n + v.length, 0);
@@ -107,7 +113,7 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
   return (
     <div className="picker">
       <button type="button" className="browse" onClick={open} disabled={props.rows.length === 0}>
-        {props.button} <span className="count">{props.rows.length}</span>
+        {props.button} <span className="count">{props.count ?? props.rows.length}</span>
       </button>
       <a href={`${REPO}/blob/main/CONTRIBUTING.md`} title="Add a driver or passive radiator to the database">
         Missing one?
@@ -196,6 +202,7 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
               ),
             )}
           </div>
+          {props.note}
           <p className="lib-status">
             {shown.length} of {props.rows.length}
             {active && (
@@ -400,15 +407,55 @@ export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onP
   );
 }
 
+type PrChoiceRow = PrRow & { kind: "pr" | "driver" };
+
+/**
+ * Passive radiators, plus (on request) drivers that can stand in for one: an unpowered
+ * woofer works as a PR. Driver ids carry the DRIVER_AS_PR prefix.
+ */
 export function PassiveRadiatorBrowser(props: {
   rows: DbIndex["passiveRadiators"] | undefined;
+  drivers?: DbIndex["drivers"];
   onPick: (id: string) => void;
 }) {
-  const rows = props.rows ?? [];
-  const filters = useMemo(() => [brandFilter(rows), sizeFilter(rows)], [rows]);
-  const columns = useMemo<Column<PrRow>[]>(
+  const rows = useMemo<PrChoiceRow[]>(() => {
+    const prs: PrChoiceRow[] = (props.rows ?? []).map((r) => ({ ...r, kind: "pr" }));
+    const drivers: PrChoiceRow[] = (props.drivers ?? [])
+      .filter((d) => d.sd_cm2 !== undefined && d.xmax_mm !== undefined && d.xmax_mm > 0)
+      .map((d) => ({ id: DRIVER_AS_PR + d.id, brand: d.brand, model: d.model, size_in: d.size_in, sd_cm2: d.sd_cm2, xmax_mm: d.xmax_mm, kind: "driver" }));
+    return [...prs, ...drivers];
+  }, [props.rows, props.drivers]);
+  const prCount = props.rows?.length ?? 0;
+  const filters = useMemo<ChipFilter<PrChoiceRow>[]>(() => {
+    const list: ChipFilter<PrChoiceRow>[] = [];
+    if (rows.length > prCount) {
+      list.push({
+        key: "kind",
+        label: "Show",
+        kind: "chips",
+        options: [
+          { value: "pr", text: "Passive radiators" },
+          { value: "driver", text: "Drivers as PRs" },
+        ],
+        match: (r, v) => r.kind === v,
+        hint: "An unpowered woofer works as a passive radiator (leave its terminals unconnected)",
+      });
+    }
+    list.push(brandFilter(rows), sizeFilter(rows));
+    return list;
+  }, [rows, prCount]);
+  const columns = useMemo<Column<PrChoiceRow>[]>(
     () => [
-      { key: "name", label: "Passive radiator", cell: nameCell },
+      {
+        key: "name",
+        label: "Passive radiator",
+        cell: (r) => (
+          <>
+            {nameCell(r)}
+            {r.kind === "driver" && <span className="lib-tag">driver</span>}
+          </>
+        ),
+      },
       { key: "size", label: "Size", sort: (r) => r.size_in, cell: (r) => (r.size_in ? `${r.size_in}"` : "–"), num: true },
       { key: "sd", label: "Sd cm²", sort: (r) => r.sd_cm2, cell: (r) => fmt(r.sd_cm2, 0), num: true },
       { key: "xmax", label: "Xmax", sort: (r) => r.xmax_mm, cell: (r) => fmt(r.xmax_mm), num: true },
@@ -422,7 +469,17 @@ export function PassiveRadiatorBrowser(props: {
       rows={rows}
       columns={columns}
       filters={filters}
-      searchText={(r) => `${r.brand} ${r.model} ${r.size_in ?? ""}in`}
+      initialFilters={rows.length > prCount ? { kind: ["pr"] } : undefined}
+      count={prCount}
+      note={
+        rows.length > prCount ? (
+          <p className="hint lib-note">
+            An unpowered woofer works as a passive radiator. Turn on <b>Drivers as PRs</b> in the filters to choose from{" "}
+            {rows.length - prCount} drivers too.
+          </p>
+        ) : undefined
+      }
+      searchText={(r) => `${r.brand} ${r.model} ${r.size_in ?? ""}in ${r.kind === "driver" ? "driver woofer" : "pr passive"}`}
       onPick={props.onPick}
     />
   );

@@ -19,6 +19,7 @@ export interface DbIndex {
     vas_l?: number;
     xmax_mm?: number;
     pe_w?: number;
+    sd_cm2?: number;
   }[];
   passiveRadiators: { id: string; brand: string; model: string; size_in?: number; sd_cm2?: number; xmax_mm?: number }[];
 }
@@ -168,4 +169,40 @@ export async function loadPassiveRadiator(
     displacement_l: displacementOf(rec.physical),
     cutout_mm: rec.physical?.cutout_mm,
   };
+}
+
+/** Ids of drivers offered as passive radiators carry this prefix (PR and driver ids can coincide). */
+export const DRIVER_AS_PR = "driver:";
+
+/**
+ * A driver used as a passive radiator: an unpowered woofer works like a PR (its coil left
+ * unconnected, so only its mechanical losses damp it: Q = Qms). Mms comes from the
+ * datasheet or, if missing, from Fs, Vas and Sd. Its displacement (magnet and all) counts.
+ */
+export async function loadDriverAsPassiveRadiator(
+  id: string,
+): Promise<{ name: string; params: PrParams; displacement_l?: number; cutout_mm?: number }> {
+  const rec = (await loadShard(brandOf(id))).drivers[id];
+  if (!rec) throw new Error(`Driver ${id} not found`);
+  const t = rec.ts;
+  const sd = t.sd_cm2!;
+  const vas = t.vas_l!;
+  const xmax = t.xmax_mm;
+  if (!(sd > 0) || !(vas > 0) || !(xmax !== undefined && xmax > 0)) throw new Error("This driver lacks Sd, Vas or Xmax");
+  let mms = t.mms_g;
+  if (!(mms !== undefined && mms > 0)) {
+    const cms = vas / 1000 / (RHO * C * C * (sd / 1e4) ** 2);
+    mms = (1 / ((2 * Math.PI * t.fs!) ** 2 * cms)) * 1000;
+  }
+  return {
+    name: `${rec.brand} ${rec.model} (as PR)`,
+    params: { mms_g: Math.round(mms * 10) / 10, sd_cm2: sd, xmax_mm: xmax, qms: t.qms ?? 5, vas_l: vas },
+    displacement_l: displacementOf(rec.physical),
+    cutout_mm: rec.physical?.cutout_mm,
+  };
+}
+
+/** A PR from the PR browser: a real passive radiator, or a driver used as one. */
+export function loadPrChoice(id: string) {
+  return id.startsWith(DRIVER_AS_PR) ? loadDriverAsPassiveRadiator(id.slice(DRIVER_AS_PR.length)) : loadPassiveRadiator(id);
 }
