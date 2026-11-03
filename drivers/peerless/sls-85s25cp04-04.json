@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "SLS-85S25CP04-04",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 3.5,
+  "ts": {
+    "fs": 73,
+    "qms": 5.41,
+    "qes": 0.386,
+    "vas_l": 1.43,
+    "re": 3.2,
+    "sd_cm2": 32.2,
+    "qts": 0.36,
+    "le_mh": 0.169,
+    "bl": 4.3,
+    "mms_g": 4.86,
+    "xmax_mm": 6.5,
+    "pe_w": 30
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/162",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

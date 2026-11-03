@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "15SW100 (4 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 37,
+    "qms": 5.33,
+    "qes": 0.29,
+    "vas_l": 99.5,
+    "re": 3.2,
+    "sd_cm2": 855,
+    "qts": 0.28,
+    "le_mh": 1.48,
+    "bl": 22.09,
+    "mms_g": 193,
+    "xmax_mm": 12.5,
+    "pe_w": 1500
+  },
+  "physical": {
+    "cutout_mm": 353,
+    "depth_mm": 190
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/15/4/15SW100",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

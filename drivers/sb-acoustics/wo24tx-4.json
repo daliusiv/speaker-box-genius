@@ -1,0 +1,29 @@
+{
+  "brand": "SB Acoustics",
+  "model": "WO24TX-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "ts": {
+    "fs": 26.3,
+    "qms": 5.66,
+    "qes": 0.37,
+    "vas_l": 79,
+    "re": 3.3,
+    "sd_cm2": 255,
+    "qts": 0.35,
+    "le_mh": 0.29,
+    "bl": 7.9,
+    "mms_g": 42.8,
+    "xmax_mm": 8.75,
+    "pe_w": 90
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/95-satori-wo24tx-4-textreme/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

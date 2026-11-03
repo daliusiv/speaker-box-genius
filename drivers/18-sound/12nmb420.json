@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "12NMB420",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 53,
+    "qms": 3.6,
+    "qes": 0.3,
+    "vas_l": 105,
+    "re": 5.2,
+    "sd_cm2": 531,
+    "qts": 0.28,
+    "le_mh": 0.2,
+    "bl": 13.9,
+    "mms_g": 33.5,
+    "xmax_mm": 4,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 282,
+    "depth_mm": 127
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/12-0/8/12NMB420",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

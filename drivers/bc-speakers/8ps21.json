@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "8PS21",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 73,
+    "qms": 4.2,
+    "qes": 0.36,
+    "vas_l": 14,
+    "re": 5.4,
+    "sd_cm2": 220,
+    "qts": 0.33,
+    "le_mh": 0.5,
+    "bl": 12.6,
+    "mms_g": 23,
+    "xmax_mm": 5,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 187,
+    "depth_mm": 91
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/8/8/8PS21",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

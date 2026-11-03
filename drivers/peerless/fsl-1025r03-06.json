@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "FSL-1025R03-06",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 66,
+    "qms": 5.15,
+    "qes": 0.507,
+    "vas_l": 18.1,
+    "re": 4.6,
+    "sd_cm2": 346,
+    "qts": 0.46,
+    "le_mh": 0.791,
+    "bl": 14.3,
+    "mms_g": 54.4,
+    "xmax_mm": 6.27,
+    "pe_w": 250
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/231",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

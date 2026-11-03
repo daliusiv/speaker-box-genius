@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "18NLW9000 (4 Ω)",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 18,
+  "ts": {
+    "fs": 32,
+    "qms": 5,
+    "qes": 0.22,
+    "vas_l": 247,
+    "re": 3.1,
+    "sd_cm2": 1222,
+    "qts": 0.21,
+    "le_mh": 1.2,
+    "bl": 25,
+    "mms_g": 228,
+    "xmax_mm": 14,
+    "pe_w": 1800
+  },
+  "physical": {
+    "cutout_mm": 422,
+    "depth_mm": 237
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/18-0/4/18nlw9000--2",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

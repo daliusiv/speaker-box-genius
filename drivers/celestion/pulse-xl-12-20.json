@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "PULSE XL 12.20",
+  "type": "other",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 35.1,
+    "qms": 6.087,
+    "qes": 0.548,
+    "vas_l": 153.3,
+    "re": 5.8,
+    "sd_cm2": 530.9,
+    "qts": 0.503,
+    "le_mh": 1.31,
+    "bl": 11.21,
+    "mms_g": 53.55,
+    "xmax_mm": 8.25,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 281.4,
+    "depth_mm": 135
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/pulse-xl-12-20/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB12PFCR25-8",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 4,
+  "ts": {
+    "fs": 59,
+    "qms": 3.63,
+    "qes": 0.55,
+    "vas_l": 5.3,
+    "re": 6.4,
+    "sd_cm2": 50,
+    "qts": 0.48,
+    "le_mh": 0.36,
+    "bl": 4.6,
+    "mms_g": 4.9,
+    "xmax_mm": 5,
+    "pe_w": 30
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/4-sb12pfcr25-8-paper/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "BN12-300S (8)",
+  "type": "other",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 62.1,
+    "qms": 2.74,
+    "qes": 0.361,
+    "vas_l": 50,
+    "re": 5.12,
+    "sd_cm2": 530.9,
+    "qts": 0.319,
+    "le_mh": 0.51,
+    "bl": 17.02,
+    "mms_g": 52.38,
+    "xmax_mm": 2.5,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 283,
+    "depth_mm": 132
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/bn12-300s-8/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

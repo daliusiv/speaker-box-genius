@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "15W700 (4 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 41,
+    "qms": 4.03,
+    "qes": 0.29,
+    "vas_l": 180,
+    "re": 2.8,
+    "sd_cm2": 850,
+    "qts": 0.27,
+    "le_mh": 0.54,
+    "bl": 14.7,
+    "mms_g": 86,
+    "xmax_mm": 6.5,
+    "pe_w": 450
+  },
+  "physical": {
+    "cutout_mm": 353,
+    "depth_mm": 168
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/15-0/4/15w700",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

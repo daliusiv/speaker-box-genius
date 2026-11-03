@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "10\" Blackbird 100 (8 Ω)",
+  "type": "other",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 112.1,
+    "qms": 14.73,
+    "qes": 0.89,
+    "vas_l": 14.1,
+    "re": 5.97,
+    "sd_cm2": 330,
+    "qts": 0.8,
+    "le_mh": 0.79,
+    "bl": 10.45,
+    "mms_g": 22,
+    "xmax_mm": 1,
+    "pe_w": 100
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/jet-series/10-blackbird-100",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

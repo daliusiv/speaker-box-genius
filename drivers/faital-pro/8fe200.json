@@ -1,0 +1,34 @@
+{
+  "brand": "Faital Pro",
+  "model": "8FE200",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 80,
+    "qms": 13,
+    "qes": 0.66,
+    "vas_l": 16.1,
+    "re": 5.9,
+    "sd_cm2": 209,
+    "qts": 0.63,
+    "le_mh": 0.44,
+    "bl": 8.2,
+    "mms_g": 15,
+    "xmax_mm": 4.67,
+    "pe_w": 130
+  },
+  "physical": {
+    "cutout_mm": 178,
+    "depth_mm": 89
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=401030100",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

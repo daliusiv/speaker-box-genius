@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "WO24P-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 28,
+    "qms": 6.7,
+    "qes": 0.42,
+    "vas_l": 71,
+    "re": 3.3,
+    "sd_cm2": 255,
+    "qts": 0.4,
+    "le_mh": 0.29,
+    "bl": 7.6,
+    "mms_g": 42,
+    "xmax_mm": 8.5,
+    "pe_w": 90
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/9%C2%BDin-satori-wo24p-4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

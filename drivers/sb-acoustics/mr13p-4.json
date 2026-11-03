@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "MR13P-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 5,
+  "ts": {
+    "fs": 41,
+    "qms": 2.8,
+    "qes": 0.25,
+    "vas_l": 19.4,
+    "re": 3.3,
+    "sd_cm2": 70,
+    "qts": 0.23,
+    "le_mh": 0.11,
+    "bl": 4.3,
+    "mms_g": 5.4,
+    "xmax_mm": 3,
+    "pe_w": 30
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/5in-satori-mr13p-4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

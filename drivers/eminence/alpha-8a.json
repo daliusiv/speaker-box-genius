@@ -1,0 +1,34 @@
+{
+  "brand": "Eminence",
+  "model": "Alpha 8A",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 73,
+    "qms": 4.6,
+    "qes": 0.68,
+    "vas_l": 17.7,
+    "re": 5.3,
+    "sd_cm2": 210,
+    "qts": 0.59,
+    "le_mh": 0.44,
+    "bl": 7.8,
+    "mms_g": 17,
+    "xmax_mm": 3.2,
+    "pe_w": 125
+  },
+  "physical": {
+    "cutout_mm": 181.1,
+    "depth_mm": 82.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://eminence.com/products/alpha_8a",
+      "retrieved": "2026-11-02",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

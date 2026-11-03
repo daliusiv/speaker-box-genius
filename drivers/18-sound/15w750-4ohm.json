@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "15W750 (4 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 39,
+    "qms": 6.2,
+    "qes": 0.3,
+    "vas_l": 253,
+    "re": 2.7,
+    "sd_cm2": 850,
+    "qts": 0.29,
+    "le_mh": 0.73,
+    "bl": 14,
+    "xmax_mm": 8,
+    "pe_w": 600
+  },
+  "physical": {
+    "cutout_mm": 354,
+    "depth_mm": 184
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/15-0/4/15w750%20-%204%20ohm",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 89.5 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}

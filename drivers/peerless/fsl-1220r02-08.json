@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "FSL-1220R02-08",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 62,
+    "qms": 8.67,
+    "qes": 0.588,
+    "vas_l": 61.1,
+    "re": 5.9,
+    "sd_cm2": 543,
+    "qts": 0.55,
+    "le_mh": 0.696,
+    "bl": 13.3,
+    "mms_g": 45.3,
+    "xmax_mm": 5.07,
+    "pe_w": 167
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/43",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

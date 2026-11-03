@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "MR13TX-4",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 5,
+  "ts": {
+    "fs": 44,
+    "qms": 4.98,
+    "qes": 0.28,
+    "vas_l": 12.2,
+    "re": 3.4,
+    "sd_cm2": 69,
+    "qts": 0.27,
+    "le_mh": 0.11,
+    "bl": 4.9,
+    "mms_g": 7.2,
+    "xmax_mm": 3,
+    "pe_w": 30
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/5-satori-mr13tx-4-textreme/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

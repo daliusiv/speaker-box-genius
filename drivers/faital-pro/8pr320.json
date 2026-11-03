@@ -1,0 +1,34 @@
+{
+  "brand": "Faital Pro",
+  "model": "8PR320",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 65,
+    "qms": 8.2,
+    "qes": 0.43,
+    "vas_l": 13.1,
+    "re": 5.4,
+    "sd_cm2": 223,
+    "qts": 0.41,
+    "le_mh": 0.52,
+    "bl": 12.9,
+    "mms_g": 31.7,
+    "xmax_mm": 7.33,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 183,
+    "depth_mm": 99.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=101030210",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

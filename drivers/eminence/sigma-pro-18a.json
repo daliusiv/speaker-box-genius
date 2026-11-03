@@ -1,0 +1,34 @@
+{
+  "brand": "Eminence",
+  "model": "Sigma Pro 18A",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 28,
+    "qms": 8.28,
+    "qes": 0.3,
+    "vas_l": 441.2,
+    "re": 6.29,
+    "sd_cm2": 1140,
+    "qts": 0.29,
+    "le_mh": 1.9,
+    "bl": 22.1,
+    "mms_g": 130,
+    "xmax_mm": 6.1,
+    "pe_w": 650
+  },
+  "physical": {
+    "cutout_mm": 420.6,
+    "depth_mm": 207
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://eminence.com/products/sigma_pro_18a",
+      "retrieved": "2026-11-02",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

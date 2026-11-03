@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "FSL-0512R01-08",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 120,
+    "qms": 2.41,
+    "qes": 0.76,
+    "vas_l": 3.48,
+    "re": 5.9,
+    "sd_cm2": 100,
+    "qts": 0.58,
+    "le_mh": 0.278,
+    "bl": 6.44,
+    "mms_g": 6.99,
+    "xmax_mm": 4.33,
+    "pe_w": 90
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/1497",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

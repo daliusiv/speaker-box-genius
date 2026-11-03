@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "TF1018",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 70.1,
+    "qms": 2.426,
+    "qes": 0.493,
+    "vas_l": 33.696992,
+    "re": 5.8,
+    "sd_cm2": 346.36,
+    "qts": 0.409,
+    "le_mh": 0.5,
+    "bl": 11.59,
+    "mms_g": 25.91,
+    "xmax_mm": 2,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 229,
+    "depth_mm": 102
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/tf1018/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

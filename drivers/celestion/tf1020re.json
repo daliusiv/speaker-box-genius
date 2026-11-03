@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "TF1020RE",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 52.6,
+    "qms": 2.797,
+    "qes": 0.448,
+    "vas_l": 44.53,
+    "re": 5.63,
+    "sd_cm2": 346.36,
+    "qts": 0.386,
+    "le_mh": 0.682,
+    "bl": 12.04,
+    "mms_g": 34.957,
+    "xmax_mm": 5.875,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 229,
+    "depth_mm": 113
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/tf1020re/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

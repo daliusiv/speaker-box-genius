@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "8NTLS2000 (8 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 41,
+    "qms": 11.5,
+    "qes": 0.19,
+    "vas_l": 27,
+    "re": 5.4,
+    "sd_cm2": 227,
+    "qts": 0.19,
+    "le_mh": 0.69,
+    "bl": 17.2,
+    "mms_g": 42,
+    "xmax_mm": 7.4,
+    "pe_w": 350
+  },
+  "physical": {
+    "cutout_mm": 186,
+    "depth_mm": 121
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/8-0/8/8ntls2000-8",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

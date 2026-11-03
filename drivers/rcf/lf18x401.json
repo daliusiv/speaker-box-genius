@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "LF18X401",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 30,
+    "qms": 7.4,
+    "qes": 0.31,
+    "vas_l": 274,
+    "re": 5.4,
+    "sd_cm2": 1200,
+    "qts": 0.3,
+    "le_mh": 0.83,
+    "bl": 26.5,
+    "mms_g": 215,
+    "xmax_mm": 12,
+    "pe_w": 1500
+  },
+  "physical": {
+    "cutout_mm": 424
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/lf18x401",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

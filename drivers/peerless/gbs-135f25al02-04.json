@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "GBS-135F25AL02-04",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 64,
+    "qms": 4.33,
+    "qes": 0.681,
+    "vas_l": 5.3,
+    "re": 3.3,
+    "sd_cm2": 86.6,
+    "qts": 0.59,
+    "le_mh": 0.436,
+    "bl": 4.93,
+    "mms_g": 12.3,
+    "xmax_mm": 5.37,
+    "pe_w": 35
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/39",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

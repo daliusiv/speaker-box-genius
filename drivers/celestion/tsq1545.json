@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "TSQ1545",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 39,
+    "qms": 5.612,
+    "qes": 0.372,
+    "vas_l": 92.03,
+    "re": 5.05,
+    "sd_cm2": 855.3,
+    "qts": 0.349,
+    "le_mh": 1.83,
+    "bl": 25,
+    "mms_g": 187.8,
+    "xmax_mm": 16,
+    "pe_w": 1800
+  },
+  "physical": {
+    "cutout_mm": 354,
+    "depth_mm": 210
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/tsq1545-2/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

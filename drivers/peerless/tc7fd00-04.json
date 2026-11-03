@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "TC7FD00-04",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 2.5,
+  "ts": {
+    "fs": 160,
+    "qms": 3.97,
+    "qes": 1.48,
+    "vas_l": 0.385,
+    "re": 3.5,
+    "sd_cm2": 22.1,
+    "qts": 1.1,
+    "le_mh": 0.054,
+    "bl": 2.05,
+    "mms_g": 1.81,
+    "xmax_mm": 2,
+    "pe_w": 20
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/187",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

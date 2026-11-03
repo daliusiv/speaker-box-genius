@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB17NBAC35-4",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 6,
+  "ts": {
+    "fs": 30,
+    "qms": 4.3,
+    "qes": 0.31,
+    "vas_l": 42.6,
+    "re": 3.1,
+    "sd_cm2": 118,
+    "qts": 0.29,
+    "le_mh": 0.13,
+    "bl": 4.9,
+    "mms_g": 12.4,
+    "xmax_mm": 5.5,
+    "pe_w": 60
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/6in-sb17nbac35-4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

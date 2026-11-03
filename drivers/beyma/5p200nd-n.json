@@ -1,0 +1,33 @@
+{
+  "brand": "Beyma",
+  "model": "5P200Nd/N",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 77,
+    "qms": 7.31,
+    "qes": 0.24,
+    "vas_l": 4.8,
+    "re": 5.3,
+    "sd_cm2": 95,
+    "qts": 0.23,
+    "le_mh": 0.28,
+    "bl": 10.5,
+    "mms_g": 11,
+    "xmax_mm": 5.7,
+    "pe_w": 150
+  },
+  "physical": {
+    "depth_mm": 72.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/105P2NDN8/altavoz-5p200nd-n-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "6PS44",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 71,
+    "qms": 12.5,
+    "qes": 0.34,
+    "vas_l": 7,
+    "re": 5.3,
+    "sd_cm2": 132,
+    "qts": 0.33,
+    "le_mh": 0.7,
+    "bl": 11,
+    "mms_g": 18,
+    "xmax_mm": 4.5,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 145,
+    "depth_mm": 88
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/6.5/8/6PS44",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

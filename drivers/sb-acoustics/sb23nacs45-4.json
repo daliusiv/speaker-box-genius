@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB23NACS45-4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 23,
+    "qms": 5.4,
+    "qes": 0.35,
+    "vas_l": 95,
+    "re": 3.3,
+    "sd_cm2": 216,
+    "qts": 0.33,
+    "le_mh": 0.27,
+    "bl": 6.7,
+    "mms_g": 32,
+    "xmax_mm": 6.5,
+    "pe_w": 60
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/8in-sb23nacs45-4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

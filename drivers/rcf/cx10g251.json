@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "CX10G251",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 72,
+    "qms": 5,
+    "qes": 0.3,
+    "vas_l": 33,
+    "re": 5.2,
+    "sd_cm2": 400,
+    "qts": 0.28,
+    "le_mh": 0.5,
+    "bl": 14.2,
+    "xmax_mm": 5,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 232
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/cx10g251",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 25 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it). Coaxial driver; values are for the woofer section."
+}

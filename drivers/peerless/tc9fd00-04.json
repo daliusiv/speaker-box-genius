@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "TC9FD00-04",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 3.5,
+  "ts": {
+    "fs": 170,
+    "qms": 4.78,
+    "qes": 1.33,
+    "vas_l": 0.737,
+    "re": 3.1,
+    "sd_cm2": 36.3,
+    "qts": 1,
+    "le_mh": 0.057,
+    "bl": 2.33,
+    "mms_g": 2.14,
+    "xmax_mm": 2.92,
+    "pe_w": 25
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/192",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

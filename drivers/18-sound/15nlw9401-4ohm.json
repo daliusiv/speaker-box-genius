@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "15NLW9401 (4 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 40,
+    "qms": 6.14,
+    "qes": 0.26,
+    "vas_l": 114,
+    "re": 2.8,
+    "sd_cm2": 850,
+    "qts": 0.25,
+    "le_mh": 1.23,
+    "bl": 20,
+    "mms_g": 150,
+    "xmax_mm": 10,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 354,
+    "depth_mm": 180
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/15-0/4/15nlw9401%20-%204%20ohm",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

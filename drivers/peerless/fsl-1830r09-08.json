@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "FSL-1830R09-08",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 33,
+    "qms": 15.9,
+    "qes": 0.602,
+    "vas_l": 220,
+    "re": 6.8,
+    "sd_cm2": 1130,
+    "qts": 0.58,
+    "le_mh": 1.42,
+    "bl": 21.1,
+    "mms_g": 189,
+    "xmax_mm": 15.9,
+    "pe_w": 600
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/1431",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

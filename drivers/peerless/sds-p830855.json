@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "SDS-P830855",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 4,
+  "ts": {
+    "fs": 66,
+    "qms": 4.56,
+    "qes": 0.539,
+    "vas_l": 3.26,
+    "re": 5.6,
+    "sd_cm2": 50.3,
+    "qts": 0.48,
+    "le_mh": 0.343,
+    "bl": 5.24,
+    "mms_g": 6.3,
+    "xmax_mm": 5.01,
+    "pe_w": 30
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/157",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "NTR15-3018E",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 34.9,
+    "qms": 4.863,
+    "qes": 0.301,
+    "vas_l": 207.278976,
+    "re": 5.85,
+    "sd_cm2": 855.3,
+    "qts": 0.283,
+    "le_mh": 1.18,
+    "bl": 21.07,
+    "mms_g": 104.12,
+    "xmax_mm": 5,
+    "pe_w": 450
+  },
+  "physical": {
+    "cutout_mm": 351,
+    "depth_mm": 162
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/ntr15-3018e/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

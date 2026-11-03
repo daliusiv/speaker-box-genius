@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "14DS88",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 44,
+    "qms": 8,
+    "qes": 0.19,
+    "vas_l": 55,
+    "re": 5.6,
+    "sd_cm2": 707,
+    "qts": 0.18,
+    "le_mh": 2.05,
+    "bl": 36.9,
+    "mms_g": 170,
+    "xmax_mm": 11,
+    "pe_w": 700
+  },
+  "physical": {
+    "cutout_mm": 325,
+    "depth_mm": 174.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/13.5/8/14DS88",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

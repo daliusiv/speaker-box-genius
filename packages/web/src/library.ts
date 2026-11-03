@@ -37,6 +37,7 @@ interface DriverRecord {
   ts_wiring?: "series" | "parallel";
   ts: Record<string, number | undefined>;
   physical?: Physical;
+  sources?: { url?: string; note?: string }[];
 }
 
 interface PrRecord {
@@ -113,6 +114,15 @@ export interface LoadedDriver {
   displacement_l?: number;
   /** DVC drivers: the wiring the published T/S values were measured with. */
   dvcWiring?: "series" | "parallel";
+  /** Where the values came from, for the credit line under the driver name. */
+  source?: { url?: string; via?: "driver-base" };
+}
+
+/** The first source with a link, and whether it came through driver-base (CC BY 4.0, credit required). */
+export function sourceOf(sources: { url?: string; note?: string }[] | undefined): LoadedDriver["source"] {
+  const s = sources?.find((x) => x.url) ?? sources?.[0];
+  if (!s) return undefined;
+  return { url: s.url, ...(/driver-base/.test(s.note ?? "") ? { via: "driver-base" as const } : {}) };
 }
 
 export async function loadDriver(id: string): Promise<LoadedDriver> {
@@ -135,6 +145,7 @@ export async function loadDriver(id: string): Promise<LoadedDriver> {
     pe_w: rec.ts.pe_w,
     displacement_l: displacementOf(rec.physical),
     dvcWiring: rec.voice_coils === 2 ? (rec.ts_wiring ?? "parallel") : undefined,
+    source: sourceOf(rec.sources),
   };
 }
 

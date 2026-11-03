@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "10MB400",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 70,
+    "qms": 3.5,
+    "qes": 0.37,
+    "vas_l": 41,
+    "re": 5.1,
+    "sd_cm2": 350,
+    "qts": 0.33,
+    "le_mh": 1.05,
+    "bl": 12,
+    "mms_g": 21,
+    "xmax_mm": 2.5,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 232,
+    "depth_mm": 121
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/10-0/8/10MB400",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

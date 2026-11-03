@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "Mod 12-35 (16 Ω)",
+  "type": "other",
+  "nominal_ohms": 16,
+  "size_in": 12,
+  "ts": {
+    "fs": 90,
+    "qms": 19.38,
+    "qes": 2.13,
+    "vas_l": 34.8,
+    "re": 12.35,
+    "sd_cm2": 490.9,
+    "qts": 1.92,
+    "le_mh": 1.7,
+    "bl": 9.99,
+    "mms_g": 30.6,
+    "xmax_mm": 1.5,
+    "pe_w": 35
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/mod-series/mod-12-35",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

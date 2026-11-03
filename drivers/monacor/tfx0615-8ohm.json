@@ -1,0 +1,35 @@
+{
+  "brand": "Monacor",
+  "model": "TFX0615 (8 Ω)",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 97,
+    "qms": 3.038,
+    "qes": 0.429,
+    "vas_l": 7.2,
+    "re": 5.39,
+    "sd_cm2": 153.944,
+    "qts": 0.376,
+    "le_mh": 0.46,
+    "bl": 9.82,
+    "mms_g": 12.62,
+    "xmax_mm": 5.25,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 145,
+    "depth_mm": 75.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/pa-coaxial-speakers-and-full-range-speakers-/tfx0615-8/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

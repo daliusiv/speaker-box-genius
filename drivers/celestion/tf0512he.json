@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "TF0512HE",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 84.7,
+    "qms": 9.225,
+    "qes": 0.569,
+    "vas_l": 3.46,
+    "re": 5.42,
+    "sd_cm2": 78.54,
+    "qts": 0.536,
+    "le_mh": 0.28,
+    "bl": 6.71,
+    "mms_g": 8.89,
+    "xmax_mm": 4.75,
+    "pe_w": 75
+  },
+  "physical": {
+    "cutout_mm": 117,
+    "depth_mm": 72
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/tf0512he/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

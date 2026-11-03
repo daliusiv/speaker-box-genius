@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "18LW2420 (4 Ω)",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 18,
+  "ts": {
+    "fs": 34,
+    "qms": 6.9,
+    "qes": 0.32,
+    "vas_l": 208,
+    "re": 2.8,
+    "sd_cm2": 1225,
+    "qts": 0.31,
+    "le_mh": 0.87,
+    "bl": 20.2,
+    "mms_g": 221,
+    "xmax_mm": 10,
+    "pe_w": 1300
+  },
+  "physical": {
+    "cutout_mm": 422,
+    "depth_mm": 215
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/18-0/4/18lw2420-4",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

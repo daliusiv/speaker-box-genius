@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "12\" Tornado Classic 100 (16 Ω)",
+  "type": "other",
+  "nominal_ohms": 16,
+  "size_in": 12,
+  "ts": {
+    "fs": 70,
+    "qms": 14.28,
+    "qes": 0.74,
+    "vas_l": 55.7,
+    "re": 13.12,
+    "sd_cm2": 490.9,
+    "qts": 0.7,
+    "le_mh": 1.16,
+    "bl": 15.72,
+    "mms_g": 31.9,
+    "xmax_mm": 1,
+    "pe_w": 100
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/jet-series/12-tornado-classic-100",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

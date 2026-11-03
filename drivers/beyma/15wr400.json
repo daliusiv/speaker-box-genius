@@ -1,0 +1,33 @@
+{
+  "brand": "Beyma",
+  "model": "15WR400",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 36,
+    "qms": 8.2,
+    "qes": 0.31,
+    "vas_l": 236,
+    "re": 5.6,
+    "sd_cm2": 880,
+    "qts": 0.3,
+    "le_mh": 1,
+    "bl": 19.2,
+    "mms_g": 91,
+    "xmax_mm": 6.3,
+    "pe_w": 400
+  },
+  "physical": {
+    "depth_mm": 162
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/115WR408/altavoz-15wr400-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

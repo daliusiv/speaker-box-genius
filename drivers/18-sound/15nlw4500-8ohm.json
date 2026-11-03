@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "15NLW4500 (8 Ω)",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 35,
+    "qms": 7.8,
+    "qes": 0.27,
+    "vas_l": 111,
+    "re": 5.4,
+    "sd_cm2": 881,
+    "qts": 0.26,
+    "le_mh": 1.62,
+    "bl": 29.7,
+    "mms_g": 201,
+    "xmax_mm": 14.5,
+    "pe_w": 1500
+  },
+  "physical": {
+    "cutout_mm": 356,
+    "depth_mm": 199
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/15-0/8/15nlw4500",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

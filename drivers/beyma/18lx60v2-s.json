@@ -1,0 +1,33 @@
+{
+  "brand": "Beyma",
+  "model": "18LX60V2/S",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 35,
+    "qms": 15.7,
+    "qes": 0.5,
+    "vas_l": 236,
+    "re": 5.1,
+    "sd_cm2": 1320,
+    "qts": 0.48,
+    "le_mh": 2.1,
+    "bl": 21.8,
+    "mms_g": 215,
+    "xmax_mm": 8,
+    "pe_w": 700
+  },
+  "physical": {
+    "depth_mm": 193
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/118LX60V2S8/altavoz-18lx60v2-s-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

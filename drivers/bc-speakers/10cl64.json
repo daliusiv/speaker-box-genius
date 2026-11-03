@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "10CL64",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 63,
+    "qms": 5.1,
+    "qes": 0.33,
+    "vas_l": 22.2,
+    "re": 5.3,
+    "sd_cm2": 320,
+    "qts": 0.31,
+    "le_mh": 1.17,
+    "bl": 16.3,
+    "mms_g": 41.6,
+    "xmax_mm": 5.2,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 232,
+    "depth_mm": 112
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/10/8/10CL64",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

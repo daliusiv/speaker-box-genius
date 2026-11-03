@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "SDS-160F25PR01-08",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 48,
+    "qms": 3.75,
+    "qes": 0.686,
+    "vas_l": 21.8,
+    "re": 7,
+    "sd_cm2": 141,
+    "qts": 0.58,
+    "le_mh": 0.803,
+    "bl": 6.64,
+    "mms_g": 14.5,
+    "xmax_mm": 8.05,
+    "pe_w": 60
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/156",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

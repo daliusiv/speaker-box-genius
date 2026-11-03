@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "FSL-1530R01-08",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 41,
+    "qms": 4.98,
+    "qes": 0.252,
+    "vas_l": 180,
+    "re": 5.3,
+    "sd_cm2": 866,
+    "qts": 0.24,
+    "le_mh": 1.19,
+    "bl": 21.8,
+    "mms_g": 87.4,
+    "xmax_mm": 4.67,
+    "pe_w": 350
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/70",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

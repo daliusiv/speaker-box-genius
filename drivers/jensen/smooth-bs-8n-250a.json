@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "Smooth BS 8N/250A",
+  "type": "other",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 59,
+    "qms": 6.72,
+    "qes": 0.39,
+    "vas_l": 14.9,
+    "re": 5.5,
+    "sd_cm2": 213.8,
+    "qts": 0.37,
+    "le_mh": 0.8,
+    "bl": 12.85,
+    "mms_g": 32,
+    "xmax_mm": 5,
+    "pe_w": 250
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/bass-speakers/smooth-bs-8n250a",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

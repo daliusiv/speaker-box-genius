@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "MW13P-8",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 41.5,
+    "qms": 3.55,
+    "qes": 0.33,
+    "vas_l": 15,
+    "re": 6,
+    "sd_cm2": 70,
+    "qts": 0.3,
+    "le_mh": 0.15,
+    "bl": 5.7,
+    "mms_g": 6.8,
+    "xmax_mm": 5,
+    "pe_w": 40
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/5in-satori-mw13p-8/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

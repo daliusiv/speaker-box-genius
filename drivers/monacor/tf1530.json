@@ -1,0 +1,34 @@
+{
+  "brand": "Monacor",
+  "model": "TF1530",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 42,
+    "qms": 2.728,
+    "qes": 0.31,
+    "vas_l": 162.2,
+    "re": 5.82,
+    "sd_cm2": 855.3,
+    "qts": 0.281,
+    "le_mh": 0.9,
+    "bl": 21.22,
+    "mms_g": 91.65,
+    "xmax_mm": 4,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 352,
+    "depth_mm": 163
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/pa-bass-speakers-/tf1530-8/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

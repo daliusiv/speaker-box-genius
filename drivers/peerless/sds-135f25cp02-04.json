@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "SDS-135F25CP02-04",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 58,
+    "qms": 3.68,
+    "qes": 0.447,
+    "vas_l": 3.94,
+    "re": 3.1,
+    "sd_cm2": 86.6,
+    "qts": 0.4,
+    "le_mh": 1.06,
+    "bl": 7.2,
+    "mms_g": 20.4,
+    "xmax_mm": 7.2,
+    "pe_w": 50
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/316",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

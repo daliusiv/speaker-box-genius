@@ -1,0 +1,34 @@
+{
+  "brand": "Faital Pro",
+  "model": "5PR160",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 90,
+    "qms": 4.4,
+    "qes": 0.33,
+    "vas_l": 3.7,
+    "re": 6.1,
+    "sd_cm2": 85.2,
+    "qts": 0.31,
+    "le_mh": 0.3,
+    "bl": 9.6,
+    "mms_g": 8.5,
+    "xmax_mm": 5.1,
+    "pe_w": 120
+  },
+  "physical": {
+    "cutout_mm": 118,
+    "depth_mm": 74
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=101010110",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "8M400F",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 89,
+    "qms": 4.03,
+    "qes": 0.28,
+    "vas_l": 13.7,
+    "re": 5.1,
+    "sd_cm2": 227,
+    "qts": 0.26,
+    "le_mh": 0.7,
+    "bl": 13.1,
+    "mms_g": 16.9,
+    "xmax_mm": 3,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 186,
+    "depth_mm": 106
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/8-0/8/8m400f",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

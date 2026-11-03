@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "BL15-300X (4)",
+  "type": "other",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 48.1,
+    "qms": 2.99,
+    "qes": 1.004,
+    "vas_l": 137.7,
+    "re": 3.15,
+    "sd_cm2": 855.3,
+    "qts": 0.751,
+    "le_mh": 0.45,
+    "bl": 8.83,
+    "mms_g": 83.39,
+    "xmax_mm": 4.25,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 351,
+    "depth_mm": 162
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/bl15-300x-4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

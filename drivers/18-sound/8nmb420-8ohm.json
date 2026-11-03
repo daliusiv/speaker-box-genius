@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "8NMB420 (8 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 61,
+    "qms": 4,
+    "qes": 0.31,
+    "vas_l": 33,
+    "re": 5,
+    "sd_cm2": 230,
+    "qts": 0.28,
+    "le_mh": 0.35,
+    "bl": 10,
+    "mms_g": 14.9,
+    "xmax_mm": 5.8,
+    "pe_w": 280
+  },
+  "physical": {
+    "cutout_mm": 186,
+    "depth_mm": 99
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/8-0/8/8NMB420",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

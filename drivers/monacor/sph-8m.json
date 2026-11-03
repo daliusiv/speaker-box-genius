@@ -1,0 +1,34 @@
+{
+  "brand": "Monacor",
+  "model": "SPH-8M",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 35,
+    "qms": 2.26,
+    "qes": 0.5,
+    "vas_l": 44,
+    "re": 6.5,
+    "sd_cm2": 240,
+    "qts": 0.41,
+    "le_mh": 0.78,
+    "bl": 9.01,
+    "xmax_mm": 4.5,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 180,
+    "depth_mm": 97
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/hi-fi-speakers-/sph-8m/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 27 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}

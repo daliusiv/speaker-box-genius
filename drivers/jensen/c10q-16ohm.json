@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "C10Q (16 Ω)",
+  "type": "other",
+  "nominal_ohms": 16,
+  "size_in": 10,
+  "ts": {
+    "fs": 105,
+    "qms": 13.06,
+    "qes": 2.01,
+    "vas_l": 23.9,
+    "re": 12,
+    "sd_cm2": 330,
+    "qts": 1.74,
+    "le_mh": 1,
+    "bl": 7.6,
+    "mms_g": 14.7,
+    "xmax_mm": 1.5,
+    "pe_w": 35
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/vintage-ceramic/c10q",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

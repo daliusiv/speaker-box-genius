@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "BN15-400X",
+  "type": "other",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 35.1,
+    "qms": 5.07,
+    "qes": 0.588,
+    "vas_l": 253,
+    "re": 5.2,
+    "sd_cm2": 855.3,
+    "qts": 0.527,
+    "le_mh": 1.08,
+    "bl": 12.9,
+    "mms_g": 83.98,
+    "xmax_mm": 4,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 351,
+    "depth_mm": 152
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/bn15-400x/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

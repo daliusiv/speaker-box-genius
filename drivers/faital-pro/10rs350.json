@@ -1,0 +1,34 @@
+{
+  "brand": "Faital Pro",
+  "model": "10RS350",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 40,
+    "qms": 5.2,
+    "qes": 0.4,
+    "vas_l": 44.3,
+    "re": 5.3,
+    "sd_cm2": 344,
+    "qts": 0.37,
+    "le_mh": 0.95,
+    "bl": 14,
+    "mms_g": 59,
+    "xmax_mm": 7.37,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 230,
+    "depth_mm": 116.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=151040090",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

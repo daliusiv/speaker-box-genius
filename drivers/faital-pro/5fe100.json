@@ -1,0 +1,34 @@
+{
+  "brand": "Faital Pro",
+  "model": "5FE100",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 65,
+    "qms": 8.2,
+    "qes": 0.48,
+    "vas_l": 5.7,
+    "re": 5.4,
+    "sd_cm2": 84,
+    "qts": 0.45,
+    "le_mh": 0.53,
+    "bl": 6.9,
+    "mms_g": 10.5,
+    "xmax_mm": 5.25,
+    "pe_w": 80
+  },
+  "physical": {
+    "cutout_mm": 114,
+    "depth_mm": 71.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=401010100",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

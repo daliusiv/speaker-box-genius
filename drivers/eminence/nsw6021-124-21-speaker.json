@@ -1,0 +1,35 @@
+{
+  "brand": "Eminence",
+  "model": "NSW6021-124-21-Speaker",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 21,
+  "ts": {
+    "fs": 30.67,
+    "qms": 10.38,
+    "qes": 0.33,
+    "vas_l": 191.2,
+    "re": 2.9,
+    "sd_cm2": 1642,
+    "qts": 0.32,
+    "le_mh": 1.2,
+    "bl": 30.5,
+    "mms_g": 551,
+    "xmax_mm": 21,
+    "pe_w": 5000
+  },
+  "physical": {
+    "cutout_mm": 503.7,
+    "depth_mm": 263.9
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://eminence.com/products/nsw6021-124-21-speaker",
+      "retrieved": "2026-11-02",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 224.58 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 191.2 L from Cms. Published nominal impedance 1 Ω is below Re 2.9 Ω, so 4 Ω is estimated from Re."
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Monacor",
+  "model": "SPM-200X (4 Ω)",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 89,
+    "qms": 2.69,
+    "qes": 1.52,
+    "vas_l": 14.9,
+    "re": 3.7,
+    "sd_cm2": 201,
+    "qts": 0.97,
+    "le_mh": 0.2,
+    "bl": 3.9,
+    "xmax_mm": 1,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 184,
+    "depth_mm": 82
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/hi-fi-full-range-speakers-/spm-200x-4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 9.9 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}

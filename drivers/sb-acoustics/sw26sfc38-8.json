@@ -1,0 +1,27 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SW26SFC38-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 28.5,
+    "qms": 5.18,
+    "qes": 0.38,
+    "vas_l": 80,
+    "re": 6,
+    "sd_cm2": 340,
+    "qts": 0.35,
+    "le_mh": 1.38,
+    "xmax_mm": 3.5,
+    "pe_w": 80
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/10%E2%80%B3-sw26sfc38-8-paper/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

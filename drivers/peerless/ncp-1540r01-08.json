@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "NCP-1540R01-08",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 54,
+    "qms": 7.68,
+    "qes": 0.33,
+    "vas_l": 86.5,
+    "re": 5.1,
+    "sd_cm2": 871,
+    "qts": 0.32,
+    "le_mh": 0.784,
+    "bl": 23.9,
+    "mms_g": 108,
+    "xmax_mm": 8.2,
+    "pe_w": 1200
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/321",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

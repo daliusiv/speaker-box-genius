@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "CF1025BMB",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 40.9,
+    "qms": 7.952,
+    "qes": 0.371,
+    "vas_l": 46.1,
+    "re": 6.04,
+    "sd_cm2": 346.36,
+    "qts": 0.355,
+    "le_mh": 1.15,
+    "bl": 15.28,
+    "mms_g": 55.865,
+    "xmax_mm": 6.65,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 233.8,
+    "depth_mm": 124.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/cf1025bmb/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

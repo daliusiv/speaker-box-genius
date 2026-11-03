@@ -1856,3 +1856,10 @@ dialog.finder .lib-inner {
     grid-template-columns: 1fr;
   }
 }
+
+/* Credit line under the driver name for database drivers. */
+.driver-source {
+  margin: -4px 0 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}

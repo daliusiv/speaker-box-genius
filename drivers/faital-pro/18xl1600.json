@@ -1,0 +1,34 @@
+{
+  "brand": "Faital Pro",
+  "model": "18XL1600",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 32,
+    "qms": 9.3,
+    "qes": 0.37,
+    "vas_l": 211.4,
+    "re": 5.4,
+    "sd_cm2": 1212,
+    "qts": 0.36,
+    "le_mh": 1.45,
+    "bl": 26.7,
+    "mms_g": 240,
+    "xmax_mm": 12.92,
+    "pe_w": 1600
+  },
+  "physical": {
+    "cutout_mm": 422,
+    "depth_mm": 231
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=201070140",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

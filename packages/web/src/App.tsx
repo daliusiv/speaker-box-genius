@@ -137,6 +137,8 @@ export function App(props: { initial: AppState | null }) {
   // The short link for the current state, once compressed (compression is asynchronous).
   const link = useRef<{ state: AppState; hash: string } | null>(null);
   const [db, setDb] = useState<DbIndex | null>(null);
+  /** Credit line for the driver loaded from the database; shown while its name is unchanged. */
+  const [driverSource, setDriverSource] = useState<{ name: string; url?: string; via?: "driver-base" } | null>(null);
   const [wdrMsg, setWdrMsg] = useState("");
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const wdrInput = useRef<HTMLInputElement>(null);
@@ -598,6 +600,7 @@ export function App(props: { initial: AppState | null }) {
                   loadDriver(id).then(
                     (d) => {
                       offerSizing(d.name);
+                      setDriverSource(d.source ? { name: d.name, ...d.source } : null);
                       setStep((s) => ({
                         ...s,
                         driverName: d.name,
@@ -626,6 +629,30 @@ export function App(props: { initial: AppState | null }) {
                 onChange={(e) => set("driverName", e.currentTarget.value)}
                 aria-label="Driver name"
               />
+              {driverSource && driverSource.name === state.driverName && (
+                <p className="driver-source muted">
+                  {driverSource.url ? (
+                    <a href={driverSource.url} target="_blank" rel="noopener">
+                      Manufacturer's specs
+                    </a>
+                  ) : (
+                    "Manufacturer's specs"
+                  )}
+                  {driverSource.via === "driver-base" && (
+                    <>
+                      {" · values via "}
+                      <a href="https://github.com/JonathanDCohen/driver-base" target="_blank" rel="noopener">
+                        driver-base
+                      </a>{" "}
+                      (
+                      <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">
+                        CC BY 4.0
+                      </a>
+                      )
+                    </>
+                  )}
+                </p>
+              )}
               <TsEditor
                 entered={state.ts}
                 solved={solved}
@@ -1159,7 +1186,7 @@ export function App(props: { initial: AppState | null }) {
 
         <footer className="muted">
           Small-signal lumped model: no voice-coil or port compression, no Bl/Cms non-linearity. Box losses Ql{" "}
-          {state.settings.losses.ql}, Qa {state.settings.losses.qa}, Qp {state.settings.losses.qp}. Free for non-commercial use · <a href={`${REPO}/blob/main/LICENSE`}>Licence</a> · <a href={REPO}>GitHub</a>
+          {state.settings.losses.ql}, Qa {state.settings.losses.qa}, Qp {state.settings.losses.qp}. Free for non-commercial use · <a href={`${REPO}/blob/main/LICENSE`}>Licence</a> · <a href={`${REPO}/blob/main/docs/data-sources.md`}>Driver data credits</a> · <a href={REPO}>GitHub</a>
           {" · "}
           <a href={reportUrl(shareUrl())} target="_blank" rel="noopener">
             Report a problem

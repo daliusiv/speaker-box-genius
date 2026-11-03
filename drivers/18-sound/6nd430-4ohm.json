@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "6ND430 (4 Ω)",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 6,
+  "ts": {
+    "fs": 64,
+    "qms": 6.5,
+    "qes": 0.25,
+    "vas_l": 12.2,
+    "re": 2.9,
+    "sd_cm2": 133,
+    "qts": 0.24,
+    "le_mh": 0.17,
+    "bl": 7.8,
+    "mms_g": 13.9,
+    "xmax_mm": 5,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 148,
+    "depth_mm": 73
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/6-5/4/6nd430",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

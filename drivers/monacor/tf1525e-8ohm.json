@@ -1,0 +1,35 @@
+{
+  "brand": "Monacor",
+  "model": "TF1525E (8 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 47.5,
+    "qms": 4.486,
+    "qes": 0.529,
+    "vas_l": 141.8,
+    "re": 6.82,
+    "sd_cm2": 855.3,
+    "qts": 0.473,
+    "le_mh": 1.31,
+    "bl": 17.78,
+    "mms_g": 82.07,
+    "xmax_mm": 5.25,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 352,
+    "depth_mm": 163
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/pa-bass-speakers-/tf1525e-4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published nominal impedance 4 Ω is below Re 6.82 Ω, so 8 Ω is estimated from Re."
+}

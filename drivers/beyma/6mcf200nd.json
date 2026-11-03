@@ -1,0 +1,33 @@
+{
+  "brand": "Beyma",
+  "model": "6MCF200Nd",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 406,
+    "qms": 10.3,
+    "qes": 0.77,
+    "vas_l": 0.27,
+    "re": 6.2,
+    "sd_cm2": 140,
+    "qts": 0.72,
+    "le_mh": 0.1,
+    "bl": 18.1,
+    "mms_g": 15,
+    "xmax_mm": 2.5,
+    "pe_w": 200
+  },
+  "physical": {
+    "depth_mm": 75
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/106MCF20ND8/altavoz-6mcf200nd-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

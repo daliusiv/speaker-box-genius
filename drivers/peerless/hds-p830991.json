@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "HDS-P830991",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 76,
+    "qms": 2.64,
+    "qes": 0.692,
+    "vas_l": 5.11,
+    "re": 5.9,
+    "sd_cm2": 89.9,
+    "qts": 0.55,
+    "le_mh": 0.352,
+    "bl": 6.35,
+    "mms_g": 9.83,
+    "xmax_mm": 6.55,
+    "pe_w": 30
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/90",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

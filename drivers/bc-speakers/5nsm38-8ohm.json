@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "5NSM38 (8 Ω)",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 336,
+    "qms": 4,
+    "qes": 0.99,
+    "vas_l": 0.3,
+    "re": 5.2,
+    "sd_cm2": 95,
+    "qts": 0.79,
+    "le_mh": 0.17,
+    "bl": 10.1,
+    "mms_g": 9,
+    "xmax_mm": 2.2,
+    "pe_w": 110
+  },
+  "physical": {
+    "cutout_mm": 122,
+    "depth_mm": 108
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/5/8/5NSM38",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

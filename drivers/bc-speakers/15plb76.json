@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "15PLB76",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 42,
+    "qms": 5.9,
+    "qes": 0.26,
+    "vas_l": 164,
+    "re": 5,
+    "sd_cm2": 855,
+    "qts": 0.25,
+    "le_mh": 1.3,
+    "bl": 22.1,
+    "mms_g": 88,
+    "xmax_mm": 5,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 354,
+    "depth_mm": 169
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/15/8/15PLB76",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

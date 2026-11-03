@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "15ND930 (4 Ω)",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 35,
+    "qms": 7.1,
+    "qes": 0.24,
+    "vas_l": 182,
+    "re": 2.8,
+    "sd_cm2": 850,
+    "qts": 0.24,
+    "le_mh": 0.52,
+    "bl": 17,
+    "mms_g": 113,
+    "xmax_mm": 7.5,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 353,
+    "depth_mm": 177
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/15-0/4/15nd930%20-%204ohm",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

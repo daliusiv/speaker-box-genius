@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "18NW100 (8 Ω)",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 31,
+    "qms": 4.2,
+    "qes": 0.27,
+    "vas_l": 252,
+    "re": 5.1,
+    "sd_cm2": 1210,
+    "qts": 0.26,
+    "le_mh": 1.7,
+    "bl": 28,
+    "mms_g": 211,
+    "xmax_mm": 9,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 422,
+    "depth_mm": 209
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/18/8/18NW100",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

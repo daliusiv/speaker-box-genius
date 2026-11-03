@@ -1,0 +1,29 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SW26DBAC76-8",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 19.5,
+    "qms": 4.4,
+    "qes": 0.29,
+    "vas_l": 54,
+    "re": 6.4,
+    "sd_cm2": 312,
+    "qts": 0.28,
+    "bl": 21.4,
+    "mms_g": 172,
+    "xmax_mm": 12,
+    "pe_w": 250
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/10in-sw26dbac76-8/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

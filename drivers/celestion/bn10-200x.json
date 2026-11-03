@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "BN10-200X",
+  "type": "other",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 50.7,
+    "qms": 3.67,
+    "qes": 0.297,
+    "vas_l": 52,
+    "re": 5.9,
+    "sd_cm2": 346.4,
+    "qts": 0.274,
+    "le_mh": 0.63,
+    "bl": 14.29,
+    "mms_g": 32.21,
+    "xmax_mm": 4,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 229,
+    "depth_mm": 112
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/bn10-200x/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

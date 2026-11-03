@@ -1,0 +1,34 @@
+{
+  "brand": "Faital Pro",
+  "model": "6PR150",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 100,
+    "qms": 8.8,
+    "qes": 0.35,
+    "vas_l": 4.9,
+    "re": 5.5,
+    "sd_cm2": 137,
+    "qts": 0.34,
+    "le_mh": 0.28,
+    "bl": 11.6,
+    "mms_g": 13.5,
+    "xmax_mm": 2.65,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 147,
+    "depth_mm": 89
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=101020110",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

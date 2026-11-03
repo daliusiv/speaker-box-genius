@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "MB15N405",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 46,
+    "qms": 4.8,
+    "qes": 0.28,
+    "vas_l": 124,
+    "re": 5.5,
+    "sd_cm2": 900,
+    "qts": 0.27,
+    "le_mh": 1.1,
+    "bl": 23.5,
+    "mms_g": 98,
+    "xmax_mm": 7,
+    "pe_w": 1100
+  },
+  "physical": {
+    "cutout_mm": 354
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/mb15n405",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

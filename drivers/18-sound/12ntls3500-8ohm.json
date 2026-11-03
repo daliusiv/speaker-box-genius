@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "12NTLS3500 (8 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 41,
+    "qms": 8.5,
+    "qes": 0.43,
+    "vas_l": 65,
+    "re": 5.8,
+    "sd_cm2": 531,
+    "qts": 0.41,
+    "le_mh": 0.55,
+    "bl": 17.8,
+    "mms_g": 92,
+    "xmax_mm": 7.9,
+    "pe_w": 750
+  },
+  "physical": {
+    "cutout_mm": 283,
+    "depth_mm": 195
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/12-0/8/12ntls3500-8",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

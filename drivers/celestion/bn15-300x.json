@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "BN15-300X",
+  "type": "other",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 57.8,
+    "qms": 4.49,
+    "qes": 1.1,
+    "vas_l": 98.7,
+    "re": 3.19,
+    "sd_cm2": 855.3,
+    "qts": 0.9,
+    "le_mh": 0.39,
+    "bl": 9.13,
+    "mms_g": 84.24,
+    "xmax_mm": 4,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 351,
+    "depth_mm": 152
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/bn15-300x/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

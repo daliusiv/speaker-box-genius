@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "FSL-1015R02-08",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 68,
+    "qms": 4.58,
+    "qes": 0.743,
+    "vas_l": 36,
+    "re": 5.3,
+    "sd_cm2": 370,
+    "qts": 0.64,
+    "le_mh": 0.504,
+    "bl": 9.48,
+    "mms_g": 29.5,
+    "xmax_mm": 4.3,
+    "pe_w": 100
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/61",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

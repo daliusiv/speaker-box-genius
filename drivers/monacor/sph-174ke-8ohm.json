@@ -1,0 +1,34 @@
+{
+  "brand": "Monacor",
+  "model": "SPH-174KE (8 Ω)",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 42,
+    "qms": 2.59,
+    "qes": 0.64,
+    "vas_l": 26,
+    "re": 6.39,
+    "sd_cm2": 137,
+    "qts": 0.51,
+    "le_mh": 0.43,
+    "bl": 5.91,
+    "mms_g": 14.23,
+    "xmax_mm": 3,
+    "pe_w": 50
+  },
+  "physical": {
+    "cutout_mm": 145,
+    "depth_mm": 75
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/hi-fi-midrange-speakers-/sph-174ke/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

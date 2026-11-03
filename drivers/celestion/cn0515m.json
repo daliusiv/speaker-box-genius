@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "CN0515M",
+  "type": "midbass",
+  "nominal_ohms": 16,
+  "size_in": 5,
+  "ts": {
+    "fs": 189.2,
+    "qms": 1.534,
+    "qes": 0.337,
+    "vas_l": 0.7,
+    "re": 11.47,
+    "sd_cm2": 78.54,
+    "qts": 0.276,
+    "bl": 19.19,
+    "mms_g": 9.11,
+    "xmax_mm": 3.25,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 116,
+    "depth_mm": 73
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/cn0515m/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 0.5663360000000001 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 0.7 L from Cms."
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Monacor",
+  "model": "SP-252E",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 42,
+    "qms": 3.13,
+    "qes": 0.6,
+    "vas_l": 57,
+    "re": 3.75,
+    "sd_cm2": 353,
+    "qts": 0.5,
+    "le_mh": 1.1,
+    "bl": 8.5,
+    "mms_g": 43,
+    "xmax_mm": 4,
+    "pe_w": 75
+  },
+  "physical": {
+    "cutout_mm": 232,
+    "depth_mm": 110
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.monacor.com/products/components/speaker-technology/hi-fi-speakers-/sp-252e/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

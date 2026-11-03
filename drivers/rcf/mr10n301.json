@@ -1,0 +1,32 @@
+{
+  "brand": "RCF",
+  "model": "MR10N301",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 250,
+    "qms": 6.48,
+    "qes": 0.72,
+    "vas_l": 2,
+    "re": 6.2,
+    "sd_cm2": 400,
+    "qts": 0.65,
+    "le_mh": 1.17,
+    "xmax_mm": 1,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 235
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/mr10n301",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 32 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it). Published Bl 20.7 T·m disagrees with Fs, Mms, Re and Qes, so it's left out (the app derives it)."
+}

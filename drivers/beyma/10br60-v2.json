@@ -1,0 +1,30 @@
+{
+  "brand": "Beyma",
+  "model": "10BR60/V2",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 29,
+    "qms": 3.3,
+    "qes": 0.44,
+    "vas_l": 142,
+    "re": 6.5,
+    "sd_cm2": 380,
+    "qts": 0.39,
+    "le_mh": 1.14,
+    "bl": 10.9,
+    "mms_g": 44,
+    "xmax_mm": 6.5,
+    "pe_w": 100
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/210BR60V28/altavoz-10br60-v2-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

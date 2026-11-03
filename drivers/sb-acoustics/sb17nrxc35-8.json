@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB17NRXC35-8",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6,
+  "ts": {
+    "fs": 32,
+    "qms": 5,
+    "qes": 0.36,
+    "vas_l": 44.5,
+    "re": 5.7,
+    "sd_cm2": 118,
+    "qts": 0.34,
+    "le_mh": 0.15,
+    "bl": 5.9,
+    "mms_g": 11,
+    "xmax_mm": 5.5,
+    "pe_w": 60
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/6in-sb17nrxc35-8/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

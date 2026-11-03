@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "L18P300",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 33,
+    "qms": 8.3,
+    "qes": 0.34,
+    "vas_l": 226,
+    "re": 5,
+    "sd_cm2": 1100,
+    "qts": 0.33,
+    "le_mh": 1.8,
+    "bl": 23.5,
+    "mms_g": 180,
+    "xmax_mm": 8,
+    "pe_w": 1000
+  },
+  "physical": {
+    "cutout_mm": 416
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/l18p300",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "6MDN44 (8 Ω)",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 140,
+    "qms": 2.8,
+    "qes": 0.46,
+    "vas_l": 2.7,
+    "re": 5.4,
+    "sd_cm2": 132,
+    "qts": 0.4,
+    "le_mh": 0.47,
+    "bl": 11,
+    "mms_g": 11,
+    "xmax_mm": 2.5,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 145,
+    "depth_mm": 73
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/6.5/8/6MDN44",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

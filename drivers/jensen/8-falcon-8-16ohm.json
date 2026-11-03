@@ -1,0 +1,30 @@
+{
+  "brand": "Jensen",
+  "model": "8\" Falcon 8 (16 Ω)",
+  "type": "other",
+  "nominal_ohms": 16,
+  "size_in": 8,
+  "ts": {
+    "fs": 130.1,
+    "qms": 17.64,
+    "qes": 1.36,
+    "vas_l": 10.5,
+    "re": 12.03,
+    "sd_cm2": 213.8,
+    "qts": 1.26,
+    "le_mh": 0.51,
+    "bl": 8.18,
+    "mms_g": 9.3,
+    "pe_w": 30
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/jet-series/8-falcon-8",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

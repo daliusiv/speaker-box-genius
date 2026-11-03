@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "15NTLW3500 (8 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 45,
+    "qms": 8.7,
+    "qes": 0.4,
+    "vas_l": 131,
+    "re": 5.2,
+    "sd_cm2": 881,
+    "qts": 0.39,
+    "le_mh": 0.46,
+    "bl": 19.5,
+    "mms_g": 106,
+    "xmax_mm": 8.3,
+    "pe_w": 900
+  },
+  "physical": {
+    "cutout_mm": 357,
+    "depth_mm": 229
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/15-0/8/15NTLW3500",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

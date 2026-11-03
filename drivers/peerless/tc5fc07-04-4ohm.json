@@ -1,0 +1,31 @@
+{
+  "brand": "Peerless",
+  "model": "TC5FC07-04 (4 Ω)",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 1.5,
+  "ts": {
+    "fs": 200,
+    "qms": 4.3,
+    "qes": 0.756,
+    "vas_l": 0.09,
+    "re": 3.5,
+    "sd_cm2": 8.04,
+    "qts": 0.64,
+    "le_mh": 0.072,
+    "bl": 1.96,
+    "mms_g": 0.666,
+    "xmax_mm": 2.67,
+    "pe_w": 5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/1885",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Vas 0.09 L calculated from the published Cms and Sd."
+}

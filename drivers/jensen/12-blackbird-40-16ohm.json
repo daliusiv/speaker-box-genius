@@ -1,0 +1,30 @@
+{
+  "brand": "Jensen",
+  "model": "12\" Blackbird 40 (16 Ω)",
+  "type": "other",
+  "nominal_ohms": 16,
+  "size_in": 12,
+  "ts": {
+    "fs": 90.1,
+    "qms": 13.97,
+    "qes": 1.85,
+    "vas_l": 39,
+    "re": 12,
+    "sd_cm2": 490.9,
+    "qts": 1.63,
+    "le_mh": 0.72,
+    "bl": 10.06,
+    "mms_g": 27.4,
+    "pe_w": 40
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/jet-series/12-blackbird-40",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

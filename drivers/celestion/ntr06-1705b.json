@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "NTR06-1705B",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 132.9,
+    "qms": 1.912,
+    "qes": 0.576,
+    "vas_l": 3.63,
+    "re": 5.94,
+    "sd_cm2": 153.94,
+    "qts": 0.442,
+    "le_mh": 0.21,
+    "bl": 10.69,
+    "mms_g": 13.26,
+    "xmax_mm": 4,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 150,
+    "depth_mm": 71
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/ntr06-1705b/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

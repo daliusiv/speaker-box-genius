@@ -1,0 +1,29 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SW26DAC76-4",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 22,
+    "qms": 4.5,
+    "qes": 0.51,
+    "vas_l": 54,
+    "re": 3.2,
+    "sd_cm2": 312,
+    "qts": 0.46,
+    "bl": 10.8,
+    "mms_g": 134,
+    "xmax_mm": 12,
+    "pe_w": 200
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/10in-sw26dac76-4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

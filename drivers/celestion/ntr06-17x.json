@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "NTR06-17X",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 60.4,
+    "qms": 7.247,
+    "qes": 0.335,
+    "vas_l": 13.19,
+    "re": 5.36,
+    "sd_cm2": 153.94,
+    "qts": 0.321,
+    "le_mh": 0.28,
+    "bl": 10.36,
+    "mms_g": 17.68,
+    "xmax_mm": 4.5,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 145,
+    "depth_mm": 73
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/ntr06-17x/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

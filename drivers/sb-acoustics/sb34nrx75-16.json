@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB34NRX75-16",
+  "type": "subwoofer",
+  "nominal_ohms": 16,
+  "size_in": 12,
+  "ts": {
+    "fs": 25,
+    "qms": 6.65,
+    "qes": 0.8,
+    "vas_l": 205,
+    "re": 14,
+    "sd_cm2": 508,
+    "qts": 0.71,
+    "le_mh": 3.2,
+    "bl": 14.1,
+    "mms_g": 72,
+    "xmax_mm": 11,
+    "pe_w": 120
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/12-sb34nrx75-16-norex/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

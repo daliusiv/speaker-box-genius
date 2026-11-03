@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "C15K (16 Ω)",
+  "type": "other",
+  "nominal_ohms": 16,
+  "size_in": 15,
+  "ts": {
+    "fs": 73.8,
+    "qms": 9.87,
+    "qes": 1.05,
+    "vas_l": 66.2,
+    "re": 11.9,
+    "sd_cm2": 754.8,
+    "qts": 0.95,
+    "le_mh": 1.28,
+    "bl": 17.21,
+    "mms_g": 56.1,
+    "xmax_mm": 1,
+    "pe_w": 100
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/vintage-ceramic/c15k",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

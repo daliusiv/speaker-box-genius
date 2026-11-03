@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "MW16P-4",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 28,
+    "qms": 5,
+    "qes": 0.28,
+    "vas_l": 50.2,
+    "re": 3.4,
+    "sd_cm2": 119,
+    "qts": 0.27,
+    "le_mh": 0.15,
+    "bl": 5.2,
+    "mms_g": 12.8,
+    "xmax_mm": 6,
+    "pe_w": 60
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/6%C2%BDin-satori-mw16p-4/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Eminence",
+  "model": "Beta 8A",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 65,
+    "qms": 4.95,
+    "qes": 0.42,
+    "vas_l": 23.3,
+    "re": 5.99,
+    "sd_cm2": 210,
+    "qts": 0.38,
+    "le_mh": 0.49,
+    "bl": 9.6,
+    "mms_g": 16,
+    "xmax_mm": 3,
+    "pe_w": 225
+  },
+  "physical": {
+    "cutout_mm": 181.1,
+    "depth_mm": 88.9
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://eminence.com/products/beta_8a",
+      "retrieved": "2026-11-02",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

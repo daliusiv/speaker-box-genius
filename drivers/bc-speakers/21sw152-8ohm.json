@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "21SW152 (8 Ω)",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 21,
+  "ts": {
+    "fs": 32,
+    "qms": 6.4,
+    "qes": 0.38,
+    "vas_l": 200,
+    "re": 6,
+    "sd_cm2": 1680,
+    "qts": 0.36,
+    "le_mh": 2.2,
+    "bl": 39,
+    "mms_g": 450,
+    "xmax_mm": 15,
+    "pe_w": 2000
+  },
+  "physical": {
+    "cutout_mm": 508,
+    "depth_mm": 261
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/21/8/21SW152",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,31 @@
+{
+  "brand": "Beyma",
+  "model": "8CX300Fe",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 89,
+    "qms": 4.2,
+    "qes": 0.63,
+    "vas_l": 10.8,
+    "re": 5.2,
+    "sd_cm2": 220,
+    "qts": 0.55,
+    "le_mh": 0.2,
+    "bl": 9.6,
+    "mms_g": 20,
+    "xmax_mm": 6,
+    "pe_w": 300
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/coaxial/108CX3FE8/altavoz-8cx300fe-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

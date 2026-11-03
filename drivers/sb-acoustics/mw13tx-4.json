@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "MW13TX-4",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 5,
+  "ts": {
+    "fs": 38,
+    "qms": 5.08,
+    "qes": 0.27,
+    "vas_l": 16,
+    "re": 3.8,
+    "sd_cm2": 70,
+    "qts": 0.26,
+    "le_mh": 0.16,
+    "bl": 5,
+    "mms_g": 7.4,
+    "xmax_mm": 5,
+    "pe_w": 40
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/5-satori-mw13tx-4-textreme/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

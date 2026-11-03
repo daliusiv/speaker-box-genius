@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "15LW2400 (4 Ω)",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 34,
+    "qms": 4.2,
+    "qes": 0.24,
+    "vas_l": 191,
+    "re": 2.7,
+    "sd_cm2": 850,
+    "qts": 0.23,
+    "le_mh": 0.79,
+    "bl": 18,
+    "mms_g": 135,
+    "xmax_mm": 9.5,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 354,
+    "depth_mm": 181
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/15-0/4/15lw2400",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

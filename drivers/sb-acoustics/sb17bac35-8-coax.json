@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB17BAC35-8-COAX",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 35.2,
+    "qms": 4.1,
+    "qes": 0.36,
+    "vas_l": 33.1,
+    "re": 5.2,
+    "sd_cm2": 108,
+    "qts": 0.33,
+    "le_mh": 0.13,
+    "bl": 5.7,
+    "mms_g": 10.2,
+    "xmax_mm": 3.1,
+    "pe_w": 45
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/sb17bac35-8-coax-aluminum/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

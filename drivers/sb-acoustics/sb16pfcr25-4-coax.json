@@ -1,0 +1,31 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB16PFCR25-4-COAX",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 6,
+  "ts": {
+    "fs": 36,
+    "qms": 2.6,
+    "qes": 0.35,
+    "vas_l": 31.3,
+    "re": 3.2,
+    "sd_cm2": 119,
+    "qts": 0.31,
+    "le_mh": 0.31,
+    "bl": 5.1,
+    "mms_g": 12.5,
+    "xmax_mm": 4.65,
+    "pe_w": 40
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/6-sb16pfcr25-4-coax/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

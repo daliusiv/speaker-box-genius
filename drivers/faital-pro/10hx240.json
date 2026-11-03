@@ -1,0 +1,35 @@
+{
+  "brand": "Faital Pro",
+  "model": "10HX240",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 65,
+    "qms": 3.3,
+    "qes": 0.3,
+    "vas_l": 31.8,
+    "re": 5.3,
+    "sd_cm2": 347,
+    "qts": 0.28,
+    "le_mh": 0.45,
+    "bl": 15.5,
+    "mms_g": 31.6,
+    "xmax_mm": 7.37,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 230,
+    "depth_mm": 137
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/Coaxial_Loudspeakers/product_details/index.php?id=351040015",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

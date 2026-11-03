@@ -1,0 +1,31 @@
+{
+  "brand": "Jensen",
+  "model": "Punch BP 15/250",
+  "type": "other",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 47,
+    "qms": 4.26,
+    "qes": 0.58,
+    "vas_l": 133.1,
+    "re": 6.6,
+    "sd_cm2": 754.8,
+    "qts": 0.51,
+    "le_mh": 1.07,
+    "bl": 15.31,
+    "mms_g": 69.7,
+    "xmax_mm": 3.4,
+    "pe_w": 250
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.jensentone.com/bass-speakers/punch-bp-15250",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Guitar/bass speaker."
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "10NMB520",
+  "type": "woofer",
+  "nominal_ohms": 16,
+  "size_in": 10,
+  "ts": {
+    "fs": 64,
+    "qms": 4,
+    "qes": 0.36,
+    "vas_l": 43,
+    "re": 11.7,
+    "sd_cm2": 340,
+    "qts": 0.33,
+    "le_mh": 0.33,
+    "bl": 17.5,
+    "mms_g": 23,
+    "xmax_mm": 4,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 232,
+    "depth_mm": 104
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/10-0/16/10NMB520",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

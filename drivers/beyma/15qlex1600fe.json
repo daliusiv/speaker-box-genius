@@ -1,0 +1,33 @@
+{
+  "brand": "Beyma",
+  "model": "15QLEX1600Fe",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 33,
+    "qms": 6.3,
+    "qes": 0.22,
+    "vas_l": 102,
+    "re": 5.3,
+    "sd_cm2": 880,
+    "qts": 0.21,
+    "le_mh": 3.7,
+    "bl": 35.6,
+    "mms_g": 254,
+    "xmax_mm": 13,
+    "pe_w": 1600
+  },
+  "physical": {
+    "depth_mm": 191
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/115QLEX16FE8/altavoz-15qlex1600fe-8-oh/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

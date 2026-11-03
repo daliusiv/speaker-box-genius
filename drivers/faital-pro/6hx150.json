@@ -1,0 +1,35 @@
+{
+  "brand": "Faital Pro",
+  "model": "6HX150",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 88,
+    "qms": 8.3,
+    "qes": 0.35,
+    "vas_l": 6.3,
+    "re": 5.5,
+    "sd_cm2": 139.2,
+    "qts": 0.34,
+    "le_mh": 0.64,
+    "bl": 12,
+    "mms_g": 14,
+    "xmax_mm": 4.35,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 147,
+    "depth_mm": 95
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://faitalpro.com/en/products/Coaxial_Loudspeakers/product_details/index.php?id=351020100",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

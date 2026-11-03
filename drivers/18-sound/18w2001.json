@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "18W2001",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 37,
+    "qms": 7.29,
+    "qes": 0.26,
+    "vas_l": 230,
+    "re": 5.8,
+    "sd_cm2": 1134,
+    "qts": 0.25,
+    "le_mh": 1.9,
+    "bl": 27.1,
+    "mms_g": 143,
+    "xmax_mm": 7,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 416,
+    "depth_mm": 205
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/18-0/8/18w2001",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "FTR18-4080FDX",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 37.3,
+    "qms": 10.25,
+    "qes": 0.43,
+    "vas_l": 160.74,
+    "re": 5.62,
+    "sd_cm2": 1134.12,
+    "qts": 0.413,
+    "le_mh": 1.52,
+    "bl": 25.116,
+    "mms_g": 206.36,
+    "xmax_mm": 6,
+    "pe_w": 800
+  },
+  "physical": {
+    "cutout_mm": 416,
+    "depth_mm": 205
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/ftr18-4080fdx/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

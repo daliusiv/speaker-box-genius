@@ -1,0 +1,29 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB17NRX2L35-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 37.8,
+    "qms": 4.55,
+    "qes": 0.3,
+    "vas_l": 26.1,
+    "re": 5.7,
+    "sd_cm2": 118,
+    "qts": 0.28,
+    "le_mh": 0.16,
+    "bl": 7.84,
+    "mms_g": 13.4,
+    "xmax_mm": 4.8,
+    "pe_w": 50
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/sb17nrx2l35-8-norex/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

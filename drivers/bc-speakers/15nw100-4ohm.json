@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "15NW100 (4 Ω)",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 34,
+    "qms": 5.41,
+    "qes": 0.23,
+    "vas_l": 126.1,
+    "re": 3.7,
+    "sd_cm2": 855,
+    "qts": 0.23,
+    "le_mh": 1.74,
+    "bl": 24.54,
+    "mms_g": 180,
+    "xmax_mm": 9,
+    "pe_w": 1000
+  },
+  "physical": {
+    "cutout_mm": 354,
+    "depth_mm": 181
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/15/4/15NW100",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

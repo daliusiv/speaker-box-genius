@@ -1,0 +1,30 @@
+{
+  "brand": "Peerless",
+  "model": "TC55FD00-08",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 1.8,
+  "ts": {
+    "fs": 180,
+    "qms": 2.42,
+    "qes": 2.54,
+    "vas_l": 0.158,
+    "re": 6.8,
+    "sd_cm2": 11,
+    "qts": 1.2,
+    "le_mh": 0.059,
+    "bl": 1.61,
+    "mms_g": 0.867,
+    "xmax_mm": 2.07,
+    "pe_w": 5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://products.peerless-audio.com/api/driver/174",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

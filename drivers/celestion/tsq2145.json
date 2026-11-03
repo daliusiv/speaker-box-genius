@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "TSQ2145",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 21,
+  "ts": {
+    "fs": 30,
+    "qms": 8.393,
+    "qes": 0.359,
+    "vas_l": 253.8,
+    "re": 5,
+    "sd_cm2": 1661.9,
+    "qts": 0.344,
+    "le_mh": 3.91,
+    "bl": 33.8,
+    "mms_g": 435.2,
+    "xmax_mm": 15,
+    "pe_w": 1800
+  },
+  "physical": {
+    "cutout_mm": 505,
+    "depth_mm": 255
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/tsq2145/",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community"
+}

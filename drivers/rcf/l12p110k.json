@@ -1,0 +1,33 @@
+{
+  "brand": "RCF",
+  "model": "L12P110K",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 44,
+    "qms": 4.3,
+    "qes": 0.14,
+    "vas_l": 98,
+    "re": 5.6,
+    "sd_cm2": 500,
+    "qts": 0.13,
+    "le_mh": 1,
+    "bl": 25,
+    "xmax_mm": 3,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 285
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.rcf.it/en/products/product-detail/l12p110k",
+      "retrieved": "2026-10-18",
+      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 55 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}
