@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { parseWdr, writeWdr, type HighPassType, type SimulationResult } from "@sbg/engine";
+import {
+  impedanceMagnitude,
+  parseWdr,
+  resampleMagnitude,
+  writeWdr,
+  type HighPassType,
+  type SimulationResult,
+} from "@sbg/engine";
 import { LogChart, type Series } from "./LogChart.tsx";
 import {
   DEFAULT_STATE,
@@ -19,6 +26,7 @@ import { airOf, alignmentDriver, colorOf, PORT_LIMIT, runDesigns, solveDriver, v
 import { AddDesign, DesignCard } from "./Designs.tsx";
 import { ShareMenu } from "./Share.tsx";
 import { EqPanel } from "./Eq.tsx";
+import { MeasurePanel, type Measurement } from "./Measure.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
 
 const LIMIT_RED = "#dc2626";
@@ -27,6 +35,7 @@ export function App() {
   const [state, setState] = useState<AppState>(() => decodeState(location.hash) ?? DEFAULT_STATE);
   const [db, setDb] = useState<DbIndex | null>(null);
   const [wdrMsg, setWdrMsg] = useState("");
+  const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const wdrInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -237,6 +246,26 @@ export function App() {
           <p className="hint">Multiple drivers are wired in parallel and share each box.</p>
         </Card>
 
+        <MeasurePanel
+          measurement={measurement}
+          onMeasurement={setMeasurement}
+          sd_cm2={solved.values.sd_cm2}
+          onUse={(ts, le_mh) =>
+            setState((s) => {
+              // Keep Vas / Sd the user had, unless the measurement provides them; drop values it supersedes.
+              const keep: typeof s.ts = {};
+              if (s.ts.vas_l !== undefined && ts.mms_g === undefined) keep.vas_l = s.ts.vas_l;
+              if (s.ts.mms_g !== undefined && s.ts.vas_l === undefined && ts.mms_g === undefined) keep.mms_g = s.ts.mms_g;
+              return {
+                ...s,
+                driverName: s.driverName.endsWith("(measured)") ? s.driverName : `${s.driverName} (measured)`,
+                ts: { ...keep, ...ts },
+                le_mh,
+              };
+            })
+          }
+        />
+
         <Card title="High-pass filter" on={hp.on} onToggle={(on) => set("highPass", { ...hp, on })}>
           <div className="fields">
             <Select<HighPassType>
@@ -366,7 +395,26 @@ export function App() {
               />
             )}
             <LogChart title="Maximum SPL (first limit reached)" unit="dB" freq={freq} series={series((r) => r.maxSpl)} />
-            <LogChart title="Impedance" unit="Ω" freq={freq} series={series((r) => r.impedanceOhm)} yMin={0} />
+            <LogChart
+              title="Impedance"
+              unit="Ω"
+              freq={freq}
+              series={[
+                ...series((r) => r.impedanceOhm),
+                ...(measurement
+                  ? [
+                      { label: "Measured (free air)", color: "#78716c", dash: "6 4", y: resampleMagnitude(measurement.data, freq) },
+                      {
+                        label: "Fit (free air)",
+                        color: "#a8a29e",
+                        dash: "2 3",
+                        y: freq.map((f) => impedanceMagnitude(measurement.fit, f)),
+                      },
+                    ]
+                  : []),
+              ]}
+              yMin={0}
+            />
             <LogChart
               title="Group delay"
               unit="ms"

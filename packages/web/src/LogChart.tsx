@@ -4,6 +4,8 @@ export interface Series {
   label: string;
   color: string;
   y: Float64Array | null;
+  /** SVG dash pattern, e.g. "6 4", for measured or reference curves. */
+  dash?: string;
 }
 
 export interface Limit {
@@ -170,7 +172,7 @@ export function LogChart({ title, unit, freq, series, limits = [], yMin, yMax, d
             </g>
           ))}
           {visible.map((s) => (
-            <path key={s.label} d={pathOf(s.y!)} fill="none" stroke={s.color} strokeWidth={2} />
+            <path key={s.label} d={pathOf(s.y!)} fill="none" stroke={s.color} strokeWidth={2} strokeDasharray={s.dash} />
           ))}
           {hover !== null && (
             <line className="cursor" x1={xOf(freq[hover]!)} x2={xOf(freq[hover]!)} y1={PAD.t} y2={PAD.t + PH} />
