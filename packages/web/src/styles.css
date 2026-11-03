@@ -1603,3 +1603,53 @@ button.check-chip.open {
     max-width: 75%;
   }
 }
+
+/* T/S fields: room for the clear button so digits never hide under it */
+.ts-input.has-clear input {
+  padding-right: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  /* Narrower label and unit columns give the numbers more room. */
+  .ts-editor .fields {
+    gap: 0.5rem 0.6rem;
+  }
+
+  .ts-editor label {
+    grid-template-columns: 2.7rem 1fr 2.3rem;
+    gap: 0.3rem;
+  }
+
+  .ts-editor .unit {
+    min-width: 0;
+    font-size: 0.75rem;
+  }
+
+  /* The clear button shows only while editing the field (emptying the field clears it too). */
+  .ts-input.has-clear button.clear {
+    display: none;
+  }
+
+  .ts-input.has-clear:focus-within button.clear {
+    display: block;
+  }
+
+  .ts-input.has-clear input {
+    padding-right: 0.45rem;
+  }
+
+  .ts-input.has-clear:focus-within input {
+    padding-right: 1.5rem;
+  }
+}
+
+@media (max-width: 359px) {
+  /* The smallest phones: one parameter per row, so every value has room. */
+  .ts-editor .fields {
+    grid-template-columns: 1fr;
+  }
+
+  .ts-editor label {
+    grid-template-columns: 3.2rem 1fr 2.6rem;
+  }
+}

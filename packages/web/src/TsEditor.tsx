@@ -170,7 +170,7 @@ function TsField(props: {
   return (
     <label className={props.conflict ? "conflict" : undefined}>
       <span>{meta.label}</span>
-      <span className="ts-input">
+      <span className={`ts-input${props.entered !== undefined ? " has-clear" : ""}`}>
         <input
           inputMode="decimal"
           className={`${props.entered !== undefined ? "entered" : "derived"}${bad ? " bad" : ""}`}
@@ -197,6 +197,10 @@ function TsField(props: {
             aria-label={`Clear ${meta.label}`}
             // Mouse convenience: keyboard users can simply delete the text, so keep it out of the tab order.
             tabIndex={-1}
+            // Keep focus in the field: on phones the button only shows while the field has focus,
+            // and moving focus away would hide it before the tap lands.
+            onMouseDown={(e) => e.preventDefault()}
+            onPointerDown={(e) => e.preventDefault()}
             onClick={() => props.onChange(undefined)}
           >
             ×
