@@ -1,3 +1,4 @@
+import { add, cx, div, mul, type Complex } from "./complex.ts";
 import { STANDARD_AIR, type Air } from "./constants.ts";
 import { blFromQes, cmsFromVas, mmsFromFsCms } from "./ts.ts";
 
@@ -18,6 +19,14 @@ export interface DriverInput {
   re: number; // Ω
   sd_cm2: number;
   le_mh?: number;
+  /**
+   * Optional L2R2 voice-coil model: a second inductance L2 in parallel with a
+   * resistance R2, in series with Le. It stands in for eddy-current losses in the
+   * pole piece, which make a real coil's impedance rise more slowly than a pure
+   * inductor's. Leave both out for the plain-Le model (what WinISD uses).
+   */
+  l2_mh?: number;
+  r2_ohm?: number;
   xmax_mm?: number; // one-way, peak
   pe_w?: number; // thermal limit, per driver
 }
@@ -25,6 +34,9 @@ export interface DriverInput {
 export interface DriverModel {
   re: number; // Ω
   le: number; // H
+  /** L2R2 branch (H and Ω); l2 = 0 means none. */
+  l2: number;
+  r2: number;
   bl: number; // T·m
   mms: number; // kg
   cms: number; // m/N
@@ -44,6 +56,8 @@ export function driverModel(d: DriverInput, air: Air = STANDARD_AIR): DriverMode
   return {
     re: d.re,
     le: (d.le_mh ?? 0) / 1000,
+    l2: d.l2_mh !== undefined && d.r2_ohm !== undefined && d.l2_mh > 0 && d.r2_ohm > 0 ? d.l2_mh / 1000 : 0,
+    r2: d.l2_mh !== undefined && d.r2_ohm !== undefined && d.l2_mh > 0 && d.r2_ohm > 0 ? d.r2_ohm : 0,
     bl: blFromQes(d.fs, mms, d.re, d.qes),
     mms,
     cms,
@@ -52,6 +66,17 @@ export function driverModel(d: DriverInput, air: Air = STANDARD_AIR): DriverMode
     xmax: d.xmax_mm !== undefined ? d.xmax_mm / 1000 : null,
     pe: d.pe_w ?? null,
   };
+}
+
+/**
+ * Blocked voice-coil impedance: Re + jωLe, plus (jωL2 ∥ R2) when the L2R2 model is
+ * used. This is everything electrical in front of the motor.
+ */
+export function voiceCoilImpedance(m: Pick<DriverModel, "re" | "le" | "l2" | "r2">, w: number): Complex {
+  const z = cx(m.re, w * m.le);
+  if (!(m.l2 > 0 && m.r2 > 0)) return z;
+  const zl2 = cx(0, w * m.l2);
+  return add(z, div(mul(zl2, cx(m.r2)), add(zl2, cx(m.r2))));
 }
 
 // ---------------------------------------------------------------------------

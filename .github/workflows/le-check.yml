@@ -1,0 +1,35 @@
+name: Voice-coil model check (temporary)
+
+# Downloads Dayton Audio's published impedance measurements for a few drivers and
+# compares the plain-Le and L2R2 voice-coil models on them. Nothing is committed.
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download measurements
+        run: |
+          mkdir -p /tmp/zma && cd /tmp/zma
+          UA="SpeakerBoxGenius-importer/1.0 (+https://github.com/daliusiv/speaker-box-genius; with Dayton Audio's permission)"
+          for slug in rss315hf-4 umii12-22 mx12-22 sd270a-88 dsa215-8 rs225-8 rs180-8 dc160-8 tcp115-8 rs150-8 nd91-4 ps95-8; do
+            page=$(node -e "console.log(require('$GITHUB_WORKSPACE/drivers/dayton-audio/$slug.json').sources[0].url)")
+            zip=$(curl -sSL -A "$UA" "$page" | grep -oiE '/images/resources/[^"]+\.zip' | head -1)
+            echo "$slug: ${zip:-no data zip}"
+            sleep 2
+            [ -z "$zip" ] && continue
+            curl -sSL -A "$UA" -o "$slug.zip" "https://www.daytonaudio.com$zip" && mkdir -p "$slug" && unzip -qo "$slug.zip" -d "$slug" || true
+            sleep 2
+          done
+          find . -iname '*.zma' | sort
+      - name: Compare models
+        run: |
+          files=$(find /tmp/zma -iname '*.zma' | sort)
+          node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/le-check.ts $files | tee -a "$GITHUB_STEP_SUMMARY"

@@ -12,6 +12,7 @@ import {
   prFb,
   prGroupsFb,
   ventedFb,
+  voiceCoilImpedance,
   type BandpassChamber,
   type PassiveRadiatorModel,
   type PrGroup,
@@ -82,6 +83,8 @@ export function isobaricPair(d: ReturnType<typeof driverModel>, coils: "series" 
     ...d,
     re: d.re * k,
     le: d.le * k,
+    l2: d.l2 * k,
+    r2: d.r2 * k,
     bl: coils === "series" ? d.bl * 2 : d.bl,
     mms: d.mms * 2,
     cms: d.cms / 2,
@@ -252,7 +255,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const f = freq[i]!;
     const w = 2 * Math.PI * f;
 
-    const ze = cx(d.re + rgDriver, w * d.le);
+    const zvc = voiceCoilImpedance(d, w);
+    const ze = add(zvc, cx(rgDriver));
     let filter = opts.highPass ? highPassResponse(opts.highPass, f) : cx(1);
     if (opts.eq && opts.eq.length > 0) filter = mul(filter, eqResponse(opts.eq, f));
     const filterGain2 = filter.re * filter.re + filter.im * filter.im;
@@ -342,7 +346,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     out.x[i] = x * 1000;
 
     // Electrical input impedance of the whole bank
-    const zDriver = add(cx(d.re, w * d.le), div(cx((d.bl * d.bl) / sd2), zMech));
+    const zDriver = add(zvc, div(cx((d.bl * d.bl) / sd2), zMech));
     const zIn = wiring === "parallel" ? scale(zDriver, 1 / n) : scale(zDriver, n);
     out.zmag[i] = abs(zIn);
     out.zph[i] = (arg(zIn) * 180) / Math.PI;

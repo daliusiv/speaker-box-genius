@@ -46,9 +46,12 @@ export interface ImpedanceParams {
   qms: number;
   qes: number;
   le_mh: number;
+  /** L2R2 voice-coil model (see DriverInput); omit for plain Le. */
+  l2_mh?: number;
+  r2_ohm?: number;
 }
 
-/** Free-air impedance of the standard driver model (Re + jωLe + motional parallel RLC). */
+/** Free-air impedance of the driver model: voice coil (Re, Le[, L2 ∥ R2]) + motional parallel RLC. */
 export function driverImpedance(p: ImpedanceParams, f: number): Complex {
   const w = 2 * Math.PI * f;
   const ws = 2 * Math.PI * p.fs;
@@ -57,7 +60,12 @@ export function driverImpedance(p: ImpedanceParams, f: number): Complex {
   const lces = 1 / (ws * ws * cmes);
   // Admittance of the motional branch
   const y = add(cx(1 / res, w * cmes), cx(0, -1 / (w * lces)));
-  return add(cx(p.re, (w * p.le_mh) / 1000), div(cx(1), y));
+  let zvc = cx(p.re, (w * p.le_mh) / 1000);
+  if (p.l2_mh !== undefined && p.r2_ohm !== undefined && p.l2_mh > 0 && p.r2_ohm > 0) {
+    const zl2 = cx(0, (w * p.l2_mh) / 1000);
+    zvc = add(zvc, div(cx(zl2.re * p.r2_ohm, zl2.im * p.r2_ohm), add(zl2, cx(p.r2_ohm))));
+  }
+  return add(zvc, div(cx(1), y));
 }
 
 export interface FitResult extends ImpedanceParams {
@@ -153,6 +161,57 @@ function solve(A: number[][], b: number[]): number[] {
   return M.map((row, i) => row[n]! / (row[i]! || 1));
 }
 
+/** Levenberg–Marquardt on x (log-parameters here). Returns the best x and its residuals. */
+function levenbergMarquardt(x0: number[], residualsOf: (x: number[]) => number[]): { x: number[]; r: number[]; cost: number } {
+  const sumsq = (r: number[]) => r.reduce((a, v) => a + v * v, 0);
+  let x = [...x0];
+  let r = residualsOf(x);
+  let cost = sumsq(r);
+  let lambda = 1e-3;
+  for (let iter = 0; iter < 200; iter++) {
+    const J: number[][] = r.map(() => new Array(x.length).fill(0));
+    for (let j = 0; j < x.length; j++) {
+      const h = 1e-6;
+      const xp = [...x];
+      xp[j]! += h;
+      const rp = residualsOf(xp);
+      for (let i = 0; i < r.length; i++) J[i]![j] = (rp[i]! - r[i]!) / h;
+    }
+    const JtJ = x.map((_, a) => x.map((_, b) => J.reduce((s, row) => s + row[a]! * row[b]!, 0)));
+    const Jtr = x.map((_, a) => J.reduce((s, row, i) => s + row[a]! * r[i]!, 0));
+    let improved = false;
+    for (let tries = 0; tries < 12; tries++) {
+      const A = JtJ.map((row, a) => row.map((v, b) => (a === b ? v * (1 + lambda) + 1e-12 : v)));
+      const delta = solve(A, Jtr.map((v) => -v));
+      const xn = x.map((v, i) => v + delta[i]!);
+      const rn = residualsOf(xn);
+      const cn = sumsq(rn);
+      if (cn < cost) {
+        const gain = (cost - cn) / cost;
+        x = xn;
+        r = rn;
+        cost = cn;
+        lambda = Math.max(lambda / 3, 1e-9);
+        improved = true;
+        if (gain < 1e-10) iter = 1e9; // converged
+        break;
+      }
+      lambda *= 4;
+    }
+    if (!improved) break;
+  }
+  return { x, r, cost };
+}
+
+export interface FitOptions {
+  /**
+   * Voice-coil model. "le": plain inductor, fitted around the resonance (default,
+   * matches WinISD). "lr2": Le + (L2 ∥ R2), fitted over the whole sweep, so the
+   * rising impedance above the resonance is captured too.
+   */
+  inductance?: "le" | "lr2";
+}
+
 /**
  * Fit Re, fs, Qms, Qes and Le to a free-air impedance sweep: start from the
  * bandwidth estimate, then refine with Levenberg–Marquardt on log-parameters
@@ -160,7 +219,8 @@ function solve(A: number[][], b: number[]): number[] {
  *
  * @param reDc measured DC resistance; if given, Re is held fixed at this value.
  */
-export function fitImpedance(d: ImpedanceData, reDc?: number): FitResult {
+export function fitImpedance(d: ImpedanceData, reDc?: number, opts: FitOptions = {}): FitResult {
+  if (opts.inductance === "lr2") return fitLr2(d, reDc);
   const start = estimateFromPeak(d, reDc);
   // Fit range: around the resonance, where the lumped model is good.
   const lo = Math.max(d.freq[0]!, start.fs / 4);
@@ -273,4 +333,71 @@ export function resampleMagnitude(d: ImpedanceData, freqs: ArrayLike<number>): F
     out[i] = f < d.freq[0]! || f > d.freq[d.freq.length - 1]! ? NaN : interp(lf, d.mag, Math.log(f));
   }
   return out;
+}
+
+/** Measured points in [lo, hi], thinned to at most ~maxPts, as complex values when phase is known. */
+function pointsIn(d: ImpedanceData, lo: number, hi: number, maxPts = 400) {
+  const idx: number[] = [];
+  for (let i = 0; i < d.freq.length; i++) if (d.freq[i]! >= lo && d.freq[i]! <= hi) idx.push(i);
+  const step = Math.max(1, Math.floor(idx.length / maxPts));
+  return idx
+    .filter((_, k) => k % step === 0)
+    .map((i) => {
+      const m = d.mag[i]!;
+      const ph = d.phase ? (d.phase[i]! * Math.PI) / 180 : 0;
+      return { f: d.freq[i]!, z: cx(m * Math.cos(ph), m * Math.sin(ph)), m };
+    });
+}
+
+/**
+ * L2R2 fit over the whole sweep (from fs/4 up to 20 kHz or the end of the data).
+ * Starts from the plain-Le fit around the resonance, then frees L2 and R2.
+ */
+function fitLr2(d: ImpedanceData, reDc?: number): FitResult {
+  const base = fitImpedance(d, reDc);
+  const lo = Math.max(d.freq[0]!, base.fs / 4);
+  const hi = Math.min(d.freq[d.freq.length - 1]!, 20000);
+  const meas = pointsIn(d, lo, hi);
+  const usedPhase = d.phase !== null;
+  const names = ["re", "fs", "qms", "qes", "le_mh", "l2_mh", "r2_ohm"] as const;
+  const free = names.filter((n) => !(n === "re" && reDc !== undefined));
+  const start: Required<ImpedanceParams> = { ...base, le_mh: base.le_mh * 0.5, l2_mh: base.le_mh, r2_ohm: 3 * base.re };
+  const toParams = (x: number[]): Required<ImpedanceParams> => {
+    const p = { ...start };
+    free.forEach((n, i) => (p[n] = Math.exp(x[i]!)));
+    return p;
+  };
+  const residualsOf = (x: number[]) => {
+    const p = toParams(x);
+    const r: number[] = [];
+    for (const { f, z, m } of meas) {
+      const zm = driverImpedance(p, f);
+      if (usedPhase) r.push((zm.re - z.re) / m, (zm.im - z.im) / m);
+      else r.push(Math.log(abs(zm) / m));
+    }
+    return r;
+  };
+  // Try a few starting points for L2/R2: the fit has local minima.
+  let best: { x: number[]; r: number[]; cost: number } | null = null;
+  for (const [leK, l2K, r2K] of [
+    [0.5, 1, 3],
+    [0.8, 2, 1],
+    [0.3, 3, 8],
+  ] as const) {
+    const s0 = { ...start, le_mh: base.le_mh * leK, l2_mh: base.le_mh * l2K, r2_ohm: base.re * r2K };
+    const x0 = free.map((n) => Math.log(s0[n]));
+    const res = levenbergMarquardt(x0, residualsOf);
+    if (!best || res.cost < best.cost) best = res;
+  }
+  const p = toParams(best!.x);
+  const rms = Math.sqrt(best!.cost / best!.r.length);
+  return { ...p, qts: (p.qms * p.qes) / (p.qms + p.qes), rmsError: rms, range: [lo, hi], usedPhase };
+}
+
+/** RMS relative error of a parameter set against a sweep over [lo, hi] (for comparing models). */
+export function impedanceFitError(d: ImpedanceData, p: ImpedanceParams, lo: number, hi: number): number {
+  const meas = pointsIn(d, lo, hi);
+  let s = 0;
+  for (const { f, m } of meas) s += Math.log(abs(driverImpedance(p, f)) / m) ** 2;
+  return Math.sqrt(s / meas.length);
 }
