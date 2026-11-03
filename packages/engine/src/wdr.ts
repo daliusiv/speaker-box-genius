@@ -157,8 +157,16 @@ export interface WprProject {
     addedMass_g: number;
     params: { mms_g: number; sd_cm2: number; vas_l: number; fs: number; qms: number; xmax_mm: number };
   };
-  /** Amplifier output resistance (Ω). */
+  /**
+   * WinISD's Rg (Ω). WinISD applies it to each driver separately (as if every
+   * driver had its own cable), so with N parallel drivers the equivalent shared
+   * amplifier resistance is Rg / N.
+   */
   rg: number;
+  /** Number of drivers (Box Nd). WinISD wires them in parallel. */
+  drivers: number;
+  /** Isobaric (Iso-Barik) loading; not supported yet. */
+  isobaric: boolean;
   /** Input power (W). */
   power: number;
   /** WinISD's "voice coil inductance" simulator option (VCInd); 0 = Le not simulated. */
@@ -258,6 +266,8 @@ export function parseWpr(text: string): WprProject {
           }
         : undefined,
     rg: n0(s.get("signalsource"), "Rg"),
+    drivers: Math.max(1, Math.round(n0(box, "Nd") || 1)),
+    isobaric: n0(box, "Isobarik") !== 0,
     power: n0(s.get("signalsource"), "P") || 1,
     simulateLe: n0(s.get("simulatoroptions"), "VCInd") !== 0,
     air: rho > 0 && c > 0 ? { rho, c } : undefined,

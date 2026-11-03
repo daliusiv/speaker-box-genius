@@ -272,3 +272,24 @@ test("DSA215-8 vented with Le simulated: response and impedance match WinISD (Te
   }
   for (const [f, z] of [[99.77, 11.452], [199.85, 6.394], [500, 6.303]] as const) near(at(f).impedanceOhm[0]! / z - 1, 0, 0.01, `impedance at ${f} Hz`);
 });
+
+// Test 5: two drivers (Nd=2, parallel) in the ported box at 100 W. WinISD applies
+// Rg to each driver separately and plots one driver's impedance.
+test("DSA215-8 ×2 in parallel: matches WinISD with its per-driver Rg (Test 5)", () => {
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215-2drivers.wpr"), "utf8"));
+  assert.equal(p.drivers, 2);
+  assert.equal(p.isobaric, false);
+  const t = p.driver.ts;
+  const drv = { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: 0 };
+  const box = { kind: "vented" as const, vb_l: p.box.vb_l, port: { shape: "round" as const, diameter_cm: p.port!.diameter_cm, length_cm: p.port!.length_cm }, endCorrection: 0.732, ql: p.box.ql, qa: p.box.qa, qp: p.box.qp };
+  const at = (f: number) =>
+    simulate(drv, box, { power: p.power, rg: p.rg / p.drivers, air: p.air, drivers: p.drivers, wiring: "parallel", fMin: f, fMax: f, points: 1 });
+  for (const [f, db] of [[20.09, -25.716], [40.13, -10.897], [80.38, -0.44]] as const) {
+    const r = at(f);
+    near(r.spl[0]! - r.summary.referenceSpl, db, 0.02, `TF at ${f} Hz`);
+  }
+  near(at(19.91).excursionMm[0]! / 13.521 - 1, 0, 0.006, "excursion at 19.91 Hz");
+  near(at(35.68).portVelocity![0]! / 8.554 - 1, 0, 0.006, "port velocity at 35.68 Hz");
+  // WinISD plots a single driver's impedance: N × what the amplifier sees.
+  for (const [f, z] of [[19.91, 16.451], [100.39, 18.553]] as const) near((at(f).impedanceOhm[0]! * p.drivers) / z - 1, 0, 0.01, `impedance at ${f} Hz`);
+});

@@ -93,6 +93,29 @@ WinISD's "Simulate voice coil inductance" on, Le = 1 mH.
 WinISD models Le as a plain series inductor, as we do. The setting is read from the
 project's `VCInd` option on import.
 
+## Two drivers in parallel (Test 5)
+
+Same ported box with WinISD's "Num. of drivers" set to 2 (parallel), 100 W.
+
+WinISD applies its Rg to **each driver separately**, as if every driver had its own
+cable. Speaker Box Genius treats the amplifier resistance as shared, so two parallel
+drivers each see twice the value. Importing a .wpr divides WinISD's Rg by the number of
+drivers so the two agree. WinISD's impedance graph also shows a **single driver**;
+ours shows what the amplifier sees, which is half that for two in parallel.
+
+| Graph | Frequency | WinISD | Speaker Box Genius | Difference |
+|---|---|---|---|---|
+| Transfer function | 20.09 Hz | −25.716 dB | −25.721 dB | −0.005 dB |
+| Transfer function | 40.13 Hz | −10.897 dB | −10.895 dB | +0.002 dB |
+| Transfer function | 80.38 Hz | −0.440 dB | −0.440 dB | 0 |
+| Cone excursion | 19.91 Hz | 13.521 mm | 13.472 mm | −0.36 % |
+| Port air velocity | 35.68 Hz | 8.554 m/s | 8.525 m/s | −0.34 % |
+| Impedance, one driver | 19.91 Hz | 16.451 Ω | 16.562 Ω | +0.7 % |
+| Impedance, one driver | 100.39 Hz | 18.553 Ω | 18.688 Ω | +0.7 % |
+
+With a shared 0.1 Ω instead, the response differs from WinISD by up to 0.1 dB around
+80 Hz.
+
 ## Passive radiator: 1× DSA270-PR
 
 | Box | Frequency | WinISD | Speaker Box Genius | Difference |

@@ -151,7 +151,9 @@ export function App() {
           xmax_mm: d.xmax_mm ?? s.xmax_mm,
           pe_w: d.pe_w ?? s.pe_w,
           power: Number(p.power.toFixed(2)),
-          settings: { ...s.settings, air: "winisd", rg: p.rg, inductance: p.simulateLe },
+          drivers: p.drivers,
+          // WinISD's Rg is per driver; our setting is the shared amplifier output.
+          settings: { ...s.settings, air: "winisd", rg: Number((p.rg / p.drivers).toPrecision(6)), inductance: p.simulateLe },
           highPass: p.highPass ? { on: true, ...p.highPass } : { ...s.highPass, on: false },
           designs,
           volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: Math.round(d.displacement_l * 100) / 100 } : s.volume,
@@ -162,6 +164,11 @@ export function App() {
           ? ` Note: the project uses losses Ql ${p.box.ql}, Qa ${p.box.qa}, Qp ${p.box.qp}; the app uses 10 / 100 / 100.`
           : "";
       const boxNote = p.box.type === "other" ? " This box type isn't supported yet, so only the driver was imported." : "";
+      const driversNote =
+        p.drivers > 1
+          ? ` ${p.drivers} drivers in parallel; WinISD's Rg of ${p.rg} Ω per driver becomes ${Number((p.rg / p.drivers).toPrecision(6))} Ω shared. WinISD's impedance graph shows one driver, ours shows what the amplifier sees.`
+          : "";
+      const isoNote = p.isobaric ? " The project uses isobaric loading, which isn't supported yet; it was imported as standard." : "";
       const filterNote = p.highPass
         ? ` High-pass filter imported (Butterworth, order ${p.highPass.order}, ${p.highPass.freq} Hz).`
         : "";
@@ -169,7 +176,7 @@ export function App() {
         p.unsupportedFilters > 0
           ? ` ${p.unsupportedFilters} filter${p.unsupportedFilters > 1 ? "s" : ""} in the project ${p.unsupportedFilters > 1 ? "were" : "was"} not imported; add ${p.unsupportedFilters > 1 ? "them" : "it"} by hand.`
           : "";
-      setWdrMsg(`Imported WinISD project ${fileName} with its power, amplifier resistance and air settings.${filterNote}${unsupportedNote}${boxNote}${lossNote}`);
+      setWdrMsg(`Imported WinISD project ${fileName} with its power, amplifier resistance and air settings.${filterNote}${unsupportedNote}${driversNote}${isoNote}${boxNote}${lossNote}`);
     } catch (e) {
       setWdrMsg(`Couldn't read ${fileName}: ${(e as Error).message}`);
     }
