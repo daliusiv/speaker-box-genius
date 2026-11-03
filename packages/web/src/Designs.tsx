@@ -80,7 +80,8 @@ function DesignShell(props: {
           aria-label="Design name"
           onChange={(e) => props.onChange({ name: e.currentTarget.value })}
         />
-        <span className="kind">{KIND_LABEL[d.kind]}</span>
+        {/* The type, unless the name already says it ("Ported 2" needs no "Ported" beside it). */}
+        {!d.name.toLowerCase().startsWith(KIND_LABEL[d.kind].toLowerCase()) && <span className="kind">{KIND_LABEL[d.kind]}</span>}
         <input
           type="checkbox"
           checked={d.on}

@@ -1161,3 +1161,84 @@ button.icon:disabled {
     animation: none;
   }
 }
+
+/* Controls column: tabs, and on wide screens the column stays in view while the charts scroll */
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.panel-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+}
+
+.panel-tabs [role="tab"] {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.45rem 0.3rem;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.panel-tabs [role="tab"]:hover {
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.panel-tabs [role="tab"].on {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.tab-badge {
+  min-width: 1.15rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 0.72rem;
+  line-height: 1.15rem;
+  text-align: center;
+}
+
+.panel-tabs [role="tab"].on .tab-badge {
+  background: rgb(255 255 255 / 0.25);
+  color: inherit;
+}
+
+@media (min-width: 861px) {
+  .panel {
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    /* room for focus rings and card shadows at the edges of the scroll box */
+    padding: 0 4px 4px;
+    margin: 0 -4px;
+  }
+
+  .panel > .panel-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    box-shadow: 0 4px 10px -6px rgb(0 0 0 / 0.25);
+  }
+}

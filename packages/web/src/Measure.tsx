@@ -23,6 +23,8 @@ export interface Measurement {
 interface Props {
   measurement: Measurement | null;
   onMeasurement: (m: Measurement | null) => void;
+  /** Hide the panel (and drop the measurement). */
+  onClose: () => void;
   /** Current Sd, needed to turn an added-mass result into Vas. */
   sd_cm2: number | undefined;
   onUse: (ts: TsValues, coil: { le_mh: number; l2_mh: number; r2_ohm: number }) => void;
@@ -137,11 +139,9 @@ export function MeasurePanel(props: Props) {
             e.currentTarget.value = "";
           }} />
         </label>
-        {m && (
-          <button className="secondary" onClick={() => props.onMeasurement(null)}>
-            Clear
-          </button>
-        )}
+        <button className="secondary" onClick={props.onClose}>
+          Close
+        </button>
       </div>
       {msg && <p className="warn">{msg}</p>}
 

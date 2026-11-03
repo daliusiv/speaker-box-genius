@@ -76,13 +76,14 @@ export function GettingStarted(props: { onDismiss: () => void }) {
       </div>
       <ol>
         <li>
-          <b>Load your driver.</b> Use <i>Browse drivers</i> (about 200 in the database), paste the parameters from a
-          datasheet, import a WinISD file, or type them in. Values you type are never overwritten; the rest are
-          calculated.
+          <b>Load your driver.</b> In <i>Driver</i>, use <i>Browse drivers</i> (about 200 in the database) or type the
+          parameters in; <i>Driver tools</i> pastes from a datasheet or imports a WinISD file. Values you type are never
+          overwritten; the rest are calculated.
         </li>
         <li>
-          <b>Shape the boxes.</b> A sealed, a ported and a passive radiator design are already set up for comparison. Change
-          the volume and tuning, try a preset like <i>QB3</i>, or add a bandpass. Up to 8 designs.
+          <b>Shape the boxes.</b> In <i>Boxes</i>, a sealed, a ported and a passive radiator design are already set up for
+          comparison. Change the volume and tuning, try a preset like <i>QB3</i>, or add a bandpass. Up to 8 designs.
+          Made a mistake? <i>Undo</i> (Ctrl+Z) takes it back.
         </li>
         <li>
           <b>Read the charts.</b> Dashed red lines are limits: cone and PR Xmax, port chuffing. Raise <i>Power</i> at the

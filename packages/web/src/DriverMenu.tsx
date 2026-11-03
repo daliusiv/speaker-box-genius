@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
  * clear, WinISD import/export and submitting the driver to the database.
  */
 export function DriverMenu(props: {
+  onMeasure: () => void;
   pasting: boolean;
   onPaste: () => void;
   onClear: () => void;
@@ -48,6 +49,9 @@ export function DriverMenu(props: {
         <div className="share-menu menu-left" role="menu">
           <button role="menuitem" onClick={pick(props.onPaste)}>
             {props.pasting ? "Cancel paste" : "Paste from datasheet…"}
+          </button>
+          <button role="menuitem" onClick={pick(props.onMeasure)}>
+            Measure from an impedance sweep…
           </button>
           <button role="menuitem" onClick={pick(props.onClear)}>
             Clear all T/S values

@@ -10,6 +10,7 @@ import {
 } from "@sbg/engine";
 import { LogChart, type Series } from "./LogChart.tsx";
 import { useUndoable } from "./useUndoable.ts";
+import { initialPanel, PanelTabs, rememberPanel, type PanelId } from "./PanelTabs.tsx";
 import {
   DEFAULT_STATE,
   decodeStateAny,
@@ -92,6 +93,13 @@ export function App(props: { initial: AppState | null }) {
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const wdrInput = useRef<HTMLInputElement>(null);
   const [pasting, setPasting] = useState(false);
+  const [measureOpen, setMeasureOpen] = useState(false);
+  // Which group of controls the left column shows.
+  const [panel, setPanel] = useState<PanelId>(initialPanel);
+  const choosePanel = (p: PanelId) => {
+    setPanel(p);
+    rememberPanel(p);
+  };
   const welcome = useWelcome();
 
   useEffect(() => {
@@ -377,6 +385,12 @@ export function App(props: { initial: AppState | null }) {
     }));
   });
 
+  const signalOn = (state.highPass.on ? 1 : 0) + state.eq.filter((e) => e.on).length + (state.roomGain.mode !== "off" ? 1 : 0);
+  const tabBadges: Partial<Record<PanelId, string>> = {
+    boxes: String(state.designs.filter((d) => d.on).length),
+    ...(signalOn > 0 ? { signal: String(signalOn) } : {}),
+  };
+
   return (
     <UnitsContext.Provider value={state.settings.units}>
     <div className="layout">
@@ -421,341 +435,370 @@ export function App(props: { initial: AppState | null }) {
       </header>
 
       <aside className="panel">
-        <Card title="Driver">
-          <DriverBrowser
-            rows={db?.drivers}
-            onPick={(id) =>
-              loadDriver(id).then(
-                (d) =>
+        <PanelTabs value={panel} onChange={choosePanel} badges={tabBadges} className="desktop-tabs" />
+        {panel === "driver" && (
+          <div className="tab-panel" role="tabpanel" id="panel-driver" aria-labelledby="tab-driver">
+            <Card title="Driver">
+              <DriverBrowser
+                rows={db?.drivers}
+                onPick={(id) =>
+                  loadDriver(id).then(
+                    (d) =>
+                      setStep((s) => ({
+                        ...s,
+                        driverName: d.name,
+                        driverBrand: d.brand,
+                        nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
+                        ts: d.ts,
+                        le_mh: d.le_mh ?? 0,
+                        l2_mh: d.l2_mh ?? 0,
+                        r2_ohm: d.r2_ohm ?? 0,
+                        xmax_mm: d.xmax_mm ?? s.xmax_mm,
+                        pe_w: d.pe_w ?? s.pe_w,
+                        volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: d.displacement_l } : s.volume,
+                        // DVC drivers start wired the way their published values were measured.
+                        dvc: d.dvcWiring
+                          ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring }
+                          : { ...s.dvc, on: false },
+                      })),
+                    () => alert("Couldn't load that driver."),
+                  )
+                }
+              />
+              <input
+                className="name"
+                value={state.driverName}
+                onChange={(e) => set("driverName", e.currentTarget.value)}
+                aria-label="Driver name"
+              />
+              <TsEditor
+                entered={state.ts}
+                solved={solved}
+                onChange={(ts) => set("ts", ts)}
+                pasting={pasting}
+                onPastingChange={setPasting}
+                onPaste={(ts, x) =>
                   setStep((s) => ({
                     ...s,
-                    driverName: d.name,
-                    driverBrand: d.brand,
-                    nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
-                    ts: d.ts,
-                    le_mh: d.le_mh ?? 0,
-                    l2_mh: d.l2_mh ?? 0,
-                    r2_ohm: d.r2_ohm ?? 0,
-                    xmax_mm: d.xmax_mm ?? s.xmax_mm,
-                    pe_w: d.pe_w ?? s.pe_w,
-                    volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: d.displacement_l } : s.volume,
-                    // DVC drivers start wired the way their published values were measured.
-                    dvc: d.dvcWiring
-                      ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring }
-                      : { ...s.dvc, on: false },
-                  })),
-                () => alert("Couldn't load that driver."),
-              )
-            }
-          />
-          <input
-            className="name"
-            value={state.driverName}
-            onChange={(e) => set("driverName", e.currentTarget.value)}
-            aria-label="Driver name"
-          />
-          <TsEditor
-            entered={state.ts}
-            solved={solved}
-            onChange={(ts) => set("ts", ts)}
-            pasting={pasting}
-            onPastingChange={setPasting}
-            onPaste={(ts, x) =>
-              setStep((s) => ({
-                ...s,
-                driverName: "Pasted driver",
-                driverBrand: "",
-                ts,
-                le_mh: x.le_mh ?? s.le_mh,
-                l2_mh: 0,
-                r2_ohm: 0,
-                xmax_mm: x.xmax_mm ?? s.xmax_mm,
-                pe_w: x.pe_w ?? s.pe_w,
-              }))
-            }
-          />
-          <div className="row">
-            <DriverMenu
-              pasting={pasting}
-              onPaste={() => setPasting(!pasting)}
-              onClear={() => {
-                setStep((s) => ({ ...s, ts: {} }));
-                notify("Cleared the T/S values.");
-              }}
-              onImport={() => wdrInput.current?.click()}
-              onExport={exportWdr}
-              submitUrl={submitDriverUrl(state)}
-            />
-            <input
-              ref={wdrInput}
-              type="file"
-              accept=".wdr,.wpr,.txt"
-              hidden
-              onChange={(e) => {
-                const f = e.currentTarget.files?.[0];
-                if (f) importWdr(f);
-                e.currentTarget.value = "";
-              }}
-            />
-          </div>
-          {wdrMsg && <p className="hint">{wdrMsg}</p>}
-          <h3>Large signal and system</h3>
-          <div className="fields">
-            <Num label="Znom" unit="Ω" value={state.nominal_ohms} onChange={(v) => set("nominal_ohms", v)} />
-            <Num label="Le" unit="mH" value={state.le_mh} min={0} onChange={(v) => set("le_mh", v)} />
-            <Num
-              label="L2"
-              unit="mH"
-              value={state.l2_mh}
-              min={0}
-              title="Optional: second, lossy inductance (L2R2 coil model). 0 = plain Le. Fill in from a measured sweep."
-              onChange={(v) => set("l2_mh", v)}
-            />
-            <Num
-              label="R2"
-              unit="Ω"
-              value={state.r2_ohm}
-              min={0}
-              title="Optional: resistance across L2 (eddy-current losses). Used only when L2 is also set."
-              onChange={(v) => set("r2_ohm", v)}
-            />
-            <Num label="Xmax" unit="mm" value={state.xmax_mm} onChange={(v) => set("xmax_mm", v)} />
-            <Num label="Pe" unit="W" value={state.pe_w} onChange={(v) => set("pe_w", v)} />
-            <Num
-              label={state.isobaric ? "Pairs" : "Drivers"}
-              value={state.drivers}
-              onChange={(v) => set("drivers", Math.max(1, Math.round(v)))}
-            />
-            <Select<"standard" | "isobaric">
-              label="Loading"
-              value={state.isobaric ? "isobaric" : "standard"}
-              options={[
-                { value: "standard", text: "Standard" },
-                { value: "isobaric", text: "Isobaric pairs" },
-              ]}
-              onChange={(x) => set("isobaric", x === "isobaric")}
-            />
-            {state.isobaric && (
-              <Select<"series" | "parallel">
-                label="Pair coils"
-                value={state.isoCoils}
-                options={[
-                  { value: "parallel", text: "Parallel (half the impedance)" },
-                  { value: "series", text: "Series (double the impedance)" },
-                ]}
-                onChange={(x) => set("isoCoils", x)}
+                    driverName: "Pasted driver",
+                    driverBrand: "",
+                    ts,
+                    le_mh: x.le_mh ?? s.le_mh,
+                    l2_mh: 0,
+                    r2_ohm: 0,
+                    xmax_mm: x.xmax_mm ?? s.xmax_mm,
+                    pe_w: x.pe_w ?? s.pe_w,
+                  }))
+                }
               />
-            )}
-            <Select<"single" | "dual">
-              label="Voice coils"
-              value={state.dvc.on ? "dual" : "single"}
-              options={[
-                { value: "single", text: "Single" },
-                { value: "dual", text: "Dual (DVC)" },
-              ]}
-              onChange={(x) => set("dvc", { ...state.dvc, on: x === "dual" })}
-            />
-            {state.dvc.on && (
-              <>
-                <Select<"one" | "parallel" | "series">
-                  label="Values are for"
-                  value={state.dvc.entered}
-                  options={[
-                    { value: "parallel", text: "Both coils in parallel" },
-                    { value: "series", text: "Both coils in series" },
-                    { value: "one", text: "One coil" },
-                  ]}
-                  onChange={(entered) => set("dvc", { ...state.dvc, entered })}
+              <div className="row">
+                <DriverMenu
+                  onMeasure={() => {
+                    setMeasureOpen(true);
+                    setTimeout(() => document.getElementById("measure-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+                  }}
+                  pasting={pasting}
+                  onPaste={() => setPasting(!pasting)}
+                  onClear={() => {
+                    setStep((s) => ({ ...s, ts: {} }));
+                    notify("Cleared the T/S values.");
+                  }}
+                  onImport={() => wdrInput.current?.click()}
+                  onExport={exportWdr}
+                  submitUrl={submitDriverUrl(state)}
                 />
-                <Select<"parallel" | "series">
-                  label="Coils wired"
-                  value={state.dvc.wired}
-                  options={[
-                    { value: "parallel", text: "In parallel" },
-                    { value: "series", text: "In series" },
-                  ]}
-                  onChange={(wired) => set("dvc", { ...state.dvc, wired })}
+                <input
+                  ref={wdrInput}
+                  type="file"
+                  accept=".wdr,.wpr,.txt"
+                  hidden
+                  onChange={(e) => {
+                    const f = e.currentTarget.files?.[0];
+                    if (f) importWdr(f);
+                    e.currentTarget.value = "";
+                  }}
                 />
-              </>
-            )}
-            {state.drivers > 1 && (
-              <Select<"parallel" | "series">
-                label="Wiring"
-                value={state.wiring}
-                options={[
-                  { value: "parallel", text: `${state.isobaric ? "Pairs" : "Drivers"} in parallel` },
-                  { value: "series", text: `${state.isobaric ? "Pairs" : "Drivers"} in series` },
-                ]}
-                onChange={(x) => set("wiring", x)}
+              </div>
+              {wdrMsg && <p className="hint">{wdrMsg}</p>}
+              <h3>Large signal and system</h3>
+              <div className="fields">
+                <Num label="Znom" unit="Ω" value={state.nominal_ohms} onChange={(v) => set("nominal_ohms", v)} />
+                <Num label="Le" unit="mH" value={state.le_mh} min={0} onChange={(v) => set("le_mh", v)} />
+                <Num
+                  label="L2"
+                  unit="mH"
+                  value={state.l2_mh}
+                  min={0}
+                  title="Optional: second, lossy inductance (L2R2 coil model). 0 = plain Le. Fill in from a measured sweep."
+                  onChange={(v) => set("l2_mh", v)}
+                />
+                <Num
+                  label="R2"
+                  unit="Ω"
+                  value={state.r2_ohm}
+                  min={0}
+                  title="Optional: resistance across L2 (eddy-current losses). Used only when L2 is also set."
+                  onChange={(v) => set("r2_ohm", v)}
+                />
+                <Num label="Xmax" unit="mm" value={state.xmax_mm} onChange={(v) => set("xmax_mm", v)} />
+                <Num label="Pe" unit="W" value={state.pe_w} onChange={(v) => set("pe_w", v)} />
+                <Num
+                  label={state.isobaric ? "Pairs" : "Drivers"}
+                  value={state.drivers}
+                  onChange={(v) => set("drivers", Math.max(1, Math.round(v)))}
+                />
+                <Select<"standard" | "isobaric">
+                  label="Loading"
+                  value={state.isobaric ? "isobaric" : "standard"}
+                  options={[
+                    { value: "standard", text: "Standard" },
+                    { value: "isobaric", text: "Isobaric pairs" },
+                  ]}
+                  onChange={(x) => set("isobaric", x === "isobaric")}
+                />
+                {state.isobaric && (
+                  <Select<"series" | "parallel">
+                    label="Pair coils"
+                    value={state.isoCoils}
+                    options={[
+                      { value: "parallel", text: "Parallel (half the impedance)" },
+                      { value: "series", text: "Series (double the impedance)" },
+                    ]}
+                    onChange={(x) => set("isoCoils", x)}
+                  />
+                )}
+                <Select<"single" | "dual">
+                  label="Voice coils"
+                  value={state.dvc.on ? "dual" : "single"}
+                  options={[
+                    { value: "single", text: "Single" },
+                    { value: "dual", text: "Dual (DVC)" },
+                  ]}
+                  onChange={(x) => set("dvc", { ...state.dvc, on: x === "dual" })}
+                />
+                {state.dvc.on && (
+                  <>
+                    <Select<"one" | "parallel" | "series">
+                      label="Values are for"
+                      value={state.dvc.entered}
+                      options={[
+                        { value: "parallel", text: "Both coils in parallel" },
+                        { value: "series", text: "Both coils in series" },
+                        { value: "one", text: "One coil" },
+                      ]}
+                      onChange={(entered) => set("dvc", { ...state.dvc, entered })}
+                    />
+                    <Select<"parallel" | "series">
+                      label="Coils wired"
+                      value={state.dvc.wired}
+                      options={[
+                        { value: "parallel", text: "In parallel" },
+                        { value: "series", text: "In series" },
+                      ]}
+                      onChange={(wired) => set("dvc", { ...state.dvc, wired })}
+                    />
+                  </>
+                )}
+                {state.drivers > 1 && (
+                  <Select<"parallel" | "series">
+                    label="Wiring"
+                    value={state.wiring}
+                    options={[
+                      { value: "parallel", text: `${state.isobaric ? "Pairs" : "Drivers"} in parallel` },
+                      { value: "series", text: `${state.isobaric ? "Pairs" : "Drivers"} in series` },
+                    ]}
+                    onChange={(x) => set("wiring", x)}
+                  />
+                )}
+              </div>
+              {state.dvc.on && solved.missing.length === 0 && (
+                <p className="hint">
+                  As wired: Re {(solved.values.re! * dvcFactors(state).re).toFixed(2)} Ω, Qes{" "}
+                  {(solved.values.qes! * dvcFactors(state).qes).toFixed(3)}. Wiring only changes the impedance (and how much the
+                  cable resistance matters); the response at a given power stays the same.
+                </p>
+              )}
+              <p className="hint">
+                {state.isobaric
+                  ? `Each pair is two drivers working as one (face to face or one behind the other): same Fs and Qts, half the Vas, so about half the box. ${state.drivers * 2} drivers in total. `
+                  : "Multiple drivers share each box. "}
+                Wiring changes the impedance the amplifier sees and the voltage each driver gets; power is what the amplifier
+                delivers into the whole set.
+              </p>
+            </Card>
+
+            {(measureOpen || measurement) && (
+              <div id="measure-panel">
+              <MeasurePanel
+                measurement={measurement}
+                onMeasurement={setMeasurement}
+                onClose={() => {
+                  setMeasureOpen(false);
+                  setMeasurement(null);
+                }}
+                sd_cm2={solved.values.sd_cm2}
+                onUse={(ts, coil) =>
+                  setStep((s) => {
+                    // Keep Vas / Sd the user had, unless the measurement provides them; drop values it supersedes.
+                    const keep: typeof s.ts = {};
+                    if (s.ts.vas_l !== undefined && ts.mms_g === undefined) keep.vas_l = s.ts.vas_l;
+                    if (s.ts.mms_g !== undefined && s.ts.vas_l === undefined && ts.mms_g === undefined) keep.mms_g = s.ts.mms_g;
+                    return {
+                      ...s,
+                      driverName: s.driverName.endsWith("(measured)") ? s.driverName : `${s.driverName} (measured)`,
+                      ts: { ...keep, ...ts },
+                      ...coil,
+                    };
+                  })
+                }
               />
+              </div>
             )}
           </div>
-          {state.dvc.on && solved.missing.length === 0 && (
-            <p className="hint">
-              As wired: Re {(solved.values.re! * dvcFactors(state).re).toFixed(2)} Ω, Qes{" "}
-              {(solved.values.qes! * dvcFactors(state).qes).toFixed(3)}. Wiring only changes the impedance (and how much the
-              cable resistance matters); the response at a given power stays the same.
-            </p>
-          )}
-          <p className="hint">
-            {state.isobaric
-              ? `Each pair is two drivers working as one (face to face or one behind the other): same Fs and Qts, half the Vas, so about half the box. ${state.drivers * 2} drivers in total. `
-              : "Multiple drivers share each box. "}
-            Wiring changes the impedance the amplifier sees and the voltage each driver gets; power is what the amplifier
-            delivers into the whole set.
-          </p>
-        </Card>
-
-        <MeasurePanel
-          measurement={measurement}
-          onMeasurement={setMeasurement}
-          sd_cm2={solved.values.sd_cm2}
-          onUse={(ts, coil) =>
-            setStep((s) => {
-              // Keep Vas / Sd the user had, unless the measurement provides them; drop values it supersedes.
-              const keep: typeof s.ts = {};
-              if (s.ts.vas_l !== undefined && ts.mms_g === undefined) keep.vas_l = s.ts.vas_l;
-              if (s.ts.mms_g !== undefined && s.ts.vas_l === undefined && ts.mms_g === undefined) keep.mms_g = s.ts.mms_g;
-              return {
-                ...s,
-                driverName: s.driverName.endsWith("(measured)") ? s.driverName : `${s.driverName} (measured)`,
-                ts: { ...keep, ...ts },
-                ...coil,
-              };
-            })
-          }
-        />
-
-        <Card title="High-pass filter" on={hp.on} onToggle={(on) => set("highPass", { ...hp, on })}>
-          <div className="fields">
-            <Select<HighPassType>
-              label="Type"
-              value={hp.type}
-              options={[
-                { value: "butterworth", text: "Butterworth" },
-                { value: "linkwitz-riley", text: "Linkwitz-Riley" },
-              ]}
-              onChange={(type) =>
-                set("highPass", { ...hp, type, order: type === "linkwitz-riley" && hp.order % 2 ? hp.order + 1 : hp.order })
-              }
-            />
-            <Select<number>
-              label="Slope"
-              value={hp.order}
-              options={(hp.type === "butterworth" ? [1, 2, 3, 4] : [2, 4]).map((o) => ({
-                value: o,
-                text: `${o * 6} dB/oct`,
-              }))}
-              onChange={(order) => set("highPass", { ...hp, order })}
-            />
-            <Num label="Freq" unit="Hz" value={hp.freq} onChange={(freq) => set("highPass", { ...hp, freq })} />
+        )}
+        {panel === "boxes" && (
+          <div className="tab-panel" role="tabpanel" id="panel-boxes" aria-labelledby="tab-boxes">
+            {state.designs.map((d) => (
+              <DesignCard
+                key={d.id}
+                design={d}
+                color={colorOf(state, d.id)}
+                vb_l={vbOf(state, d)}
+                linked={state.volume.link === d.id}
+                canDelete={state.designs.length > 1}
+                db={db}
+                air={airOf(state)}
+                align={alignmentDriver(solved, state)}
+                drivers={state.drivers}
+                portCtx={portContext(state, designs, d.id)}
+                losses={state.settings.losses}
+                onChange={updateDesign}
+                onDuplicate={() => duplicateDesign(d)}
+                onDelete={() => deleteDesign(d)}
+                onPrDisplacement={(l) => setState((s) => ({ ...s, volume: { ...s.volume, prDisp_l: l } }))}
+              />
+            ))}
+            <AddDesign disabled={state.designs.length >= MAX_DESIGNS} onAdd={addDesign} />
           </div>
-          <p className="hint">A subsonic filter protects ported and PR boxes from over-excursion below tuning.</p>
-        </Card>
+        )}
+        {panel === "signal" && (
+          <div className="tab-panel" role="tabpanel" id="panel-signal" aria-labelledby="tab-signal">
+            <Card title="High-pass filter" on={hp.on} onToggle={(on) => set("highPass", { ...hp, on })}>
+              <div className="fields">
+                <Select<HighPassType>
+                  label="Type"
+                  value={hp.type}
+                  options={[
+                    { value: "butterworth", text: "Butterworth" },
+                    { value: "linkwitz-riley", text: "Linkwitz-Riley" },
+                  ]}
+                  onChange={(type) =>
+                    set("highPass", { ...hp, type, order: type === "linkwitz-riley" && hp.order % 2 ? hp.order + 1 : hp.order })
+                  }
+                />
+                <Select<number>
+                  label="Slope"
+                  value={hp.order}
+                  options={(hp.type === "butterworth" ? [1, 2, 3, 4] : [2, 4]).map((o) => ({
+                    value: o,
+                    text: `${o * 6} dB/oct`,
+                  }))}
+                  onChange={(order) => set("highPass", { ...hp, order })}
+                />
+                <Num label="Freq" unit="Hz" value={hp.freq} onChange={(freq) => set("highPass", { ...hp, freq })} />
+              </div>
+              <p className="hint">A subsonic filter protects ported and PR boxes from over-excursion below tuning.</p>
+            </Card>
 
-        <EqPanel state={state} designs={designs} onChange={(eq) => set("eq", eq)} />
+            <EqPanel state={state} designs={designs} onChange={(eq) => set("eq", eq)} />
 
-        {state.designs.map((d) => (
-          <DesignCard
-            key={d.id}
-            design={d}
-            color={colorOf(state, d.id)}
-            vb_l={vbOf(state, d)}
-            linked={state.volume.link === d.id}
-            canDelete={state.designs.length > 1}
-            db={db}
-            air={airOf(state)}
-            align={alignmentDriver(solved, state)}
-            drivers={state.drivers}
-            portCtx={portContext(state, designs, d.id)}
-            losses={state.settings.losses}
-            onChange={updateDesign}
-            onDuplicate={() => duplicateDesign(d)}
-            onDelete={() => deleteDesign(d)}
-            onPrDisplacement={(l) => setState((s) => ({ ...s, volume: { ...s.volume, prDisp_l: l } }))}
-          />
-        ))}
-        <AddDesign disabled={state.designs.length >= MAX_DESIGNS} onAdd={addDesign} />
-
-        <VolumePanel state={state} onChange={(v) => set("volume", v)} />
-
-        <RoomGainPanel value={state.roomGain} room={roomGainOf(state)} onChange={(r) => set("roomGain", r)} />
-
-        <Card title="Settings">
-          <div className="fields">
-            <Select<"metric" | "imperial">
-              label="Units"
-              value={state.settings.units}
-              options={[
-                { value: "metric", text: "Metric (L, cm)" },
-                { value: "imperial", text: "Imperial (ft³, in)" },
-              ]}
-              onChange={(units) => set("settings", { ...state.settings, units })}
-            />
-            <Select<"standard" | "winisd">
-              label="Air"
-              value={state.settings.air}
-              options={[
-                { value: "standard", text: "Standard (20 °C, ρ 1.204, c 343.2)" },
-                { value: "winisd", text: "WinISD defaults (ρ 1.201, c 343.7)" },
-              ]}
-              onChange={(air) => set("settings", { ...state.settings, air })}
-            />
-            <Num
-              label="Amp + cable"
-              unit="Ω"
-              value={state.settings.rg}
-              min={0}
-              onChange={(rg) => set("settings", { ...state.settings, rg })}
-            />
-            <Select<"yes" | "no">
-              label="Coil inductance"
-              value={state.settings.inductance ? "yes" : "no"}
-              options={[
-                {
-                  value: "yes",
-                  text: state.l2_mh > 0 && state.r2_ohm > 0 ? "Le + L2/R2 (most realistic)" : "Le (more realistic above ~100 Hz)",
-                },
-                { value: "no", text: "Off (WinISD's default)" },
-              ]}
-              onChange={(x) => set("settings", { ...state.settings, inductance: x === "yes" })}
-            />
-            <Num
-              label="Leak Ql"
-              value={state.settings.losses.ql}
-              min={1}
-              onChange={(ql) => set("settings", { ...state.settings, losses: { ...state.settings.losses, ql } })}
-            />
-            <Num
-              label="Absorb Qa"
-              value={state.settings.losses.qa}
-              min={1}
-              onChange={(qa) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qa } })}
-            />
-            <Num
-              label="Port Qp"
-              value={state.settings.losses.qp}
-              min={1}
-              onChange={(qp) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qp } })}
-            />
-            <Select<"peak" | "rms">
-              label="Port speed"
-              value={state.settings.velocity}
-              options={[
-                { value: "peak", text: "Peak" },
-                { value: "rms", text: "RMS" },
-              ]}
-              onChange={(velocity) => set("settings", { ...state.settings, velocity })}
-            />
+            <RoomGainPanel value={state.roomGain} room={roomGainOf(state)} onChange={(r) => set("roomGain", r)} />
           </div>
-          <p className="hint">
-            Box losses are Q values at the tuning frequency: lower means more loss. 10 / 100 / 100 matches WinISD's
-            defaults. A bandpass can also set its own losses for each chamber. For like-for-like checks against WinISD,
-            choose its air values, its amplifier resistance (Signal tab, Rg) and leave out Le, or simply import the
-            WinISD project (.wpr). The {PORT_LIMIT} m/s chuffing line applies to
-            whichever port-speed convention you pick.
-          </p>
-        </Card>
+        )}
+        {panel === "build" && (
+          <div className="tab-panel" role="tabpanel" id="panel-build" aria-labelledby="tab-build">
+            <VolumePanel state={state} onChange={(v) => set("volume", v)} />
+          </div>
+        )}
+        {panel === "settings" && (
+          <div className="tab-panel" role="tabpanel" id="panel-settings" aria-labelledby="tab-settings">
+            <Card title="Settings">
+              <div className="fields">
+                <Select<"metric" | "imperial">
+                  label="Units"
+                  value={state.settings.units}
+                  options={[
+                    { value: "metric", text: "Metric (L, cm)" },
+                    { value: "imperial", text: "Imperial (ft³, in)" },
+                  ]}
+                  onChange={(units) => set("settings", { ...state.settings, units })}
+                />
+                <Select<"standard" | "winisd">
+                  label="Air"
+                  value={state.settings.air}
+                  options={[
+                    { value: "standard", text: "Standard (20 °C, ρ 1.204, c 343.2)" },
+                    { value: "winisd", text: "WinISD defaults (ρ 1.201, c 343.7)" },
+                  ]}
+                  onChange={(air) => set("settings", { ...state.settings, air })}
+                />
+                <Num
+                  label="Amp + cable"
+                  unit="Ω"
+                  value={state.settings.rg}
+                  min={0}
+                  onChange={(rg) => set("settings", { ...state.settings, rg })}
+                />
+                <Select<"yes" | "no">
+                  label="Coil inductance"
+                  value={state.settings.inductance ? "yes" : "no"}
+                  options={[
+                    {
+                      value: "yes",
+                      text: state.l2_mh > 0 && state.r2_ohm > 0 ? "Le + L2/R2 (most realistic)" : "Le (more realistic above ~100 Hz)",
+                    },
+                    { value: "no", text: "Off (WinISD's default)" },
+                  ]}
+                  onChange={(x) => set("settings", { ...state.settings, inductance: x === "yes" })}
+                />
+                <Num
+                  label="Leak Ql"
+                  value={state.settings.losses.ql}
+                  min={1}
+                  onChange={(ql) => set("settings", { ...state.settings, losses: { ...state.settings.losses, ql } })}
+                />
+                <Num
+                  label="Absorb Qa"
+                  value={state.settings.losses.qa}
+                  min={1}
+                  onChange={(qa) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qa } })}
+                />
+                <Num
+                  label="Port Qp"
+                  value={state.settings.losses.qp}
+                  min={1}
+                  onChange={(qp) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qp } })}
+                />
+                <Select<"peak" | "rms">
+                  label="Port speed"
+                  value={state.settings.velocity}
+                  options={[
+                    { value: "peak", text: "Peak" },
+                    { value: "rms", text: "RMS" },
+                  ]}
+                  onChange={(velocity) => set("settings", { ...state.settings, velocity })}
+                />
+              </div>
+              <p className="hint">
+                Box losses are Q values at the tuning frequency: lower means more loss. 10 / 100 / 100 matches WinISD's
+                defaults. A bandpass can also set its own losses for each chamber. For like-for-like checks against WinISD,
+                choose its air values, its amplifier resistance (Signal tab, Rg) and leave out Le, or simply import the
+                WinISD project (.wpr). The {PORT_LIMIT} m/s chuffing line applies to
+                whichever port-speed convention you pick.
+              </p>
+            </Card>
+          </div>
+        )}
       </aside>
 
       <main className="charts">
