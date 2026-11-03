@@ -13,7 +13,8 @@ import {
 } from "@sbg/engine";
 import { Fixed, Num, Select } from "./components.tsx";
 import { PassiveRadiatorBrowser } from "./Library.tsx";
-import { loadPassiveRadiator, type DbIndex } from "./library.ts";
+import { loadPrChoice, type DbIndex } from "./library.ts";
+import { PrTuning } from "./PrTuning.tsx";
 import { KIND_LABEL, PORT_LIMIT, portOf } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { bandpassLossesFrom } from "./state.ts";
@@ -374,8 +375,9 @@ function PrBody(
     <>
       <PassiveRadiatorBrowser
         rows={p.db?.passiveRadiators}
+        drivers={p.db?.drivers}
         onPick={(id) =>
-          loadPassiveRadiator(id).then(
+          loadPrChoice(id).then(
             ({ name, params, displacement_l }) => {
               set({ prName: name, params });
               if (displacement_l !== undefined) p.onPrDisplacement(displacement_l);
@@ -393,6 +395,7 @@ function PrBody(
           db={p.db}
           onUse={(patch, summary, displacement_l) => p.onFound(patch, summary, displacement_l)}
         />
+        <PrTuning ctx={p.finder} design={pr} vb_l={p.vb_l} linked={p.linked} onApply={(patch, summary) => p.onFound(patch, summary)} />
       </div>
       <p className="pr-name">{pr.prName}</p>
       <div className="fields">
@@ -504,8 +507,9 @@ function PrGroupCard(props: {
       )}
       <PassiveRadiatorBrowser
         rows={props.db?.passiveRadiators}
+        drivers={props.db?.drivers}
         onPick={(id) =>
-          loadPassiveRadiator(id).then(
+          loadPrChoice(id).then(
             ({ name, params }) => props.onChange({ prName: name, params }),
             () => alert("Couldn't load that passive radiator."),
           )

@@ -19,6 +19,10 @@ export interface PrCandidate {
   pr: PassiveRadiatorInput;
   /** Outside diameter of the frame (cm), if known; otherwise estimated from Sd. */
   od_cm?: number;
+  /** Group sizes to try for this candidate (overrides the finder's `counts`). */
+  counts?: number[];
+  /** Added to the score when it passes (e.g. a driver used as a PR: heavier, dearer, a magnet in the box). */
+  penalty?: number;
 }
 
 /** Frame diameter of a PR: the known one, or about 1.3 × the effective cone diameter. */
@@ -68,6 +72,8 @@ export interface PrFinderResult {
   od_cm: number;
   /** Lower is better (only meaningful among results that pass). */
   score: number;
+  /** The candidate's ranking penalty (0 for real PRs). */
+  penalty: number;
 }
 
 export function findPassiveRadiators(driver: DriverInput, candidates: PrCandidate[], o: PrFinderOptions): PrFinderResult[] {
@@ -83,8 +89,8 @@ export function findPassiveRadiators(driver: DriverInput, candidates: PrCandidat
     if (c.pr.xmax_mm === undefined) continue;
     const od_cm = prOutsideDiameter(c);
     const fits = od_cm <= largestPrFor(o.vb_l);
-    for (const count of counts) {
-      const base = { id: c.id, name: c.name, count, od_cm };
+    for (const count of c.counts ?? counts) {
+      const base = { id: c.id, name: c.name, count, od_cm, penalty: c.penalty ?? 0 };
       const mass = prAddedMassForFb(o.vb_l, c.pr, o.targetFb, count, air);
       if (!(mass >= -1e-9)) {
         const bare = prFb(o.vb_l, c.pr, count, 0, air);
@@ -152,7 +158,7 @@ export function findPassiveRadiators(driver: DriverInput, candidates: PrCandidat
       continue;
     }
     const f3Penalty = r.f3 !== null && Number.isFinite(f3Best) ? r.f3 / f3Best - 1 : 0;
-    r.score = 3 * f3Penalty + 0.6 * (r.count - 1) + 2 * Math.max(0, 0.35 - r.prUse) + 0.3 * Math.max(0, r.massRatio - 1);
+    r.score = r.penalty + 3 * f3Penalty + 0.6 * (r.count - 1) + 2 * Math.max(0, 0.35 - r.prUse) + 0.3 * Math.max(0, r.massRatio - 1);
   }
   return out.sort((a, b) => Number(b.ok) - Number(a.ok) || a.score - b.score || (a.prUse || 0) - (b.prUse || 0));
 }

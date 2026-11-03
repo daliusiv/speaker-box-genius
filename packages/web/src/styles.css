@@ -1863,3 +1863,91 @@ dialog.finder .lib-inner {
   font-size: 12px;
   line-height: 1.4;
 }
+
+/* PR browser: drivers offered as passive radiators. */
+.lib-tag {
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--border, #8884);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  vertical-align: 1px;
+}
+.lib-note {
+  margin: 4px 0 0;
+}
+
+/* PR finder: include drivers as PRs */
+.finder-drivers {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.finder-drivers input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex: none;
+}
+
+/* Best tuning dialog */
+.tuning-goal {
+  margin: 0;
+}
+.tuning-target {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  grid-template-columns: none;
+}
+.tuning-target input {
+  width: 6rem;
+}
+.tuning-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.tuning-card > button {
+  align-self: flex-start;
+}
+.tuning-card .warn,
+.tuning-card .hint {
+  margin: 0;
+}
+.tuning-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: 0.6rem 1rem;
+}
+.tuning-fact {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.tuning-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.tuning-fact b {
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+.tuning-was {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.tuning-fix {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}

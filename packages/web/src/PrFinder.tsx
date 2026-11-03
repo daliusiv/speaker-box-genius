@@ -1,6 +1,7 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   findPassiveRadiators,
+  largestPrFor,
   type AlignmentDriver,
   type DriverInput,
   type Losses,
@@ -8,7 +9,7 @@ import {
   type PrFinderResult,
   type SimulationOptions,
 } from "@sbg/engine";
-import { loadPassiveRadiator, type DbIndex } from "./library.ts";
+import { DRIVER_AS_PR, loadDriverAsPassiveRadiator, loadPassiveRadiator, type DbIndex } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
 import type { PrDesign, PrParams } from "./state.ts";
 
@@ -44,6 +45,34 @@ function loadCandidates(db: DbIndex): Promise<Loaded[]> {
   return candidatesPromise;
 }
 
+// Drivers that could stand in as PRs, loaded on request (one by one: failures are skipped).
+const driverCache = new Map<string, Promise<Loaded | null>>();
+function loadDriverCandidates(rows: DbIndex["drivers"]): Promise<Loaded[]> {
+  return Promise.all(
+    rows.map((r) => {
+      let p = driverCache.get(r.id);
+      if (!p) {
+        p = loadDriverAsPassiveRadiator(r.id).then(
+          (x) => ({
+            id: DRIVER_AS_PR + r.id,
+            name: x.name,
+            pr: x.params,
+            params: x.params,
+            displacement_l: x.displacement_l,
+            od_cm: x.cutout_mm !== undefined ? x.cutout_mm / 10 + 2.5 : undefined,
+            counts: [1, 2],
+            // Rank a driver below an equally good real PR: heavier, dearer, and its magnet takes room.
+            penalty: 0.5,
+          }),
+          () => null,
+        );
+        driverCache.set(r.id, p);
+      }
+      return p;
+    }),
+  ).then((xs) => xs.filter((x): x is Loaded => x !== null));
+}
+
 const f1 = (v: number | null | undefined) => (v === null || v === undefined || !Number.isFinite(v) ? "–" : v.toFixed(1));
 
 /**
@@ -67,6 +96,8 @@ export function PrFinder(props: {
   const [isOpen, setIsOpen] = useState(false);
   const [more, setMore] = useState(false);
   const [why, setWhy] = useState(false);
+  const [withDrivers, setWithDrivers] = useState(false);
+  const [driverCands, setDriverCands] = useState<Loaded[] | null>(null);
   const { ctx } = props;
 
   const alignment = ctx.align ? ventedAlignmentFor(ctx.align, ctx.drivers) : null;
@@ -75,24 +106,49 @@ export function PrFinder(props: {
     ? { vb_l: alignment.vb_l, fb: alignment.fb, label: `${alignment.vb_l.toFixed(1)} L tuned to ${alignment.fb.toFixed(1)} Hz (${alignment.name})` }
     : { vb_l: props.vb_l, fb: props.design.targetFb, label: `your ${props.vb_l.toFixed(1)} L box tuned to ${props.design.targetFb} Hz` };
 
-  const found = useMemo<{ results: PrFinderResult[] | null; error: string }>(() => {
-    if (!isOpen || !cands || !ctx.driver) return { results: null, error: "" };
-    try {
-      return {
-        results: findPassiveRadiators(ctx.driver, cands, {
-          vb_l: target.vb_l,
-          targetFb: target.fb,
-          losses: ctx.losses,
-          sim: ctx.sim,
-          fMin: ctx.fMin,
-        }),
-        error: "",
-      };
-    } catch (e) {
-      return { results: null, error: (e as Error).message };
-    }
+  // Drivers worth trying as PRs here: enough cone area to keep up, and a frame that fits the box.
+  const driverRows = (props.db?.drivers ?? []).filter((d) => {
+    if (d.sd_cm2 === undefined || !(d.xmax_mm! > 0) || !ctx.driver) return false;
+    const od = 1.3 * 2 * Math.sqrt(d.sd_cm2 / Math.PI);
+    return d.sd_cm2 >= 0.5 * ctx.driver.sd_cm2 && od <= largestPrFor(target.vb_l);
+  });
+  const driverKey = withDrivers ? driverRows.map((d) => d.id).join() : "";
+
+  useEffect(() => {
+    if (!isOpen || !withDrivers || !props.db) return;
+    let live = true;
+    setDriverCands(null);
+    loadDriverCandidates(driverRows).then((x) => live && setDriverCands(x), () => live && setError("Couldn't load the drivers."));
+    return () => {
+      live = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, cands, ctx.driver, ctx.sim, ctx.losses, ctx.fMin, target.vb_l, target.fb]);
+  }, [isOpen, driverKey]);
+
+  // Simulating every candidate takes a moment, so it runs after the window has painted.
+  const [found, setFound] = useState<{ results: PrFinderResult[] | null; error: string }>({ results: null, error: "" });
+  useEffect(() => {
+    setFound({ results: null, error: "" });
+    if (!isOpen || !cands || !ctx.driver || (withDrivers && !driverCands)) return;
+    const driver = ctx.driver;
+    const t = setTimeout(() => {
+      try {
+        setFound({
+          results: findPassiveRadiators(driver, withDrivers ? [...cands, ...driverCands!] : cands, {
+            vb_l: target.vb_l,
+            targetFb: target.fb,
+            losses: ctx.losses,
+            sim: ctx.sim,
+            fMin: ctx.fMin,
+          }),
+          error: "",
+        });
+      } catch (e) {
+        setFound({ results: null, error: (e as Error).message });
+      }
+    }, 30);
+    return () => clearTimeout(t);
+  }, [isOpen, cands, driverCands, withDrivers, ctx.driver, ctx.sim, ctx.losses, ctx.fMin, target.vb_l, target.fb]);
   const results = found.results;
   const shownError = error || found.error;
 
@@ -107,7 +163,7 @@ export function PrFinder(props: {
   const close = () => dlg.current?.close();
 
   const use = (r: PrFinderResult) => {
-    const c = cands!.find((x) => x.id === r.id)!;
+    const c = [...cands!, ...(driverCands ?? [])].find((x) => x.id === r.id)!;
     const patch: Partial<PrDesign> = {
       prName: c.name,
       params: c.params,
@@ -172,11 +228,16 @@ export function PrFinder(props: {
             </button>
           </div>
           <p className="hint finder-target">
-            1, 2 or 4 of each PR in the database ({props.db?.passiveRadiators.length ?? 0}), tuned with added mass to {target.label}.
+            1, 2 or 4 of each PR in the database ({props.db?.passiveRadiators.length ?? 0}){withDrivers ? `, and 1 or 2 of ${driverRows.length} drivers used as PRs,` : ""}{" "}
+            tuned with added mass to {target.label}.
           </p>
+          <label className="check finder-drivers" title="An unpowered woofer works as a passive radiator (terminals left unconnected)">
+            <input type="checkbox" checked={withDrivers} onChange={(e) => setWithDrivers(e.currentTarget.checked)} /> Include drivers as PRs
+            (unpowered woofers)
+          </label>
           {shownError && <p className="warn">{shownError}</p>}
           <div className="finder-results">
-            {!results && !shownError && <p className="hint">Trying every passive radiator…</p>}
+            {!results && !shownError && <p className="hint">Trying every passive radiator{withDrivers ? " and driver" : ""}…</p>}
             {results && ok.length === 0 && (
               <p className="warn">
                 None of the passive radiators in the database keeps up in this box. See why below; a bigger box, a lower
