@@ -65,7 +65,7 @@ export function volumeFor(s: AppState, d: DesignState | undefined): VolumeResult
   return netVolume({
     shape: shapeOf(v),
     wall_mm: v.wall_mm,
-    drivers: { count: s.drivers, displacement_l: v.driverDisp_l },
+    drivers: { count: s.drivers * (s.isobaric ? 2 : 1), displacement_l: v.driverDisp_l },
     passiveRadiators: d?.kind === "pr" ? { count: d.count, displacement_l: v.prDisp_l } : undefined,
     ports:
       d?.kind === "bandpass" && d.order !== "4"
@@ -108,10 +108,11 @@ export function solveDriver(s: AppState): SolveResult {
 }
 
 /** The solved driver in the form the alignment helpers need, or null if incomplete. */
-export function alignmentDriver(solved: SolveResult) {
+export function alignmentDriver(solved: SolveResult, isobaric = false) {
   const v = solved.values;
   if (solved.missing.length > 0) return null;
-  return { fs: v.fs!, qms: v.qms!, qes: v.qes!, vas_l: v.vas_l! };
+  // An isobaric pair has the same Fs and Qs with half the Vas.
+  return { fs: v.fs!, qms: v.qms!, qes: v.qes!, vas_l: v.vas_l! / (isobaric ? 2 : 1) };
 }
 
 function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"]): EnclosureInput {
@@ -151,6 +152,8 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
     rg: s.settings.rg,
     power: s.power,
     drivers: s.drivers,
+    wiring: s.wiring,
+    isobaric: s.isobaric ? { coils: s.isoCoils } : null,
     fMin: 10,
     fMax: 500,
     points: 300,

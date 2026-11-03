@@ -174,6 +174,32 @@ both with a 7.5 cm port to the outside, 100.1 W.
 Referring the inter-chamber leak to the front chamber instead put the response 0.16 dB
 off, which rules that reading out.
 
+## Isobaric pairs in a sealed box (Test 9)
+
+The 10.4 L sealed project with "Num. of drivers 2 pair(s)" and Iso-Barik on: four drivers
+in two push-pull pairs. WinISD stores this as `Nd=2`, `Isobarik=1`, and:
+
+- wires the two voice coils of a pair **in series** (its "Voice coil connection" stays
+  greyed out on Parallel, which refers to the pairs);
+- applies Rg to **each coil**, so 0.2 Ω per pair;
+- sets the drive voltage as if the pairs were single drivers, V = √(P·Re/Nd). Into
+  series-wired pairs that is only **half** of the stated power, so WinISD's "100 W" is
+  about 50 W at the coils.
+
+Speaker Box Genius keeps power physical (what the amplifier delivers into all the coils),
+so importing an isobaric .wpr halves the power to give the same results. At the same
+voltage:
+
+| Graph | Frequency | WinISD | Speaker Box Genius | Difference |
+|---|---|---|---|---|
+| Transfer function | 29.83 Hz | −17.028 dB | −17.025 dB | +0.003 dB |
+| Transfer function | 60.69 Hz | −5.881 dB | −5.868 dB | +0.013 dB |
+| Transfer function | 100.39 Hz | −1.407 dB | −1.393 dB | +0.014 dB |
+| Cone excursion | 29.92 Hz | 2.559 mm | 2.551 mm | −0.32 % |
+| Impedance | 100.39 Hz | 13.910 Ω | 14.010 Ω | +0.7 % |
+
+The same 0.01–0.015 dB as the plain sealed box.
+
 ## Passive radiator: 1× DSA270-PR
 
 | Box | Frequency | WinISD | Speaker Box Genius | Difference |

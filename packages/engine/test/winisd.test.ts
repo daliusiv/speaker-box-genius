@@ -373,3 +373,45 @@ test("DSA215-8 6th-order bandpass: project read and graphs match WinISD (Test 8)
   for (const [f, v] of [[35.25, 2.68], [69.73, 22.982]] as const) rel(at(f).portVelocity![0]!, v, 0.006, `front port velocity at ${f} Hz`);
   for (const [f, z] of [[30.48, 7.265], [60.13, 8.832]] as const) rel(at(f).impedanceOhm[0]!, z, 0.01, `impedance at ${f} Hz`);
 });
+
+// Test 9: two isobaric pairs ("Num. of drivers 2 pair(s)", Iso-Barik) in the 10.4 L
+// sealed box. WinISD wires the two coils of a pair in series, applies Rg to each coil,
+// and sets the voltage as if the pairs were single drivers: V = √(P·Re/Nd). That puts
+// only about half of its stated power into the coils; we keep P physical, so the test
+// drives both at the same voltage.
+test("DSA215-8 isobaric pairs in a sealed box match WinISD at the same voltage (Test 9)", () => {
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215-iso-sealed.wpr"), "utf8"));
+  assert.equal(p.isobaric, true);
+  assert.equal(p.drivers, 2);
+  const t = p.driver.ts;
+  const drv = { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: 0 };
+  const box = { kind: "sealed" as const, vb_l: p.box.vb_l, ql: p.box.ql, qa: p.box.qa };
+  const volts = Math.sqrt((p.power * t.re!) / p.drivers);
+  const at = (f: number) =>
+    simulate(drv, box, {
+      convention: "volts",
+      power: volts,
+      rg: (2 * p.rg) / p.drivers, // Rg per coil → 2·Rg per series pair → shared value
+      drivers: p.drivers,
+      isobaric: { coils: "series" },
+      air: p.air,
+      fMin: f,
+      fMax: f,
+      points: 1,
+    });
+  for (const [f, db] of [[29.83, -17.028], [60.69, -5.881], [100.39, -1.407]] as const) {
+    const r = at(f);
+    near(r.spl[0]! - r.summary.referenceSpl, db, 0.02, `TF at ${f} Hz`);
+  }
+  near(at(29.92).excursionMm[0]! / 2.559 - 1, 0, 0.006, "excursion at 29.92 Hz");
+  near(at(100.39).impedanceOhm[0]! / 13.91 - 1, 0, 0.01, "impedance at 100.39 Hz");
+});
+
+test("an isobaric pair keeps Fs and Qts and halves Vas", () => {
+  const drv = { fs: 35, qms: 1.87, qes: 0.4, vas_l: 37.4, re: 5.9, sd_cm2: 211.2, le_mh: 0 };
+  const iso = simulate(drv, { kind: "sealed", vb_l: 10 }, { isobaric: { coils: "parallel" }, fMin: 20, fMax: 200, points: 50 });
+  const half = simulate({ ...drv, vas_l: drv.vas_l / 2, re: drv.re / 2 }, { kind: "sealed", vb_l: 10 }, { fMin: 20, fMax: 200, points: 50 });
+  near(iso.summary.fc!, half.summary.fc!, 1e-9, "Fc");
+  near(iso.summary.qtc!, half.summary.qtc!, 1e-9, "Qtc");
+  for (let i = 0; i < iso.spl.length; i++) near(iso.spl[i]!, half.spl[i]!, 1e-9, "SPL");
+});

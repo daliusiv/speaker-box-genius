@@ -64,6 +64,27 @@ export interface SimulationOptions {
   air?: Air;
   /** Amplifier output + cable resistance (Ω), shared by the whole driver bank. Default 0. */
   rg?: number;
+  /**
+   * Isobaric (compound) loading: each "driver" is a pair of identical drivers
+   * working as one (twice the moving mass, half the compliance, same Sd), with the
+   * two voice coils in series or in parallel. `drivers` then counts pairs.
+   */
+  isobaric?: { coils: "series" | "parallel" } | null;
+}
+
+/** The single equivalent driver of an isobaric pair. */
+export function isobaricPair(d: ReturnType<typeof driverModel>, coils: "series" | "parallel"): ReturnType<typeof driverModel> {
+  const k = coils === "series" ? 2 : 0.5;
+  return {
+    ...d,
+    re: d.re * k,
+    le: d.le * k,
+    bl: coils === "series" ? d.bl * 2 : d.bl,
+    mms: d.mms * 2,
+    cms: d.cms / 2,
+    rms: d.rms * 2,
+    pe: d.pe === null ? null : d.pe * 2,
+  };
 }
 
 export interface SimulationResult {
@@ -119,7 +140,8 @@ const finiteOr = (v: number | undefined, d: number) => (v === undefined ? d : v)
 
 export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: SimulationOptions = {}): SimulationResult {
   const air = opts.air ?? STANDARD_AIR;
-  const d = driverModel(driverIn, air);
+  const base = driverModel(driverIn, air);
+  const d = opts.isobaric ? isobaricPair(base, opts.isobaric.coils) : base;
   const n = opts.drivers ?? 1;
   const wiring = opts.wiring ?? "parallel";
   const power = opts.power ?? 1;

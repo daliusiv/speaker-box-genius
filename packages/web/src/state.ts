@@ -100,6 +100,12 @@ export interface AppState {
   pe_w: number;
   power: number;
   drivers: number;
+  /** How several drivers (or isobaric pairs) are wired to the amplifier. */
+  wiring: "parallel" | "series";
+  /** Isobaric loading: each "driver" above is a pair working as one. */
+  isobaric: boolean;
+  /** Voice coils within an isobaric pair. */
+  isoCoils: "series" | "parallel";
   highPass: { on: boolean; type: HighPassType; order: number; freq: number };
   settings: Settings;
   eq: EqItem[];
@@ -202,6 +208,9 @@ export const DEFAULT_STATE: AppState = {
   pe_w: 250,
   power: 100,
   drivers: 1,
+  wiring: "parallel",
+  isobaric: false,
+  isoCoils: "parallel",
   highPass: { on: false, type: "butterworth", order: 2, freq: 18 },
   settings: { units: "metric", air: "standard", velocity: "peak", rg: 0, inductance: true, losses: { ql: 10, qa: 100, qp: 100 } },
   eq: [],
@@ -324,6 +333,9 @@ export function decodeState(hash: string): AppState | null {
       pe_w: raw.pe_w ?? d.pe_w,
       power: raw.power ?? d.power,
       drivers: raw.drivers ?? d.drivers,
+      wiring: raw.wiring === "series" ? "series" : "parallel",
+      isobaric: raw.isobaric === true,
+      isoCoils: raw.isoCoils === "series" ? "series" : "parallel",
       highPass: { ...d.highPass, ...raw.highPass },
       settings: { ...d.settings, ...raw.settings, losses: { ...d.settings.losses, ...raw.settings?.losses } },
       eq: Array.isArray(raw.eq)

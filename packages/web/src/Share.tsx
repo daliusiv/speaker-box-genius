@@ -54,7 +54,8 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
 
 function subtitle(state: AppState): string {
   const parts = [`${state.power} W`];
-  if (state.drivers > 1) parts.push(`${state.drivers} drivers`);
+  if (state.isobaric) parts.push(`${state.drivers} isobaric pair${state.drivers > 1 ? "s" : ""}`);
+  else if (state.drivers > 1) parts.push(`${state.drivers} drivers (${state.wiring})`);
   if (state.highPass.on) parts.push(`${state.highPass.order * 6} dB/oct high-pass at ${state.highPass.freq} Hz`);
   parts.push(`Xmax ${state.xmax_mm} mm`);
   return parts.join(" · ");

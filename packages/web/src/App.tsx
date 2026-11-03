@@ -172,13 +172,18 @@ export function App() {
           le_mh: d.le_mh ?? 0,
           xmax_mm: d.xmax_mm ?? s.xmax_mm,
           pe_w: d.pe_w ?? s.pe_w,
-          power: Number(p.power.toFixed(2)),
+          // WinISD drives isobaric pairs at V = √(P·Re/N), which is only half of P in the coils.
+          power: Number((p.isobaric ? p.power / 2 : p.power).toFixed(2)),
           drivers: p.drivers,
+          wiring: "parallel",
+          isobaric: p.isobaric,
+          isoCoils: "series",
           // WinISD's Rg is per driver; our setting is the shared amplifier output.
           settings: {
             ...s.settings,
             air: "winisd",
-            rg: Number((p.rg / p.drivers).toPrecision(6)),
+            // Isobaric pairs have two coils in series, each with WinISD's Rg.
+            rg: Number(((p.rg * (p.isobaric ? 2 : 1)) / p.drivers).toPrecision(6)),
             inductance: p.simulateLe,
             losses: p.bandpass
               ? { ql: p.bandpass.front.ql, qa: p.bandpass.front.qa, qp: p.bandpass.front.qp }
@@ -196,10 +201,12 @@ export function App() {
           : "";
       const boxNote = p.box.type === "other" ? " This box type isn't supported yet, so only the driver was imported." : "";
       const driversNote =
-        p.drivers > 1
+        p.drivers > 1 && !p.isobaric
           ? ` ${p.drivers} drivers in parallel; WinISD's Rg of ${p.rg} Ω per driver becomes ${Number((p.rg / p.drivers).toPrecision(6))} Ω shared. WinISD's impedance graph shows one driver, ours shows what the amplifier sees.`
           : "";
-      const isoNote = p.isobaric ? " The project uses isobaric loading, which isn't supported yet; it was imported as standard." : "";
+      const isoNote = p.isobaric
+        ? ` Isobaric: ${p.drivers} pair${p.drivers > 1 ? "s" : ""} with series-wired coils, like WinISD. WinISD's ${Number(p.power.toFixed(2))} W only puts half that into the coils, so the power here is ${Number((p.power / 2).toFixed(2))} W for the same results.`
+        : "";
       const filterNote = p.highPass
         ? ` High-pass filter imported (Butterworth, order ${p.highPass.order}, ${p.highPass.freq} Hz).`
         : "";
@@ -375,9 +382,50 @@ export function App() {
             <Num label="Le" unit="mH" value={state.le_mh} min={0} onChange={(v) => set("le_mh", v)} />
             <Num label="Xmax" unit="mm" value={state.xmax_mm} onChange={(v) => set("xmax_mm", v)} />
             <Num label="Pe" unit="W" value={state.pe_w} onChange={(v) => set("pe_w", v)} />
-            <Num label="Drivers" value={state.drivers} onChange={(v) => set("drivers", Math.max(1, Math.round(v)))} />
+            <Num
+              label={state.isobaric ? "Pairs" : "Drivers"}
+              value={state.drivers}
+              onChange={(v) => set("drivers", Math.max(1, Math.round(v)))}
+            />
+            <Select<"standard" | "isobaric">
+              label="Loading"
+              value={state.isobaric ? "isobaric" : "standard"}
+              options={[
+                { value: "standard", text: "Standard" },
+                { value: "isobaric", text: "Isobaric pairs" },
+              ]}
+              onChange={(x) => set("isobaric", x === "isobaric")}
+            />
+            {state.isobaric && (
+              <Select<"series" | "parallel">
+                label="Pair coils"
+                value={state.isoCoils}
+                options={[
+                  { value: "parallel", text: "Parallel (half the impedance)" },
+                  { value: "series", text: "Series (double the impedance)" },
+                ]}
+                onChange={(x) => set("isoCoils", x)}
+              />
+            )}
+            {state.drivers > 1 && (
+              <Select<"parallel" | "series">
+                label="Wiring"
+                value={state.wiring}
+                options={[
+                  { value: "parallel", text: `${state.isobaric ? "Pairs" : "Drivers"} in parallel` },
+                  { value: "series", text: `${state.isobaric ? "Pairs" : "Drivers"} in series` },
+                ]}
+                onChange={(x) => set("wiring", x)}
+              />
+            )}
           </div>
-          <p className="hint">Multiple drivers are wired in parallel and share each box.</p>
+          <p className="hint">
+            {state.isobaric
+              ? `Each pair is two drivers working as one (face to face or one behind the other): same Fs and Qts, half the Vas, so about half the box. ${state.drivers * 2} drivers in total. `
+              : "Multiple drivers share each box. "}
+            Wiring changes the impedance the amplifier sees and the voltage each driver gets; power is what the amplifier
+            delivers into the whole set.
+          </p>
         </Card>
 
         <MeasurePanel
@@ -439,7 +487,7 @@ export function App() {
             canDelete={state.designs.length > 1}
             db={db}
             air={airOf(state)}
-            align={alignmentDriver(solved)}
+            align={alignmentDriver(solved, state.isobaric)}
             drivers={state.drivers}
             portCtx={portContext(state, designs, d.id)}
             onChange={updateDesign}
