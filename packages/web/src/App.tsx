@@ -23,7 +23,7 @@ import { loadDriver, loadIndex, type DbIndex } from "./library.ts";
 import { Card, LibraryPicker, Num, REPO, Select } from "./components.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
-import { airOf, alignmentDriver, colorOf, PORT_LIMIT, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
+import { airOf, alignmentDriver, colorOf, dvcFactors, PORT_LIMIT, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
 import { AddDesign, DesignCard } from "./Designs.tsx";
 import { ShareMenu } from "./Share.tsx";
 import { EqPanel } from "./Eq.tsx";
@@ -85,6 +85,10 @@ export function App() {
         le_mh: d.le_mh ?? 0,
         xmax_mm: d.xmax_mm ?? s.xmax_mm,
         pe_w: d.pe_w ?? s.pe_w,
+        dvc:
+          (d.voiceCoils ?? 1) > 1
+            ? { on: true, entered: d.raw.vccon === "2" ? "series" : "parallel", wired: d.raw.vccon === "2" ? "series" : "parallel" }
+            : { ...s.dvc, on: false },
         volume: d.displacement_l !== undefined ? { ...s.volume, driverDisp_l: Math.round(d.displacement_l * 100) / 100 } : s.volume,
       }));
       setWdrMsg(`Imported ${file.name}.`);
@@ -178,6 +182,11 @@ export function App() {
           wiring: "parallel",
           isobaric: p.isobaric,
           isoCoils: "series",
+          // WinISD stores a DVC driver with its coils already wired (VCCon 1 = parallel, 2 = series).
+          dvc:
+            (d.voiceCoils ?? 1) > 1
+              ? { on: true, entered: d.raw.vccon === "2" ? "series" : "parallel", wired: d.raw.vccon === "2" ? "series" : "parallel" }
+              : { ...s.dvc, on: false },
           // WinISD's Rg is per driver; our setting is the shared amplifier output.
           settings: {
             ...s.settings,
@@ -407,6 +416,38 @@ export function App() {
                 onChange={(x) => set("isoCoils", x)}
               />
             )}
+            <Select<"single" | "dual">
+              label="Voice coils"
+              value={state.dvc.on ? "dual" : "single"}
+              options={[
+                { value: "single", text: "Single" },
+                { value: "dual", text: "Dual (DVC)" },
+              ]}
+              onChange={(x) => set("dvc", { ...state.dvc, on: x === "dual" })}
+            />
+            {state.dvc.on && (
+              <>
+                <Select<"one" | "parallel" | "series">
+                  label="Values are for"
+                  value={state.dvc.entered}
+                  options={[
+                    { value: "parallel", text: "Both coils in parallel" },
+                    { value: "series", text: "Both coils in series" },
+                    { value: "one", text: "One coil" },
+                  ]}
+                  onChange={(entered) => set("dvc", { ...state.dvc, entered })}
+                />
+                <Select<"parallel" | "series">
+                  label="Coils wired"
+                  value={state.dvc.wired}
+                  options={[
+                    { value: "parallel", text: "In parallel" },
+                    { value: "series", text: "In series" },
+                  ]}
+                  onChange={(wired) => set("dvc", { ...state.dvc, wired })}
+                />
+              </>
+            )}
             {state.drivers > 1 && (
               <Select<"parallel" | "series">
                 label="Wiring"
@@ -419,6 +460,13 @@ export function App() {
               />
             )}
           </div>
+          {state.dvc.on && solved.missing.length === 0 && (
+            <p className="hint">
+              As wired: Re {(solved.values.re! * dvcFactors(state).re).toFixed(2)} Ω, Qes{" "}
+              {(solved.values.qes! * dvcFactors(state).qes).toFixed(3)}. Wiring only changes the impedance (and how much the
+              cable resistance matters); the response at a given power stays the same.
+            </p>
+          )}
           <p className="hint">
             {state.isobaric
               ? `Each pair is two drivers working as one (face to face or one behind the other): same Fs and Qts, half the Vas, so about half the box. ${state.drivers * 2} drivers in total. `
@@ -487,7 +535,7 @@ export function App() {
             canDelete={state.designs.length > 1}
             db={db}
             air={airOf(state)}
-            align={alignmentDriver(solved, state.isobaric)}
+            align={alignmentDriver(solved, state)}
             drivers={state.drivers}
             portCtx={portContext(state, designs, d.id)}
             onChange={updateDesign}

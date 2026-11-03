@@ -434,3 +434,24 @@ test("DSA215-8 isobaric pairs in a ported box match WinISD at the same voltage (
   near(at(20.09).excursionMm[0]! / 7.4 - 1, 0, 0.05, "excursion at 20 Hz (read off the graph)");
   for (const [f, z] of [[19.91, 28.545], [101.01, 11.602]] as const) near(at(f).impedanceOhm[0]! / z - 1, 0, 0.01, `impedance at ${f} Hz`);
 });
+
+// Test 11: dual voice coil driver (numVC=2) with the coils in series (VCCon=2). WinISD
+// stores the driver as wired: Re 23.6 Ω and Bl 21.2 (from 5.9 Ω / 10.6 entered for the
+// coils in parallel), Qes unchanged. It then simulates like any single-coil driver.
+test("DSA215-8 as a DVC driver wired in series matches WinISD (Test 11)", () => {
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "dsa215-dvc-series.wpr"), "utf8"));
+  assert.equal(p.driver.voiceCoils, 2);
+  assert.equal(p.driver.raw.vccon, "2");
+  const t = p.driver.ts;
+  near(t.re!, 4 * 5.9, 1e-9, "series Re = 4 × parallel Re");
+  near(t.bl!, 2 * 10.6, 1e-9, "series Bl = 2 × parallel Bl");
+  const drv = { fs: t.fs!, qms: t.qms!, qes: t.qes!, vas_l: t.vas_l!, re: t.re!, sd_cm2: t.sd_cm2!, le_mh: 0 };
+  const box = { kind: "vented" as const, vb_l: p.box.vb_l, port: { shape: "round" as const, diameter_cm: p.port!.diameter_cm, length_cm: p.port!.length_cm }, ql: p.box.ql, qa: p.box.qa, qp: p.box.qp };
+  const at = (f: number) => simulate(drv, box, { power: p.power, rg: p.rg, air: p.air, fMin: f, fMax: f, points: 1 });
+  for (const [f, db] of [[19.97, -25.312], [39.76, -5.932], [80.63, -0.225]] as const) {
+    const r = at(f);
+    near(r.spl[0]! - r.summary.referenceSpl, db, 0.01, `TF at ${f} Hz`);
+  }
+  near(at(20).excursionMm[0]! / 20.4 - 1, 0, 0.03, "excursion at 20 Hz (read off the graph)");
+  for (const [f, z] of [[19.97, 114.441], [100.08, 47.177]] as const) near(at(f).impedanceOhm[0]! / z - 1, 0, 0.01, `impedance at ${f} Hz`);
+});

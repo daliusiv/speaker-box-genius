@@ -106,6 +106,11 @@ export interface AppState {
   isobaric: boolean;
   /** Voice coils within an isobaric pair. */
   isoCoils: "series" | "parallel";
+  /**
+   * Dual voice coil drivers: what the entered Re / Qes / Le describe (one coil on its own,
+   * or both coils wired in parallel or series) and how the coils are actually wired.
+   */
+  dvc: { on: boolean; entered: "one" | "parallel" | "series"; wired: "parallel" | "series" };
   highPass: { on: boolean; type: HighPassType; order: number; freq: number };
   settings: Settings;
   eq: EqItem[];
@@ -211,6 +216,7 @@ export const DEFAULT_STATE: AppState = {
   wiring: "parallel",
   isobaric: false,
   isoCoils: "parallel",
+  dvc: { on: false, entered: "parallel", wired: "parallel" },
   highPass: { on: false, type: "butterworth", order: 2, freq: 18 },
   settings: { units: "metric", air: "standard", velocity: "peak", rg: 0, inductance: true, losses: { ql: 10, qa: 100, qp: 100 } },
   eq: [],
@@ -336,6 +342,11 @@ export function decodeState(hash: string): AppState | null {
       wiring: raw.wiring === "series" ? "series" : "parallel",
       isobaric: raw.isobaric === true,
       isoCoils: raw.isoCoils === "series" ? "series" : "parallel",
+      dvc: {
+        on: raw.dvc?.on === true,
+        entered: ["one", "parallel", "series"].includes(raw.dvc?.entered) ? raw.dvc.entered : "parallel",
+        wired: raw.dvc?.wired === "series" ? "series" : "parallel",
+      },
       highPass: { ...d.highPass, ...raw.highPass },
       settings: { ...d.settings, ...raw.settings, losses: { ...d.settings.losses, ...raw.settings?.losses } },
       eq: Array.isArray(raw.eq)

@@ -103,16 +103,28 @@ export const airOf = (s: AppState): Air => (s.settings.air === "winisd" ? WINISD
 /** Chuffing guideline, in whichever convention (peak or RMS) the user chose to display. */
 export const PORT_LIMIT = 17;
 
+/**
+ * Dual voice coil: factors that turn the entered Re (and Le) and Qes into the values for
+ * the coils as wired. Per coil (other coil open) Re1, Bl1, Qes1; both coils driven:
+ * parallel → Re1/2, Bl1, Qes1/2; series → 2·Re1, 2·Bl1, Qes1/2. Fs, Qms, Vas don't change.
+ */
+export function dvcFactors(s: AppState): { re: number; qes: number } {
+  if (!s.dvc.on) return { re: 1, qes: 1 };
+  const reOne = { one: 1, parallel: 2, series: 0.5 }[s.dvc.entered];
+  const qesOne = s.dvc.entered === "one" ? 1 : 2;
+  return { re: reOne * (s.dvc.wired === "parallel" ? 0.5 : 2), qes: qesOne * 0.5 };
+}
+
 export function solveDriver(s: AppState): SolveResult {
   return solveTs(s.ts, 0.03, airOf(s));
 }
 
 /** The solved driver in the form the alignment helpers need, or null if incomplete. */
-export function alignmentDriver(solved: SolveResult, isobaric = false) {
+export function alignmentDriver(solved: SolveResult, s: AppState) {
   const v = solved.values;
   if (solved.missing.length > 0) return null;
   // An isobaric pair has the same Fs and Qs with half the Vas.
-  return { fs: v.fs!, qms: v.qms!, qes: v.qes!, vas_l: v.vas_l! / (isobaric ? 2 : 1) };
+  return { fs: v.fs!, qms: v.qms!, qes: v.qes! * dvcFactors(s).qes, vas_l: v.vas_l! / (s.isobaric ? 2 : 1) };
 }
 
 function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"]): EnclosureInput {
@@ -137,14 +149,15 @@ function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"]): En
 export function runDesigns(s: AppState, solved: SolveResult): Design[] {
   if (solved.missing.length > 0) return [];
   const t = solved.values;
+  const k = dvcFactors(s);
   const driver: DriverInput = {
     fs: t.fs!,
     qms: t.qms!,
-    qes: t.qes!,
+    qes: t.qes! * k.qes,
     vas_l: t.vas_l!,
-    re: t.re!,
+    re: t.re! * k.re,
     sd_cm2: t.sd_cm2!,
-    le_mh: s.settings.inductance ? s.le_mh : 0,
+    le_mh: s.settings.inductance ? s.le_mh * k.re : 0,
     xmax_mm: s.xmax_mm,
     pe_w: s.pe_w,
   };

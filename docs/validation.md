@@ -214,6 +214,26 @@ Two pairs in the 18 L box tuned to 41.67 Hz, 100 W, same conventions:
 | Impedance | 19.91 Hz | 28.545 Ω | 28.772 Ω | +0.8 % |
 | Impedance | 101.01 Hz | 11.602 Ω | 11.674 Ω | +0.6 % |
 
+## Dual voice coil driver, coils in series (Test 11)
+
+The ported project with the driver set to two voice coils (`numVC=2`) wired in series
+(`VCCon=2`). WinISD treats the parameters entered (Re 5.9 Ω, Bl 10.6) as the coils **in
+parallel** and stores the driver **as wired**: Re 23.6 Ω, Bl 21.2, Qes unchanged. It then
+simulates it like any single-coil driver, and so do we:
+
+| Graph | Frequency | WinISD | Speaker Box Genius | Difference |
+|---|---|---|---|---|
+| Transfer function | 19.97 Hz | −25.312 dB | −25.311 dB | +0.001 dB |
+| Transfer function | 39.76 Hz | −5.932 dB | −5.930 dB | +0.002 dB |
+| Transfer function | 80.63 Hz | −0.225 dB | −0.225 dB | 0 |
+| Cone excursion (graph) | 20 Hz | ≈ 20.4 mm | 20.45 mm | within graph-reading accuracy |
+| Impedance | 19.97 Hz | 114.441 Ω | 115.347 Ω | +0.8 % |
+| Impedance | 100.08 Hz | 47.177 Ω | 47.469 Ω | +0.6 % |
+
+In the app, Driver → Voice coils → Dual lets you say what the entered values describe
+(one coil, or both in parallel or series) and how the coils are wired. Importing a WinISD
+DVC driver keeps its wiring.
+
 ## Passive radiator: 1× DSA270-PR
 
 | Box | Frequency | WinISD | Speaker Box Genius | Difference |
