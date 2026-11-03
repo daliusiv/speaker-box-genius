@@ -3,6 +3,8 @@ import type { PrParams } from "./state.ts";
 
 /** Shape of db/index.json produced by packages/db-tools/src/bundle.ts */
 export interface DbIndex {
+  /** Build timestamp; used to make sure brand files match this index. */
+  generated?: string;
   drivers: { id: string; brand: string; model: string; type: string; ohms: number; size_in?: number }[];
   passiveRadiators: { id: string; brand: string; model: string; size_in?: number }[];
 }
@@ -44,16 +46,23 @@ interface Shard {
 const base = () => `${import.meta.env.BASE_URL}db/`;
 const shardCache = new Map<string, Promise<Shard>>();
 
+/** Version tag of the loaded index, appended to brand files so a new deploy never mixes with cached ones. */
+let version = "";
+
 export async function loadIndex(): Promise<DbIndex> {
-  const r = await fetch(base() + "index.json");
+  // GitHub Pages lets browsers cache files for 10 minutes; "no-cache" makes the
+  // browser check for a newer index on every visit (cheap: 304 if unchanged).
+  const r = await fetch(base() + "index.json", { cache: "no-cache" });
   if (!r.ok) throw new Error(`index.json: ${r.status}`);
-  return r.json();
+  const index = (await r.json()) as DbIndex;
+  version = index.generated ? `?v=${encodeURIComponent(index.generated)}` : "";
+  return index;
 }
 
 function loadShard(brandSlug: string): Promise<Shard> {
   let p = shardCache.get(brandSlug);
   if (!p) {
-    p = fetch(`${base()}${brandSlug}.json`).then((r) => {
+    p = fetch(`${base()}${brandSlug}.json${version}`).then((r) => {
       if (!r.ok) throw new Error(`${brandSlug}.json: ${r.status}`);
       return r.json() as Promise<Shard>;
     });
