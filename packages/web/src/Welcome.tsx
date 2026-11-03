@@ -31,7 +31,7 @@ const write = (v: boolean) => {
  * of this tab (marked in sessionStorage, which lives as long as the tab) doesn't count.
  */
 const OPENED_FROM_LINK = (() => {
-  if (typeof location === "undefined" || !/(?:^#|&)s=/.test(location.hash)) return false;
+  if (typeof location === "undefined" || !/(?:^#|&)[sz]=/.test(location.hash)) return false;
   try {
     const seen = sessionStorage.getItem("sbg.tab") === "1";
     sessionStorage.setItem("sbg.tab", "1");

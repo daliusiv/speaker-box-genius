@@ -11,8 +11,9 @@ import {
 import { LogChart, type Series } from "./LogChart.tsx";
 import {
   DEFAULT_STATE,
-  decodeState,
+  decodeStateAny,
   encodeState,
+  encodeStateShort,
   MAX_DESIGNS,
   newDesign,
   newId,
@@ -53,8 +54,10 @@ import { submitDriverUrl } from "./submit.ts";
 
 const LIMIT_RED = "#dc2626";
 
-export function App() {
-  const [state, setState] = useState<AppState>(() => decodeState(location.hash) ?? DEFAULT_STATE);
+export function App(props: { initial: AppState | null }) {
+  const [state, setState] = useState<AppState>(() => props.initial ?? DEFAULT_STATE);
+  // The short link for the current state, once compressed (compression is asynchronous).
+  const link = useRef<{ state: AppState; hash: string } | null>(null);
   const [db, setDb] = useState<DbIndex | null>(null);
   const [wdrMsg, setWdrMsg] = useState("");
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
@@ -66,16 +69,28 @@ export function App() {
     loadIndex().then(setDb, () => setDb(null));
   }, []);
 
-  // Keep the URL in sync so the address bar is always a shareable link.
+  // Keep the URL in sync so the address bar is always a shareable (short) link.
   useEffect(() => {
-    const id = setTimeout(() => history.replaceState(null, "", "#" + encodeState(state)), 150);
-    return () => clearTimeout(id);
+    let live = true;
+    const id = setTimeout(() => {
+      encodeStateShort(state).then((hash) => {
+        if (!live) return;
+        link.current = { state, hash };
+        history.replaceState(null, "", "#" + hash);
+      });
+    }, 150);
+    return () => {
+      live = false;
+      clearTimeout(id);
+    };
   }, [state]);
 
   useEffect(() => {
     const onHash = () => {
-      const s = decodeState(location.hash);
-      if (s) setState(s);
+      // Our own replaceState doesn't fire hashchange; this is a pasted or edited link.
+      decodeStateAny(location.hash).then((s) => {
+        if (s) setState(s);
+      });
     };
     addEventListener("hashchange", onHash);
     return () => removeEventListener("hashchange", onHash);
@@ -89,7 +104,9 @@ export function App() {
   const series = (pick: (r: SimulationResult) => Float64Array | null): Series[] =>
     designs.map((d) => ({ label: d.design.name, color: d.color, y: pick(d.result) }));
 
-  const shareUrl = () => location.origin + location.pathname + "#" + encodeState(state);
+  // The short link once it's ready for this exact state; until then (150 ms after an edit) the long form, which is always correct.
+  const shareUrl = () =>
+    location.origin + location.pathname + "#" + (link.current?.state === state ? link.current.hash : encodeState(state));
 
   const importWdr = async (file: File) => {
     try {

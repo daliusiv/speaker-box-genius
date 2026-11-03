@@ -317,8 +317,86 @@ function fromBase64Url(s: string): string {
 
 const nonNeg = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : 0);
 
+/** Long form: plain JSON in base64url. Kept for saved projects and as a fallback; always decodes synchronously. */
 export function encodeState(s: AppState): string {
   return "s=" + toBase64Url(JSON.stringify(s));
+}
+
+// Short links: values equal to their defaults are left out, then the JSON is deflated.
+// decodeState fills every left-out value back in from the defaults, so only keys whose
+// absence decodes to the same value may be dropped:
+// - top-level keys, whole (ts never partially: its keys mean "values the user typed");
+// - one level into objects that decoding merges with their defaults;
+// - per design, its keys against a fresh design of the same kind, one level into front/rear/params.
+const MERGED_TOP = new Set(["settings", "volume", "highPass", "roomGain"]);
+const MERGED_DESIGN = new Set(["front", "rear", "params"]);
+const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+function stripKeys(v: Raw, d: Raw, mergedOneLevel: Set<string>, keep: string[]): Raw {
+  const out: Raw = {};
+  for (const k of Object.keys(v)) {
+    if (keep.includes(k)) {
+      out[k] = v[k];
+    } else if (mergedOneLevel.has(k) && v[k] && typeof v[k] === "object" && d[k] && typeof d[k] === "object") {
+      const inner = stripKeys(v[k], d[k], k === "settings" ? new Set(["losses"]) : new Set(), []);
+      if (Object.keys(inner).length > 0) out[k] = inner;
+    } else if (!sameJson(v[k], d[k])) {
+      out[k] = v[k];
+    }
+  }
+  return out;
+}
+
+/** The state with default values left out (see above). */
+export function compactState(s: AppState): Raw {
+  const out = stripKeys({ ...s, designs: [] }, { ...DEFAULT_STATE, designs: [] }, MERGED_TOP, ["v", "driverBrand"]);
+  const before: DesignState[] = [];
+  out.designs = s.designs.map((d) => {
+    const base = newDesign(d.kind, before);
+    before.push(d);
+    return stripKeys(d, base, MERGED_DESIGN, ["id", "kind", "name"]);
+  });
+  return out;
+}
+
+async function deflate(text: string): Promise<Uint8Array<ArrayBuffer>> {
+  const stream = new Blob([text]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+async function inflate(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  return new Response(stream).text();
+}
+
+const bytesToB64Url = (bytes: Uint8Array) => {
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+};
+const b64UrlToBytes = (s: string) => {
+  const b64 = s.replace(/-/g, "+").replace(/_/g, "/");
+  return Uint8Array.from(atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4)), (c) => c.charCodeAt(0));
+};
+
+const canCompress = () => typeof CompressionStream === "function" && typeof DecompressionStream === "function";
+
+/** Short form for links: "z=" + deflated JSON without defaults. Falls back to the long form without compression support. */
+export async function encodeStateShort(s: AppState): Promise<string> {
+  if (!canCompress()) return encodeState(s);
+  return "z=" + bytesToB64Url(await deflate(JSON.stringify(compactState(s))));
+}
+
+/** Reads either link form (short "z=" or long "s="). */
+export async function decodeStateAny(hash: string): Promise<AppState | null> {
+  const m = /(?:^#?|&)z=([A-Za-z0-9_-]+)/.exec(hash);
+  if (!m) return decodeState(hash);
+  if (!canCompress()) return null;
+  try {
+    return decodeState("s=" + toBase64Url(await inflate(b64UrlToBytes(m[1]!))));
+  } catch {
+    return null;
+  }
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
