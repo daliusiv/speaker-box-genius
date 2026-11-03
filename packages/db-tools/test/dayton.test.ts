@@ -5,6 +5,7 @@ import { join } from "node:path";
 import {
   firstNumber,
   parseCategory,
+  parsePager,
   parseCm2,
   parseInches,
   parseLitres,
@@ -158,4 +159,22 @@ test("implausible optional values are dropped or read as inches", () => {
   assert.equal(ts.qts, undefined);
   assert.deepEqual(physical, { cutout_mm: 95.8 });
   assert.equal(notes.length, 4);
+});
+
+test("category paging follows the category's own address", () => {
+  const html = '<a href="/category/123/full-range-drivers?pagenum=1">1</a><a href="/category/123/full-range-drivers?pagenum=3">3</a>';
+  assert.deepEqual(parsePager(html, 123), { path: "/category/123/full-range-drivers", last: 3 });
+  assert.equal(parsePager("<p>no pages</p>", 123), undefined);
+});
+
+test("Vas of 0 is calculated from Cms; a -55 model without DVC in its title stays single-coil", () => {
+  const rows = MX12.map(([k, v]): [string, string] =>
+    k === "Compliance Equivalent Volume (Vas)" ? [k, "0 liters"] : k === "Model Number" ? [k, "RC180-55"] : k === "Impedance" ? [k, "4 ohms"] : [k, v],
+  );
+  rows.push(["Mechanical Compliance of Suspension (Cms)", "0.12 mm/N"]);
+  const p = parseProduct(page("RC180-55 2 x 7&quot; Res-Core Neodymium Woofer 4 Ohm", rows), URL, "d");
+  assert.equal(p.kind, "driver");
+  assert.ok(Math.abs(p.driver!.ts.vas_l - 45.6) < 1.5, String(p.driver!.ts.vas_l));
+  assert.equal(p.driver!.voice_coils, undefined);
+  assert.equal(p.driver!.nominal_ohms, 4);
 });

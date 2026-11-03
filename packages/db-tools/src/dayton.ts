@@ -47,6 +47,13 @@ const decode = (s: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+/** The category's own paging address and last page number, from its page links. */
+export function parsePager(html: string, id: number): { path: string; last: number } | undefined {
+  const pages = [...html.matchAll(new RegExp(`href="(/category/${id}/[^"?#]+)\\?pagenum=(\\d+)"`, "g"))];
+  if (pages.length === 0) return undefined;
+  return { path: pages[0]![1]!, last: Math.max(...pages.map((m) => Number(m[2]))) };
+}
+
 /** Product links on a category page, as absolute URLs. */
 export function parseCategory(html: string): string[] {
   const out = new Set<string>();
@@ -147,10 +154,13 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
   const titleModel = title.split(" ")[0] ?? "";
   const urlSlug = url.match(/\/product\/\d+\/([^/?#]+)/)?.[1] ?? "";
   let model = rowModel ?? titleModel;
-  if (rowModel && titleModel && slugOf(rowModel) !== slugOf(titleModel) && !urlSlug.startsWith(slugOf(rowModel)) && urlSlug.startsWith(slugOf(titleModel))) {
+  const looksLikeModel = /\d/.test(titleModel) && /-/.test(titleModel);
+  if (rowModel && looksLikeModel && slugOf(rowModel) !== slugOf(titleModel) && !urlSlug.startsWith(slugOf(rowModel)) && urlSlug.startsWith(slugOf(titleModel))) {
     // e.g. the E150HE-44 page lists "E180HE-44" as its model number.
     notes.push(`The page's Model Number field says ${rowModel}; the product title and address say ${titleModel}, which is used.`);
     model = titleModel;
+  } else if (rowModel && !urlSlug.includes(slugOf(rowModel)) && !slugOf(title).includes(slugOf(rowModel))) {
+    notes.push(`Check the model name: the page's Model Number field says ${rowModel}, but the product title is "${title}".`);
   }
   const base = { notes, model, title };
   const type = get(rows, "Speaker Type") ?? "";
@@ -174,7 +184,7 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
 
   const fs = firstNumber(get(rows, "(Fs)", "Resonant Frequency"));
   const qms = firstNumber(get(rows, "(Qms)"));
-  const vas = parseLitres(get(rows, "(Vas)"));
+  let vas = parseLitres(get(rows, "(Vas)"));
   const sd = parseCm2(get(rows, "(Sd)"));
   const mms = firstNumber(get(rows, "(Mms)"));
   const cmsRow = get(rows, "(Cms)");
@@ -196,6 +206,7 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
     if (cms !== undefined) params.cms_mm_per_n = cms;
     const maxAdd = firstNumber(get(rows, "Max Added Mass", "Maximum Added Mass"));
     if (maxAdd !== undefined) params.max_added_mass_g = maxAdd;
+    fixPhysical(physical, notes);
     const pr: PassiveRadiator = {
       brand: "Dayton Audio",
       model,
@@ -217,6 +228,11 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
     qes = round(1 / (1 / qts - 1 / qms), 3);
     notes.push(`Qes ${qes} calculated from the published Qts and Qms.`);
   }
+  if ((vas === undefined || vas <= 0) && cms !== undefined && cms > 0 && sd !== undefined) {
+    const v = cms / 1000 * 1.184 * 346.1 * 346.1 * (sd / 1e4) ** 2 * 1000;
+    notes.push(`Vas ${round(v, 3)} L calculated from the published Cms and Sd (the page gives ${vas === undefined ? "no Vas" : `Vas ${vas}`}).`);
+    vas = round(v, 3);
+  }
   const missing = Object.entries({ fs, qms, qes, vas, re, sd })
     .filter(([, v]) => v === undefined)
     .map(([k]) => k);
@@ -228,8 +244,8 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
   const dvc = perCoil !== undefined || /\bDVC\b|dual voice coil|dual \d+ ?ohm/i.test(title);
   let nominal = firstNumber(zText) ?? 4;
   let wiring: "series" | "parallel" | undefined;
-  const suffixCoil = model.match(/-(\d)\1$/)?.[1]; // Dayton: -22, -44, -88 = two 2, 4 or 8 Ω coils
-  if (dvc || suffixCoil) {
+  const suffixCoil = dvc ? model.match(/-(\d)\1$/)?.[1] : undefined; // Dayton DVC: -22, -44, -88 = two 2, 4 or 8 Ω coils
+  if (dvc) {
     const coil =
       perCoil !== undefined
         ? Number(perCoil)
@@ -303,25 +319,32 @@ const OPTIONAL_TS = ["qts", "le_mh", "bl", "mms_g", "xmax_mm", "pe_w"] as const;
  * drop the rest, and say so.
  */
 export function dropImplausible(ts: Driver["ts"], physical: NonNullable<Driver["physical"]>, notes: string[]) {
-  const probe = (patch: object) =>
-    validateDriver({ brand: "x", model: "x", type: "woofer", nominal_ohms: 4, ts, physical, sources: [{ kind: "community" }], status: "community", ...patch });
-  for (const key of ["cutout_mm", "depth_mm"] as const) {
-    const v = physical[key];
-    if (v === undefined || !probe({}).some((e) => e.startsWith(`physical.${key}`))) continue;
-    const mm = round(v * 25.4, 1);
-    physical[key] = mm;
-    if (probe({}).some((e) => e.startsWith(`physical.${key}`))) {
-      delete physical[key];
-      notes.push(`Published ${key === "cutout_mm" ? "cutout" : "depth"} ${v} is implausible, so it's left out.`);
-    } else {
-      notes.push(`Published ${key === "cutout_mm" ? "cutout" : "depth"} ${v} has no unit; read as inches (${mm} mm).`);
-    }
-  }
+  const probe = () =>
+    validateDriver({ brand: "x", model: "x", type: "woofer", nominal_ohms: 4, ts, physical, sources: [{ kind: "community" }], status: "community" });
+  fixPhysical(physical, notes);
   for (const key of OPTIONAL_TS) {
     const v = ts[key];
-    if (v === undefined || !probe({}).some((e) => e.startsWith(`ts.${key}`))) continue;
+    if (v === undefined || !probe().some((e) => e.startsWith(`ts.${key}`))) continue;
     delete ts[key];
     notes.push(`Published ${key.replace(/_.*/, "")} ${v} is implausible, so it's left out.`);
+  }
+}
+
+/** Cutout and depth: read unit-less small numbers as inches, drop the impossible. */
+export function fixPhysical(physical: NonNullable<Driver["physical"]>, notes: string[]) {
+  const ok = (key: "cutout_mm" | "depth_mm", v: number) => (key === "cutout_mm" ? v >= 10 && v <= 1000 : v >= 5 && v <= 600);
+  for (const key of ["cutout_mm", "depth_mm"] as const) {
+    const v = physical[key];
+    if (v === undefined || ok(key, v)) continue;
+    const name = key === "cutout_mm" ? "cutout" : "depth";
+    const mm = round(v * 25.4, 1);
+    if (ok(key, mm)) {
+      physical[key] = mm;
+      notes.push(`Published ${name} ${v} has no unit; read as inches (${mm} mm).`);
+    } else {
+      delete physical[key];
+      notes.push(`Published ${name} ${v} is implausible, so it's left out.`);
+    }
   }
 }
 
@@ -386,19 +409,22 @@ async function main() {
 
   const productUrls = new Map<string, string>(); // id → url
   for (const c of CATEGORIES) {
-    let lastPage = "";
-    for (let page = 1; page <= 30; page++) {
-      const url = `${SITE}/category/${c.id}/${c.slug}${page > 1 ? `?pagenum=${page}` : ""}`;
-      const links = parseCategory(await fetchText(url));
+    // The short address works for page 1, but paging only works on the category's own
+    // address (e.g. /category/123/full-range-drivers), so follow its page links.
+    const first = await fetchText(`${SITE}/category/${c.id}/${c.slug}`);
+    await sleep(delay);
+    const pager = parsePager(first, c.id);
+    const pages = [first];
+    for (let page = 2; pager && page <= Math.min(pager.last, 30); page++) {
+      pages.push(await fetchText(`${SITE}${pager.path}?pagenum=${page}`));
       await sleep(delay);
-      const before = productUrls.size;
-      const key = links.join(" ");
-      for (const l of links) productUrls.set(l.match(/\/product\/(\d+)\//)![1]!, l);
-      console.log(`${c.slug} p${page}: ${links.length} links, ${productUrls.size - before} new`);
-      // Past the last page the site returns nothing (or the same page again).
-      if (links.length === 0 || key === lastPage) break;
-      lastPage = key;
     }
+    pages.forEach((html, i) => {
+      const before = productUrls.size;
+      const links = parseCategory(html);
+      for (const l of links) productUrls.set(l.match(/\/product\/(\d+)\//)![1]!, l);
+      console.log(`${c.slug} p${i + 1}/${pages.length}: ${links.length} links, ${productUrls.size - before} new`);
+    });
   }
 
   const written: string[] = [];
