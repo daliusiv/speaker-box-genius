@@ -644,3 +644,44 @@ label.file-button {
   font-weight: 500;
   cursor: pointer;
 }
+
+.menu-label {
+  margin: 0.4rem 0.5rem 0.1rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.saved-row {
+  display: flex;
+  align-items: center;
+}
+
+.saved-row button[role="menuitem"] {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-menu hr {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0.3rem 0;
+}
+
+a.button-link {
+  display: inline-block;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--fg);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.row {
+  flex-wrap: wrap;
+}

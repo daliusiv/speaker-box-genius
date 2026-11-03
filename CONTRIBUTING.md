@@ -5,7 +5,9 @@ Thanks for helping. There are two kinds of contribution, and you don't need to b
 ## 1. Adding a driver or passive radiator
 
 ### The easy way (no git needed)
-Open a [new driver issue](../../issues/new?template=new-driver.yml) or a [new passive radiator issue](../../issues/new?template=new-passive-radiator.yml), fill in the values from the manufacturer's datasheet and include the datasheet link. A maintainer will turn it into a database entry.
+In the app, load or enter the driver and press **Submit to database**: it opens a pre-filled GitHub form, and you add the datasheet link. Or open a [new driver issue](../../issues/new?template=new-driver.yml) / [new passive radiator issue](../../issues/new?template=new-passive-radiator.yml) directly.
+
+A bot then turns the issue into a pull request with the database file, after running the same checks as CI. If something's wrong it comments on the issue; edit the issue and it tries again. A maintainer checks the values against the datasheet and merges.
 
 ### The git way
 1. Create `drivers/<brand-slug>/<model-slug>.json` (or `passive-radiators/…`). Slugs are lowercase letters, numbers and hyphens only, e.g. `drivers/dayton-audio/rss265hf-4.json`.

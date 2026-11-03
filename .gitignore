@@ -9,3 +9,6 @@ dist/
 
 # generated at build time from drivers/ and passive-radiators/
 packages/web/public/db/
+
+# written by the database-submissions workflow on failure
+issue-error.md

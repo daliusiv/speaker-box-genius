@@ -28,6 +28,8 @@ import { ShareMenu } from "./Share.tsx";
 import { EqPanel } from "./Eq.tsx";
 import { MeasurePanel, type Measurement } from "./Measure.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
+import { ProjectsMenu } from "./Projects.tsx";
+import { submitDriverUrl } from "./submit.ts";
 
 const LIMIT_RED = "#dc2626";
 
@@ -166,6 +168,7 @@ export function App() {
             />
             <b>{state.power} W</b>
           </label>
+          <ProjectsMenu state={state} onOpen={(s) => setState(s)} />
           <ShareMenu state={state} designs={designs} shareUrl={shareUrl} />
         </div>
       </header>
@@ -222,6 +225,15 @@ export function App() {
             <button className="secondary" onClick={exportWdr}>
               Export .wdr
             </button>
+            <a
+              className="button-link secondary"
+              href={submitDriverUrl(state)}
+              target="_blank"
+              rel="noopener"
+              title="Opens a pre-filled GitHub form; you add the datasheet link"
+            >
+              Submit to database
+            </a>
             <input
               ref={wdrInput}
               type="file"

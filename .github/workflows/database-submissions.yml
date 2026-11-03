@@ -1,0 +1,76 @@
+name: Database submissions
+
+# Turns a "new driver" / "new passive radiator" issue into a pull request with
+# the database file, after running the same checks as CI. If the submission
+# has problems, it comments on the issue instead; editing the issue retries.
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: db-issue-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  to-pull-request:
+    if: >-
+      github.event.issue.state == 'open' &&
+      (contains(github.event.issue.labels.*.name, 'new-driver') ||
+       contains(github.event.issue.labels.*.name, 'new-passive-radiator'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Convert the issue into a database file
+        id: convert
+        env:
+          # Passed through the environment, never interpolated into the script.
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/issue-to-driver.ts
+
+      - name: Explain what needs fixing
+        if: failure() && steps.convert.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+        run: gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body-file issue-error.md
+
+      - name: Open or update the pull request
+        id: pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: ${{ steps.convert.outputs.branch }}
+          add-paths: |
+            drivers/**
+            passive-radiators/**
+          commit-message: "${{ steps.convert.outputs.title }} (from #${{ github.event.issue.number }})"
+          title: ${{ steps.convert.outputs.title }}
+          labels: database
+          body: |
+            Closes #${{ github.event.issue.number }}, submitted by @${{ github.event.issue.user.login }}.
+
+            Adds `${{ steps.convert.outputs.path }}`. The database checks passed.
+
+            Consistency warnings (if any):
+            ${{ steps.convert.outputs.warnings }}
+
+            Reviewer: compare the values with the datasheet link, then merge.
+
+      - name: Link the pull request on the issue
+        if: steps.pr.outputs.pull-request-number && steps.pr.outputs.pull-request-operation == 'created'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+          PR: ${{ steps.pr.outputs.pull-request-number }}
+        run: gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body "Thanks! I've opened #$PR with this entry. A maintainer will check it against the datasheet and merge it."

@@ -2,17 +2,19 @@
 
 **A modern, zero-install, browser-based loudspeaker enclosure simulator — the WinISD replacement the DIY audio community has been waiting for.**
 
-> 🚧 **Early development.** The plan lives in [`docs/build-plan.md`](docs/build-plan.md). The app is not usable yet — watch the repo or join in.
+> 🚧 **Early preview** at **https://daliusiv.github.io/speaker-box-genius/**. The plan lives in [`docs/build-plan.md`](docs/build-plan.md).
 
-## What it will do
+## What it does
 
-- **Sealed, ported, single and dual passive radiator** designs side by side on one chart
+- **Any mix of sealed, ported and passive radiator designs** (up to 8) side by side on one set of charts
 - **Excursion redlines** for the woofer *and* the passive radiators at your chosen input power
 - **Port air velocity** with a chuffing warning line
 - **A T/S parameter editor that never overwrites what you typed.** Lock the values you trust; the rest are derived, and contradictions are flagged
 - **Real-world net volume calculator**: boxes, cylinders, spheres, truncated pyramids, minus drivers, PRs, ports, bracing and crossover boards
-- **Import** WinISD `.wdr` drivers, DATS exports and `.zma` impedance files
-- **Shareable links**: the whole simulation lives in the URL. Paste it on diyAudio or Reddit instead of five blurry screenshots
+- **Import** WinISD `.wdr` drivers; **measure** a driver from a `.zma` / DATS impedance sweep (with added-mass Vas)
+- **High-pass filter, Linkwitz Transform and EQ**, alignment presets (Qtc 0.5–0.707, QB3/B4), port fit and chuffing checks
+- **Metric or imperial**, and a WinISD mode (air constants, peak/RMS port speed) for like-for-like comparisons
+- **Shareable links**: the whole simulation lives in the URL. **Share** gives you a forum image plus ready-to-paste Reddit / diyAudio text, and CSV of every curve
 - **A community driver database** that lives right here in the repo
 
 Everything runs in your browser. No accounts, no server, works offline.
