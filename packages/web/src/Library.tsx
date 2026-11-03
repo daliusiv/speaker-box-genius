@@ -48,6 +48,9 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
   const searchBox = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<Filters>({});
+  // Phones: the filters fold away behind a button (wide screens always show them).
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterCount = Object.values(filters).reduce((n, v) => n + v.length, 0);
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 }>({ key: "name", dir: 1 });
   const [cursor, setCursor] = useState(0);
 
@@ -124,6 +127,7 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
               ×
             </button>
           </header>
+          <div className="lib-searchrow">
           <input
             ref={searchBox}
             type="search"
@@ -145,7 +149,17 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
             }}
             aria-label="Search"
           />
-          <div className="lib-filters">
+            <button
+              type="button"
+              className={`secondary lib-filter-toggle${filterCount > 0 ? " has-filters" : ""}`}
+              aria-expanded={filtersOpen}
+              aria-controls="lib-filters"
+              onClick={() => setFiltersOpen(!filtersOpen)}
+            >
+              Filters{filterCount > 0 ? ` (${filterCount})` : ""} {filtersOpen ? "▴" : "▾"}
+            </button>
+          </div>
+          <div className={`lib-filters${filtersOpen ? " open" : ""}`} id="lib-filters">
             {props.filters.map((f) =>
               f.kind === "select" ? (
                 <label key={f.key} className="lib-filter">

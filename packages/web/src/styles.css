@@ -1653,3 +1653,35 @@ button.check-chip.open {
     grid-template-columns: 3.2rem 1fr 2.6rem;
   }
 }
+
+/* Database browser: search with a Filters button that folds the filters away on phones */
+.lib-searchrow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.lib-searchrow input.lib-search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.lib-filter-toggle {
+  display: none;
+  white-space: nowrap;
+}
+
+.lib-filter-toggle.has-filters {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .lib-filter-toggle {
+    display: inline-block;
+  }
+
+  .lib-filters:not(.open) {
+    display: none;
+  }
+}
