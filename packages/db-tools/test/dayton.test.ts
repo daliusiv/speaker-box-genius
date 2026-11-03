@@ -211,3 +211,11 @@ test("re-import keeps displacement, submissions and verified status, drops deale
   assert.equal(fresh.sources.length, 4); // two from the importer + the submission + the measurement
   assert.ok(!fresh.sources.some((x) => x.url?.includes("soundimports")));
 });
+
+test("midranges are imported as midrange; woofer/midrange stays a woofer", () => {
+  const mid = parseProduct(page("x", MX12.map(([k, v]): [string, string] => (k === "Speaker Type" ? [k, "Midrange"] : [k, v]))), URL, "d");
+  assert.equal(mid.kind, "driver");
+  assert.equal(mid.driver!.type, "midrange");
+  const wm = parseProduct(page("x", MX12.map(([k, v]): [string, string] => (k === "Speaker Type" ? [k, "Woofer/Midrange"] : [k, v]))), URL, "d");
+  assert.equal(wm.driver!.type, "woofer");
+});
