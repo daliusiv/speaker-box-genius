@@ -87,7 +87,7 @@ export function BuildSheet(props: {
   const driverCutout = v.driverCutout_mm > 0 ? v.driverCutout_mm : props.driverSd_cm2 ? cutoutFromSd(props.driverSd_cm2) : 0;
   const prCount = d?.kind === "pr" ? prTotal(d) : 0;
   const prCutout = d?.kind === "pr" ? (v.prCutout_mm > 0 ? v.prCutout_mm : cutoutFromSd(d.params.sd_cm2)) : 0;
-  const port =
+  const port: { count: number; length: number; holeDiameter?: number; slot?: { width: number; height: number } } | undefined =
     d?.kind === "vented"
       ? {
           count: d.count,
@@ -151,11 +151,11 @@ export function BuildSheet(props: {
             </tr>
           </thead>
           <tbody>
-            {[...c.panels, ...c.braces].map((p) => (
+            {[...c.panels.map((p) => ({ ...p, frame: undefined as number | undefined })), ...c.braces].map((p) => (
               <tr key={p.name}>
                 <td className="cut-name">
                   {p.name}
-                  {"frame" in p && (
+                  {p.frame !== undefined && (
                     <span className="hint cut-sub">
                       a frame {len(p.frame)}
                       {lenUnit} wide around a window
