@@ -598,3 +598,13 @@ button.chip {
   border: 1px solid var(--accent);
   border-radius: 999px;
 }
+
+.port-checks {
+  margin: 0.6rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+}
+
+.port-checks li + li {
+  margin-top: 0.25rem;
+}

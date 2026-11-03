@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useUnits, type Quantity } from "./units.ts";
 
 export const REPO = "https://github.com/daliusiv/speaker-box-genius";
 
@@ -28,14 +29,34 @@ export function Card(props: {
   );
 }
 
-/** Number input that lets you type freely and only commits valid values (≥ min, default > 0). */
-export function Num(props: { label: string; unit?: string; value: number; min?: number; onChange: (v: number) => void }) {
-  const [text, setText] = useState(String(props.value));
+/** Converted values are rounded for display (4 significant figures); metric ones keep up to 6. */
+const tidy = (v: number, converted = false) => String(Number(v.toPrecision(converted ? 4 : 6)));
+
+/**
+ * Number input that lets you type freely and only commits valid values (≥ min, default > 0).
+ * With `q`, the value is stored in metric and shown in the user's chosen units.
+ */
+export function Num(props: {
+  label: string;
+  unit?: string;
+  q?: Quantity;
+  value: number;
+  min?: number;
+  onChange: (v: number) => void;
+}) {
+  const units = useUnits();
+  const u = props.q ? units.unit(props.q) : { unit: props.unit ?? "", k: 1 };
+  const shown = props.value * u.k;
+  const converted = u.k !== 1;
+  const [text, setText] = useState(tidy(shown, converted));
   useEffect(() => {
-    if (Number(text.replace(",", ".")) !== props.value) setText(String(props.value));
+    // Only rewrite the box when the stored value really moved (not when it's our own rounding).
+    const typed = Number(text.replace(",", "."));
+    const tol = converted ? 5e-4 * Math.max(1, Math.abs(shown)) : 1e-9 * Math.max(1, Math.abs(shown));
+    if (!(Math.abs(typed - shown) <= tol)) setText(tidy(shown, converted));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.value]);
-  const min = props.min ?? Number.MIN_VALUE;
+  }, [shown]);
+  const min = (props.min ?? Number.MIN_VALUE) * u.k;
   return (
     <label>
       <span>{props.label}</span>
@@ -46,21 +67,24 @@ export function Num(props: { label: string; unit?: string; value: number; min?: 
           const t = e.currentTarget.value;
           setText(t);
           const v = Number(t.replace(",", "."));
-          if (t.trim() !== "" && Number.isFinite(v) && v >= min) props.onChange(v);
+          if (t.trim() !== "" && Number.isFinite(v) && v >= min) props.onChange(v / u.k);
         }}
       />
-      <span className="unit">{props.unit ?? ""}</span>
+      <span className="unit">{u.unit}</span>
     </label>
   );
 }
 
-/** A read-only value laid out like a Num field. */
-export function Fixed(props: { label: string; unit?: string; value: string; title?: string }) {
+/** A read-only value laid out like a Num field. Give `num` + `q` to convert units. */
+export function Fixed(props: { label: string; unit?: string; value?: string; num?: number; q?: Quantity; title?: string }) {
+  const units = useUnits();
+  const u = props.q ? units.unit(props.q) : null;
+  const text = props.num !== undefined && u ? (props.num * u.k).toFixed(u.digits) : (props.value ?? "–");
   return (
     <label title={props.title}>
       <span>{props.label}</span>
-      <output className="fixed">{props.value}</output>
-      <span className="unit">{props.unit ?? ""}</span>
+      <output className="fixed">{text}</output>
+      <span className="unit">{u ? u.unit : (props.unit ?? "")}</span>
     </label>
   );
 }

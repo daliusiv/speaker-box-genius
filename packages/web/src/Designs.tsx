@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import {
+  portEffectiveLength,
   prAddedMassForFb,
   prFb,
   portLengthForFb,
@@ -11,7 +12,8 @@ import {
 } from "@sbg/engine";
 import { Fixed, LibraryPicker, Num, Select } from "./components.tsx";
 import { loadPassiveRadiator, type DbIndex } from "./library.ts";
-import { KIND_LABEL, portOf } from "./sim.ts";
+import { KIND_LABEL, PORT_LIMIT, portOf } from "./sim.ts";
+import { useUnits } from "./units.ts";
 import type { DesignKind, DesignState, PrDesign, VentedDesign } from "./state.ts";
 
 const f1 = (v: number) => (Number.isFinite(v) ? v.toFixed(1) : "–");
@@ -86,9 +88,9 @@ function DesignShell(props: {
 
 function VbField(props: { vb_l: number; value: number; linked: boolean; onChange: (v: number) => void }) {
   return props.linked ? (
-    <Fixed label="Vb" unit="L" value={props.vb_l.toFixed(1)} title="From the volume calculator" />
+    <Fixed label="Vb" num={props.vb_l} q="vol" title="From the volume calculator" />
   ) : (
-    <Num label="Vb" unit="L" value={props.value} onChange={props.onChange} />
+    <Num label="Vb" q="vol" value={props.value} onChange={props.onChange} />
   );
 }
 
@@ -143,7 +145,73 @@ function renamed(current: string, defaultPrefix: string, next: string): string {
   return current.startsWith(defaultPrefix) ? next : current;
 }
 
-function VentedBody(p: CommonProps<VentedDesign>) {
+interface PortContext {
+  /** Peak port velocity in the displayed convention (above the subsonic cut-off), if simulated. */
+  portVelocity: number | null;
+  /** Largest internal box dimension (cm) when the volume calculator feeds this design. */
+  internalMax_cm: number | null;
+}
+
+/** Warnings and suggestions about the port itself: does it fit, will it chuff, where does it resonate. */
+function PortChecks(props: { v: VentedDesign; vb_l: number; air: Air; ctx: PortContext }) {
+  const { v, vb_l, air, ctx } = props;
+  const { fmt } = useUnits();
+  const port = portOf(v);
+  const leff = portEffectiveLength(port); // m
+  const pipe = air.c / (2 * leff);
+  const notes: { warn: boolean; text: string }[] = [];
+
+  // Will it fit? Keep at least one port diameter (or slot height) clear of the opposite wall.
+  const clearance = v.shape === "round" ? v.diameter_cm : v.slotHeight_cm;
+  const cube = Math.cbrt(vb_l * 1000);
+  const room = (ctx.internalMax_cm ?? cube) - clearance;
+  if (v.length_cm > room) {
+    notes.push({
+      warn: true,
+      text:
+        `The port is ${fmt(v.length_cm, "len")} long, but ${ctx.internalMax_cm ? "this box" : "a cube-shaped box of this volume"} ` +
+        `only has room for about ${fmt(Math.max(0, room), "len")} in a straight line. Use a bent (L-shaped) port, a slot along a wall, or a bigger port area with a shorter length.`,
+    });
+  }
+
+  // Chuffing: air speed scales with 1/area, so suggest the area that brings it under the line.
+  if (ctx.portVelocity !== null && ctx.portVelocity > PORT_LIMIT) {
+    const k = ctx.portVelocity / PORT_LIMIT;
+    const fbNow = ventedFb(vb_l, port, v.count, undefined, air);
+    const bigger: typeof port =
+      v.shape === "round"
+        ? { ...port, shape: "round", diameter_cm: v.diameter_cm * Math.sqrt(k) }
+        : { ...port, shape: "slot", width_cm: v.slotWidth_cm * k, height_cm: v.slotHeight_cm };
+    const newLen = portLengthForFb(vb_l, { ...bigger, length_cm: 0 }, fbNow, v.count, undefined, air);
+    const size = v.shape === "round" ? `${fmt(v.diameter_cm * Math.sqrt(k), "len")} diameter` : `${fmt(v.slotWidth_cm * k, "len")} wide`;
+    const ports = Math.ceil(v.count * k);
+    notes.push({
+      warn: true,
+      text:
+        `Port air speed reaches ${ctx.portVelocity.toFixed(1)} m/s. To stay under ${PORT_LIMIT} m/s at this power: about ${size} ` +
+        `(length ≈ ${fmt(newLen, "len")} for the same tuning)${ports > v.count ? `, or ${ports} ports of the current size` : ""}.`,
+    });
+  }
+
+  notes.push({
+    warn: pipe < 300,
+    text:
+      `Port pipe resonance ≈ ${pipe.toFixed(0)} Hz` +
+      (pipe < 300 ? ". That's low enough to leak midrange through the port; line the port's surroundings or cross over well below it." : "."),
+  });
+
+  return (
+    <ul className="port-checks">
+      {notes.map((n) => (
+        <li key={n.text} className={n.warn ? "warn" : "hint"}>
+          {n.text}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
   const v = p.design;
   const [msg, setMsg] = useState("");
   const set = (patch: Partial<VentedDesign>) => p.onChange({ ...v, ...patch });
@@ -173,14 +241,14 @@ function VentedBody(p: CommonProps<VentedDesign>) {
         />
         <VbField vb_l={p.vb_l} value={v.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
         {v.shape === "round" ? (
-          <Num label="Port Ø" unit="cm" value={v.diameter_cm} onChange={(x) => set({ diameter_cm: x })} />
+          <Num label="Port Ø" q="len" value={v.diameter_cm} onChange={(x) => set({ diameter_cm: x })} />
         ) : (
           <>
-            <Num label="Width" unit="cm" value={v.slotWidth_cm} onChange={(x) => set({ slotWidth_cm: x })} />
-            <Num label="Height" unit="cm" value={v.slotHeight_cm} onChange={(x) => set({ slotHeight_cm: x })} />
+            <Num label="Width" q="len" value={v.slotWidth_cm} onChange={(x) => set({ slotWidth_cm: x })} />
+            <Num label="Height" q="len" value={v.slotHeight_cm} onChange={(x) => set({ slotHeight_cm: x })} />
           </>
         )}
-        <Num label="Length" unit="cm" value={v.length_cm} min={0} onChange={(x) => set({ length_cm: x })} />
+        <Num label="Length" q="len" value={v.length_cm} min={0} onChange={(x) => set({ length_cm: x })} />
         <Num label="Ports" value={v.count} onChange={(x) => set({ count: Math.max(1, Math.round(x)) })} />
         <Fixed label="Fb" unit="Hz" value={f1(fb)} title="Box tuning frequency" />
       </div>
@@ -214,6 +282,7 @@ function VentedBody(p: CommonProps<VentedDesign>) {
         </button>
       </Presets>
       {msg && <p className="warn">{msg}</p>}
+      <PortChecks v={v} vb_l={p.vb_l} air={p.air} ctx={p.portCtx} />
       <p className="hint">
         Physical port length; end correction (0.732 × diameter, like WinISD) is added automatically.
         {v.shape === "slot" && " A slot along a box wall behaves slightly longer than this model assumes."}
@@ -314,6 +383,7 @@ export function DesignCard(props: {
   air: Air;
   align: AlignmentDriver | null;
   drivers: number;
+  portCtx: PortContext;
   onChange: (d: DesignState) => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -338,7 +408,7 @@ export function DesignCard(props: {
       onDelete={props.onDelete}
     >
       {d.kind === "sealed" && <SealedBody {...common} design={d} onChange={props.onChange} />}
-      {d.kind === "vented" && <VentedBody {...common} design={d} onChange={props.onChange} />}
+      {d.kind === "vented" && <VentedBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} />}
       {d.kind === "pr" && (
         <PrBody {...common} design={d} onChange={props.onChange} db={props.db} onPrDisplacement={props.onPrDisplacement} />
       )}

@@ -18,6 +18,7 @@ import { VolumePanel } from "./VolumePanel.tsx";
 import { airOf, alignmentDriver, colorOf, PORT_LIMIT, runDesigns, solveDriver, vbOf, type Design } from "./sim.ts";
 import { AddDesign, DesignCard } from "./Designs.tsx";
 import { ShareMenu } from "./Share.tsx";
+import { fmtQ, UnitsContext } from "./units.ts";
 
 const LIMIT_RED = "#dc2626";
 
@@ -132,6 +133,7 @@ export function App() {
   }));
 
   return (
+    <UnitsContext.Provider value={state.settings.units}>
     <div className="layout">
       <header className="top">
         <div>
@@ -272,6 +274,7 @@ export function App() {
             air={airOf(state)}
             align={alignmentDriver(solved)}
             drivers={state.drivers}
+            portCtx={portContext(state, designs, d.id)}
             onChange={updateDesign}
             onDuplicate={() => duplicateDesign(d)}
             onDelete={() => deleteDesign(d)}
@@ -377,7 +380,31 @@ export function App() {
         </footer>
       </main>
     </div>
+    </UnitsContext.Provider>
   );
+}
+
+/** What the port checks need to know about a design: its simulated peak port speed and the box it sits in. */
+function portContext(state: AppState, designs: Design[], id: string) {
+  const r = designs.find((x) => x.design.id === id)?.result;
+  const fMin = state.highPass.on ? 10 : 15;
+  let peak: number | null = null;
+  if (r?.portVelocity) {
+    peak = 0;
+    for (let i = 0; i < r.freq.length; i++) if (r.freq[i]! >= fMin && r.portVelocity[i]! > peak) peak = r.portVelocity[i]!;
+  }
+  const v = state.volume;
+  let internalMax_cm: number | null = null;
+  if (v.link === id) {
+    const t = v.wall_mm / 5; // both walls, in cm
+    internalMax_cm =
+      v.shape === "box" || v.shape === "frustum"
+        ? Math.max(v.width_cm, v.height_cm, v.depth_cm) - t
+        : v.shape === "cylinder"
+          ? Math.max(v.diameter_cm, v.height_cm) - t
+          : v.diameter_cm - t;
+  }
+  return { portVelocity: peak, internalMax_cm };
 }
 
 function Summary({ designs, state, missing }: { designs: Design[]; state: AppState; missing: boolean }) {
@@ -415,7 +442,7 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
             return (
               <tr key={d.id}>
                 <th style={{ color }}>{d.name}</th>
-                <td>{fmt(vb_l)} L</td>
+                <td>{fmtQ(vb_l, "vol", state.settings.units)}</td>
                 <td>{fmt(r.summary.f3)} Hz</td>
                 <td>{fmt(r.summary.fb ?? r.summary.fc)} Hz</td>
                 <td>{fmt(r.summary.qtc, 2)}</td>

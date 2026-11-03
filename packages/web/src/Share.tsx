@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { PORT_LIMIT, type Design } from "./sim.ts";
+import { fmtQ } from "./units.ts";
 import type { AppState } from "./state.ts";
 
 const SITE = "daliusiv.github.io/speaker-box-genius";
@@ -32,7 +33,7 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
     return {
       name: d.name,
       color,
-      cells: [n(vb_l, "L"), n(r.summary.fb ?? r.summary.fc, "Hz"), n(r.summary.f3, "Hz"), n(x, "mm"), n(xpr, "mm"), n(vp, "m/s")],
+      cells: [fmtQ(vb_l, "vol", state.settings.units), n(r.summary.fb ?? r.summary.fc, "Hz"), n(r.summary.f3, "Hz"), n(x, "mm"), n(xpr, "mm"), n(vp, "m/s")],
       over: [
         false,
         false,
