@@ -124,7 +124,10 @@ Below 200 Hz both models are within 1.5–6.3 %, since the resonance dominates t
 plain Le is fitted around the resonance like WinISD's, so it gets the low end right but
 can be off by 2× or more in the treble. With L2R2 the impedance stays within about 10 %
 up to 20 kHz, and so does the response above the resonance of a driver with a lossy coil.
-The comparison script is `packages/db-tools/src/le-check.ts`. Dayton's measurement files
+Letting the L2R2 fit move Fs, Qms and Qes too lowers the error a little more, but it
+pushes Qes 5–10 % above the datasheets (DC160-8: 0.38 published, 0.41 held, 0.45 free).
+The app therefore keeps the T/S values from the fit around the resonance and fits only
+the coil. The comparison script is `packages/db-tools/src/le-check.ts`. Dayton's measurement files
 aren't kept in the repository.
 
 ## Two drivers in parallel (Test 5)
