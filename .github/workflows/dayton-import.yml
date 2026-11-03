@@ -1,0 +1,39 @@
+name: Import Dayton Audio drivers
+
+# Reads Dayton Audio product pages (with Dayton Audio's permission, see
+# docs/data-permissions.md) and opens a pull request with new and updated
+# entries plus a report of anything adjusted or skipped. Run by hand.
+on: workflow_dispatch
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read daytonaudio.com
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/dayton.ts
+
+      - name: Check the database
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts
+
+      - name: Open or update the pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: db/dayton-import
+          add-paths: |
+            drivers/dayton-audio/**
+            passive-radiators/dayton-audio/**
+          commit-message: "Database: import Dayton Audio drivers from daytonaudio.com (with permission)"
+          title: "Database: Dayton Audio import"
+          labels: database
+          body-path: dayton-import-report.md

@@ -12,3 +12,6 @@ packages/web/public/db/
 
 # written by the database-submissions workflow on failure
 issue-error.md
+
+# Importer reports
+dayton-import-report.md
