@@ -44,7 +44,7 @@ export function BuildSheet(props: {
   const lenUnit = system === "imperial" ? "" : " mm";
   const d = linkedDesign(s);
   // What to build: the calculator's box, or one of the transmission lines folded into a box.
-  const lines = s.designs.filter((x): x is LineDesign => x.kind === "line" && x.end !== "horn");
+  const lines = s.designs.filter((x): x is LineDesign => x.kind === "line");
   const [what, setWhat] = useState<string>("box");
   const line = lines.find((x) => x.id === what) ?? null;
 
@@ -85,7 +85,7 @@ export function BuildSheet(props: {
         <Select<string>
           label="What to build"
           value={line ? line.id : "box"}
-          options={[{ value: "box", text: "The box in the volume calculator" }, ...lines.map((x) => ({ value: x.id, text: `${x.name} (folded line)` }))]}
+          options={[{ value: "box", text: "The box in the volume calculator" }, ...lines.map((x) => ({ value: x.id, text: `${x.name} (folded ${x.end === "horn" ? "horn" : "line"})` }))]}
           onChange={setWhat}
         />
       </div>
@@ -167,9 +167,9 @@ export function BuildSheet(props: {
           {line ? (
             <>
               <b>{line.name}</b>
-              {line.name.toLowerCase().startsWith("transmission line") ? "" : " (transmission line)"}
-              {line.end === "tapped" ? ", a tapped horn," : line.end === "port" ? ", mass-loaded," : ""} with {s.drivers} × {props.driverName || "driver"}
-              {sim?.result.summary.fb ? `, tuned to ${sim.result.summary.fb.toFixed(1)} Hz` : ""}. Line {Math.round(lineLength(line))} cm long, folded into {fold!.runs.length} run
+              {line.end === "horn" || line.name.toLowerCase().startsWith("transmission line") ? "" : " (transmission line)"}
+              {line.end === "tapped" ? ", a tapped horn," : line.end === "port" ? ", mass-loaded," : line.end === "horn" ? ", a front-loaded horn," : ""} with {s.drivers} × {props.driverName || "driver"}
+              {line.end === "horn" ? `, flare cutoff ${Math.round(line.targetFb)} Hz` : sim?.result.summary.fb ? `, tuned to ${sim.result.summary.fb.toFixed(1)} Hz` : ""}. {line.end === "horn" ? "Horn" : "Line"} {Math.round(lineLength(line))} cm long, folded into {fold!.runs.length} run
               {fold!.runs.length === 1 ? "" : "s"}.
             </>
           ) : d ? (
@@ -187,14 +187,18 @@ export function BuildSheet(props: {
         {line && (
           <div className="build-fold">
             <FoldDrawing d={line} wall_mm={v.wall_mm} driverCutout={driverCutout > 0 ? driverCutout : undefined} />
-            <span className="hint">Side view, front on the left: dividers, driver and the {line.end === "port" ? "port" : "mouth"} on the back.</span>
+            <span className="hint">
+              {line.end === "horn"
+                ? "Side view, front on the left: the driver section on top (rear chamber, motor board, throat chamber, throat board with the slot at the back), the horn folded below and the mouth on the front."
+                : `Side view, front on the left: dividers, driver and the ${line.end === "port" ? "port" : "mouth"} on the back.`}
+            </span>
           </div>
         )}
         <p className="hint">
           Outside {len(outside.width)} × {len(outside.height)} × {len(outside.depth)}
           {lenUnit} (W × H × D), {len(v.wall_mm)}
           {lenUnit} walls. Front and back cover the full size, top and bottom fit between them, the sides fit inside all four.
-          {fold && fold.runs.length > 1 ? " Dividers run the full inside width, glued between the sides, alternately from the top and the bottom; set each from the front as listed below." : ""}
+          {fold && fold.runs.length > 1 ? " Dividers run the full inside width, glued between the sides, alternately from the top and the bottom; set each as listed below." : ""}
         </p>
 
         <table className="cut-table">
@@ -261,11 +265,19 @@ export function BuildSheet(props: {
               {fold &&
                 fold.runs.slice(0, -1).map((r, k) => (
                   <li key={`div${k}`}>
-                    Divider {k + 1}: its face <b>{len(fold!.runs.slice(0, k + 1).reduce((a, x) => a + x.depth, 0) + k * v.wall_mm)}{lenUnit}</b> behind the inside of the front, leaving a{" "}
+                    Divider {k + 1}: its face <b>{len(fold!.runs.slice(0, k + 1).reduce((a, x) => a + x.depth, 0) + k * v.wall_mm)}{lenUnit}</b> {fold!.horn ? "in front of the inside of the back" : "behind the inside of the front"}, leaving a{" "}
                     {len(fold!.gaps[k]!)}
                     {lenUnit} gap at the {r.down ? "bottom" : "top"}
                   </li>
                 ))}
+              {line?.end === "horn" && fold?.horn && (
+                <li>
+                  Driver section: the motor board sits {len(fold.horn.rear)}
+                  {lenUnit} below the inside of the top (the rear chamber above it must be sealed); the throat board {len(fold.horn.throat)}
+                  {lenUnit} below the motor board, its {len(fold.horn.slot)}
+                  {lenUnit} slot along the back opening into the horn. The horn's dividers hang from the throat board, not the top of the box. Fit the driver before closing the rear chamber, or make the top removable.
+                </li>
+              )}
               {line?.end === "tapped" && fold?.driverOnDivider && (
                 <li>
                   Tapped horn: the driver mounts on divider {fold.driverOnDivider.index + 1}, its rear in run {fold.driverOnDivider.index + 1} and its front facing run{" "}

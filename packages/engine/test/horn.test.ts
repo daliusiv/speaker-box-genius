@@ -126,3 +126,28 @@ test("front-loaded horn: horn gain in band, less excursion, throat chamber rolls
   const k = at(r, fHi / 3);
   assert.ok(Math.abs(withTc.spl[k]! - r.spl[k]!) < 1.5, "little change well below it");
 });
+
+test("horns: the 0 dB reference is the horn's own passband, so F3 is its real low edge", () => {
+  const S1 = 250;
+  const fc = 60;
+  const m = (4 * Math.PI * fc) / c;
+  const L = 300;
+  const flh: LineInput = {
+    kind: "line",
+    segments: [{ length_cm: L, startArea_cm2: S1, endArea_cm2: S1 * Math.exp((m * L) / 100), taper: "exponential" }],
+    driverAt_cm: 0,
+    // A throat chamber for a top end near 4 × fc, as the preset designs it.
+    frontLoaded: { rear_l: 60, throat_l: ((S1 / 1e4) * c) / (2 * Math.PI * 4 * fc) * 1000 },
+  };
+  const r = simulate(D, flh, { power: 1, fMin: 10, fMax: 500, points: 300 });
+  // Most of the band 1.5–4 × fc sits within a few dB of the reference.
+  let near = 0;
+  let n = 0;
+  for (let i = 0; i < r.freq.length; i++) {
+    if (r.freq[i]! < 1.5 * fc || r.freq[i]! > 4 * fc) continue;
+    n++;
+    if (Math.abs(r.spl[i]! - r.summary.referenceSpl) < 4) near++;
+  }
+  assert.ok(near / n > 0.7, `${near}/${n} within 4 dB`);
+  assert.ok(r.summary.f3! > 0.8 * fc && r.summary.f3! < 1.6 * fc, `F3 ${r.summary.f3}`);
+});

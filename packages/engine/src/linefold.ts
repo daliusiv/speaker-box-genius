@@ -34,6 +34,13 @@ export interface FoldInput {
    * The driver then mounts on the divider between the run with its rear and the next run.
    */
   tap_mm?: number;
+  /**
+   * Front-loaded horn (litres): the line is the horn, its closed end the throat. The horn
+   * folds below a driver section the full depth of the box: the sealed rear chamber on top,
+   * the motor board with the driver firing down, the throat chamber, and the throat board
+   * with the throat slot over run 1. Run 1 is at the back, so the mouth opens on the front.
+   */
+  horn?: { rear_l: number; throat_l: number };
 }
 
 export interface Run {
@@ -62,6 +69,13 @@ export interface Fold {
   driverOnDivider?: { index: number; fromTop: number };
   /** Tapped horn: the tap position (mm along the line) that lines up with the rear across the divider. */
   tapLinedUp_mm?: number;
+  /**
+   * Front-loaded horn: heights (mm, inside) of the rear chamber and the throat chamber in the
+   * driver section on top, the section's total height (both chambers and the two boards),
+   * the throat slot's depth (front to back, at the back) and the driver cutout. The runs are
+   * mirrored: run 1 at the back.
+   */
+  horn?: { rear: number; throat: number; top: number; slot: number; cutout: number };
   warnings: string[];
 }
 
@@ -127,7 +141,15 @@ export function foldLine(i: FoldInput): Fold {
 
   const depthIn = runs.reduce((a, r) => a + r.depth, 0) + (n - 1) * t;
   const inside = { width: W, height: H, depth: depthIn };
-  const outside = { width: W + 2 * i.wall, height: H + 2 * i.wall, depth: depthIn + 2 * i.wall };
+  // Front-loaded horn: the driver section sits on top of the folded horn.
+  let horn: Fold["horn"];
+  if (i.horn) {
+    const footprint = W * depthIn; // mm²
+    const rear = (Math.max(0, i.horn.rear_l) * 1e6) / footprint;
+    const throat = Math.max(25, (Math.max(0, i.horn.throat_l) * 1e6) / footprint);
+    horn = { rear, throat, top: rear + t + throat + t, slot: depthAt(0), cutout: i.driverCutout ?? 0 };
+  }
+  const outside = { width: W + 2 * i.wall, height: H + 2 * i.wall + (horn?.top ?? 0), depth: depthIn + 2 * i.wall };
 
   // Outer box from the standard cut list, then the dividers and the line's own holes.
   const box = cutList({ width: outside.width, height: outside.height, depth: outside.depth, wall: i.wall });
@@ -135,12 +157,21 @@ export function foldLine(i: FoldInput): Fold {
     const h = H - g;
     return { name: `Divider ${k + 1} (${runs[k]!.down ? "from the top" : "from the bottom"})`, qty: 1, a: Math.max(h, W), b: Math.min(h, W) };
   });
+  if (horn) {
+    dividers.push(
+      { name: "Motor board (driver, horizontal)", qty: 1, a: Math.max(W, depthIn), b: Math.min(W, depthIn) },
+      { name: "Throat board (horizontal)", qty: 1, a: Math.max(W, depthIn), b: Math.min(W, depthIn) },
+    );
+  }
   if (dividers.some((d) => !(d.a > 0 && d.b > 0))) warnings.push("A divider would have no height: use fewer folds.");
 
   const last = runs[runs.length - 1]!;
   const mouthAt = last.down ? "bottom" : "top";
-  // With one run the line stands straight behind the front panel and opens through the back.
-  const mouth = { panel: "back" as const, at: mouthAt as "top" | "bottom", height: last.depth };
+  // With one run the line stands straight behind the front panel and opens through the back;
+  // a front horn's runs are mirrored, so its mouth opens on the front.
+  const mouthPanel: "back" | "front" = horn ? "front" : "back";
+  const mouth = { panel: mouthPanel, at: mouthAt as "top" | "bottom", height: last.depth };
+  const Panel_ = mouthPanel === "front" ? "Front" : "Back";
   const holes: Hole[] = [];
   let driverFromTop: number | null = null;
   let driverOnDivider: Fold["driverOnDivider"];
@@ -152,7 +183,25 @@ export function foldLine(i: FoldInput): Fold {
     return r.down ? t * H : (1 - t) * H;
   };
   const runOf = (x: number) => Math.max(0, runs.findIndex((r) => x >= r.from - 1e-6 && x <= r.to + 1e-6));
-  if (i.tap_mm !== undefined) {
+  if (horn) {
+    const cut = horn.cutout;
+    if (cut > 0) {
+      holes.push({ name: "Driver cutout", qty: 1, diameter: cut, where: "Motor board, centred (the driver fires down into the throat chamber)" });
+      if (cut > Math.min(W, depthIn)) warnings.push(`The driver cutout (${Math.round(cut)} mm) doesn't fit on the motor board (${Math.round(W)} × ${Math.round(depthIn)} mm): widen the box or fold more.`);
+    }
+    holes.push({ name: "Throat slot", qty: 1, width: W, height: horn.slot, where: "Throat board, along the back edge (over run 1)" });
+    if (horn.slot < 30) warnings.push(`The throat slot is only ${Math.round(horn.slot)} mm across (the throat's area over the full ${Math.round(W)} mm width): fine acoustically, but a narrower box gives a more practical slot.`);
+    // Spread over the whole top of the box, a chamber may be too shallow to build as set.
+    const litresFor = (mm: number) => Math.ceil((W * depthIn * mm) / 1e6);
+    if (horn.rear < 100)
+      warnings.push(
+        `Spread over the top of the box the rear chamber is only ${Math.round(horn.rear)} mm tall: the magnet needs about 100 mm, i.e. a rear chamber of about ${litresFor(100)} L or more (a bigger rear chamber lowers the bass roll-off), or a narrower box.`,
+      );
+    if ((Math.max(0, i.horn!.throat_l) * 1e6) / (W * depthIn) < 25)
+      warnings.push(
+        `The throat chamber as set would be under 25 mm tall over the whole box; it's drawn at 25 mm (about ${litresFor(25)} L) so the cone can move. Set the throat chamber to that to simulate what you'd build: the top end rolls off lower.`,
+      );
+  } else if (i.tap_mm !== undefined) {
     // Tapped horn: the driver straddles a divider, rear in one run and front in the next.
     const kr = runOf(i.driverAt_mm);
     const kf = runOf(i.tap_mm);
@@ -203,7 +252,7 @@ export function foldLine(i: FoldInput): Fold {
     holes.push({ name: "Port hole", qty: 1, diameter: i.port.holeDiameter, where: `Back, at the ${mouthAt}` });
     if (i.port.length > H) warnings.push("The port is longer than the box is tall: bend it or use a wider, shorter port.");
   } else {
-    holes.push({ name: "Mouth opening", qty: 1, width: W, height: last.depth, where: `Back, at the ${mouthAt}` });
+    holes.push({ name: "Mouth opening", qty: 1, width: W, height: last.depth, where: `${Panel_}, at the ${mouthAt}${horn && mouthAt === "top" ? " of the horn (just under the throat board)" : ""}` });
   }
   const cut: CutList = {
     ...box,
@@ -214,5 +263,5 @@ export function foldLine(i: FoldInput): Fold {
     area_m2: box.panels.reduce((a, p) => a + p.qty * p.a * p.b, 0) / 1e6 + dividers.reduce((a, d) => a + d.a * d.b, 0) / 1e6,
     warnings: [...warnings],
   };
-  return { runs, gaps, inside, outside, cut, mouth, driverFromTop, warnings, ...(driverOnDivider ? { driverOnDivider } : {}), ...(tapLinedUp_mm !== undefined ? { tapLinedUp_mm } : {}) };
+  return { runs, gaps, inside, outside, cut, mouth, driverFromTop, warnings, ...(horn ? { horn } : {}), ...(driverOnDivider ? { driverOnDivider } : {}), ...(tapLinedUp_mm !== undefined ? { tapLinedUp_mm } : {}) };
 }

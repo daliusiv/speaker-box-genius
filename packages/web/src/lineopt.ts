@@ -112,6 +112,8 @@ export function frontHorn(d: LineDesign, driver: DriverInput, drivers: number, f
     closedArea_cm2: r1(s1),
     sections: [{ length_cm: r1(L), endArea_cm2: Math.round(s2), taper: "exponential", fill_kgm3: 0 }],
     driverAt_cm: 0,
+    // Folded: as wide as a square mouth (the last run is then about as deep as the box is wide).
+    fold: { width_cm: Math.max(d.fold.width_cm, Math.round(Math.sqrt(s2))), folds: 2 },
     rearChamber_l: r1(Math.max(2, (driver.vas_l * drivers) / 2)),
     throatChamber_l: r1(vtc),
     mouth: "front",

@@ -16,7 +16,7 @@
 
 ## Front-loaded horns
 
-The driver sits at the throat in a sealed rear chamber (Vrc), its front into a throat chamber (Vtc) that opens into the horn. The cone sees the rear chamber's compliance in series with the throat chamber in parallel with the horn's input impedance; only the mouth radiates. The "Front horn" preset is an exponential horn with the throat at ½ Sd, the mouth sized for a normalised circumference of 1 in half space, Vrc = ½ Vas, and Vtc for a top end near 4 × the cutoff. Folding and the cut list don't cover front horns yet.
+The driver sits at the throat in a sealed rear chamber (Vrc), its front into a throat chamber (Vtc) that opens into the horn. The cone sees the rear chamber's compliance in series with the throat chamber in parallel with the horn's input impedance; only the mouth radiates. The "Front horn" preset is an exponential horn with the throat at ½ Sd, the mouth sized for a normalised circumference of 1 in half space, Vrc = ½ Vas, and Vtc for a top end near 4 × the cutoff. Folded, the horn runs from the back towards the front (mouth on the front panel) under a driver section the full width and depth of the box: the sealed rear chamber on top, the motor board with the driver firing down, the throat chamber, and the throat board with a slot along the back into run 1. Chamber heights come from their volumes over that footprint; the app warns when the rear chamber is too shallow for a magnet (about 100 mm) or the throat chamber under 25 mm, giving the volume that would fit. Horns' 0 dB reference is their own passband (median over the two octaves above where the response first comes within 6 dB of its peak), not a plain cone's.
 
 ## Hornresp export and import (`packages/web/src/hornresp.ts`)
 

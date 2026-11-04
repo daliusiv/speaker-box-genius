@@ -446,9 +446,11 @@ export function LineBody(p: {
   }
   if (p.fb === null && p.driver && !horn) notes.push({ warn: false, text: "The tuning isn't in the charts' range (no clear impedance dip)." });
 
+  // Driver cutout for the fold's fit checks: about 1.12 × the cone diameter (the Build tab can override it).
+  const cutout = p.driver ? Math.round(1.12 * 2 * Math.sqrt(p.driver.sd_cm2 / Math.PI) * 10) : undefined;
   const fold = (() => {
     try {
-      return lineFoldOf(d, p.wall_mm);
+      return lineFoldOf(d, p.wall_mm, cutout);
     } catch {
       return null;
     }
@@ -662,13 +664,10 @@ export function LineBody(p: {
         </p>
       ))}
 
-      {horn ? (
-        <p className="hint">Folding and the cut list don't cover front-loaded horns yet: plan the horn's panels by hand.</p>
-      ) : (
       <details className="line-fold">
         <summary>Fold it into a box</summary>
         <div className="fold-row">
-          <FoldDrawing d={d} wall_mm={p.wall_mm} />
+          <FoldDrawing d={d} wall_mm={p.wall_mm} driverCutout={cutout} />
           <div>
             <div className="fields">
               <Num label="Inside width" q="len" value={d.fold.width_cm} min={1} title="Width of the line inside (the box's inside width)" onChange={(width_cm) => set({ fold: { ...d.fold, width_cm } })} />
@@ -677,7 +676,11 @@ export function LineBody(p: {
             {fold && (
               <p className="hint">
                 Outside {Math.round(fold.outside.width / 10)} × {Math.round(fold.outside.height / 10)} × {Math.round(fold.outside.depth / 10)} cm (W × H × D), {p.wall_mm} mm
-                walls · {fold.runs.length} runs · mouth on the back at the {fold.mouth.at}. Panels, dividers and holes: Build tab → Cut list.
+                walls · {fold.runs.length} run{fold.runs.length === 1 ? "" : "s"} · mouth on the {fold.mouth.panel} at the {fold.mouth.at}
+                {fold.horn
+                  ? ` · driver section on top: rear chamber ${Math.round(fold.horn.rear / 10)} cm and throat chamber ${Math.round(fold.horn.throat / 10)} cm tall, the driver on a motor board between them firing down`
+                  : ""}
+                . Panels, dividers and holes: Build tab → Cut list.
               </p>
             )}
             {fold?.tapLinedUp_mm !== undefined && Math.abs(fold.tapLinedUp_mm / 10 - d.tapAt_cm) >= 1 && (
@@ -693,7 +696,6 @@ export function LineBody(p: {
           </div>
         </div>
       </details>
-      )}
 
       <HornrespPanel d={d} driver={p.driver} sim={p.sim} drivers={p.drivers} onDesign={(patch) => set(patch)} onImportDriver={p.onImportDriver} />
 

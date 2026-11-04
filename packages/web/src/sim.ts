@@ -166,10 +166,11 @@ export function lineFoldOf(d: LineDesign, wall_mm: number, driverCutout?: number
     width: d.fold.width_cm * 10,
     folds: d.fold.folds,
     wall: wall_mm,
-    driverAt_mm: d.driverAt_cm * 10,
+    driverAt_mm: d.end === "horn" ? 0 : d.driverAt_cm * 10,
     driverCutout,
     port: d.end === "port" ? { holeDiameter: (d.portDiameter_cm + 2 * d.portFlare_cm) * 10, length: d.portLength_cm * 10 } : undefined,
     ...(d.end === "tapped" ? { tap_mm: d.tapAt_cm * 10 } : {}),
+    ...(d.end === "horn" ? { horn: { rear_l: d.rearChamber_l, throat_l: d.throatChamber_l } } : {}),
   });
 }
 
