@@ -1,0 +1,39 @@
+name: Import SB Acoustics drivers
+
+# Reads SB Acoustics product pages (with SB Acoustics' permission, see
+# docs/data-permissions.md) and opens a pull request with new and updated
+# entries plus a report of anything adjusted or skipped. Run by hand.
+on: workflow_dispatch
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read sbacoustics.com
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/sb.ts
+
+      - name: Check the database
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts
+
+      - name: Open or update the pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: db/sb-import
+          add-paths: |
+            drivers/sb-acoustics/**
+            passive-radiators/sb-acoustics/**
+          commit-message: "Database: import SB Acoustics drivers from sbacoustics.com (with permission)"
+          title: "Database: SB Acoustics import"
+          labels: database
+          body-path: sb-import-report.md

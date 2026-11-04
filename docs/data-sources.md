@@ -8,11 +8,11 @@ Every entry in `drivers/` and `passive-radiators/` lists where its numbers came 
 
 ## Manufacturers who gave permission
 
-See [`data-permissions.md`](data-permissions.md). Dayton Audio entries are imported directly from daytonaudio.com with Dayton Audio's permission.
+See [`data-permissions.md`](data-permissions.md). Dayton Audio entries are imported directly from daytonaudio.com with Dayton Audio's permission. SB Acoustics entries are imported directly from sbacoustics.com with SB Acoustics' permission (they replace the SB Acoustics entries that came from driver-base).
 
 ## driver-base (CC BY 4.0)
 
-Entries for 18 Sound, B&C Speakers, Beyma, Celestion, Eminence, Faital Pro, HOQS, Jensen, Monacor, Peerless, RCF and SB Acoustics (except entries that were already in this database) come from:
+Entries for 18 Sound, B&C Speakers, Beyma, Celestion, Eminence, Faital Pro, HOQS, Jensen, Monacor, Peerless and RCF (except entries that were already in this database) come from (SB Acoustics entries also came from here until 4 Nov 2026, when they were replaced by SB Acoustics' own pages):
 
 > Data from driver-base (https://github.com/JonathanDCohen/driver-base), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
