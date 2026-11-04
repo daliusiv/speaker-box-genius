@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  coilHeatFactor,
   impedanceMagnitude,
   parseWdr,
   parseWpr,
@@ -44,7 +45,7 @@ import {
   prPeak,
   prXmaxes,
   dimensionsFor,
-  driveLabel,
+  coilLabel, driveLabel,
   driverInputOf,
   simOptionsOf,
   roomGainOf,
@@ -1125,6 +1126,14 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(x) => set("settings", { ...state.settings, portCompression: x === "on" })}
                 />
+                <Num
+                  label="Voice coil"
+                  unit="°C"
+                  value={state.settings.coilTemp_C}
+                  min={20}
+                  title="Voice-coil temperature: 20 °C = the datasheet's cold values (like WinISD). A hot coil has a higher Re: less output, higher Q."
+                  onChange={(t) => set("settings", { ...state.settings, coilTemp_C: Math.min(250, Math.max(20, t)) })}
+                />
                 <Select<"lumped" | "pipe">
                   label="Ports"
                   value={state.settings.portModel}
@@ -1161,6 +1170,21 @@ export function App(props: { initial: AppState | null }) {
                 whichever port-speed convention you pick.
               </p>
               <p className="hint">
+                Voice coil: {state.settings.coilTemp_C > 20 ? (
+                  <>
+                    at {state.settings.coilTemp_C} °C the coil&rsquo;s resistance is {Math.round((coilHeatFactor(state.settings.coilTemp_C) - 1) * 100)}% higher
+                    {solved.values.re !== undefined ? ` (Re ${(solved.values.re * dvcFactors(state).re).toFixed(2)} → ${(solved.values.re * dvcFactors(state).re * coilHeatFactor(state.settings.coilTemp_C)).toFixed(2)} Ω)` : ""}, so the
+                    same amplifier voltage gives about {(20 * Math.log10(coilHeatFactor(state.settings.coilTemp_C))).toFixed(1)}&nbsp;dB less above the bass,
+                    and Qes (so the box&rsquo;s Q) rises by the same ratio, propping up the response near resonance. This is power
+                    compression: the dB SPL view shows the lost output, the Relative view the change in shape (and F3).
+                  </>
+                ) : (
+                  <>20 °C uses the datasheet&rsquo;s cold values. </>
+                )}{" "}
+                Coils heat with sustained power, only a little at moderate levels but to 150&nbsp;°C or more near their rated power.
+                Copper and aluminium both rise about 0.4&nbsp;% per °C.
+              </p>
+              <p className="hint">
                 Ports as pipes: a port is also a pipe open at both ends, resonating at about c&nbsp;/&nbsp;2L (a 40&nbsp;cm port near
                 380&nbsp;Hz) and letting midrange out as a narrow peak. &ldquo;Pipe&rdquo; draws those resonances (charts then run to
                 1&nbsp;kHz); in the bass it matches the air-mass model within a few tenths of a dB. Vented boxes only; the box&rsquo;s own
@@ -1186,7 +1210,7 @@ export function App(props: { initial: AppState | null }) {
           <CrosshairProvider>
             <LogChart
               forum
-              title={`${splMode === "relative" ? "Relative response" : "SPL"} at ${driveLabel(state)}, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : state.baffle.on ? "free-standing (baffle step)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
+              title={`${splMode === "relative" ? "Relative response" : "SPL"} at ${driveLabel(state)}${coilLabel(state)}, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : state.baffle.on ? "free-standing (baffle step)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
               unit="dB"
               freq={freq}
               actions={

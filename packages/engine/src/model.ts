@@ -69,6 +69,16 @@ export function driverModel(d: DriverInput, air: Air = STANDARD_AIR): DriverMode
   };
 }
 
+/** Temperature coefficient of resistance of copper (per °C, near 20 °C); aluminium is about the same (0.0040). */
+export const COIL_ALPHA = 0.00393;
+
+/**
+ * How much a voice coil's resistance has risen at this temperature (°C), against the 20 °C
+ * datasheet value: Re(T) = Re · (1 + α(T − 20)). Bl, the suspension and Le stay as they are.
+ */
+export const coilHeatFactor = (temp_C: number | undefined) =>
+  temp_C === undefined || !Number.isFinite(temp_C) || temp_C <= 20 ? 1 : 1 + COIL_ALPHA * (temp_C - 20);
+
 /**
  * Blocked voice-coil impedance: Re + jωLe, plus (jωL2 ∥ R2) when the L2R2 model is
  * used. This is everything electrical in front of the motor.

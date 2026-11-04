@@ -293,6 +293,7 @@ export function simOptionsOf(s: AppState) {
     portCompression: s.settings.portCompression,
     splFrom: s.settings.lineSpl === "power" ? ("power" as const) : undefined,
     portModel: s.settings.portModel === "pipe" ? ("pipe" as const) : undefined,
+    coilTemp_C: s.settings.coilTemp_C > 20 ? s.settings.coilTemp_C : undefined,
   };
 }
 
@@ -419,6 +420,8 @@ export function prPeak(r: SimulationResult, fMin: number): { mm: number; xmax: n
 
 /** The drive level as people read it: "100 W" or "2.83 V". */
 export const driveLabel = (s: Pick<AppState, "drive" | "power" | "volts">) => (s.drive === "volts" ? `${s.volts} V` : `${s.power} W`);
+/** ", voice coil at 100 °C" when the coil is simulated hot; empty when cold. */
+export const coilLabel = (s: Pick<AppState, "settings">) => (s.settings.coilTemp_C > 20 ? `, voice coil at ${s.settings.coilTemp_C} °C` : "");
 
 /** Golden-ratio box proportions (width : height : depth), a common choice to spread standing waves. */
 const GOLDEN = { w: 1, h: 1.618, d: 0.618 };
