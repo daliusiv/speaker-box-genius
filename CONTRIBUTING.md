@@ -44,13 +44,19 @@ pnpm dev
 
 Keep PRs small and focused. For anything large, open an issue first so we can agree on the approach.
 
-## Licence of contributions
+## Licence of contributions and the CLA
 
-By submitting a contribution you agree that:
-- code you contribute is licensed under the project's [PolyForm Noncommercial 1.0.0](LICENSE) licence, and
-- data and documentation you contribute are licensed under [CC BY-NC-SA 4.0](LICENSE-DATA),
+Code and docs contributions need a one-time **[Contributor License Agreement](CLA.md)** (CLA). When you open your first pull request, a check asks you to comment `I have read the CLA and I agree to it.` That's all: no forms, no outside sites.
 
-and that the maintainer may grant commercial-use permissions for the project as a whole. Please sign off your commits (`git commit -s`) to confirm you have the right to submit the work.
+**Why?** The project is free for non-commercial use, and nobody may resell it. The CLA keeps it that way while letting the maintainer say yes to uses the non-commercial licence doesn't cover (say, a shop embedding the simulator) or move to a better licence later, without having to track down every contributor.
+
+**What it says, in short:**
+- You keep the copyright in your work.
+- You give the maintainer a broad licence to it, including the right to offer the project under other terms.
+- Your contribution stays available to everyone under the project's licence: [PolyForm Noncommercial 1.0.0](LICENSE) for code, [CC BY-NC-SA 4.0](LICENSE-DATA) for data and docs, or something more permissive.
+- You confirm it's yours to give (and your employer is fine with it, if that applies).
+
+**No CLA needed for driver data.** Pull requests that only add or change files in `drivers/` or `passive-radiators/` (including those the submission bot opens from the issue form) don't need it. That data is licensed under [CC BY-NC-SA 4.0](LICENSE-DATA) as you submit it.
 
 ## Code of conduct
 

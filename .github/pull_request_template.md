@@ -8,4 +8,4 @@
 - [ ] `pnpm test` and `pnpm typecheck` pass (code changes)
 - [ ] Engine maths changes have tests and a note on how the output curves changed
 - [ ] Database entries cite a datasheet or my own measurement
-- [ ] Commits are signed off (`git commit -s`), and I agree to the licence terms in CONTRIBUTING.md
+- [ ] Code or docs changes: I've signed the [CLA](https://github.com/daliusiv/speaker-box-genius/blob/main/CLA.md) (the CLA check asks on your first PR; not needed for database-only changes)

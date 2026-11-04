@@ -361,7 +361,7 @@ Keep `engine` free of any UI dependency so it stays reusable. Under PolyForm NC,
 ## 14. Open questions to decide
 
 1. **Name and repo slug:** this sets the Pages URL (`<user>.github.io/<repo>`). A custom domain (~£10/yr) is optional and can be added later without breaking hash links if you redirect.
-2. **CLA or DCO?** A CLA keeps the option to relicense or grant commercial exceptions. DCO is lighter but locks the licence in.
+2. ~~**CLA or DCO?**~~ **Decided 4 Nov 2026: a licence-grant CLA** ([`CLA.md`](../CLA.md)), checked by `.github/workflows/cla.yml` (sign by PR comment, signatures on the `cla-signatures` branch). Contributors keep copyright; database-only PRs are exempt.
 3. **Framework preference:** React vs Svelte?
 4. **Which 6–8 reference drivers** to use for the golden-test suite? These are also good first entries in the DB.
 5. **Your GitHub username/org** for the Required Notice and CODEOWNERS.

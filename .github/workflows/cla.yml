@@ -1,0 +1,133 @@
+name: CLA
+
+# Checks that everyone contributing to a pull request has signed CLA.md, and lets them
+# sign by commenting "I have read the CLA and I agree to it." Signatures are kept in
+# signatures/cla.json on the cla-signatures branch.
+#
+# Not needed: the maintainer's own pull requests, bots, and changes that only touch the
+# driver database (drivers/, passive-radiators/), such as the driver-submission bot's PRs.
+#
+# Runs on pull_request_target so it can comment on PRs from forks. It never checks out or
+# runs the pull request's code: it only reads metadata through the API.
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  statuses: write
+
+concurrency:
+  group: cla-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  cla:
+    if: github.event_name == 'pull_request_target' || github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const PHRASE = "i have read the cla and i agree to it";
+            const MAINTAINERS = ["daliusiv"];
+            const DATA_ONLY = /^(drivers|passive-radiators)\//;
+            const BRANCH = "cla-signatures";
+            const FILE = "signatures/cla.json";
+            const VERSION = "1.0";
+            const MARK = "<!-- cla-check -->";
+            const { owner, repo } = context.repo;
+            const claUrl = `https://github.com/${owner}/${repo}/blob/main/CLA.md`;
+
+            const number = context.eventName === "issue_comment" ? context.payload.issue.number : context.payload.pull_request.number;
+            const pr = (await github.rest.pulls.get({ owner, repo, pull_number: number })).data;
+            if (pr.state !== "open") return;
+
+            const normal = (s) => s.trim().toLowerCase().replace(/[.!\s]+$/, "").replace(/\s+/g, " ");
+            if (context.eventName === "issue_comment") {
+              const said = normal(context.payload.comment.body);
+              if (said !== PHRASE && said !== "recheck") return; // an ordinary comment
+            }
+
+            // Who needs to have signed: the person who opened the PR and the authors of its
+            // commits (when the maintainer opens it, the maintainer vouches for the commits).
+            const isBot = (u) => u.type === "Bot" || u.login.endsWith("[bot]");
+            const people = new Map();
+            const add = (u) => { if (u && u.login && !isBot(u) && !MAINTAINERS.includes(u.login)) people.set(u.id, u.login); };
+            add(pr.user);
+            if (!MAINTAINERS.includes(pr.user.login) && !isBot(pr.user)) {
+              const commits = await github.paginate(github.rest.pulls.listCommits, { owner, repo, pull_number: number, per_page: 100 });
+              for (const c of commits) add(c.author);
+            }
+            const files = await github.paginate(github.rest.pulls.listFiles, { owner, repo, pull_number: number, per_page: 100 });
+            const dataOnly = files.length > 0 && files.every((f) => DATA_ONLY.test(f.filename));
+
+            // Signatures so far.
+            let signatures = [];
+            let sha;
+            try {
+              const r = await github.rest.repos.getContent({ owner, repo, path: FILE, ref: BRANCH });
+              sha = r.data.sha;
+              signatures = JSON.parse(Buffer.from(r.data.content, "base64").toString("utf8"));
+            } catch (e) {
+              if (e.status !== 404) throw e;
+            }
+            const signed = (id) => signatures.some((s) => s.id === id);
+
+            // Signing.
+            if (context.eventName === "issue_comment" && normal(context.payload.comment.body) === PHRASE) {
+              const u = context.payload.comment.user;
+              if (people.has(u.id) && !signed(u.id)) {
+                signatures.push({
+                  login: u.login,
+                  id: u.id,
+                  signed: new Date().toISOString(),
+                  cla_version: VERSION,
+                  pull_request: number,
+                  comment: context.payload.comment.html_url,
+                });
+                await github.rest.repos.createOrUpdateFileContents({
+                  owner, repo, branch: BRANCH, path: FILE, sha,
+                  message: `CLA ${VERSION} signed by ${u.login} in #${number}`,
+                  content: Buffer.from(JSON.stringify(signatures, null, 2) + "\n").toString("base64"),
+                });
+              }
+            }
+
+            const missing = [...people].filter(([id]) => !signed(id)).map(([, login]) => login);
+            const ok = dataOnly || missing.length === 0;
+            const description = dataOnly
+              ? "Database-only change: no CLA needed"
+              : ok
+                ? "Everyone has signed the CLA"
+                : `Waiting for: ${missing.join(", ")}`.slice(0, 140);
+            await github.rest.repos.createCommitStatus({ owner, repo, sha: pr.head.sha, state: ok ? "success" : "failure", context: "CLA", description, target_url: claUrl });
+
+            // One comment per PR, kept up to date.
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: number, per_page: 100 });
+            const mine = comments.find((c) => c.body.includes(MARK) && c.user.type === "Bot");
+            let body;
+            if (!ok) {
+              body = [
+                MARK,
+                "Thanks for contributing! Before this can be merged, everyone who contributed to it needs to agree to the [Contributor License Agreement](" + claUrl + ").",
+                "",
+                "In short: you keep the copyright, the project stays free for non-commercial use, and the maintainer can still allow uses the licence doesn't cover (that's what stops anyone reselling it while keeping the project flexible).",
+                "",
+                "To sign, comment exactly:",
+                "",
+                "> I have read the CLA and I agree to it.",
+                "",
+                "Still to sign: " + missing.map((l) => "@" + l).join(", "),
+                "",
+                "Commits whose email isn't linked to a GitHub account are covered by the person who opened the pull request. Comment `recheck` to run this check again.",
+              ].join("\n");
+            } else if (mine) {
+              body = MARK + "\n" + (dataOnly ? "Database-only change: no CLA needed." : "Everyone has signed the CLA. Thank you!");
+            }
+            if (body && mine && mine.body !== body) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+            else if (body && !mine) await github.rest.issues.createComment({ owner, repo, issue_number: number, body });
