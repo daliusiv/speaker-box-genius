@@ -1,7 +1,9 @@
 import {
   STANDARD_AIR,
   WINISD_AIR,
+  baffleStepDb,
   type Air,
+  type Baffle,
   netVolume,
   roomGainDb,
   simulate,
@@ -211,8 +213,9 @@ export function simOptionsOf(s: AppState) {
     wiring: s.wiring,
     isobaric: s.isobaric ? { coils: s.isoCoils } : null,
     fMin: 10,
-    fMax: 500,
-    points: 300,
+    // The baffle step and its ripple sit higher up than the bass: show up to 1 kHz then.
+    fMax: s.baffle.on ? 1000 : 500,
+    points: s.baffle.on ? 340 : 300,
     highPass: s.highPass.on ? { type: s.highPass.type, order: s.highPass.order, freq: s.highPass.freq } : null,
     air: airOf(s),
     // The limit is in the displayed convention; the engine works in peak.
@@ -239,6 +242,12 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
         if (result.portVelocity) result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
         if (result.rearPortVelocity) result.rearPortVelocity = result.rearPortVelocity.map((v) => v / Math.SQRT2);
       }
+      const step = baffleOf(s, driver.sd_cm2);
+      if (step) {
+        const db = baffleCache(result.freq, step);
+        result.spl = result.spl.map((v, i) => v + db[i]!);
+        result.maxSpl = result.maxSpl.map((v, i) => v + db[i]!);
+      }
       const room = roomGainOf(s);
       if (room) {
         const lift = result.freq.map((f) => roomGainDb(f, room));
@@ -251,6 +260,38 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
     }
   }
   return out;
+}
+
+/** The front baffle for the baffle step, or null when it's off or the size is unusable. */
+export function baffleOf(s: AppState, sd_cm2?: number): Baffle | null {
+  const b = s.baffle;
+  if (!b.on) return null;
+  const v = s.volume;
+  const w = b.fromBox && v.shape === "box" ? v.width_cm : b.width_cm;
+  const h = b.fromBox && v.shape === "box" ? v.height_cm : b.height_cm;
+  if (!(w > 0 && h > 0)) return null;
+  return {
+    width: w / 100,
+    height: h / 100,
+    x: Math.min(w, Math.max(0, b.x_cm)) / 100,
+    y: Math.min(h, Math.max(0, b.y_cm)) / 100,
+    sd_cm2,
+    c: airOf(s).c,
+  };
+}
+
+/** The baffle step (dB) at these frequencies, or null when it's off. */
+export function baffleDbFor(s: AppState, freq: Float64Array, sd_cm2?: number): Float64Array | null {
+  const b = baffleOf(s, sd_cm2);
+  return b ? baffleCache(freq, b) : null;
+}
+
+// The step only depends on the baffle and frequencies: compute it once per change.
+let lastBaffle: { key: string; db: Float64Array } | null = null;
+function baffleCache(freq: Float64Array, b: Baffle): Float64Array {
+  const key = JSON.stringify([b, freq.length, freq[0], freq[freq.length - 1]]);
+  if (lastBaffle?.key !== key) lastBaffle = { key, db: baffleStepDb(freq, b) };
+  return lastBaffle.db;
 }
 
 /** Number of passive radiators in a PR design, all groups together. */

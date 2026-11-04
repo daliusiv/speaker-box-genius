@@ -17,3 +17,4 @@ export * from "./prfinder.ts";
 export * from "./prtuning.ts";
 export * from "./cutlist.ts";
 export * from "./qr.ts";
+export * from "./baffle.ts";

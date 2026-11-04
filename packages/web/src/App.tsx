@@ -35,6 +35,7 @@ import { VolumePanel } from "./VolumePanel.tsx";
 import { BuildSheet } from "./BuildSheet.tsx";
 import {
   airOf,
+  baffleDbFor,
   alignmentDriver,
   colorOf,
   dvcFactors,
@@ -53,6 +54,7 @@ import {
   type Design,
 } from "./sim.ts";
 import { RoomGainPanel } from "./RoomGain.tsx";
+import { BafflePanel } from "./BafflePanel.tsx";
 import { AddDesign, DesignCard } from "./Designs.tsx";
 import { reportUrl, ShareMenu } from "./Share.tsx";
 import { EqPanel } from "./Eq.tsx";
@@ -971,6 +973,16 @@ export function App(props: { initial: AppState | null }) {
             <EqPanel state={state} designs={designs} onChange={(eq) => set("eq", eq)} />
 
             <RoomGainPanel value={state.roomGain} room={roomGainOf(state)} onChange={(r) => set("roomGain", r)} />
+
+            <BafflePanel
+              state={state}
+              sd_cm2={finderCtx.driver?.sd_cm2}
+              onChange={(b) => set("baffle", b)}
+              onAddEq={(item) => {
+                setStep((st) => ({ ...st, eq: [...st.eq, item] }));
+                notify(`Added a +${"gain_db" in item ? item.gain_db : 0} dB low shelf at ${"freq" in item ? item.freq : ""} Hz (EQ, all designs).`);
+              }}
+            />
           </div>
         )}
         {panel === "build" && (
@@ -1084,7 +1096,7 @@ export function App(props: { initial: AppState | null }) {
           <CrosshairProvider>
             <LogChart
               forum
-              title={`${splMode === "relative" ? "Relative response" : "SPL"} at ${driveLabel(state)}, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
+              title={`${splMode === "relative" ? "Relative response" : "SPL"} at ${driveLabel(state)}, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : state.baffle.on ? "free-standing (baffle step)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
               unit="dB"
               freq={freq}
               actions={
@@ -1117,9 +1129,13 @@ export function App(props: { initial: AppState | null }) {
                     yMin: -30,
                     points: designs.flatMap((d) => {
                       const ref = d.result.summary.referenceSpl;
-                      return minus3Points(d.result.freq, d.result.spl.map((v) => v - ref), d.design.kind === "bandpass").map((f) => ({
+                      const rel = d.result.spl.map((v) => v - ref);
+                      // F3 is the box's own: without the baffle step (which isn't a box property), drawn on the curve as shown.
+                      const step = baffleDbFor(state, d.result.freq, finderCtx.driver?.sd_cm2);
+                      const own = step ? rel.map((v, i) => v - step[i]!) : rel;
+                      return minus3Points(d.result.freq, own, d.design.kind === "bandpass").map((f) => ({
                         f,
-                        y: -3,
+                        y: step ? valueAt(d.result.freq, rel, f) : -3,
                         color: d.color,
                         label: `F3 ${f < 100 ? f.toFixed(1) : f.toFixed(0)}`,
                       }));
@@ -1415,6 +1431,14 @@ function bandpassOwnLosses(b: { front: WprChamberLosses; rear: WprChamberLosses;
  * Where a relative response (0 dB = passband) crosses −3 dB, read off the curve as shown:
  * below its peak, and for a bandpass above it too. Interpolated in log f.
  */
+/** Value of a curve at frequency f (log-frequency interpolation). */
+function valueAt(freq: Float64Array, ys: ArrayLike<number>, f: number): number {
+  let i = 1;
+  while (i < freq.length - 1 && freq[i]! < f) i++;
+  const t = Math.log(f / freq[i - 1]!) / Math.log(freq[i]! / freq[i - 1]!);
+  return ys[i - 1]! + t * (ys[i]! - ys[i - 1]!);
+}
+
 function minus3Points(freq: Float64Array, rel: ArrayLike<number>, bandLimited: boolean): number[] {
   let peak = 0;
   for (let i = 1; i < rel.length; i++) if (rel[i]! > rel[peak]!) peak = i;

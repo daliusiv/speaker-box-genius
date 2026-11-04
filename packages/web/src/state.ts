@@ -166,6 +166,11 @@ export interface AppState {
   dvc: { on: boolean; entered: "one" | "parallel" | "series"; wired: "parallel" | "series" };
   /** Low-frequency lift of the listening space, added to the SPL curves. */
   roomGain: { mode: "off" | "car" | "room"; length_cm: number; slope: 6 | 12; max_db: number };
+  /**
+   * Baffle step: the speaker free-standing (full space) with its front baffle, instead of
+   * an infinite baffle. Size from the volume calculator's box when `fromBox`.
+   */
+  baffle: { on: boolean; fromBox: boolean; width_cm: number; height_cm: number; x_cm: number; y_cm: number };
   highPass: { on: boolean; type: HighPassType; order: number; freq: number };
   settings: Settings;
   eq: EqItem[];
@@ -290,6 +295,7 @@ export const DEFAULT_STATE: AppState = {
   isoCoils: "parallel",
   dvc: { on: false, entered: "parallel", wired: "parallel" },
   roomGain: { mode: "off", length_cm: 250, slope: 12, max_db: 18 },
+  baffle: { on: false, fromBox: true, width_cm: 25, height_cm: 40, x_cm: 12.5, y_cm: 15 },
   highPass: { on: false, type: "butterworth", order: 2, freq: 18 },
   settings: {
     units: "metric",
@@ -357,7 +363,7 @@ export function encodeState(s: AppState): string {
 // - top-level keys, whole (ts never partially: its keys mean "values the user typed");
 // - one level into objects that decoding merges with their defaults;
 // - per design, its keys against a fresh design of the same kind, one level into front/rear/params.
-const MERGED_TOP = new Set(["settings", "volume", "highPass", "roomGain"]);
+const MERGED_TOP = new Set(["settings", "volume", "highPass", "roomGain", "baffle"]);
 const MERGED_DESIGN = new Set(["front", "rear", "params"]);
 const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -557,6 +563,7 @@ export function decodeState(hash: string): AppState | null {
         wired: raw.dvc?.wired === "series" ? "series" : "parallel",
       },
       highPass: { ...d.highPass, ...raw.highPass },
+      baffle: { ...d.baffle, ...(raw.baffle ?? {}) },
       settings: { ...d.settings, ...raw.settings, losses: { ...d.settings.losses, ...raw.settings?.losses } },
       eq: Array.isArray(raw.eq)
         ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf"].includes(e.type)).slice(0, 12)
