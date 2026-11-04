@@ -1,6 +1,6 @@
 import { abs, add, arg, cx, div, inv, mul, parallel, scale, sub, type Complex } from "./complex.ts";
 import { STANDARD_AIR, type Air } from "./constants.ts";
-import { lineNetwork } from "./line.ts";
+import { baffledPistonImpedance, lineNetwork, pistonPowerFactor } from "./line.ts";
 import { eqResponse, highPassResponse, type EqStage, type HighPass } from "./filters.ts";
 import {
   boxCompliance,
@@ -98,6 +98,12 @@ export interface SimulationOptions {
   highPass?: HighPass | null;
   /** EQ stages (Linkwitz Transform, peaking, shelving) ahead of the amplifier. */
   eq?: EqStage[];
+  /**
+   * Lines and horns: "on-axis" (default) treats the cone and the mouth as point sources;
+   * "power" scales each by the share of power a baffled piston of its size really radiates,
+   * as Hornresp does. They differ once the mouth is large next to the wavelength.
+   */
+  splFrom?: "on-axis" | "power";
   /** Air properties. Default: 20 °C. Use WINISD_AIR to match WinISD exactly. */
   air?: Air;
   /** Amplifier output + cable resistance (Ω), shared by the whole driver bank. Default 0. */
@@ -227,6 +233,10 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const summary: SimulationResult["summary"] = { volts, referenceSpl: 0, f3: null, f6: null };
   const bp = box.kind === "bandpass" ? bandpassNetwork(box, d, n, air, summary) : null;
   const line = box.kind === "line" ? lineNetwork(box, air) : null;
+  // A line or horn models the air on the cone's sides explicitly, so the cone carries its bare
+  // moving mass Mmd = Mms − 16ρa³/3 (both sides' free-air load, as Hornresp defines it). An open
+  // line adds the front's radiation load (a piston in a baffle); the rear's is in the line's load.
+  const lineMmd = line ? Math.max(d.mms - (16 * air.rho * Math.pow(d.sd / Math.PI, 1.5)) / 3, d.mms * 0.05) : 0;
   // Port compression in a mass-loaded line's port (same model as vented boxes).
   let lineNl = 0;
   let lineReynoldsPerQ = 0;
@@ -385,9 +395,11 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       }
     } else if (line) {
       // Transmission line (or tapped horn): the line loads the cone; the mouth (or port) radiates.
+      let zasLine = cx(d.rms / sd2, (w * lineMmd - 1 / (w * d.cms)) / sd2);
+      if (!line.mouthOnly) zasLine = add(zasLine, baffledPistonImpedance(d.sd, w, air));
       const solveLine = () => {
         const zl = line.zLoad(w);
-        const zm = add(zas, scale(zl, n));
+        const zm = add(zasLine, scale(zl, n));
         const u = div(pg, add(zae, zm));
         return { zl, zm, u, exit: mul(scale(u, n), line.exitPerCone(w)) };
       };
@@ -417,7 +429,10 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       const dm = line.mouthDistance;
       const exitAtListener = dm > 0 ? scale(mul(sol.exit, cx(Math.cos((w * dm) / air.c), -Math.sin((w * dm) / air.c))), r / (r + dm)) : sol.exit;
       // Open line: the front of the cone radiates −ud as well. Tapped horn: only the mouth.
-      u0 = line.mouthOnly ? exitAtListener : sub(exitAtListener, ud);
+      const power = opts.splFrom === "power";
+      const mouthOut = power ? scale(exitAtListener, pistonPowerFactor(line.exitArea, w, air)) : exitAtListener;
+      const coneOut = power ? scale(ud, pistonPowerFactor(d.sd, w, air)) : ud;
+      u0 = line.mouthOnly ? mouthOut : sub(mouthOut, coneOut);
       if (out.parts) {
         const k = (w * air.rho) / (space * Math.PI * r) / 2e-5;
         out.parts.cone[i] = 20 * Math.log10(Math.max(abs(ud) * k, 1e-12));

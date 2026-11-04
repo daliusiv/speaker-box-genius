@@ -140,3 +140,49 @@ test("the INI-style form: L12 = 40.90, PAR", () => {
   assert.equal(r.design.sections!.length, 2);
   assert.equal(r.design.sections![1]!.taper, "conical");
 });
+
+// A record exported by Hornresp 55.30 itself (its default horn), 4 Nov 2026.
+import { readFileSync } from "node:fs";
+const HR = readFileSync(new URL("./fixtures/hornresp-55.30-default.txt", import.meta.url), "latin1");
+/** Each line as its key (or heading, or blank): the layout Hornresp checks on import. */
+const skeleton = (t: string) => t.split(/\r\n/).map((l) => l.replace(/ = .*$/, " ="));
+
+test("export: the exact layout of a Hornresp 55.30 record, CRLF line endings", () => {
+  // Hornresp's default horn and driver, rebuilt here.
+  const ts = tsFromMechanical({ sd_cm2: 350, bl: 18, cms: 4e-4, rms: 4, mmd_g: 20, re: 6 });
+  const drv = { ...(ts as Required<typeof ts>), le_mh: 1 };
+  const d: LineDesign = {
+    ...base,
+    end: "horn",
+    closedArea_cm2: 80,
+    sections: [
+      { length_cm: 60, endArea_cm2: 350, taper: "conical", fill_kgm3: 0 },
+      { length_cm: 75, endArea_cm2: 2400, taper: "exponential", fill_kgm3: 0 },
+    ],
+    rearChamber_l: 14,
+    throatChamber_l: 0.9,
+  };
+  const out = toHornresp(d, drv as never, { eg: 2.83, drivers: 1, name: "x", pmax: 100, xmax_mm: 5 });
+  assert.ok(typeof out !== "string", out as string);
+  assert.deepEqual(skeleton(out.text), skeleton(HR));
+  assert.ok(out.text.endsWith("\r\n") && !/[^\r]\n/.test(out.text));
+  // Same values as Hornresp's own record where the designs agree.
+  const val = (t: string, k: string, n = 0) => [...t.matchAll(new RegExp(`^${k.replace(/[()']/g, "\\$&")} = (.*)$`, "gm"))][n]?.[1]?.trim();
+  for (const [k, n] of [["S1", 0], ["S2", 0], ["Con", 0], ["S3", 0], ["Exp", 0], ["F23", 0], ["Sd", 0], ["Bl", 0], ["Cms", 0], ["Rms", 0], ["Mmd", 0], ["Re", 0], ["Nd", 0], ["Vrc", 0], ["Vtc", 0], ["Atc", 0]] as const)
+    assert.equal(val(out.text, k, n), val(HR, k, n), k);
+  // Hornresp drops the rear chamber when Lrc = 0, so a front horn's record must carry a depth.
+  assert.ok(Number(val(out.text, "Lrc")) > 0, "Lrc");
+});
+
+test("import: Hornresp's own default record", () => {
+  const r = fromHornresp(HR, base);
+  assert.ok(typeof r !== "string", r as string);
+  assert.equal(r.design.end, "horn");
+  assert.equal(r.design.closedArea_cm2, 80);
+  assert.deepEqual(r.design.sections!.map((x) => [x.length_cm, x.endArea_cm2, x.taper]), [[60, 350, "conical"], [75, 2400, "exponential"]]);
+  assert.equal(r.design.rearChamber_l, 14);
+  assert.equal(r.design.throatChamber_l, 0.9);
+  assert.ok(r.warnings.some((w) => /0\.5 x Pi/.test(w)));
+  assert.ok(r.warnings.some((w) => /Lrc/.test(w)));
+  assert.ok(r.driver && Math.abs(r.driver.ts.sd_cm2! - 350) < 1e-9 && r.driver.le_mh === 1);
+});

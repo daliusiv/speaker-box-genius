@@ -10,7 +10,7 @@ import type { LineDesign, LineSection } from "./state.ts";
  * arrangement (OD = offset driver: the driver at S2, used for lines; TH = tapped horn: the
  * driver between S2 and S3; Nd = front-loaded: the driver at the throat with chambers
  * Vrc and Vtc), the driver as mechanical parameters, and filling per segment (Fr1…Fr4
- * flow resistivity in rayls/cm, Tal1…Tal4 percentage of the segment filled).
+ * flow resistivity in mks rayls/m, Tal1…Tal4 percentage of the segment filled).
  *
  * The export follows the layout of recent Hornresp versions ("|SECTION:" headings,
  * "Key = value" lines); Hornresp fills defaults for parameters left out. The import is
@@ -136,53 +136,152 @@ export function toHornresp(d: LineDesign, driver: DriverInput, o: { eg: number; 
   const lines: string[] = [];
   const put = (key: string, value: string, note?: string) => {
     lines.push(`${key} = ${value}`);
-    rows.push({ key, value, ...(note ? { note } : {}) });
+    if (note !== "") rows.push({ key, value, ...(note ? { note } : {}) });
   };
+  // Settings this app doesn't use, written as Hornresp writes its defaults (no table row).
+  const fixed = (key: string, value: string) => put(key, value, "");
   const head = (h: string) => lines.push("", `|${h}:`, "");
+  const gap = () => lines.push("");
 
+  // Hornresp's speed of sound (its F values for Exp segments use 344 m/s).
+  const C_HR = 344;
+  const expCutoff = (sg: Seg) => (C_HR * Math.log(sg.s2 / sg.s1)) / (4 * Math.PI * (sg.length_cm / 100));
+  const last = segs[segs.length - 1]!;
+  const mouthExp = last.taper === "exponential" && last.s2 > last.s1;
+
+  // The layout of a Hornresp 55.30 export, field for field (test/fixtures/hornresp-55.30-default.txt).
   lines.push("ID = 55.30", "", `Comment = ${o.name.replace(/[\r\n|]/g, " ").slice(0, 60)} (Speaker Box Genius)`);
   head("RADIATION, SOURCE AND MOUTH PARAMETER VALUES");
   put("Ang", "2.0 x Pi", "half space");
   put("Eg", r2(o.eg), "volts");
   put("Rg", "0.00");
-  put("Fta", "0.00");
+  if (mouthExp) {
+    // Mouth circumference in wavelengths at the last segment's flare cutoff (free space).
+    const cir = (2 * Math.sqrt((last.s2 / 1e4) / Math.PI) * Math.PI * expCutoff(last)) / C_HR;
+    put("Cir", r2(cir), "mouth circumference ÷ wavelength at the flare cutoff");
+  } else put("Fta", "0.00");
   head("HORN PARAMETER VALUES");
-  segs.forEach((s, i) => {
+  for (let i = 0; i < MAX_SEGMENTS; i++) {
     const a = i + 1;
     const b = i + 2;
-    put(`S${a}`, r2(s.s1), "cm²");
-    put(`S${b}`, r2(s.s2), "cm²");
-    put(FLARE[s.taper], r2(s.length_cm), `L${a}${b}, cm`);
-    put(`F${a}${b}`, "0.00");
-  });
+    const sg = segs[i];
+    if (sg) {
+      put(`S${a}`, r2(sg.s1), "cm²");
+      put(`S${b}`, r2(sg.s2), "cm²");
+      put(FLARE[sg.taper], r2(sg.length_cm), `L${a}${b}, cm`);
+      put(`F${a}${b}`, r2(sg.taper === "exponential" && sg.s2 !== sg.s1 ? expCutoff(sg) : 0), sg.taper === "exponential" ? "flare cutoff, Hz" : undefined);
+    } else {
+      fixed(`S${a}`, "0.00");
+      fixed(`S${b}`, "0.00");
+      fixed(`L${a}${b}`, "0.00");
+      fixed(`F${a}${b}`, "0.00");
+    }
+  }
   head("TRADITIONAL DRIVER PARAMETER VALUES");
   put("Sd", r2(m.sd_cm2), "cm²");
   put("Bl", r2(m.bl), "T·m");
-  put("Cms", m.cms.toExponential(2).toUpperCase(), "m/N");
+  // Hornresp writes a two-digit exponent: 5.91E-04.
+  put("Cms", m.cms.toExponential(2).toUpperCase().replace(/E([+-])(\d)$/, "E$10$2"), "m/N");
   put("Rms", r2(m.rms), "N·s/m");
   put("Mmd", r2(m.mmd_g), "g, without air load");
   put("Le", r2(m.le_mh), "mH");
   put("Re", r2(m.re), "Ω");
   put(topo, String(Math.max(1, o.drivers)), topo === "OD" ? "offset driver (driver at S2)" : topo === "TH" ? "tapped horn (driver between S2 and S3)" : "front-loaded");
+  head("ADVANCED DRIVER PARAMETER VALUES FOR SEMI-INDUCTANCE MODEL");
+  for (const k of ["Re'", "Leb", "Le", "Ke", "Rss"]) fixed(k, "0.00");
+  head("ADVANCED DRIVER PARAMETER VALUES FOR FREQUENCY-DEPENDENT DAMPING MODEL");
+  fixed("Rms", "0.00");
+  fixed("Ams", "0.00");
+  head("PASSIVE RADIATOR PARAMETER VALUE");
+  fixed("Added Mass", "0.00");
   head("CHAMBER PARAMETER VALUES");
-  put("Vrc", r2(topo === "Nd" ? d.rearChamber_l : 0), "L");
-  put("Lrc", "0.00");
-  put("Ap1", "0.00");
-  put("Lp", "0.00");
-  put("Vtc", r2(topo === "Nd" ? d.throatChamber_l : 0), "L");
+  put("Vrc", r2(topo === "Nd" ? d.rearChamber_l : 0), "rear chamber, L");
+  // Hornresp drops the rear chamber (and lets the cone's back radiate) when Lrc = 0, so give it
+  // the depth of a cube of that volume. With chamber resonances masked the depth changes nothing else.
+  put("Lrc", r2(topo === "Nd" && d.rearChamber_l > 0 ? Math.cbrt(d.rearChamber_l * 1000) : 0), "rear chamber depth, cm");
+  fixed("Fr", "0.00");
+  fixed("Tal", "0.00");
+  // Hornresp's throat chamber volume is in cm³.
+  put("Vtc", r2(topo === "Nd" ? d.throatChamber_l * 1000 : 0), "throat chamber, cm³");
   put("Atc", r2(topo === "Nd" && d.throatChamber_l > 0 ? m.sd_cm2 * Math.max(1, o.drivers) : 0), "cm²");
+  gap();
+  fixed("Acoustic Path Length", "0.0");
   head("MAXIMUM SPL PARAMETER VALUES");
+  fixed("Pamp", "100");
+  fixed("Vamp", "25");
+  fixed("Iamp", "4");
   put("Pmax", String(Math.round(o.pmax ?? 100)), "W");
   put("Xmax", (o.xmax_mm ?? 5).toFixed(1), "mm");
+  gap();
+  fixed("Maximum SPL Setting", "3");
   head("ABSORBENT FILLING MATERIAL PARAMETER VALUES");
   for (let i = 0; i < MAX_SEGMENTS; i++) {
     const f = segs[i]?.fill_kgm3 ?? 0;
-    put(`Fr${i + 1}`, r2(f > 0 ? flowResistivity(f) / 100 : 0), f > 0 ? `rayls/cm (${f} kg/m³ polyester)` : undefined);
+    put(`Fr${i + 1}`, r2(f > 0 ? flowResistivity(f) : 0), f > 0 ? `mks rayls/m (${f} kg/m³ polyester)` : "");
   }
-  for (let i = 0; i < MAX_SEGMENTS; i++) put(`Tal${i + 1}`, "100", "% of the segment filled");
-  if (segs.some((s) => s.fill_kgm3 > 0)) warnings.push("Stuffing is exported as flow resistivity (Fr); Hornresp's filling model differs from this one, so stuffed lines won't match exactly.");
+  gap();
+  for (let i = 0; i < MAX_SEGMENTS; i++) put(`Tal${i + 1}`, "100", segs[i]?.fill_kgm3 ? "% of the segment filled" : "");
+  if (segs.some((sg) => sg.fill_kgm3 > 0)) warnings.push("Stuffing is exported as flow resistivity (Fr1…Fr4, rayls/m). Hornresp only uses it in the Loudspeaker Wizard (Tools → Loudspeaker Wizard), not from the main window's Calculate, and its filling model differs from this one, so stuffed lines won't match exactly.");
+  lines.push(...HORNRESP_TAIL);
   return { text: lines.join("\r\n") + "\r\n", rows, warnings };
 }
+
+
+/** Filter, EQ, flag and other settings, exactly as Hornresp 55.30 writes its defaults. */
+const HORNRESP_TAIL = `
+|ACTIVE BAND PASS FILTER PARAMETER VALUES:
+
+High Pass Frequency = 0
+High Pass Slope = 1
+Low Pass Frequency = 0
+Low Pass Slope = 1
+
+Butterworth High Pass Order = 1
+Butterworth Low Pass Order = 1
+Linkwitz-Riley High Pass Order = 2
+Linkwitz-Riley Low Pass Order = 2
+Bessel High Pass Order = 1
+Bessel Low Pass Order = 1
+
+2nd Order High Pass Q = 0.5
+2nd Order Low Pass Q = 0.5
+4th Order High Pass Q = 0.5
+4th Order Low Pass Q = 0.5
+
+Active Filter Alignment = 1
+Active Filter On / Off Switch = 1
+
+|PASSIVE FILTER PARAMETER VALUES:
+
+Series / Parallel 1 = S
+Series / Parallel 2 = S
+Series / Parallel 3 = S
+Series / Parallel 4 = S
+
+|EQUALISER FILTER PARAMETER VALUES:
+
+${[1, 2, 3, 4, 5, 6].map((b) => `Band ${b} Frequency = 0\nBand ${b} Q Factor = 0.01\nBand ${b} Gain = 0.0\nBand ${b} Type = -1`).join("\n")}
+
+|STATUS FLAGS:
+
+Auto Path Flag = 0
+Lossy Inductance Model Flag = 0
+Semi-Inductance Model Flag = 0
+Damping Model Flag = 0
+Closed Mouth Flag = 0
+Continuous Flag = 1
+End Correction Flag = 1
+
+|OTHER SETTINGS:
+
+Filter Type Index = 0
+Filter Input Index = 0
+Filter Output Index = 0
+
+Filter Type = 1
+
+MEH Configuration = 0
+ME Amplifier Polarity Value = 1`.split("\n");
 
 const TAPER: Record<string, LineSection["taper"]> = { par: "linear", con: "conical", exp: "exponential" };
 
@@ -217,8 +316,10 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
   for (const [k, v] of pairs) {
     const sm = /^S([1-6])$/i.exec(k);
     if (sm) {
+      // Unused segments are written as zeros ("S3 = 0.00" after "S3 = 2400.00"): keep the real area.
       const idx = Number(sm[1]) - 1;
-      areas[idx] = num(v);
+      const val = num(v);
+      if (val > 0 || areas[idx] === undefined) areas[idx] = val;
       continue;
     }
     const lm = /^L(\d)(\d)$/i.exec(k);
@@ -236,8 +337,8 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
   const topo = pairs.find(([k]) => /^(OD|TH|Nd|ND)$/.test(k))?.[0]?.toUpperCase() ?? (typeValue === "OD" || typeValue === "TH" ? typeValue : "ND");
   const fills = [1, 2, 3, 4].map((i) => {
     const fr = get(`Fr${i}`) ?? 0;
-    // rayls/cm → Pa·s/m², then the density that gives it (inverse of Garai–Pompoli).
-    return fr > 0 ? Math.round((((fr * 100) / 25.989) ** (1 / 1.404)) * 10) / 10 : 0;
+    // mks rayls/m (Pa·s/m²) → the density that gives it (inverse of Garai–Pompoli).
+    return fr > 0 ? Math.round(((fr / 25.989) ** (1 / 1.404)) * 10) / 10 : 0;
   });
 
   // Sections from the segments (closed end / throat = S1).
@@ -271,10 +372,12 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
   } else {
     design.end = "horn";
     design.driverAt_cm = 0;
+    // Hornresp only has a rear chamber when both Vrc and Lrc are set; otherwise the driver's back is open.
     const vrc = get("Vrc") ?? 0;
+    const closed = vrc > 0 && (get("Lrc") ?? 0) > 0;
     design.rearChamber_l = vrc > 0 ? vrc : base.rearChamber_l;
-    if (!(vrc > 0)) warnings.push(`No rear chamber in the record (Vrc = 0): using ${design.rearChamber_l} L (an open-backed driver isn't modelled).`);
-    design.throatChamber_l = get("Vtc") ?? 0;
+    if (!closed) warnings.push(`The record has no rear chamber (Vrc or Lrc = 0, an open-backed driver, which isn't modelled here): using a sealed ${design.rearChamber_l} L.`);
+    design.throatChamber_l = (get("Vtc") ?? 0) / 1000; // Hornresp: cm³
   }
   // Sections: the first starts at S1 (or at the driver), so re-base the closed area.
   if ((topo === "TH" || topo === "OD") && lengths[0]! < 0.5) design.closedArea_cm2 = areas[1]!;
