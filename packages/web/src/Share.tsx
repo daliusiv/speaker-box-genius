@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { driveLabel, PORT_LIMIT, prGroupLabels, prPeak, type Design } from "./sim.ts";
+import { driveLabel, lineFoldOf, PORT_LIMIT, prGroupLabels, prPeak, type Design } from "./sim.ts";
+import { foldShapes } from "./foldShapes.ts";
 import { REPO } from "./components.tsx";
 import { fmtQ } from "./units.ts";
 import { encodeStateShort, type AppState } from "./state.ts";
@@ -212,7 +213,20 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
   const rowH = 34;
   const chartsTop = tableTop + rowH * (rows.length + 1) + 30;
   const chartBlock = chartH + 48;
-  const H = chartsTop + Math.ceil(figures.length / 2) * (chartBlock + pad) + 50;
+  // Folded transmission lines (not front horns): a side view each, in a row under the charts.
+  const folds = designs
+    .flatMap((d) => {
+      if (d.design.kind !== "line" || d.design.end === "horn") return [];
+      try {
+        return [{ d, f: lineFoldOf(d.design, state.volume.wall_mm) }];
+      } catch {
+        return [];
+      }
+    })
+    .slice(0, 4);
+  const foldsTop = chartsTop + Math.ceil(figures.length / 2) * (chartBlock + pad);
+  const foldBlock = 300;
+  const H = foldsTop + (folds.length > 0 ? foldBlock + pad : 0) + 50;
 
   const scale = 2;
   const canvas = document.createElement("canvas");
@@ -287,6 +301,40 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
     const img = await loadImage(standaloneSvg(svg, colW - 16, chartH));
     g.drawImage(img, x + 8, y + 40, colW - 16, chartH);
   }
+
+  // Folded lines
+  const foldW = (W - pad * (folds.length + 1)) / Math.max(folds.length, 1);
+  folds.forEach(({ d, f }, i) => {
+    const x = pad + i * (foldW + pad);
+    const y = foldsTop;
+    g.fillStyle = card;
+    g.strokeStyle = border;
+    g.lineWidth = 1;
+    g.beginPath();
+    g.roundRect(x, y, foldW, foldBlock, 12);
+    g.fill();
+    g.stroke();
+    g.fillStyle = d.color;
+    g.fillRect(x + 16, y + 18, 14, 14);
+    g.fillStyle = fg;
+    g.font = `600 18px ${font}`;
+    g.fillText(`${d.design.name}: folded`, x + 38, y + 31, foldW - 54);
+    g.fillStyle = muted;
+    g.font = `400 16px ${font}`;
+    const o = f.outside;
+    g.fillText(`${Math.round(o.width / 10)} × ${Math.round(o.height / 10)} × ${Math.round(o.depth / 10)} cm (W × H × D), ${f.runs.length} runs`, x + 16, y + foldBlock - 16, foldW - 32);
+    // Side view, front on the left, scaled into the block.
+    const boxH = foldBlock - 90;
+    const k = Math.min(boxH / o.height, (foldW - 60) / o.depth);
+    const ox = x + (foldW - o.depth * k) / 2;
+    const oy = y + 48;
+    for (const r of foldShapes(f, state.volume.wall_mm)) {
+      g.fillStyle = r.kind === "inner" ? card : r.kind === "driver" || r.kind === "mouth" ? d.color : muted;
+      g.globalAlpha = r.kind === "outer" ? 0.55 : r.kind === "mouth" ? 0.6 : 1;
+      g.fillRect(ox + r.x * k, oy + r.y * k, Math.max(1, r.w * k), Math.max(1, r.h * k));
+    }
+    g.globalAlpha = 1;
+  });
 
   // Footer
   g.fillStyle = muted;

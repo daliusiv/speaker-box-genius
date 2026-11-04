@@ -123,7 +123,8 @@ export interface LineDesign extends DesignBase {
   sections: LineSection[];
   /** Driver centre (its rear, for a tapped horn) from the closed end. */
   driverAt_cm: number;
-  end: "open" | "port" | "tapped";
+  /** open/port: TL family; tapped: tapped horn; horn: front-loaded horn (driver at the throat). */
+  end: "open" | "port" | "tapped" | "horn";
   /** Tapped horn: where the driver's front feeds the line, from the closed end. */
   tapAt_cm: number;
   portDiameter_cm: number;
@@ -136,6 +137,9 @@ export interface LineDesign extends DesignBase {
   fold: { width_cm: number; folds: number };
   /** Last tuning asked for with "Set length". */
   targetFb: number;
+  /** Front-loaded horn: sealed chamber behind the driver and the chamber in front of it (litres). */
+  rearChamber_l: number;
+  throatChamber_l: number;
 }
 
 export type DesignState = SealedDesign | VentedDesign | PrDesign | BandpassDesign | LineDesign;
@@ -291,6 +295,8 @@ export function newDesign(kind: DesignKind, existing: DesignState[]): DesignStat
         mouthDistance_cm: 0,
         fold: { width_cm: 20, folds: 2 },
         targetFb: 40,
+        rearChamber_l: 20,
+        throatChamber_l: 0,
       };
     case "bandpass":
       return {
@@ -581,7 +587,7 @@ function lineFrom(d: Raw, base: LineDesign): Partial<LineDesign> {
         fill_kgm3: x.fill_kgm3 > 0 ? x.fill_kgm3 : 0,
       }));
     if (out.sections.length === 0) out.sections = base.sections;
-    out.end = ["open", "port", "tapped"].includes(d.end) ? d.end : "open";
+    out.end = ["open", "port", "tapped", "horn"].includes(d.end) ? d.end : "open";
   }
   out.mouth = ["front", "back", "custom"].includes(d.mouth) ? d.mouth : "front";
   out.fold = { ...base.fold, ...(d.fold ?? {}) };

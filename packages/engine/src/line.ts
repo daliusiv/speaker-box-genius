@@ -54,6 +54,12 @@ export interface LineInput {
    */
   tap_cm?: number;
   /**
+   * Front-loaded horn: the driver sits at the throat (x = 0, so `driverAt_cm` must be 0) in a
+   * sealed rear chamber, its front into a throat (compression) chamber that opens into the
+   * horn. Only the mouth radiates. Volumes in litres; throat 0 = none.
+   */
+  frontLoaded?: { rear_l: number; throat_l: number };
+  /**
    * Extra distance from the mouth (or port) to the listener compared with the cone (cm),
    * e.g. about the box depth for a mouth on the back. 0 = next to the driver.
    */
@@ -221,6 +227,8 @@ export interface LineNetwork {
   mouthFlow(w: number, pDriver: Complex): Complex;
   /** Tapped horn: the cone's front is inside the line, so only the mouth radiates. */
   tapped: boolean;
+  /** Only the mouth radiates (tapped and front-loaded horns): the cone is enclosed. */
+  mouthOnly: boolean;
   /** Extra path from the exit to the listener (m). */
   mouthDistance: number;
   /** Extra resistance in series with the exit (port compression), Pa·s/m³. */
@@ -247,6 +255,20 @@ export function lineNetwork(line: LineInput, air: Air = STANDARD_AIR): LineNetwo
   const xr = line.driverAt_cm / 100;
   if (xr > total - 1e-6) throw new Error("The driver must sit before the mouth");
   const tapped = line.tap_cm !== undefined;
+  const flh = line.frontLoaded;
+  if (flh) {
+    if (tapped || xr > 1e-9) throw new Error("A front-loaded horn's driver sits at the throat");
+    if (!(flh.rear_l > 0)) throw new Error("A front-loaded horn needs a rear chamber");
+  }
+  // Chambers as acoustic compliances: C = V / (ρc²).
+  const cRear = flh ? flh.rear_l / 1000 / (air.rho * air.c * air.c) : 0;
+  const cThroat = flh ? Math.max(0, flh.throat_l) / 1000 / (air.rho * air.c * air.c) : 0;
+  /** Front-loaded horn: the impedance in front of the cone (throat chamber ∥ horn). */
+  const zFront = (zHorn: Complex, w: number): Complex => {
+    if (!(cThroat > 0)) return zHorn;
+    const yTc = cx(0, w * cThroat);
+    return div(cx(1), add(yTc, div(cx(1), zHorn)));
+  };
   const xf = tapped ? line.tap_cm! / 100 : xr;
   if (tapped && !(xf > xr + 1e-6 && xf < total - 1e-6)) throw new Error("The front tap must sit between the driver's rear and the mouth");
 
@@ -315,6 +337,7 @@ export function lineNetwork(line: LineInput, air: Air = STANDARD_AIR): LineNetwo
   return {
     zLoad(w) {
       chains(w);
+      if (flh) return add(zFront(zAheadIn(), w), cx(0, -1 / (w * cRear)));
       if (tapped) {
         const { pr, pf } = tappedPressures();
         return sub(pr, pf);
@@ -326,6 +349,7 @@ export function lineNetwork(line: LineInput, air: Air = STANDARD_AIR): LineNetwo
     },
     exitPerCone(w) {
       chains(w);
+      if (flh) return mouthFlow(zFront(zAheadIn(), w)); // pressure at the throat for unit cone flow
       if (tapped) return mouthFlow(tappedPressures().pf);
       const z = this.zLoad(w);
       return mouthFlow(z);
@@ -335,6 +359,7 @@ export function lineNetwork(line: LineInput, air: Air = STANDARD_AIR): LineNetwo
       return mouthFlow(pDriver);
     },
     tapped,
+    mouthOnly: tapped || !!flh,
     mouthDistance: Math.max(0, (line.mouthDistance_cm ?? 0) / 100),
     setExitLoss(r) {
       if (r !== exitLoss) {

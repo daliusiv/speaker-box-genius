@@ -14,9 +14,23 @@
 - Mouth position: when the mouth is further from the listener than the cone (on the back of a folded box, or a custom distance), its output is delayed and scaled by distance.
 - An MLTL's port can be flared, and port compression (Settings) applies to it like a ported box's.
 
+## Front-loaded horns
+
+The driver sits at the throat in a sealed rear chamber (Vrc), its front into a throat chamber (Vtc) that opens into the horn. The cone sees the rear chamber's compliance in series with the throat chamber in parallel with the horn's input impedance; only the mouth radiates. The "Front horn" preset is an exponential horn with the throat at ½ Sd, the mouth sized for a normalised circumference of 1 in half space, Vrc = ½ Vas, and Vtc for a top end near 4 × the cutoff. Folding and the cut list don't cover front horns yet.
+
+## Hornresp export and import (`packages/web/src/hornresp.ts`)
+
+Export writes a record in the layout of recent Hornresp versions (`|SECTION:` headings, `Key = value`): segments S1…S5 with Par/Con/Exp lengths, OD for lines (a 0.01 cm first segment when the driver is at the closed end), TH for tapped horns, Nd with Vrc/Vtc for front horns, the driver as Sd/Bl/Cms/Rms/Mmd/Le/Re (Mmd without the air load, 16ρa³/3), stuffing as Fr (rayls/cm) with Tal = 100 %. An MLTL's port is a 0.01 cm step plus a uniform segment (a flared port as its equivalent straight length). Hornresp takes at most 4 segments; designs needing more are refused with the reason. The app also lists every value to type in, in case a Hornresp version refuses the file.
+
+Import reads `Key = value` pairs in order from a file or a one-line forum paste, with comma or point decimals and the INI form (`L12=40.90, PAR`). Unknown flares (Hyp, Tra, Obl) are read as Par with a warning; Lrc, chamber ports and angles other than 2π are flagged. The record's driver can replace the current one.
+
+Not yet checked against Hornresp itself: whether its import accepts the exported file unchanged.
+
 ## Folding (`linefold.ts`)
 
 The line is folded into vertical runs side by side, front to back, separated by dividers alternately from the top and the bottom. The box height is solved so that the path along the centre of the runs (straight parts plus the turns) equals the line's length. The cut list adds the dividers, the driver cutout (which must be in the first run) and the mouth opening or port hole on the back. Bends aren't modelled acoustically.
+
+Tapped horns: the driver mounts on the divider between the run holding its rear and the next run, which must hold the tap. Heights along a run are taken as proportional to the distance along it; "Line up the tap" moves the tap level with the rear. The side view also appears on the printed build sheet and on the forum image.
 
 ## "Best line"
 
@@ -29,6 +43,8 @@ Tries driver positions (0–40 % along) against stuffing (none, or the first 1�
 - A short, wide line with a port lands within 7 % of the ported box of the same volume (the end corrections differ slightly).
 - Stuffing at 8 kg/m³ cuts the 150–800 Hz ripple from about 72 dB (empty and lossless) to about 8 dB.
 - Baffled piston radiation: its low-frequency limits match 8a/3π and (ka)²/2.
+- Textbook horns (`horn.test.ts`): an exponential horn's throat resistance follows √(1 − (fc/f)²) above cutoff (averaged over one mouth-ripple period, within 10 %) and is near zero below; a conical horn's throat impedance follows jkx₀/(1 + jkx₀) within 0.06 ρc/S; a TQWT (cone closed at its narrow end) resonates where tan kL = −k·x₁, within 3 %.
+- Front-loaded horn: horn gain over the same driver in a sealed box, less excursion in band, and a throat chamber rolls off the top near S₁c / (2π·Vtc).
 
 ## Validation against Hornresp (to do)
 

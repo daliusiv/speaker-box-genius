@@ -15,7 +15,7 @@ import { Fixed, Num, Select } from "./components.tsx";
 import { PassiveRadiatorBrowser } from "./Library.tsx";
 import { loadPrChoice, type DbIndex } from "./library.ts";
 import { PrTuning } from "./PrTuning.tsx";
-import { LineBody } from "./LineBody.tsx";
+import { LineBody, type ImportedDriver } from "./LineBody.tsx";
 
 /** What the volume calculator and build sheet need from a chosen PR. */
 export interface PrPhysical {
@@ -885,6 +885,8 @@ export function DesignCard(props: {
   onPrPhysical: (x: PrPhysical) => void;
   /** Transmission lines: simulated tuning. */
   lineFb?: number | null;
+  /** Transmission lines: replace the driver with one read from a Hornresp record. */
+  onImportDriver?: (x: ImportedDriver) => void;
   /** Transmission lines: all the drivers' displacement (L) and the wall thickness (mm). */
   driverDisp_l?: number;
   wall_mm?: number;
@@ -925,6 +927,7 @@ export function DesignCard(props: {
           compression={props.portCtx.portCompression ?? null}
           driverDisp_l={props.driverDisp_l ?? 0}
           wall_mm={props.wall_mm ?? 18}
+          onImportDriver={props.onImportDriver}
         />
       )}
       {d.kind === "pr" && (

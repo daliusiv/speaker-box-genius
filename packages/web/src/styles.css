@@ -2050,6 +2050,17 @@ dialog.finder .lib-inner {
   body.print-build #print-root .hint {
     color: #444;
   }
+  body.print-build #print-root .fold-inner {
+    fill: #fff;
+  }
+  body.print-build #print-root .fold-outer,
+  body.print-build #print-root .fold-divider {
+    fill: #555;
+    opacity: 1;
+  }
+  body.print-build #print-root .build-fold .fold-drawing {
+    width: 5cm;
+  }
 }
 
 .cut-name {
@@ -2179,4 +2190,33 @@ button.chip.on {
 }
 .line-tags .tag.bad {
   background: color-mix(in srgb, var(--over) 18%, transparent);
+}
+.build-fold {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  margin: 0.4rem 0;
+}
+.build-fold .fold-drawing {
+  width: 8rem;
+}
+.line-hornresp .unit-switch {
+  margin: 0.3rem 0 0.4rem;
+}
+textarea.hornresp-text {
+  width: 100%;
+  box-sizing: border-box;
+  font: 0.8rem ui-monospace, monospace;
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.4rem;
+}
+label.check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
 }

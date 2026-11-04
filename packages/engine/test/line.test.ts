@@ -185,8 +185,8 @@ test("a line's cone and mouth parts add up to its response; the mouth carries th
   assert.ok(st.parts!.cone[k]! > st.parts!.mouth[k]! + 6, "cone dominates high up");
   // The sum lies between the difference and the sum of the parts' magnitudes.
   for (let i = 0; i < r.freq.length; i++) {
-    const a = 10 ** (r.parts.cone[i]! / 20);
-    const b = 10 ** (r.parts.mouth[i]! / 20);
+    const a: number = 10 ** (r.parts.cone[i]! / 20);
+    const b: number = 10 ** (r.parts.mouth[i]! / 20);
     const s = 10 ** (r.spl[i]! / 20);
     assert.ok(s <= (a + b) * 1.0001 && s >= Math.abs(a - b) * 0.9999, `triangle at ${r.freq[i]}`);
   }

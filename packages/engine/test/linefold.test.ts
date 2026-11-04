@@ -42,3 +42,20 @@ test("driver position, mouth side and warnings", () => {
   const wide = foldLine({ segments: STRAIGHT, width: 120, folds: 1, wall: 18, driverAt_mm: 200, driverCutout: 145 });
   assert.ok(wide.warnings.some((w) => /wider than the line/.test(w)));
 });
+
+test("tapped horn: the driver sits on the divider between the rear's run and the tap's run, lined up", () => {
+  const segs = [{ length_cm: 300, startArea_cm2: 400, endArea_cm2: 1200 }];
+  const base = { segments: segs, width: 400, folds: 2, wall: 18, driverAt_mm: 300, driverCutout: 230 };
+  const first = foldLine({ ...base, tap_mm: 1500 });
+  assert.ok(first.tapLinedUp_mm !== undefined);
+  const lined = foldLine({ ...base, tap_mm: first.tapLinedUp_mm! });
+  assert.equal(lined.driverOnDivider?.index, 0);
+  const hole = lined.cut.holes.find((h) => h.name === "Driver cutout")!;
+  assert.match(hole.where, /^Divider 1/);
+  assert.ok(!lined.warnings.some((w) => /different heights/.test(w)), lined.warnings.join(" | "));
+  // Same height either side of the divider.
+  assert.ok(Math.abs(lined.driverOnDivider!.fromTop - (18 + 300)) < 6, `${lined.driverOnDivider!.fromTop}`);
+  // A tap two runs away can't work.
+  const far = foldLine({ ...base, tap_mm: 2800 });
+  assert.ok(far.warnings.some((w) => /neighbouring runs/.test(w)));
+});

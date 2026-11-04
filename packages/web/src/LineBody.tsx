@@ -1,9 +1,141 @@
-import { useEffect, useState, type ReactElement } from "react";
+import { useEffect, useState } from "react";
 import type { AlignmentDriver, DriverInput, SimulationOptions } from "@sbg/engine";
 import { Fixed, Num, Select } from "./components.tsx";
 import { lineFoldOf, lineLength, lineVolume, PORT_LIMIT } from "./sim.ts";
-import { bestLine, compareOne, PRESETS, presetFor, rankLines, tuneLine, type LineBest, type LineCompare, type LineGoal, type PresetId } from "./lineopt.ts";
+import { bestLine, compareOne, frontHorn, makePreset, PRESETS, presetFor, rankLines, tuneLine, type LineBest, type LineCompare, type LineGoal, type PresetId } from "./lineopt.ts";
 import type { LineDesign, LineSection } from "./state.ts";
+import { foldShapes } from "./foldShapes.ts";
+import { fromHornresp, toHornresp, type HornrespImport } from "./hornresp.ts";
+
+export type ImportedDriver = NonNullable<HornrespImport["driver"]>;
+
+/** Export the design as a Hornresp record, or read one in. */
+function HornrespPanel(p: {
+  d: LineDesign;
+  driver: DriverInput | null;
+  sim: SimulationOptions;
+  drivers: number;
+  onDesign: (patch: Partial<LineDesign>) => void;
+  onImportDriver?: (x: ImportedDriver) => void;
+}) {
+  const [mode, setMode] = useState<"export" | "import">("export");
+  const [text, setText] = useState("");
+  const [useDriver, setUseDriver] = useState(true);
+  const [result, setResult] = useState<{ ok: boolean; lines: string[] } | null>(null);
+  const power = p.sim.power ?? 1;
+  const eg = p.driver ? (p.sim.convention === "volts" ? power : Math.sqrt(power * p.driver.re)) : 2.83;
+  const out = p.driver ? toHornresp(p.d, p.driver, { eg, drivers: p.drivers, name: p.d.name, pmax: p.driver.pe_w, xmax_mm: p.driver.xmax_mm }) : "Enter the driver's parameters first.";
+  const download = () => {
+    if (typeof out === "string") return;
+    const url = URL.createObjectURL(new Blob([out.text], { type: "text/plain" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${p.d.name.replace(/[^\w\- ]+/g, "").trim() || "line"}.txt`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  const read = (raw: string) => {
+    const r = fromHornresp(raw, p.d);
+    if (typeof r === "string") return setResult({ ok: false, lines: [r] });
+    p.onDesign(r.design);
+    const used = !!(r.driver && useDriver && p.onImportDriver);
+    if (used) p.onImportDriver!(r.driver!);
+    setResult({
+      ok: true,
+      lines: [
+        `Read ${r.design.sections?.length ?? 0} section${r.design.sections?.length === 1 ? "" : "s"} (${r.design.end === "horn" ? "front-loaded horn" : r.design.end === "tapped" ? "tapped horn" : r.design.end === "port" ? "line with a port" : "line"})${used ? " and the driver" : ""}.`,
+        ...r.warnings,
+      ],
+    });
+  };
+  return (
+    <details className="line-fold line-hornresp">
+      <summary>Hornresp</summary>
+      <div className="unit-switch" role="group" aria-label="Hornresp">
+        <button aria-pressed={mode === "export"} onClick={() => setMode("export")}>
+          Export
+        </button>
+        <button aria-pressed={mode === "import"} onClick={() => setMode("import")}>
+          Import
+        </button>
+      </div>
+      {mode === "export" ? (
+        typeof out === "string" ? (
+          <p className="warn">{out}</p>
+        ) : (
+          <>
+            <p className="hint">
+              A Hornresp record of this design and driver at {eg.toFixed(2)} V. In Hornresp: File → Import. If your version won't take it, every value is listed below to
+              type in.
+            </p>
+            <div className="row">
+              <button type="button" onClick={download}>
+                Download .txt
+              </button>
+              <button type="button" className="secondary" onClick={() => void navigator.clipboard?.writeText(out.text)}>
+                Copy
+              </button>
+            </div>
+            {out.warnings.map((w) => (
+              <p key={w} className="hint">
+                {w}
+              </p>
+            ))}
+            <details>
+              <summary className="hint">Values to type in</summary>
+              <table className="cut-table">
+                <tbody>
+                  {out.rows.map((r, i) => (
+                    <tr key={i}>
+                      <td>{r.key}</td>
+                      <td className="num">{r.value}</td>
+                      <td className="hint">{r.note ?? ""}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </details>
+          </>
+        )
+      ) : (
+        <>
+          <p className="hint">Paste a Hornresp record (from File → Export, or from a forum post), or open its .txt file. It replaces this design.</p>
+          <textarea className="hornresp-text" rows={6} value={text} placeholder="ID = …" onChange={(e) => setText(e.currentTarget.value)} />
+          {p.onImportDriver && (
+            <label className="check">
+              <input type="checkbox" checked={useDriver} onChange={(e) => setUseDriver(e.currentTarget.checked)} /> Use the record's driver too
+            </label>
+          )}
+          <div className="row">
+            <button type="button" disabled={!text.trim()} onClick={() => read(text)}>
+              Read record
+            </button>
+            <label className="secondary file-button">
+              Open .txt…
+              <input
+                type="file"
+                accept=".txt,text/plain"
+                hidden
+                onChange={async (e) => {
+                  const f = e.currentTarget.files?.[0];
+                  if (!f) return;
+                  const t = new TextDecoder("latin1").decode(await f.arrayBuffer());
+                  setText(t);
+                  read(t);
+                }}
+              />
+            </label>
+          </div>
+          {result?.lines.map((l, i) => (
+            <p key={i} className={result.ok && i === 0 ? "hint" : "warn"}>
+              {l}
+            </p>
+          ))}
+        </>
+      )}
+    </details>
+  );
+}
 
 const f1 = (v: number | null | undefined) => (v === null || v === undefined || !Number.isFinite(v) ? "–" : v.toFixed(1));
 const C = 343;
@@ -67,7 +199,7 @@ function LineDrawing({ d }: { d: LineDesign }) {
       {d.end === "port" && <rect x={x0 + span} y={mid - portH} width={30} height={2 * portH} className="line-port" />}
       <rect x={rear.x - 8} y={rear.y - 7} width={16} height={7} className="line-driver" />
       <text x={Math.max(rear.x, x0 + 28)} y={rear.y - 10} textAnchor="middle" className="line-label">
-        {tap ? "driver rear" : "driver"}
+        {tap ? "driver rear" : d.end === "horn" ? "driver + chambers" : "driver"}
       </text>
       {tap && (
         <>
@@ -78,7 +210,7 @@ function LineDrawing({ d }: { d: LineDesign }) {
         </>
       )}
       <text x={x0} y={H - 2} className="line-label">
-        closed
+        {d.end === "horn" ? "throat" : "closed"}
       </text>
       <text x={W - x0} y={H - 2} textAnchor="end" className="line-label">
         {d.end === "port" ? "port" : "mouth"}
@@ -88,39 +220,21 @@ function LineDrawing({ d }: { d: LineDesign }) {
 }
 
 /** Side view of the folded box: runs front (left) to back, dividers, driver and mouth. */
-function FoldDrawing({ d, wall_mm }: { d: LineDesign; wall_mm: number }) {
+export function FoldDrawing({ d, wall_mm, driverCutout }: { d: LineDesign; wall_mm: number; driverCutout?: number }) {
   let f;
   try {
-    f = lineFoldOf(d, wall_mm);
+    f = lineFoldOf(d, wall_mm, driverCutout);
   } catch {
     return null;
   }
-  const { outside, runs, gaps } = f;
-  if (!(outside.height > 0 && outside.depth > 0)) return null;
-  const k = 160 / Math.max(outside.height, outside.depth);
-  const w = outside.depth * k;
-  const h = outside.height * k;
-  const t = wall_mm * k;
-  let x = t;
-  const dividers: ReactElement[] = [];
-  runs.forEach((r, i) => {
-    x += r.depth * k;
-    if (i < runs.length - 1) {
-      const g = gaps[i]! * k;
-      // Run i goes down → the turn is at the bottom, the divider hangs from the top.
-      const y = r.down ? t : t + g;
-      dividers.push(<rect key={i} x={x} y={y} width={Math.max(1, wall_mm * k)} height={h - 2 * t - g} className="fold-divider" />);
-      x += wall_mm * k;
-    }
-  });
-  const mouthY = f.mouth.at === "top" ? t : h - t - runs.at(-1)!.depth * k;
+  if (!(f.outside.height > 0 && f.outside.depth > 0)) return null;
+  const shapes = foldShapes(f, wall_mm);
+  const m = 30;
   return (
-    <svg className="fold-drawing" viewBox={`-4 -4 ${w + 8} ${h + 8}`} role="img" aria-label="Side view of the folded line: front on the left">
-      <rect x={0} y={0} width={w} height={h} className="fold-outer" />
-      <rect x={t} y={t} width={w - 2 * t} height={h - 2 * t} className="fold-inner" />
-      {dividers}
-      {f.driverFromTop !== null && <rect x={-3} y={f.driverFromTop * k - 6} width={6} height={12} className="line-driver" />}
-      <rect x={w - t - 1} y={mouthY} width={t + 4} height={runs.at(-1)!.depth * k} className="fold-mouth" />
+    <svg className="fold-drawing" viewBox={`${-m} ${-m} ${f.outside.depth + 2 * m} ${f.outside.height + 2 * m}`} role="img" aria-label="Side view of the folded line: front on the left">
+      {shapes.map((r, i) => (
+        <rect key={i} x={r.x} y={r.y} width={Math.max(r.w, 1)} height={Math.max(r.h, 1)} className={r.kind === "driver" ? "line-driver" : `fold-${r.kind}`} />
+      ))}
     </svg>
   );
 }
@@ -191,6 +305,7 @@ export function LineBody(p: {
   /** Displacement of all the drivers (litres), from the volume calculator. */
   driverDisp_l: number;
   wall_mm: number;
+  onImportDriver?: (x: ImportedDriver) => void;
 }) {
   const d = p.design;
   const [msg, setMsg] = useState("");
@@ -215,9 +330,15 @@ export function LineBody(p: {
 
   const preset = (id: PresetId) => {
     if (!p.driver) return setMsg("Enter the driver's parameters first.");
-    const base = presetFor(id, d, p.driver, p.align, p.drivers);
-    if (typeof base === "string") return setMsg(base);
-    tune({ ...base, name: d.name }, base.targetFb);
+    const made = makePreset(id, p.driver, d, p.sim, p.align, p.drivers, p.wall_mm);
+    if (typeof made === "string") {
+      // Keep the untuned preset so there's something to adjust.
+      const base = presetFor(id, d, p.driver, p.align, p.drivers);
+      if (typeof base !== "string") set({ ...base, name: d.name });
+      return setMsg(made);
+    }
+    setMsg("");
+    set({ ...made, name: d.name });
   };
 
   // "Best line": search driver position and stuffing, then retune the length.
@@ -296,7 +417,21 @@ export function LineBody(p: {
     }
     return start;
   };
-  if (sd > 0 && areaAt(d.driverAt_cm) < 0.6 * sd) {
+  const horn = d.end === "horn";
+  if (horn && sd > 0) {
+    const cr = sd / d.closedArea_cm2;
+    if (cr > 4) notes.push({ warn: true, text: `Compression ratio ${cr.toFixed(1)}:1 (cone area ÷ throat): above about 4:1 the air at the throat distorts at high levels. Widen the throat.` });
+    // Mouth size: normalised circumference (half space) at the flare cutoff.
+    const s1 = d.closedArea_cm2;
+    const s2 = d.sections.at(-1)!.endArea_cm2;
+    const exp = d.sections.length === 1 && d.sections[0]!.taper === "exponential";
+    if (exp && s2 > s1) {
+      const fc = (C * Math.log(s2 / s1)) / (4 * Math.PI * (L / 100));
+      const cir = (2 * Math.PI * Math.sqrt((2 * s2) / 1e4 / Math.PI)) / (C / fc);
+      notes.push({ warn: cir < 0.7, text: `Flare cutoff ${fc.toFixed(0)} Hz; the mouth's circumference is ${cir.toFixed(2)} × the wavelength there (half space)${cir < 0.7 ? ": the mouth is small for this cutoff, so the response ripples. A bigger mouth or a higher cutoff." : "."}` });
+    }
+  }
+  if (!horn && sd > 0 && areaAt(d.driverAt_cm) < 0.6 * sd) {
     notes.push({ warn: true, text: `The line is narrower where the driver sits (${Math.round(areaAt(d.driverAt_cm))} cm²) than the cone (${Math.round(sd)} cm²): the cone needs room behind it.` });
   }
   if (d.driverAt_cm >= L) notes.push({ warn: true, text: "The driver is past the mouth: move it along the line." });
@@ -309,7 +444,7 @@ export function LineBody(p: {
   if (p.compression && p.compression.db >= 0.3) {
     notes.push({ warn: p.compression.db >= 1.5, text: `Port compression: about −${p.compression.db.toFixed(1)} dB around ${p.compression.f.toFixed(0)} Hz at this power (approximate).` });
   }
-  if (p.fb === null && p.driver) notes.push({ warn: false, text: "The tuning isn't in the charts' range (no clear impedance dip)." });
+  if (p.fb === null && p.driver && !horn) notes.push({ warn: false, text: "The tuning isn't in the charts' range (no clear impedance dip)." });
 
   const fold = (() => {
     try {
@@ -330,11 +465,31 @@ export function LineBody(p: {
             { value: "open", text: "Open mouth (TL, TQWT)" },
             { value: "port", text: "Port at the mouth (MLTL)" },
             { value: "tapped", text: "Tapped horn" },
+            { value: "horn", text: "Front-loaded horn" },
           ]}
-          onChange={(end) => set({ end, ...(end === "tapped" && !(d.tapAt_cm > d.driverAt_cm && d.tapAt_cm < L) ? { tapAt_cm: r1((d.driverAt_cm + L) / 2) } : {}) })}
+          onChange={(end) =>
+            set({
+              end,
+              ...(end === "tapped" && !(d.tapAt_cm > d.driverAt_cm && d.tapAt_cm < L) ? { tapAt_cm: r1((d.driverAt_cm + L) / 2) } : {}),
+              ...(end === "horn" ? { driverAt_cm: 0, ...(d.mouth === "back" ? { mouth: "front" as const } : {}) } : {}),
+            })
+          }
         />
-        <Num label="Closed end" unit="cm²" value={d.closedArea_cm2} min={1} title="Cross-section at the closed end" onChange={(closedArea_cm2) => set({ closedArea_cm2 })} />
-        <Num label={d.end === "tapped" ? "Rear at" : "Driver at"} q="len" value={d.driverAt_cm} min={0} title={d.end === "tapped" ? "Where the driver's rear opens into the line, from the closed end" : "Driver centre, from the closed end"} onChange={(driverAt_cm) => set({ driverAt_cm })} />
+        <Num
+          label={horn ? "Throat" : "Closed end"}
+          unit="cm²"
+          value={d.closedArea_cm2}
+          min={1}
+          title={horn ? "Throat area, where the throat chamber opens into the horn" : "Cross-section at the closed end"}
+          onChange={(closedArea_cm2) => set({ closedArea_cm2 })}
+        />
+        {horn && (
+          <>
+            <Num label="Rear vol" unit="L" value={d.rearChamber_l} min={0.1} title="Sealed chamber behind the driver" onChange={(rearChamber_l) => set({ rearChamber_l })} />
+            <Num label="Throat vol" unit="L" value={d.throatChamber_l} min={0} title="Air between the cone and the throat (0 = none); with the throat it sets the top-end roll-off" onChange={(throatChamber_l) => set({ throatChamber_l })} />
+          </>
+        )}
+        {!horn && <Num label={d.end === "tapped" ? "Rear at" : "Driver at"} q="len" value={d.driverAt_cm} min={0} title={d.end === "tapped" ? "Where the driver's rear opens into the line, from the closed end" : "Driver centre, from the closed end"} onChange={(driverAt_cm) => set({ driverAt_cm })} />}
         {d.end === "tapped" && <Num label="Front tap" q="len" value={d.tapAt_cm} min={0} title="Where the driver's front opens into the line, from the closed end" onChange={(tapAt_cm) => set({ tapAt_cm })} />}
         {d.end === "port" && (
           <>
@@ -348,7 +503,7 @@ export function LineBody(p: {
           value={d.mouth}
           options={[
             { value: "front", text: "Next to the driver" },
-            { value: "back", text: `On the back${fold ? ` (${Math.round(fold.outside.depth / 10)} cm further)` : ""}` },
+            ...(horn ? [] : [{ value: "back" as const, text: `On the back${fold ? ` (${Math.round(fold.outside.depth / 10)} cm further)` : ""}` }]),
             { value: "custom", text: "Further away by…" },
           ]}
           onChange={(mouth) => set({ mouth })}
@@ -371,16 +526,30 @@ export function LineBody(p: {
           label="Volume"
           unit="L"
           value={f1(volume - p.driverDisp_l)}
-          title={`Inside volume ${f1(volume)} L, less ${f1(p.driverDisp_l)} L for the driver${p.drivers > 1 ? "s" : ""} (port excluded)`}
+          title={`Inside volume ${f1(volume)} L${horn ? " (horn and both chambers)" : ""}, less ${f1(p.driverDisp_l)} L for the driver${p.drivers > 1 ? "s" : ""} (port excluded)`}
         />
-        <Fixed label="Fb" unit="Hz" value={f1(p.fb)} title="Tuning: the impedance dip between the first two peaks" />
+        {!horn && <Fixed label="Fb" unit="Hz" value={f1(p.fb)} title="Tuning: the impedance dip between the first two peaks" />}
       </div>
+      {horn ? (
+        <div className="tune">
+          <Num label="Cutoff" unit="Hz" value={d.targetFb} min={5} title="Flare cutoff of the exponential horn" onChange={(targetFb) => set({ targetFb })} />
+          <button
+            className="secondary"
+            disabled={!p.driver}
+            title="Redesign the horn for this cutoff: throat ½ cone area, mouth and length for the cutoff, chambers from the driver"
+            onClick={() => p.driver && set({ ...frontHorn(d, p.driver, p.drivers, d.targetFb), name: d.name })}
+          >
+            Size the horn
+          </button>
+        </div>
+      ) : (
       <div className="tune">
         <Num label="Tune to" unit="Hz" value={d.targetFb} min={5} onChange={(targetFb) => set({ targetFb })} />
         <button className="secondary" onClick={() => tune()} disabled={!p.driver} title={d.end === "port" ? "Find the port length for this tuning" : "Scale the line's length (driver, tap and sections follow) for this tuning"}>
           {d.end === "port" ? "Set port length" : "Set line length"}
         </button>
       </div>
+      )}
       <div className="presets">
         <span>Presets:</span>
         {PRESETS.map((x) => (
@@ -454,6 +623,8 @@ export function LineBody(p: {
           )}
         </div>
       )}
+      {!horn && (
+        <>
       <div className="row line-best">
         <span>Best line:</span>
         <button className="secondary" disabled={!p.driver || best?.busy} onClick={() => findBest("smooth")} title="Driver position and stuffing for the smoothest response (keeping the bass), then the length retuned">
@@ -481,6 +652,8 @@ export function LineBody(p: {
           </button>
         </div>
       )}
+        </>
+      )}
       {msg && <p className="warn">{msg}</p>}
       {notes.map((n) => (
         <p key={n.text} className={n.warn ? "warn" : "hint"}>
@@ -489,6 +662,9 @@ export function LineBody(p: {
         </p>
       ))}
 
+      {horn ? (
+        <p className="hint">Folding and the cut list don't cover front-loaded horns yet: plan the horn's panels by hand.</p>
+      ) : (
       <details className="line-fold">
         <summary>Fold it into a box</summary>
         <div className="fold-row">
@@ -504,6 +680,11 @@ export function LineBody(p: {
                 walls · {fold.runs.length} runs · mouth on the back at the {fold.mouth.at}. Panels, dividers and holes: Build tab → Cut list.
               </p>
             )}
+            {fold?.tapLinedUp_mm !== undefined && Math.abs(fold.tapLinedUp_mm / 10 - d.tapAt_cm) >= 1 && (
+              <button type="button" className="secondary" onClick={() => set({ tapAt_cm: r1(fold.tapLinedUp_mm! / 10) })} title="Move the front tap so it's level with the rear across the divider the driver mounts on">
+                Line up the tap ({r1(fold.tapLinedUp_mm / 10)} cm)
+              </button>
+            )}
             {fold?.warnings.map((w) => (
               <p key={w} className="warn">
                 ⚠ {w}
@@ -512,10 +693,13 @@ export function LineBody(p: {
           </div>
         </div>
       </details>
+      )}
+
+      <HornrespPanel d={d} driver={p.driver} sim={p.sim} drivers={p.drivers} onDesign={(patch) => set(patch)} onImportDriver={p.onImportDriver} />
 
       <p className="hint">
-        Simulated as a one-dimensional duct, like Hornresp: lengths along the centre of the line; bends are not modelled. Stuffing is the least certain part of any line
-        simulation; treat its effect as a guide. Beta: being checked against Hornresp. A plain quarter wave of this length would be {(C / ((4 * Math.max(L, 1)) / 100)).toFixed(0)} Hz.
+        Simulated as a one-dimensional duct, like Hornresp: lengths along the centre of the {horn ? "horn" : "line"}; bends are not modelled. Stuffing is the least certain part of any line
+        simulation; treat its effect as a guide. Beta: being checked against Hornresp. {!horn && `A plain quarter wave of this length would be ${(C / ((4 * Math.max(L, 1)) / 100)).toFixed(0)} Hz.`}
       </p>
     </>
   );

@@ -953,6 +953,19 @@ export function App(props: { initial: AppState | null }) {
                 onChange={updateDesign}
                 onDuplicate={() => duplicateDesign(d)}
                 onDelete={() => deleteDesign(d)}
+                onImportDriver={(x) =>
+                  setStep((s) => ({
+                    ...s,
+                    driverName: x.name,
+                    driverBrand: "",
+                    ts: x.ts,
+                    le_mh: x.le_mh,
+                    l2_mh: 0,
+                    r2_ohm: 0,
+                    ...(x.xmax_mm !== undefined ? { xmax_mm: x.xmax_mm } : {}),
+                    dvc: { ...s.dvc, on: false },
+                  }))
+                }
                 onPrPhysical={(x) =>
                   setState((s) => ({
                     ...s,
