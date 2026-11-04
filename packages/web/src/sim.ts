@@ -311,12 +311,14 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
         const db = baffleCache(result.freq, step);
         result.spl = result.spl.map((v, i) => v + db[i]!);
         result.maxSpl = result.maxSpl.map((v, i) => v + db[i]!);
+        if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + db[i]!), mouth: result.parts.mouth.map((v, i) => v + db[i]!) };
       }
       const room = roomGainOf(s);
       if (room) {
         const lift = result.freq.map((f) => roomGainDb(f, room));
         result.spl = result.spl.map((v, i) => v + lift[i]!);
         result.maxSpl = result.maxSpl.map((v, i) => v + lift[i]!);
+        if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + lift[i]!), mouth: result.parts.mouth.map((v, i) => v + lift[i]!) };
       }
       out.push({ design: d, color: colorOf(s, d.id), vb_l: vb, result });
     } catch {

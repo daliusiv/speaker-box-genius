@@ -151,6 +151,11 @@ export interface SimulationResult {
   rearPortVelocity: Float64Array | null;
   impedanceOhm: Float64Array;
   impedancePhaseDeg: Float64Array;
+  /**
+   * Open transmission lines: the cone's front and the mouth (or port) on their own (dB SPL);
+   * spl is their sum, with the phase between them. Null for other designs and tapped horns.
+   */
+  parts: { cone: Float64Array; mouth: Float64Array } | null;
   /** Highest input power (W) before any limit is reached, per frequency. */
   maxPowerW: Float64Array;
   /** SPL at maxPowerW. */
@@ -309,6 +314,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const N = freq.length;
   const out = {
     spl: new Float64Array(N),
+    parts: box.kind === "line" && box.tap_cm === undefined ? { cone: new Float64Array(N), mouth: new Float64Array(N) } : null,
     phase: new Float64Array(N),
     gd: new Float64Array(N),
     x: new Float64Array(N),
@@ -412,6 +418,11 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       const exitAtListener = dm > 0 ? scale(mul(sol.exit, cx(Math.cos((w * dm) / air.c), -Math.sin((w * dm) / air.c))), r / (r + dm)) : sol.exit;
       // Open line: the front of the cone radiates −ud as well. Tapped horn: only the mouth.
       u0 = line.tapped ? exitAtListener : sub(exitAtListener, ud);
+      if (out.parts) {
+        const k = (w * air.rho) / (space * Math.PI * r) / 2e-5;
+        out.parts.cone[i] = 20 * Math.log10(Math.max(abs(ud) * k, 1e-12));
+        out.parts.mouth[i] = 20 * Math.log10(Math.max(abs(exitAtListener) * k, 1e-12));
+      }
       if (out.vport) {
         vport = (Math.SQRT2 * abs(sol.exit)) / line.exitArea;
         out.vport[i] = vport;
@@ -556,6 +567,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     rearPortVelocity: out.vport2,
     impedanceOhm: out.zmag,
     impedancePhaseDeg: out.zph,
+    parts: out.parts,
     maxPowerW: out.pmax,
     maxSpl: out.splmax,
     limitedBy,

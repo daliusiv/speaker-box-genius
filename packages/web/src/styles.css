@@ -2155,3 +2155,28 @@ button.add-section {
   fill: var(--accent);
   opacity: 0.6;
 }
+button.chip.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.line-compare {
+  overflow-x: auto;
+  margin: 0.3rem 0 0.6rem;
+}
+.line-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  margin-top: 0.15rem;
+}
+.line-tags .tag {
+  font-size: 0.7rem;
+  padding: 0 0.35rem;
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--fg);
+}
+.line-tags .tag.bad {
+  background: color-mix(in srgb, var(--over) 18%, transparent);
+}

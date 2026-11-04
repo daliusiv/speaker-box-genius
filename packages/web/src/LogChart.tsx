@@ -26,6 +26,8 @@ export interface Series {
   y: Float64Array | null;
   /** SVG dash pattern, e.g. "6 4", for measured or reference curves. */
   dash?: string;
+  /** A secondary curve (e.g. one part of a design's output): drawn thinner and fainter. */
+  thin?: boolean;
   /** This curve's own limit: where it runs above it, a red glow is drawn behind it. */
   over?: number;
   /** A short note per point, shown in the hover readout (e.g. what limits the design there). */
@@ -385,7 +387,7 @@ export function LogChart({
             ) : null,
           )}
           {visible.map((s) => (
-            <path key={s.label} d={pathOf(s.y!)} fill="none" stroke={s.color} strokeDasharray={s.dash} {...sw(2)} />
+            <path key={s.label} d={pathOf(s.y!)} fill="none" stroke={s.color} strokeDasharray={s.dash} opacity={s.thin ? 0.75 : undefined} {...sw(s.thin ? 1.3 : 2)} />
           ))}
           {points
             .filter((pt) => pt.f >= fMin && pt.f <= fMax && Number.isFinite(pt.y))

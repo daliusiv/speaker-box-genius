@@ -167,3 +167,29 @@ test("a stuffed line whose lower impedance peak is damped away still has a tunin
   const r = simulate(d, line, { power: 1, fMin: 8, fMax: 400, points: 260 });
   assert.ok(r.summary.fb !== undefined && r.summary.fb > 10 && r.summary.fb < 30, `fb ${r.summary.fb}`);
 });
+
+test("a line's cone and mouth parts add up to its response; the mouth carries the tuning", () => {
+  const r = simulate(D, TL, OPT);
+  assert.ok(r.parts);
+  const at = (f: number) => {
+    let i = 0;
+    while (r.freq[i]! < f) i++;
+    return i;
+  };
+  const fb = at(r.summary.fb!);
+  assert.ok(r.parts.mouth[fb]! > r.parts.cone[fb]! + 6, "mouth dominates at Fb");
+  // Stuffed, the mouth fades above the tuning and the cone takes over.
+  const st = simulate(D, { ...TL, segments: [{ ...TL.segments[0]!, fill_kgm3: 8 }] }, OPT);
+  let k = 0;
+  while (st.freq[k]! < 500) k++;
+  assert.ok(st.parts!.cone[k]! > st.parts!.mouth[k]! + 6, "cone dominates high up");
+  // The sum lies between the difference and the sum of the parts' magnitudes.
+  for (let i = 0; i < r.freq.length; i++) {
+    const a = 10 ** (r.parts.cone[i]! / 20);
+    const b = 10 ** (r.parts.mouth[i]! / 20);
+    const s = 10 ** (r.spl[i]! / 20);
+    assert.ok(s <= (a + b) * 1.0001 && s >= Math.abs(a - b) * 0.9999, `triangle at ${r.freq[i]}`);
+  }
+  const th = simulate(D, { ...TL, tap_cm: 60 }, OPT);
+  assert.equal(th.parts, null);
+});

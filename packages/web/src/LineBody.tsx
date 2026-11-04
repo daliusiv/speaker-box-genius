@@ -1,130 +1,14 @@
 import { useEffect, useState, type ReactElement } from "react";
-import { simulate, type AlignmentDriver, type DriverInput, type SimulationOptions } from "@sbg/engine";
+import type { AlignmentDriver, DriverInput, SimulationOptions } from "@sbg/engine";
 import { Fixed, Num, Select } from "./components.tsx";
-import { lineFoldOf, lineInputOf, lineLength, lineVolume, PORT_LIMIT } from "./sim.ts";
-import { ventedAlignmentFor } from "./presets.ts";
-import { bestLine, type LineBest, type LineGoal } from "./lineopt.ts";
+import { lineFoldOf, lineLength, lineVolume, PORT_LIMIT } from "./sim.ts";
+import { bestLine, compareOne, PRESETS, presetFor, rankLines, tuneLine, type LineBest, type LineCompare, type LineGoal, type PresetId } from "./lineopt.ts";
 import type { LineDesign, LineSection } from "./state.ts";
 
 const f1 = (v: number | null | undefined) => (v === null || v === undefined || !Number.isFinite(v) ? "–" : v.toFixed(1));
 const C = 343;
 const r1 = (x: number) => Math.round(x * 10) / 10;
 const MAX_SECTIONS = 4;
-
-/** Tuning of a line design, by simulation (impedance minimum between the first two peaks). */
-export function lineTuning(driver: DriverInput, d: LineDesign, sim: SimulationOptions, wall_mm = 18): number | null {
-  try {
-    const r = simulate(driver, lineInputOf(d, wall_mm), { ...sim, fMin: 8, fMax: 400, points: 260, highPass: null, eq: [] });
-    return r.summary.fb ?? null;
-  } catch {
-    return null;
-  }
-}
-
-/** The design with every length along the line scaled by k (sections, driver, tap). */
-const scaled = (d: LineDesign, k: number): LineDesign => ({
-  ...d,
-  sections: d.sections.map((x) => ({ ...x, length_cm: x.length_cm * k })),
-  driverAt_cm: d.driverAt_cm * k,
-  tapAt_cm: d.tapAt_cm * k,
-});
-
-/**
- * Change one setting until the line tunes to `target`: the line's length (sections,
- * driver and tap scale with it) for open lines and tapped horns, the port length for a
- * mass-loaded line. Steps out from the current size until bracketed, then bisects.
- */
-export function tuneLine(driver: DriverInput, d: LineDesign, target: number, sim: SimulationOptions, wall_mm = 18): LineDesign | string {
-  const port = d.end === "port";
-  const withK = (k: number): LineDesign => (port ? { ...d, portLength_cm: k } : scaled(d, k));
-  const fbAt = (k: number) => lineTuning(driver, withK(k), sim, wall_mm);
-  const k0 = port ? Math.max(d.portLength_cm, 1) : 1;
-  const f0 = fbAt(k0);
-  if (f0 === null) return "The tuning can't be found for this line (no clear impedance dip): check its sizes.";
-  const step = 1.25;
-  let lo = k0;
-  let hi = k0;
-  if (f0 > target) {
-    for (let i = 0; ; i++) {
-      hi *= step;
-      const f = fbAt(hi);
-      if (f !== null && f <= target) break;
-      if (i > 12 || f === null) return port ? `No port length up to ${Math.round(hi)} cm tunes down to ${target} Hz: use a narrower port or a bigger line.` : `${target} Hz needs a much longer line; check the driver and the areas.`;
-      lo = hi;
-    }
-  } else {
-    for (let i = 0; ; i++) {
-      lo /= step;
-      const f = fbAt(lo);
-      if (f !== null && f >= target) break;
-      if (i > 12 || f === null || (port && lo < 0.3)) return port ? `Even a very short port tunes below ${target} Hz: use a wider port or a smaller line.` : `${target} Hz needs a much shorter line; check the driver and the areas.`;
-      hi = lo;
-    }
-  }
-  for (let i = 0; i < 24; i++) {
-    const mid = Math.sqrt(lo * hi);
-    const f = fbAt(mid);
-    if (f === null) break;
-    if (f > target) lo = mid;
-    else hi = mid;
-  }
-  const out = withK(Math.sqrt(lo * hi));
-  return {
-    ...out,
-    sections: out.sections.map((x) => ({ ...x, length_cm: r1(x.length_cm) })),
-    driverAt_cm: r1(out.driverAt_cm),
-    tapAt_cm: r1(out.tapAt_cm),
-    portLength_cm: r1(out.portLength_cm),
-  };
-}
-
-type PresetId = "tl" | "tqwt" | "otl" | "mltl" | "th";
-
-const PRESETS: { id: PresetId; label: string; title: string }[] = [
-  { id: "tl", label: "Classic TL", title: "Tapered line, driver at the closed end, stuffed for two thirds; tuned to Fs" },
-  { id: "tqwt", label: "TQWT", title: "Tapered quarter-wave tube (Voigt pipe): narrow closed end opening to a wide mouth, driver a third along, lightly stuffed" },
-  { id: "otl", label: "Offset TL", title: "Straight line with the driver a fifth of the way along (suppresses the 5th harmonic), stuffed behind the driver" },
-  { id: "mltl", label: "MLTL", title: "Mass-loaded line: straight, driver about a quarter along, port at the mouth; tuned like a vented box" },
-  { id: "th", label: "Tapped horn", title: "Starting point: expanding horn, driver's rear at the closed end, front tapped in 45 % along; tuned near Fs" },
-];
-
-/** Split [0, L] into stuffed and empty sections along a taper from s1 to s2. */
-function twoPart(L: number, s1: number, s2: number, stuffedTo: number, fill: number): { closedArea_cm2: number; sections: LineSection[] } {
-  const at = (t: number) => r1(s1 + (s2 - s1) * t);
-  const sections: LineSection[] = [];
-  if (stuffedTo > 0) sections.push({ length_cm: r1(stuffedTo), endArea_cm2: at(stuffedTo / L), taper: "linear", fill_kgm3: fill });
-  if (L - stuffedTo > 0) sections.push({ length_cm: r1(L - stuffedTo), endArea_cm2: r1(s2), taper: "linear", fill_kgm3: 0 });
-  return { closedArea_cm2: r1(s1), sections };
-}
-
-/** A preset sized for the driver, before tuning. */
-function presetFor(id: PresetId, d: LineDesign, driver: DriverInput, align: AlignmentDriver | null, drivers: number): LineDesign | string {
-  const sd = driver.sd_cm2 * drivers;
-  const lq = (C / (4 * driver.fs)) * 100; // quarter wave at Fs, cm
-  // Fold width: room for the driver's cutout (about 1.12 × the cone diameter) plus a margin.
-  const width_cm = Math.max(d.fold.width_cm, Math.ceil(1.12 * 2 * Math.sqrt(driver.sd_cm2 / Math.PI) + 3));
-  const base = { ...d, portFlare_cm: 0, fold: { ...d.fold, width_cm } };
-  switch (id) {
-    case "tl":
-      return { ...base, end: "open", ...twoPart(lq, 1.25 * sd, 0.8 * sd, (lq * 2) / 3, 8), driverAt_cm: 0, targetFb: r1(driver.fs) };
-    case "tqwt":
-      return { ...base, end: "open", ...twoPart(lq, 0.3 * sd, 3 * sd, lq / 3, 4), driverAt_cm: r1(lq / 3), targetFb: r1(driver.fs * 0.9) };
-    case "otl":
-      return { ...base, end: "open", ...twoPart(lq, 1.5 * sd, 1.5 * sd, lq / 3, 6), driverAt_cm: r1(lq / 5), targetFb: r1(driver.fs) };
-    case "mltl": {
-      const a = align ? ventedAlignmentFor(align, drivers) : null;
-      if (!a) return "This driver's Qts is above 0.6: a mass-loaded line (like a ported box) doesn't suit it. Try a classic TL or TQWT.";
-      // Long and slim: about 0.4 of a quarter wave at the tuning, holding about 1.5 × the
-      // matching ported box's volume (the line's own losses need more room).
-      const L = 0.4 * (C / (4 * a.fb)) * 100;
-      const area = (1.5 * a.vb_l * 1000) / L;
-      const portD = 2 * Math.sqrt((0.2 * sd) / Math.PI);
-      return { ...base, end: "port", ...twoPart(L, area, area, L / 2, 4), driverAt_cm: r1(L / 4), portDiameter_cm: r1(portD), portLength_cm: 10, targetFb: r1(a.fb) };
-    }
-    case "th":
-      return { ...base, end: "tapped", ...twoPart(lq, sd, 4 * sd, 0, 0), driverAt_cm: 0, tapAt_cm: r1(0.45 * lq), targetFb: r1(driver.fs) };
-  }
-}
 
 /** The unfolded line, closed end on the left: height follows the area, stuffing hatched. */
 function LineDrawing({ d }: { d: LineDesign }) {
@@ -361,6 +245,29 @@ export function LineBody(p: {
     set(tuned);
   };
 
+  // "Which type suits this driver?": every preset made, tuned and simulated, one per tick.
+  const [cmp, setCmp] = useState<{ rows: LineCompare[]; done: boolean } | null>(null);
+  const cmpKey = JSON.stringify([p.driver, p.drivers, p.sim, p.wall_mm]);
+  useEffect(() => setCmp(null), [cmpKey]);
+  const compare = () => {
+    if (!p.driver) return;
+    const driver = p.driver;
+    const rows: LineCompare[] = [];
+    setCmp({ rows: [], done: false });
+    const next = (k: number) => {
+      if (k >= PRESETS.length) return setCmp({ rows: rankLines(rows, driver.xmax_mm), done: true });
+      rows.push(compareOne(PRESETS[k]!.id, driver, d, p.sim, p.align, p.drivers, p.wall_mm));
+      setCmp({ rows: [...rows], done: false });
+      setTimeout(() => next(k + 1), 20);
+    };
+    setTimeout(() => next(0), 20);
+  };
+  const useRow = (r: LineCompare) => {
+    if (!r.design) return;
+    setMsg("");
+    set({ ...r.design, name: d.name, id: d.id, on: d.on });
+  };
+
   const setSection = (i: number, s: LineSection) => set({ sections: d.sections.map((x, k) => (k === i ? s : x)) });
   // A new section splits the last one in half, so the line keeps its length and shape.
   const addSection = () => {
@@ -482,6 +389,71 @@ export function LineBody(p: {
           </button>
         ))}
       </div>
+      <div className="row line-best">
+        <span>Which type suits this driver?</span>
+        <button className="secondary" disabled={!p.driver || (cmp !== null && !cmp.done)} onClick={compare} title="Make every preset for this driver, tune it and compare size, bass, smoothness, excursion and mouth speed at this power">
+          Compare types
+        </button>
+      </div>
+      {cmp && (
+        <div className="line-compare">
+          <table className="cut-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th className="num">F3</th>
+                <th className="num">Size</th>
+                <th className="num">Ripple</th>
+                <th className="num" title="Peak cone excursion from 0.7 × F3 up, at this power">Cone</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {cmp.rows.map((r) => (
+                <tr key={r.id}>
+                  <td>
+                    {r.label}
+                    {r.tags.length > 0 && (
+                      <span className="line-tags">
+                        {r.tags.map((t) => (
+                          <span key={t} className={`tag${t.startsWith("Over") || t.startsWith("Noisy") ? " bad" : ""}`}>
+                            {t}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                    {r.error && <span className="hint cut-sub">{r.error}</span>}
+                  </td>
+                  <td className="num">{r.f3 !== null ? `${r.f3.toFixed(0)} Hz` : "–"}</td>
+                  <td className="num">{r.design ? `${Math.round(r.volume_l)} L` : "–"}</td>
+                  <td className="num">{r.ripple !== null ? `${r.ripple.toFixed(0)} dB` : "–"}</td>
+                  <td className="num">{r.excursion_mm !== null ? `${r.excursion_mm.toFixed(1)} mm` : "–"}</td>
+                  <td>
+                    {r.design && (
+                      <button type="button" className="chip" onClick={() => useRow(r)}>
+                        Use
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {!cmp.done && (
+                <tr>
+                  <td colSpan={6} className="hint">
+                    Sizing and tuning {PRESETS[cmp.rows.length]?.label}…
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          {cmp.done && (
+            <p className="hint">
+              Starting points from the presets, each tuned by simulation; ripple is the peak-to-peak wobble above F3. "Best line" can then smooth the one you pick. Over Xmax: use
+              less power or a high-pass; noisy mouth: air over {PORT_LIMIT} m/s.
+            </p>
+          )}
+        </div>
+      )}
       <div className="row line-best">
         <span>Best line:</span>
         <button className="secondary" disabled={!p.driver || best?.busy} onClick={() => findBest("smooth")} title="Driver position and stuffing for the smoothest response (keeping the bass), then the length retuned">
