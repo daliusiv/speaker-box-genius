@@ -13,6 +13,7 @@ import {
   portFlare,
   portLossCoefficient,
   portPipe,
+  coilHeatFactor,
   portMouthArea,
   prFb,
   prGroupsFb,
@@ -111,6 +112,12 @@ export interface SimulationOptions {
    * peaks in the response higher up.
    */
   portModel?: "lumped" | "pipe";
+  /**
+   * Voice-coil temperature (°C). Above 20 °C the coil's resistance rises (copper, about
+   * 0.39 %/°C) while Bl stays: less output for the same voltage and a higher Qes, i.e. the
+   * driver's power compression. Default 20 (the datasheet's cold values, like WinISD).
+   */
+  coilTemp_C?: number;
   /** Air properties. Default: 20 °C. Use WINISD_AIR to match WinISD exactly. */
   air?: Air;
   /** Amplifier output + cable resistance (Ω), shared by the whole driver bank. Default 0. */
@@ -216,7 +223,10 @@ const finiteOr = (v: number | undefined, d: number) => (v === undefined ? d : v)
 export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: SimulationOptions = {}): SimulationResult {
   const air = opts.air ?? STANDARD_AIR;
   const base = driverModel(driverIn, air);
-  const d = opts.isobaric ? isobaricPair(base, opts.isobaric.coils) : base;
+  const cold = opts.isobaric ? isobaricPair(base, opts.isobaric.coils) : base;
+  // A hot voice coil: Re rises, Bl doesn't, so Qes rises and the same voltage drives less current.
+  const heat = coilHeatFactor(opts.coilTemp_C);
+  const d = heat === 1 ? cold : { ...cold, re: cold.re * heat };
   const n = opts.drivers ?? 1;
   const wiring = opts.wiring ?? "parallel";
   const power = opts.power ?? 1;
@@ -225,7 +235,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const vLimit = opts.portVelocityLimit ?? 17;
 
   // Voltage at the terminals of the whole driver bank, and per driver.
-  const reTotal = wiring === "parallel" ? d.re / n : d.re * n;
+  // Watts are turned into volts with the datasheet (cold) Re, as an amplifier's rating would be.
+  const reTotal = wiring === "parallel" ? cold.re / n : cold.re * n;
   const nominalTotal =
     opts.nominalOhms !== undefined ? (wiring === "parallel" ? opts.nominalOhms / n : opts.nominalOhms * n) : reTotal;
   const volts =
@@ -236,7 +247,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   // Power the limits are scaled from, in watts as the thermal limit counts them. In "volts"
   // mode the input is a voltage, so take the power it puts into the coils (V²/Re); every limit
   // below is then "how far the drive can rise", and SPL and excursion follow from that.
-  const pNow = opts.convention === "volts" ? (volts * volts) / reTotal : power;
+  // A hot coil takes less power from the same voltage (V²/Re): the thermal limit counts that.
+  const pNow = (opts.convention === "volts" ? (volts * volts) / reTotal : power) / heat;
   // A source resistance shared by N parallel drivers looks like N·Rg to each one (Rg/N in series).
   const rgTotal = opts.rg ?? 0;
   const rgDriver = wiring === "parallel" ? rgTotal * n : rgTotal / n;

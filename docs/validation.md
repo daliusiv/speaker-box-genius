@@ -316,6 +316,10 @@ PR travel. The dip and bump frequencies agree within 0.05 Hz.
 
 Not in WinISD, so not part of the comparison above (the default, "Air mass", is what's compared). A port is modelled as a uniform pipe of its throat's area and its effective length (end corrections included, so it tunes the box exactly as the air-mass port), radiating at its outer end: it adds the pipe's resonances at about c / 2L, 2c / 2L, … Checks (`portflare.test.ts`): within 0.35 dB of the air-mass port below 60 Hz (the pipe's air is slightly springy, which the air-mass model leaves out), and the port's air speed peaks within 5 % of c / 2L. Not modelled: the box's own standing waves, which drive the port hardest when they coincide (the port card warns when they do), and wall losses in the port. Bandpass ports stay as air masses.
 
+## Hot voice coil (Settings → Voice coil °C)
+
+Not in WinISD (20 °C, the default, is what's compared). Re(T) = Re · (1 + 0.00393 (T − 20)), Bl, suspension and Le unchanged; watts are turned into volts with the cold Re (as an amplifier rating would be), and the thermal limit counts the smaller power the hot coil takes. Checks (`simulate.test.ts`): factor 1.3144 at 100 °C; above the bass the output falls towards 20·log of the Re ratio (2.37 dB at 100 °C; 0.13 dB short of it at 10 × fs with Qes 0.4, where the motor's damping still counts); less loss near resonance (higher Q); impedance minimum up by the Re ratio. Relative view: referred to the hot driver (shape and F3); dB SPL view: the lost output.
+
 ## Reproduce
 
 ```bash

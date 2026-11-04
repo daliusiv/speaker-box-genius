@@ -177,6 +177,8 @@ export interface Settings {
   lineSpl: "on-axis" | "power";
   /** Vented boxes: ports as lumped air masses (like WinISD) or as pipes with their own resonances. */
   portModel: "lumped" | "pipe";
+  /** Voice-coil temperature (°C): 20 = the datasheet's cold values (like WinISD); hotter raises Re. */
+  coilTemp_C: number;
 }
 
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
@@ -397,6 +399,7 @@ export const DEFAULT_STATE: AppState = {
     portCompression: false,
     lineSpl: "on-axis",
     portModel: "lumped",
+    coilTemp_C: 20,
   },
   eq: [],
   measured: [],

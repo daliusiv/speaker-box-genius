@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { driveLabel, lineFoldOf, PORT_LIMIT, prGroupLabels, prPeak, type Design } from "./sim.ts";
+import { coilLabel, driveLabel, lineFoldOf, PORT_LIMIT, prGroupLabels, prPeak, type Design } from "./sim.ts";
 import { foldShapes } from "./foldShapes.ts";
 import { REPO } from "./components.tsx";
 import { fmtQ } from "./units.ts";
@@ -56,7 +56,7 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
 }
 
 function subtitle(state: AppState): string {
-  const parts = [driveLabel(state)];
+  const parts = [driveLabel(state) + coilLabel(state)];
   if (state.isobaric) parts.push(`${state.drivers} isobaric pair${state.drivers > 1 ? "s" : ""}`);
   else if (state.drivers > 1) parts.push(`${state.drivers} drivers (${state.wiring})`);
   if (state.highPass.on) parts.push(`${state.highPass.order * 6} dB/oct high-pass at ${state.highPass.freq} Hz`);

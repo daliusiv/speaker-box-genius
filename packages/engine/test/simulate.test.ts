@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { C, RHO } from "../src/constants.ts";
 import {
+  coilHeatFactor,
   portAcousticMass,
   portArea,
   portLengthForFb,
@@ -184,4 +185,32 @@ test("driving by voltage gives the same limits and maximum SPL as the equivalent
       assert.equal(a.limitedBy[i], b.limitedBy[i]);
     }
   }
+});
+
+// ---------------------------------------------------------------------------
+// Hot voice coil
+// ---------------------------------------------------------------------------
+
+test("hot voice coil: Re up 0.393 %/°C, output down towards the Re ratio above the bass, Q up, impedance up", () => {
+  const D = { fs: 30, qms: 4, qes: 0.4, vas_l: 50, re: 6, sd_cm2: 330, xmax_mm: 8, pe_w: 300 };
+  const box = { kind: "sealed" as const, vb_l: 30 };
+  const o = { power: 100, fMin: 10, fMax: 400, points: 300 };
+  const k = coilHeatFactor(100);
+  assert.ok(Math.abs(k - 1.3144) < 1e-4);
+  assert.equal(coilHeatFactor(20), 1);
+  assert.equal(coilHeatFactor(undefined), 1);
+  const c = simulate(D, box, o);
+  const h = simulate(D, box, { ...o, coilTemp_C: 100 });
+  const at = (r: typeof c, f: number) => r.freq.findIndex((x) => x >= f);
+  const i = at(c, 300);
+  const drop = c.spl[i]! - h.spl[i]!;
+  // Approaches 20·log(Re ratio) as the motor's damping fades (still 0.13 dB short at 10 × fs with Qes 0.4).
+  assert.ok(drop > 20 * Math.log10(k) - 0.15 && drop <= 20 * Math.log10(k) + 1e-6, `drop ${drop.toFixed(3)} dB`);
+  // In the bass the drop is smaller: the higher Q props the response up near resonance.
+  const j = at(c, 45);
+  assert.ok(c.spl[j]! - h.spl[j]! < drop - 0.3, "less loss near resonance");
+  assert.ok(Math.abs(Math.min(...h.impedanceOhm) / Math.min(...c.impedanceOhm) - k) < 0.02, "impedance minimum rises with Re");
+  // Same watts on the dial, less taken by the hot coil: the thermal limit allows more drive.
+  const mi = at(c, 300);
+  assert.ok(h.maxSpl[mi]! >= c.maxSpl[mi]! - 20 * Math.log10(k) - 0.01);
 });
