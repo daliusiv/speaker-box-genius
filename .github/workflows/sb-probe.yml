@@ -10,28 +10,22 @@ jobs:
     steps:
       - name: Fetch samples
         run: |
+          set +e
           which pdftotext || (sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null)
           mkdir out && cd out
           UA="SpeakerBoxGenius-importer/1.0 (+https://github.com/daliusiv/speaker-box-genius; with SB Acoustics' permission)"
-          get() { curl -sSL -A "$UA" -o "$2" -w "%{http_code} %{size_download} %{content_type} $1\n" "$1" || true; sleep 2; }
-          get "https://sbacoustics.com/robots.txt" robots.txt
-          echo "== robots.txt"; cat robots.txt | head -40
-          get "https://sbacoustics.com/sitemap_index.xml" smi.xml
-          get "https://sbacoustics.com/wp-sitemap.xml" wps.xml
+          get() { curl -sSL -A "$UA" -o "$2" -w "%{http_code} %{size_download} $1\n" "$1"; sleep 2; }
           get "https://sbacoustics.com/product-sitemap.xml" ps.xml
-          echo "== sitemap index"; grep -oE '<loc>[^<]+' smi.xml wps.xml | head -30
-          echo "== product sitemap (first 15, count)"; grep -oE '<loc>[^<]+' ps.xml | head -15; grep -c '<loc>' ps.xml || true
-          get "https://sbacoustics.com/wp-json/wc/store/v1/products?per_page=3" api.json
-          echo "== store api"; head -c 6000 api.json; echo
+          echo "== product urls (all)"; grep -oE '<loc>https://sbacoustics.com/product/[^<]+' ps.xml | sed 's/<loc>//' | sed 's|https://sbacoustics.com/product/||' | tr '\n' ' '; echo
+          get "https://sbacoustics.com/wp-json/wc/store/v1/products?per_page=2" api.json
+          echo "== api keys"; jq -r '.[0] | keys | join(" ")' api.json
+          echo "== api categories/attributes"; jq -c '.[0] | {categories: [.categories[].slug], attributes, extensions}' api.json | head -c 3000; echo
+          get "https://sbacoustics.com/wp-json/wc/store/v1/products/categories?per_page=100" cats.json
+          echo "== categories"; jq -r '.[] | "\(.slug) \(.count)"' cats.json | tr '\n' ';'; echo
           get "https://sbacoustics.com/product/7%C2%BD-satori-mw19tx-4-textreme/" p1.html
-          get "https://sbacoustics.com/product/10in-sb29nrx75-6/" p2.html
-          for p in p1 p2; do
-            echo "== $p title"; grep -oE '<title>[^<]+' $p.html | head -1
-            echo "== $p breadcrumbs/categories"; grep -oE 'product_cat-[a-z0-9-]+' $p.html | sort -u | head -10
-            echo "== $p pdf links"; grep -oE 'https?://[^" ]+\.pdf' $p.html | sort -u | head -5
-            echo "== $p tables"; grep -c '<table' $p.html
-            echo "== $p text around Fs"; sed -e 's/<[^>]*>/ /g' $p.html | tr -s ' \n\t' ' ' | grep -oE '.{0,300}(Fs|Free air resonance).{0,1600}' | head -3
-            echo "== $p raw html around Qms"; grep -n -m3 -iE 'Qms' $p.html | cut -c1-600
-          done
-          pdf=$(grep -oE 'https?://[^" ]+\.pdf' p1.html | head -1)
-          if [ -n "$pdf" ]; then get "$pdf" p1.pdf; echo "== p1 pdf text"; pdftotext -layout p1.pdf - | head -70; fi
+          echo "== p1 text with Qms"; sed -e 's/<[^>]*>/ /g' p1.html | tr -s ' \n\t' ' ' | grep -oE '.{0,800}Qms.{0,1500}' | head -2
+          echo "== p1 html lines with Qms"; grep -n -iE 'Qms|Vas|Xmax' p1.html | head -8 | cut -c1-700
+          echo "== p1 pdf text"; get "https://sbacoustics.com/wp-content/uploads/2024/04/7.5in-SATORI-MW19TX-4.pdf" p1.pdf; pdftotext -layout p1.pdf - | head -75
+          s=$(grep -oE '<loc>https://sbacoustics.com/product/[^<]*sb34[^<]*' ps.xml | head -1 | sed 's/<loc>//'); echo "== sub page $s"
+          if [ -n "$s" ]; then get "$s" p2.html; pdf=$(grep -oE 'https://sbacoustics.com/wp-content/uploads/[^" ]+\.pdf' p2.html | head -1); echo "pdf $pdf"; get "$pdf" p2.pdf; pdftotext -layout p2.pdf - | head -75; fi
+          s=$(grep -oE '<loc>https://sbacoustics.com/product/[^<]*(pr|passive)[^<]*' ps.xml | head -3 | sed 's/<loc>//'); echo "== passive? $s"
