@@ -2699,3 +2699,21 @@ button.as-text {
     padding-inline: 0.4rem;
   }
 }
+
+/* A line's cone and mouth in the phone legend: indented, smaller and quieter, under their design. */
+.chart-strip .strip-item.part {
+  padding-left: 0.9rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.chart-strip .strip-item.part .strip-value {
+  font-weight: 500;
+}
+@media (max-width: 860px) {
+  .chart figcaption .chip {
+    flex: none;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+}

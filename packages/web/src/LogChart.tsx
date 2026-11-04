@@ -567,14 +567,19 @@ export function LogChart({
             </b>
           )}
         </div>
-        {visible
-          .filter((s) => !s.thin)
-          .map((s) => (
-            <div key={s.label} className={`strip-item${faded.length > 0 && fadedBy(faded, s.label) ? " faint" : ""}`}>
+        {/* Every curve, parts too (a line's cone and mouth): those sit indented under their design. */}
+        {visible.map((s) => (
+            <div
+              key={s.label}
+              className={`strip-item${s.thin ? " part" : ""}${faded.length > 0 && fadedBy(faded, s.label) ? " faint" : ""}`}
+            >
               <svg className="strip-line" viewBox="0 0 22 8" aria-hidden="true">
                 <line x1="1" y1="4" x2="21" y2="4" stroke={s.color} strokeWidth="3" strokeDasharray={s.dash} strokeLinecap="round" />
               </svg>
-              <span className="strip-name">{shortName(s.label)}</span>
+              <span className="strip-name" title={s.label}>
+                {/* Under its design, a part needs only its own name ("cone", "mouth"). */}
+                {s.thin && s.label.includes(" · ") ? s.label.slice(s.label.lastIndexOf(" · ") + 3) : shortName(s.label)}
+              </span>
               {leaderMark(s)}
               <span className="strip-value">
                 {hover === null ? "" : Number.isFinite(s.y![hover]!) ? s.y![hover]!.toFixed(digits) : "–"}
