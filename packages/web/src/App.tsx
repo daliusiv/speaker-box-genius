@@ -1125,6 +1125,15 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(x) => set("settings", { ...state.settings, portCompression: x === "on" })}
                 />
+                <Select<"lumped" | "pipe">
+                  label="Ports"
+                  value={state.settings.portModel}
+                  options={[
+                    { value: "lumped", text: "Air mass (like WinISD)" },
+                    { value: "pipe", text: "Pipe, with its resonances" },
+                  ]}
+                  onChange={(portModel) => set("settings", { ...state.settings, portModel })}
+                />
                 <Select<"on-axis" | "power">
                   label="Line/horn SPL"
                   value={state.settings.lineSpl}
@@ -1150,6 +1159,12 @@ export function App(props: { initial: AppState | null }) {
                 choose its air values, its amplifier resistance (Signal tab, Rg) and leave out Le, or simply import the
                 WinISD project (.wpr). The {PORT_LIMIT} m/s chuffing line applies to
                 whichever port-speed convention you pick.
+              </p>
+              <p className="hint">
+                Ports as pipes: a port is also a pipe open at both ends, resonating at about c&nbsp;/&nbsp;2L (a 40&nbsp;cm port near
+                380&nbsp;Hz) and letting midrange out as a narrow peak. &ldquo;Pipe&rdquo; draws those resonances (charts then run to
+                1&nbsp;kHz); in the bass it matches the air-mass model within a few tenths of a dB. Vented boxes only; the box&rsquo;s own
+                standing waves, which drive the port hardest when they coincide, aren&rsquo;t simulated.
               </p>
               <p className="hint">
                 Lines and horns: Hornresp works SPL out from the power each opening radiates. That matches the

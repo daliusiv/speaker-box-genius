@@ -283,15 +283,16 @@ export function simOptionsOf(s: AppState) {
     wiring: s.wiring,
     isobaric: s.isobaric ? { coils: s.isoCoils } : null,
     fMin: 10,
-    // The baffle step and its ripple sit higher up than the bass: show up to 1 kHz then.
-    fMax: s.baffle.on ? 1000 : 500,
-    points: s.baffle.on ? 340 : 300,
+    // The baffle step and its ripple, or port pipe resonances, sit higher up than the bass: show up to 1 kHz then.
+    fMax: s.baffle.on || s.settings.portModel === "pipe" ? 1000 : 500,
+    points: s.baffle.on || s.settings.portModel === "pipe" ? 400 : 300,
     highPass: s.highPass.on ? { type: s.highPass.type, order: s.highPass.order, freq: s.highPass.freq } : null,
     air: airOf(s),
     // The limit is in the displayed convention; the engine works in peak.
     portVelocityLimit: s.settings.velocity === "rms" ? PORT_LIMIT * Math.SQRT2 : PORT_LIMIT,
     portCompression: s.settings.portCompression,
     splFrom: s.settings.lineSpl === "power" ? ("power" as const) : undefined,
+    portModel: s.settings.portModel === "pipe" ? ("pipe" as const) : undefined,
   };
 }
 

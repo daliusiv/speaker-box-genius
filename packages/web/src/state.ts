@@ -175,6 +175,8 @@ export interface Settings {
    * radiates ("power"), as Hornresp shows it. They part once a mouth is large next to the wavelength.
    */
   lineSpl: "on-axis" | "power";
+  /** Vented boxes: ports as lumped air masses (like WinISD) or as pipes with their own resonances. */
+  portModel: "lumped" | "pipe";
 }
 
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
@@ -394,6 +396,7 @@ export const DEFAULT_STATE: AppState = {
     losses: { ql: 10, qa: 100, qp: 100 },
     portCompression: false,
     lineSpl: "on-axis",
+    portModel: "lumped",
   },
   eq: [],
   measured: [],

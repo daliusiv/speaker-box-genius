@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { portEffectiveLength, portLengthForFb, portLossCoefficient, portMouthArea, portArea, ventedFb } from "../src/model.ts";
+import { portEffectiveLength, portLengthForFb, portLossCoefficient, portMouthArea, portArea, portPipeResonance, ventedFb } from "../src/model.ts";
 import { simulate } from "../src/simulate.ts";
 
 const DRV = { fs: 22, qms: 4.5, qes: 0.42, vas_l: 90, re: 3.3, sd_cm2: 330, bl: 12, mms_g: 120, xmax_mm: 13, pe_w: 400 };
@@ -64,4 +64,23 @@ test("flared ports compress less and are judged at their mouths", () => {
   const sl = simulate(DRV, { ...mk(3), port: { ...port, flare_cm: 0 } }, { power: 10 });
   assert.ok(ratio < 0.5);
   assert.ok(Math.max(...fl.portVelocity!) < Math.max(...sl.portVelocity!));
+});
+
+// ---------------------------------------------------------------------------
+// Ports as pipes
+// ---------------------------------------------------------------------------
+
+test("port as a pipe: same box as the lumped port in the bass, a resonance near c / 2L higher up", () => {
+  const D = { fs: 35, qms: 1.87, qes: 0.4, vas_l: 37.4, re: 5.9, sd_cm2: 211.2, xmax_mm: 5.5, pe_w: 80 };
+  const box = { kind: "vented" as const, vb_l: 40, port: { shape: "round" as const, diameter_cm: 7, length_cm: 40 } };
+  const o = { power: 2.83, convention: "volts" as const, fMin: 10, fMax: 1000, points: 800 };
+  const lumped = simulate(D, box, o);
+  const pipe = simulate(D, box, { ...o, portModel: "pipe" });
+  for (let i = 0; i < lumped.freq.length && lumped.freq[i]! < 60; i++) if (lumped.spl[i]! > 40)
+    assert.ok(Math.abs(lumped.spl[i]! - pipe.spl[i]!) < 0.35, `${lumped.freq[i]} Hz`); // the pipe air is slightly springy
+  const f1 = portPipeResonance(box.port);
+  let iMax = 0;
+  for (let i = 0; i < pipe.freq.length; i++) if (pipe.freq[i]! > 150 && pipe.portVelocity![i]! > pipe.portVelocity![iMax]! * (pipe.freq[iMax]! > 150 ? 1 : 0)) iMax = i;
+  assert.ok(Math.abs(pipe.freq[iMax]! / f1 - 1) < 0.05, `air speed peaks at ${pipe.freq[iMax]} Hz, pipe resonance ${f1}`);
+  assert.ok(pipe.portVelocity![iMax]! > 5 * lumped.portVelocity![iMax]!, "the lumped port has no such resonance");
 });

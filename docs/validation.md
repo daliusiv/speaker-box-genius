@@ -312,6 +312,10 @@ Away from the tuning the agreement matches the ported box (0.35–0.5 %). Close 
 WinISD's lighter PR damping shows up again: a slightly deeper cone dip and a little more
 PR travel. The dip and bump frequencies agree within 0.05 Hz.
 
+## Ports as pipes (Settings → Ports → Pipe)
+
+Not in WinISD, so not part of the comparison above (the default, "Air mass", is what's compared). A port is modelled as a uniform pipe of its throat's area and its effective length (end corrections included, so it tunes the box exactly as the air-mass port), radiating at its outer end: it adds the pipe's resonances at about c / 2L, 2c / 2L, … Checks (`portflare.test.ts`): within 0.35 dB of the air-mass port below 60 Hz (the pipe's air is slightly springy, which the air-mass model leaves out), and the port's air speed peaks within 5 % of c / 2L. Not modelled: the box's own standing waves, which drive the port hardest when they coincide (the port card warns when they do), and wall losses in the port. Bandpass ports stay as air masses.
+
 ## Reproduce
 
 ```bash
