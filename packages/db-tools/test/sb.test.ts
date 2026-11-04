@@ -113,3 +113,10 @@ test("missing values: skipped with the reason", () => {
   assert.equal(r.kind, "skip");
   assert.match(r.reason!, /missing qes, vas/);
 });
+
+test("passive radiator: the 'Max Mechanical Cone Excursion' label too", () => {
+  const items = ["Effective piston area, Sd 506 cm2", "Free air resonance, Fs 14 Hz", "Moving mass incl. air, Mms 294 g", "Max Mechanical Cone Excursion, Xmech ±17 mm", "Mechanical Q-factor, Qms 8.62", "Equivalent volume, Vas 160 liters"];
+  const r = parseProduct(product("12″ SB34NRX-00 / Norex", ["passive-radiators"]), page(items), "2026-11-04");
+  assert.equal(r.kind, "passive-radiator", r.reason ?? "");
+  assert.equal(r.pr!.params.xmax_mm, 17);
+});

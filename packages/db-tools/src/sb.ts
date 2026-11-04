@@ -90,7 +90,7 @@ const LABELS: Record<string, RegExp> = {
   sd: /^Effective (?:piston|diaphragm) area,?\s*Sd\b/i,
   travel: /^Linear coil travel \(p-p\)/i,
   xmax: /^(?:Max(?:imum)? linear excursion|Linear excursion),?\s*Xmax\b/i,
-  xmech: /^Maximum mechanical cone excursion,?\s*Xmech\b/i,
+  xmech: /^Max(?:imum|\.)? mechanical cone excursion,?\s*Xmech\b/i,
   fs: /^Free air resonance,?\s*Fs\b/i,
   qms: /^Mechanical Q-factor,?\s*Qms\b/i,
   qes: /^Electrical Q-factor,?\s*Qes\b/i,
