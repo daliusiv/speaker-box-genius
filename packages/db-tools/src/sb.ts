@@ -15,6 +15,7 @@
  * driver-base; SB models not on the site any more keep their driver-base entry.
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import https from "node:https";
 import { join } from "node:path";
 import { validateDriver, validatePassiveRadiator, type Driver, type PassiveRadiator } from "../../schema/src/index.ts";
 import { checkConsistency } from "../../engine/src/ts.ts";
@@ -259,10 +260,24 @@ export function parseProduct(p: StoreProduct, html: string, retrieved: string): 
 const UA = "SpeakerBoxGenius-importer/1.0 (+https://github.com/daliusiv/speaker-box-genius; with SB Acoustics' permission)";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** One GET with plain headers (the site's firewall refuses fetch()'s browser-style ones). */
+function get(url: string): Promise<{ status: number; body: string; location?: string }> {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, { headers: { "User-Agent": UA, Accept: "text/html,application/json;q=0.9,*/*;q=0.8" }, timeout: 40000 }, (res) => {
+      const chunks: Buffer[] = [];
+      res.on("data", (c: Buffer) => chunks.push(c));
+      res.on("end", () => resolve({ status: res.statusCode ?? 0, body: Buffer.concat(chunks).toString("utf8"), ...(res.headers.location ? { location: res.headers.location } : {}) }));
+    });
+    req.on("timeout", () => req.destroy(new Error(`timeout ${url}`)));
+    req.on("error", reject);
+  });
+}
+
 async function fetchText(url: string): Promise<string> {
   for (let attempt = 1; ; attempt++) {
-    const r = await fetch(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(40000) });
-    if (r.ok) return r.text();
+    let r = await get(url);
+    for (let hops = 0; r.status >= 300 && r.status < 400 && r.location && hops < 5; hops++) r = await get(new URL(r.location, url).toString());
+    if (r.status >= 200 && r.status < 300) return r.body;
     if (attempt >= 3 || r.status === 404 || r.status === 403) throw new Error(`${r.status} ${url}`);
     await sleep(5000 * attempt);
   }
