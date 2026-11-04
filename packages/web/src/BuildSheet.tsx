@@ -82,7 +82,7 @@ export function BuildSheet(props: {
   const chooser =
     lines.length > 0 ? (
       <div className="fields">
-        <Select<string>
+        <Select<string> help="Which box the cut list is for: the volume calculator's box, or a folded line or horn."
           label="What to build"
           value={line ? line.id : "box"}
           options={[{ value: "box", text: "The box in the volume calculator" }, ...lines.map((x) => ({ value: x.id, text: `${x.name} (folded ${x.end === "horn" ? "horn" : "line"})` }))]}
@@ -350,17 +350,17 @@ export function BuildSheet(props: {
 
       <h3>Settings</h3>
       <div className="fields">
-        <Num
+        <Num help="Diameter of the hole for the driver (from its datasheet; often a little smaller than the frame)."
           label="Driver cutout"
           q="mm"
           value={v.driverCutout_mm > 0 ? v.driverCutout_mm : driverCutout}
           min={0}
           onChange={(x) => set("driverCutout_mm", x)}
         />
-        {prCount > 0 && <Num label="PR cutout" q="mm" value={v.prCutout_mm > 0 ? v.prCutout_mm : prCutout} min={0} onChange={(x) => set("prCutout_mm", x)} />}
-        <Num label="Sheet W" q="mm" value={v.sheetW_mm} min={100} onChange={(x) => set("sheetW_mm", x)} />
-        <Num label="Sheet H" q="mm" value={v.sheetH_mm} min={100} onChange={(x) => set("sheetH_mm", x)} />
-        <Num label="Kerf" q="mm" value={v.kerf_mm} min={0} onChange={(x) => set("kerf_mm", x)} />
+        {prCount > 0 && <Num help="Diameter of the hole for each passive radiator." label="PR cutout" q="mm" value={v.prCutout_mm > 0 ? v.prCutout_mm : prCutout} min={0} onChange={(x) => set("prCutout_mm", x)} />}
+        <Num help="Width of the sheets you cut from (e.g. 2440 × 1220 mm boards). Used to lay out the panels." label="Sheet W" q="mm" value={v.sheetW_mm} min={100} onChange={(x) => set("sheetW_mm", x)} />
+        <Num help="Height of the sheets you cut from." label="Sheet H" q="mm" value={v.sheetH_mm} min={100} onChange={(x) => set("sheetH_mm", x)} />
+        <Num help="Width of the saw cut, left between panels on the sheet layout." label="Kerf" q="mm" value={v.kerf_mm} min={0} onChange={(x) => set("kerf_mm", x)} />
       </div>
       <div className="row">
         <button type="button" onClick={() => void print()}>

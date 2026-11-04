@@ -47,7 +47,7 @@ export function LineProfileView(p: { d: LineDesign; driver: DriverInput | null; 
     <details className="line-fold">
       <summary>Pressure and air speed inside</summary>
       <div className="profile-controls">
-        <label className="profile-freq">
+        <label className="profile-freq" data-help-title="Frequency" data-help="The frequency to look at inside the line. Tap a resonance to jump to one of the line's own peaks.">
           <span>
             Frequency <b>{fmt(f)} Hz</b>
           </span>

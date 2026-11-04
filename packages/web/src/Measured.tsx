@@ -116,7 +116,7 @@ export function MeasuredCard(p: { measured: MeasuredCurve[]; designs: Design[]; 
             <div className="fields">
               <Num label="Level" unit="dB" value={m.offset_db} title="Added to the measurement (uncalibrated measurements need this)" onChange={(offset_db) => set(m.id, { offset_db })} />
               {p.designs.length > 0 && (
-                <Select<string>
+                <Select<string> help="Level-match the measurement to a design's curve, so you compare shape, not loudness."
                   label="Match to"
                   value={p.designs.some((d) => d.design.id === m.matchTo) ? m.matchTo : ""}
                   options={[{ value: "", text: "—" }, ...p.designs.map((d) => ({ value: d.design.id, text: d.design.name }))]}

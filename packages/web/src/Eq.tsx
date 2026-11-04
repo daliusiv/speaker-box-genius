@@ -65,20 +65,20 @@ export function EqPanel(props: { state: AppState; designs: Design[]; onChange: (
               </button>
             </div>
             <div className="fields">
-              <Select label="Applies to" value={targets.some((t) => t.value === e.target) ? e.target : "all"} options={targets} onChange={(target) => set({ ...e, target })} />
+              <Select help="Which designs this EQ stage applies to." label="Applies to" value={targets.some((t) => t.value === e.target) ? e.target : "all"} options={targets} onChange={(target) => set({ ...e, target })} />
               {e.type === "linkwitz" && (
                 <>
-                  <Num label="f0" unit="Hz" value={e.f0} onChange={(f0) => set({ ...e, f0 })} />
-                  <Num label="Q0" value={e.q0} onChange={(q0) => set({ ...e, q0 })} />
-                  <Num label="fp" unit="Hz" value={e.fp} onChange={(fp) => set({ ...e, fp })} />
-                  <Num label="Qp" value={e.qp} onChange={(qp) => set({ ...e, qp })} />
+                  <Num help="Linkwitz Transform: the sealed box's current resonance (fc). Taken from the design; change it only to experiment." label="f0" unit="Hz" value={e.f0} onChange={(f0) => set({ ...e, f0 })} />
+                  <Num help="Linkwitz Transform: the box's current Q (Qtc)." label="Q0" value={e.q0} onChange={(q0) => set({ ...e, q0 })} />
+                  <Num help="Linkwitz Transform: the resonance you want instead. Lower extends the bass (and needs more excursion and power)." label="fp" unit="Hz" value={e.fp} onChange={(fp) => set({ ...e, fp })} />
+                  <Num help="Linkwitz Transform: the Q you want. 0.707 is flat (Butterworth); 0.5 is tighter, more gradual." label="Qp" value={e.qp} onChange={(qp) => set({ ...e, qp })} />
                 </>
               )}
               {(e.type === "peak" || e.type === "lowshelf") && (
                 <>
-                  <Num label="Freq" unit="Hz" value={e.freq} onChange={(freq) => set({ ...e, freq })} />
-                  <Num label="Gain" unit="dB" value={e.gain_db} min={-30} onChange={(gain_db) => set({ ...e, gain_db: Math.min(24, gain_db) })} />
-                  <Num label="Q" value={e.q} onChange={(q) => set({ ...e, q })} />
+                  <Num help="Centre (or corner) frequency of this EQ band." label="Freq" unit="Hz" value={e.freq} onChange={(freq) => set({ ...e, freq })} />
+                  <Num help="Boost (+) or cut (−) in dB. Every +6 dB needs four times the power and doubles the excursion." label="Gain" unit="dB" value={e.gain_db} min={-30} onChange={(gain_db) => set({ ...e, gain_db: Math.min(24, gain_db) })} />
+                  <Num help="Width of the band: higher Q is narrower. About 0.7 for broad shaping, 2–5 to fix a peak." label="Q" value={e.q} onChange={(q) => set({ ...e, q })} />
                 </>
               )}
             </div>

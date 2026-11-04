@@ -91,6 +91,8 @@ function DesignShell(props: {
         <span className="swatch" style={{ background: props.color }} />
         <input
           className="design-name"
+          data-help-title="Design name"
+          data-help="Name this design: it labels its curves on every chart. Duplicate a design to compare a variation side by side."
           value={d.name}
           aria-label="Design name"
           onChange={(e) => props.onChange({ name: e.currentTarget.value })}
@@ -123,14 +125,14 @@ function VbField(props: { vb_l: number; value: number; linked: boolean; label?: 
   return props.linked ? (
     <Fixed label={label} num={props.vb_l} q="vol" title="From the volume calculator" />
   ) : (
-    <Num label={label} q="vol" value={props.value} onChange={props.onChange} />
+    <Num help="Net internal air volume of the box (after the driver, port and bracing)." label={label} q="vol" value={props.value} onChange={props.onChange} />
   );
 }
 
 function TuneRow(props: { target: number; onTarget: (v: number) => void; button: string; title?: string; onApply: () => void }) {
   return (
     <div className="tune">
-      <Num label="Tune to" unit="Hz" value={props.target} onChange={props.onTarget} />
+      <Num help="The tuning frequency you want. Press the button to size the port (or PR mass) for it." label="Tune to" unit="Hz" value={props.target} onChange={props.onTarget} />
       <button className="secondary" onClick={props.onApply} title={props.title}>
         {props.button}
       </button>
@@ -319,7 +321,7 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
   return (
     <>
       <div className="fields">
-        <Select
+        <Select help="Round tube, or a slot (rectangular, often along a wall). Slots are easy to build and less prone to chuffing at the same area."
           label="Port"
           value={v.shape}
           options={[
@@ -331,7 +333,7 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
         <VbField vb_l={p.vb_l} value={v.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
         {v.shape === "round" ? (
           <>
-            <Num label="Port Ø" q="len" value={v.diameter_cm} onChange={(x) => set({ diameter_cm: x })} />
+            <Num help="Inside diameter of the port tube. Bigger means lower air speed (less chuffing) but a longer port for the same tuning." label="Port Ø" q="len" value={v.diameter_cm} onChange={(x) => set({ diameter_cm: x })} />
             <Num
               label="Flare r"
               q="len"
@@ -343,12 +345,12 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
           </>
         ) : (
           <>
-            <Num label="Width" q="len" value={v.slotWidth_cm} onChange={(x) => set({ slotWidth_cm: x })} />
-            <Num label="Height" q="len" value={v.slotHeight_cm} onChange={(x) => set({ slotHeight_cm: x })} />
+            <Num help="Inside width of the slot port." label="Width" q="len" value={v.slotWidth_cm} onChange={(x) => set({ slotWidth_cm: x })} />
+            <Num help="Inside height of the slot port (the gap)." label="Height" q="len" value={v.slotHeight_cm} onChange={(x) => set({ slotHeight_cm: x })} />
           </>
         )}
-        <Num label="Length" q="len" value={v.length_cm} min={0} onChange={(x) => set({ length_cm: x })} />
-        <Num label="Ports" value={v.count} onChange={(x) => set({ count: Math.max(1, Math.round(x)) })} />
+        <Num help="Physical length of the port (tube or slot). Longer tunes lower; end corrections are added automatically." label="Length" q="len" value={v.length_cm} min={0} onChange={(x) => set({ length_cm: x })} />
+        <Num help="Number of identical ports. Two ports have twice the area: half the air speed, but each needs to be longer for the same tuning." label="Ports" value={v.count} onChange={(x) => set({ count: Math.max(1, Math.round(x)) })} />
         <Fixed label="Fb" unit="Hz" value={f1(fb)} title="Box tuning frequency" />
       </div>
       <TuneRow target={v.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set port length" onApply={tune} />
@@ -454,8 +456,8 @@ function PrBody(
       <p className="pr-name">{pr.prName}</p>
       <div className="fields">
         <VbField vb_l={p.vb_l} value={pr.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
-        <Num label="PRs" value={pr.count} onChange={(v) => set({ count: Math.max(1, Math.round(v)) })} />
-        <Num label="Added mass" unit="g" value={pr.addedMass_g} min={0} onChange={(v) => set({ addedMass_g: v })} />
+        <Num help="Number of identical passive radiators. More PRs means more cone area: less excursion each." label="PRs" value={pr.count} onChange={(v) => set({ count: Math.max(1, Math.round(v)) })} />
+        <Num help="Mass glued onto the PR cone (grams). More mass tunes the box lower." label="Added mass" unit="g" value={pr.addedMass_g} min={0} onChange={(v) => set({ addedMass_g: v })} />
         <Fixed
           label={t.mixed ? "Fb ≈" : "Fb"}
           unit="Hz"
@@ -571,8 +573,8 @@ function PrGroupCard(props: {
       />
       <p className="pr-name">{g.prName}</p>
       <div className="fields">
-        <Num label="PRs" value={g.count} onChange={(v) => props.onChange({ count: Math.max(1, Math.round(v)) })} />
-        <Num label="Added mass" unit="g" value={g.addedMass_g} min={0} onChange={(v) => props.onChange({ addedMass_g: v })} />
+        <Num help="Number of identical passive radiators in this group." label="PRs" value={g.count} onChange={(v) => props.onChange({ count: Math.max(1, Math.round(v)) })} />
+        <Num help="Mass glued onto each PR cone in this group (grams). More mass tunes lower." label="Added mass" unit="g" value={g.addedMass_g} min={0} onChange={(v) => props.onChange({ addedMass_g: v })} />
         <PrParamFields params={g.params} onChange={(patch) => props.onChange({ params: { ...g.params, ...patch } })} />
       </div>
     </div>
@@ -656,11 +658,11 @@ function PrParamFields(props: { params: PrDesign["params"]; onChange: (patch: Pa
   const { params, onChange } = props;
   return (
     <>
-      <Num label="PR Mms" unit="g" value={params.mms_g} onChange={(v) => onChange({ mms_g: v })} />
-      <Num label="PR Vas" unit="L" value={params.vas_l} onChange={(v) => onChange({ vas_l: v })} />
-      <Num label="PR Qms" value={params.qms} onChange={(v) => onChange({ qms: v })} />
-      <Num label="PR Sd" unit="cm²" value={params.sd_cm2} onChange={(v) => onChange({ sd_cm2: v })} />
-      <Num label="PR Xmax" unit="mm" value={params.xmax_mm} onChange={(v) => onChange({ xmax_mm: v })} />
+      <Num help="Moving mass of the passive radiator (its datasheet value, without added mass)." label="PR Mms" unit="g" value={params.mms_g} onChange={(v) => onChange({ mms_g: v })} />
+      <Num help="Compliance of the PR's suspension, as an equivalent air volume. Bigger means a softer suspension." label="PR Vas" unit="L" value={params.vas_l} onChange={(v) => onChange({ vas_l: v })} />
+      <Num help="Mechanical Q of the PR: its own losses. Higher means a lossless, sharper resonance." label="PR Qms" value={params.qms} onChange={(v) => onChange({ qms: v })} />
+      <Num help="Effective cone area of the passive radiator." label="PR Sd" unit="cm²" value={params.sd_cm2} onChange={(v) => onChange({ sd_cm2: v })} />
+      <Num help="Maximum one-way excursion of the passive radiator before it bottoms out." label="PR Xmax" unit="mm" value={params.xmax_mm} onChange={(v) => onChange({ xmax_mm: v })} />
     </>
   );
 }
@@ -689,7 +691,7 @@ function PortEditor(props: {
   return (
     <>
       <div className="fields">
-        <Select
+        <Select help="Round tube, or a slot (rectangular, often along a wall)."
           label="Port"
           value={v.shape}
           options={[
@@ -699,15 +701,15 @@ function PortEditor(props: {
           onChange={(shape) => set({ shape })}
         />
         {v.shape === "round" ? (
-          <Num label="Port Ø" q="len" value={v.diameter_cm} onChange={(x) => set({ diameter_cm: x })} />
+          <Num help="Inside diameter of this chamber's port tube." label="Port Ø" q="len" value={v.diameter_cm} onChange={(x) => set({ diameter_cm: x })} />
         ) : (
           <>
-            <Num label="Width" q="len" value={v.slotWidth_cm} onChange={(x) => set({ slotWidth_cm: x })} />
-            <Num label="Height" q="len" value={v.slotHeight_cm} onChange={(x) => set({ slotHeight_cm: x })} />
+            <Num help="Inside width of the slot port." label="Width" q="len" value={v.slotWidth_cm} onChange={(x) => set({ slotWidth_cm: x })} />
+            <Num help="Inside height of the slot port (the gap)." label="Height" q="len" value={v.slotHeight_cm} onChange={(x) => set({ slotHeight_cm: x })} />
           </>
         )}
-        <Num label="Length" q="len" value={v.length_cm} min={0} onChange={(x) => set({ length_cm: x })} />
-        <Num label="Ports" value={v.count} onChange={(x) => set({ count: Math.max(1, Math.round(x)) })} />
+        <Num help="Physical length of this chamber's port. Longer tunes lower." label="Length" q="len" value={v.length_cm} min={0} onChange={(x) => set({ length_cm: x })} />
+        <Num help="Number of identical ports in this chamber." label="Ports" value={v.count} onChange={(x) => set({ count: Math.max(1, Math.round(x)) })} />
         <Fixed label="Fb" unit="Hz" value={f1(fb)} title="Tuning of this chamber with its port" />
       </div>
       <TuneRow target={v.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set port length" onApply={tune} />
@@ -755,7 +757,7 @@ function BandpassLossesEditor(p: {
     <>
       <h3>Box losses</h3>
       <div className="fields">
-        <Select<"shared" | "own">
+        <Select<"shared" | "own"> help="Use the box losses from Settings for both chambers, or set leakage, absorption and port loss per chamber (like WinISD)."
           label="Losses"
           value={l ? "own" : "shared"}
           options={[
@@ -795,13 +797,13 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
   return (
     <>
       <div className="fields">
-        <Select label="Type" value={b.order} options={BP_ORDERS} onChange={(order) => set({ order })} />
+        <Select help="4th order: sealed rear, ported front. 6th order: both chambers vented (parallel to the outside, or series through the front)." label="Type" value={b.order} options={BP_ORDERS} onChange={(order) => set({ order })} />
         <VbField label="Rear Vb" vb_l={p.vb_l} value={b.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
-        <Num label="Front Vb" q="vol" value={b.frontVb_l} onChange={(frontVb_l) => set({ frontVb_l })} />
+        <Num help="Air volume of the front chamber (the one the cone fires into)." label="Front Vb" q="vol" value={b.frontVb_l} onChange={(frontVb_l) => set({ frontVb_l })} />
       </div>
       <h3>Front chamber (to the outside)</h3>
       <div className="fields">
-        <Select label="Opening" value={b.frontOpening} options={OPENINGS} onChange={(frontOpening) => set({ frontOpening })} />
+        <Select help="How this chamber opens: through a port, or through passive radiators." label="Opening" value={b.frontOpening} options={OPENINGS} onChange={(frontOpening) => set({ frontOpening })} />
       </div>
       {b.frontOpening === "port" ? (
         <>
@@ -823,7 +825,7 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
         <>
           <h3>Rear chamber ({into})</h3>
           <div className="fields">
-            <Select label="Opening" value={b.rearOpening} options={OPENINGS} onChange={(rearOpening) => set({ rearOpening })} />
+            <Select help="How this chamber opens: through a port, or through passive radiators." label="Opening" value={b.rearOpening} options={OPENINGS} onChange={(rearOpening) => set({ rearOpening })} />
           </div>
           {b.rearOpening === "port" ? (
             <>

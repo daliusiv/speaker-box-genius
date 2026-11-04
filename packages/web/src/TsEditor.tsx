@@ -23,6 +23,21 @@ const QUANTITY: Record<TsParam, Quantity> = {
   rms: "plain",
 };
 
+/** What each T/S parameter is, for the help strip. */
+const TS_HELP: Record<TsParam, string> = {
+  fs: "Free-air resonance: the frequency the cone bounces at on its own, out of a box. Lower usually means deeper bass is possible.",
+  qts: "Total Q: how damped that resonance is (Qms and Qes together). Below ~0.4 suits ported boxes, 0.4–0.7 sealed, higher needs a big box or open baffle.",
+  qms: "Mechanical Q: the damping from the suspension's own losses. Usually 2–10.",
+  qes: "Electrical Q: the damping from the motor (magnet and coil). Usually much lower than Qms, so it sets most of Qts.",
+  vas_l: "Equivalent compliance volume: the air volume as springy as the suspension. Bigger Vas usually needs a bigger box.",
+  re: "DC resistance of the voice coil (measure it with a meter). Lower than the nominal impedance.",
+  sd_cm2: "Effective cone area (including about a third of the surround). More area moves more air for the same excursion.",
+  mms_g: "Moving mass: cone, coil and the air load moving with them.",
+  cms_mm_per_n: "Suspension compliance: how far the cone moves per newton of force. The springier, the higher.",
+  bl: "Motor strength: force per amp of coil current (tesla-metres). Higher Bl means more control and efficiency.",
+  rms: "Mechanical resistance: the suspension's losses (kg/s). Goes with Qms.",
+};
+
 const ORDER: TsParam[] = ["fs", "qts", "qms", "qes", "vas_l", "re", "sd_cm2", "mms_g", "cms_mm_per_n", "bl", "rms"];
 
 function fmt(v: number): string {
@@ -168,7 +183,10 @@ function TsField(props: {
   }, [props.entered]);
 
   return (
-    <label className={props.conflict ? "conflict" : undefined}>
+    <label
+      className={props.conflict ? "conflict" : undefined}
+      data-help={`${TS_HELP[props.param]} Type any values from the datasheet in any order; the rest are calculated (grey).`}
+    >
       <span>{meta.label}</span>
       <span className={`ts-input${props.entered !== undefined ? " has-clear" : ""}`}>
         <input

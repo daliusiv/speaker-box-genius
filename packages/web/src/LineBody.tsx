@@ -263,9 +263,9 @@ function SectionEditor(p: { s: LineSection; index: number; canRemove: boolean; o
         )}
       </div>
       <div className="fields">
-        <Num label="Length" q="len" value={s.length_cm} min={1} onChange={(length_cm) => p.onChange({ ...s, length_cm })} />
+        <Num help="Length of this section, along its centre." label="Length" q="len" value={s.length_cm} min={1} onChange={(length_cm) => p.onChange({ ...s, length_cm })} />
         <Num label="End area" unit="cm²" value={s.endArea_cm2} min={1} title="Cross-section at the end of this section (it tapers from the previous one)" onChange={(endArea_cm2) => p.onChange({ ...s, endArea_cm2 })} />
-        <Select<LineSection["taper"]>
+        <Select<LineSection["taper"]> help="How the area changes along this section: linear (one wall slopes), conical (both ways), or exponential (a horn flare)."
           label="Taper"
           value={s.taper}
           options={[
@@ -275,7 +275,7 @@ function SectionEditor(p: { s: LineSection; index: number; canRemove: boolean; o
           ]}
           onChange={(taper) => p.onChange({ ...s, taper })}
         />
-        <Select
+        <Select help="Fibre stuffing in this section. It damps the line's higher resonances (smoother response) at a little cost in bass."
           label="Stuffing"
           value={custom ? "custom" : level}
           options={STUFFING.map(({ value, text }) => ({ value, text }))}
@@ -461,7 +461,7 @@ export function LineBody(p: {
     <>
       <LineDrawing d={d} />
       <div className="fields">
-        <Select<LineDesign["end"]>
+        <Select<LineDesign["end"]> help="Open line (TL, TQWT), mass-loaded line with a port (MLTL), tapped horn (both sides of the cone in the line) or front-loaded horn."
           label="Type"
           value={d.end}
           options={[
@@ -496,12 +496,12 @@ export function LineBody(p: {
         {d.end === "tapped" && <Num label="Front tap" q="len" value={d.tapAt_cm} min={0} title="Where the driver's front opens into the line, from the closed end" onChange={(tapAt_cm) => set({ tapAt_cm })} />}
         {d.end === "port" && (
           <>
-            <Num label="Port Ø" q="len" value={d.portDiameter_cm} min={0.5} onChange={(portDiameter_cm) => set({ portDiameter_cm })} />
-            <Num label="Port length" q="len" value={d.portLength_cm} min={0} onChange={(portLength_cm) => set({ portLength_cm })} />
+            <Num help="Inside diameter of the port at the mouth of the line." label="Port Ø" q="len" value={d.portDiameter_cm} min={0.5} onChange={(portDiameter_cm) => set({ portDiameter_cm })} />
+            <Num help="Physical length of the port at the mouth. Longer tunes lower." label="Port length" q="len" value={d.portLength_cm} min={0} onChange={(portLength_cm) => set({ portLength_cm })} />
             <Num label="Flare r" q="len" value={d.portFlare_cm} min={0} title="Round-over radius at both ends of the port (0 = straight)" onChange={(portFlare_cm) => set({ portFlare_cm })} />
           </>
         )}
-        <Select<LineDesign["mouth"]>
+        <Select<LineDesign["mouth"]> help="Where the mouth is relative to the driver. A mouth on the back reaches you later, which changes how it adds up with the cone."
           label="Mouth"
           value={d.mouth}
           options={[
@@ -547,7 +547,7 @@ export function LineBody(p: {
         </div>
       ) : (
       <div className="tune">
-        <Num label="Tune to" unit="Hz" value={d.targetFb} min={5} onChange={(targetFb) => set({ targetFb })} />
+        <Num help="The tuning you want. Press the button to rescale the line (or size the port) for it." label="Tune to" unit="Hz" value={d.targetFb} min={5} onChange={(targetFb) => set({ targetFb })} />
         <button className="secondary" onClick={() => tune()} disabled={!p.driver} title={d.end === "port" ? "Find the port length for this tuning" : "Scale the line's length (driver, tap and sections follow) for this tuning"}>
           {d.end === "port" ? "Set port length" : "Set line length"}
         </button>

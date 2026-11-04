@@ -42,7 +42,9 @@ export function Num(props: {
   q?: Quantity;
   value: number;
   min?: number;
-  /** Tooltip for the field. */
+  /** What the field is and does: shown in the help strip when it has focus (or is hovered). */
+  help?: string;
+  /** Older name for help. */
   title?: string;
   onChange: (v: number) => void;
 }) {
@@ -60,7 +62,7 @@ export function Num(props: {
   }, [shown]);
   const min = (props.min ?? Number.MIN_VALUE) * u.k;
   return (
-    <label title={props.title}>
+    <label data-help={props.help ?? props.title}>
       <span>{props.label}</span>
       <input
         inputMode="decimal"
@@ -78,12 +80,12 @@ export function Num(props: {
 }
 
 /** A read-only value laid out like a Num field. Give `num` + `q` to convert units. */
-export function Fixed(props: { label: string; unit?: string; value?: string; num?: number; q?: Quantity; title?: string }) {
+export function Fixed(props: { label: string; unit?: string; value?: string; num?: number; q?: Quantity; title?: string; help?: string }) {
   const units = useUnits();
   const u = props.q ? units.unit(props.q) : null;
   const text = props.num !== undefined && u ? (props.num * u.k).toFixed(u.digits) : (props.value ?? "–");
   return (
-    <label title={props.title}>
+    <label data-help={props.help ?? props.title} tabIndex={props.help ?? props.title ? 0 : undefined}>
       <span>{props.label}</span>
       <output className="fixed">{text}</output>
       <span className="unit">{u ? u.unit : (props.unit ?? "")}</span>
@@ -95,10 +97,12 @@ export function Select<T extends string | number>(props: {
   label: string;
   value: T;
   options: { value: T; text: string }[];
+  /** What the choice does: shown in the help strip when it has focus (or is hovered). */
+  help?: string;
   onChange: (v: T) => void;
 }) {
   return (
-    <label className="full">
+    <label className="full" data-help={props.help}>
       <span>{props.label}</span>
       <select
         value={String(props.value)}

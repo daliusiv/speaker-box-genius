@@ -41,44 +41,44 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
   return (
     <Card title="Volume calculator">
       <div className="fields">
-        <Select label="Used by" value={target ? v.link : "none"} options={linkOptions} onChange={(x) => set("link", x)} />
-        <Select label="Shape" value={v.shape} options={SHAPES} onChange={(x) => set("shape", x)} />
+        <Select help="Which designs take their box volume from this calculator (their volume field then follows it)." label="Used by" value={target ? v.link : "none"} options={linkOptions} onChange={(x) => set("link", x)} />
+        <Select help="Outside shape of the enclosure: box, cylinder (tube), sphere or tapered box (frustum)." label="Shape" value={v.shape} options={SHAPES} onChange={(x) => set("shape", x)} />
       </div>
 
       <h3>External size</h3>
       <div className="fields">
         {v.shape === "box" && (
           <>
-            <Num label="Width" q="len" value={v.width_cm} onChange={(x) => set("width_cm", x)} />
-            <Num label="Height" q="len" value={v.height_cm} onChange={(x) => set("height_cm", x)} />
-            <Num label="Depth" q="len" value={v.depth_cm} onChange={(x) => set("depth_cm", x)} />
+            <Num help="Outside width of the box." label="Width" q="len" value={v.width_cm} onChange={(x) => set("width_cm", x)} />
+            <Num help="Outside height of the box." label="Height" q="len" value={v.height_cm} onChange={(x) => set("height_cm", x)} />
+            <Num help="Outside depth of the box (front to back)." label="Depth" q="len" value={v.depth_cm} onChange={(x) => set("depth_cm", x)} />
           </>
         )}
         {v.shape === "cylinder" && (
           <>
-            <Num label="Diameter" q="len" value={v.diameter_cm} onChange={(x) => set("diameter_cm", x)} />
-            <Num label="Length" q="len" value={v.height_cm} onChange={(x) => set("height_cm", x)} />
+            <Num help="Outside diameter of the tube." label="Diameter" q="len" value={v.diameter_cm} onChange={(x) => set("diameter_cm", x)} />
+            <Num help="Outside length of the tube." label="Length" q="len" value={v.height_cm} onChange={(x) => set("height_cm", x)} />
           </>
         )}
         {v.shape === "sphere" && (
-          <Num label="Diameter" q="len" value={v.diameter_cm} onChange={(x) => set("diameter_cm", x)} />
+          <Num help="Outside diameter of the sphere." label="Diameter" q="len" value={v.diameter_cm} onChange={(x) => set("diameter_cm", x)} />
         )}
         {v.shape === "frustum" && (
           <>
-            <Num label="Bottom W" q="len" value={v.width_cm} onChange={(x) => set("width_cm", x)} />
-            <Num label="Bottom D" q="len" value={v.depth_cm} onChange={(x) => set("depth_cm", x)} />
-            <Num label="Top W" q="len" value={v.topWidth_cm} min={0} onChange={(x) => set("topWidth_cm", x)} />
-            <Num label="Top D" q="len" value={v.topDepth_cm} min={0} onChange={(x) => set("topDepth_cm", x)} />
-            <Num label="Height" q="len" value={v.height_cm} onChange={(x) => set("height_cm", x)} />
+            <Num help="Outside width at the bottom of the tapered box." label="Bottom W" q="len" value={v.width_cm} onChange={(x) => set("width_cm", x)} />
+            <Num help="Outside depth at the bottom of the tapered box." label="Bottom D" q="len" value={v.depth_cm} onChange={(x) => set("depth_cm", x)} />
+            <Num help="Outside width at the top (0 = a point, like a pyramid)." label="Top W" q="len" value={v.topWidth_cm} min={0} onChange={(x) => set("topWidth_cm", x)} />
+            <Num help="Outside depth at the top." label="Top D" q="len" value={v.topDepth_cm} min={0} onChange={(x) => set("topDepth_cm", x)} />
+            <Num help="Outside height of the tapered box." label="Height" q="len" value={v.height_cm} onChange={(x) => set("height_cm", x)} />
           </>
         )}
-        <Num label="Walls" q="mm" value={v.wall_mm} min={0} onChange={(x) => set("wall_mm", x)} />
+        <Num help="Wall thickness (e.g. 18 mm MDF). Taken off every side to get the inside volume." label="Walls" q="mm" value={v.wall_mm} min={0} onChange={(x) => set("wall_mm", x)} />
       </div>
 
       <h3>Find dimensions</h3>
       <div className="fields">
-        <Num label="Target" q="vol" value={aim} onChange={setAim} />
-        <Select<"keep" | "golden">
+        <Num help="The net volume you want; Find dimensions sizes the box for it." label="Target" q="vol" value={aim} onChange={setAim} />
+        <Select<"keep" | "golden"> help="Keep the box's current proportions, or use the golden ratio (spreads its internal standing waves)."
           label="Ratio"
           value={v.shape === "box" ? proportions : "keep"}
           options={
@@ -105,12 +105,12 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
 
       <h3>Takes up space inside</h3>
       <div className="fields">
-        <Num label="Each driver" q="vol" value={v.driverDisp_l} min={0} onChange={(x) => set("driverDisp_l", x)} />
-        <Num label="Each PR" q="vol" value={v.prDisp_l} min={0} onChange={(x) => set("prDisp_l", x)} />
-        <Num label="Port wall" q="mm" value={v.portWall_mm} min={0} onChange={(x) => set("portWall_mm", x)} />
-        <Num label="Bracing" unit="%" value={v.bracing_pct} min={0} onChange={(x) => set("bracing_pct", x)} />
-        <Num label="Other" q="vol" value={v.other_l} min={0} onChange={(x) => set("other_l", x)} />
-        <Num label="Stuffing +" unit="%" value={v.fill_pct} min={0} onChange={(x) => set("fill_pct", x)} />
+        <Num help="Air each driver takes up inside the box (its displacement, from the datasheet)." label="Each driver" q="vol" value={v.driverDisp_l} min={0} onChange={(x) => set("driverDisp_l", x)} />
+        <Num help="Air each passive radiator takes up inside the box." label="Each PR" q="vol" value={v.prDisp_l} min={0} onChange={(x) => set("prDisp_l", x)} />
+        <Num help="Wall thickness of the port tube: the tube's own volume is taken off too." label="Port wall" q="mm" value={v.portWall_mm} min={0} onChange={(x) => set("portWall_mm", x)} />
+        <Num help="Bracing, as a share of the inside volume (5% is typical for a well-braced box)." label="Bracing" unit="%" value={v.bracing_pct} min={0} onChange={(x) => set("bracing_pct", x)} />
+        <Num help="Anything else inside (crossover, amplifier plate, handles), in litres." label="Other" q="vol" value={v.other_l} min={0} onChange={(x) => set("other_l", x)} />
+        <Num help="Stuffing makes a box act a little bigger (fibre slows the air's pressure changes). Typically +10–20% with a good fill." label="Stuffing +" unit="%" value={v.fill_pct} min={0} onChange={(x) => set("fill_pct", x)} />
       </div>
 
       <table className="breakdown">
