@@ -184,6 +184,12 @@ export interface AppState {
     bracing_pct: number;
     other_l: number;
     fill_pct: number;
+    /** Build sheet: driver and PR cutouts (0 = unknown), stock sheet size and saw kerf (mm). */
+    driverCutout_mm: number;
+    prCutout_mm: number;
+    sheetW_mm: number;
+    sheetH_mm: number;
+    kerf_mm: number;
   };
 }
 
@@ -299,6 +305,11 @@ export const DEFAULT_STATE: AppState = {
     bracing_pct: 3,
     other_l: 0,
     fill_pct: 0,
+    driverCutout_mm: 0,
+    prCutout_mm: 0,
+    sheetW_mm: 2440,
+    sheetH_mm: 1220,
+    kerf_mm: 3,
   },
 };
 

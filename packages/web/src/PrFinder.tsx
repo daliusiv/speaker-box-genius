@@ -24,7 +24,7 @@ export interface FinderContext {
   drivers: number;
 }
 
-type Loaded = PrCandidate & { params: PrParams; displacement_l?: number };
+type Loaded = PrCandidate & { params: PrParams; displacement_l?: number; cutout_mm?: number };
 
 // Every PR in the database, loaded once (the brand files are cached anyway).
 let candidatesPromise: Promise<Loaded[]> | null = null;
@@ -37,6 +37,7 @@ function loadCandidates(db: DbIndex): Promise<Loaded[]> {
         pr: x.params,
         params: x.params,
         displacement_l: x.displacement_l,
+        cutout_mm: x.cutout_mm,
         // The frame is a little wider than the cutout.
         od_cm: x.cutout_mm !== undefined ? x.cutout_mm / 10 + 2.5 : undefined,
       })),
@@ -59,6 +60,7 @@ function loadDriverCandidates(rows: DbIndex["drivers"]): Promise<Loaded[]> {
             pr: x.params,
             params: x.params,
             displacement_l: x.displacement_l,
+            cutout_mm: x.cutout_mm,
             od_cm: x.cutout_mm !== undefined ? x.cutout_mm / 10 + 2.5 : undefined,
             counts: [1, 2],
             // Rank a driver below an equally good real PR: heavier, dearer, and its magnet takes room.
@@ -86,7 +88,7 @@ export function PrFinder(props: {
   vb_l: number;
   linked: boolean;
   db: DbIndex | null;
-  onUse: (patch: Partial<PrDesign>, summary: string, displacement_l?: number) => void;
+  onUse: (patch: Partial<PrDesign>, summary: string, physical?: { displacement_l?: number; cutout_mm?: number }) => void;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [cands, setCands] = useState<Loaded[] | null>(null);
@@ -173,7 +175,7 @@ export function PrFinder(props: {
       extra: [],
       ...(useAlign ? { vb_l: Math.round(target.vb_l * 10) / 10 } : {}),
     };
-    props.onUse(patch, `${r.count} × ${c.name}, ${Math.round(r.addedMass_g)} g added`, c.displacement_l);
+    props.onUse(patch, `${r.count} × ${c.name}, ${Math.round(r.addedMass_g)} g added`, { displacement_l: c.displacement_l, cutout_mm: c.cutout_mm });
     close();
   };
 

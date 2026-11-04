@@ -15,6 +15,12 @@ import { Fixed, Num, Select } from "./components.tsx";
 import { PassiveRadiatorBrowser } from "./Library.tsx";
 import { loadPrChoice, type DbIndex } from "./library.ts";
 import { PrTuning } from "./PrTuning.tsx";
+
+/** What the volume calculator and build sheet need from a chosen PR. */
+export interface PrPhysical {
+  displacement_l?: number;
+  cutout_mm?: number;
+}
 import { KIND_LABEL, PORT_LIMIT, portOf } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { bandpassLossesFrom } from "./state.ts";
@@ -343,9 +349,9 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
 function PrBody(
   p: CommonProps<PrDesign> & {
     db: DbIndex | null;
-    onPrDisplacement: (l: number) => void;
+    onPrPhysical: (x: PrPhysical) => void;
     finder: FinderContext;
-    onFound: (patch: Partial<PrDesign>, summary: string, displacement_l?: number) => void;
+    onFound: (patch: Partial<PrDesign>, summary: string, physical?: PrPhysical) => void;
   },
 ) {
   const pr = p.design;
@@ -378,9 +384,9 @@ function PrBody(
         drivers={p.db?.drivers}
         onPick={(id) =>
           loadPrChoice(id).then(
-            ({ name, params, displacement_l }) => {
+            ({ name, params, displacement_l, cutout_mm }) => {
               set({ prName: name, params });
-              if (displacement_l !== undefined) p.onPrDisplacement(displacement_l);
+              p.onPrPhysical({ displacement_l, cutout_mm });
             },
             () => alert("Couldn't load that passive radiator."),
           )
@@ -393,7 +399,7 @@ function PrBody(
           vb_l={p.vb_l}
           linked={p.linked}
           db={p.db}
-          onUse={(patch, summary, displacement_l) => p.onFound(patch, summary, displacement_l)}
+          onUse={(patch, summary, physical) => p.onFound(patch, summary, physical)}
         />
         <PrTuning ctx={p.finder} design={pr} vb_l={p.vb_l} linked={p.linked} onApply={(patch, summary) => p.onFound(patch, summary)} />
       </div>
@@ -831,13 +837,13 @@ export function DesignCard(props: {
   /** For the passive radiator finder. */
   finder: FinderContext;
   /** A finder result applied to a PR design (an undoable step). */
-  onFound: (d: DesignState, patch: Partial<PrDesign>, summary: string, displacement_l?: number) => void;
+  onFound: (d: DesignState, patch: Partial<PrDesign>, summary: string, physical?: PrPhysical) => void;
   /** Stop taking the volume from the calculator (keeping the current volume). */
   onUnlink: () => void;
   onChange: (d: DesignState) => void;
   onDuplicate: () => void;
   onDelete: () => void;
-  onPrDisplacement: (l: number) => void;
+  onPrPhysical: (x: PrPhysical) => void;
 }) {
   const d = props.design;
   const common = {
@@ -868,9 +874,9 @@ export function DesignCard(props: {
           design={d}
           onChange={props.onChange}
           db={props.db}
-          onPrDisplacement={props.onPrDisplacement}
+          onPrPhysical={props.onPrPhysical}
           finder={props.finder}
-          onFound={(patch, summary, displacement_l) => props.onFound(d, patch, summary, displacement_l)}
+          onFound={(patch, summary, physical) => props.onFound(d, patch, summary, physical)}
         />
       )}
       <p className="dims-link hint">
