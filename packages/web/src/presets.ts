@@ -14,10 +14,14 @@ import {
 import { airOf, alignmentDriver, portOf, prGroupsOf, solveDriver } from "./sim.ts";
 import { viewFor, type AppState, type DesignState, type PrDesign } from "./state.ts";
 
-/** A design keeps a name the user chose; a default name ("Ported", "Ported QB3") follows the preset. */
-export function renamed(current: string, defaultPrefix: string, next: string): string {
-  return current.startsWith(defaultPrefix) ? next : current;
-}
+/** Preset names that older versions appended to a design's name ("Ported QB3"). */
+const PRESET_SUFFIX = / (Qtc [\d.]+|QB3|B4|Keele)$/;
+/** A design's name without a preset appended by older versions: "Ported QB3" → "Ported". */
+export const stripPreset = (name: string) => name.replace(PRESET_SUFFIX, "");
+/** The preset an older version appended to the name, if any. */
+export const presetInName = (name: string) => PRESET_SUFFIX.exec(name)?.[1];
+/** A preset applied to a design: the name stays (minus any old suffix), the preset becomes its tag. */
+export const withPreset = (name: string, preset: string) => ({ name: stripPreset(name), preset });
 
 /** Tuning helpers for a PR box (one or several groups); added mass goes on group 1. */
 export function prTuning(d: PrDesign, vb_l: number, air: Air) {
@@ -79,7 +83,7 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
           return d;
         }
         changed.push(`${d.name} → ${r1(vb)} L (Qtc 0.707)`);
-        return { ...d, vb_l: r1(vb), name: renamed(d.name, "Sealed", "Sealed Qtc 0.707") };
+        return { ...d, vb_l: r1(vb), ...withPreset(d.name, "Qtc 0.707") };
       }
       case "vented": {
         if (!qb3) {
@@ -92,7 +96,7 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
           return d;
         }
         changed.push(`${d.name} → ${r1(qb3.vb_l)} L at ${r1(qb3.fb)} Hz (${qb3.name})`);
-        return { ...d, vb_l: r1(qb3.vb_l), targetFb: r1(qb3.fb), length_cm: r1(len), name: renamed(d.name, "Ported", `Ported ${qb3.name}`) };
+        return { ...d, vb_l: r1(qb3.vb_l), targetFb: r1(qb3.fb), length_cm: r1(len), ...withPreset(d.name, qb3.name) };
       }
       case "pr": {
         if (!qb3) {
@@ -110,7 +114,7 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
           vb_l: r1(qb3.vb_l),
           targetFb: r1(qb3.fb),
           addedMass_g: Math.round(add),
-          name: renamed(d.name, "Passive radiators", `PR ${qb3.name}`),
+          ...withPreset(d.name, qb3.name),
         };
       }
       case "bandpass":

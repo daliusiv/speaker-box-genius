@@ -47,6 +47,8 @@ export interface Design {
   label: string;
   /** Line style for its driver: A solid, B dashed, C dotted, D dash-dot. */
   dash?: string;
+  /** Its driver's letter, when there are several drivers. */
+  tag?: string;
   color: string;
   vb_l: number;
   result: SimulationResult;
@@ -359,7 +361,7 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
         result.maxSpl = result.maxSpl.map((v, i) => v + lift[i]!);
         if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + lift[i]!), mouth: result.parts.mouth.map((v, i) => v + lift[i]!) };
       }
-      out.push({ design: d, label: designLabel(s, d), dash: DRIVER_DASH[d.driverId ?? "A"], color: colorOf(s, d.id), vb_l: vb, result });
+      out.push({ design: d, label: designLabel(s, d), dash: DRIVER_DASH[d.driverId ?? "A"], tag: s.extraDrivers.length > 0 ? (d.driverId ?? "A") : undefined, color: colorOf(s, d.id), vb_l: vb, result });
     } catch {
       // Invalid input mid-edit: skip this design until the numbers make sense again.
     }

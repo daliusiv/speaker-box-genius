@@ -25,7 +25,7 @@ export interface PrPhysical {
 import { KIND_LABEL, PORT_LIMIT, portOf } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { bandpassLossesFrom } from "./state.ts";
-import { prTuning, renamed, ventedAlignmentFor } from "./presets.ts";
+import { prTuning, withPreset, ventedAlignmentFor } from "./presets.ts";
 import { PrFinder, type FinderContext } from "./PrFinder.tsx";
 
 /** The preset chip's label: which flat vented alignment this driver gets. */
@@ -101,6 +101,11 @@ function DesignShell(props: {
         />
         {/* The type, unless the name already says it ("Ported 2" needs no "Ported" beside it). */}
         {!d.name.toLowerCase().startsWith(KIND_LABEL[d.kind].toLowerCase()) && <span className="kind">{KIND_LABEL[d.kind]}</span>}
+        {d.preset && (
+          <span className="preset-tag" title={`Last sized with the ${d.preset} preset`}>
+            {d.preset}
+          </span>
+        )}
         {props.driverTag && (
           <span className="driver-tag" title={`Uses driver ${props.driverTag}`}>
             {props.driverTag}
@@ -157,7 +162,7 @@ function SealedBody(p: CommonProps<DesignState & { kind: "sealed" }>) {
       return;
     }
     setMsg("");
-    p.onChange({ ...p.design, vb_l: Math.round(vb * 10) / 10, name: renamed(p.design.name, "Sealed", `Sealed Qtc ${qtc}`) });
+    p.onChange({ ...p.design, vb_l: Math.round(vb * 10) / 10, ...withPreset(p.design.name, `Qtc ${qtc}`) });
   };
   return (
     <>
@@ -382,7 +387,7 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
               vb_l: Math.round(a.vb_l * 10) / 10,
               targetFb: Math.round(a.fb * 10) / 10,
               length_cm: Math.round(len * 10) / 10,
-              name: renamed(v.name, "Ported", `Ported ${a.name}`),
+              ...withPreset(v.name, a.name),
             });
           }}
         >
@@ -530,7 +535,7 @@ function PrBody(
               vb_l: Math.round(a.vb_l * 10) / 10,
               targetFb: Math.round(a.fb * 10) / 10,
               addedMass_g: Math.round(add),
-              name: renamed(pr.name, "Passive radiators", `PR ${a.name}`),
+              ...withPreset(pr.name, a.name),
             });
           }}
         >

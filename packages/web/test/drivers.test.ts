@@ -120,3 +120,12 @@ test("with several drivers the curves say which driver (· A, · B) and B's are 
   assert.equal(two.find((d) => d.design.kind === "sealed")!.dash, undefined);
   assert.deepEqual(run(DEFAULT_STATE).map((d) => d.label), DEFAULT_STATE.designs.map((d) => d.name));
 });
+
+test("presets no longer go in the name: old names like “Ported QB3” load as “Ported” with a QB3 tag", () => {
+  const old = { ...DEFAULT_STATE, designs: DEFAULT_STATE.designs.map((d, i) => ({ ...d, name: ["Sealed Qtc 0.707", "Ported QB3", "My PR box"][i]! })) };
+  const back = roundTrip(old as AppState);
+  assert.deepEqual(back.designs.map((d) => [d.name, d.preset]), [["Sealed", "Qtc 0.707"], ["Ported", "QB3"], ["My PR box", undefined]]);
+  const sized = sizeAllForDriver(DEFAULT_STATE).state.designs;
+  assert.equal(sized.find((d) => d.kind === "vented")!.name, "Ported");
+  assert.ok(["QB3", "B4", "Keele"].includes(sized.find((d) => d.kind === "vented")!.preset!));
+});
