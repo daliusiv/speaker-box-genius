@@ -15,6 +15,11 @@
 - The cone's mass: in a line or horn the air on both sides of the cone is modelled explicitly, so the cone carries its bare mass Mmd = Mms − 16ρa³/3 (as in Hornresp). An open line adds the front's radiation load (a baffled piston); the rear's comes from the line. Using Mms here counted the rear air mass twice and made impedance peaks up to 10 % low.
 - An MLTL's port can be flared, and port compression (Settings) applies to it like a ported box's.
 
+## Charts and settings
+
+- **Line load (Za)** chart, for lines and horns: the line's acoustic impedance as Hornresp's Za chart shows it (at the driver; at a front horn's throat without its chambers), resistance and reactance divided by ρc/S there. Checked against Hornresp's Za export for record 01 (`hornresp.test.ts`).
+- Settings: **Line/horn SPL** "From radiated power (like Hornresp)" (engine `splFrom: "power"`), and **Air** "Hornresp defaults" (ρ 1.205, c 344). With both, and 2.83 V drive, the app's curves line up with Hornresp's.
+
 ## Front-loaded horns
 
 The driver sits at the throat in a sealed rear chamber (Vrc), its front into a throat chamber (Vtc) that opens into the horn. The cone sees the rear chamber's compliance in series with the throat chamber in parallel with the horn's input impedance; only the mouth radiates. The "Front horn" preset is an exponential horn with the throat at ½ Sd, the mouth sized for a normalised circumference of 1 in half space, Vrc = ½ Vas, and Vtc for a top end near 4 × the cutoff. Folded, the horn runs from the back towards the front (mouth on the front panel) under a driver section the full width and depth of the box: the sealed rear chamber on top, the motor board with the driver firing down, the throat chamber, and the throat board with a slot along the back into run 1. Chamber heights come from their volumes over that footprint; the app warns when the rear chamber is too shallow for a magnet (about 100 mm) or the throat chamber under 25 mm, giving the volume that would fit. Horns' 0 dB reference is their own passband (median over the two octaves above where the response first comes within 6 dB of its peak), not a plain cone's.

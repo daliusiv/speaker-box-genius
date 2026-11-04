@@ -111,7 +111,9 @@ export function vbOf(s: AppState, d: DesignState): number {
   return s.volume.link === d.id ? volumeFor(s, d).effective_l : d.vb_l;
 }
 
-export const airOf = (s: AppState): Air => (s.settings.air === "winisd" ? WINISD_AIR : STANDARD_AIR);
+/** Hornresp's air: c = 344 m/s, ρ = 1.205 kg/m³. */
+export const HORNRESP_AIR: Air = { rho: 1.205, c: 344 };
+export const airOf = (s: AppState): Air => (s.settings.air === "winisd" ? WINISD_AIR : s.settings.air === "hornresp" ? HORNRESP_AIR : STANDARD_AIR);
 
 /** Chuffing guideline, in whichever convention (peak or RMS) the user chose to display. */
 export const PORT_LIMIT = 17;
@@ -289,6 +291,7 @@ export function simOptionsOf(s: AppState) {
     // The limit is in the displayed convention; the engine works in peak.
     portVelocityLimit: s.settings.velocity === "rms" ? PORT_LIMIT * Math.SQRT2 : PORT_LIMIT,
     portCompression: s.settings.portCompression,
+    splFrom: s.settings.lineSpl === "power" ? ("power" as const) : undefined,
   };
 }
 

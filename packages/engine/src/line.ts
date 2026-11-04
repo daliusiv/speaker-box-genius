@@ -232,6 +232,14 @@ function slicesAt(line: LineInput, points: number[], maxSlice = 0.02): { slices:
 export interface LineNetwork {
   /** Acoustic impedance the cone(s) see, per unit volume velocity into the line from the rear. */
   zLoad(w: number): Complex;
+  /**
+   * The line's own acoustic impedance as Hornresp's Za chart shows it: at the driver for lines
+   * and tapped horns (the same as zLoad), at the horn's throat (without the chambers) for a
+   * front-loaded horn. Divide by `zaRef` for the normalised value.
+   */
+  za(w: number): Complex;
+  /** ρc / area where Za is taken (at the driver, or the horn's throat), Pa·s/m³. */
+  zaRef: number;
   /** Volume velocity leaving the mouth (or port) per unit cone volume velocity into the line. */
   exitPerCone(w: number): Complex;
   /** Volume velocity leaving the mouth for a pressure p at the driver (open lines). */
@@ -358,6 +366,12 @@ export function lineNetwork(line: LineInput, air: Air = STANDARD_AIR): LineNetwo
       const zB = div(tBehind[0], tBehind[2]); // rigid end: U = 0
       return div(mul(zA, zB), add(zA, zB));
     },
+    za(w) {
+      if (!flh) return this.zLoad(w);
+      chains(w);
+      return zAheadIn();
+    },
+    zaRef: (air.rho * air.c) / (slices[iR]?.area ?? mouthArea),
     exitPerCone(w) {
       chains(w);
       if (flh) return mouthFlow(zFront(zAheadIn(), w)); // pressure at the throat for unit cone flow

@@ -145,6 +145,11 @@ export interface SimulationResult {
   spl: Float64Array;
   phaseDeg: Float64Array;
   groupDelayMs: Float64Array;
+  /**
+   * Lines and horns: the line's acoustic impedance (Hornresp's Za), resistance and reactance
+   * divided by ρc/S at the driver (or the horn's throat). Null for boxes.
+   */
+  acousticImpedance: { resistance: Float64Array; reactance: Float64Array; area_cm2: number } | null;
   /** Peak one-way cone excursion per driver (mm). */
   excursionMm: Float64Array;
   /** Peak one-way excursion per passive radiator (mm), PR designs only. With mixed PRs: the first group. */
@@ -340,6 +345,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     zph: new Float64Array(N),
     pmax: new Float64Array(N),
     splmax: new Float64Array(N),
+    zaR: line ? new Float64Array(N) : null,
+    zaX: line ? new Float64Array(N) : null,
   };
   const limitedBy: SimulationResult["limitedBy"] = [];
   const unwrapped = new Float64Array(N);
@@ -423,6 +430,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       }
       zLoad = sol.zl;
       zMech = sol.zm;
+      const za = line.za(w);
+      out.zaR![i] = za.re / line.zaRef;
+      out.zaX![i] = za.im / line.zaRef;
       ui = sol.u;
       const ud = scale(ui, n);
       // The mouth's sound arrives later when it is farther from the listener.
@@ -582,6 +592,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     spl: out.spl,
     phaseDeg: out.phase,
     groupDelayMs: out.gd,
+    acousticImpedance: line ? { resistance: out.zaR!, reactance: out.zaX!, area_cm2: ((air.rho * air.c) / line.zaRef) * 1e4 } : null,
     excursionMm: out.x,
     prExcursionMm: out.xpr,
     prGroups: prModels
