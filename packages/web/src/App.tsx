@@ -1131,7 +1131,6 @@ export function App(props: { initial: AppState | null }) {
                   unit="°C"
                   value={state.settings.coilTemp_C}
                   min={20}
-                  max={250}
                   title="Voice-coil temperature: 20 °C = the datasheet's cold values (like WinISD). A hot coil has a higher Re: less output, higher Q."
                   onChange={(t) => set("settings", { ...state.settings, coilTemp_C: Math.min(250, Math.max(20, t)) })}
                 />
