@@ -2269,3 +2269,11 @@ label.file-button.disabled {
 .measured-head > input.measured-name {
   width: auto;
 }
+.fold-chamber {
+  fill: var(--accent);
+  opacity: 0.15;
+}
+body.print-build #print-root .fold-chamber {
+  fill: #ddd;
+  opacity: 1;
+}

@@ -539,6 +539,20 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   summary.f3 = crossing(freq, out.spl, summary.referenceSpl - 3);
   summary.f6 = crossing(freq, out.spl, summary.referenceSpl - 6);
   if (nlCoef > 0 || lineNl > 0) summary.portCompression = compression;
+  if (line?.mouthOnly) {
+    // Horns: the mouth's gain puts the passband well above a plain cone's, so the reference
+    // is the horn's own: the median level over the two octaves above where the response
+    // first comes within 6 dB of its peak (a horn without a throat chamber keeps rising, so
+    // the very top would overstate it).
+    let top = -Infinity;
+    for (const v of out.spl) if (Number.isFinite(v)) top = Math.max(top, v);
+    let i0 = 0;
+    while (i0 < N - 1 && !(out.spl[i0]! >= top - 6)) i0++;
+    const band: number[] = [];
+    for (let i = i0; i < N && freq[i]! <= 4 * freq[i0]!; i++) if (Number.isFinite(out.spl[i]!)) band.push(out.spl[i]!);
+    band.sort((a, b) => a - b);
+    if (band.length > 0) summary.referenceSpl = band[Math.floor(band.length / 2)]!;
+  }
   if (line) {
     summary.fb = lineTuning(freq, out.zmag) ?? undefined;
     // A line's response ripples above its tuning, so its F3 is the low-frequency edge:

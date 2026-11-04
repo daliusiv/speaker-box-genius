@@ -213,10 +213,10 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
   const rowH = 34;
   const chartsTop = tableTop + rowH * (rows.length + 1) + 30;
   const chartBlock = chartH + 48;
-  // Folded transmission lines (not front horns): a side view each, in a row under the charts.
+  // Folded transmission lines and horns: a side view each, in a row under the charts.
   const folds = designs
     .flatMap((d) => {
-      if (d.design.kind !== "line" || d.design.end === "horn") return [];
+      if (d.design.kind !== "line") return [];
       try {
         return [{ d, f: lineFoldOf(d.design, state.volume.wall_mm) }];
       } catch {
@@ -329,8 +329,8 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
     const ox = x + (foldW - o.depth * k) / 2;
     const oy = y + 48;
     for (const r of foldShapes(f, state.volume.wall_mm)) {
-      g.fillStyle = r.kind === "inner" ? card : r.kind === "driver" || r.kind === "mouth" ? d.color : muted;
-      g.globalAlpha = r.kind === "outer" ? 0.55 : r.kind === "mouth" ? 0.6 : 1;
+      g.fillStyle = r.kind === "inner" ? card : r.kind === "driver" || r.kind === "mouth" || r.kind === "chamber" ? d.color : muted;
+      g.globalAlpha = r.kind === "outer" ? 0.55 : r.kind === "mouth" ? 0.6 : r.kind === "chamber" ? 0.15 : 1;
       g.fillRect(ox + r.x * k, oy + r.y * k, Math.max(1, r.w * k), Math.max(1, r.h * k));
     }
     g.globalAlpha = 1;

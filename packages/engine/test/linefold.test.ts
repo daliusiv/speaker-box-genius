@@ -59,3 +59,26 @@ test("tapped horn: the driver sits on the divider between the rear's run and the
   const far = foldLine({ ...base, tap_mm: 2800 });
   assert.ok(far.warnings.some((w) => /neighbouring runs/.test(w)));
 });
+
+test("front horn: driver section on top, runs mirrored, mouth on the front", () => {
+  const segs = [{ length_cm: 250, startArea_cm2: 300, endArea_cm2: 3000, taper: "exponential" as const }];
+  const f = foldLine({ segments: segs, width: 500, folds: 3, wall: 18, driverAt_mm: 0, driverCutout: 280, horn: { rear_l: 40, throat_l: 5 } });
+  assert.ok(f.horn);
+  const D = f.inside.depth;
+  assert.ok(Math.abs(f.horn.rear - (40e6 / (500 * D))) < 0.01);
+  assert.ok(Math.abs(f.horn.throat - Math.max(25, 5e6 / (500 * D))) < 0.01);
+  assert.ok(Math.abs(f.horn.slot - 300 * 100 / 500) < 0.5, `slot ${f.horn.slot}`);
+  assert.ok(Math.abs(f.outside.height - (f.inside.height + 36 + f.horn.top)) < 1e-6);
+  assert.equal(f.mouth.panel, "front");
+  const names = f.cut.panels.map((p) => p.name);
+  assert.ok(names.some((n) => n.startsWith("Motor board")) && names.some((n) => n.startsWith("Throat board")));
+  assert.ok(f.cut.holes.some((h) => h.name === "Throat slot" && h.width === 500));
+  assert.match(f.cut.holes.find((h) => h.name === "Driver cutout")!.where, /Motor board/);
+  assert.match(f.cut.holes.find((h) => h.name === "Mouth opening")!.where, /^Front/);
+  // The horn's path is still the horn's length.
+  const path = f.runs.reduce((a, r) => a + (r.to - r.from), 0);
+  assert.ok(Math.abs(path - 2500) < 1);
+  // A tiny rear chamber: the magnet warning.
+  const small = foldLine({ segments: segs, width: 500, folds: 3, wall: 18, driverAt_mm: 0, driverCutout: 280, horn: { rear_l: 5, throat_l: 5 } });
+  assert.ok(small.warnings.some((w) => /magnet/.test(w)));
+});
