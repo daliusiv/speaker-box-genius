@@ -24,8 +24,13 @@ jobs:
           get "https://sbacoustics.com/wp-json/wc/store/v1/products/categories?per_page=100" cats.json
           echo "== categories"; jq -r '.[] | "\(.slug) \(.count)"' cats.json | tr '\n' ';'; echo
           get "https://sbacoustics.com/product/7%C2%BD-satori-mw19tx-4-textreme/" p1.html
-          echo "== p1 text with Qms"; sed -e 's/<[^>]*>/ /g' p1.html | tr -s ' \n\t' ' ' | grep -oE '.{0,800}Qms.{0,1500}' | head -2
-          echo "== p1 html lines with Qms"; grep -n -iE 'Qms|Vas|Xmax' p1.html | head -8 | cut -c1-700
+          echo "== p1 text with Qms"; python3 -c "
+          import re,sys
+          t=re.sub(r'<script.*?</script>|<style.*?</style>',' ',open('p1.html',encoding='utf8',errors='ignore').read(),flags=re.S)
+          t=re.sub(r'\s+',' ',re.sub(r'<[^>]+>',' | ',t))
+          i=t.find('Qms'); print(t[max(0,i-1500):i+2500] if i>=0 else 'no Qms in text')
+          "
+          echo "== p1 html lines with Qms"; grep -n -iE 'Qms' p1.html | head -4 | cut -c1-400
           echo "== p1 pdf text"; get "https://sbacoustics.com/wp-content/uploads/2024/04/7.5in-SATORI-MW19TX-4.pdf" p1.pdf; pdftotext -layout p1.pdf - | head -75
           s=$(grep -oE '<loc>https://sbacoustics.com/product/[^<]*sb34[^<]*' ps.xml | head -1 | sed 's/<loc>//'); echo "== sub page $s"
           if [ -n "$s" ]; then get "$s" p2.html; pdf=$(grep -oE 'https://sbacoustics.com/wp-content/uploads/[^" ]+\.pdf' p2.html | head -1); echo "pdf $pdf"; get "$pdf" p2.pdf; pdftotext -layout p2.pdf - | head -75; fi
