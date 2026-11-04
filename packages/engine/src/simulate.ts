@@ -46,12 +46,26 @@ import {
 
 /**
  * Tuning of a line from its impedance: the minimum between the first two peaks (like a
- * vented box's Fb). Null if the curve doesn't show two peaks in range.
+ * vented box's Fb), or the shoulder below the first peak when stuffing has damped the
+ * lower peak away. Null if the curve shows neither in range.
  */
 function lineTuning(freq: Float64Array, z: Float64Array): number | null {
   let i = 1;
   while (i < z.length - 1 && !(z[i]! >= z[i - 1]! && z[i]! > z[i + 1]!)) i++;
   if (i >= z.length - 1) return null;
+  // Stuffing can damp the lower peak into a shoulder on the rising flank of the upper one:
+  // then the tuning is the shoulder, where the impedance rises least steeply (log–log).
+  const slope = (k: number) => Math.log(z[k + 1]! / z[k - 1]!) / Math.log(freq[k + 1]! / freq[k - 1]!);
+  let before = -Infinity;
+  for (let k = 1; k < i - 1; k++) {
+    const sk = slope(k);
+    if (k > 1 && before > 0.3 && sk < slope(k - 1) && sk <= slope(k + 1) && sk < 0.5 * before) {
+      let after = -Infinity;
+      for (let m = k + 1; m < i; m++) after = Math.max(after, slope(m));
+      if (sk < 0.5 * after) return freq[k]!;
+    }
+    before = Math.max(before, sk);
+  }
   let j = i + 1;
   while (j < z.length - 1 && !(z[j]! <= z[j - 1]! && z[j]! < z[j + 1]!)) j++;
   return j < z.length - 1 ? freq[j]! : null;
@@ -208,6 +222,13 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const summary: SimulationResult["summary"] = { volts, referenceSpl: 0, f3: null, f6: null };
   const bp = box.kind === "bandpass" ? bandpassNetwork(box, d, n, air, summary) : null;
   const line = box.kind === "line" ? lineNetwork(box, air) : null;
+  // Port compression in a mass-loaded line's port (same model as vented boxes).
+  let lineNl = 0;
+  let lineReynoldsPerQ = 0;
+  if (line && box.kind === "line" && box.port && opts.portCompression) {
+    lineNl = ((8 / (3 * Math.PI)) * 0.5 * air.rho * portLossCoefficient(box.port)) / (line.exitThroatArea * line.exitThroatArea);
+    lineReynoldsPerQ = (Math.sqrt(line.exitArea / Math.PI) * air.rho) / (AIR_VISCOSITY * line.exitArea);
+  }
   const single = box.kind === "bandpass" || box.kind === "line" ? null : box;
   const cab = single ? boxCompliance(single.vb_l, air) : 0;
   const ql = finiteOr(single?.ql, DEFAULT_LOSSES.ql);
@@ -357,17 +378,42 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         out.xpr![i] = out.xprGroups[0]![i]!;
       }
     } else if (line) {
-      // Transmission line: the cone's back drives the line; the mouth (or port) radiates.
-      zLoad = line.zLoad(w);
-      zMech = add(zas, scale(zLoad, n));
-      ui = div(pg, add(zae, zMech));
+      // Transmission line (or tapped horn): the line loads the cone; the mouth (or port) radiates.
+      const solveLine = () => {
+        const zl = line.zLoad(w);
+        const zm = add(zas, scale(zl, n));
+        const u = div(pg, add(zae, zm));
+        return { zl, zm, u, exit: mul(scale(u, n), line.exitPerCone(w)) };
+      };
+      let sol = solveLine();
+      if (lineNl > 0) {
+        // Port compression in a mass-loaded line's port, as for vented boxes.
+        const linearExit = abs(sol.exit);
+        let rNl = 0;
+        for (let k = 0; k < 40; k++) {
+          const qPeak = Math.SQRT2 * abs(sol.exit);
+          const onset = Math.min(1, Math.max(0, (lineReynoldsPerQ * qPeak - 20000) / 30000));
+          const target = lineNl * qPeak * onset;
+          if (Math.abs(target - rNl) <= 1e-4 * Math.max(1, rNl)) break;
+          rNl = 0.5 * (rNl + target);
+          line.setExitLoss(rNl);
+          sol = solveLine();
+        }
+        line.setExitLoss(0);
+        const loss = 20 * Math.log10(linearExit / Math.max(abs(sol.exit), 1e-30));
+        if (loss > compression.db) compression = { db: loss, f };
+      }
+      zLoad = sol.zl;
+      zMech = sol.zm;
+      ui = sol.u;
       const ud = scale(ui, n);
-      const pDriver = mul(ud, zLoad);
-      const uMouth = line.mouthFlow(w, pDriver);
-      // As for a vented box: the front of the cone radiates −ud, the mouth radiates uMouth.
-      u0 = sub(uMouth, ud);
+      // The mouth's sound arrives later when it is farther from the listener.
+      const dm = line.mouthDistance;
+      const exitAtListener = dm > 0 ? scale(mul(sol.exit, cx(Math.cos((w * dm) / air.c), -Math.sin((w * dm) / air.c))), r / (r + dm)) : sol.exit;
+      // Open line: the front of the cone radiates −ud as well. Tapped horn: only the mouth.
+      u0 = line.tapped ? exitAtListener : sub(exitAtListener, ud);
       if (out.vport) {
-        vport = (Math.SQRT2 * abs(uMouth)) / line.exitArea;
+        vport = (Math.SQRT2 * abs(sol.exit)) / line.exitArea;
         out.vport[i] = vport;
       }
     } else {
@@ -481,7 +527,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   summary.referenceSpl = 20 * Math.log10(pRef / 2e-5);
   summary.f3 = crossing(freq, out.spl, summary.referenceSpl - 3);
   summary.f6 = crossing(freq, out.spl, summary.referenceSpl - 6);
-  if (nlCoef > 0) summary.portCompression = compression;
+  if (nlCoef > 0 || lineNl > 0) summary.portCompression = compression;
   if (line) {
     summary.fb = lineTuning(freq, out.zmag) ?? undefined;
     // A line's response ripples above its tuning, so its F3 is the low-frequency edge:

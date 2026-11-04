@@ -8,7 +8,19 @@
 - The driver's rear sits anywhere along the line and sees the closed-end branch and the mouth branch in parallel.
 - The mouth radiates as a baffled piston (Struve/Bessel radiation impedance) into the same half space as the cone. A port at the mouth (a mass-loaded line) is one more uniform piece.
 - Stuffing uses Delany–Bazley's fibrous-absorber model. Flow resistivity comes from the density (Garai & Pompoli, polyester fibre).
-- Fb is the impedance minimum between the first two peaks. F3 is the low-frequency edge, because lines ripple above their tuning.
+- Up to four sections, each with its own taper and stuffing density.
+- Fb is the impedance minimum between the first two peaks. When stuffing damps the lower peak into a shoulder, Fb is the shoulder (where the impedance rises least steeply). F3 is the low-frequency edge, because lines ripple above their tuning.
+- Tapped horns: the driver's rear and front both open into the line (rear at one point, front at the tap), solved as two nodes; only the mouth radiates.
+- Mouth position: when the mouth is further from the listener than the cone (on the back of a folded box, or a custom distance), its output is delayed and scaled by distance.
+- An MLTL's port can be flared, and port compression (Settings) applies to it like a ported box's.
+
+## Folding (`linefold.ts`)
+
+The line is folded into vertical runs side by side, front to back, separated by dividers alternately from the top and the bottom. The box height is solved so that the path along the centre of the runs (straight parts plus the turns) equals the line's length. The cut list adds the dividers, the driver cutout (which must be in the first run) and the mouth opening or port hole on the back. Bends aren't modelled acoustically.
+
+## "Best line"
+
+Tries driver positions (0–40 % along) against stuffing (none, or the first 1…n sections at 4, 8 or 12 kg/m³). "Smoothest": least ripple (1.5 × F3 to 400 Hz) without raising F3 more than 10 %. "Deepest": lowest F3 without more than 1 dB extra ripple. The length is then retuned to the target.
 
 ## Checks so far (engine tests)
 
@@ -27,5 +39,6 @@ For each case, the user saves the Hornresp record and exports SPL and impedance 
 3. An offset-driver TL with the driver at L/3.
 4. A TQWT (Con taper, narrow closed end).
 5. An MLTL (offset driver plus a port at the mouth).
+6. A tapped horn (Hornresp TH, S1–S4), driver rear at the closed end.
 
 Target: empty lines within about 0.2 dB of Hornresp, matching resonance frequencies. Stuffed lines are judged on the trend, since the stuffing models differ.

@@ -51,9 +51,14 @@ function variants(): [string, AppState][] {
       settings: { ...d.settings, portCompression: true },
       baffle: { ...d.baffle, on: true, fromBox: false, width_cm: 22, x_cm: 11 },
       designs: [
-        { ...(newDesign("line", d.designs) as LineDesign), taper: "exponential", driverAt_cm: 40, port: true, portLength_cm: 18.5 },
+        { ...(newDesign("line", d.designs) as LineDesign), driverAt_cm: 40, end: "port", portLength_cm: 18.5, portFlare_cm: 1.5, mouth: "back",
+          sections: [
+            { length_cm: 60, endArea_cm2: 140, taper: "exponential", fill_kgm3: 12 },
+            { length_cm: 45.5, endArea_cm2: 90, taper: "conical", fill_kgm3: 5.5 },
+            { length_cm: 30, endArea_cm2: 90, taper: "linear", fill_kgm3: 0 },
+          ], fold: { width_cm: 24, folds: 3 } },
         { ...ported, flare_cm: 2.5 },
-        { ...(newDesign("line", d.designs) as LineDesign), id: "d9", name: "TQWT", fill_kgm3: 0 },
+        { ...(newDesign("line", d.designs) as LineDesign), id: "d9", name: "TH", end: "tapped", tapAt_cm: 77, mouth: "custom", mouthDistance_cm: 12 },
       ],
     }],
   ];
@@ -66,6 +71,27 @@ test("a line design survives a link exactly", async () => {
   assert.equal(back!.designs[1]!.kind === "vented" && back!.designs[1]!.flare_cm, 2.5);
   assert.equal(back!.baffle.on, true);
   assert.equal(back!.settings.portCompression, true);
+  assert.deepEqual(back!.designs[2], s.designs[2]);
+});
+
+test("old single-piece line links open as sections", () => {
+  const s = variants().at(-1)![1];
+  const raw = JSON.parse(JSON.stringify(s)) as AppState;
+  // The form PR #12 shipped: one tapered piece, stuffing from the closed end.
+  raw.designs[0] = {
+    id: "d1", name: "Old TL", kind: "line", on: true, vb_l: 30, closedArea_cm2: 200, length_cm: 150, mouthArea_cm2: 100, taper: "linear",
+    driverAt_cm: 20, fill_kgm3: 8, fillLength_cm: 50, port: false, portDiameter_cm: 5, portLength_cm: 10, targetFb: 40,
+  } as unknown as LineDesign;
+  const back = decodeState(encodeState(raw))!;
+  const l = back.designs[0] as LineDesign;
+  assert.equal(l.end, "open");
+  assert.equal(l.sections.length, 2);
+  assert.equal(l.sections[0]!.length_cm, 50);
+  assert.equal(l.sections[0]!.fill_kgm3, 8);
+  assert.equal(l.sections[1]!.length_cm, 100);
+  assert.equal(l.sections[1]!.endArea_cm2, 100);
+  assert.ok(Math.abs(l.sections[0]!.endArea_cm2 - (200 - (100 * 50) / 150)) < 0.01);
+  assert.equal("length_cm" in l, false);
 });
 
 test("short links decode to exactly what the long form gives", async () => {

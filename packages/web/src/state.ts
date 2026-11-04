@@ -103,25 +103,37 @@ export interface BandpassLosses {
 /** Per-chamber losses starting from the shared ones. */
 export const bandpassLossesFrom = (l: ChamberLosses): BandpassLosses => ({ front: { ...l }, rear: { ...l }, qicl: 100 });
 
+/** One section of a line: from where the previous one ends to its own end area. */
+export interface LineSection {
+  length_cm: number;
+  endArea_cm2: number;
+  taper: "linear" | "conical" | "exponential";
+  /** Stuffing density (kg/m³), 0 = empty. */
+  fill_kgm3: number;
+}
+
 /**
- * Transmission line family: one piece from the closed end to the mouth (straight or
- * tapered), the driver somewhere along it, stuffing from the closed end, and optionally
- * a port at the mouth (mass-loaded line). `vb_l` is kept equal to the line's volume.
+ * Transmission line family: sections from the closed end to the mouth, the driver
+ * somewhere along it, and the end open (TL, TQWT), ported (MLTL) or a tapped horn (the
+ * driver's front feeds the line further along). `vb_l` is kept equal to the line's volume.
  */
 export interface LineDesign extends DesignBase {
   kind: "line";
-  length_cm: number;
   closedArea_cm2: number;
-  mouthArea_cm2: number;
-  taper: "linear" | "conical" | "exponential";
-  /** Driver centre from the closed end. */
+  sections: LineSection[];
+  /** Driver centre (its rear, for a tapped horn) from the closed end. */
   driverAt_cm: number;
-  /** Stuffing density and how far from the closed end it goes (0 = none). */
-  fill_kgm3: number;
-  fillLength_cm: number;
-  port: boolean;
+  end: "open" | "port" | "tapped";
+  /** Tapped horn: where the driver's front feeds the line, from the closed end. */
+  tapAt_cm: number;
   portDiameter_cm: number;
   portLength_cm: number;
+  portFlare_cm: number;
+  /** Where the mouth is: next to the driver, on the back (fold depth), or a set extra distance. */
+  mouth: "front" | "back" | "custom";
+  mouthDistance_cm: number;
+  /** Folding into a box: inside width of the line and number of folds. */
+  fold: { width_cm: number; folds: number };
   /** Last tuning asked for with "Set length". */
   targetFb: number;
 }
@@ -264,16 +276,20 @@ export function newDesign(kind: DesignKind, existing: DesignState[]): DesignStat
         name: `Transmission line${suffix}`,
         on: true,
         vb_l: 32,
-        length_cm: 200,
         closedArea_cm2: 200,
-        mouthArea_cm2: 120,
-        taper: "linear",
+        sections: [
+          { length_cm: 120, endArea_cm2: 152, taper: "linear", fill_kgm3: 8 },
+          { length_cm: 80, endArea_cm2: 120, taper: "linear", fill_kgm3: 0 },
+        ],
         driverAt_cm: 0,
-        fill_kgm3: 8,
-        fillLength_cm: 120,
-        port: false,
+        end: "open",
+        tapAt_cm: 90,
         portDiameter_cm: 5,
         portLength_cm: 10,
+        portFlare_cm: 0,
+        mouth: "front",
+        mouthDistance_cm: 0,
+        fold: { width_cm: 20, folds: 2 },
         targetFb: 40,
       };
     case "bandpass":
@@ -406,7 +422,7 @@ export function encodeState(s: AppState): string {
 // - one level into objects that decoding merges with their defaults;
 // - per design, its keys against a fresh design of the same kind, one level into front/rear/params.
 const MERGED_TOP = new Set(["settings", "volume", "highPass", "roomGain", "baffle"]);
-const MERGED_DESIGN = new Set(["front", "rear", "params"]);
+const MERGED_DESIGN = new Set(["front", "rear", "params", "fold"]);
 const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 function stripKeys(v: Raw, d: Raw, mergedOneLevel: Set<string>, keep: string[]): Raw {
@@ -537,6 +553,41 @@ function prGroupsFrom(raw: unknown): PrGroupState[] {
     }));
 }
 
+/** Line fields from a link, including the first (single-piece) form of 4 Nov 2026. */
+function lineFrom(d: Raw, base: LineDesign): Partial<LineDesign> {
+  const out: Partial<LineDesign> = {};
+  if (!Array.isArray(d.sections) && typeof d.length_cm === "number") {
+    // Old form: one piece with stuffing from the closed end for fillLength_cm, maybe a port.
+    const L = d.length_cm;
+    const s1 = d.closedArea_cm2 ?? base.closedArea_cm2;
+    const s2 = d.mouthArea_cm2 ?? s1;
+    const taper = ["linear", "conical", "exponential"].includes(d.taper) ? d.taper : "linear";
+    const at = (t: number) =>
+      taper === "conical" ? (Math.sqrt(s1) + (Math.sqrt(s2) - Math.sqrt(s1)) * t) ** 2 : taper === "exponential" ? s1 * (s2 / s1) ** t : s1 + (s2 - s1) * t;
+    const fill = d.fill_kgm3 > 0 ? Math.min(L, Math.max(0, d.fillLength_cm ?? 0)) : 0;
+    out.sections = [
+      ...(fill > 0 ? [{ length_cm: fill, endArea_cm2: at(fill / L), taper, fill_kgm3: d.fill_kgm3 }] : []),
+      ...(L - fill > 0 ? [{ length_cm: L - fill, endArea_cm2: s2, taper, fill_kgm3: 0 }] : []),
+    ];
+    out.end = d.port === true ? "port" : "open";
+  } else {
+    out.sections = (Array.isArray(d.sections) ? d.sections : base.sections)
+      .filter((x: Raw) => x && x.length_cm > 0 && x.endArea_cm2 > 0)
+      .slice(0, 4)
+      .map((x: Raw) => ({
+        length_cm: x.length_cm,
+        endArea_cm2: x.endArea_cm2,
+        taper: ["linear", "conical", "exponential"].includes(x.taper) ? x.taper : "linear",
+        fill_kgm3: x.fill_kgm3 > 0 ? x.fill_kgm3 : 0,
+      }));
+    if (out.sections.length === 0) out.sections = base.sections;
+    out.end = ["open", "port", "tapped"].includes(d.end) ? d.end : "open";
+  }
+  out.mouth = ["front", "back", "custom"].includes(d.mouth) ? d.mouth : "front";
+  out.fold = { ...base.fold, ...(d.fold ?? {}) };
+  return out;
+}
+
 function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
   if (!["sealed", "vented", "pr", "bandpass", "line"].includes(d?.kind)) return null;
   const base = newDesign(d.kind, all);
@@ -544,6 +595,10 @@ function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
   if (merged.kind === "pr") {
     merged.params = { ...(base as PrDesign).params, ...(d.params ?? {}) };
     merged.extra = prGroupsFrom(d.extra);
+  }
+  if (merged.kind === "line") {
+    Object.assign(merged, lineFrom(d, base as LineDesign));
+    for (const old of ["length_cm", "mouthArea_cm2", "taper", "fill_kgm3", "fillLength_cm", "port"]) delete (merged as Raw)[old];
   }
   if (merged.kind === "bandpass") {
     const b = base as BandpassDesign;

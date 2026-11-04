@@ -101,3 +101,69 @@ test("bad lines are refused", () => {
   assert.throws(() => lineNetwork({ ...TL, driverAt_cm: 200 }));
   assert.throws(() => lineNetwork({ kind: "line", segments: [{ length_cm: 100, startArea_cm2: 0, endArea_cm2: 100 }], driverAt_cm: 0 }));
 });
+
+test("tapped horn: front and rear cancel at very low frequencies, the horn works at its resonance", () => {
+  const th: LineInput = { kind: "line", segments: [{ length_cm: 250, startArea_cm2: 150, endArea_cm2: 600 }], driverAt_cm: 0, tap_cm: 110 };
+  const n = lineNetwork(th);
+  assert.equal(n.tapped, true);
+  const g = (f: number) => {
+    const u = n.exitPerCone(2 * Math.PI * f);
+    return Math.hypot(u.re, u.im);
+  };
+  assert.ok(g(3) < 0.2, `low ${g(3)}`);
+  let best = 0;
+  for (let f = 20; f < 120; f += 0.5) best = Math.max(best, g(f));
+  assert.ok(best > 2, `peak ${best}`);
+  const r = simulate(D, th, OPT);
+  assert.ok(r.spl.every((v) => Number.isFinite(v)));
+  // The front of the cone is inside the horn: nothing radiates at DC-ish frequencies.
+  assert.ok(r.spl[0]! < r.summary.referenceSpl - 20);
+  assert.throws(() => lineNetwork({ ...th, tap_cm: 260 }));
+  assert.throws(() => lineNetwork({ ...th, driverAt_cm: 120 }));
+});
+
+test("mouth distance: same bass, different where the extra path is half a wavelength", () => {
+  const near = simulate(D, TL, OPT);
+  const far = simulate(D, { ...TL, mouthDistance_cm: 40 }, OPT);
+  const at = (r: typeof near, f: number) => {
+    let i = 0;
+    while (r.freq[i]! < f) i++;
+    return r.spl[i]!;
+  };
+  assert.ok(Math.abs(at(near, 20) - at(far, 20)) < 0.5);
+  let diff = 0;
+  for (let i = 0; i < near.freq.length; i++) if (near.freq[i]! > 300 && near.freq[i]! < 600) diff = Math.max(diff, Math.abs(near.spl[i]! - far.spl[i]!));
+  assert.ok(diff > 2, `${diff}`);
+});
+
+test("MLTL port: a flare lowers the air speed at its mouth; compression costs output at high power", () => {
+  const ml: LineInput = {
+    kind: "line",
+    segments: [{ length_cm: 80, startArea_cm2: 170, endArea_cm2: 170 }],
+    driverAt_cm: 20,
+    port: { shape: "round", diameter_cm: 5, length_cm: 20 },
+  };
+  const peak = (r: ReturnType<typeof simulate>) => Math.max(...r.portVelocity!);
+  const straight = simulate(D, ml, { ...OPT, power: 50 });
+  const flared = simulate(D, { ...ml, port: { shape: "round", diameter_cm: 5, length_cm: 20, flare_cm: 1.5 } }, { ...OPT, power: 50 });
+  assert.ok(peak(flared) < peak(straight));
+  const c = simulate(D, ml, { ...OPT, power: 50, portCompression: true });
+  assert.ok(c.summary.portCompression!.db > 0.3, `${c.summary.portCompression!.db}`);
+  assert.equal(simulate(D, ml, { ...OPT, power: 50 }).summary.portCompression, undefined);
+});
+
+test("a stuffed line whose lower impedance peak is damped away still has a tuning (the shoulder)", () => {
+  // Same driver and line as the classic TL in the app, stuffed for two thirds.
+  const d = { fs: 30, qms: 5.2, qes: 0.4, vas_l: 50, re: 3.4, sd_cm2: 330, xmax_mm: 12, pe_w: 250 };
+  const Lq = (343 / (4 * d.fs)) * 100;
+  const line: LineInput = {
+    kind: "line",
+    segments: [
+      { length_cm: (Lq * 2) / 3, startArea_cm2: 412, endArea_cm2: 313, fill_kgm3: 8 },
+      { length_cm: Lq / 3, startArea_cm2: 313, endArea_cm2: 264 },
+    ],
+    driverAt_cm: 0,
+  };
+  const r = simulate(d, line, { power: 1, fMin: 8, fMax: 400, points: 260 });
+  assert.ok(r.summary.fb !== undefined && r.summary.fb > 10 && r.summary.fb < 30, `fb ${r.summary.fb}`);
+});
