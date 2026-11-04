@@ -104,8 +104,12 @@ function niceStep(range: number): number {
   return (n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10) * mag;
 }
 
-/** Shorter design names where space is tight (the values box, the summary table): "Passive radiators" → "PR". */
-export const shortName = (label: string) => label.replace(/passive radiators?/gi, "PR").replace(/\bPRs?:/g, "PR:");
+/** Shorter design names where space is tight (the values box, the summary table): "Passive radiators" → "PR", "Transmission line" → "TL". */
+export const shortName = (label: string) =>
+  label
+    .replace(/passive radiators?/gi, "PR")
+    .replace(/\bPRs?:/g, "PR:")
+    .replace(/transmission line/gi, "TL");
 
 /** Line chart with a logarithmic frequency axis, horizontal limit lines and a hover readout. */
 export function LogChart({
