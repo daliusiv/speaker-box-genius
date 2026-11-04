@@ -7,6 +7,7 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     steps:
       - name: Fetch samples
         run: |
@@ -14,7 +15,7 @@ jobs:
           which pdftotext || (sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null)
           mkdir out && cd out
           UA="SpeakerBoxGenius-importer/1.0 (+https://github.com/daliusiv/speaker-box-genius; with SB Acoustics' permission)"
-          get() { curl -sSL -A "$UA" -o "$2" -w "%{http_code} %{size_download} $1\n" "$1"; sleep 2; }
+          get() { curl -sSL -m 40 -A "$UA" -o "$2" -w "%{http_code} %{size_download} $1\n" "$1"; sleep 2; }
           get "https://sbacoustics.com/product-sitemap.xml" ps.xml
           echo "== product urls (all)"; grep -oE '<loc>https://sbacoustics.com/product/[^<]+' ps.xml | sed 's/<loc>//' | sed 's|https://sbacoustics.com/product/||' | tr '\n' ' '; echo
           get "https://sbacoustics.com/wp-json/wc/store/v1/products?per_page=2" api.json
