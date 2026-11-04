@@ -49,8 +49,10 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
   note?: ReactNode;
   /** Number on the button, if not every row (e.g. real PRs, not drivers offered as PRs). */
   count?: number;
-  /** Leave out the "Missing one?" link (shown once is enough). */
-  hideMissing?: boolean;
+  /** What's chosen now: the button shows it (like a dropdown) instead of `button`. */
+  current?: string;
+  /** Shown in the dialog above the search (e.g. renaming the current driver). */
+  extra?: ReactNode;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const searchBox = useRef<HTMLInputElement>(null);
@@ -114,13 +116,15 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
 
   return (
     <div className="picker">
-      <button type="button" className="browse" onClick={open} disabled={props.rows.length === 0}>
-        {props.button} <span className="count">{props.count ?? props.rows.length}</span>
-      </button>
-      {!props.hideMissing && (
-        <a href={`${REPO}/blob/main/CONTRIBUTING.md`} title="Add a driver or passive radiator to the database">
-          Missing one?
-        </a>
+      {props.current ? (
+        <button type="button" className="browse chosen" onClick={open} disabled={props.rows.length === 0} title={`${props.current}: tap to choose another`}>
+          <span className="chosen-name">{props.current.replace(/ \(([^)]*)\)/g, (_, x: string) => `\u00a0(${x.replace(/ /g, "\u00a0")})`)}</span>
+          <span className="caret" aria-hidden="true">▾</span>
+        </button>
+      ) : (
+        <button type="button" className="browse" onClick={open} disabled={props.rows.length === 0}>
+          {props.button} <span className="count">{props.count ?? props.rows.length}</span>
+        </button>
       )}
       <dialog
         ref={dlg}
@@ -133,10 +137,21 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
         <div className="lib-inner">
           <header>
             <h2>{props.title}</h2>
+            <a
+              className="icon missing"
+              href={`${REPO}/blob/main/CONTRIBUTING.md`}
+              target="_blank"
+              rel="noopener"
+              title="Missing one? Add it to the database"
+              aria-label="Missing one? Add it to the database"
+            >
+              +
+            </a>
             <button type="button" className="icon" onClick={close} aria-label="Close">
               ×
             </button>
           </header>
+          {props.extra}
           <div className="lib-searchrow">
           <input
             ref={searchBox}
@@ -330,7 +345,12 @@ const QTS_BANDS: { value: string; text: string; lo: number; hi: number }[] = [
   { value: "high", text: "> 0.5", lo: 0.5, hi: Infinity },
 ];
 
-export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onPick: (id: string) => void; button?: string; title?: string; hideMissing?: boolean }) {
+export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onPick: (id: string) => void;
+  button?: string;
+  title?: string;
+  current?: string;
+  extra?: ReactNode;
+}) {
   const units = useUnits();
   const vol = units.unit("vol");
   const rows = props.rows ?? [];
@@ -402,7 +422,8 @@ export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onP
     <Browser
       button={props.button ?? "Browse drivers"}
       title={props.title ?? "Driver database"}
-      hideMissing={props.hideMissing}
+      current={props.current}
+      extra={props.extra}
       rows={rows}
       columns={columns}
       filters={filters}

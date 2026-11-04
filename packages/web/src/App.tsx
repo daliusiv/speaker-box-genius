@@ -664,103 +664,35 @@ export function App(props: { initial: AppState | null }) {
         {panel === "driver" && (
           <div className="tab-panel" role="tabpanel" id="panel-driver" aria-labelledby="tab-driver">
             <Card title="Driver">
-              <DriverBrowser
-                rows={db?.drivers}
-                onPick={(id) =>
-                  loadDriver(id).then(
-                    (d) => {
-                      offerSizing(d.name);
-                      setDriverSource(d.source ? { name: d.name, ...d.source } : null);
-                      setStep((s) => ({
-                        ...s,
-                        driverName: d.name,
-                        driverBrand: d.brand,
-                        nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
-                        ts: d.ts,
-                        le_mh: d.le_mh ?? 0,
-                        l2_mh: d.l2_mh ?? 0,
-                        r2_ohm: d.r2_ohm ?? 0,
-                        xmax_mm: d.xmax_mm ?? s.xmax_mm,
-                        pe_w: d.pe_w ?? s.pe_w,
-                        volume: {
-                          ...s.volume,
-                          ...(d.displacement_l !== undefined ? { driverDisp_l: d.displacement_l } : {}),
-                          driverCutout_mm: d.cutout_mm ?? 0,
-                        },
-                        // DVC drivers start wired the way their published values were measured.
-                        dvc: d.dvcWiring
-                          ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring }
-                          : { ...s.dvc, on: false },
-                      }));
-                    },
-                    () => alert("Couldn't load that driver."),
-                  )
-                }
-              />
-              <input
-                className="name"
-                data-help-title="Driver name"
-                data-help="A name for this driver, used in shared links, forum posts and exports. Load a driver from the database to fill everything in."
-                value={state.driverName}
-                onChange={(e) => set("driverName", e.currentTarget.value)}
-                aria-label="Driver name"
-              />
-              {driverSource && driverSource.name === state.driverName && (
-                <p className="driver-source muted">
-                  {driverSource.url ? (
-                    <a href={driverSource.url} target="_blank" rel="noopener">
-                      Manufacturer's specs
-                    </a>
-                  ) : (
-                    "Manufacturer's specs"
-                  )}
-                  {driverSource.via === "driver-base" && (
-                    <>
-                      {" · values via "}
-                      <a href="https://github.com/JonathanDCohen/driver-base" target="_blank" rel="noopener">
-                        driver-base
-                      </a>{" "}
-                      (
-                      <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">
-                        CC BY 4.0
-                      </a>
-                      )
-                    </>
-                  )}
-                </p>
-              )}
-              <div className="compare-row" data-help-title="Compare with another driver" data-help="Shows a second driver in every box as faint dashed curves, with the same number of drivers, wiring and settings. Swap makes it the main driver (to edit it or size boxes for it).">
-                {state.compare ? (
-                  <p className="compare-strip">
-                    <span>
-                      Comparing with <b>{state.compare.driverName}</b> <span className="muted">(dashed)</span>
-                    </span>
-                    <button
-                      type="button"
-                      className="link"
-                      onClick={() => {
-                        setStep((s) => swapCompare(s));
-                        notify(`${state.compare!.driverName} is now the main driver; ${state.driverName} is the comparison.`);
-                      }}
-                    >
-                      Swap
-                    </button>
-                    <button type="button" className="icon" aria-label="Stop comparing" title="Stop comparing" onClick={() => setStep((s) => ({ ...s, compare: null }))}>
-                      ✕
-                    </button>
-                  </p>
-                ) : null}
-                <DriverBrowser
-                  rows={db?.drivers}
-                  button={state.compare ? "Compare with a different driver…" : "Compare with…"}
-                  title="Compare with another driver"
-                  hideMissing
-                  onPick={(id) =>
-                    loadDriver(id).then(
-                      (d) => {
-                        setStep((s) => ({
-                          ...s,
-                          compare: {
+              {/* Two dropdown-like pickers: the main driver, and an optional one to compare with. */}
+              <div className="driver-pickers">
+                <div
+                  className="dp-row"
+                  data-help-title="Driver"
+                  data-help="The driver every box is simulated with. Tap to pick another from the database (or rename this one). Its parameters are below."
+                >
+                  <span className="dp-label">Main</span>
+                  <DriverBrowser
+                    rows={db?.drivers}
+                    current={state.driverName.trim() || "Unnamed driver"}
+                    extra={
+                      <label className="lib-rename">
+                        <span>Name of the current driver</span>
+                        <input
+                          className="name"
+                          value={state.driverName}
+                          onChange={(e) => set("driverName", e.currentTarget.value)}
+                          aria-label="Driver name"
+                        />
+                      </label>
+                    }
+                    onPick={(id) =>
+                      loadDriver(id).then(
+                        (d) => {
+                          offerSizing(d.name);
+                          setDriverSource(d.source ? { name: d.name, ...d.source } : null);
+                          setStep((s) => ({
+                            ...s,
                             driverName: d.name,
                             driverBrand: d.brand,
                             nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
@@ -770,15 +702,100 @@ export function App(props: { initial: AppState | null }) {
                             r2_ohm: d.r2_ohm ?? 0,
                             xmax_mm: d.xmax_mm ?? s.xmax_mm,
                             pe_w: d.pe_w ?? s.pe_w,
-                            dvc: d.dvcWiring ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring } : { ...s.dvc, on: false },
-                          },
-                        }));
-                        notify(`Comparing with ${d.name}: dashed curves in every box.`);
-                      },
-                      () => alert("Couldn't load that driver."),
-                    )
-                  }
-                />
+                            volume: {
+                              ...s.volume,
+                              ...(d.displacement_l !== undefined ? { driverDisp_l: d.displacement_l } : {}),
+                              driverCutout_mm: d.cutout_mm ?? 0,
+                            },
+                            // DVC drivers start wired the way their published values were measured.
+                            dvc: d.dvcWiring
+                              ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring }
+                              : { ...s.dvc, on: false },
+                          }));
+                        },
+                        () => alert("Couldn't load that driver."),
+                      )
+                    }
+                  />
+                  <span className="dp-icons">
+                    {driverSource && driverSource.name === state.driverName && driverSource.url && (
+                      <a
+                        className="icon"
+                        href={driverSource.url}
+                        target="_blank"
+                        rel="noopener"
+                        title={driverSource.via === "driver-base" ? "Manufacturer's specs (values via driver-base, CC BY 4.0)" : "Manufacturer's specs"}
+                        aria-label="Manufacturer's specs"
+                      >
+                        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                          <path d="M4 1.5h5.5L13 5v9.5H4z M9.5 1.5V5H13 M6 8h5 M6 10.5h5 M6 13h3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+                        </svg>
+                      </a>
+                    )}
+                  </span>
+                </div>
+                <div
+                  className="dp-row"
+                  data-help-title="Compare with another driver"
+                  data-help="Shows a second driver in every box as faint dashed curves, with the same number of drivers, wiring and settings. Swap makes it the main driver (to edit it or size boxes for it)."
+                >
+                  <span className="dp-label">
+                    Compare
+                    <svg className="dp-dash" viewBox="0 0 22 6" aria-hidden="true">
+                      <line x1="1" y1="3" x2="21" y2="3" stroke="currentColor" strokeWidth="2.5" strokeDasharray="5 3" />
+                    </svg>
+                  </span>
+                  <DriverBrowser
+                    rows={db?.drivers}
+                    button="Pick one…"
+                    current={state.compare?.driverName}
+                    title="Compare with another driver"
+                    onPick={(id) =>
+                      loadDriver(id).then(
+                        (d) => {
+                          setStep((s) => ({
+                            ...s,
+                            compare: {
+                              driverName: d.name,
+                              driverBrand: d.brand,
+                              nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
+                              ts: d.ts,
+                              le_mh: d.le_mh ?? 0,
+                              l2_mh: d.l2_mh ?? 0,
+                              r2_ohm: d.r2_ohm ?? 0,
+                              xmax_mm: d.xmax_mm ?? s.xmax_mm,
+                              pe_w: d.pe_w ?? s.pe_w,
+                              dvc: d.dvcWiring ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring } : { ...s.dvc, on: false },
+                            },
+                          }));
+                          notify(`Comparing with ${d.name}: dashed curves in every box.`);
+                        },
+                        () => alert("Couldn't load that driver."),
+                      )
+                    }
+                  />
+                  <span className="dp-icons">
+                    {state.compare && (
+                      <>
+                        <button
+                          type="button"
+                          className="icon"
+                          title="Swap: make it the main driver"
+                          aria-label="Swap with the main driver"
+                          onClick={() => {
+                            setStep((s) => swapCompare(s));
+                            notify(`${state.compare!.driverName} is now the main driver; ${state.driverName} is the comparison.`);
+                          }}
+                        >
+                          ⇅
+                        </button>
+                        <button type="button" className="icon" aria-label="Stop comparing" title="Stop comparing" onClick={() => setStep((s) => ({ ...s, compare: null }))}>
+                          ✕
+                        </button>
+                      </>
+                    )}
+                  </span>
+                </div>
               </div>
               <TsEditor
                 entered={state.ts}
