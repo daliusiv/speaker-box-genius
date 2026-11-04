@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  findPassiveRadiators,
+  evaluatePrCandidates,
   largestPrFor,
+  rankPrResults,
   type AlignmentDriver,
   type DriverInput,
   type Losses,
@@ -48,7 +49,13 @@ function loadCandidates(db: DbIndex): Promise<Loaded[]> {
 
 // Drivers that could stand in as PRs, loaded on request (one by one: failures are skipped).
 const driverCache = new Map<string, Promise<Loaded | null>>();
-function loadDriverCandidates(rows: DbIndex["drivers"]): Promise<Loaded[]> {
+function loadDriverCandidates(rows: DbIndex["drivers"], onProgress?: (done: number) => void): Promise<Loaded[]> {
+  let done = 0;
+  const tick = <T,>(p: Promise<T>) =>
+    p.then((x) => {
+      onProgress?.(++done);
+      return x;
+    });
   return Promise.all(
     rows.map((r) => {
       let p = driverCache.get(r.id);
@@ -70,7 +77,7 @@ function loadDriverCandidates(rows: DbIndex["drivers"]): Promise<Loaded[]> {
         );
         driverCache.set(r.id, p);
       }
-      return p;
+      return tick(p);
     }),
   ).then((xs) => xs.filter((x): x is Loaded => x !== null));
 }
@@ -100,6 +107,11 @@ export function PrFinder(props: {
   const [why, setWhy] = useState(false);
   const [withDrivers, setWithDrivers] = useState(false);
   const [driverCands, setDriverCands] = useState<Loaded[] | null>(null);
+  // Progress: loading the drivers' files, then simulating every candidate (both can be stopped).
+  const [loading, setLoading] = useState<{ done: number; total: number } | null>(null);
+  const [simming, setSimming] = useState<{ done: number; total: number } | null>(null);
+  const stopRef = useRef<(() => void) | null>(null);
+  const [rerun, setRerun] = useState(0);
   const { ctx } = props;
 
   const alignment = ctx.align ? ventedAlignmentFor(ctx.align, ctx.drivers) : null;
@@ -120,37 +132,100 @@ export function PrFinder(props: {
     if (!isOpen || !withDrivers || !props.db) return;
     let live = true;
     setDriverCands(null);
-    loadDriverCandidates(driverRows).then((x) => live && setDriverCands(x), () => live && setError("Couldn't load the drivers."));
+    const total = driverRows.length;
+    setLoading({ done: 0, total });
+    loadDriverCandidates(driverRows, (done) => live && setLoading({ done, total })).then(
+      (x) => {
+        if (!live) return;
+        setLoading(null);
+        setDriverCands(x);
+      },
+      () => {
+        if (!live) return;
+        setLoading(null);
+        setError("Couldn't load the drivers.");
+      },
+    );
     return () => {
       live = false;
+      setLoading(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, driverKey]);
 
-  // Simulating every candidate takes a moment, so it runs after the window has painted.
-  const [found, setFound] = useState<{ results: PrFinderResult[] | null; error: string }>({ results: null, error: "" });
+  // Simulating every candidate takes a while (seconds with drivers as PRs), so it runs in short
+  // slices between paints: the progress bar moves, the window stays usable, and it can be stopped
+  // (keeping the results so far).
+  const [found, setFound] = useState<{ results: PrFinderResult[] | null; error: string; stopped?: { done: number; total: number } }>({
+    results: null,
+    error: "",
+  });
   useEffect(() => {
     setFound({ results: null, error: "" });
+    setSimming(null);
     if (!isOpen || !cands || !ctx.driver || (withDrivers && !driverCands)) return;
-    const driver = ctx.driver;
-    const t = setTimeout(() => {
+    const all = withDrivers ? [...cands, ...driverCands!] : cands;
+    const steps = evaluatePrCandidates(ctx.driver, all, {
+      vb_l: target.vb_l,
+      targetFb: target.fb,
+      losses: ctx.losses,
+      sim: ctx.sim,
+      fMin: ctx.fMin,
+    });
+    const out: PrFinderResult[] = [];
+    let done = 0;
+    let live = true;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const finish = (stopped?: { done: number; total: number }) => {
+      live = false;
+      clearTimeout(timer);
+      stopRef.current = null;
+      setSimming(null);
+      setFound({ results: rankPrResults(out), error: "", stopped });
+    };
+    const slice = () => {
+      if (!live) return;
+      const t0 = performance.now();
       try {
-        setFound({
-          results: findPassiveRadiators(driver, withDrivers ? [...cands, ...driverCands!] : cands, {
-            vb_l: target.vb_l,
-            targetFb: target.fb,
-            losses: ctx.losses,
-            sim: ctx.sim,
-            fMin: ctx.fMin,
-          }),
-          error: "",
-        });
+        while (performance.now() - t0 < 30) {
+          const n = steps.next();
+          if (n.done) return finish();
+          out.push(...n.value);
+          done++;
+        }
       } catch (e) {
+        live = false;
+        stopRef.current = null;
+        setSimming(null);
         setFound({ results: null, error: (e as Error).message });
+        return;
       }
-    }, 30);
-    return () => clearTimeout(t);
-  }, [isOpen, cands, driverCands, withDrivers, ctx.driver, ctx.sim, ctx.losses, ctx.fMin, target.vb_l, target.fb]);
+      setSimming({ done, total: all.length });
+      timer = setTimeout(slice, 0);
+    };
+    stopRef.current = () => finish({ done, total: all.length });
+    setSimming({ done: 0, total: all.length });
+    timer = setTimeout(slice, 30);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+      stopRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, cands, driverCands, withDrivers, ctx.driver, ctx.sim, ctx.losses, ctx.fMin, target.vb_l, target.fb, rerun]);
+  const stop = () => {
+    if (loading) {
+      // Still fetching the drivers: stop by leaving them out.
+      setWithDrivers(false);
+      return;
+    }
+    stopRef.current?.();
+  };
+  const progress = loading
+    ? { label: "Loading drivers", ...loading }
+    : simming
+      ? { label: withDrivers ? "Trying PRs and drivers" : "Trying every PR", ...simming }
+      : null;
   const results = found.results;
   const shownError = error || found.error;
 
@@ -239,7 +314,29 @@ export function PrFinder(props: {
           </label>
           {shownError && <p className="warn">{shownError}</p>}
           <div className="finder-results">
-            {!results && !shownError && <p className="hint">Trying every passive radiator{withDrivers ? " and driver" : ""}…</p>}
+            {!results && !progress && !shownError && <p className="hint">Loading the passive radiators…</p>}
+            {progress && !shownError && (
+              <div className="finder-progress" role="status">
+                <div className="finder-progress-text">
+                  <span>{progress.label}…</span>
+                  <span className="muted">
+                    {progress.done} / {progress.total}
+                  </span>
+                </div>
+                <progress value={progress.done} max={Math.max(1, progress.total)} />
+                <button type="button" className="icon" onClick={stop} aria-label="Stop" title="Stop (keeps the results so far)">
+                  ✕
+                </button>
+              </div>
+            )}
+            {found.stopped && (
+              <p className="hint">
+                Stopped after {found.stopped.done} of {found.stopped.total}: the best of those tried so far.{" "}
+                <button type="button" className="link" onClick={() => setRerun((n) => n + 1)}>
+                  Try them all
+                </button>
+              </p>
+            )}
             {results && ok.length === 0 && (
               <p className="warn">
                 None of the passive radiators in the database keeps up in this box. See why below; a bigger box, a lower

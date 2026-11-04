@@ -77,16 +77,30 @@ export interface PrFinderResult {
 }
 
 export function findPassiveRadiators(driver: DriverInput, candidates: PrCandidate[], o: PrFinderOptions): PrFinderResult[] {
+  const out: PrFinderResult[] = [];
+  for (const rs of evaluatePrCandidates(driver, candidates, o)) out.push(...rs);
+  return rankPrResults(out);
+}
+
+/**
+ * The work of findPassiveRadiators one candidate at a time (each step yields that candidate's
+ * results, one per count), so a caller can show progress, stay responsive and stop early.
+ * Rank what it yields with rankPrResults.
+ */
+export function* evaluatePrCandidates(driver: DriverInput, candidates: PrCandidate[], o: PrFinderOptions): Generator<PrFinderResult[]> {
   const counts = o.counts ?? [1, 2, 4];
   const fMin = o.fMin ?? 15;
   const maxRatio = o.maxMassRatio ?? 3;
   const air = o.sim?.air;
-  const out: PrFinderResult[] = [];
   if (driver.xmax_mm === undefined) throw new Error("The driver's Xmax is needed to judge passive radiators");
 
   for (const c of candidates) {
+    const out: PrFinderResult[] = [];
     // Without a published Xmax there is nothing to judge the PR's travel against.
-    if (c.pr.xmax_mm === undefined) continue;
+    if (c.pr.xmax_mm === undefined) {
+      yield out;
+      continue;
+    }
     const od_cm = prOutsideDiameter(c);
     const fits = od_cm <= largestPrFor(o.vb_l);
     for (const count of c.counts ?? counts) {
@@ -142,10 +156,15 @@ export function findPassiveRadiators(driver: DriverInput, candidates: PrCandidat
         prUse,
         ok: reason === undefined,
         reason,
-        score: 0, // set below, once the best F3 is known
+        score: 0, // set by rankPrResults, once the best F3 is known
       });
     }
+    yield out;
   }
+}
+
+/** Scores and sorts results (from evaluatePrCandidates): the best usable ones first. */
+export function rankPrResults(out: PrFinderResult[]): PrFinderResult[] {
   // Ranking among those that pass: closest to the best bass extension on offer (a PR that
   // is stiff for the box spoils the response), then fewer PRs, then not grossly oversized
   // (using under ~35 % of its travel: bigger and dearer than needed), then less added mass
