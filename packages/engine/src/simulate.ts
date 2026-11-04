@@ -9,6 +9,9 @@ import {
   passiveRadiatorModel,
   portAcousticMass,
   portArea,
+  portFlare,
+  portLossCoefficient,
+  portMouthArea,
   prFb,
   prGroupsFb,
   ventedFb,
@@ -39,6 +42,9 @@ import {
  * Radiated volume velocity is the air that leaves the box system, which equals
  * minus the flow into the box air spring: U0 = −P_box / Z_box-air.
  */
+
+/** Dynamic viscosity of air at about 20 °C (Pa·s). */
+const AIR_VISCOSITY = 1.81e-5;
 
 export type PowerConvention = "re" | "nominal" | "volts";
 
@@ -74,6 +80,12 @@ export interface SimulationOptions {
    * two voice coils in series or in parallel. `drivers` then counts pairs.
    */
   isobaric?: { coils: "series" | "parallel" } | null;
+  /**
+   * Port compression (vented boxes): the port's turbulent loss grows with air speed
+   * (ΔP = ½ρK·v², as an equivalent resistance for a sine), solved at this drive level.
+   * Approximate; off by default so results stay comparable with WinISD.
+   */
+  portCompression?: boolean;
 }
 
 /** The single equivalent driver of an isobaric pair. */
@@ -126,6 +138,10 @@ export interface SimulationResult {
     /** Bandpass: upper −3 dB point. */
     f3High?: number | null;
     fb?: number;
+    /** Vented: where portVelocity is taken: the throat, or the mouths of a port flared at both ends. */
+    portVelocityAt?: "throat" | "ends";
+    /** Vented with portCompression: largest output loss from port compression (dB) and where (Hz). */
+    portCompression?: { db: number; f: number };
     /** Bandpass: tuning of the rear chamber's port (6th order). */
     fbRear?: number;
     fc?: number;
@@ -185,6 +201,11 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   // Reference frequency for the loss Qs, and branch impedance builders.
   let fRef = 1;
   let ventZ: ((w: number) => Complex) | null = null; // total of all ports / PRs in parallel
+  let ventPortZ: ((w: number) => Complex) | null = null; // one port (vented boxes)
+  let velocityScale = 1; // throat → where velocity is judged
+  let nlCoef = 0; // port compression: extra resistance per unit peak volume velocity
+  let reynoldsPerQ = 0; // Reynolds number at the port's ends per unit peak volume velocity
+  let compression = { db: 0, f: 0 };
   let ventCount = 1;
   let ventArea = 0;
   let prXmax: number | null = null;
@@ -208,6 +229,23 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const rap = Number.isFinite(qp) ? (2 * Math.PI * fRef * map) / qp : 0;
     ventArea = portArea(single.port);
     ventZ = (w) => scale(cx(rap, w * map), 1 / ventCount);
+    ventPortZ = (w) => cx(rap, w * map);
+    // Peak velocity is judged where the air leaves: the mouths when both ends are flared.
+    if (portFlare(single.port).ends === 2) {
+      velocityScale = ventArea / portMouthArea(single.port);
+      summary.portVelocityAt = "ends";
+    } else summary.portVelocityAt = "throat";
+    if (opts.portCompression) {
+      // Equivalent resistance of a quadratic loss for a sine of peak volume velocity Q:
+      // R = (8 / 3π) · ½ρK · Q / S².
+      nlCoef = ((8 / (3 * Math.PI)) * 0.5 * air.rho * portLossCoefficient(single.port)) / (ventArea * ventArea);
+      // The loss only builds up once the flow at the ends turns turbulent: from a Reynolds
+      // number of about 20 000 to full effect by about 50 000 (Raczynski, after Vanderkooy).
+      // Re = r·v·ρ/μ at the mouth; per unit peak volume velocity:
+      const mouth = portMouthArea(single.port);
+      const ends = portFlare(single.port).ends === 2 ? mouth : ventArea;
+      reynoldsPerQ = (Math.sqrt(ends / Math.PI) * air.rho) / (AIR_VISCOSITY * ends);
+    }
   } else {
     const groups: PrGroup[] = [
       { pr: single.pr, count: single.prCount ?? 1, addedMass_g: single.addedMass_g ?? 0 },
@@ -306,14 +344,37 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     } else {
       const zAir = cx(rab, -1 / (w * cab));
       const zLeak = Number.isFinite(ral) ? cx(ral) : null;
-      const zVent = ventZ ? ventZ(w) : null;
-      zLoad = parallel(zAir, zLeak, zVent)!;
-
-      // N identical drivers into one load: each driver sees N × the load impedance.
-      zMech = add(zas, scale(zLoad, n)); // per driver, acoustic units
-      ui = div(pg, add(zae, zMech));
-      const ud = scale(ui, n);
-      const pBox = mul(ud, zLoad);
+      let zVent = ventZ ? ventZ(w) : null;
+      const solve = () => {
+        const zl = parallel(zAir, zLeak, zVent)!;
+        // N identical drivers into one load: each driver sees N × the load impedance.
+        const zm = add(zas, scale(zl, n)); // per driver, acoustic units
+        const u = div(pg, add(zae, zm));
+        const pb = mul(scale(u, n), zl);
+        return { zl, zm, u, pb };
+      };
+      let sol = solve();
+      if (nlCoef > 0 && ventPortZ && zVent) {
+        // Port compression: the loss depends on the flow it limits, so iterate to agreement.
+        const linear = abs(scale(div(sol.pb, zAir), -1));
+        const zPort = ventPortZ(w);
+        let rNl = 0;
+        for (let k = 0; k < 40; k++) {
+          const qPeak = (Math.SQRT2 * abs(div(sol.pb, zVent))) / ventCount;
+          const onset = Math.min(1, Math.max(0, (reynoldsPerQ * qPeak - 20000) / 30000));
+          const target = nlCoef * qPeak * onset;
+          if (Math.abs(target - rNl) <= 1e-4 * Math.max(1, rNl)) break;
+          rNl = 0.5 * (rNl + target);
+          zVent = scale(add(zPort, cx(rNl)), 1 / ventCount);
+          sol = solve();
+        }
+        const loss = 20 * Math.log10(linear / abs(scale(div(sol.pb, zAir), -1)));
+        if (loss > compression.db) compression = { db: loss, f };
+      }
+      zLoad = sol.zl;
+      zMech = sol.zm;
+      ui = sol.u;
+      const pBox = sol.pb;
 
       // Radiated volume velocity = −(flow into the box air spring).
       u0 = scale(div(pBox, zAir), -1);
@@ -335,7 +396,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
           out.xpr[i] = xpr * 1000;
         }
         if (out.vport) {
-          vport = (Math.SQRT2 * abs(uVentEach)) / ventArea;
+          vport = ((Math.SQRT2 * abs(uVentEach)) / ventArea) * velocityScale;
           out.vport[i] = vport;
         }
       }
@@ -391,6 +452,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   summary.referenceSpl = 20 * Math.log10(pRef / 2e-5);
   summary.f3 = crossing(freq, out.spl, summary.referenceSpl - 3);
   summary.f6 = crossing(freq, out.spl, summary.referenceSpl - 6);
+  if (nlCoef > 0) summary.portCompression = compression;
   if (bp) summary.f3High = crossingHigh(freq, out.spl, summary.referenceSpl - 3);
 
   return {

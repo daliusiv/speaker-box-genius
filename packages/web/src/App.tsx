@@ -1044,6 +1044,15 @@ export function App(props: { initial: AppState | null }) {
                   min={1}
                   onChange={(qp) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qp } })}
                 />
+                <Select<"off" | "on">
+                  label="Port compression"
+                  value={state.settings.portCompression ? "on" : "off"}
+                  options={[
+                    { value: "off", text: "Off (like WinISD)" },
+                    { value: "on", text: "On (approximate, at this power)" },
+                  ]}
+                  onChange={(x) => set("settings", { ...state.settings, portCompression: x === "on" })}
+                />
                 <Select<"peak" | "rms">
                   label="Port speed"
                   value={state.settings.velocity}
@@ -1306,7 +1315,14 @@ function portContext(state: AppState, designs: Design[], id: string) {
           ? Math.max(v.diameter_cm, v.height_cm) - t
           : v.diameter_cm - t;
   }
-  return { portVelocity: peak, rearPortVelocity: rearPeak, internalMax_cm };
+  return {
+    portVelocity: peak,
+    rearPortVelocity: rearPeak,
+    internalMax_cm,
+    portVelocityAt: r?.summary.portVelocityAt ?? "throat",
+    portCompression: r?.summary.portCompression ?? null,
+    drive: driveLabel(state),
+  };
 }
 
 function Summary({ designs, state, missing }: { designs: Design[]; state: AppState; missing: boolean }) {

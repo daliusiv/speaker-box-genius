@@ -181,10 +181,21 @@ interface PortContext {
   rearPortVelocity: number | null;
   /** Largest internal box dimension (cm) when the volume calculator feeds this design. */
   internalMax_cm: number | null;
+  /** Where portVelocity was taken: the throat, or the mouths of a port flared at both ends. */
+  portVelocityAt?: "throat" | "ends";
+  /** Port compression at this drive (when switched on in Settings). */
+  portCompression?: { db: number; f: number } | null;
+  /** Drive level, for wording. */
+  drive?: string;
 }
 
 /** Warnings and suggestions about the port itself: does it fit, will it chuff, where does it resonate. */
-function PortChecks(props: { v: PortFields; vb_l: number; air: Air; ctx: Pick<PortContext, "portVelocity" | "internalMax_cm"> }) {
+function PortChecks(props: {
+  v: PortFields & { flare_cm?: number };
+  vb_l: number;
+  air: Air;
+  ctx: Pick<PortContext, "portVelocity" | "internalMax_cm" | "portVelocityAt" | "portCompression" | "drive">;
+}) {
   const { v, vb_l, air, ctx } = props;
   const { fmt } = useUnits();
   const port = portOf(v);
@@ -217,12 +228,27 @@ function PortChecks(props: { v: PortFields; vb_l: number; air: Air; ctx: Pick<Po
     const newLen = portLengthForFb(vb_l, { ...bigger, length_cm: 0 }, fbNow, v.count, undefined, air);
     const size = v.shape === "round" ? `${fmt(v.diameter_cm * Math.sqrt(k), "len")} diameter` : `${fmt(v.slotWidth_cm * k, "len")} wide`;
     const ports = Math.ceil(v.count * k);
+    const ends = ctx.portVelocityAt === "ends";
     notes.push({
       warn: true,
       chip: `Chuffing: ${ctx.portVelocity.toFixed(1)} m/s`,
+      text: ends
+        ? `Air speed at the flared ends reaches ${ctx.portVelocity.toFixed(1)} m/s. A bigger port, more ports or a larger flare radius brings it down (the flares set the noise, not the narrow middle).`
+        : `Port air speed reaches ${ctx.portVelocity.toFixed(1)} m/s. To stay under ${PORT_LIMIT} m/s at this power: about ${size} ` +
+          `(length ≈ ${fmt(newLen, "len")} for the same tuning)${ports > v.count ? `, or ${ports} ports of the current size` : ""}` +
+          (v.shape === "round" && !(v.flare_cm! > 0) ? `. Flared ends also help a lot: try a flare radius of about ${fmt(v.diameter_cm / 4, "len")}.` : "."),
+    });
+  }
+
+  // Port compression (Settings): what the port loses to turbulence at this power.
+  const pc = ctx.portCompression;
+  if (pc && pc.db >= 0.3) {
+    notes.push({
+      warn: pc.db >= 1.5,
+      chip: `Compression −${pc.db.toFixed(1)} dB`,
       text:
-        `Port air speed reaches ${ctx.portVelocity.toFixed(1)} m/s. To stay under ${PORT_LIMIT} m/s at this power: about ${size} ` +
-        `(length ≈ ${fmt(newLen, "len")} for the same tuning)${ports > v.count ? `, or ${ports} ports of the current size` : ""}.`,
+        `At ${ctx.drive ?? "this power"} the port loses about ${pc.db.toFixed(1)} dB around ${pc.f.toFixed(0)} Hz to turbulence (approximate model, shown in the SPL chart). ` +
+        (v.shape === "round" && !(v.flare_cm! > 0) ? "More port area or flared ends reduce it." : "More port area reduces it further."),
     });
   }
 
@@ -294,7 +320,17 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
         />
         <VbField vb_l={p.vb_l} value={v.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
         {v.shape === "round" ? (
-          <Num label="Port Ø" q="len" value={v.diameter_cm} onChange={(x) => set({ diameter_cm: x })} />
+          <>
+            <Num label="Port Ø" q="len" value={v.diameter_cm} onChange={(x) => set({ diameter_cm: x })} />
+            <Num
+              label="Flare r"
+              q="len"
+              value={v.flare_cm ?? 0}
+              min={0}
+              title="Round-over radius at both ends (0 = a straight tube). About a quarter of the diameter is a good start."
+              onChange={(x) => set({ flare_cm: x })}
+            />
+          </>
         ) : (
           <>
             <Num label="Width" q="len" value={v.slotWidth_cm} onChange={(x) => set({ slotWidth_cm: x })} />
@@ -337,7 +373,9 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
       {msg && <p className="warn">{msg}</p>}
       <PortChecks v={v} vb_l={p.vb_l} air={p.air} ctx={p.portCtx} />
       <p className="hint">
-        Physical port length; end correction (0.732 × diameter, like WinISD) is added automatically.
+        Physical port length{v.flare_cm > 0 && v.shape === "round" ? ", end to end including the flares" : ""}; end correction (0.732 ×
+        diameter, like WinISD) is added automatically.
+        {v.shape === "round" && v.flare_cm > 0 && v.length_cm < 2 * v.flare_cm && " The port is shorter than its two flares: lengthen it or use a smaller radius."}
         {v.shape === "slot" && " A slot along a box wall behaves slightly longer than this model assumes."}
       </p>
     </>
