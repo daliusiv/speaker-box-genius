@@ -22,6 +22,7 @@ import {
   type VolumeResult,
 } from "@sbg/engine";
 import type { AppState, DesignState, LineDesign, PortFields, PrDesign, PrGroupState, Settings } from "./state.ts";
+import { viewFor } from "./state.ts";
 
 /** One colour per design slot; distinguishable in light and dark mode. */
 export const PALETTE = ["#3b82f6", "#f97316", "#22c55e", "#a855f7", "#e11d48", "#0d9488", "#ca8a04", "#64748b"];
@@ -297,13 +298,31 @@ export function simOptionsOf(s: AppState) {
   };
 }
 
+/** Each driver's solved T/S values (A from `solved`, B–D solved here), keyed by letter. */
+export function solvedDrivers(s: AppState, solved: SolveResult): Map<string, SolveResult> {
+  const m = new Map<string, SolveResult>([["A", solved]]);
+  for (const e of s.extraDrivers) m.set(e.id, solveDriver(viewFor(s, e.id)));
+  return m;
+}
+
 export function runDesigns(s: AppState, solved: SolveResult): Design[] {
-  if (solved.missing.length > 0) return [];
-  const driver = driverInputOf(s, solved);
-  const opts = simOptionsOf(s);
+  const solvedBy = solvedDrivers(s, solved);
+  // Driver input and options per driver, worked out once each.
+  const perDriver = new Map<string, { driver: DriverInput; opts: ReturnType<typeof simOptionsOf> } | null>();
+  const forDriver = (id: string) => {
+    if (!perDriver.has(id)) {
+      const view = viewFor(s, id === "A" ? undefined : id);
+      const sv = solvedBy.get(id) ?? solved;
+      perDriver.set(id, sv.missing.length > 0 ? null : { driver: driverInputOf(view, sv), opts: simOptionsOf(view) });
+    }
+    return perDriver.get(id)!;
+  };
   const out: Design[] = [];
   for (const d of s.designs) {
     if (!d.on) continue;
+    const dr = forDriver(d.driverId ?? "A");
+    if (!dr) continue;
+    const { driver, opts } = dr;
     const vb = vbOf(s, d);
     if (!(vb > 0)) continue;
     const eq = s.eq

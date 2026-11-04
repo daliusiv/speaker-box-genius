@@ -12,7 +12,7 @@ import {
   type VentedAlignment,
 } from "@sbg/engine";
 import { airOf, alignmentDriver, portOf, prGroupsOf, solveDriver } from "./sim.ts";
-import type { AppState, DesignState, PrDesign } from "./state.ts";
+import { viewFor, type AppState, type DesignState, type PrDesign } from "./state.ts";
 
 /** A design keeps a name the user chose; a default name ("Ported", "Ported QB3") follows the preset. */
 export function renamed(current: string, defaultPrefix: string, next: string): string {
@@ -47,20 +47,33 @@ export const ventedAlignmentFor = (a: AlignmentDriver, drivers: number): VentedA
  * design whose volume comes from the volume calculator are left as they are, with a reason.
  */
 export function sizeAllForDriver(s: AppState): { state: AppState; changed: string[]; skipped: string[] } {
-  const align = alignmentDriver(solveDriver(s), s);
   const changed: string[] = [];
   const skipped: string[] = [];
-  if (!align) return { state: s, changed, skipped: ["Enter the driver's parameters first."] };
   const air = airOf(s);
-  const qb3 = ventedAlignmentFor(align, s.drivers);
+  // Each design is sized for its own driver (A, or B–D).
+  const byDriver = new Map<string, { align: AlignmentDriver | null; qb3: VentedAlignment | null; drivers: number }>();
+  const forDriver = (id = "A") => {
+    if (!byDriver.has(id)) {
+      const view = viewFor(s, id === "A" ? undefined : id);
+      const align = alignmentDriver(solveDriver(view), view);
+      byDriver.set(id, { align, qb3: align ? ventedAlignmentFor(align, view.drivers) : null, drivers: view.drivers });
+    }
+    return byDriver.get(id)!;
+  };
+  if (s.designs.every((d) => !forDriver(d.driverId).align)) return { state: s, changed, skipped: ["Enter the driver's parameters first."] };
   const designs = s.designs.map((d): DesignState => {
+    const { align, qb3, drivers } = forDriver(d.driverId);
+    if (!align) {
+      skipped.push(`${d.name}: enter driver ${d.driverId ?? "A"}'s parameters first`);
+      return d;
+    }
     if (s.volume.link === d.id) {
       skipped.push(`${d.name}: its volume comes from the volume calculator`);
       return d;
     }
     switch (d.kind) {
       case "sealed": {
-        const vb = sealedVolumeForAlignment(align, 0.707, s.drivers);
+        const vb = sealedVolumeForAlignment(align, 0.707, drivers);
         if (vb === null) {
           skipped.push(`${d.name}: the driver's Qts is already above 0.707`);
           return d;

@@ -3,7 +3,7 @@ import { coilLabel, driveLabel, lineFoldOf, PORT_LIMIT, prGroupLabels, prPeak, t
 import { foldShapes } from "./foldShapes.ts";
 import { REPO } from "./components.tsx";
 import { fmtQ } from "./units.ts";
-import { encodeStateShort, type AppState } from "./state.ts";
+import { encodeStateShort, viewOfDesign, type AppState } from "./state.ts";
 import { drawQr } from "./qrDraw.ts";
 
 const SITE = "daliusiv.github.io/speaker-box-genius";
@@ -47,7 +47,7 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
         false,
         false,
         false,
-        x !== null && x > state.xmax_mm,
+        x !== null && x > viewOfDesign(state, d).xmax_mm,
         xpr?.over ?? false,
         vp !== null && vp > PORT_LIMIT,
       ],
