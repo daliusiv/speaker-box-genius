@@ -173,6 +173,23 @@ export interface Settings {
 }
 
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
+/** A measured curve overlaid on the charts: an in-box response (.frd) or impedance (.zma). */
+export interface MeasuredCurve {
+  id: string;
+  name: string;
+  kind: "spl" | "impedance";
+  on: boolean;
+  /** Thinned to 1/24 octave (see thinCurve): Hz and dB or ohms. */
+  f: number[];
+  v: number[];
+  /** dB added to a response, to match the simulation's level. */
+  offset_db: number;
+  /** Design whose level it was matched to; in the Relative view it shares that design's 0 dB. */
+  matchTo: string;
+}
+
+export const MAX_MEASURED = 4;
+
 export interface AppState {
   v: 3;
   driverName: string;
@@ -213,6 +230,8 @@ export interface AppState {
   highPass: { on: boolean; type: HighPassType; order: number; freq: number };
   settings: Settings;
   eq: EqItem[];
+  /** Measurements overlaid on the charts (travel with the link). */
+  measured: MeasuredCurve[];
   designs: DesignState[];
   volume: {
     /** Id of the design whose Vb follows the calculator, or "none". */
@@ -371,6 +390,7 @@ export const DEFAULT_STATE: AppState = {
     portCompression: false,
   },
   eq: [],
+  measured: [],
   designs: defaultDesigns(),
   volume: {
     link: "none",
@@ -417,6 +437,35 @@ function fromBase64Url(s: string): string {
 const nonNeg = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : 0);
 
 /** Long form: plain JSON in base64url. Kept for saved projects and as a fallback; always decodes synchronously. */
+/** Measured curves from a link: well-formed ones only. */
+function measuredFrom(raw: unknown): MeasuredCurve[] {
+  if (!Array.isArray(raw)) return [];
+  const num = (x: unknown) => typeof x === "number" && Number.isFinite(x);
+  return raw
+    .filter(
+      (m: Raw) =>
+        m &&
+        (m.kind === "spl" || m.kind === "impedance") &&
+        Array.isArray(m.f) &&
+        Array.isArray(m.v) &&
+        m.f.length === m.v.length &&
+        m.f.length >= 2 &&
+        m.f.every((x: unknown) => num(x) && (x as number) > 0) &&
+        m.v.every(num),
+    )
+    .slice(0, MAX_MEASURED)
+    .map((m: Raw, i: number) => ({
+      id: typeof m.id === "string" ? m.id : `m${i + 1}`,
+      name: typeof m.name === "string" ? m.name.slice(0, 60) : "Measured",
+      kind: m.kind,
+      on: m.on !== false,
+      f: m.f,
+      v: m.v,
+      offset_db: num(m.offset_db) ? m.offset_db : 0,
+      matchTo: typeof m.matchTo === "string" ? m.matchTo : "",
+    }));
+}
+
 export function encodeState(s: AppState): string {
   return "s=" + toBase64Url(JSON.stringify(s));
 }
@@ -671,6 +720,7 @@ export function decodeState(hash: string): AppState | null {
       eq: Array.isArray(raw.eq)
         ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf"].includes(e.type)).slice(0, 12)
         : [],
+      measured: measuredFrom(raw.measured),
       designs,
       volume: { ...d.volume, ...raw.volume },
     };

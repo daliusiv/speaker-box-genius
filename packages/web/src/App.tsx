@@ -56,6 +56,7 @@ import {
 import { RoomGainPanel } from "./RoomGain.tsx";
 import { BafflePanel } from "./BafflePanel.tsx";
 import { AddDesign, DesignCard } from "./Designs.tsx";
+import { MeasuredCard, measuredSeries } from "./Measured.tsx";
 import { reportUrl, ShareMenu } from "./Share.tsx";
 import { EqPanel } from "./Eq.tsx";
 import { MeasurePanel, type Measurement } from "./Measure.tsx";
@@ -1174,7 +1175,7 @@ export function App(props: { initial: AppState | null }) {
                         },
                         ...partsOf(d, (y) => y.map((v) => v - ref)),
                       ];
-                    }),
+                    }).concat(measuredSeries(state.measured, "spl", freq, designs, true)),
                     limits: [
                       { value: -3, label: "−3 dB", color: "var(--muted)" },
                       { value: -6, label: "−6 dB", color: "var(--muted)" },
@@ -1200,7 +1201,11 @@ export function App(props: { initial: AppState | null }) {
                       }));
                     }),
                   }
-                : { series: designs.flatMap((d) => [{ label: d.design.name, color: d.color, y: d.result.spl }, ...partsOf(d, (y) => y)]) })}
+                : {
+                    series: designs
+                      .flatMap((d) => [{ label: d.design.name, color: d.color, y: d.result.spl }, ...partsOf(d, (y) => y)])
+                      .concat(measuredSeries(state.measured, "spl", freq, designs)),
+                  })}
             />
             <LogChart
               forum
@@ -1277,6 +1282,7 @@ export function App(props: { initial: AppState | null }) {
               freq={freq}
               series={[
                 ...series((r) => r.impedanceOhm),
+                ...measuredSeries(state.measured, "impedance", freq, designs),
                 ...(measurement
                   ? [
                       { label: "Measured (free air)", color: "#78716c", dash: "6 4", y: resampleMagnitude(measurement.data, freq) },
@@ -1303,6 +1309,7 @@ export function App(props: { initial: AppState | null }) {
             />
           </CrosshairProvider>
         )}
+        {designs.length > 0 && <MeasuredCard measured={state.measured} designs={designs} onChange={(measured) => setStep((s) => ({ ...s, measured }))} />}
 
         <footer className="muted">
           Small-signal lumped model: no voice-coil or port compression, no Bl/Cms non-linearity. Box losses Ql{" "}

@@ -20,3 +20,4 @@ export * from "./qr.ts";
 export * from "./baffle.ts";
 export * from "./line.ts";
 export * from "./linefold.ts";
+export * from "./measured.ts";
