@@ -1,34 +1,20 @@
 :root {
-  color-scheme: light dark;
-  --bg: #f5f5f4;
-  --fg: #1c1917;
-  --muted: #6b6460;
-  --accent: #c2410c;
-  --card: #ffffff;
-  --border: #e7e5e4;
-  --grid: #e7e5e4;
-  --over: #dc2626;
-  --warn: #b45309;
-  --on-accent: #fff;
+  /* Dark only: the light palette never looked right, and the charts were tuned on dark. */
+  color-scheme: dark;
+  --bg: #0c0a09;
+  --fg: #f5f5f4;
+  --muted: #a8a29e;
+  --accent: #fb923c;
+  --card: #1c1917;
+  --border: #292524;
+  --grid: #292524;
+  --over: #f87171;
+  --warn: #fbbf24;
+  --on-accent: #1c1917;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 15px;
   background: var(--bg);
   color: var(--fg);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0c0a09;
-    --fg: #f5f5f4;
-    --muted: #a8a29e;
-    --accent: #fb923c;
-    --card: #1c1917;
-    --border: #292524;
-    --grid: #292524;
-    --over: #f87171;
-    --warn: #fbbf24;
-    --on-accent: #1c1917;
-  }
 }
 
 * {
