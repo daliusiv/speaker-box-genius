@@ -9,7 +9,7 @@ import {
   type HighPassType,
   type SimulationResult,
 } from "@sbg/engine";
-import { CrosshairProvider, LogChart, shortName, type Series } from "./LogChart.tsx";
+import { ChartEmphasis, CrosshairProvider, LogChart, shortName, type Series } from "./LogChart.tsx";
 import { useUndoable } from "./useUndoable.ts";
 import { sizeAllForDriver } from "./presets.ts";
 import type { FinderContext } from "./PrFinder.tsx";
@@ -271,6 +271,21 @@ export function App(props: { initial: AppState | null }) {
   /** An edit made on the selected driver's view, written back to that driver. */
   const setStepDrv = (fn: (s: AppState) => AppState) =>
     setStep((s) => routeDriverEdit(s, drvSel, fn(viewFor(s, drvSel === "A" ? undefined : drvSel))));
+  // Comparing drivers: the selected driver's curves bold, the others faint.
+  const fadedLabels = useMemo(
+    () => (state.extraDrivers.length > 0 ? designs.filter((d) => (d.design.driverId ?? "A") !== drvSel).map((d) => d.label) : []),
+    [designs, drvSel, state.extraDrivers.length],
+  );
+  /** Copies of driver A's boxes for driver `id` (as many as there's room for). */
+  const withCopiesFor = (s: AppState, id: string): { state: AppState; copied: number; of: number } => {
+    const src = s.designs.filter((d) => d.driverId === undefined);
+    const designs = [...s.designs];
+    for (const d of src.slice(0, Math.max(0, MAX_DESIGNS - s.designs.length))) {
+      const { driverId: _a, ...rest } = structuredClone(d);
+      designs.push({ ...rest, id: newId(designs), driverId: id, vb_l: Math.round(vbOf(s, d) * 10) / 10 } as DesignState);
+    }
+    return { state: { ...s, designs }, copied: designs.length - s.designs.length, of: src.length };
+  };
   const setD = <K extends keyof AppState>(k: K, v: AppState[K]) =>
     setState((s) => routeDriverEdit(s, drvSel, { ...viewFor(s, drvSel === "A" ? undefined : drvSel), [k]: v }));
   // A line's cone and mouth curves, when switched on.
@@ -703,15 +718,10 @@ export function App(props: { initial: AppState | null }) {
                       const r = addDriver(state, undefined);
                       if (!r) return;
                       // The new driver gets its own copies of driver A's boxes, so the charts compare them straight away.
-                      const room = MAX_DESIGNS - state.designs.length;
-                      const src = state.designs.filter((d) => d.driverId === undefined);
-                      const designs = [...r.state.designs];
-                      for (const d of src.slice(0, Math.max(0, room))) {
-                        const { driverId: _a, ...rest } = structuredClone(d);
-                        designs.push({ ...rest, id: newId(designs), driverId: r.id, vb_l: Math.round(vbOf(state, d) * 10) / 10 } as DesignState);
-                      }
-                      const copied = designs.length - state.designs.length;
-                      setStep({ ...r.state, designs });
+                      const c = withCopiesFor(r.state, r.id);
+                      const copied = c.copied;
+                      const src = { length: c.of };
+                      setStep(c.state);
                       setDrvPick(r.id);
                       notify(
                         `Added driver ${r.id} (a copy of A for now)${copied > 0 ? ` with ${copied === src.length ? "copies of your boxes" : `copies of ${copied} of your boxes (the most there's room for)`}, shown as “· ${r.id}” on the charts` : ""}. Now load or type driver ${r.id}'s values.`,
@@ -722,12 +732,37 @@ export function App(props: { initial: AppState | null }) {
                   </button>
                 )}
               </div>
+              {drvSel === "A" && state.extraDrivers.length > 0 && (
+                <p className="hint">
+                  Editing driver A. Its curves are bold on the charts and the other drivers&rsquo; faint (dashed for B, dotted for C); tap a
+                  driver to bring its curves forward.
+                </p>
+              )}
               {drvSel !== "A" && (
                 <p className="hint">
                   Editing driver {drvSel}.{" "}
-                  {state.designs.filter((d) => d.driverId === drvSel).length === 0
-                    ? "No design uses it yet: pick it in a design on the Boxes tab."
-                    : `Used by ${state.designs.filter((d) => d.driverId === drvSel).map((d) => d.name).join(", ")}.`}{" "}
+                  {state.designs.filter((d) => d.driverId === drvSel).length === 0 ? (
+                    <>
+                      No box uses it yet.{" "}
+                      <button
+                        type="button"
+                        className="link"
+                        disabled={state.designs.length >= MAX_DESIGNS}
+                        onClick={() => {
+                          const c = withCopiesFor(state, drvSel);
+                          setStep(c.state);
+                          notify(c.copied > 0 ? `Copied ${c.copied} box${c.copied > 1 ? "es" : ""} for driver ${drvSel} (“· ${drvSel}” on the charts).` : "No room for more boxes (8 at most).");
+                        }}
+                      >
+                        Copy your boxes for driver {drvSel}
+                      </button>
+                    </>
+                  ) : (
+                    `Its curves are bold on the charts; the other drivers' are faint. Used by ${state.designs
+                      .filter((d) => d.driverId === drvSel)
+                      .map((d) => d.name)
+                      .join(", ")}.`
+                  )}{" "}
                   <button
                     type="button"
                     className="link"
@@ -1314,6 +1349,7 @@ export function App(props: { initial: AppState | null }) {
         <Summary designs={designs} state={state} missing={solved.missing.length > 0} />
 
         {designs.length > 0 && (
+          <ChartEmphasis.Provider value={fadedLabels}>
           <CrosshairProvider>
             <LogChart
               forum
@@ -1379,6 +1415,7 @@ export function App(props: { initial: AppState | null }) {
                         y: step ? valueAt(d.result.freq, rel, f) : -3,
                         color: d.color,
                         label: `F3 ${f < 100 ? f.toFixed(1) : f.toFixed(0)}`,
+                        of: d.label,
                       }));
                     }),
                   }
@@ -1519,6 +1556,7 @@ export function App(props: { initial: AppState | null }) {
               yMax={100}
             />
           </CrosshairProvider>
+          </ChartEmphasis.Provider>
         )}
         {designs.length > 0 && <MeasuredCard measured={state.measured} designs={designs} onChange={(measured) => setStep((s) => ({ ...s, measured }))} />}
 

@@ -4,6 +4,14 @@ import { createContext, useContext, useEffect, useId, useRef, useState, type Poi
  * Shared crosshair: hovering any chart shows the cursor and the values at that
  * frequency on every chart. Only the charts re-render as it moves.
  */
+/**
+ * Curves to play down: a design's label (and its parts, "Name · cone", "Name: …") listed here is
+ * drawn faint, the rest bold. Used to bring one driver's boxes forward when comparing drivers.
+ */
+export const ChartEmphasis = createContext<readonly string[]>([]);
+const fadedBy = (faded: readonly string[], label: string) =>
+  faded.some((f) => label === f || label.startsWith(`${f} `) || label.startsWith(`${f}:`));
+
 const Crosshair = createContext<{ f: number | null; set: (f: number | null) => void } | null>(null);
 
 export function CrosshairProvider({ children }: { children: ReactNode }) {
@@ -53,6 +61,8 @@ export interface Point {
   y: number;
   color: string;
   label: string;
+  /** The curve it belongs to, so it fades with it (see ChartEmphasis). */
+  of?: string;
 }
 
 /** A labelled vertical line at one frequency (e.g. a passive radiator's notch). */
@@ -248,6 +258,7 @@ export function LogChart({
   };
 
   const visible = series.filter((s) => s.y);
+  const faded = useContext(ChartEmphasis);
 
   // Limit strip under the plot: one row per design, then a legend of the kinds shown.
   const ROW = 11 * k;
@@ -386,13 +397,25 @@ export function LogChart({
               />
             ) : null,
           )}
-          {visible.map((s) => (
-            <path key={s.label} d={pathOf(s.y!)} fill="none" stroke={s.color} strokeDasharray={s.dash} opacity={s.thin ? 0.75 : undefined} {...sw(s.thin ? 1.3 : 2)} />
-          ))}
+          {visible.map((s) => {
+            const faint = faded.length > 0 && fadedBy(faded, s.label);
+            const bold = faded.length > 0 && !faint;
+            return (
+              <path
+                key={s.label}
+                d={pathOf(s.y!)}
+                fill="none"
+                stroke={s.color}
+                strokeDasharray={s.dash}
+                opacity={faint ? 0.28 : s.thin ? 0.75 : undefined}
+                {...sw(s.thin ? 1.3 : bold ? 2.8 : 2)}
+              />
+            );
+          })}
           {points
             .filter((pt) => pt.f >= fMin && pt.f <= fMax && Number.isFinite(pt.y))
             .map((pt, i) => (
-              <g key={`${pt.label}-${i}`} className="chart-point">
+              <g key={`${pt.label}-${i}`} className="chart-point" opacity={pt.of && faded.length > 0 && fadedBy(faded, pt.of) ? 0.3 : undefined}>
                 <circle cx={xOf(pt.f)} cy={yOf(pt.y)} r={4 * k} fill={pt.color} stroke="var(--card)" {...sw(1.5)} />
                 <text
                   className="point-label"
