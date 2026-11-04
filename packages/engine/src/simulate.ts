@@ -12,6 +12,7 @@ import {
   portArea,
   portFlare,
   portLossCoefficient,
+  portPipe,
   portMouthArea,
   prFb,
   prGroupsFb,
@@ -104,6 +105,12 @@ export interface SimulationOptions {
    * as Hornresp does. They differ once the mouth is large next to the wavelength.
    */
   splFrom?: "on-axis" | "power";
+  /**
+   * Vented boxes: "lumped" (default, like WinISD) treats each port as a mass of air; "pipe"
+   * treats it as a short pipe with its own resonances (the first near c / 2L), which show as
+   * peaks in the response higher up.
+   */
+  portModel?: "lumped" | "pipe";
   /** Air properties. Default: 20 °C. Use WINISD_AIR to match WinISD exactly. */
   air?: Air;
   /** Amplifier output + cable resistance (Ω), shared by the whole driver bank. Default 0. */
@@ -258,6 +265,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   let fRef = 1;
   let ventZ: ((w: number) => Complex) | null = null; // total of all ports / PRs in parallel
   let ventPortZ: ((w: number) => Complex) | null = null; // one port (vented boxes)
+  let ventPipe: ReturnType<typeof portPipe> | null = null; // ports as pipes: flow out per flow in
   let velocityScale = 1; // throat → where velocity is judged
   let nlCoef = 0; // port compression: extra resistance per unit peak volume velocity
   let reynoldsPerQ = 0; // Reynolds number at the port's ends per unit peak volume velocity
@@ -284,8 +292,15 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const qp = finiteOr(single.qp, DEFAULT_LOSSES.qp);
     const rap = Number.isFinite(qp) ? (2 * Math.PI * fRef * map) / qp : 0;
     ventArea = portArea(single.port);
-    ventZ = (w) => scale(cx(rap, w * map), 1 / ventCount);
-    ventPortZ = (w) => cx(rap, w * map);
+    if (opts.portModel === "pipe") {
+      const pipe = portPipe(single.port, ec, air);
+      ventPipe = pipe;
+      ventZ = (w) => scale(add(cx(rap), pipe(w).zIn), 1 / ventCount);
+      ventPortZ = (w) => add(cx(rap), pipe(w).zIn);
+    } else {
+      ventZ = (w) => scale(cx(rap, w * map), 1 / ventCount);
+      ventPortZ = (w) => cx(rap, w * map);
+    }
     // Peak velocity is judged where the air leaves: the mouths when both ends are flared.
     if (portFlare(single.port).ends === 2) {
       velocityScale = ventArea / portMouthArea(single.port);
@@ -489,6 +504,14 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
 
       // Radiated volume velocity = −(flow into the box air spring).
       u0 = scale(div(pBox, zAir), -1);
+      // A port as a pipe: what leaves its outer end differs from what enters from the box.
+      let pipeOutEach: Complex | null = null;
+      if (ventPipe && zVent) {
+        const uIn = div(pBox, zVent); // all ports
+        const ratio = ventPipe(w).outPerIn;
+        u0 = add(u0, mul(uIn, sub(ratio, cx(1))));
+        pipeOutEach = scale(mul(uIn, ratio), 1 / ventCount);
+      }
 
       if (prModels && out.xprGroups) {
         // Each group sees the box pressure; flow per PR = p / (group impedance × count).
@@ -507,7 +530,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
           out.xpr[i] = xpr * 1000;
         }
         if (out.vport) {
-          vport = ((Math.SQRT2 * abs(uVentEach)) / ventArea) * velocityScale;
+          // A pipe's air moves fastest at whichever end its standing wave puts the motion.
+          const uMax = pipeOutEach ? Math.max(abs(uVentEach), abs(pipeOutEach)) : abs(uVentEach);
+          vport = ((Math.SQRT2 * uMax) / ventArea) * velocityScale;
           out.vport[i] = vport;
         }
       }

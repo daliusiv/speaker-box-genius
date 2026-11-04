@@ -253,12 +253,21 @@ function PortChecks(props: {
     });
   }
 
+  // The box's own lowest standing wave (half a wavelength across its longest inside dimension):
+  // when it lands near the port's pipe resonance it drives the port hard and the port rings.
+  const boxMode = air.c / (2 * (ctx.internalMax_cm ?? cube) / 100);
+  const coincide = Math.abs(boxMode / pipe - 1) < 0.15;
   notes.push({
-    warn: pipe < 300,
-    chip: `Pipe resonance ${pipe.toFixed(0)} Hz`,
+    warn: pipe < 300 || coincide,
+    chip: coincide ? `Pipe resonance ${pipe.toFixed(0)} Hz meets a box mode` : `Pipe resonance ${pipe.toFixed(0)} Hz`,
     text:
-      `Port pipe resonance ≈ ${pipe.toFixed(0)} Hz` +
-      (pipe < 300 ? ". That's low enough to leak midrange through the port; line the port's surroundings or cross over well below it." : "."),
+      `The port is also a pipe open at both ends; it resonates at about ${pipe.toFixed(0)} Hz (and ${(2 * pipe).toFixed(0)}, ${(3 * pipe).toFixed(0)} Hz…), ` +
+      `letting midrange out of the box as a narrow peak.` +
+      (pipe < 300 ? " That's low enough to reach the woofer's working range: cross over well below it, or use a shorter, narrower port." : "") +
+      (coincide
+        ? ` The box's longest inside dimension (${fmt(ctx.internalMax_cm ?? cube, "len")}${ctx.internalMax_cm ? "" : " for a cube"}) has its own standing wave at about ${boxMode.toFixed(0)} Hz, close to it: the box will drive the port hard there. Damping on the walls (and keeping the port's inner end away from the box's middle) helps, or change the port length a little.`
+        : ` The box's own lowest standing wave is about ${boxMode.toFixed(0)} Hz${ctx.internalMax_cm ? "" : " (for a cube)"}.`) +
+      " Settings → Ports → \u201cPipe\u201d draws the port's resonances on the SPL chart (the box's standing waves aren't simulated).",
   });
 
   return <CheckChips notes={notes} />;

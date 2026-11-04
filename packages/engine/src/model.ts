@@ -1,5 +1,5 @@
 import type { LineInput } from "./line.ts";
-import { add, cx, div, mul, type Complex } from "./complex.ts";
+import { add, cx, div, mul, scale, type Complex } from "./complex.ts";
 import { STANDARD_AIR, type Air } from "./constants.ts";
 import { blFromQes, cmsFromVas, mmsFromFsCms } from "./ts.ts";
 
@@ -157,6 +157,35 @@ export function portEffectiveLength(p: PortInput, endCorrection = DEFAULT_END_CO
   const ecPlain = (endCorrection / 2) * d0;
   return straight + flared + ends * ecMouth + (2 - ends) * ecPlain;
 }
+
+/**
+ * One port as a pipe rather than a lumped mass: a uniform tube of the throat's area and the
+ * effective length (end corrections included, so it tunes the box exactly as the lumped port
+ * does), radiating at its outer end. Unlike the lumped mass it has the pipe's own resonances,
+ * the first near c / (2 × effective length), which leak out of the port as peaks.
+ * Returns the impedance looking into the port from the box (without the Qp loss) and the
+ * flow leaving its outer end per unit flow entering.
+ */
+export function portPipe(p: PortInput, endCorrection = DEFAULT_END_CORRECTION, air: Air = STANDARD_AIR) {
+  const L = portEffectiveLength(p, endCorrection);
+  const zc = (air.rho * air.c) / portArea(p);
+  return (w: number): { zIn: Complex; outPerIn: Complex } => {
+    const kl = (w / air.c) * L;
+    const c = Math.cos(kl);
+    const s = Math.sin(kl);
+    // Radiation resistance at the mouth (small-ka limit, the same for any area): ρω² / 2πc.
+    // Its reactance is already in the end correction.
+    const zr = cx((air.rho * w * w) / (2 * Math.PI * air.c));
+    // [p_in; U_in] = [cos, j·zc·sin; j·sin/zc, cos] · [p_out; U_out], p_out = zr·U_out
+    const num = add(scale(zr, c), cx(0, zc * s));
+    const den = add(mul(cx(0, s / zc), zr), cx(c));
+    return { zIn: div(num, den), outPerIn: div(cx(1), den) };
+  };
+}
+
+/** First resonance of a port as a pipe open at both ends (Hz): c / (2 × effective length). */
+export const portPipeResonance = (p: PortInput, endCorrection = DEFAULT_END_CORRECTION, air: Air = STANDARD_AIR) =>
+  air.c / (2 * portEffectiveLength(p, endCorrection));
 
 /** Acoustic mass of one port (kg/m⁴). */
 export function portAcousticMass(p: PortInput, endCorrection = DEFAULT_END_CORRECTION, air: Air = STANDARD_AIR): number {
