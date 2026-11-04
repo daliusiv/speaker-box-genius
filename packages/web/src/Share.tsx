@@ -208,7 +208,15 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
   const W = 1600;
   const pad = 32;
   const colW = (W - pad * 3) / 2;
-  const chartH = Math.round((colW * 260) / 640);
+  // Charts drawn on a phone are taller (nearly 4:3); keep their shape.
+  const ratio = Math.min(
+    ...figures.map((f) => {
+      const vb = f.querySelector("svg")?.viewBox.baseVal;
+      return vb && vb.width > 0 ? vb.height / vb.width : 260 / 640;
+    }),
+    470 / 640,
+  );
+  const chartH = Math.round(colW * (Number.isFinite(ratio) ? ratio : 260 / 640));
   const rows = summaryRows(state, designs);
   const tableTop = 130;
   const rowH = 34;

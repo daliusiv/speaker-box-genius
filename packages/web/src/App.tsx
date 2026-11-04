@@ -1297,6 +1297,7 @@ export function App(props: { initial: AppState | null }) {
             <LogChart
               forum
               best="high"
+              shortTitle={`${splMode === "relative" ? "Response" : "SPL"} · ${driveLabel(state)}${hp.on ? " · high-pass" : ""}`}
               title={`${splMode === "relative" ? "Relative response" : "SPL"} at ${driveLabel(state)}${coilLabel(state)}, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : state.baffle.on ? "free-standing (baffle step)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
               unit="dB"
               freq={freq}
@@ -1383,6 +1384,7 @@ export function App(props: { initial: AppState | null }) {
               forum
               hidden={narrow && chartTab !== "excursion"}
               best="low"
+              shortTitle="Cone excursion"
               title="Cone excursion (peak, one way)"
               unit="mm"
               freq={freq}
@@ -1422,6 +1424,7 @@ export function App(props: { initial: AppState | null }) {
                 forum
                 hidden={chartTab !== "pr"}
                 best="low"
+              shortTitle="PR excursion"
               title="Passive radiator excursion (peak, one way)"
                 unit="mm"
                 freq={freq}
@@ -1435,6 +1438,7 @@ export function App(props: { initial: AppState | null }) {
                 forum
                 hidden={chartTab !== "port"}
                 best="low"
+              shortTitle="Port speed"
               title={`Port air velocity (${state.settings.velocity === "rms" ? "RMS" : "peak"})`}
                 unit="m/s"
                 freq={freq}
@@ -1461,6 +1465,7 @@ export function App(props: { initial: AppState | null }) {
             <LogChart
               hidden={chartTab !== "maxspl"}
               best="high"
+              shortTitle="Max SPL"
               title="Maximum SPL (first limit reached)"
               unit="dB"
               freq={freq}
@@ -1632,6 +1637,7 @@ function portContext(state: AppState, designs: Design[], id: string) {
 
 function Summary({ designs, state, missing, narrow }: { designs: Design[]; state: AppState; missing: boolean; narrow?: boolean }) {
   const [open, setOpen] = useState<string | null>(null);
+  const [folded, setFolded] = useState(true);
   const fmt = (v: number | null | undefined, digits = 1) => (v === null || v === undefined ? "–" : v.toFixed(digits));
   const peak = (a: Float64Array | null, freq: Float64Array, fMin: number) => {
     if (!a) return null;
@@ -1646,9 +1652,36 @@ function Summary({ designs, state, missing, narrow }: { designs: Design[]; state
   // Without a high-pass filter, ignore the subsonic region where excursion runs away.
   const fMin = state.highPass.on ? 10 : 15;
   if (narrow) {
-    // Phones: name, volume, F3 and what (if anything) is over its limit; the rest one tap away.
+    // Phones: folded to one line by default, so the charts start near the top of the screen.
+    // Open: name, volume, F3 and what (if anything) is over its limit; the rest one tap away.
+    const mains = designs.filter((d) => !d.compare);
+    const overCount = mains.filter(({ result: r }) => {
+      const x = peak(r.excursionMm, r.freq, fMin);
+      const vpF = peak(r.portVelocity, r.freq, fMin);
+      const vpR = peak(r.rearPortVelocity, r.freq, fMin);
+      const vp = vpF === null ? vpR : Math.max(vpF, vpR ?? 0);
+      return (x !== null && x > state.xmax_mm) || prPeak(r, fMin)?.over || (vp !== null && vp > PORT_LIMIT);
+    }).length;
+    const f3s = mains.map((d) => d.result.summary.f3).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
     return (
-      <div className="summary">
+      <div className={`summary${folded ? " folded" : ""}`}>
+        <button type="button" className="summary-fold" aria-expanded={!folded} onClick={() => setFolded(!folded)}>
+          <span className="summary-dots" aria-hidden="true">
+            {mains.map((d) => (
+              <span key={d.design.id} className="dot" style={{ background: d.color }} />
+            ))}
+          </span>
+          <span>
+            {mains.length} {mains.length === 1 ? "box" : "boxes"}
+            {f3s.length > 0 && ` · F3 ${fmt(Math.min(...f3s), 0)}${f3s.length > 1 ? `–${fmt(Math.max(...f3s), 0)}` : ""} Hz`}
+          </span>
+          <span className={overCount ? "over" : "muted"}>{overCount ? `⚠ ${overCount} over a limit` : "all OK"}</span>
+          <span className="caret muted" aria-hidden="true">
+            {folded ? "▾" : "▴"}
+          </span>
+        </button>
+        {!folded && (
+        <>
         <table className="summary-compact">
           <thead>
             <tr>
@@ -1725,6 +1758,8 @@ function Summary({ designs, state, missing, narrow }: { designs: Design[]; state
         <p className="hint">
           Tap a row for its details. Peaks above {fMin} Hz.
         </p>
+        </>
+        )}
       </div>
     );
   }

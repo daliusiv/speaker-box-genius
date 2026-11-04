@@ -106,6 +106,8 @@ interface Props {
    * (excursion, port speed) or "zero" (closest to zero: group delay). None: no marker.
    */
   best?: "high" | "low" | "zero";
+  /** A shorter title for phones (the full one shows on a tap). */
+  shortTitle?: string;
   /** Hidden charts stay rendered (the forum image can still use them). */
   hidden?: boolean;
   /** Include this chart in the forum image. */
@@ -113,9 +115,16 @@ interface Props {
 }
 
 const W = 640;
-const H = 260;
-/** Margins around the plot, grown with the text scale k on narrow screens. */
-const padOf = (k: number) => ({ l: 48 + 22 * (k - 1), r: 12 + 16 * (k - 1), t: 22 + 12 * (k - 1), b: 28 + 14 * (k - 1) });
+/** Plot height: wide on computers; nearly 4:3 on phones, where the chart is the main thing on screen. */
+const heightOf = (tall: boolean) => (tall ? 470 : 260);
+/**
+ * Margins around the plot, grown with the text scale k on narrow screens. Phones ("tall") get
+ * lean ones: the unit moves into the values strip, so there's no label row above the plot.
+ */
+const padOf = (k: number, tall: boolean) =>
+  tall
+    ? { l: 34 + 14 * (k - 1), r: 6 + 6 * (k - 1), t: 8 + 6 * (k - 1), b: 20 + 12 * (k - 1) }
+    : { l: 48 + 22 * (k - 1), r: 12 + 16 * (k - 1), t: 22 + 12 * (k - 1), b: 28 + 14 * (k - 1) };
 const X_TICKS = [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000];
 
 function niceStep(range: number): number {
@@ -150,6 +159,7 @@ export function LogChart({
   actions,
   digits = 1,
   best,
+  shortTitle,
   hidden,
   forum,
 }: Props) {
@@ -175,7 +185,11 @@ export function LogChart({
   // data-base-* keep the desktop sizes for the forum image export.
   const fs = (px: number) => ({ style: { fontSize: `${px * k}px` }, "data-base-fs": `${px}px` });
   const sw = (w: number) => ({ strokeWidth: w * k, "data-base-sw": w });
-  const PAD = padOf(k);
+  // Phone-sized (shrunk well below its 640 units): taller, with lean margins.
+  const tall = k > 1.3;
+  const H = heightOf(tall);
+  const PAD = padOf(k, tall);
+  const [fullTitle, setFullTitle] = useState(false);
   const PW = W - PAD.l - PAD.r;
   const PH = H - PAD.t - PAD.b;
 
@@ -313,7 +327,16 @@ export function LogChart({
   return (
     <figure className="chart" hidden={hidden} data-forum={forum ? "" : undefined}>
       <figcaption>
-        <span className="chart-title">{title}</span>
+        {tall && shortTitle && shortTitle !== title ? (
+          <button type="button" className="chart-title as-text" onClick={() => setFullTitle((v) => !v)} title={title} aria-expanded={fullTitle}>
+            {fullTitle ? title : shortTitle}
+            <span className="muted" aria-hidden="true">
+              {fullTitle ? " ▴" : " ▾"}
+            </span>
+          </button>
+        ) : (
+          <span className="chart-title">{title}</span>
+        )}
         {actions}
         <span className="chart-hint muted">Hover or tap for values</span>
       </figcaption>
@@ -364,12 +387,20 @@ export function LogChart({
         {X_TICKS.filter((f) => f >= fMin && f <= fMax).map((f) => (
           <g key={f}>
             <line className="grid" x1={xOf(f)} x2={xOf(f)} y1={PAD.t} y2={PAD.t + PH} />
-            <text className="tick" x={xOf(f)} y={H - 8} textAnchor="middle" {...fs(11)}>
+            <text
+              className="tick"
+              x={xOf(f)}
+              y={H - 8}
+              // At the plot's edges, keep the label inside the chart.
+              textAnchor={tall && xOf(f) > W - PAD.r - 12 * k ? "end" : tall && xOf(f) < PAD.l + 12 * k ? "start" : "middle"}
+              {...fs(11)}
+            >
               {f >= 1000 ? `${f / 1000}k` : f}
             </text>
           </g>
         ))}
-        {yTicks.map((v) => (
+        {/* On phones the lowest y label would sit on the first frequency label: leave it out. */}
+        {yTicks.filter((v) => !(tall && v === yTicks[0])).map((v) => (
           <g key={v}>
             <line className="grid" x1={PAD.l} x2={W - PAD.r} y1={yOf(v)} y2={yOf(v)} />
             <text className="tick" x={PAD.l - 6} y={yOf(v) + 4 * k} textAnchor="end" {...fs(11)}>
@@ -377,9 +408,11 @@ export function LogChart({
             </text>
           </g>
         ))}
-        <text className="tick unit-label" x={PAD.l} y={4 + 8 * k} textAnchor="start" {...fs(11)}>
-          {unit}
-        </text>
+        {!tall && (
+          <text className="tick unit-label" x={PAD.l} y={4 + 8 * k} textAnchor="start" {...fs(11)}>
+            {unit}
+          </text>
+        )}
 
         <g clipPath={`url(#${clipId})`}>
           {limits.map((l, li) => (
@@ -525,7 +558,9 @@ export function LogChart({
       <div className="chart-strip" role="status">
         <div className="strip-head">
           {hover === null ? (
-            <span className="muted">Tap the chart for values</span>
+            <span className="muted">
+              Tap the chart for values{unit ? ` (${unit})` : ""}
+            </span>
           ) : (
             <b>
               {freq[hover]!.toFixed(freq[hover]! < 100 ? 1 : 0)} Hz{unit ? ` · ${unit}` : ""}
