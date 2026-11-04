@@ -1580,7 +1580,7 @@ button.check-chip.open {
 
 .chart-tip .readout-item {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr 0.9rem auto;
   align-items: center;
   gap: 0.4rem;
 }
@@ -2399,6 +2399,12 @@ body.print-build #print-root .fold-chamber {
   min-width: 1.8rem;
   min-height: 1.8rem;
 }
+/* The leader at the tapped frequency: a fixed slot before the value, so nothing shifts. */
+.leader {
+  color: var(--accent);
+  font-size: 0.75em;
+  text-align: center;
+}
 .chart-tip .readout-item.faint {
   opacity: 0.5;
 }
@@ -2455,7 +2461,7 @@ body.print-build #print-root .fold-chamber {
   }
   .chart-strip .strip-item {
     display: grid;
-    grid-template-columns: 1.6rem 1fr auto;
+    grid-template-columns: 1.6rem 1fr 0.9rem auto;
     align-items: center;
     gap: 0.5rem;
   }

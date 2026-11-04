@@ -42,6 +42,8 @@ export interface Series {
   over?: number;
   /** A short note per point, shown in the hover readout (e.g. what limits the design there). */
   notes?: readonly string[];
+  /** Left out when marking the leader (e.g. a measurement, which isn't a box to choose). */
+  noRank?: boolean;
 }
 
 /**
@@ -99,6 +101,11 @@ interface Props {
   /** Controls shown in the caption beside the title (e.g. a view switch). */
   actions?: ReactNode;
   digits?: number;
+  /**
+   * Which value leads at the tapped frequency, marked in the readout: "high" (SPL), "low"
+   * (excursion, port speed) or "zero" (closest to zero: group delay). None: no marker.
+   */
+  best?: "high" | "low" | "zero";
   /** Hidden charts stay rendered (the forum image can still use them). */
   hidden?: boolean;
   /** Include this chart in the forum image. */
@@ -142,6 +149,7 @@ export function LogChart({
   limitStyle = "limit",
   actions,
   digits = 1,
+  best,
   hidden,
   forum,
 }: Props) {
@@ -260,6 +268,28 @@ export function LogChart({
   };
 
   const visible = series.filter((s) => s.y);
+  // The leader at the tapped frequency (ties at the shown precision all lead); only with two or more to rank.
+  const leaders = (() => {
+    const out = new Set<string>();
+    if (!best || hover === null) return out;
+    const ranked = visible.filter((s) => !s.thin && !s.noRank && Number.isFinite(s.y![hover]!));
+    if (ranked.length < 2) return out;
+    const score = (s: Series) => {
+      const v = Number(s.y![hover]!.toFixed(digits));
+      return best === "high" ? v : best === "low" ? -v : -Math.abs(v);
+    };
+    const top = Math.max(...ranked.map(score));
+    for (const s of ranked) if (score(s) === top) out.add(s.label);
+    return out;
+  })();
+  const mark = best === "high" ? "▲" : best === "low" ? "▼" : "◆";
+  const markTitle = best === "high" ? "Highest here" : best === "low" ? "Lowest here" : "Closest to zero here";
+  const leaderMark = (s: Series) => (
+    <span className="leader" title={leaders.has(s.label) ? markTitle : undefined}>
+      {leaders.has(s.label) ? mark : ""}
+      {leaders.has(s.label) && <span className="sr-only">{markTitle}: </span>}
+    </span>
+  );
   const faded = useContext(ChartEmphasis);
 
   // Limit strip under the plot: one row per design, then a legend of the kinds shown.
@@ -305,6 +335,7 @@ export function LogChart({
             <span key={s.label} className={`readout-item${faded.length > 0 && fadedBy(faded, s.label) ? " faint" : ""}`}>
               <span className="swatch" style={{ background: s.color }} aria-hidden="true" />
               <span className="tip-label">{shortName(s.label)}</span>
+              {leaderMark(s)}
               <span className="tip-value">
                 {Number.isFinite(s.y![hover!]!) ? s.y![hover!]!.toFixed(digits) : "–"} {unit}
                 {s.notes?.[hover!] ? ` · ${s.notes[hover!]}` : ""}
@@ -509,6 +540,7 @@ export function LogChart({
                 <line x1="1" y1="4" x2="21" y2="4" stroke={s.color} strokeWidth="3" strokeDasharray={s.dash} strokeLinecap="round" />
               </svg>
               <span className="strip-name">{shortName(s.label)}</span>
+              {leaderMark(s)}
               <span className="strip-value">
                 {hover === null ? "" : Number.isFinite(s.y![hover]!) ? s.y![hover]!.toFixed(digits) : "–"}
               </span>

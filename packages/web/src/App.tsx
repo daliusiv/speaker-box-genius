@@ -1279,6 +1279,7 @@ export function App(props: { initial: AppState | null }) {
           <CrosshairProvider>
             <LogChart
               forum
+              best="high"
               title={`${splMode === "relative" ? "Relative response" : "SPL"} at ${driveLabel(state)}${coilLabel(state)}, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : state.baffle.on ? "free-standing (baffle step)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
               unit="dB"
               freq={freq}
@@ -1364,6 +1365,7 @@ export function App(props: { initial: AppState | null }) {
             <LogChart
               forum
               hidden={narrow && chartTab !== "excursion"}
+              best="low"
               title="Cone excursion (peak, one way)"
               unit="mm"
               freq={freq}
@@ -1402,7 +1404,8 @@ export function App(props: { initial: AppState | null }) {
               <LogChart
                 forum
                 hidden={chartTab !== "pr"}
-                title="Passive radiator excursion (peak, one way)"
+                best="low"
+              title="Passive radiator excursion (peak, one way)"
                 unit="mm"
                 freq={freq}
                 series={prSeries}
@@ -1414,7 +1417,8 @@ export function App(props: { initial: AppState | null }) {
               <LogChart
                 forum
                 hidden={chartTab !== "port"}
-                title={`Port air velocity (${state.settings.velocity === "rms" ? "RMS" : "peak"})`}
+                best="low"
+              title={`Port air velocity (${state.settings.velocity === "rms" ? "RMS" : "peak"})`}
                 unit="m/s"
                 freq={freq}
                 series={[
@@ -1439,6 +1443,7 @@ export function App(props: { initial: AppState | null }) {
             )}
             <LogChart
               hidden={chartTab !== "maxspl"}
+              best="high"
               title="Maximum SPL (first limit reached)"
               unit="dB"
               freq={freq}
@@ -1497,6 +1502,7 @@ export function App(props: { initial: AppState | null }) {
             )}
             <LogChart
               hidden={chartTab !== "delay"}
+              best="zero"
               title="Group delay"
               unit="ms"
               freq={freq}
