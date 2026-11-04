@@ -6,7 +6,7 @@ import { useUnits } from "./units.ts";
 import { encodeStateShort, type AppState, type DesignState } from "./state.ts";
 import { qrSvg } from "./qrDraw.ts";
 
-const KIND: Record<DesignState["kind"], string> = { sealed: "Sealed", vented: "Ported", pr: "Passive radiator", bandpass: "Bandpass" };
+const KIND: Record<DesignState["kind"], string> = { sealed: "Sealed", vented: "Ported", pr: "Passive radiator", bandpass: "Bandpass", line: "Transmission line" };
 
 /** Cutout from the cone area when the database doesn't give one: about 1.12 × the effective cone diameter. */
 const cutoutFromSd = (sd_cm2: number) => Math.round(1.12 * 2 * Math.sqrt(sd_cm2 / Math.PI) * 10);
