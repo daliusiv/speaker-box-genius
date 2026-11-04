@@ -1,124 +1,99 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  addDriver,
+  asCompare,
   compactState,
   DEFAULT_STATE,
   decodeState,
   encodeState,
-  patchDriver,
-  removeDriver,
-  routeDriverEdit,
-  viewFor,
+  swapCompare,
   type AppState,
-  type DesignState,
 } from "../src/state.ts";
-import { runDesigns, solveDriver } from "../src/sim.ts";
+import { COMPARE_DASH, runDesigns, solveDriver } from "../src/sim.ts";
 import { sizeAllForDriver } from "../src/presets.ts";
 
 const roundTrip = (s: AppState) => decodeState(encodeState(s))!;
 const shortTrip = (s: AppState) => decodeState(encodeState(compactState(s) as AppState))!;
 const run = (s: AppState) => runDesigns(s, solveDriver(s));
 
-/** Driver A as is, plus driver B: a different 12" driver. */
-function twoDrivers(): AppState {
-  const r = addDriver(DEFAULT_STATE)!;
-  const s = patchDriver(r.state, r.id, { driverName: "Other 12", ts: { fs: 24, qms: 4, qes: 0.35, vas_l: 120, re: 3.2, sd_cm2: 480 }, xmax_mm: 15 });
-  // The ported design uses B.
-  return { ...s, designs: s.designs.map((d) => (d.kind === "vented" ? { ...d, driverId: "B" } : d)) };
-}
+const OTHER = { ...asCompare(DEFAULT_STATE), driverName: "Other 12", driverBrand: "Acme", ts: { fs: 24, qms: 4, qes: 0.35, vas_l: 120, re: 3.2, sd_cm2: 480 }, xmax_mm: 15 };
+const withCompare = (): AppState => ({ ...DEFAULT_STATE, compare: OTHER });
 
-test("old states and links (one driver) load as driver A, unchanged", () => {
+test("no comparison by default: one run per box, plain names", () => {
+  const r = run(DEFAULT_STATE);
+  assert.equal(DEFAULT_STATE.compare, null);
+  assert.deepEqual(r.map((d) => d.label), DEFAULT_STATE.designs.map((d) => d.name));
+  assert.ok(r.every((d) => !d.compare && d.dash === undefined));
+});
+
+test("a comparison driver adds a dashed run in every box, in the box's colour", () => {
+  const s = withCompare();
+  const r = run(s);
+  const main = r.filter((d) => !d.compare);
+  const vs = r.filter((d) => d.compare);
+  assert.equal(main.length, s.designs.length);
+  assert.equal(vs.length, s.designs.length);
+  vs.forEach((d, i) => {
+    assert.equal(d.dash, COMPARE_DASH);
+    assert.equal(d.color, main[i]!.color);
+    assert.equal(d.design.id, main[i]!.design.id);
+    assert.match(d.label, /vs /);
+  });
+  // Different driver, different curves; the main runs are unchanged.
+  assert.notDeepEqual(Array.from(vs[0]!.result.spl), Array.from(main[0]!.result.spl));
+  run(DEFAULT_STATE).forEach((d, i) => assert.deepEqual(Array.from(d.result.spl), Array.from(main[i]!.result.spl)));
+});
+
+test("the comparison uses the main driver's count and wiring", () => {
+  const two = { ...withCompare(), drivers: { ...withCompare().drivers, count: 2 } } as AppState;
+  const one = run(withCompare()).find((d) => d.compare)!;
+  const both = run(two).find((d) => d.compare)!;
+  assert.notDeepEqual(Array.from(one.result.spl), Array.from(both.result.spl));
+});
+
+test("the comparison travels in long and short links", () => {
+  for (const back of [roundTrip(withCompare()), shortTrip(withCompare())]) {
+    assert.equal(back.compare!.driverName, "Other 12");
+    assert.equal(back.compare!.ts.fs, 24);
+    assert.equal(back.compare!.xmax_mm, 15);
+  }
+  assert.equal(roundTrip(DEFAULT_STATE).compare, null);
+});
+
+test("swap makes the comparison the main driver and back", () => {
+  const s = swapCompare(withCompare());
+  assert.equal(s.driverName, "Other 12");
+  assert.equal(s.ts.fs, 24);
+  assert.equal(s.compare!.driverName, DEFAULT_STATE.driverName);
+  const back = swapCompare(s);
+  assert.equal(back.driverName, DEFAULT_STATE.driverName);
+  assert.deepEqual(back.ts, DEFAULT_STATE.ts);
+  assert.equal(back.compare!.driverName, "Other 12");
+});
+
+test("old A–D links: B becomes the comparison, C and D go, box copies go, hand-moved boxes stay", () => {
   const old = JSON.parse(JSON.stringify(DEFAULT_STATE));
-  delete old.extraDrivers;
+  delete old.compare;
+  const vented = old.designs.find((d: { kind: string }) => d.kind === "vented");
+  old.extraDrivers = [
+    { id: "B", ...OTHER },
+    { id: "C", ...OTHER, driverName: "Third" },
+  ];
+  // A copy of the vented box for B (same kind and name), and the PR box moved to C by hand.
+  old.designs.push({ ...vented, id: "copy", driverId: "B" });
+  old.designs = old.designs.map((d: { kind: string }) => (d.kind === "pr" ? { ...d, driverId: "C" } : d));
   const s = decodeState(encodeState(old))!;
-  assert.deepEqual(s.extraDrivers, []);
-  assert.ok(s.designs.every((d) => d.driverId === undefined));
-  // Same results as before.
-  const a = run(DEFAULT_STATE);
-  const b = run(s);
-  assert.equal(a.length, b.length);
-  a.forEach((x, i) => assert.deepEqual(Array.from(x.result.spl), Array.from(b[i]!.result.spl)));
+  assert.equal(s.compare!.driverName, "Other 12");
+  assert.equal(s.designs.length, DEFAULT_STATE.designs.length);
+  assert.ok(s.designs.every((d) => !("driverId" in d)));
+  assert.ok(s.designs.some((d) => d.kind === "pr"));
+  assert.equal(s.designs.filter((d) => d.kind === "vented").length, 1);
 });
 
-test("a second driver travels in long and short links, with the designs that use it", () => {
-  const s = twoDrivers();
-  for (const back of [roundTrip(s), shortTrip(s)]) {
-    assert.equal(back.extraDrivers.length, 1);
-    assert.equal(back.extraDrivers[0]!.id, "B");
-    assert.equal(back.extraDrivers[0]!.driverName, "Other 12");
-    assert.equal(back.extraDrivers[0]!.ts.fs, 24);
-    assert.equal(back.designs.find((d) => d.kind === "vented")!.driverId, "B");
-    assert.equal(back.designs.find((d) => d.kind === "sealed")!.driverId, undefined);
-  }
-});
-
-test("a design pointing at a driver that isn't there falls back to driver A", () => {
-  const s = { ...DEFAULT_STATE, designs: DEFAULT_STATE.designs.map((d) => ({ ...d, driverId: "C" }) as DesignState) };
-  assert.ok(roundTrip(s).designs.every((d) => d.driverId === undefined));
-});
-
-test("each design runs with its own driver", () => {
-  const s = twoDrivers();
-  const both = run(s);
-  const vented = both.find((d) => d.design.kind === "vented")!;
-  // The same ported design with driver A, and on its own with driver B.
-  const withA = run({ ...s, designs: s.designs.map((d) => ({ ...d, driverId: undefined })) }).find((d) => d.design.kind === "vented")!;
-  const asB = run(viewFor(s, "B")).find((d) => d.design.kind === "vented")!;
-  assert.notDeepEqual(Array.from(vented.result.spl), Array.from(withA.result.spl));
-  assert.deepEqual(Array.from(vented.result.spl), Array.from(asB.result.spl));
-  // The sealed design still uses A.
-  const sealed = both.find((d) => d.design.kind === "sealed")!;
-  assert.deepEqual(Array.from(sealed.result.spl), Array.from(run(DEFAULT_STATE).find((d) => d.design.kind === "sealed")!.result.spl));
-});
-
-test("editing driver B leaves A alone; designs added there use B; A's box details stay", () => {
-  const s = twoDrivers();
-  const view = viewFor(s, "B");
-  const edited = { ...view, xmax_mm: 20, volume: { ...view.volume, driverDisp_l: 9 }, designs: [...view.designs, { ...view.designs[0]!, id: "new1", name: "New" }] };
-  const out = routeDriverEdit(s, "B", edited);
-  assert.equal(out.extraDrivers[0]!.xmax_mm, 20);
-  assert.equal(out.xmax_mm, DEFAULT_STATE.xmax_mm);
-  assert.equal(out.driverName, DEFAULT_STATE.driverName);
-  assert.equal(out.volume.driverDisp_l, s.volume.driverDisp_l);
-  assert.equal(out.designs.find((d) => d.id === "new1")!.driverId, "B");
-  // Editing A is a plain edit.
-  const a = routeDriverEdit(s, "A", { ...s, xmax_mm: 3 });
-  assert.equal(a.xmax_mm, 3);
-  assert.equal(a.extraDrivers[0]!.xmax_mm, 15);
-});
-
-test("removing a driver moves its designs back to A; at most four drivers", () => {
-  const s = removeDriver(twoDrivers(), "B");
-  assert.equal(s.extraDrivers.length, 0);
-  assert.ok(s.designs.every((d) => d.driverId === undefined));
-  let t: AppState = DEFAULT_STATE;
-  const ids: string[] = [];
-  for (let i = 0; i < 4; i++) {
-    const r = addDriver(t);
-    if (!r) break;
-    t = r.state;
-    ids.push(r.id);
-  }
-  assert.deepEqual(ids, ["B", "C", "D"]);
-});
-
-test("Size all boxes sizes each design for its own driver", () => {
-  const s = twoDrivers();
-  const r = sizeAllForDriver(s);
-  const vented = r.state.designs.find((d) => d.kind === "vented")!;
-  const alone = sizeAllForDriver({ ...viewFor(s, "B"), extraDrivers: [], designs: s.designs.map((d) => ({ ...d, driverId: undefined })) });
-  assert.equal(vented.vb_l, alone.state.designs.find((d) => d.kind === "vented")!.vb_l);
-  const sealed = r.state.designs.find((d) => d.kind === "sealed")!;
-  assert.equal(sealed.vb_l, sizeAllForDriver(DEFAULT_STATE).state.designs.find((d) => d.kind === "sealed")!.vb_l);
-});
-
-test("with several drivers the curves say which driver (· A, · B) and B's are dashed; one driver: plain names", () => {
-  const two = run(twoDrivers());
-  assert.deepEqual(two.map((d) => d.label), ["Sealed · A", "Ported · B", "Passive radiators · A"]);
-  assert.equal(two.find((d) => d.design.kind === "vented")!.dash, "7 4");
-  assert.equal(two.find((d) => d.design.kind === "sealed")!.dash, undefined);
-  assert.deepEqual(run(DEFAULT_STATE).map((d) => d.label), DEFAULT_STATE.designs.map((d) => d.name));
+test("presets size for the main driver only", () => {
+  const a = sizeAllForDriver(DEFAULT_STATE).state.designs;
+  const b = sizeAllForDriver(withCompare()).state.designs;
+  assert.deepEqual(a, b);
 });
 
 test("presets no longer go in the name: old names like “Ported QB3” load as “Ported” with a QB3 tag", () => {

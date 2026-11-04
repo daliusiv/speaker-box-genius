@@ -10,8 +10,6 @@ interface DesignBase {
   name: string;
   on: boolean;
   vb_l: number;
-  /** Which driver this design uses: "B", "C" or "D" from AppState.extraDrivers; absent = driver A. */
-  driverId?: string;
   /** The preset it was last sized with (a tag on the card), e.g. "QB3" or "Qtc 0.707". */
   preset?: string;
 }
@@ -221,12 +219,12 @@ export const DRIVER_KEYS = [
   "dvc",
 ] as const;
 export type DriverSlot = Pick<AppState, (typeof DRIVER_KEYS)[number]>;
-/** Driver B, C or D (driver A is the AppState's own driver fields). */
-export interface ExtraDriver extends DriverSlot {
-  id: "B" | "C" | "D";
-}
-export const MAX_DRIVERS = 4;
-const EXTRA_IDS: ExtraDriver["id"][] = ["B", "C", "D"];
+/**
+ * The fields a comparison driver has of its own; how many drivers there are and how they're
+ * loaded and wired stay the main driver's, so the comparison is like for like.
+ */
+export const COMPARE_KEYS = ["driverName", "driverBrand", "nominal_ohms", "ts", "le_mh", "l2_mh", "r2_ohm", "xmax_mm", "pe_w", "dvc"] as const;
+export type CompareDriver = Pick<AppState, (typeof COMPARE_KEYS)[number]>;
 
 export interface AppState {
   v: 3;
@@ -270,8 +268,8 @@ export interface AppState {
   eq: EqItem[];
   /** Measurements overlaid on the charts (travel with the link). */
   measured: MeasuredCurve[];
-  /** Drivers B, C, D to compare (driver A is the fields above); designs pick one with driverId. */
-  extraDrivers: ExtraDriver[];
+  /** A second driver shown in every box (faint, dashed) to compare with the main one; null = none. */
+  compare: CompareDriver | null;
   designs: DesignState[];
   volume: {
     /** Id of the design whose Vb follows the calculator, or "none". */
@@ -434,7 +432,7 @@ export const DEFAULT_STATE: AppState = {
   },
   eq: [],
   measured: [],
-  extraDrivers: [],
+  compare: null,
   designs: defaultDesigns(),
   volume: {
     link: "none",
@@ -747,17 +745,12 @@ function driverSlotFrom(raw: Raw, d: DriverSlot): DriverSlot {
   };
 }
 
-function extraDriversFrom(raw: unknown): ExtraDriver[] {
-  if (!Array.isArray(raw)) return [];
-  const out: ExtraDriver[] = [];
-  for (const x of raw) {
-    if (!x || typeof x !== "object") continue;
-    const id = EXTRA_IDS.includes(x.id) ? (x.id as ExtraDriver["id"]) : EXTRA_IDS.find((k) => !out.some((o) => o.id === k));
-    if (!id || out.some((o) => o.id === id)) continue;
-    out.push({ id, ...driverSlotFrom(x, DEFAULT_STATE) });
-    if (out.length >= MAX_DRIVERS - 1) break;
-  }
-  return out;
+function compareFrom(raw: unknown): CompareDriver | null {
+  if (!raw || typeof raw !== "object") return null;
+  const slot = driverSlotFrom(raw as Raw, DEFAULT_STATE);
+  const out = {} as Record<string, unknown>;
+  for (const k of COMPARE_KEYS) out[k] = slot[k];
+  return out as CompareDriver;
 }
 
 /** Reads state from a URL hash, falling back to defaults for anything missing. */
@@ -769,13 +762,20 @@ export function decodeState(hash: string): AppState | null {
     if (raw.v !== 3) return null;
     const d = DEFAULT_STATE;
     const designs: DesignState[] = [];
-    for (const x of Array.isArray(raw.designs) ? raw.designs.slice(0, MAX_DESIGNS) : []) {
+    // Projects from the short-lived drivers A–D: driver B becomes the comparison; boxes copied for
+    // another driver (same kind and name as one of A's boxes) go, boxes moved to one by hand stay.
+    const olds: Raw[] = Array.isArray(raw.designs) ? raw.designs.slice(0, MAX_DESIGNS) : [];
+    const isCopy = (x: Raw) =>
+      typeof x?.driverId === "string" && olds.some((o) => typeof o?.driverId !== "string" && o?.kind === x.kind && o?.name === x.name);
+    for (const x of olds) {
+      if (isCopy(x)) continue;
       const fixed = fixDesign(x, designs);
-      if (fixed) designs.push(fixed);
+      if (fixed) {
+        delete (fixed as Raw).driverId;
+        designs.push(fixed);
+      }
     }
-    const extraDrivers = extraDriversFrom(raw.extraDrivers);
-    // A design pointing at a driver that isn't there falls back to driver A.
-    for (const x of designs) if (x.driverId !== undefined && !extraDrivers.some((e) => e.id === x.driverId)) delete x.driverId;
+    const compare = compareFrom(raw.compare ?? (Array.isArray(raw.extraDrivers) ? raw.extraDrivers[0] : null));
     return {
       v: 3,
       ...driverSlotFrom(raw, d),
@@ -795,7 +795,7 @@ export function decodeState(hash: string): AppState | null {
         ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf"].includes(e.type)).slice(0, 12)
         : [],
       measured: measuredFrom(raw.measured),
-      extraDrivers,
+      compare,
       designs,
       volume: { ...d.volume, ...raw.volume },
     };
@@ -806,84 +806,23 @@ export function decodeState(hash: string): AppState | null {
 
 
 // ---------------------------------------------------------------------------
-// Several drivers
+// Comparison driver
 // ---------------------------------------------------------------------------
 
-/** The driver fields of driver A (the state's own) or of driver B/C/D. */
-export function driverSlotOf(s: AppState, id?: string): DriverSlot {
-  const x = id ? s.extraDrivers.find((e) => e.id === id) : undefined;
-  if (x) {
-    const { id: _id, ...slot } = x;
-    return slot;
-  }
+/** The state with the comparison driver in place of the main one (same boxes, count and wiring); null without one. */
+export function compareView(s: AppState): AppState | null {
+  return s.compare ? { ...s, ...s.compare } : null;
+}
+
+/** The main driver's own fields, as a comparison driver. */
+export function asCompare(s: AppState): CompareDriver {
   const out = {} as Record<string, unknown>;
-  for (const k of DRIVER_KEYS) out[k] = s[k];
-  return out as DriverSlot;
+  for (const k of COMPARE_KEYS) out[k] = s[k];
+  return out as CompareDriver;
 }
 
-/**
- * The state as one driver sees it: the same settings and designs, with that driver's fields in
- * place of driver A's. Everything that reads "the driver" from the state works per driver with it.
- */
-export function viewFor(s: AppState, id?: string): AppState {
-  if (!id) return s;
-  const x = s.extraDrivers.find((e) => e.id === id);
-  if (!x) return s;
-  const { id: _id, ...slot } = x;
-  return { ...s, ...slot };
-}
-
-/** A design's own view of the state (its driver). */
-export const viewOfDesign = (s: AppState, d: { driverId?: string }) => viewFor(s, d.driverId);
-
-/** Changes some of a driver's fields: driver A's on the state itself, B/C/D's in extraDrivers. */
-export function patchDriver(s: AppState, id: string | undefined, patch: Partial<DriverSlot>): AppState {
-  if (!id || id === "A") return { ...s, ...patch };
-  return { ...s, extraDrivers: s.extraDrivers.map((e) => (e.id === id ? { ...e, ...patch } : e)) };
-}
-
-/** Adds a driver (a copy of `from`, or of driver A) under the next free letter; null when all four are in use. */
-export function addDriver(s: AppState, from?: DriverSlot): { state: AppState; id: ExtraDriver["id"] } | null {
-  const id = EXTRA_IDS.find((k) => !s.extraDrivers.some((e) => e.id === k));
-  if (!id) return null;
-  return { state: { ...s, extraDrivers: [...s.extraDrivers, { id, ...(from ?? driverSlotOf(s)) }] }, id };
-}
-
-/** Removes driver B/C/D; its designs go back to driver A. */
-export function removeDriver(s: AppState, id: string): AppState {
-  return {
-    ...s,
-    extraDrivers: s.extraDrivers.filter((e) => e.id !== id),
-    designs: s.designs.map((d) => (d.driverId === id ? (({ driverId: _x, ...rest }) => rest as DesignState)(d) : d)),
-  };
-}
-
-/** Letter and name of each driver in use: A first. */
-export function driverList(s: AppState): { id: string; name: string }[] {
-  return [{ id: "A", name: s.driverName }, ...s.extraDrivers.map((e) => ({ id: e.id, name: e.driverName }))];
-}
-
-/**
- * Applies an edit made on driver `sel`'s view (see viewFor) back to the real state: the
- * driver fields go into that driver's slot, everything else as it was edited. Box-level
- * driver details (displacement, cutout) stay with driver A's box; designs the edit adds use
- * driver `sel`.
- */
-export function routeDriverEdit(prev: AppState, sel: string, next: AppState): AppState {
-  if (!sel || sel === "A" || !prev.extraDrivers.some((e) => e.id === sel)) return next;
-  const slot = {} as Record<string, unknown>;
-  const keepA = {} as Record<string, unknown>;
-  for (const k of DRIVER_KEYS) {
-    slot[k] = next[k];
-    keepA[k] = prev[k];
-  }
-  const known = new Set(prev.designs.map((d) => d.id));
-  const base: AppState = {
-    ...next,
-    ...(keepA as Partial<AppState>),
-    extraDrivers: prev.extraDrivers,
-    volume: prev.volume,
-    designs: next.designs.map((d) => (known.has(d.id) ? d : { ...d, driverId: sel })),
-  };
-  return patchDriver(base, sel, slot as Partial<DriverSlot>);
+/** The comparison driver becomes the main one, and the main one the comparison. */
+export function swapCompare(s: AppState): AppState {
+  if (!s.compare) return s;
+  return { ...s, ...s.compare, compare: asCompare(s) };
 }

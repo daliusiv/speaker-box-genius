@@ -49,6 +49,8 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
   note?: ReactNode;
   /** Number on the button, if not every row (e.g. real PRs, not drivers offered as PRs). */
   count?: number;
+  /** Leave out the "Missing one?" link (shown once is enough). */
+  hideMissing?: boolean;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const searchBox = useRef<HTMLInputElement>(null);
@@ -115,9 +117,11 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
       <button type="button" className="browse" onClick={open} disabled={props.rows.length === 0}>
         {props.button} <span className="count">{props.count ?? props.rows.length}</span>
       </button>
-      <a href={`${REPO}/blob/main/CONTRIBUTING.md`} title="Add a driver or passive radiator to the database">
-        Missing one?
-      </a>
+      {!props.hideMissing && (
+        <a href={`${REPO}/blob/main/CONTRIBUTING.md`} title="Add a driver or passive radiator to the database">
+          Missing one?
+        </a>
+      )}
       <dialog
         ref={dlg}
         className="library"
@@ -326,7 +330,7 @@ const QTS_BANDS: { value: string; text: string; lo: number; hi: number }[] = [
   { value: "high", text: "> 0.5", lo: 0.5, hi: Infinity },
 ];
 
-export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onPick: (id: string) => void }) {
+export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onPick: (id: string) => void; button?: string; title?: string; hideMissing?: boolean }) {
   const units = useUnits();
   const vol = units.unit("vol");
   const rows = props.rows ?? [];
@@ -396,8 +400,9 @@ export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onP
 
   return (
     <Browser
-      button="Browse drivers"
-      title="Driver database"
+      button={props.button ?? "Browse drivers"}
+      title={props.title ?? "Driver database"}
+      hideMissing={props.hideMissing}
       rows={rows}
       columns={columns}
       filters={filters}

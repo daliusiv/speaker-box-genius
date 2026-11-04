@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useId, useRef, useState, type Poi
  */
 /**
  * Curves to play down: a design's label (and its parts, "Name · cone", "Name: …") listed here is
- * drawn faint, the rest bold. Used to bring one driver's boxes forward when comparing drivers.
+ * drawn faint, the rest bold. Used for the comparison driver's curves, behind the main driver's.
  */
 export const ChartEmphasis = createContext<readonly string[]>([]);
 const fadedBy = (faded: readonly string[], label: string) =>
@@ -302,7 +302,7 @@ export function LogChart({
         >
           <b>{freq[hover]!.toFixed(1)} Hz</b>
           {visible.map((s) => (
-            <span key={s.label} className="readout-item">
+            <span key={s.label} className={`readout-item${faded.length > 0 && fadedBy(faded, s.label) ? " faint" : ""}`}>
               <span className="swatch" style={{ background: s.color }} aria-hidden="true" />
               <span className="tip-label">{shortName(s.label)}</span>
               <span className="tip-value">

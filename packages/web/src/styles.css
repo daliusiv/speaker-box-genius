@@ -2376,26 +2376,44 @@ body.print-build #print-root .fold-chamber {
   }
 }
 
-/* Drivers A–D */
-.driver-chips {
+/* Compare with another driver */
+.compare-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
   margin: 0 0 0.6rem;
 }
-.driver-chips .chip b {
-  margin-right: 0.15rem;
+.compare-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.6rem;
+  margin: 0;
+  padding: 0.3rem 0.6rem;
+  border: 1px dashed var(--border, color-mix(in srgb, var(--muted) 45%, transparent));
+  border-radius: 8px;
+  font-size: 0.9rem;
 }
-.driver-tag {
-  flex: none;
-  min-width: 1.4rem;
-  padding: 0.05rem 0.4rem;
-  border: 1px solid var(--accent);
-  border-radius: 999px;
-  color: var(--accent);
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-align: center;
+.compare-strip .icon {
+  min-width: 1.8rem;
+  min-height: 1.8rem;
+}
+.chart-tip .readout-item.faint {
+  opacity: 0.5;
+}
+.summary-vs {
+  opacity: 0.6;
+  font-size: 0.9em;
+}
+.summary-vs th span:last-child {
+  padding-left: 0.4rem;
+}
+.dot-vs,
+.swatch-vs {
+  background: transparent !important;
+  border: 2px dashed;
+  box-sizing: border-box;
 }
 .preset-tag {
   flex: none;
