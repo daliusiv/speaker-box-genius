@@ -28,7 +28,7 @@ Results match **WinISD** to within 0.01 dB for ported and sealed boxes, and box 
 There are two ways to help:
 
 1. **Add drivers and passive radiators.** No coding needed. Use the [new driver form](../../issues/new?template=new-driver.yml) and copy the numbers from the manufacturer's datasheet. See [`drivers/README.md`](drivers/README.md).
-2. **Work on the code.** See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+2. **Work on the code.** See [`CONTRIBUTING.md`](CONTRIBUTING.md). Code and docs contributions need a one-time [Contributor License Agreement](CLA.md), signed with a comment on your first pull request; adding drivers doesn't.
 
 ## Development
 
