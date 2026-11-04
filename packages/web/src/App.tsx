@@ -892,6 +892,8 @@ export function App(props: { initial: AppState | null }) {
                 vb_l={vbOf(state, d)}
                 linked={state.volume.link === d.id}
                 lineFb={d.kind === "line" ? (designs.find((x) => x.design.id === d.id)?.result.summary.fb ?? null) : undefined}
+                driverDisp_l={state.volume.driverDisp_l * state.drivers * (state.isobaric ? 2 : 1)}
+                wall_mm={state.volume.wall_mm}
                 canDelete={state.designs.length > 1}
                 db={db}
                 air={airOf(state)}

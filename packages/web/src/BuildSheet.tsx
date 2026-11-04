@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { braceVolume, cutList, layoutSheets, piecesOf, type CutList, type Layout } from "@sbg/engine";
-import { Card, Num, REPO } from "./components.tsx";
-import { linkedDesign, prTotal, volumeFor, type Design } from "./sim.ts";
+import { Card, Num, REPO, Select } from "./components.tsx";
+import { lineFoldOf, lineLength, linkedDesign, prTotal, volumeFor, type Design } from "./sim.ts";
 import { useUnits } from "./units.ts";
-import { encodeStateShort, type AppState, type DesignState } from "./state.ts";
+import { encodeStateShort, type AppState, type DesignState, type LineDesign } from "./state.ts";
 import { qrSvg } from "./qrDraw.ts";
 
 const KIND: Record<DesignState["kind"], string> = { sealed: "Sealed", vented: "Ported", pr: "Passive radiator", bandpass: "Bandpass", line: "Transmission line" };
@@ -42,6 +42,10 @@ export function BuildSheet(props: {
   const len = (mm: number) => (system === "imperial" ? inches(mm) : `${Math.round(mm)}`);
   const lenUnit = system === "imperial" ? "" : " mm";
   const d = linkedDesign(s);
+  // What to build: the calculator's box, or one of the transmission lines folded into a box.
+  const lines = s.designs.filter((x): x is LineDesign => x.kind === "line");
+  const [what, setWhat] = useState<string>("box");
+  const line = lines.find((x) => x.id === what) ?? null;
 
   // Print just the sheet: a copy goes straight under <body>, everything else is hidden while printing.
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -74,10 +78,23 @@ export function BuildSheet(props: {
     window.print();
   };
 
-  if (v.shape !== "box") {
+  const chooser =
+    lines.length > 0 ? (
+      <div className="fields">
+        <Select<string>
+          label="What to build"
+          value={line ? line.id : "box"}
+          options={[{ value: "box", text: "The box in the volume calculator" }, ...lines.map((x) => ({ value: x.id, text: `${x.name} (folded line)` }))]}
+          onChange={setWhat}
+        />
+      </div>
+    ) : null;
+
+  if (!line && v.shape !== "box") {
     return (
       <Card title="Cut list">
-        <p className="hint">The cut list is for box-shaped enclosures. Choose “Box” as the shape in the volume calculator.</p>
+        {chooser}
+        <p className="hint">The cut list is for box-shaped enclosures. Choose “Box” as the shape in the volume calculator{lines.length ? ", or pick a transmission line above" : ""}.</p>
       </Card>
     );
   }
@@ -85,10 +102,14 @@ export function BuildSheet(props: {
   const drivers = s.drivers * (s.isobaric ? 2 : 1);
   const onBaffle = s.isobaric ? s.drivers : drivers;
   const driverCutout = v.driverCutout_mm > 0 ? v.driverCutout_mm : props.driverSd_cm2 ? cutoutFromSd(props.driverSd_cm2) : 0;
-  const prCount = d?.kind === "pr" ? prTotal(d) : 0;
+  const prCount = !line && d?.kind === "pr" ? prTotal(d) : 0;
   const prCutout = d?.kind === "pr" ? (v.prCutout_mm > 0 ? v.prCutout_mm : cutoutFromSd(d.params.sd_cm2)) : 0;
   const port: { count: number; length: number; holeDiameter?: number; slot?: { width: number; height: number } } | undefined =
-    d?.kind === "vented"
+    line
+      ? line.end === "port"
+        ? { count: 1, length: line.portLength_cm * 10 }
+        : undefined
+      : d?.kind === "vented"
       ? {
           count: d.count,
           length: d.length_cm * 10,
@@ -98,7 +119,23 @@ export function BuildSheet(props: {
         }
       : undefined;
 
-  const c: CutList = cutList({
+  let fold: ReturnType<typeof lineFoldOf> | null = null;
+  if (line) {
+    try {
+      fold = lineFoldOf(line, v.wall_mm, driverCutout > 0 ? driverCutout : undefined);
+    } catch {
+      fold = null;
+    }
+  }
+  if (line && !fold) {
+    return (
+      <Card title="Cut list">
+        {chooser}
+        <p className="warn">This line can't be folded with these settings: check its sections and the fold width.</p>
+      </Card>
+    );
+  }
+  const c: CutList = fold ? fold.cut : cutList({
     width: v.width_cm * 10,
     height: v.height_cm * 10,
     depth: v.depth_cm * 10,
@@ -109,12 +146,14 @@ export function BuildSheet(props: {
   });
   const layout: Layout = layoutSheets(piecesOf(c), v.sheetW_mm, v.sheetH_mm, v.kerf_mm);
   const vol = volumeFor(s, d);
-  const sim = d ? props.designs.find((x) => x.design.id === d.id) : undefined;
+  const sim = line ? props.designs.find((x) => x.design.id === line.id) : d ? props.designs.find((x) => x.design.id === d.id) : undefined;
+  const outside = fold ? fold.outside : { width: v.width_cm * 10, height: v.height_cm * 10, depth: v.depth_cm * 10 };
   const braceL = braceVolume(c.braces, v.wall_mm);
   const bracingL = vol.deductions.find((x) => x.label.startsWith("Bracing"))?.litres ?? 0;
 
   return (
     <Card title="Cut list">
+      {chooser}
       <div className="build-sheet" ref={sheetRef}>
         <div className="print-only build-title">
           <div>
@@ -124,7 +163,15 @@ export function BuildSheet(props: {
           <div className="build-qr" />
         </div>
         <p className="build-summary">
-          {d ? (
+          {line ? (
+            <>
+              <b>{line.name}</b>
+              {line.name.toLowerCase().startsWith("transmission line") ? "" : " (transmission line)"}
+              {line.end === "tapped" ? ", a tapped horn," : line.end === "port" ? ", mass-loaded," : ""} with {s.drivers} × {props.driverName || "driver"}
+              {sim?.result.summary.fb ? `, tuned to ${sim.result.summary.fb.toFixed(1)} Hz` : ""}. Line {Math.round(lineLength(line))} cm long, folded into {fold!.runs.length} run
+              {fold!.runs.length === 1 ? "" : "s"}.
+            </>
+          ) : d ? (
             <>
               <b>{d.name}</b>
               {d.name.toLowerCase().startsWith(KIND[d.kind].toLowerCase()) ? "" : ` (${KIND[d.kind].toLowerCase()})`} with {drivers} × {props.driverName || "driver"}
@@ -137,9 +184,10 @@ export function BuildSheet(props: {
           )}
         </p>
         <p className="hint">
-          Outside {len(v.width_cm * 10)} × {len(v.height_cm * 10)} × {len(v.depth_cm * 10)}
+          Outside {len(outside.width)} × {len(outside.height)} × {len(outside.depth)}
           {lenUnit} (W × H × D), {len(v.wall_mm)}
           {lenUnit} walls. Front and back cover the full size, top and bottom fit between them, the sides fit inside all four.
+          {fold && fold.runs.length > 1 ? " Dividers run the full inside width, glued between the sides, alternately from the top and the bottom; set each from the front as listed below." : ""}
         </p>
 
         <table className="cut-table">
@@ -173,7 +221,7 @@ export function BuildSheet(props: {
 
         {(c.holes.length > 0 || port) && (
           <>
-            <h3>Holes{port ? " and port" : ""}</h3>
+            <h3>{fold ? "Holes and assembly" : `Holes${port ? " and port" : ""}`}</h3>
             <ul className="build-list">
               {c.holes.map((h) => (
                 <li key={h.name}>
@@ -185,7 +233,15 @@ export function BuildSheet(props: {
               {port && port.length > 0 && (
                 <li>
                   {port.count} × port {port.slot ? "channel" : "tube"}, cut to <b>{len(port.length)}{lenUnit}</b> long
-                  {!port.slot && d?.kind === "vented" && (
+                  {line?.end === "port" && (
+                    <span className="hint">
+                      {" "}
+                      (inside ⌀ {len(line.portDiameter_cm * 10)}
+                      {lenUnit}
+                      {line.portFlare_cm > 0 ? `, flared ${len(line.portFlare_cm * 10)}${lenUnit} radius at both ends` : ""})
+                    </span>
+                  )}
+                  {!line && !port.slot && d?.kind === "vented" && (
                     <span className="hint">
                       {" "}
                       (inside ⌀ {len(d.diameter_cm * 10)}
@@ -195,8 +251,27 @@ export function BuildSheet(props: {
                   )}
                 </li>
               )}
+              {fold &&
+                fold.runs.slice(0, -1).map((r, k) => (
+                  <li key={`div${k}`}>
+                    Divider {k + 1}: its face <b>{len(fold!.runs.slice(0, k + 1).reduce((a, x) => a + x.depth, 0) + k * v.wall_mm)}{lenUnit}</b> behind the inside of the front, leaving a{" "}
+                    {len(fold!.gaps[k]!)}
+                    {lenUnit} gap at the {r.down ? "bottom" : "top"}
+                  </li>
+                ))}
+              {line?.end === "tapped" && <li>Tapped horn: the driver mounts on an inner panel; its front opens into the line at the tap, {Math.round(line.tapAt_cm)} cm along. Plan this by hand: the cut list shows the outer box and dividers only.</li>}
+              {line && line.sections.some((x) => x.fill_kgm3 > 0) && (
+                <li>
+                  Stuffing:{" "}
+                  {line.sections
+                    .map((x, k) => (x.fill_kgm3 > 0 ? `section ${k + 1} at ${x.fill_kgm3} kg/m³` : null))
+                    .filter(Boolean)
+                    .join(", ")}
+                  , loosely and evenly.
+                </li>
+              )}
               {s.isobaric && <li>Isobaric: the second driver of each pair mounts on an inner baffle, face to face or behind the first.</li>}
-              {d?.kind === "bandpass" && <li>Bandpass: add the divider between the chambers; the panels above are the outer box only.</li>}
+              {!line && d?.kind === "bandpass" && <li>Bandpass: add the divider between the chambers; the panels above are the outer box only.</li>}
             </ul>
             {(v.driverCutout_mm === 0 && driverCutout > 0) || (prCount > 0 && v.prCutout_mm === 0) ? (
               <p className="hint">Cutouts marked from the cone area are estimates: check the datasheet before cutting.</p>

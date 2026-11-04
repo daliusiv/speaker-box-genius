@@ -19,3 +19,4 @@ export * from "./cutlist.ts";
 export * from "./qr.ts";
 export * from "./baffle.ts";
 export * from "./line.ts";
+export * from "./linefold.ts";

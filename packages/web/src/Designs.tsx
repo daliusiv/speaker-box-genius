@@ -885,6 +885,9 @@ export function DesignCard(props: {
   onPrPhysical: (x: PrPhysical) => void;
   /** Transmission lines: simulated tuning. */
   lineFb?: number | null;
+  /** Transmission lines: all the drivers' displacement (L) and the wall thickness (mm). */
+  driverDisp_l?: number;
+  wall_mm?: number;
 }) {
   const d = props.design;
   const common = {
@@ -919,6 +922,9 @@ export function DesignCard(props: {
           drivers={props.drivers}
           fb={props.lineFb ?? null}
           exitVelocity={props.portCtx.portVelocity}
+          compression={props.portCtx.portCompression ?? null}
+          driverDisp_l={props.driverDisp_l ?? 0}
+          wall_mm={props.wall_mm ?? 18}
         />
       )}
       {d.kind === "pr" && (

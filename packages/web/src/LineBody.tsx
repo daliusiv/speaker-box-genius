@@ -1,57 +1,63 @@
-import { useState } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import { simulate, type AlignmentDriver, type DriverInput, type SimulationOptions } from "@sbg/engine";
 import { Fixed, Num, Select } from "./components.tsx";
-import { lineInputOf, lineVolume, PORT_LIMIT } from "./sim.ts";
+import { lineFoldOf, lineInputOf, lineLength, lineVolume, PORT_LIMIT } from "./sim.ts";
 import { ventedAlignmentFor } from "./presets.ts";
-import type { LineDesign } from "./state.ts";
+import { bestLine, type LineBest, type LineGoal } from "./lineopt.ts";
+import type { LineDesign, LineSection } from "./state.ts";
 
 const f1 = (v: number | null | undefined) => (v === null || v === undefined || !Number.isFinite(v) ? "–" : v.toFixed(1));
 const C = 343;
+const r1 = (x: number) => Math.round(x * 10) / 10;
+const MAX_SECTIONS = 4;
 
 /** Tuning of a line design, by simulation (impedance minimum between the first two peaks). */
-export function lineTuning(driver: DriverInput, d: LineDesign, sim: SimulationOptions): number | null {
+export function lineTuning(driver: DriverInput, d: LineDesign, sim: SimulationOptions, wall_mm = 18): number | null {
   try {
-    const r = simulate(driver, lineInputOf(d), { ...sim, fMin: 8, fMax: 400, points: 260, highPass: null, eq: [] });
+    const r = simulate(driver, lineInputOf(d, wall_mm), { ...sim, fMin: 8, fMax: 400, points: 260, highPass: null, eq: [] });
     return r.summary.fb ?? null;
   } catch {
     return null;
   }
 }
 
+/** The design with every length along the line scaled by k (sections, driver, tap). */
+const scaled = (d: LineDesign, k: number): LineDesign => ({
+  ...d,
+  sections: d.sections.map((x) => ({ ...x, length_cm: x.length_cm * k })),
+  driverAt_cm: d.driverAt_cm * k,
+  tapAt_cm: d.tapAt_cm * k,
+});
+
 /**
- * Change one setting until the line tunes to `target`: the whole line's length (driver
- * position and stuffing scale with it) for an open line, the port length for a
- * mass-loaded one. Bisection on the simulated tuning.
+ * Change one setting until the line tunes to `target`: the line's length (sections,
+ * driver and tap scale with it) for open lines and tapped horns, the port length for a
+ * mass-loaded line. Steps out from the current size until bracketed, then bisects.
  */
-export function tuneLine(driver: DriverInput, d: LineDesign, target: number, sim: SimulationOptions): LineDesign | string {
-  const withScale = (k: number): LineDesign =>
-    d.port
-      ? { ...d, portLength_cm: k }
-      : { ...d, length_cm: d.length_cm * k, driverAt_cm: d.driverAt_cm * k, fillLength_cm: d.fillLength_cm * k };
-  const fbAt = (k: number) => lineTuning(driver, withScale(k), sim);
-  // Start from where the line is now and step outward until the target is bracketed
-  // (longer = lower in both cases); far from home the first impedance dip can jump to a
-  // higher-order resonance, so stay local.
-  const k0 = d.port ? Math.max(d.portLength_cm, 1) : 1;
+export function tuneLine(driver: DriverInput, d: LineDesign, target: number, sim: SimulationOptions, wall_mm = 18): LineDesign | string {
+  const port = d.end === "port";
+  const withK = (k: number): LineDesign => (port ? { ...d, portLength_cm: k } : scaled(d, k));
+  const fbAt = (k: number) => lineTuning(driver, withK(k), sim, wall_mm);
+  const k0 = port ? Math.max(d.portLength_cm, 1) : 1;
   const f0 = fbAt(k0);
-  if (f0 === null) return "The tuning can't be found for this line: check its sizes.";
+  if (f0 === null) return "The tuning can't be found for this line (no clear impedance dip): check its sizes.";
   const step = 1.25;
-  let lo = k0; // tunes above target (too short)
-  let hi = k0; // tunes below target (too long)
+  let lo = k0;
+  let hi = k0;
   if (f0 > target) {
     for (let i = 0; ; i++) {
-      hi = hi * step;
+      hi *= step;
       const f = fbAt(hi);
       if (f !== null && f <= target) break;
-      if (i > 12 || f === null) return d.port ? `No port length up to ${Math.round(hi)} cm tunes down to ${target} Hz: use a narrower port or a bigger line.` : `${target} Hz needs a much longer line; check the driver and the areas.`;
+      if (i > 12 || f === null) return port ? `No port length up to ${Math.round(hi)} cm tunes down to ${target} Hz: use a narrower port or a bigger line.` : `${target} Hz needs a much longer line; check the driver and the areas.`;
       lo = hi;
     }
   } else {
     for (let i = 0; ; i++) {
-      lo = lo / step;
+      lo /= step;
       const f = fbAt(lo);
       if (f !== null && f >= target) break;
-      if (i > 12 || f === null || (d.port && lo < 0.3)) return d.port ? `Even a very short port tunes below ${target} Hz: use a wider port or a smaller line.` : `${target} Hz needs a much shorter line; check the driver and the areas.`;
+      if (i > 12 || f === null || (port && lo < 0.3)) return port ? `Even a very short port tunes below ${target} Hz: use a wider port or a smaller line.` : `${target} Hz needs a much shorter line; check the driver and the areas.`;
       hi = lo;
     }
   }
@@ -62,41 +68,61 @@ export function tuneLine(driver: DriverInput, d: LineDesign, target: number, sim
     if (f > target) lo = mid;
     else hi = mid;
   }
-  return withScale(Math.sqrt(lo * hi));
+  const out = withK(Math.sqrt(lo * hi));
+  return {
+    ...out,
+    sections: out.sections.map((x) => ({ ...x, length_cm: r1(x.length_cm) })),
+    driverAt_cm: r1(out.driverAt_cm),
+    tapAt_cm: r1(out.tapAt_cm),
+    portLength_cm: r1(out.portLength_cm),
+  };
 }
 
-type PresetId = "tl" | "tqwt" | "otl" | "mltl";
+type PresetId = "tl" | "tqwt" | "otl" | "mltl" | "th";
 
 const PRESETS: { id: PresetId; label: string; title: string }[] = [
   { id: "tl", label: "Classic TL", title: "Tapered line, driver at the closed end, stuffed for two thirds; tuned to Fs" },
   { id: "tqwt", label: "TQWT", title: "Tapered quarter-wave tube (Voigt pipe): narrow closed end opening to a wide mouth, driver a third along, lightly stuffed" },
   { id: "otl", label: "Offset TL", title: "Straight line with the driver a fifth of the way along (suppresses the 5th harmonic), stuffed behind the driver" },
   { id: "mltl", label: "MLTL", title: "Mass-loaded line: straight, driver about a quarter along, port at the mouth; tuned like a vented box" },
+  { id: "th", label: "Tapped horn", title: "Starting point: expanding horn, driver's rear at the closed end, front tapped in 45 % along; tuned near Fs" },
 ];
+
+/** Split [0, L] into stuffed and empty sections along a taper from s1 to s2. */
+function twoPart(L: number, s1: number, s2: number, stuffedTo: number, fill: number): { closedArea_cm2: number; sections: LineSection[] } {
+  const at = (t: number) => r1(s1 + (s2 - s1) * t);
+  const sections: LineSection[] = [];
+  if (stuffedTo > 0) sections.push({ length_cm: r1(stuffedTo), endArea_cm2: at(stuffedTo / L), taper: "linear", fill_kgm3: fill });
+  if (L - stuffedTo > 0) sections.push({ length_cm: r1(L - stuffedTo), endArea_cm2: r1(s2), taper: "linear", fill_kgm3: 0 });
+  return { closedArea_cm2: r1(s1), sections };
+}
 
 /** A preset sized for the driver, before tuning. */
 function presetFor(id: PresetId, d: LineDesign, driver: DriverInput, align: AlignmentDriver | null, drivers: number): LineDesign | string {
   const sd = driver.sd_cm2 * drivers;
   const lq = (C / (4 * driver.fs)) * 100; // quarter wave at Fs, cm
-  const r = (x: number) => Math.round(x * 10) / 10;
+  // Fold width: room for the driver's cutout (about 1.12 × the cone diameter) plus a margin.
+  const width_cm = Math.max(d.fold.width_cm, Math.ceil(1.12 * 2 * Math.sqrt(driver.sd_cm2 / Math.PI) + 3));
+  const base = { ...d, portFlare_cm: 0, fold: { ...d.fold, width_cm } };
   switch (id) {
     case "tl":
-      return { ...d, port: false, taper: "linear", closedArea_cm2: r(1.25 * sd), mouthArea_cm2: r(0.8 * sd), length_cm: r(lq), driverAt_cm: 0, fill_kgm3: 8, fillLength_cm: r((lq * 2) / 3), targetFb: r(driver.fs) };
+      return { ...base, end: "open", ...twoPart(lq, 1.25 * sd, 0.8 * sd, (lq * 2) / 3, 8), driverAt_cm: 0, targetFb: r1(driver.fs) };
     case "tqwt":
-      return { ...d, port: false, taper: "linear", closedArea_cm2: r(0.3 * sd), mouthArea_cm2: r(3 * sd), length_cm: r(lq), driverAt_cm: r(lq / 3), fill_kgm3: 4, fillLength_cm: r(lq / 3), targetFb: r(driver.fs * 0.9) };
+      return { ...base, end: "open", ...twoPart(lq, 0.3 * sd, 3 * sd, lq / 3, 4), driverAt_cm: r1(lq / 3), targetFb: r1(driver.fs * 0.9) };
     case "otl":
-      return { ...d, port: false, taper: "linear", closedArea_cm2: r(1.5 * sd), mouthArea_cm2: r(1.5 * sd), length_cm: r(lq), driverAt_cm: r(lq / 5), fill_kgm3: 6, fillLength_cm: r(lq / 3), targetFb: r(driver.fs) };
+      return { ...base, end: "open", ...twoPart(lq, 1.5 * sd, 1.5 * sd, lq / 3, 6), driverAt_cm: r1(lq / 5), targetFb: r1(driver.fs) };
     case "mltl": {
       const a = align ? ventedAlignmentFor(align, drivers) : null;
       if (!a) return "This driver's Qts is above 0.6: a mass-loaded line (like a ported box) doesn't suit it. Try a classic TL or TQWT.";
-      // Long and slim, as MLTLs are built: about 0.4 of a quarter wave at the tuning, holding
-      // about 1.5 × the matching ported box's volume (the line's own losses need more room).
+      // Long and slim: about 0.4 of a quarter wave at the tuning, holding about 1.5 × the
+      // matching ported box's volume (the line's own losses need more room).
       const L = 0.4 * (C / (4 * a.fb)) * 100;
       const area = (1.5 * a.vb_l * 1000) / L;
-      // Port area about a fifth of the cone area for a start.
       const portD = 2 * Math.sqrt((0.2 * sd) / Math.PI);
-      return { ...d, port: true, taper: "linear", closedArea_cm2: r(area), mouthArea_cm2: r(area), length_cm: r(L), driverAt_cm: r(L / 4), fill_kgm3: 4, fillLength_cm: r(L / 2), portDiameter_cm: r(portD), portLength_cm: 10, targetFb: r(a.fb) };
+      return { ...base, end: "port", ...twoPart(L, area, area, L / 2, 4), driverAt_cm: r1(L / 4), portDiameter_cm: r1(portD), portLength_cm: 10, targetFb: r1(a.fb) };
     }
+    case "th":
+      return { ...base, end: "tapped", ...twoPart(lq, sd, 4 * sd, 0, 0), driverAt_cm: 0, tapAt_cm: r1(0.45 * lq), targetFb: r1(driver.fs) };
   }
 }
 
@@ -106,26 +132,42 @@ function LineDrawing({ d }: { d: LineDesign }) {
   const H = 124;
   const mid = 70;
   const x0 = 16;
-  const span = W - 2 * x0 - (d.port ? 30 : 0);
-  const maxA = Math.max(d.closedArea_cm2, d.mouthArea_cm2, 1);
+  const span = W - 2 * x0 - (d.end === "port" ? 30 : 0);
+  const L = Math.max(lineLength(d), 1);
+  const areas = [d.closedArea_cm2, ...d.sections.map((x) => x.endArea_cm2)];
+  const maxA = Math.max(...areas, 1);
   const half = (a: number) => (Math.sqrt(Math.max(a, 0)) / Math.sqrt(maxA)) * 42;
-  const areaAt = (t: number) =>
-    d.taper === "conical"
-      ? (Math.sqrt(d.closedArea_cm2) + (Math.sqrt(d.mouthArea_cm2) - Math.sqrt(d.closedArea_cm2)) * t) ** 2
-      : d.taper === "exponential"
-        ? d.closedArea_cm2 * (d.mouthArea_cm2 / d.closedArea_cm2) ** t
-        : d.closedArea_cm2 + (d.mouthArea_cm2 - d.closedArea_cm2) * t;
-  const pts = Array.from({ length: 41 }, (_, i) => i / 40);
-  const top = pts.map((t) => `${x0 + t * span},${mid - half(areaAt(t))}`).join(" ");
-  const bottom = [...pts].reverse().map((t) => `${x0 + t * span},${mid + half(areaAt(t))}`).join(" ");
-  const L = Math.max(d.length_cm, 1);
-  const fillT = d.fill_kgm3 > 0 ? Math.min(1, d.fillLength_cm / L) : 0;
-  const fillPts = pts.filter((t) => t <= fillT).concat(fillT > 0 ? [fillT] : []);
-  const fillTop = fillPts.map((t) => `${x0 + t * span},${mid - half(areaAt(t))}`).join(" ");
-  const fillBottom = [...fillPts].reverse().map((t) => `${x0 + t * span},${mid + half(areaAt(t))}`).join(" ");
-  const xd = x0 + Math.min(1, d.driverAt_cm / L) * span;
-  const yTop = mid - half(areaAt(Math.min(1, d.driverAt_cm / L)));
-  const portH = d.port ? Math.min(half(areaAt(1)), Math.max(3, half((d.portDiameter_cm / 2) ** 2 * Math.PI))) : 0;
+  // Sample each section along its taper.
+  const pts: { x: number; a: number; fill: number }[] = [];
+  let pos = 0;
+  let start = d.closedArea_cm2;
+  for (const s of d.sections) {
+    for (let k = 0; k <= 12; k++) {
+      const t = k / 12;
+      const a = s.taper === "conical" ? (Math.sqrt(start) + (Math.sqrt(s.endArea_cm2) - Math.sqrt(start)) * t) ** 2 : s.taper === "exponential" ? start * (s.endArea_cm2 / start) ** t : start + (s.endArea_cm2 - start) * t;
+      pts.push({ x: x0 + ((pos + t * s.length_cm) / L) * span, a, fill: s.fill_kgm3 });
+    }
+    pos += s.length_cm;
+    start = s.endArea_cm2;
+  }
+  const top = pts.map((p) => `${p.x},${mid - half(p.a)}`).join(" ");
+  const bottom = [...pts].reverse().map((p) => `${p.x},${mid + half(p.a)}`).join(" ");
+  // Stuffed sections as their own hatched polygons.
+  const stuffed: string[] = [];
+  for (let s = 0; s < d.sections.length; s++) {
+    if (!(d.sections[s]!.fill_kgm3 > 0)) continue;
+    const part = pts.slice(s * 13, s * 13 + 13);
+    stuffed.push(`${part.map((p) => `${p.x},${mid - half(p.a)}`).join(" ")} ${[...part].reverse().map((p) => `${p.x},${mid + half(p.a)}`).join(" ")}`);
+  }
+  const at = (cm: number) => {
+    const x = x0 + (Math.min(cm, L) / L) * span;
+    let j = 0;
+    while (j < pts.length - 1 && pts[j]!.x < x) j++;
+    return { x, y: mid - half(pts[j]!.a) };
+  };
+  const rear = at(d.driverAt_cm);
+  const tap = d.end === "tapped" ? at(d.tapAt_cm) : null;
+  const portH = d.end === "port" ? Math.min(half(areas.at(-1)!), Math.max(3, half(Math.PI * (d.portDiameter_cm / 2) ** 2))) : 0;
   return (
     <svg className="line-drawing" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="The line, unfolded: closed end on the left, mouth on the right">
       <defs>
@@ -134,20 +176,119 @@ function LineDrawing({ d }: { d: LineDesign }) {
         </pattern>
       </defs>
       <polygon points={`${top} ${bottom}`} className="line-body" />
-      {fillT > 0 && <polygon points={`${fillTop} ${fillBottom}`} fill="url(#line-fill)" />}
+      {stuffed.map((p, k) => (
+        <polygon key={k} points={p} fill="url(#line-fill)" />
+      ))}
       <line x1={x0} y1={mid - half(d.closedArea_cm2)} x2={x0} y2={mid + half(d.closedArea_cm2)} className="line-closed" />
-      {d.port && <rect x={x0 + span} y={mid - portH} width={30} height={2 * portH} className="line-port" />}
-      <rect x={xd - 8} y={yTop - 7} width={16} height={7} className="line-driver" />
-      <text x={xd} y={yTop - 10} textAnchor="middle" className="line-label">
-        driver
+      {d.end === "port" && <rect x={x0 + span} y={mid - portH} width={30} height={2 * portH} className="line-port" />}
+      <rect x={rear.x - 8} y={rear.y - 7} width={16} height={7} className="line-driver" />
+      <text x={Math.max(rear.x, x0 + 28)} y={rear.y - 10} textAnchor="middle" className="line-label">
+        {tap ? "driver rear" : "driver"}
       </text>
+      {tap && (
+        <>
+          <rect x={tap.x - 8} y={tap.y - 7} width={16} height={7} className="line-driver tap" />
+          <text x={Math.min(Math.max(tap.x, x0 + 28), W - 30)} y={tap.y - 10} textAnchor="middle" className="line-label">
+            front tap
+          </text>
+        </>
+      )}
       <text x={x0} y={H - 2} className="line-label">
         closed
       </text>
       <text x={W - x0} y={H - 2} textAnchor="end" className="line-label">
-        {d.port ? "port" : "mouth"}
+        {d.end === "port" ? "port" : "mouth"}
       </text>
     </svg>
+  );
+}
+
+/** Side view of the folded box: runs front (left) to back, dividers, driver and mouth. */
+function FoldDrawing({ d, wall_mm }: { d: LineDesign; wall_mm: number }) {
+  let f;
+  try {
+    f = lineFoldOf(d, wall_mm);
+  } catch {
+    return null;
+  }
+  const { outside, runs, gaps } = f;
+  if (!(outside.height > 0 && outside.depth > 0)) return null;
+  const k = 160 / Math.max(outside.height, outside.depth);
+  const w = outside.depth * k;
+  const h = outside.height * k;
+  const t = wall_mm * k;
+  let x = t;
+  const dividers: ReactElement[] = [];
+  runs.forEach((r, i) => {
+    x += r.depth * k;
+    if (i < runs.length - 1) {
+      const g = gaps[i]! * k;
+      // Run i goes down → the turn is at the bottom, the divider hangs from the top.
+      const y = r.down ? t : t + g;
+      dividers.push(<rect key={i} x={x} y={y} width={Math.max(1, wall_mm * k)} height={h - 2 * t - g} className="fold-divider" />);
+      x += wall_mm * k;
+    }
+  });
+  const mouthY = f.mouth.at === "top" ? t : h - t - runs.at(-1)!.depth * k;
+  return (
+    <svg className="fold-drawing" viewBox={`-4 -4 ${w + 8} ${h + 8}`} role="img" aria-label="Side view of the folded line: front on the left">
+      <rect x={0} y={0} width={w} height={h} className="fold-outer" />
+      <rect x={t} y={t} width={w - 2 * t} height={h - 2 * t} className="fold-inner" />
+      {dividers}
+      {f.driverFromTop !== null && <rect x={-3} y={f.driverFromTop * k - 6} width={6} height={12} className="line-driver" />}
+      <rect x={w - t - 1} y={mouthY} width={t + 4} height={runs.at(-1)!.depth * k} className="fold-mouth" />
+    </svg>
+  );
+}
+
+const STUFFING: { value: string; text: string; density: number }[] = [
+  { value: "0", text: "None", density: 0 },
+  { value: "4", text: "Light (4 kg/m³)", density: 4 },
+  { value: "8", text: "Medium (8 kg/m³)", density: 8 },
+  { value: "12", text: "Heavy (12 kg/m³)", density: 12 },
+  { value: "custom", text: "Custom…", density: NaN },
+];
+
+function SectionEditor(p: { s: LineSection; index: number; canRemove: boolean; onChange: (s: LineSection) => void; onRemove: () => void }) {
+  const { s } = p;
+  const level = STUFFING.find((x) => x.density === s.fill_kgm3)?.value ?? "custom";
+  const [custom, setCustom] = useState(level === "custom");
+  return (
+    <div className="line-section">
+      <div className="line-section-head">
+        <b>Section {p.index + 1}</b>
+        {p.canRemove && (
+          <button type="button" className="icon" aria-label={`Remove section ${p.index + 1}`} onClick={p.onRemove}>
+            ×
+          </button>
+        )}
+      </div>
+      <div className="fields">
+        <Num label="Length" q="len" value={s.length_cm} min={1} onChange={(length_cm) => p.onChange({ ...s, length_cm })} />
+        <Num label="End area" unit="cm²" value={s.endArea_cm2} min={1} title="Cross-section at the end of this section (it tapers from the previous one)" onChange={(endArea_cm2) => p.onChange({ ...s, endArea_cm2 })} />
+        <Select<LineSection["taper"]>
+          label="Taper"
+          value={s.taper}
+          options={[
+            { value: "linear", text: "Linear (one side slopes)" },
+            { value: "conical", text: "Conical" },
+            { value: "exponential", text: "Exponential" },
+          ]}
+          onChange={(taper) => p.onChange({ ...s, taper })}
+        />
+        <Select
+          label="Stuffing"
+          value={custom ? "custom" : level}
+          options={STUFFING.map(({ value, text }) => ({ value, text }))}
+          onChange={(v) => {
+            if (v === "custom") return setCustom(true);
+            setCustom(false);
+            p.onChange({ ...s, fill_kgm3: Number(v) });
+          }}
+        />
+        {custom && <Num label="Density" unit="kg/m³" value={s.fill_kgm3} min={0} title="Polyester fibre" onChange={(fill_kgm3) => p.onChange({ ...s, fill_kgm3 })} />}
+      </div>
+    </div>
   );
 }
 
@@ -161,33 +302,31 @@ export function LineBody(p: {
   /** Simulated tuning and peak velocity at the mouth or port, from the charts' run. */
   fb: number | null;
   exitVelocity: number | null;
+  /** Port compression in an MLTL's port, when switched on. */
+  compression?: { db: number; f: number } | null;
+  /** Displacement of all the drivers (litres), from the volume calculator. */
+  driverDisp_l: number;
+  wall_mm: number;
 }) {
   const d = p.design;
   const [msg, setMsg] = useState("");
   const set = (patch: Partial<LineDesign>) => {
     const next = { ...d, ...patch };
-    p.onChange({ ...next, vb_l: Math.round(lineVolume(next) * 10) / 10 });
+    p.onChange({ ...next, vb_l: r1(lineVolume(next)) });
   };
+  const L = lineLength(d);
   const volume = lineVolume(d);
 
   const tune = (base: LineDesign = d, target = base.targetFb) => {
     if (!p.driver) return setMsg("Enter the driver's parameters first.");
-    const r = tuneLine(p.driver, base, target, p.sim);
+    const r = tuneLine(p.driver, base, target, p.sim, p.wall_mm);
     if (typeof r === "string") {
       setMsg(r);
       if (base !== d) set(base); // keep the preset, untuned
       return;
     }
     setMsg("");
-    const round = (x: number) => Math.round(x * 10) / 10;
-    set({
-      ...r,
-      targetFb: target,
-      length_cm: round(r.length_cm),
-      driverAt_cm: round(r.driverAt_cm),
-      fillLength_cm: round(r.fillLength_cm),
-      portLength_cm: round(r.portLength_cm),
-    });
+    set({ ...r, targetFb: target });
   };
 
   const preset = (id: PresetId) => {
@@ -197,62 +336,142 @@ export function LineBody(p: {
     tune({ ...base, name: d.name }, base.targetFb);
   };
 
+  // "Best line": search driver position and stuffing, then retune the length.
+  const [best, setBest] = useState<{ goal: LineGoal; result: LineBest | null; busy: boolean } | null>(null);
+  useEffect(() => setBest(null), [d]);
+  const findBest = (goal: LineGoal) => {
+    if (!p.driver) return;
+    const driver = p.driver;
+    setBest({ goal, result: null, busy: true });
+    setTimeout(() => {
+      const r = bestLine(driver, d, p.sim, goal, p.wall_mm);
+      setBest({ goal, result: r, busy: false });
+    }, 30);
+  };
+  const useBest = (r: LineBest) => {
+    if (!p.driver) return;
+    const tuned = tuneLine(p.driver, r.design, d.targetFb, p.sim, p.wall_mm);
+    setBest(null);
+    if (typeof tuned === "string") {
+      setMsg(`${r.summary} Couldn't retune afterwards: ${tuned}`);
+      set(r.design);
+      return;
+    }
+    setMsg("");
+    set(tuned);
+  };
+
+  const setSection = (i: number, s: LineSection) => set({ sections: d.sections.map((x, k) => (k === i ? s : x)) });
+  // A new section splits the last one in half, so the line keeps its length and shape.
+  const addSection = () => {
+    const last = d.sections.at(-1)!;
+    const start = d.sections.length > 1 ? d.sections.at(-2)!.endArea_cm2 : d.closedArea_cm2;
+    const half = r1(last.length_cm / 2);
+    set({
+      sections: [
+        ...d.sections.slice(0, -1),
+        { ...last, length_cm: half, endArea_cm2: r1((start + last.endArea_cm2) / 2) },
+        { ...last, length_cm: r1(last.length_cm - half) },
+      ],
+    });
+  };
+
   // Checks
   const notes: { warn: boolean; text: string }[] = [];
   const sd = (p.driver?.sd_cm2 ?? 0) * p.drivers;
-  const areaAtDriver =
-    d.closedArea_cm2 + (d.mouthArea_cm2 - d.closedArea_cm2) * Math.min(1, d.driverAt_cm / Math.max(1, d.length_cm));
-  if (sd > 0 && areaAtDriver < 0.6 * sd) {
-    notes.push({ warn: true, text: `The line is narrower where the driver sits (${Math.round(areaAtDriver)} cm²) than the cone (${Math.round(sd)} cm²): the cone needs room behind it.` });
+  const areaAt = (x: number) => {
+    let pos = 0;
+    let start = d.closedArea_cm2;
+    for (const s of d.sections) {
+      if (x <= pos + s.length_cm) return start + (s.endArea_cm2 - start) * ((x - pos) / s.length_cm);
+      pos += s.length_cm;
+      start = s.endArea_cm2;
+    }
+    return start;
+  };
+  if (sd > 0 && areaAt(d.driverAt_cm) < 0.6 * sd) {
+    notes.push({ warn: true, text: `The line is narrower where the driver sits (${Math.round(areaAt(d.driverAt_cm))} cm²) than the cone (${Math.round(sd)} cm²): the cone needs room behind it.` });
   }
-  if (d.driverAt_cm > d.length_cm) notes.push({ warn: true, text: "The driver is past the mouth: move it along the line." });
+  if (d.driverAt_cm >= L) notes.push({ warn: true, text: "The driver is past the mouth: move it along the line." });
+  if (d.end === "tapped" && !(d.tapAt_cm > d.driverAt_cm && d.tapAt_cm < L)) {
+    notes.push({ warn: true, text: "The front tap must sit between the driver's rear and the mouth." });
+  }
   if (p.exitVelocity !== null && p.exitVelocity > PORT_LIMIT) {
-    notes.push({ warn: true, text: `Air speed at the ${d.port ? "port" : "mouth"} reaches ${p.exitVelocity.toFixed(1)} m/s (over ${PORT_LIMIT}): ${d.port ? "use a wider port" : "a wider mouth"} or less power.` });
+    notes.push({ warn: true, text: `Air speed at the ${d.end === "port" ? "port" : "mouth"} reaches ${p.exitVelocity.toFixed(1)} m/s (over ${PORT_LIMIT}): ${d.end === "port" ? "a wider or flared port" : "a wider mouth"}, or less power.` });
+  }
+  if (p.compression && p.compression.db >= 0.3) {
+    notes.push({ warn: p.compression.db >= 1.5, text: `Port compression: about −${p.compression.db.toFixed(1)} dB around ${p.compression.f.toFixed(0)} Hz at this power (approximate).` });
   }
   if (p.fb === null && p.driver) notes.push({ warn: false, text: "The tuning isn't in the charts' range (no clear impedance dip)." });
+
+  const fold = (() => {
+    try {
+      return lineFoldOf(d, p.wall_mm);
+    } catch {
+      return null;
+    }
+  })();
 
   return (
     <>
       <LineDrawing d={d} />
       <div className="fields">
-        <Select<"open" | "port">
-          label="End"
-          value={d.port ? "port" : "open"}
+        <Select<LineDesign["end"]>
+          label="Type"
+          value={d.end}
           options={[
             { value: "open", text: "Open mouth (TL, TQWT)" },
             { value: "port", text: "Port at the mouth (MLTL)" },
+            { value: "tapped", text: "Tapped horn" },
           ]}
-          onChange={(x) => set({ port: x === "port" })}
+          onChange={(end) => set({ end, ...(end === "tapped" && !(d.tapAt_cm > d.driverAt_cm && d.tapAt_cm < L) ? { tapAt_cm: r1((d.driverAt_cm + L) / 2) } : {}) })}
         />
-        <Select<LineDesign["taper"]>
-          label="Taper"
-          value={d.taper}
-          options={[
-            { value: "linear", text: "Linear (one side slopes)" },
-            { value: "conical", text: "Conical" },
-            { value: "exponential", text: "Exponential" },
-          ]}
-          onChange={(taper) => set({ taper })}
-        />
-        <Num label="Length" q="len" value={d.length_cm} min={1} onChange={(length_cm) => set({ length_cm })} />
-        <Num label="Driver at" q="len" value={d.driverAt_cm} min={0} title="Driver centre, measured from the closed end" onChange={(driverAt_cm) => set({ driverAt_cm })} />
         <Num label="Closed end" unit="cm²" value={d.closedArea_cm2} min={1} title="Cross-section at the closed end" onChange={(closedArea_cm2) => set({ closedArea_cm2 })} />
-        <Num label="Mouth" unit="cm²" value={d.mouthArea_cm2} min={1} title="Cross-section at the mouth" onChange={(mouthArea_cm2) => set({ mouthArea_cm2 })} />
-        <Num label="Stuffing" unit="kg/m³" value={d.fill_kgm3} min={0} title="Polyester fibre density; 0 = empty. 4–10 is typical." onChange={(fill_kgm3) => set({ fill_kgm3 })} />
-        <Num label="Stuffed to" q="len" value={d.fillLength_cm} min={0} title="Stuffing runs from the closed end this far along the line" onChange={(fillLength_cm) => set({ fillLength_cm })} />
-        {d.port && (
+        <Num label={d.end === "tapped" ? "Rear at" : "Driver at"} q="len" value={d.driverAt_cm} min={0} title={d.end === "tapped" ? "Where the driver's rear opens into the line, from the closed end" : "Driver centre, from the closed end"} onChange={(driverAt_cm) => set({ driverAt_cm })} />
+        {d.end === "tapped" && <Num label="Front tap" q="len" value={d.tapAt_cm} min={0} title="Where the driver's front opens into the line, from the closed end" onChange={(tapAt_cm) => set({ tapAt_cm })} />}
+        {d.end === "port" && (
           <>
             <Num label="Port Ø" q="len" value={d.portDiameter_cm} min={0.5} onChange={(portDiameter_cm) => set({ portDiameter_cm })} />
             <Num label="Port length" q="len" value={d.portLength_cm} min={0} onChange={(portLength_cm) => set({ portLength_cm })} />
+            <Num label="Flare r" q="len" value={d.portFlare_cm} min={0} title="Round-over radius at both ends of the port (0 = straight)" onChange={(portFlare_cm) => set({ portFlare_cm })} />
           </>
         )}
-        <Fixed label="Volume" unit="L" value={f1(volume)} title="Inside volume of the line (port excluded)" />
+        <Select<LineDesign["mouth"]>
+          label="Mouth"
+          value={d.mouth}
+          options={[
+            { value: "front", text: "Next to the driver" },
+            { value: "back", text: `On the back${fold ? ` (${Math.round(fold.outside.depth / 10)} cm further)` : ""}` },
+            { value: "custom", text: "Further away by…" },
+          ]}
+          onChange={(mouth) => set({ mouth })}
+        />
+        {d.mouth === "custom" && <Num label="Extra" q="len" value={d.mouthDistance_cm} min={0} title="How much further the mouth is from the listener than the driver" onChange={(mouthDistance_cm) => set({ mouthDistance_cm })} />}
+      </div>
+
+      {d.sections.map((s, i) => (
+        <SectionEditor key={i} s={s} index={i} canRemove={d.sections.length > 1} onChange={(x) => setSection(i, x)} onRemove={() => set({ sections: d.sections.filter((_, k) => k !== i) })} />
+      ))}
+      {d.sections.length < MAX_SECTIONS && (
+        <button type="button" className="secondary add-section" onClick={addSection}>
+          + Split into another section
+        </button>
+      )}
+
+      <div className="fields">
+        <Fixed label="Length" unit="cm" value={f1(L)} title="Total length along the centre of the line" />
+        <Fixed
+          label="Volume"
+          unit="L"
+          value={f1(volume - p.driverDisp_l)}
+          title={`Inside volume ${f1(volume)} L, less ${f1(p.driverDisp_l)} L for the driver${p.drivers > 1 ? "s" : ""} (port excluded)`}
+        />
         <Fixed label="Fb" unit="Hz" value={f1(p.fb)} title="Tuning: the impedance dip between the first two peaks" />
       </div>
       <div className="tune">
         <Num label="Tune to" unit="Hz" value={d.targetFb} min={5} onChange={(targetFb) => set({ targetFb })} />
-        <button className="secondary" onClick={() => tune()} disabled={!p.driver} title={d.port ? "Find the port length for this tuning" : "Scale the line's length (driver position and stuffing follow) for this tuning"}>
-          {d.port ? "Set port length" : "Set line length"}
+        <button className="secondary" onClick={() => tune()} disabled={!p.driver} title={d.end === "port" ? "Find the port length for this tuning" : "Scale the line's length (driver, tap and sections follow) for this tuning"}>
+          {d.end === "port" ? "Set port length" : "Set line length"}
         </button>
       </div>
       <div className="presets">
@@ -263,6 +482,33 @@ export function LineBody(p: {
           </button>
         ))}
       </div>
+      <div className="row line-best">
+        <span>Best line:</span>
+        <button className="secondary" disabled={!p.driver || best?.busy} onClick={() => findBest("smooth")} title="Driver position and stuffing for the smoothest response (keeping the bass), then the length retuned">
+          Smoothest
+        </button>
+        <button className="secondary" disabled={!p.driver || best?.busy} onClick={() => findBest("deep")} title="Driver position and stuffing for the deepest bass (keeping it fairly smooth), then the length retuned">
+          Deepest
+        </button>
+      </div>
+      {best?.busy && <p className="hint">Trying driver positions and stuffing…</p>}
+      {best && !best.busy && !best.result && <p className="warn">No combination gave a usable response for this line.</p>}
+      {best?.result && (
+        <div className="tuning-card">
+          <p>
+            <b>{best.result.better ? best.result.summary : `Already about as ${best.goal === "smooth" ? "smooth" : "deep"} as these settings allow.`}</b>
+            {!best.result.better && <span className="hint"> Closest: {best.result.summary}</span>}
+          </p>
+          <p className="hint">
+            F3 {f1(best.result.score.f3)} Hz, ripple {f1(best.result.score.ripple)} dB
+            {best.result.before ? ` (now F3 ${f1(best.result.before.f3)} Hz, ripple ${f1(best.result.before.ripple)} dB)` : ""} · {best.result.tried} tried. The length is
+            retuned to {d.targetFb} Hz when used.
+          </p>
+          <button type="button" onClick={() => useBest(best.result!)}>
+            Use it
+          </button>
+        </div>
+      )}
       {msg && <p className="warn">{msg}</p>}
       {notes.map((n) => (
         <p key={n.text} className={n.warn ? "warn" : "hint"}>
@@ -270,10 +516,34 @@ export function LineBody(p: {
           {n.text}
         </p>
       ))}
+
+      <details className="line-fold">
+        <summary>Fold it into a box</summary>
+        <div className="fold-row">
+          <FoldDrawing d={d} wall_mm={p.wall_mm} />
+          <div>
+            <div className="fields">
+              <Num label="Inside width" q="len" value={d.fold.width_cm} min={1} title="Width of the line inside (the box's inside width)" onChange={(width_cm) => set({ fold: { ...d.fold, width_cm } })} />
+              <Num label="Folds" value={d.fold.folds} min={0} title="Number of dividers (runs − 1)" onChange={(folds) => set({ fold: { ...d.fold, folds: Math.max(0, Math.min(8, Math.round(folds))) } })} />
+            </div>
+            {fold && (
+              <p className="hint">
+                Outside {Math.round(fold.outside.width / 10)} × {Math.round(fold.outside.height / 10)} × {Math.round(fold.outside.depth / 10)} cm (W × H × D), {p.wall_mm} mm
+                walls · {fold.runs.length} runs · mouth on the back at the {fold.mouth.at}. Panels, dividers and holes: Build tab → Cut list.
+              </p>
+            )}
+            {fold?.warnings.map((w) => (
+              <p key={w} className="warn">
+                ⚠ {w}
+              </p>
+            ))}
+          </div>
+        </div>
+      </details>
+
       <p className="hint">
-        Simulated as a one-dimensional duct, like Hornresp: lengths along the centre of the line, folds not modelled. Stuffing is the
-        least certain part of any line simulation; treat its effect as a guide. Beta: being checked against Hornresp. A plain quarter
-        wave of this length would be {(C / (4 * Math.max(d.length_cm, 1) / 100)).toFixed(0)} Hz.
+        Simulated as a one-dimensional duct, like Hornresp: lengths along the centre of the line; bends are not modelled. Stuffing is the least certain part of any line
+        simulation; treat its effect as a guide. Beta: being checked against Hornresp. A plain quarter wave of this length would be {(C / ((4 * Math.max(L, 1)) / 100)).toFixed(0)} Hz.
       </p>
     </>
   );

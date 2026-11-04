@@ -2092,3 +2092,66 @@ dialog.finder .lib-inner {
   font-size: 10px;
   fill: var(--muted);
 }
+.line-driver.tap {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+.line-section {
+  border-left: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  padding: 0.2rem 0 0.1rem 0.6rem;
+  margin: 0.5rem 0;
+}
+.line-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+button.add-section {
+  margin: 0.2rem 0 0.6rem;
+}
+.line-best {
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.4rem 0;
+  flex-wrap: wrap;
+}
+.line-fold {
+  margin-top: 0.6rem;
+}
+.line-fold > summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.3rem 0;
+}
+.fold-row {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.fold-row > div {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.fold-drawing {
+  width: 9rem;
+  height: auto;
+  flex: 0 0 auto;
+}
+.fold-outer {
+  fill: var(--muted);
+  opacity: 0.55;
+}
+.fold-inner {
+  fill: var(--card);
+}
+.fold-divider {
+  fill: var(--muted);
+  opacity: 0.8;
+}
+.fold-mouth {
+  fill: var(--accent);
+  opacity: 0.6;
+}

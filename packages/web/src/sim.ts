@@ -3,6 +3,7 @@ import {
   WINISD_AIR,
   baffleStepDb,
   lineNetwork,
+  foldLine,
   type LineInput,
   type Air,
   type Baffle,
@@ -146,25 +147,52 @@ export function alignmentDriver(solved: SolveResult, s: AppState) {
   return { fs: v.fs!, qms: v.qms!, qes: v.qes! * dvcFactors(s).qes, vas_l: v.vas_l! / (s.isobaric ? 2 : 1) };
 }
 
-/** Engine input for a line design: the stuffed part and the rest as separate pieces. */
-export function lineInputOf(d: LineDesign): LineInput {
-  const L = d.length_cm;
-  const area = (t: number) => {
-    const s1 = d.closedArea_cm2;
-    const s2 = d.mouthArea_cm2;
-    if (d.taper === "conical") return (Math.sqrt(s1) + (Math.sqrt(s2) - Math.sqrt(s1)) * t) ** 2;
-    if (d.taper === "exponential") return s1 * (s2 / s1) ** t;
-    return s1 + (s2 - s1) * t;
-  };
-  const fillTo = Math.min(L, Math.max(0, d.fill_kgm3 > 0 ? d.fillLength_cm : 0));
-  const segments: LineInput["segments"] = [];
-  if (fillTo > 0) segments.push({ length_cm: fillTo, startArea_cm2: area(0), endArea_cm2: area(fillTo / L), taper: d.taper, fill_kgm3: d.fill_kgm3 });
-  if (L - fillTo > 0) segments.push({ length_cm: L - fillTo, startArea_cm2: area(fillTo / L), endArea_cm2: area(1), taper: d.taper });
+/** The line's pieces for the engine: each section runs from the previous end area to its own. */
+export function lineSegmentsOf(d: LineDesign): LineInput["segments"] {
+  let start = d.closedArea_cm2;
+  return d.sections.map((x) => {
+    const seg = { length_cm: x.length_cm, startArea_cm2: start, endArea_cm2: x.endArea_cm2, taper: x.taper, fill_kgm3: x.fill_kgm3 };
+    start = x.endArea_cm2;
+    return seg;
+  });
+}
+
+export const lineLength = (d: LineDesign) => d.sections.reduce((a, x) => a + x.length_cm, 0);
+
+/** Folded layout of a line design (lengths in mm). */
+export function lineFoldOf(d: LineDesign, wall_mm: number, driverCutout?: number) {
+  return foldLine({
+    segments: lineSegmentsOf(d),
+    width: d.fold.width_cm * 10,
+    folds: d.fold.folds,
+    wall: wall_mm,
+    driverAt_mm: d.driverAt_cm * 10,
+    driverCutout,
+    port: d.end === "port" ? { holeDiameter: (d.portDiameter_cm + 2 * d.portFlare_cm) * 10, length: d.portLength_cm * 10 } : undefined,
+  });
+}
+
+/** Engine input for a line design. */
+export function lineInputOf(d: LineDesign, wall_mm = 18): LineInput {
+  const L = lineLength(d);
+  let mouthDistance = 0;
+  if (d.mouth === "custom") mouthDistance = d.mouthDistance_cm;
+  else if (d.mouth === "back") {
+    try {
+      mouthDistance = lineFoldOf(d, wall_mm).outside.depth / 10;
+    } catch {
+      mouthDistance = 0;
+    }
+  }
   return {
     kind: "line",
-    segments,
+    segments: lineSegmentsOf(d),
     driverAt_cm: Math.min(Math.max(0, d.driverAt_cm), L - 0.1),
-    ...(d.port ? { port: { shape: "round" as const, diameter_cm: d.portDiameter_cm, length_cm: d.portLength_cm } } : {}),
+    ...(d.end === "tapped" ? { tap_cm: d.tapAt_cm } : {}),
+    ...(d.end === "port"
+      ? { port: { shape: "round" as const, diameter_cm: d.portDiameter_cm, length_cm: d.portLength_cm, ...(d.portFlare_cm > 0 ? { flare_cm: d.portFlare_cm } : {}) } }
+      : {}),
+    ...(mouthDistance > 0 ? { mouthDistance_cm: mouthDistance } : {}),
   };
 }
 
@@ -177,11 +205,11 @@ export function lineVolume(d: LineDesign): number {
   }
 }
 
-function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"]): EnclosureInput {
+function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"], wall_mm = 18): EnclosureInput {
   const { ql, qa, qp } = losses;
   switch (d.kind) {
     case "line":
-      return lineInputOf(d);
+      return lineInputOf(d, wall_mm);
     case "sealed":
       return { kind: "sealed", vb_l: vb, ql, qa };
     case "vented":
@@ -273,7 +301,7 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
       .filter((e) => e.on && (e.target === "all" || e.target === d.id))
       .map(({ id: _id, on: _on, target: _t, ...stage }) => stage as EqStage);
     try {
-      const result = simulate(driver, enclosureOf(d, vb, s.settings.losses), { ...opts, eq });
+      const result = simulate(driver, enclosureOf(d, vb, s.settings.losses, s.volume.wall_mm), { ...opts, eq });
       if (s.settings.velocity === "rms") {
         if (result.portVelocity) result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
         if (result.rearPortVelocity) result.rearPortVelocity = result.rearPortVelocity.map((v) => v / Math.SQRT2);
