@@ -27,19 +27,19 @@ jobs:
           from collections import Counter
           c = Counter(s for p in prods for s in [x["slug"] for x in p["categories"]])
           print("== per category", dict(c))
-          want = ["passive-radiators", "soft-passive-radiators", "subwoofers", "shallow-subwoofers", "widebanders", "full-range", "midranges", "midwoofers-oem", "woofers", "coaxials", "satori-woofers", "nrx-woofers"]
+          want = ["dv", "coax", "1in", "passive-radiators", "soft-passive-radiators", "subwoofers", "shallow-subwoofers", "widebanders", "full-range", "midranges", "midwoofers-oem", "woofers", "coaxials", "satori-woofers", "nrx-woofers"]
           seen = set()
           for cat in want:
-              ps = [p for p in prods if cat in [x["slug"] for x in p["categories"]] and p["id"] not in seen]
+              pick = {"dv": lambda p: "-DV" in p["name"], "coax": lambda p: "COAX" in p["name"], "1in": lambda p: "SB36WBAC21-8" in p["name"]}.get(cat, lambda p: cat in [x["slug"] for x in p["categories"]])
+              ps = [p for p in prods if pick(p) and p["id"] not in seen]
               if not ps: continue
               p = ps[0]; seen.add(p["id"])
               html = get(p["permalink"])
-              m = re.search(r">\s*Specs\s*<(.*?)(Downloads|</section>)", html, re.S)
-              lis = re.findall(r"<li[^>]*>(.*?)</li>", m.group(1), re.S) if m else []
-              lis = [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", x)).strip() for x in lis]
+              lis = [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", x)).strip() for x in re.findall(r"<li[^>]*>(.*?)</li>", html, re.S)]
+              lis = [x for x in lis if re.search(r"\d", x) and len(x) < 90 and not x.startswith(("1", "2", "3", "4", "5", "6", "7", "8", "9"))]
               pdfs = sorted(set(re.findall(r'https://sbacoustics.com/wp-content/uploads/[^" ]+\.pdf', html)))
               print(f"\n== {cat}: {p['name']} | {p['permalink']} | cats {[x['slug'] for x in p['categories']]}")
               print("   ", " || ".join(lis))
               print("    pdf:", pdfs[:2])
           # Names, to see DVC/variants
-          print("\n== all names"); print(" ; ".join(sorted(p["name"] for p in prods)))
+
