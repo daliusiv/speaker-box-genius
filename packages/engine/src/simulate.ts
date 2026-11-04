@@ -1,6 +1,6 @@
 import { abs, add, arg, cx, div, inv, mul, parallel, scale, sub, type Complex } from "./complex.ts";
 import { STANDARD_AIR, type Air } from "./constants.ts";
-import { lineNetwork } from "./line.ts";
+import { baffledPistonImpedance, lineNetwork } from "./line.ts";
 import { eqResponse, highPassResponse, type EqStage, type HighPass } from "./filters.ts";
 import {
   boxCompliance,
@@ -227,6 +227,10 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const summary: SimulationResult["summary"] = { volts, referenceSpl: 0, f3: null, f6: null };
   const bp = box.kind === "bandpass" ? bandpassNetwork(box, d, n, air, summary) : null;
   const line = box.kind === "line" ? lineNetwork(box, air) : null;
+  // A line or horn models the air on the cone's sides explicitly, so the cone carries its bare
+  // moving mass Mmd = Mms − 16ρa³/3 (both sides' free-air load, as Hornresp defines it). An open
+  // line adds the front's radiation load (a piston in a baffle); the rear's is in the line's load.
+  const lineMmd = line ? Math.max(d.mms - (16 * air.rho * Math.pow(d.sd / Math.PI, 1.5)) / 3, d.mms * 0.05) : 0;
   // Port compression in a mass-loaded line's port (same model as vented boxes).
   let lineNl = 0;
   let lineReynoldsPerQ = 0;
@@ -385,9 +389,11 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       }
     } else if (line) {
       // Transmission line (or tapped horn): the line loads the cone; the mouth (or port) radiates.
+      let zasLine = cx(d.rms / sd2, (w * lineMmd - 1 / (w * d.cms)) / sd2);
+      if (!line.mouthOnly) zasLine = add(zasLine, baffledPistonImpedance(d.sd, w, air));
       const solveLine = () => {
         const zl = line.zLoad(w);
-        const zm = add(zas, scale(zl, n));
+        const zm = add(zasLine, scale(zl, n));
         const u = div(pg, add(zae, zm));
         return { zl, zm, u, exit: mul(scale(u, n), line.exitPerCone(w)) };
       };

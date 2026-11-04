@@ -12,6 +12,7 @@
 - Fb is the impedance minimum between the first two peaks. When stuffing damps the lower peak into a shoulder, Fb is the shoulder (where the impedance rises least steeply). F3 is the low-frequency edge, because lines ripple above their tuning.
 - Tapped horns: the driver's rear and front both open into the line (rear at one point, front at the tap), solved as two nodes; only the mouth radiates.
 - Mouth position: when the mouth is further from the listener than the cone (on the back of a folded box, or a custom distance), its output is delayed and scaled by distance.
+- The cone's mass: in a line or horn the air on both sides of the cone is modelled explicitly, so the cone carries its bare mass Mmd = Mms − 16ρa³/3 (as in Hornresp). An open line adds the front's radiation load (a baffled piston); the rear's comes from the line. Using Mms here counted the rear air mass twice and made impedance peaks up to 10 % low.
 - An MLTL's port can be flared, and port compression (Settings) applies to it like a ported box's.
 
 ## Front-loaded horns
@@ -24,7 +25,7 @@ Export writes a record in the layout of recent Hornresp versions (`|SECTION:` he
 
 Import reads `Key = value` pairs in order from a file or a one-line forum paste, with comma or point decimals and the INI form (`L12=40.90, PAR`). Unknown flares (Hyp, Tra, Obl) are read as Par with a warning; Lrc, chamber ports and angles other than 2π are flagged. The record's driver can replace the current one.
 
-Not yet checked against Hornresp itself: whether its import accepts the exported file unchanged.
+Hornresp 55.30 imports the exported records unchanged (checked with the nine validation records in `docs/hornresp-validation/records`; the layout test compares against a record Hornresp itself exported).
 
 ## Folding (`linefold.ts`)
 
@@ -46,7 +47,15 @@ Tries driver positions (0–40 % along) against stuffing (none, or the first 1�
 - Textbook horns (`horn.test.ts`): an exponential horn's throat resistance follows √(1 − (fc/f)²) above cutoff (averaged over one mouth-ripple period, within 10 %) and is near zero below; a conical horn's throat impedance follows jkx₀/(1 + jkx₀) within 0.06 ρc/S; a TQWT (cone closed at its narrow end) resonates where tan kL = −k·x₁, within 3 %.
 - Front-loaded horn: horn gain over the same driver in a sealed box, less excursion in band, and a throat chamber rolls off the top near S₁c / (2π·Vtc).
 
-## Validation against Hornresp (to do)
+## Validation against Hornresp
+
+Results so far (Hornresp 55.30, DSA215-8 at 2.83 V, half space, Hornresp's air c = 344 m/s, ρ = 1.205 kg/m³). Each checked case is a permanent test in `packages/engine/test/hornresp.test.ts`, with Hornresp's exports under `test/fixtures/hornresp/`:
+
+| Case | SPL 10–500 Hz | Ze 10–1000 Hz | Line impedance peaks |
+|---|---|---|---|
+| 01 straight TL | mean 0.09 dB | mean 0.16 %, worst 1.0 % | identical (54.8 … 606.2 Hz) |
+
+The one large SPL difference is at the bottom of the deep null near 229 Hz (same frequency, different depth). Cases 02–09 are waiting for their exports.
 
 For each case, the user saves the Hornresp record and exports SPL and impedance (File → Export → Chart data), with stuffing off (Fr = 0) and then on:
 
