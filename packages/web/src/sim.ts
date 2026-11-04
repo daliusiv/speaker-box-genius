@@ -29,6 +29,13 @@ export const PALETTE = ["#3b82f6", "#f97316", "#22c55e", "#a855f7", "#e11d48", "
 
 export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators", bandpass: "Bandpass", line: "Transmission line" } as const;
 
+/** Curve style per driver, so a second driver's boxes stand apart on the charts. */
+export const DRIVER_DASH: Record<string, string | undefined> = { A: undefined, B: "7 4", C: "2 3", D: "9 3 2 3" };
+
+/** A design's name for charts and tables: with its driver's letter once there are several drivers. */
+export const designLabel = (s: AppState, d: { name: string; driverId?: string }) =>
+  s.extraDrivers.length > 0 ? `${d.name} · ${d.driverId ?? "A"}` : d.name;
+
 export function colorOf(s: AppState, id: string): string {
   const i = s.designs.findIndex((d) => d.id === id);
   return PALETTE[(i < 0 ? 0 : i) % PALETTE.length]!;
@@ -36,6 +43,10 @@ export function colorOf(s: AppState, id: string): string {
 
 export interface Design {
   design: DesignState;
+  /** Name for charts and tables: with " · B" (its driver) once there are several drivers. */
+  label: string;
+  /** Line style for its driver: A solid, B dashed, C dotted, D dash-dot. */
+  dash?: string;
   color: string;
   vb_l: number;
   result: SimulationResult;
@@ -348,7 +359,7 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
         result.maxSpl = result.maxSpl.map((v, i) => v + lift[i]!);
         if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + lift[i]!), mouth: result.parts.mouth.map((v, i) => v + lift[i]!) };
       }
-      out.push({ design: d, color: colorOf(s, d.id), vb_l: vb, result });
+      out.push({ design: d, label: designLabel(s, d), dash: DRIVER_DASH[d.driverId ?? "A"], color: colorOf(s, d.id), vb_l: vb, result });
     } catch {
       // Invalid input mid-edit: skip this design until the numbers make sense again.
     }

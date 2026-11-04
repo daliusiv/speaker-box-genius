@@ -29,7 +29,7 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
   };
   const n = (v: number | null | undefined, unit: string, digits = 1) =>
     v === null || v === undefined || !Number.isFinite(v) ? "–" : `${v.toFixed(digits)} ${unit}`;
-  return designs.map(({ design: d, color, vb_l, result: r }) => {
+  return designs.map(({ design: d, label, color, vb_l, result: r }) => {
     const x = peak(r.excursionMm, r.freq);
     const xpr = prPeak(r, fMin);
     const vpFront = peak(r.portVelocity, r.freq);
@@ -40,7 +40,7 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
         ? `${fmtQ(vb_l, "vol", state.settings.units)} + ${fmtQ(d.frontVb_l, "vol", state.settings.units)}`
         : fmtQ(vb_l, "vol", state.settings.units);
     return {
-      name: d.name,
+      name: label,
       color,
       cells: [vol, n(r.summary.fb ?? r.summary.fc, "Hz"), n(r.summary.f3, "Hz"), n(x, "mm"), n(xpr?.mm, "mm"), n(vp, "m/s")],
       over: [
@@ -318,7 +318,7 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
     g.fillRect(x + 16, y + 18, 14, 14);
     g.fillStyle = fg;
     g.font = `600 18px ${font}`;
-    g.fillText(`${d.design.name}: folded`, x + 38, y + 31, foldW - 54);
+    g.fillText(`${d.label}: folded`, x + 38, y + 31, foldW - 54);
     g.fillStyle = muted;
     g.font = `400 16px ${font}`;
     const o = f.outside;

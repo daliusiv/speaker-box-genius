@@ -112,3 +112,11 @@ test("Size all boxes sizes each design for its own driver", () => {
   const sealed = r.state.designs.find((d) => d.kind === "sealed")!;
   assert.equal(sealed.vb_l, sizeAllForDriver(DEFAULT_STATE).state.designs.find((d) => d.kind === "sealed")!.vb_l);
 });
+
+test("with several drivers the curves say which driver (· A, · B) and B's are dashed; one driver: plain names", () => {
+  const two = run(twoDrivers());
+  assert.deepEqual(two.map((d) => d.label), ["Sealed · A", "Ported · B", "Passive radiators · A"]);
+  assert.equal(two.find((d) => d.design.kind === "vented")!.dash, "7 4");
+  assert.equal(two.find((d) => d.design.kind === "sealed")!.dash, undefined);
+  assert.deepEqual(run(DEFAULT_STATE).map((d) => d.label), DEFAULT_STATE.designs.map((d) => d.name));
+});

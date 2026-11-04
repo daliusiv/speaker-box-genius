@@ -45,7 +45,7 @@ export function MeasuredCard(p: { measured: MeasuredCurve[]; designs: Design[]; 
     if (!d) return m;
     const [lo, hi] = matchBand(d);
     const off = levelMatch(m, d.result.freq, d.result.spl, lo, hi);
-    if (off === null) return `${m.name} doesn't cover ${Math.round(lo)}–${Math.round(hi)} Hz, where ${d.design.name} is matched: set the level by hand.`;
+    if (off === null) return `${m.name} doesn't cover ${Math.round(lo)}–${Math.round(hi)} Hz, where ${d.label} is matched: set the level by hand.`;
     return { ...m, offset_db: off, matchTo: designId };
   };
 
@@ -119,7 +119,7 @@ export function MeasuredCard(p: { measured: MeasuredCurve[]; designs: Design[]; 
                 <Select<string> help="Level-match the measurement to a design's curve, so you compare shape, not loudness."
                   label="Match to"
                   value={p.designs.some((d) => d.design.id === m.matchTo) ? m.matchTo : ""}
-                  options={[{ value: "", text: "—" }, ...p.designs.map((d) => ({ value: d.design.id, text: d.design.name }))]}
+                  options={[{ value: "", text: "—" }, ...p.designs.map((d) => ({ value: d.design.id, text: d.label }))]}
                   onChange={(id) => {
                     if (!id) return set(m.id, { matchTo: "" });
                     const r = match(m, id);
