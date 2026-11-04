@@ -56,4 +56,18 @@ for (const id of existsSync(DIR) ? readdirSync(DIR) : []) {
     assert.ok(mean < 0.15, `mean SPL difference ${mean.toFixed(2)} dB`);
     assert.ok(percentile(errs, 0.95) < 0.4, `95th percentile ${percentile(errs, 0.95).toFixed(2)} dB`);
   });
+
+  const zaFile = join(DIR, id, "za.txt");
+  if (existsSync(zaFile)) {
+    test(`Hornresp ${id}: acoustic impedance (Za, normalised)`, () => {
+      const za = r.acousticImpedance!;
+      const mag = Float64Array.from(za.resistance, (re, i) => Math.hypot(re, za.reactance[i]!));
+      // Away from the sharp peaks and nulls (where a hair's shift in frequency moves the value a lot).
+      const errs = readCurve(zaFile)
+        .filter((p) => p[0]! <= 1000 && p[1]! > 0.3 && p[1]! < 5)
+        .map(([f, z]) => Math.abs(20 * Math.log10(interp(r.freq, mag, f!) / z!)));
+      const mean = errs.reduce((a, b) => a + b, 0) / errs.length;
+      assert.ok(mean < 0.1, `mean |Za| difference ${mean.toFixed(3)} dB`);
+    });
+  }
 }

@@ -159,7 +159,7 @@ export interface Settings {
   /** Unit system for box sizes and volumes. */
   units: "metric" | "imperial";
   /** Air constants: 20 °C standard, or WinISD's values for like-for-like comparison. */
-  air: "standard" | "winisd";
+  air: "standard" | "winisd" | "hornresp";
   /** Port air velocity shown as peak (default) or RMS. */
   velocity: "peak" | "rms";
   /** Amplifier output + cable resistance (Ω). */
@@ -170,6 +170,11 @@ export interface Settings {
   losses: { ql: number; qa: number; qp: number };
   /** Port compression: turbulent port loss that grows with air speed (approximate). Off = like WinISD. */
   portCompression: boolean;
+  /**
+   * Lines and horns: SPL in front of the box ("on-axis", default) or from the power each opening
+   * radiates ("power"), as Hornresp shows it. They part once a mouth is large next to the wavelength.
+   */
+  lineSpl: "on-axis" | "power";
 }
 
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
@@ -388,6 +393,7 @@ export const DEFAULT_STATE: AppState = {
     inductance: true,
     losses: { ql: 10, qa: 100, qp: 100 },
     portCompression: false,
+    lineSpl: "on-axis",
   },
   eq: [],
   measured: [],

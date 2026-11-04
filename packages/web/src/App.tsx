@@ -74,7 +74,7 @@ const LIMIT_KINDS: Record<string, { label: string; short: string; color: string 
   thermal: { label: "Power (Pe)", short: "power handling", color: "#78716c" },
 };
 
-type ChartId = "pr" | "port" | "maxspl" | "impedance" | "delay";
+type ChartId = "pr" | "port" | "maxspl" | "impedance" | "za" | "delay";
 
 export function App(props: { initial: AppState | null }) {
   const { state, setState, undo, redo, canUndo, canRedo } = useUndoable<AppState>(() => props.initial ?? DEFAULT_STATE);
@@ -513,6 +513,23 @@ export function App(props: { initial: AppState | null }) {
     }));
   });
 
+  // Lines and horns: the line's acoustic impedance (Hornresp's Za), resistance solid, reactance dashed.
+  const zaDesigns = designs.filter((d) => d.result.acousticImpedance);
+  const zaSeries: Series[] = zaDesigns.flatMap((d) => {
+    const za = d.result.acousticImpedance!;
+    return [
+      { label: `${d.design.name}: resistance`, color: d.color, y: za.resistance },
+      { label: `${d.design.name}: reactance`, color: d.color, dash: "5 3", y: za.reactance },
+    ];
+  });
+  // Empty lines resonate sharply (Za runs into the hundreds): keep the scale on the useful part.
+  const zaRange = (() => {
+    let lo = 0;
+    let hi = 1;
+    for (const s of zaSeries) for (const v of s.y!) if (Number.isFinite(v)) (lo = Math.min(lo, v)), (hi = Math.max(hi, v));
+    return { yMin: Math.max(-4, Math.floor(lo)), yMax: Math.min(6, Math.ceil(hi)) };
+  })();
+
   // The charts under the tab row: one at a time, the choice remembered; unavailable ones are left out.
   const hasPr = prDesigns.length > 0;
   const hasPort = designs.some((d) => d.result.portVelocity || d.result.rearPortVelocity);
@@ -521,6 +538,7 @@ export function App(props: { initial: AppState | null }) {
     ...(hasPort ? [{ id: "port" as const, label: "Port speed" }] : []),
     { id: "maxspl", label: "Max SPL" },
     { id: "impedance", label: "Impedance" },
+    ...(zaDesigns.length > 0 ? [{ id: "za" as const, label: "Line load (Za)" }] : []),
     { id: "delay", label: "Group delay" },
   ];
   const chartTab: ChartId = chartTabs.some((t) => t.id === chartPick) ? chartPick : chartTabs[0]!.id;
@@ -1051,12 +1069,13 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(units) => set("settings", { ...state.settings, units })}
                 />
-                <Select<"standard" | "winisd">
+                <Select<"standard" | "winisd" | "hornresp">
                   label="Air"
                   value={state.settings.air}
                   options={[
                     { value: "standard", text: "Standard (20 °C, ρ 1.204, c 343.2)" },
                     { value: "winisd", text: "WinISD defaults (ρ 1.201, c 343.7)" },
+                    { value: "hornresp", text: "Hornresp defaults (ρ 1.205, c 344)" },
                   ]}
                   onChange={(air) => set("settings", { ...state.settings, air })}
                 />
@@ -1106,6 +1125,15 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(x) => set("settings", { ...state.settings, portCompression: x === "on" })}
                 />
+                <Select<"on-axis" | "power">
+                  label="Line/horn SPL"
+                  value={state.settings.lineSpl}
+                  options={[
+                    { value: "on-axis", text: "In front of the box" },
+                    { value: "power", text: "From radiated power (like Hornresp)" },
+                  ]}
+                  onChange={(lineSpl) => set("settings", { ...state.settings, lineSpl })}
+                />
                 <Select<"peak" | "rms">
                   label="Port speed"
                   value={state.settings.velocity}
@@ -1122,6 +1150,12 @@ export function App(props: { initial: AppState | null }) {
                 choose its air values, its amplifier resistance (Signal tab, Rg) and leave out Le, or simply import the
                 WinISD project (.wpr). The {PORT_LIMIT} m/s chuffing line applies to
                 whichever port-speed convention you pick.
+              </p>
+              <p className="hint">
+                Lines and horns: Hornresp works SPL out from the power each opening radiates. That matches the
+                in-front-of-the-box SPL in the bass and reads lower once a mouth is large next to the wavelength (about
+                1.5 dB at 500 Hz for an 850 cm² mouth). For like-for-like checks against Hornresp, pick its air and
+                &ldquo;From radiated power&rdquo;, and set the drive to 2.83 V.
               </p>
             </Card>
           </div>
@@ -1297,6 +1331,27 @@ export function App(props: { initial: AppState | null }) {
               ]}
               yMin={0}
             />
+            {zaDesigns.length > 0 && (
+              <LogChart
+                hidden={chartTab !== "za"}
+                title="Line load Za"
+                unit="× ρc/S"
+                freq={freq}
+                series={zaSeries}
+                limits={[{ value: 1, label: "1 = the duct's own impedance", color: "#a8a29e" }]}
+                limitStyle="guide"
+                digits={2}
+                {...zaRange}
+              />
+            )}
+            {zaDesigns.length > 0 && chartTab === "za" && (
+              <p className="hint">
+                Solid: resistance, dashed: reactance. The air load the line puts on the cone, as Hornresp&rsquo;s Za chart shows it: taken at the driver (at the
+                horn&rsquo;s throat for a front-loaded horn, without its chambers), divided by ρc/S there. Peaks are the
+                line&rsquo;s resonances; resistance near 1 over a wide band means the horn is loading the cone well, and
+                stuffing shows as the ripples shrinking towards 1.
+              </p>
+            )}
             <LogChart
               hidden={chartTab !== "delay"}
               title="Group delay"
