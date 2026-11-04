@@ -103,6 +103,9 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
       case "bandpass":
         skipped.push(`${d.name}: bandpass boxes have no one-click alignment yet`);
         return d;
+      case "line":
+        skipped.push(`${d.name}: use the line's own presets (they size the line for the driver)`);
+        return d;
     }
   });
   return { state: changed.length > 0 ? { ...s, designs } : s, changed, skipped };

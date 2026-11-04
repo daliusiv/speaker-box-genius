@@ -1,3 +1,4 @@
+import type { LineInput } from "./line.ts";
 import { add, cx, div, mul, type Complex } from "./complex.ts";
 import { STANDARD_AIR, type Air } from "./constants.ts";
 import { blFromQes, cmsFromVas, mmsFromFsCms } from "./ts.ts";
@@ -385,6 +386,7 @@ export interface BandpassInput {
 
 export type EnclosureInput =
   | BandpassInput
+  | LineInput
   | ({ kind: "sealed"; vb_l: number } & Losses)
   | ({ kind: "vented"; vb_l: number; port: PortInput; portCount?: number; endCorrection?: number } & Losses)
   | ({

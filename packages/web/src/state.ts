@@ -1,6 +1,6 @@
 import type { EqStage, HighPassType, PassiveRadiatorInput, TsValues } from "@sbg/engine";
 
-export type DesignKind = "sealed" | "vented" | "pr" | "bandpass";
+export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line";
 export type ShapeKind = "box" | "cylinder" | "sphere" | "frustum";
 export type PrParams = Required<Pick<PassiveRadiatorInput, "mms_g" | "sd_cm2" | "xmax_mm" | "qms" | "vas_l">>;
 
@@ -103,7 +103,30 @@ export interface BandpassLosses {
 /** Per-chamber losses starting from the shared ones. */
 export const bandpassLossesFrom = (l: ChamberLosses): BandpassLosses => ({ front: { ...l }, rear: { ...l }, qicl: 100 });
 
-export type DesignState = SealedDesign | VentedDesign | PrDesign | BandpassDesign;
+/**
+ * Transmission line family: one piece from the closed end to the mouth (straight or
+ * tapered), the driver somewhere along it, stuffing from the closed end, and optionally
+ * a port at the mouth (mass-loaded line). `vb_l` is kept equal to the line's volume.
+ */
+export interface LineDesign extends DesignBase {
+  kind: "line";
+  length_cm: number;
+  closedArea_cm2: number;
+  mouthArea_cm2: number;
+  taper: "linear" | "conical" | "exponential";
+  /** Driver centre from the closed end. */
+  driverAt_cm: number;
+  /** Stuffing density and how far from the closed end it goes (0 = none). */
+  fill_kgm3: number;
+  fillLength_cm: number;
+  port: boolean;
+  portDiameter_cm: number;
+  portLength_cm: number;
+  /** Last tuning asked for with "Set length". */
+  targetFb: number;
+}
+
+export type DesignState = SealedDesign | VentedDesign | PrDesign | BandpassDesign | LineDesign;
 
 /** An EQ stage plus where it applies: every design, or one design by id. */
 export type EqItem = EqStage & { id: string; on: boolean; target: string };
@@ -233,6 +256,25 @@ export function newDesign(kind: DesignKind, existing: DesignState[]): DesignStat
         count: 1,
         flare_cm: 0,
         targetFb: 30,
+      };
+    case "line":
+      return {
+        id,
+        kind,
+        name: `Transmission line${suffix}`,
+        on: true,
+        vb_l: 32,
+        length_cm: 200,
+        closedArea_cm2: 200,
+        mouthArea_cm2: 120,
+        taper: "linear",
+        driverAt_cm: 0,
+        fill_kgm3: 8,
+        fillLength_cm: 120,
+        port: false,
+        portDiameter_cm: 5,
+        portLength_cm: 10,
+        targetFb: 40,
       };
     case "bandpass":
       return {
@@ -496,7 +538,7 @@ function prGroupsFrom(raw: unknown): PrGroupState[] {
 }
 
 function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
-  if (!["sealed", "vented", "pr", "bandpass"].includes(d?.kind)) return null;
+  if (!["sealed", "vented", "pr", "bandpass", "line"].includes(d?.kind)) return null;
   const base = newDesign(d.kind, all);
   const merged = { ...base, ...d } as DesignState;
   if (merged.kind === "pr") {

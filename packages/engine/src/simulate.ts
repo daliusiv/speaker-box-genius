@@ -1,5 +1,6 @@
 import { abs, add, arg, cx, div, inv, mul, parallel, scale, sub, type Complex } from "./complex.ts";
 import { STANDARD_AIR, type Air } from "./constants.ts";
+import { lineNetwork } from "./line.ts";
 import { eqResponse, highPassResponse, type EqStage, type HighPass } from "./filters.ts";
 import {
   boxCompliance,
@@ -42,6 +43,19 @@ import {
  * Radiated volume velocity is the air that leaves the box system, which equals
  * minus the flow into the box air spring: U0 = −P_box / Z_box-air.
  */
+
+/**
+ * Tuning of a line from its impedance: the minimum between the first two peaks (like a
+ * vented box's Fb). Null if the curve doesn't show two peaks in range.
+ */
+function lineTuning(freq: Float64Array, z: Float64Array): number | null {
+  let i = 1;
+  while (i < z.length - 1 && !(z[i]! >= z[i - 1]! && z[i]! > z[i + 1]!)) i++;
+  if (i >= z.length - 1) return null;
+  let j = i + 1;
+  while (j < z.length - 1 && !(z[j]! <= z[j - 1]! && z[j]! < z[j + 1]!)) j++;
+  return j < z.length - 1 ? freq[j]! : null;
+}
 
 /** Dynamic viscosity of air at about 20 °C (Pa·s). */
 const AIR_VISCOSITY = 1.81e-5;
@@ -193,7 +207,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   // Box elements
   const summary: SimulationResult["summary"] = { volts, referenceSpl: 0, f3: null, f6: null };
   const bp = box.kind === "bandpass" ? bandpassNetwork(box, d, n, air, summary) : null;
-  const single = box.kind === "bandpass" ? null : box;
+  const line = box.kind === "line" ? lineNetwork(box, air) : null;
+  const single = box.kind === "bandpass" || box.kind === "line" ? null : box;
   const cab = single ? boxCompliance(single.vb_l, air) : 0;
   const ql = finiteOr(single?.ql, DEFAULT_LOSSES.ql);
   const qa = finiteOr(single?.qa, DEFAULT_LOSSES.qa);
@@ -282,7 +297,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       : bp && bp.frontPrs.length + bp.rearPrs.length > 0
         ? [...bp.frontPrs, ...bp.rearPrs].map(() => new Float64Array(N))
         : null,
-    vport: box.kind === "vented" || bp?.front ? new Float64Array(N) : null,
+    vport: box.kind === "vented" || box.kind === "line" || bp?.front ? new Float64Array(N) : null,
     vport2: bp?.rear ? new Float64Array(N) : null,
     zmag: new Float64Array(N),
     zph: new Float64Array(N),
@@ -340,6 +355,20 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
           if (g.m.xmax !== null && xk > 0) prLimitPower = Math.min(prLimitPower, pNow * (g.m.xmax / xk) ** 2);
         });
         out.xpr![i] = out.xprGroups[0]![i]!;
+      }
+    } else if (line) {
+      // Transmission line: the cone's back drives the line; the mouth (or port) radiates.
+      zLoad = line.zLoad(w);
+      zMech = add(zas, scale(zLoad, n));
+      ui = div(pg, add(zae, zMech));
+      const ud = scale(ui, n);
+      const pDriver = mul(ud, zLoad);
+      const uMouth = line.mouthFlow(w, pDriver);
+      // As for a vented box: the front of the cone radiates −ud, the mouth radiates uMouth.
+      u0 = sub(uMouth, ud);
+      if (out.vport) {
+        vport = (Math.SQRT2 * abs(uMouth)) / line.exitArea;
+        out.vport[i] = vport;
       }
     } else {
       const zAir = cx(rab, -1 / (w * cab));
@@ -453,6 +482,13 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   summary.f3 = crossing(freq, out.spl, summary.referenceSpl - 3);
   summary.f6 = crossing(freq, out.spl, summary.referenceSpl - 6);
   if (nlCoef > 0) summary.portCompression = compression;
+  if (line) {
+    summary.fb = lineTuning(freq, out.zmag) ?? undefined;
+    // A line's response ripples above its tuning, so its F3 is the low-frequency edge:
+    // where the response first reaches −3 dB coming up from the bottom.
+    summary.f3 = crossingUp(freq, out.spl, summary.referenceSpl - 3);
+    summary.f6 = crossingUp(freq, out.spl, summary.referenceSpl - 6);
+  }
   if (bp) summary.f3High = crossingHigh(freq, out.spl, summary.referenceSpl - 3);
 
   return {
@@ -499,6 +535,18 @@ function crossing(freq: Float64Array, spl: Float64Array, level: number): number 
   return Math.exp(f1 + t * (f2 - f1));
 }
 
+
+/** Coming up from the lowest frequency, where the response first reaches `level`. */
+function crossingUp(freq: Float64Array, spl: Float64Array, level: number): number | null {
+  if (spl[0]! >= level) return freq[0]!;
+  for (let i = 1; i < spl.length; i++) {
+    if (spl[i]! >= level) {
+      const t = (level - spl[i - 1]!) / (spl[i]! - spl[i - 1]!);
+      return Math.exp(Math.log(freq[i - 1]!) + t * (Math.log(freq[i]!) - Math.log(freq[i - 1]!)));
+    }
+  }
+  return null;
+}
 
 /** Walking up from the loudest point, where the response first falls below `level`. */
 function crossingHigh(freq: Float64Array, spl: Float64Array, level: number): number | null {

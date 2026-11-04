@@ -20,7 +20,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
   const r = volumeFor(s, target);
   const linkOptions: { value: string; text: string }[] = [
     { value: "none", text: "No design (just calculate)" },
-    ...s.designs.map((d) => ({ value: d.id, text: d.name || d.id })),
+    ...s.designs.filter((d) => d.kind !== "line").map((d) => ({ value: d.id, text: d.name || d.id })),
   ];
 
   // Find dimensions for a target volume (what the box volume will be in the simulation).

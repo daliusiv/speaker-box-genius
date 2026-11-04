@@ -891,6 +891,7 @@ export function App(props: { initial: AppState | null }) {
                 color={colorOf(state, d.id)}
                 vb_l={vbOf(state, d)}
                 linked={state.volume.link === d.id}
+                lineFb={d.kind === "line" ? (designs.find((x) => x.design.id === d.id)?.result.summary.fb ?? null) : undefined}
                 canDelete={state.designs.length > 1}
                 db={db}
                 air={airOf(state)}
@@ -1133,7 +1134,11 @@ export function App(props: { initial: AppState | null }) {
                       // F3 is the box's own: without the baffle step (which isn't a box property), drawn on the curve as shown.
                       const step = baffleDbFor(state, d.result.freq, finderCtx.driver?.sd_cm2);
                       const own = step ? rel.map((v, i) => v - step[i]!) : rel;
-                      return minus3Points(d.result.freq, own, d.design.kind === "bandpass").map((f) => ({
+                      const pts =
+                        d.design.kind === "line"
+                          ? lowEdge(d.result.freq, own)
+                          : minus3Points(d.result.freq, own, d.design.kind === "bandpass");
+                      return pts.map((f) => ({
                         f,
                         y: step ? valueAt(d.result.freq, rel, f) : -3,
                         color: d.color,
@@ -1431,6 +1436,17 @@ function bandpassOwnLosses(b: { front: WprChamberLosses; rear: WprChamberLosses;
  * Where a relative response (0 dB = passband) crosses −3 dB, read off the curve as shown:
  * below its peak, and for a bandpass above it too. Interpolated in log f.
  */
+/** Transmission lines ripple above their tuning: their −3 dB point is the first one coming up from the bottom. */
+function lowEdge(freq: Float64Array, rel: ArrayLike<number>): number[] {
+  for (let i = 1; i < rel.length; i++) {
+    if (rel[i]! >= -3 && rel[i - 1]! < -3) {
+      const t = (-3 - rel[i - 1]!) / (rel[i]! - rel[i - 1]!);
+      return [freq[i - 1]! * (freq[i]! / freq[i - 1]!) ** t];
+    }
+  }
+  return [];
+}
+
 /** Value of a curve at frequency f (log-frequency interpolation). */
 function valueAt(freq: Float64Array, ys: ArrayLike<number>, f: number): number {
   let i = 1;
