@@ -2337,7 +2337,7 @@ body.print-build #print-root .fold-chamber {
 .help-dock {
   position: fixed;
   left: 50%;
-  bottom: 1rem;
+  top: 0;
   z-index: 60;
   transform: translateX(-50%);
   width: min(40rem, calc(100vw - 1.5rem));
@@ -2360,15 +2360,6 @@ body.print-build #print-root .fold-chamber {
   from {
     opacity: 0;
     transform: translate(-50%, 6px);
-  }
-}
-@media (max-width: 860px) {
-  .help-dock {
-    bottom: calc(4.6rem + env(safe-area-inset-bottom));
-  }
-  /* With the keyboard open the strip sits just above it (set from script). */
-  .help-dock.over-keyboard {
-    margin-bottom: 0.4rem;
   }
 }
 @media print {
