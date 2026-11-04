@@ -26,6 +26,8 @@ export interface VentedDesign extends DesignBase {
   count: number;
   /** Last tuning frequency asked for with "Set port length". */
   targetFb: number;
+  /** Round ports: round-over radius at both ends (cm), 0 = straight. */
+  flare_cm: number;
 }
 
 /** A further group of passive radiators in the same box (a different model, or the same with other added mass). */
@@ -127,6 +129,8 @@ export interface Settings {
   inductance: boolean;
   /** Box losses as Q values at the tuning frequency: leakage, absorption, port. WinISD's defaults are 10 / 100 / 100. */
   losses: { ql: number; qa: number; qp: number };
+  /** Port compression: turbulent port loss that grows with air speed (approximate). Off = like WinISD. */
+  portCompression: boolean;
 }
 
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
@@ -222,6 +226,7 @@ export function newDesign(kind: DesignKind, existing: DesignState[]): DesignStat
         slotHeight_cm: 5,
         length_cm: 30,
         count: 1,
+        flare_cm: 0,
         targetFb: 30,
       };
     case "bandpass":
@@ -286,7 +291,15 @@ export const DEFAULT_STATE: AppState = {
   dvc: { on: false, entered: "parallel", wired: "parallel" },
   roomGain: { mode: "off", length_cm: 250, slope: 12, max_db: 18 },
   highPass: { on: false, type: "butterworth", order: 2, freq: 18 },
-  settings: { units: "metric", air: "standard", velocity: "peak", rg: 0, inductance: true, losses: { ql: 10, qa: 100, qp: 100 } },
+  settings: {
+    units: "metric",
+    air: "standard",
+    velocity: "peak",
+    rg: 0,
+    inductance: true,
+    losses: { ql: 10, qa: 100, qp: 100 },
+    portCompression: false,
+  },
   eq: [],
   designs: defaultDesigns(),
   volume: {

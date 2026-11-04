@@ -55,10 +55,10 @@ export function shapeOf(v: AppState["volume"]): Shape {
   }
 }
 
-export function portOf(v: Omit<PortFields, "count" | "targetFb">, length_cm = v.length_cm): PortInput {
+export function portOf(v: Omit<PortFields, "count" | "targetFb"> & { flare_cm?: number }, length_cm = v.length_cm): PortInput {
   return v.shape === "slot"
     ? { shape: "slot", width_cm: v.slotWidth_cm, height_cm: v.slotHeight_cm, length_cm }
-    : { shape: "round", diameter_cm: v.diameter_cm, length_cm };
+    : { shape: "round", diameter_cm: v.diameter_cm, length_cm, ...(v.flare_cm! > 0 ? { flare_cm: v.flare_cm } : {}) };
 }
 
 /** Net volume of the calculator's box, with deductions for the design it feeds (if any). */
@@ -217,6 +217,7 @@ export function simOptionsOf(s: AppState) {
     air: airOf(s),
     // The limit is in the displayed convention; the engine works in peak.
     portVelocityLimit: s.settings.velocity === "rms" ? PORT_LIMIT * Math.SQRT2 : PORT_LIMIT,
+    portCompression: s.settings.portCompression,
   };
 }
 

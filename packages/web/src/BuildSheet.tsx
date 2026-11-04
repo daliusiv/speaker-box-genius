@@ -94,7 +94,7 @@ export function BuildSheet(props: {
           length: d.length_cm * 10,
           ...(d.shape === "slot"
             ? { slot: { width: d.slotWidth_cm * 10, height: d.slotHeight_cm * 10 } }
-            : { holeDiameter: d.diameter_cm * 10 + 2 * v.portWall_mm }),
+            : { holeDiameter: (d.diameter_cm + 2 * (d.flare_cm ?? 0)) * 10 + 2 * v.portWall_mm }),
         }
       : undefined;
 
@@ -185,7 +185,14 @@ export function BuildSheet(props: {
               {port && port.length > 0 && (
                 <li>
                   {port.count} × port {port.slot ? "channel" : "tube"}, cut to <b>{len(port.length)}{lenUnit}</b> long
-                  {!port.slot && <span className="hint"> (inside ⌀ {len(port.holeDiameter! - 2 * v.portWall_mm)}{lenUnit})</span>}
+                  {!port.slot && d?.kind === "vented" && (
+                    <span className="hint">
+                      {" "}
+                      (inside ⌀ {len(d.diameter_cm * 10)}
+                      {lenUnit}
+                      {d.flare_cm > 0 ? `, flared ${len(d.flare_cm * 10)}${lenUnit} radius at both ends` : ""})
+                    </span>
+                  )}
                 </li>
               )}
               {s.isobaric && <li>Isobaric: the second driver of each pair mounts on an inner baffle, face to face or behind the first.</li>}

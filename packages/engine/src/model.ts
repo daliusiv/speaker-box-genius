@@ -84,12 +84,21 @@ export function voiceCoilImpedance(m: Pick<DriverModel, "re" | "le" | "l2" | "r2
 // ---------------------------------------------------------------------------
 
 export type PortInput =
-  | { shape: "round"; diameter_cm: number; length_cm: number }
+  | {
+      shape: "round";
+      diameter_cm: number;
+      length_cm: number;
+      /** Round-over (flare) radius at the ends (cm); 0 or missing = a straight tube. */
+      flare_cm?: number;
+      /** How many ends are flared (default 2 when flare_cm > 0). */
+      flareEnds?: 1 | 2;
+    }
   | { shape: "slot"; width_cm: number; height_cm: number; length_cm: number };
 
 /** WinISD-style end correction: effective length = length + k × (equivalent) diameter. */
 export const DEFAULT_END_CORRECTION = 0.732;
 
+/** Cross-section at the narrowest point (the throat for a flared port). */
 export function portArea(p: PortInput): number {
   return p.shape === "round" ? Math.PI * (p.diameter_cm / 200) ** 2 : (p.width_cm * p.height_cm) / 1e4;
 }
@@ -99,13 +108,71 @@ export function portEquivalentDiameter(p: PortInput): number {
   return 2 * Math.sqrt(portArea(p) / Math.PI);
 }
 
+/** Flare radius (m) and number of flared ends; zero for slots and straight tubes. */
+export function portFlare(p: PortInput): { r: number; ends: 0 | 1 | 2 } {
+  if (p.shape !== "round" || !(p.flare_cm! > 0)) return { r: 0, ends: 0 };
+  return { r: p.flare_cm! / 100, ends: p.flareEnds ?? 2 };
+}
+
+/** Area of a flared end's mouth (m²). Equals the throat area for straight ports. */
+export function portMouthArea(p: PortInput): number {
+  const { r, ends } = portFlare(p);
+  if (ends === 0) return portArea(p);
+  return Math.PI * (p.shape === "round" ? p.diameter_cm / 200 + r : 0) ** 2;
+}
+
+/**
+ * ∫ S0/S(x) dx over one flared end (m): the "throat-equivalent" length of a round-over
+ * of radius r on a tube of radius a. Along the flare the radius grows from a to a + r
+ * as a quarter circle.
+ */
+function flareEquivalentLength(a: number, r: number): number {
+  const n = 64;
+  let sum = 0;
+  for (let k = 0; k < n; k++) {
+    const x = ((k + 0.5) / n) * r; // distance from where the flare starts
+    const radius = a + r - Math.sqrt(Math.max(0, r * r - x * x));
+    sum += (a / radius) ** 2;
+  }
+  return (sum / n) * r;
+}
+
+/**
+ * Effective length (m) as a straight tube of the throat's area: the physical length with
+ * flared sections weighted by their larger area, plus the end corrections (k × diameter
+ * shared over both ends, taken at each end's own diameter and referred to the throat).
+ * For a straight port this is WinISD's length + k × diameter.
+ */
 export function portEffectiveLength(p: PortInput, endCorrection = DEFAULT_END_CORRECTION): number {
-  return p.length_cm / 100 + endCorrection * portEquivalentDiameter(p);
+  const d0 = portEquivalentDiameter(p);
+  const { r, ends } = portFlare(p);
+  if (ends === 0) return p.length_cm / 100 + endCorrection * d0;
+  const a = d0 / 2;
+  const straight = Math.max(0, p.length_cm / 100 - ends * r);
+  const flared = ends * flareEquivalentLength(a, r);
+  const dMouth = 2 * (a + r);
+  // End correction per end ∝ its diameter, and its mass ∝ 1/area: refer to the throat.
+  const ecMouth = (endCorrection / 2) * dMouth * (a / (a + r)) ** 2;
+  const ecPlain = (endCorrection / 2) * d0;
+  return straight + flared + ends * ecMouth + (2 - ends) * ecPlain;
 }
 
 /** Acoustic mass of one port (kg/m⁴). */
 export function portAcousticMass(p: PortInput, endCorrection = DEFAULT_END_CORRECTION, air: Air = STANDARD_AIR): number {
   return (air.rho * portEffectiveLength(p, endCorrection)) / portArea(p);
+}
+
+/**
+ * Turbulent ("minor") loss coefficient for port compression: about 1.5 for sharp-edged
+ * ends (entry ≈ 0.5 + exit jet ≈ 1), falling quickly as the ends are rounded. Approximate:
+ * real ports vary with how the flare is shaped, bends and the box around them.
+ */
+export function portLossCoefficient(p: PortInput): number {
+  const { r, ends } = portFlare(p);
+  if (ends === 0) return 1.5;
+  const ratio = r / portEquivalentDiameter(p);
+  const flaredEnd = 0.1 + 0.65 * Math.exp(-6 * ratio); // per end: 0.75 sharp → ~0.15 well rounded
+  return ends * flaredEnd + (2 - ends) * 0.75;
 }
 
 /** Acoustic compliance of a box (m⁵/N). */
@@ -135,7 +202,11 @@ export function portLengthForFb(
   const w = 2 * Math.PI * fb;
   const mapTotal = 1 / (w * w * boxCompliance(vb_l, air));
   const leff = (mapTotal * count * portArea(port)) / air.rho;
-  return (leff - endCorrection * portEquivalentDiameter(port)) * 100;
+  // Effective length grows one-for-one with physical length once the flares fit, so
+  // solve from the effective length of a port of the flares' length.
+  const { r, ends } = portFlare(port);
+  const base = { ...port, length_cm: ends * r * 100 } as PortInput;
+  return (leff - portEffectiveLength(base, endCorrection)) * 100 + base.length_cm;
 }
 
 // ---------------------------------------------------------------------------
