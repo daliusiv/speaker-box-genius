@@ -3,6 +3,7 @@
   "model": "WO34HC-4",
   "type": "woofer",
   "nominal_ohms": 4,
+  "size_in": 13.5,
   "ts": {
     "fs": 20,
     "qms": 5.53,
@@ -21,9 +22,16 @@
     {
       "kind": "datasheet",
       "url": "https://sbacoustics.com/product/satori-wo34hc-4/",
-      "retrieved": "2026-10-18",
-      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2026/03/13.5-inch-SATORI-WO34HC-4.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "notes": "Xmax 8.3 mm is half the published linear coil travel (16.6 mm peak to peak)."
 }

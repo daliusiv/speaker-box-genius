@@ -1,8 +1,9 @@
 {
   "brand": "SB Acoustics",
   "model": "SB17NRX2L35-4",
-  "type": "woofer",
+  "type": "midbass",
   "nominal_ohms": 4,
+  "size_in": 6,
   "ts": {
     "fs": 41,
     "qms": 4.97,
@@ -21,9 +22,16 @@
     {
       "kind": "datasheet",
       "url": "https://sbacoustics.com/product/sb17nrx2l35-4-norex/",
-      "retrieved": "2026-10-18",
-      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2025/03/6in-SB17NRX2L35-4.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "notes": "Xmax 4.8 mm is half the published linear coil travel (9.6 mm peak to peak)."
 }

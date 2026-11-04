@@ -1,0 +1,31 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB34NRX-00",
+  "type": "passive-radiator",
+  "size_in": 12,
+  "params": {
+    "mms_g": 665,
+    "sd_cm2": 508,
+    "xmax_mm": 17,
+    "fs": 8.7,
+    "qms": 12.1,
+    "vas_l": 183,
+    "cms_mm_per_n": 0.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/12in-sb34nrx-00-norex/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2022/04/12in-SB34NRX-00.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax is the published maximum mechanical excursion (Xmech ±17 mm), not a linear limit."
+}

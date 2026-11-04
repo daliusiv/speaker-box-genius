@@ -1,8 +1,9 @@
 {
   "brand": "SB Acoustics",
   "model": "SB17BAC35-8-COAX",
-  "type": "woofer",
+  "type": "midbass",
   "nominal_ohms": 8,
+  "size_in": 6,
   "ts": {
     "fs": 35.2,
     "qms": 4.1,
@@ -21,10 +22,16 @@
     {
       "kind": "datasheet",
       "url": "https://sbacoustics.com/product/sb17bac35-8-coax-aluminum/",
-      "retrieved": "2026-10-18",
-      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2026/09/6-inch-SB17BAC35-8-COAX.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
     }
   ],
   "status": "community",
-  "notes": "Coaxial driver; values are for the woofer section."
+  "notes": "Coaxial: the woofer's parameters (the tweeter's are left out). Xmax 3.1 mm is half the published linear coil travel (6.2 mm peak to peak)."
 }

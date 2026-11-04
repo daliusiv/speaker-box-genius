@@ -1,0 +1,31 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB20PFC-00",
+  "type": "passive-radiator",
+  "size_in": 8,
+  "params": {
+    "mms_g": 76.7,
+    "sd_cm2": 216,
+    "xmax_mm": 11,
+    "fs": 20,
+    "qms": 6.8,
+    "vas_l": 55,
+    "cms_mm_per_n": 0.83
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/8-sb20pfc-00-paper/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2021/02/8in-SB20PFC-00-OEM-only.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Listed by SB Acoustics as OEM only. Xmax is the published maximum mechanical excursion (Xmech ±11 mm), not a linear limit."
+}

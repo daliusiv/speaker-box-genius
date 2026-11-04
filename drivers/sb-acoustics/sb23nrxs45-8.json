@@ -8,23 +8,30 @@
     "fs": 27,
     "qms": 5.4,
     "qes": 0.41,
-    "qts": 0.38,
     "vas_l": 94,
     "re": 5.6,
+    "sd_cm2": 216,
+    "qts": 0.38,
     "le_mh": 0.6,
     "bl": 7.5,
     "mms_g": 24.5,
-    "sd_cm2": 216,
     "xmax_mm": 6.5,
     "pe_w": 60
   },
   "sources": [
     {
       "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/8in-sb23nrxs45-8-norex/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
       "url": "https://sbacoustics.com/wp-content/uploads/2026/05/8-inch-SB23NRXS45-8.pdf",
-      "retrieved": "2026-11-02",
-      "note": "Manufacturer datasheet REV.2 (04.05.2026). Xmax = half the published 13 mm peak-to-peak linear coil travel."
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "notes": "Xmax 6.5 mm is half the published linear coil travel (13 mm peak to peak)."
 }

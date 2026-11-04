@@ -1,7 +1,7 @@
 {
   "brand": "SB Acoustics",
   "model": "MR13TX-4",
-  "type": "full-range",
+  "type": "midrange",
   "nominal_ohms": 4,
   "size_in": 5,
   "ts": {
@@ -22,9 +22,16 @@
     {
       "kind": "datasheet",
       "url": "https://sbacoustics.com/product/5-satori-mr13tx-4-textreme/",
-      "retrieved": "2026-10-18",
-      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2024/05/5in-SATORI-MR13TX-4.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "notes": "Xmax 3 mm is half the published linear coil travel (6 mm peak to peak)."
 }

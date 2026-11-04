@@ -6,28 +6,32 @@
   "size_in": 12,
   "ts": {
     "fs": 19,
-    "qms": 5.0,
+    "qms": 5,
     "qes": 0.34,
-    "qts": 0.32,
     "vas_l": 164,
     "re": 4.5,
-    "le_mh": 3.0,
+    "sd_cm2": 508,
+    "qts": 0.32,
+    "le_mh": 3,
     "bl": 15.4,
     "mms_g": 154,
-    "sd_cm2": 508,
     "xmax_mm": 11,
     "pe_w": 200
-  },
-  "physical": {
-    "depth_mm": 156
   },
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.soundimports.eu/en/sb-acoustics-sb34swnrx-s75-6.html",
-      "retrieved": "2026-11-03",
-      "note": "SoundImports (official distributor) product specifications table. No cutout diameter listed."
+      "url": "https://sbacoustics.com/product/12in-sb34swnrx-s75-6-norex/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2020/11/12in-SB34SWNRX-S75-6.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "notes": "Xmax 11 mm is half the published linear coil travel (22 mm peak to peak)."
 }

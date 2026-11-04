@@ -8,23 +8,30 @@
     "fs": 28.5,
     "qms": 7.3,
     "qes": 0.46,
-    "qts": 0.43,
     "vas_l": 37,
     "re": 6.2,
+    "sd_cm2": 210,
+    "qts": 0.43,
     "le_mh": 1.02,
     "bl": 11.3,
     "mms_g": 53,
-    "sd_cm2": 210,
     "xmax_mm": 10.5,
     "pe_w": 150
   },
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.soundimports.eu/en/sb-acoustics-sb23mfcl45-8.html",
-      "retrieved": "2026-11-03",
-      "note": "SoundImports (official distributor) product specifications table. No cutout or depth listed."
+      "url": "https://sbacoustics.com/product/8in-sb23mfcl45-8/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2026/05/8-inch-SB23MFCL45-8.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "notes": "Xmax 10.5 mm is half the published linear coil travel (21 mm peak to peak)."
 }

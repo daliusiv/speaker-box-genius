@@ -22,9 +22,16 @@
     {
       "kind": "datasheet",
       "url": "https://sbacoustics.com/product/4in-sb12nrxf25-4-norex/",
-      "retrieved": "2026-10-18",
-      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2023/07/4in-SB12NRXF25-4-OEM-only.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "notes": "Listed by SB Acoustics as OEM only. Xmax 5 mm is half the published linear coil travel (10 mm peak to peak)."
 }

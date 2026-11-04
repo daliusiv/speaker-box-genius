@@ -1,0 +1,38 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SW26DBAC76-3-DV",
+  "type": "subwoofer",
+  "nominal_ohms": 1.5,
+  "size_in": 10,
+  "ts": {
+    "fs": 19.5,
+    "qms": 5.96,
+    "qes": 0.29,
+    "vas_l": 49.7,
+    "re": 1.2,
+    "sd_cm2": 312,
+    "qts": 0.28,
+    "bl": 9.7,
+    "mms_g": 185,
+    "xmax_mm": 12,
+    "pe_w": 300
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/10in-sw26dbac76-3-dv/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2021/09/10in-SW26DBAC76-3-DV.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "parallel",
+  "notes": "Listed by SB Acoustics as OEM only. Dual voice coil (2 × 2.4 Ω): values for the coils in parallel (Bl 9.7 T·m parallel, 19.4 series). Xmax 12 mm is half the published linear coil travel (24 mm peak to peak)."
+}

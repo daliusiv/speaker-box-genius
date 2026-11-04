@@ -1,0 +1,31 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SW26DBAC-00",
+  "type": "passive-radiator",
+  "size_in": 10,
+  "params": {
+    "mms_g": 400,
+    "sd_cm2": 312,
+    "xmax_mm": 17,
+    "fs": 13,
+    "qms": 8.8,
+    "vas_l": 54,
+    "cms_mm_per_n": 0.39
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/10in-sw26dbac-00/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2020/09/10in-SW26DBAC-00.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax is the published maximum mechanical excursion (Xmech ±17 mm), not a linear limit."
+}
