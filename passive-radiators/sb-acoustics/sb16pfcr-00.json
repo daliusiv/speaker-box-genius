@@ -1,0 +1,31 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB16PFCR-00",
+  "type": "passive-radiator",
+  "size_in": 6,
+  "params": {
+    "mms_g": 38,
+    "sd_cm2": 124,
+    "xmax_mm": 10,
+    "fs": 22,
+    "qms": 4.4,
+    "vas_l": 30,
+    "cms_mm_per_n": 1.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/6in-sb16pfcr-00-paper/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2020/03/6in-SB16PFCR-00.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax is the published maximum mechanical excursion (Xmech ±10 mm), not a linear limit."
+}

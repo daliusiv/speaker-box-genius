@@ -1,7 +1,7 @@
 {
   "brand": "SB Acoustics",
   "model": "MR16PNW-8",
-  "type": "full-range",
+  "type": "midrange",
   "nominal_ohms": 8,
   "size_in": 6.5,
   "ts": {
@@ -21,10 +21,17 @@
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://sbacoustics.com/product/6%C2%BDin-satori-mr16pnw-8/",
-      "retrieved": "2026-10-18",
-      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+      "url": "https://sbacoustics.com/product/6%c2%bdin-satori-mr16pnw-8/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2021/01/6%C2%BDin-SATORI-MR16PNW-8.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "notes": "Xmax 3.1 mm is half the published linear coil travel (6.2 mm peak to peak)."
 }

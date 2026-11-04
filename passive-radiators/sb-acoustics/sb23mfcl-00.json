@@ -1,0 +1,31 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB23MFCL-00",
+  "type": "passive-radiator",
+  "size_in": 8,
+  "params": {
+    "mms_g": 141,
+    "sd_cm2": 210,
+    "xmax_mm": 19,
+    "fs": 19,
+    "qms": 15.3,
+    "vas_l": 31.2,
+    "cms_mm_per_n": 0.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/8%e2%80%b3-sb23mfcl-00-polypropylene/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2026/05/8-inch-SB23MFCL-00.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax is the published maximum mechanical excursion (Xmech ±19 mm), not a linear limit."
+}

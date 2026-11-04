@@ -8,7 +8,7 @@
     "fs": 200,
     "qms": 0.68,
     "qes": 1.05,
-    "vas_l": 0.02,
+    "vas_l": 0.021,
     "re": 3.4,
     "sd_cm2": 4.2,
     "qts": 0.41,
@@ -22,10 +22,16 @@
     {
       "kind": "datasheet",
       "url": "https://sbacoustics.com/product/1-sb36wbac21-4-aluminum/",
-      "retrieved": "2026-10-18",
-      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2020/03/1in-SB36WBAC21-4.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
     }
   ],
   "status": "community",
-  "notes": "Vas 0.02 L calculated from the published Cms and Sd."
+  "notes": "Xmax 1.75 mm is half the published linear coil travel (3.5 mm peak to peak)."
 }

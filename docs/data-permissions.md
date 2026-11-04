@@ -5,11 +5,11 @@ Manufacturers who have given permission for their published data to be used in t
 | Brand | Granted | By | Scope |
 |---|---|---|---|
 | Dayton Audio | 3 Nov 2026 | Jill Chupka, Product Coordinator (email) | Use the published Thiele/Small parameters from Dayton Audio specification sheets to expand the driver database. |
+| SB Acoustics | 4 Nov 2026 | Mark Thomsen, International Sales & Marketing Manager, SB Audience / SB Acoustics (email) | Post the published specs; no export file exists, so they may be gathered with a script. |
 
 ## Requests pending
 
 - Scan-Speak: email drafted 3 Nov 2026. Their website terms restrict copying datasheet information without written consent, so **no automated import until they reply**.
-- SB Acoustics: email drafted 3 Nov 2026.
 - Parts Express, Tymphany, Markaudio, Tang Band, Faital Pro, B&C Speakers, 18 Sound, Beyma: emails drafted 3 Nov 2026.
 
 ## Rules that apply whatever the permission

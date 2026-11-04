@@ -1,0 +1,30 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB15SFCR-00",
+  "type": "passive-radiator",
+  "params": {
+    "mms_g": 62,
+    "sd_cm2": 178,
+    "xmax_mm": 11,
+    "fs": 21,
+    "qms": 2.7,
+    "vas_l": 41.8,
+    "cms_mm_per_n": 0.93
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/5x8in-sb15sfcr-00/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2020/11/5x8in-SB15SFCR-00.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax is the published maximum mechanical excursion (Xmech ±11 mm), not a linear limit."
+}

@@ -1,0 +1,31 @@
+{
+  "brand": "SB Acoustics",
+  "model": "SB13PFC-00",
+  "type": "passive-radiator",
+  "size_in": 5,
+  "params": {
+    "mms_g": 36,
+    "sd_cm2": 87,
+    "xmax_mm": 10,
+    "fs": 23,
+    "qms": 5.9,
+    "vas_l": 14.2,
+    "cms_mm_per_n": 1.33
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/product/5-sb13pfc-00-paper/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2021/02/5in-SB13PFC-00-OEM-only.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Listed by SB Acoustics as OEM only. Xmax is the published maximum mechanical excursion (Xmech ±10 mm), not a linear limit."
+}

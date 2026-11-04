@@ -8,27 +8,30 @@
     "fs": 18.4,
     "qms": 7.4,
     "qes": 0.32,
-    "qts": 0.31,
     "vas_l": 462,
     "re": 4.6,
+    "sd_cm2": 850,
+    "qts": 0.31,
     "le_mh": 2.1,
     "bl": 16.7,
     "mms_g": 166,
-    "sd_cm2": 850,
     "xmax_mm": 11.5,
     "pe_w": 300
-  },
-  "physical": {
-    "cutout_mm": 377,
-    "depth_mm": 170.3
   },
   "sources": [
     {
       "kind": "datasheet",
-      "url": "https://www.soundimports.eu/en/sb-aucoustics-sb42fhcl75-6.html",
-      "retrieved": "2026-11-03",
-      "note": "SoundImports (official distributor) product specifications table. Xmax listed as 11.5 mm in the table and 23 mm peak-to-peak in the text — the same figure."
+      "url": "https://sbacoustics.com/product/15in-sb42fhcl75-6/",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics product page specifications, used with SB Acoustics' permission (4 Nov 2026)."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://sbacoustics.com/wp-content/uploads/2020/03/15in-SB42FHCL75-6.pdf",
+      "retrieved": "2026-11-04",
+      "note": "SB Acoustics datasheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "notes": "Xmax 11.5 mm is half the published linear coil travel (23 mm peak to peak)."
 }

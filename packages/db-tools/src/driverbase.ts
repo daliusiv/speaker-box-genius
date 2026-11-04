@@ -12,7 +12,7 @@
  *
  * Only woofers, full-range, coaxial and guitar/bass speakers are taken.
  * Entries we already have are never overwritten, and brands we import
- * directly (Dayton Audio, with permission) are left out. The same checks as
+ * directly (Dayton Audio and SB Acoustics, with permission) are left out. The same checks as
  * the Dayton importer apply: values that contradict each other are fixed only
  * when one is clearly the odd one out; anything else is skipped and reported.
  */
@@ -28,7 +28,7 @@ export const ATTRIBUTION =
   "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes.";
 
 /** Brands we import from the manufacturer directly, so driver-base copies are skipped. */
-export const DIRECT_BRANDS = new Set(["Dayton Audio"]);
+export const DIRECT_BRANDS = new Set(["Dayton Audio", "SB Acoustics"]);
 
 /** driver-base manufacturer name → our brand folder and _brand.json. */
 export const BRANDS: Record<string, { slug: string; brand: Brand }> = {
@@ -368,7 +368,7 @@ async function main() {
     "",
     `Source: ${DRIVER_BASE_URL} (\`web/drivers.json\`, generated ${data.generated_at ?? "?"}), data licensed CC BY 4.0.`,
     "",
-    `Records considered (woofer, full-range, coax, guitar/bass; Dayton Audio excluded): ${considered}. Written: ${total}. Already in the database: ${kept.length}. Adjusted: ${adjusted.length}. Skipped: ${skipped.length}.`,
+    `Records considered (woofer, full-range, coax, guitar/bass; Dayton Audio and SB Acoustics excluded): ${considered}. Written: ${total}. Already in the database: ${kept.length}. Adjusted: ${adjusted.length}. Skipped: ${skipped.length}.`,
     "",
     "### Written per brand",
     ...[...written.entries()].sort((a, b) => b[1].length - a[1].length).map(([m, l]) => `- ${m}: ${l.length}`),
