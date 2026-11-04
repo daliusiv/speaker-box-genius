@@ -277,12 +277,12 @@ export function App(props: { initial: AppState | null }) {
   const partsOf = (d: Design, map: (y: Float64Array) => Float64Array): Series[] =>
     showParts && d.result.parts
       ? [
-          { label: `${d.design.name} · cone`, color: d.color, y: map(d.result.parts.cone), dash: "6 4", thin: true },
-          { label: `${d.design.name} · mouth`, color: d.color, y: map(d.result.parts.mouth), dash: "1.5 3", thin: true },
+          { label: `${d.label} · cone`, color: d.color, y: map(d.result.parts.cone), dash: "6 4", thin: true },
+          { label: `${d.label} · mouth`, color: d.color, y: map(d.result.parts.mouth), dash: "1.5 3", thin: true },
         ]
       : [];
   const series = (pick: (r: SimulationResult) => Float64Array | null): Series[] =>
-    designs.map((d) => ({ label: d.design.name, color: d.color, y: pick(d.result) }));
+    designs.map((d) => ({ label: d.label, color: d.color, dash: d.dash, y: pick(d.result) }));
 
   // The short link once it's ready for this exact state; until then (150 ms after an edit) the long form, which is always correct.
   const shareUrl = () =>
@@ -527,7 +527,7 @@ export function App(props: { initial: AppState | null }) {
   const prSeries: Series[] = prDesigns.flatMap((d) => {
     const names = prGroupLabels(d.design);
     return (d.result.prGroups ?? []).map((g, k) => ({
-      label: d.design.kind === "pr" && k === 0 ? d.design.name : `${d.design.name}: ${names[k] ?? `group ${k + 1}`}`,
+      label: d.design.kind === "pr" && k === 0 ? d.label : `${d.label}: ${names[k] ?? `group ${k + 1}`}`,
       color: d.color,
       dash: k === 0 ? undefined : k === 1 ? "6 3" : "2 3",
       y: g.excursionMm,
@@ -540,8 +540,8 @@ export function App(props: { initial: AppState | null }) {
   const zaSeries: Series[] = zaDesigns.flatMap((d) => {
     const za = d.result.acousticImpedance!;
     return [
-      { label: `${d.design.name}: resistance`, color: d.color, y: za.resistance },
-      { label: `${d.design.name}: reactance`, color: d.color, dash: "5 3", y: za.reactance },
+      { label: `${d.label}: resistance`, color: d.color, y: za.resistance },
+      { label: `${d.label}: reactance`, color: d.color, dash: "5 3", y: za.reactance },
     ];
   });
   // Empty lines resonate sharply (Za runs into the hundreds): keep the scale on the useful part.
@@ -573,7 +573,7 @@ export function App(props: { initial: AppState | null }) {
     for (let i = 0; i < gd.length; i++) if (gd[i]! < -20 && (i0 < 0 || gd[i]! < gd[i0]!)) i0 = i;
     if (i0 < 0) return [];
     const f = d.result.freq[i0]!;
-    return [{ f, label: `${d.design.name}: notch ${f < 100 ? f.toFixed(1) : f.toFixed(0)} Hz`, color: d.color }];
+    return [{ f, label: `${d.label}: notch ${f < 100 ? f.toFixed(1) : f.toFixed(0)} Hz`, color: d.color }];
   });
 
   // Passive radiator finder: the driver and drive as the charts use them.
@@ -702,9 +702,20 @@ export function App(props: { initial: AppState | null }) {
                     onClick={() => {
                       const r = addDriver(state, undefined);
                       if (!r) return;
-                      setStep(r.state);
+                      // The new driver gets its own copies of driver A's boxes, so the charts compare them straight away.
+                      const room = MAX_DESIGNS - state.designs.length;
+                      const src = state.designs.filter((d) => d.driverId === undefined);
+                      const designs = [...r.state.designs];
+                      for (const d of src.slice(0, Math.max(0, room))) {
+                        const { driverId: _a, ...rest } = structuredClone(d);
+                        designs.push({ ...rest, id: newId(designs), driverId: r.id, vb_l: Math.round(vbOf(state, d) * 10) / 10 } as DesignState);
+                      }
+                      const copied = designs.length - state.designs.length;
+                      setStep({ ...r.state, designs });
                       setDrvPick(r.id);
-                      notify(`Added driver ${r.id} (a copy of A for now): load or type its values, then pick it in a design on the Boxes tab.`);
+                      notify(
+                        `Added driver ${r.id} (a copy of A for now)${copied > 0 ? ` with ${copied === src.length ? "copies of your boxes" : `copies of ${copied} of your boxes (the most there's room for)`}, shown as “· ${r.id}” on the charts` : ""}. Now load or type driver ${r.id}'s values.`,
+                      );
                     }}
                   >
                     + Add driver
@@ -1337,8 +1348,9 @@ export function App(props: { initial: AppState | null }) {
                       const ref = d.result.summary.referenceSpl;
                       return [
                         {
-                          label: d.design.name,
+                          label: d.label,
                           color: d.color,
+                          dash: d.dash,
                           y: d.result.spl.map((v) => v - ref),
                           notes: Array.from(d.result.spl, (v) => `${v.toFixed(1)} dB SPL`),
                         },
@@ -1372,7 +1384,7 @@ export function App(props: { initial: AppState | null }) {
                   }
                 : {
                     series: designs
-                      .flatMap((d) => [{ label: d.design.name, color: d.color, y: d.result.spl }, ...partsOf(d, (y) => y)])
+                      .flatMap((d) => [{ label: d.label, color: d.color, dash: d.dash, y: d.result.spl }, ...partsOf(d, (y) => y)])
                       .concat(measuredSeries(state.measured, "spl", freq, designs)),
                   })}
             />
@@ -1381,7 +1393,7 @@ export function App(props: { initial: AppState | null }) {
               title="Cone excursion (peak, one way)"
               unit="mm"
               freq={freq}
-              series={designs.map((d) => ({ label: d.design.name, color: d.color, y: d.result.excursionMm, over: viewOfDesign(state, d.design).xmax_mm }))}
+              series={designs.map((d) => ({ label: d.label, color: d.color, dash: d.dash, y: d.result.excursionMm, over: viewOfDesign(state, d.design).xmax_mm }))}
               limits={designs
                 .map((d) => viewOfDesign(state, d.design).xmax_mm)
                 .filter((x, i, all) => all.indexOf(x) === i)
@@ -1420,13 +1432,14 @@ export function App(props: { initial: AppState | null }) {
                 freq={freq}
                 series={[
                   ...designs.map((d) => ({
-                    label: d.design.kind === "bandpass" ? `${d.design.name} (front port)` : d.design.name,
+                    label: d.design.kind === "bandpass" ? `${d.label} (front port)` : d.label,
                     color: d.color,
+                    dash: d.dash,
                     y: d.result.portVelocity,
                     over: PORT_LIMIT,
                   })),
                   ...designs.map((d) => ({
-                    label: `${d.design.name} (rear port)`,
+                    label: `${d.label} (rear port)`,
                     color: d.color,
                     dash: "5 3",
                     y: d.result.rearPortVelocity,
@@ -1443,12 +1456,13 @@ export function App(props: { initial: AppState | null }) {
               unit="dB"
               freq={freq}
               series={designs.map((d) => ({
-                label: d.design.name,
+                label: d.label,
                 color: d.color,
+                dash: d.dash,
                 y: d.result.maxSpl,
                 notes: d.result.limitedBy.map((l) => LIMIT_KINDS[l]?.short ?? ""),
               }))}
-              ribbons={designs.map((d) => ({ label: d.design.name, color: d.color, kinds: d.result.limitedBy }))}
+              ribbons={designs.map((d) => ({ label: d.label, color: d.color, kinds: d.result.limitedBy }))}
               ribbonKinds={LIMIT_KINDS}
             />
             <LogChart
@@ -1634,7 +1648,7 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
           </tr>
         </thead>
         <tbody>
-          {designs.map(({ design: d, color, vb_l, result: r }) => {
+          {designs.map(({ design: d, label, color, vb_l, result: r }) => {
             const x = peak(r.excursionMm, r.freq, fMin);
             const xpr = prPeak(r, fMin);
             const vpFront = peak(r.portVelocity, r.freq, fMin);
@@ -1644,7 +1658,7 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
               <tr key={d.id}>
                 <th>
                   <span className="swatch" style={{ background: color }} aria-hidden="true" />
-                  <span title={d.name}>{shortName(d.name)}</span>
+                  <span title={label}>{shortName(label)}</span>
                 </th>
                 <td>
                   {fmtQ(vb_l, "vol", state.settings.units)}

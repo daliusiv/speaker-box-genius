@@ -82,6 +82,8 @@ function DesignShell(props: {
   onChange: (patch: Partial<DesignState>) => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  /** Driver letter, shown once there are several drivers. */
+  driverTag?: string;
   children: ReactNode;
 }) {
   const d = props.design;
@@ -99,6 +101,11 @@ function DesignShell(props: {
         />
         {/* The type, unless the name already says it ("Ported 2" needs no "Ported" beside it). */}
         {!d.name.toLowerCase().startsWith(KIND_LABEL[d.kind].toLowerCase()) && <span className="kind">{KIND_LABEL[d.kind]}</span>}
+        {props.driverTag && (
+          <span className="driver-tag" title={`Uses driver ${props.driverTag}`}>
+            {props.driverTag}
+          </span>
+        )}
         <input
           type="checkbox"
           checked={d.on}
@@ -921,6 +928,7 @@ export function DesignCard(props: {
       onChange={(patch) => props.onChange({ ...d, ...patch } as DesignState)}
       onDuplicate={props.onDuplicate}
       onDelete={props.onDelete}
+      driverTag={props.driverChoice?.value}
     >
       {props.driverChoice && (
         <div className="fields design-driver">

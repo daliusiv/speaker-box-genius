@@ -2395,3 +2395,14 @@ body.print-build #print-root .fold-chamber {
 .driver-chips .chip b {
   margin-right: 0.15rem;
 }
+.driver-tag {
+  flex: none;
+  min-width: 1.4rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+}
