@@ -10,7 +10,7 @@ import type { LineDesign, LineSection } from "./state.ts";
  * arrangement (OD = offset driver: the driver at S2, used for lines; TH = tapped horn: the
  * driver between S2 and S3; Nd = front-loaded: the driver at the throat with chambers
  * Vrc and Vtc), the driver as mechanical parameters, and filling per segment (Fr1…Fr4
- * flow resistivity in rayls/cm, Tal1…Tal4 percentage of the segment filled).
+ * flow resistivity in mks rayls/m, Tal1…Tal4 percentage of the segment filled).
  *
  * The export follows the layout of recent Hornresp versions ("|SECTION:" headings,
  * "Key = value" lines); Hornresp fills defaults for parameters left out. The import is
@@ -217,11 +217,11 @@ export function toHornresp(d: LineDesign, driver: DriverInput, o: { eg: number; 
   head("ABSORBENT FILLING MATERIAL PARAMETER VALUES");
   for (let i = 0; i < MAX_SEGMENTS; i++) {
     const f = segs[i]?.fill_kgm3 ?? 0;
-    put(`Fr${i + 1}`, r2(f > 0 ? flowResistivity(f) / 100 : 0), f > 0 ? `rayls/cm (${f} kg/m³ polyester)` : "");
+    put(`Fr${i + 1}`, r2(f > 0 ? flowResistivity(f) : 0), f > 0 ? `mks rayls/m (${f} kg/m³ polyester)` : "");
   }
   gap();
   for (let i = 0; i < MAX_SEGMENTS; i++) put(`Tal${i + 1}`, "100", segs[i]?.fill_kgm3 ? "% of the segment filled" : "");
-  if (segs.some((sg) => sg.fill_kgm3 > 0)) warnings.push("Stuffing is exported as flow resistivity (Fr); Hornresp's filling model differs from this one, so stuffed lines won't match exactly.");
+  if (segs.some((sg) => sg.fill_kgm3 > 0)) warnings.push("Stuffing is exported as flow resistivity (Fr1…Fr4, rayls/m). Hornresp only uses it in the Loudspeaker Wizard (Tools → Loudspeaker Wizard), not from the main window's Calculate, and its filling model differs from this one, so stuffed lines won't match exactly.");
   lines.push(...HORNRESP_TAIL);
   return { text: lines.join("\r\n") + "\r\n", rows, warnings };
 }
@@ -337,8 +337,8 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
   const topo = pairs.find(([k]) => /^(OD|TH|Nd|ND)$/.test(k))?.[0]?.toUpperCase() ?? (typeValue === "OD" || typeValue === "TH" ? typeValue : "ND");
   const fills = [1, 2, 3, 4].map((i) => {
     const fr = get(`Fr${i}`) ?? 0;
-    // rayls/cm → Pa·s/m², then the density that gives it (inverse of Garai–Pompoli).
-    return fr > 0 ? Math.round((((fr * 100) / 25.989) ** (1 / 1.404)) * 10) / 10 : 0;
+    // mks rayls/m (Pa·s/m²) → the density that gives it (inverse of Garai–Pompoli).
+    return fr > 0 ? Math.round(((fr / 25.989) ** (1 / 1.404)) * 10) / 10 : 0;
   });
 
   // Sections from the segments (closed end / throat = S1).
