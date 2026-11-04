@@ -1,10 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// GitHub Pages serves the site from /<repo-name>/.
-// If you add a custom domain later, change base to "/".
+// Served at the root of its own domain, speakerboxgenius.com (see public/CNAME).
+// Without the custom domain, GitHub Pages would serve it from /<repo-name>/ instead.
 export default defineConfig({
-  base: "/speaker-box-genius/",
+  base: "/",
   plugins: [react()],
   build: {
     target: "es2022",

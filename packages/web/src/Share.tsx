@@ -6,7 +6,7 @@ import { fmtQ } from "./units.ts";
 import { encodeStateShort, type AppState } from "./state.ts";
 import { drawQr } from "./qrDraw.ts";
 
-const SITE = "daliusiv.github.io/speaker-box-genius";
+const SITE = "speakerboxgenius.com";
 
 interface Row {
   name: string;

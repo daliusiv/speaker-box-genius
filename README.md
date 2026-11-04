@@ -4,7 +4,7 @@
 
 Design sealed, ported, passive radiator, bandpass and transmission line boxes for any driver, see straight away whether the cone, the passive radiators or the port run out of headroom, then share the live design with a link instead of a pile of screenshots.
 
-**Try it: https://daliusiv.github.io/speaker-box-genius/**
+**Try it: https://speakerboxgenius.com**
 
 Everything runs in your browser. There's nothing to install, no account and no server, and it keeps working offline. It works on phones as well as computers.
 
