@@ -2620,3 +2620,82 @@ button.browse.chosen .caret {
   min-height: 2.6rem;
   border-color: var(--border);
 }
+
+/* ---- Phones: the charts get the screen ---- */
+button.as-text {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.summary-fold {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.15rem 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+}
+.summary-fold .caret {
+  margin-left: auto;
+}
+.summary-fold .over {
+  color: var(--over);
+  font-weight: 600;
+}
+.summary-dots {
+  display: inline-flex;
+  gap: 2px;
+}
+.summary-dots .dot {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+.summary:not(.folded) .summary-fold {
+  margin-bottom: 0.4rem;
+}
+@media (max-width: 860px) {
+  .layout {
+    padding-inline: 0.5rem;
+  }
+  .layout > .charts {
+    gap: 0.6rem;
+  }
+  .summary.folded {
+    padding: 0.55rem 0.8rem;
+  }
+  .chart {
+    padding: 0.6rem 0.35rem 0.5rem;
+  }
+  .chart figcaption {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding-inline: 0.4rem;
+  }
+  .chart figcaption .chart-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .chart figcaption .chart-title[aria-expanded="true"] {
+    white-space: normal;
+  }
+  .chart figcaption .unit-switch button,
+  .chart figcaption > button:not(.chart-title) {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  .chart-strip {
+    padding-inline: 0.4rem;
+  }
+}
