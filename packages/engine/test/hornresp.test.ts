@@ -10,6 +10,7 @@ import type { LineInput } from "../src/line.ts";
 // input.json (our LineInput), and Hornresp's own exports for it at 2.83 V in half space:
 // spl.frd (SPL at 1 m) and ze.zma (electrical impedance). The records Hornresp was run on
 // are in docs/hornresp-validation/records. Hornresp's air: c = 344 m/s, ρ = 1.205 kg/m³.
+// Hornresp works SPL out from radiated power, so the comparison uses splFrom: "power".
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "hornresp");
 const AIR = { rho: 1.205, c: 344 };
@@ -34,7 +35,7 @@ const percentile = (xs: number[], p: number) => [...xs].sort((a, b) => a - b)[Ma
 
 for (const id of existsSync(DIR) ? readdirSync(DIR) : []) {
   const input = JSON.parse(readFileSync(join(DIR, id, "input.json"), "utf8")) as LineInput;
-  const r = simulate(DRIVER, input, { power: 2.83, convention: "volts", fMin: 10, fMax: 2000, points: 2000, air: AIR });
+  const r = simulate(DRIVER, input, { power: 2.83, convention: "volts", fMin: 10, fMax: 2000, points: 2000, air: AIR, splFrom: "power" });
 
   test(`Hornresp ${id}: electrical impedance`, () => {
     const errs = readCurve(join(DIR, id, "ze.zma"))
@@ -49,10 +50,10 @@ for (const id of existsSync(DIR) ? readdirSync(DIR) : []) {
     // Deep notches are compared by where they fall, not by how deep they are: a few
     // hundredths of a hertz move the bottom of a 40 dB null by many dB.
     const errs = readCurve(join(DIR, id, "spl.frd"))
-      .filter((p) => p[0]! <= 500)
+      .filter((p) => p[0]! <= 1000)
       .map(([f, db]) => Math.abs(interp(r.freq, r.spl, f!) - db!));
     const mean = errs.reduce((a, b) => a + b, 0) / errs.length;
-    assert.ok(mean < 0.25, `mean SPL difference ${mean.toFixed(2)} dB`);
-    assert.ok(percentile(errs, 0.95) < 0.5, `95th percentile ${percentile(errs, 0.95).toFixed(2)} dB`);
+    assert.ok(mean < 0.15, `mean SPL difference ${mean.toFixed(2)} dB`);
+    assert.ok(percentile(errs, 0.95) < 0.4, `95th percentile ${percentile(errs, 0.95).toFixed(2)} dB`);
   });
 }

@@ -196,7 +196,9 @@ export function toHornresp(d: LineDesign, driver: DriverInput, o: { eg: number; 
   fixed("Added Mass", "0.00");
   head("CHAMBER PARAMETER VALUES");
   put("Vrc", r2(topo === "Nd" ? d.rearChamber_l : 0), "rear chamber, L");
-  put("Lrc", "0.00");
+  // Hornresp drops the rear chamber (and lets the cone's back radiate) when Lrc = 0, so give it
+  // the depth of a cube of that volume. With chamber resonances masked the depth changes nothing else.
+  put("Lrc", r2(topo === "Nd" && d.rearChamber_l > 0 ? Math.cbrt(d.rearChamber_l * 1000) : 0), "rear chamber depth, cm");
   fixed("Fr", "0.00");
   fixed("Tal", "0.00");
   // Hornresp's throat chamber volume is in cm³.
@@ -370,9 +372,11 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
   } else {
     design.end = "horn";
     design.driverAt_cm = 0;
+    // Hornresp only has a rear chamber when both Vrc and Lrc are set; otherwise the driver's back is open.
     const vrc = get("Vrc") ?? 0;
+    const closed = vrc > 0 && (get("Lrc") ?? 0) > 0;
     design.rearChamber_l = vrc > 0 ? vrc : base.rearChamber_l;
-    if (!(vrc > 0)) warnings.push(`No rear chamber in the record (Vrc = 0): using ${design.rearChamber_l} L (an open-backed driver isn't modelled).`);
+    if (!closed) warnings.push(`The record has no rear chamber (Vrc or Lrc = 0, an open-backed driver, which isn't modelled here): using a sealed ${design.rearChamber_l} L.`);
     design.throatChamber_l = (get("Vtc") ?? 0) / 1000; // Hornresp: cm³
   }
   // Sections: the first starts at S1 (or at the driver), so re-base the closed area.

@@ -170,6 +170,8 @@ test("export: the exact layout of a Hornresp 55.30 record, CRLF line endings", (
   const val = (t: string, k: string, n = 0) => [...t.matchAll(new RegExp(`^${k.replace(/[()']/g, "\\$&")} = (.*)$`, "gm"))][n]?.[1]?.trim();
   for (const [k, n] of [["S1", 0], ["S2", 0], ["Con", 0], ["S3", 0], ["Exp", 0], ["F23", 0], ["Sd", 0], ["Bl", 0], ["Cms", 0], ["Rms", 0], ["Mmd", 0], ["Re", 0], ["Nd", 0], ["Vrc", 0], ["Vtc", 0], ["Atc", 0]] as const)
     assert.equal(val(out.text, k, n), val(HR, k, n), k);
+  // Hornresp drops the rear chamber when Lrc = 0, so a front horn's record must carry a depth.
+  assert.ok(Number(val(out.text, "Lrc")) > 0, "Lrc");
 });
 
 test("import: Hornresp's own default record", () => {

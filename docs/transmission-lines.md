@@ -23,7 +23,7 @@ The driver sits at the throat in a sealed rear chamber (Vrc), its front into a t
 
 Export writes a record in the layout of recent Hornresp versions (`|SECTION:` headings, `Key = value`): segments S1…S5 with Par/Con/Exp lengths, OD for lines (a 0.01 cm first segment when the driver is at the closed end), TH for tapped horns, Nd with Vrc/Vtc for front horns, the driver as Sd/Bl/Cms/Rms/Mmd/Le/Re (Mmd without the air load, 16ρa³/3), stuffing as Fr (rayls/cm) with Tal = 100 %. An MLTL's port is a 0.01 cm step plus a uniform segment (a flared port as its equivalent straight length). Hornresp takes at most 4 segments; designs needing more are refused with the reason. The app also lists every value to type in, in case a Hornresp version refuses the file.
 
-Import reads `Key = value` pairs in order from a file or a one-line forum paste, with comma or point decimals and the INI form (`L12=40.90, PAR`). Unknown flares (Hyp, Tra, Obl) are read as Par with a warning; Lrc, chamber ports and angles other than 2π are flagged. The record's driver can replace the current one.
+Import reads `Key = value` pairs in order from a file or a one-line forum paste, with comma or point decimals and the INI form (`L12=40.90, PAR`). Unknown flares (Hyp, Tra, Obl) are read as Par with a warning; Lrc, chamber ports and angles other than 2π are flagged, as is a front horn with no rear chamber (Vrc or Lrc = 0, which Hornresp models as an open back). The record's driver can replace the current one.
 
 Hornresp 55.30 imports the exported records unchanged (checked with the nine validation records in `docs/hornresp-validation/records`; the layout test compares against a record Hornresp itself exported).
 
@@ -49,13 +49,23 @@ Tries driver positions (0–40 % along) against stuffing (none, or the first 1�
 
 ## Validation against Hornresp
 
-Results so far (Hornresp 55.30, DSA215-8 at 2.83 V, half space, Hornresp's air c = 344 m/s, ρ = 1.205 kg/m³). Each checked case is a permanent test in `packages/engine/test/hornresp.test.ts`, with Hornresp's exports under `test/fixtures/hornresp/`:
+Results (Hornresp 55.30, DSA215-8 at 2.83 V, half space, Hornresp's air c = 344 m/s, ρ = 1.205 kg/m³, SPL from radiated power as Hornresp does). Each case is a permanent test in `packages/engine/test/hornresp.test.ts`, with Hornresp's exports under `test/fixtures/hornresp/`:
 
-| Case | SPL 10–500 Hz | Ze 10–1000 Hz | Line impedance peaks |
-|---|---|---|---|
-| 01 straight TL | mean 0.09 dB | mean 0.16 %, worst 1.0 % | identical (54.8 … 606.2 Hz) |
+| Case | SPL 10 Hz–1 kHz, mean | Ze 10 Hz–1 kHz, mean / worst |
+|---|---|---|
+| 01 straight TL | 0.08 dB | 0.16 % / 1.0 % |
+| 02 tapered TL (Par) | 0.04 dB | 0.16 % / 0.9 % |
+| 03 offset-driver TL | 0.04 dB | 0.15 % / 0.8 % |
+| 04 TQWT (Con) | 0.03 dB | 0.15 % / 1.4 % |
+| 05 MLTL | 0.06 dB | 0.18 % / 1.6 % |
+| 06 tapped horn | 0.04 dB | 0.09 % / 0.9 % |
 
-The one large SPL difference is at the bottom of the deep null near 229 Hz (same frequency, different depth). Cases 02–09 are waiting for their exports.
+The line's own resonances (acoustic impedance at the driver) fall on exactly the same frequencies as Hornresp's. The only large SPL differences are at the bottom of deep nulls: same frequency, different depth.
+
+What the comparison found and fixed:
+- The cone's mass in lines and horns (see Model): impedance peaks had been up to 10 % low.
+- SPL: Hornresp works SPL out from the power each opening radiates (a baffled piston's radiation resistance), not from on-axis pressure. The two agree at low frequency and part once the mouth is large next to the wavelength: about 1.7 dB at 500 Hz for an 850 cm² mouth. The app shows on-axis SPL; the engine option `splFrom: "power"` gives Hornresp's.
+- Export: Hornresp drops the rear chamber and lets the back of the cone radiate when Lrc = 0, so front horns are now exported with Lrc set (the depth of a cube of that volume; with chamber resonances masked it changes nothing else). Record 07 (front horn) needs re-running with the fixed record; 08–09 (stuffed) are still to do.
 
 For each case, the user saves the Hornresp record and exports SPL and impedance (File → Export → Chart data), with stuffing off (Fr = 0) and then on:
 

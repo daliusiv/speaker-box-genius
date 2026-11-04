@@ -155,6 +155,17 @@ function struveH1(x: number): number {
   return 2 / Math.PI - besselJ0(x) + (16 / Math.PI - 5) * (Math.sin(x) / x) + (12 - 36 / Math.PI) * ((1 - Math.cos(x)) / (x * x));
 }
 
+/**
+ * How much less a baffled piston radiates than a point source with the same volume velocity
+ * (as an amplitude factor): √(R / R_low-ka). 1 at low frequency, falling once ka passes ~1.
+ * Hornresp works its SPL out from radiated power, which is this factor times the on-axis result.
+ */
+export function pistonPowerFactor(area: number, w: number, air: Air = STANDARD_AIR): number {
+  const x = (2 * w * Math.sqrt(area / Math.PI)) / air.c;
+  if (x < 1e-2) return 1;
+  return Math.sqrt((1 - (2 * besselJ1(x)) / x) / ((x * x) / 8));
+}
+
 /** Radiation impedance (acoustic, Pa·s/m³) of a piston of area S in an infinite baffle. */
 export function baffledPistonImpedance(area: number, w: number, air: Air = STANDARD_AIR): Complex {
   const a = Math.sqrt(area / Math.PI);

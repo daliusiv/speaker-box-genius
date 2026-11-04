@@ -59,7 +59,7 @@ Added Mass = 0.00
 |CHAMBER PARAMETER VALUES:
 
 Vrc = 20.00
-Lrc = 0.00
+Lrc = 27.14
 Fr = 0.00
 Tal = 0.00
 Vtc = 1000.00

@@ -1,6 +1,6 @@
 import { abs, add, arg, cx, div, inv, mul, parallel, scale, sub, type Complex } from "./complex.ts";
 import { STANDARD_AIR, type Air } from "./constants.ts";
-import { baffledPistonImpedance, lineNetwork } from "./line.ts";
+import { baffledPistonImpedance, lineNetwork, pistonPowerFactor } from "./line.ts";
 import { eqResponse, highPassResponse, type EqStage, type HighPass } from "./filters.ts";
 import {
   boxCompliance,
@@ -98,6 +98,12 @@ export interface SimulationOptions {
   highPass?: HighPass | null;
   /** EQ stages (Linkwitz Transform, peaking, shelving) ahead of the amplifier. */
   eq?: EqStage[];
+  /**
+   * Lines and horns: "on-axis" (default) treats the cone and the mouth as point sources;
+   * "power" scales each by the share of power a baffled piston of its size really radiates,
+   * as Hornresp does. They differ once the mouth is large next to the wavelength.
+   */
+  splFrom?: "on-axis" | "power";
   /** Air properties. Default: 20 °C. Use WINISD_AIR to match WinISD exactly. */
   air?: Air;
   /** Amplifier output + cable resistance (Ω), shared by the whole driver bank. Default 0. */
@@ -423,7 +429,10 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       const dm = line.mouthDistance;
       const exitAtListener = dm > 0 ? scale(mul(sol.exit, cx(Math.cos((w * dm) / air.c), -Math.sin((w * dm) / air.c))), r / (r + dm)) : sol.exit;
       // Open line: the front of the cone radiates −ud as well. Tapped horn: only the mouth.
-      u0 = line.mouthOnly ? exitAtListener : sub(exitAtListener, ud);
+      const power = opts.splFrom === "power";
+      const mouthOut = power ? scale(exitAtListener, pistonPowerFactor(line.exitArea, w, air)) : exitAtListener;
+      const coneOut = power ? scale(ud, pistonPowerFactor(d.sd, w, air)) : ud;
+      u0 = line.mouthOnly ? mouthOut : sub(mouthOut, coneOut);
       if (out.parts) {
         const k = (w * air.rho) / (space * Math.PI * r) / 2e-5;
         out.parts.cone[i] = 20 * Math.log10(Math.max(abs(ud) * k, 1e-12));
