@@ -901,6 +901,8 @@ export function DesignCard(props: {
   /** Transmission lines: all the drivers' displacement (L) and the wall thickness (mm). */
   driverDisp_l?: number;
   wall_mm?: number;
+  /** Several drivers: which one this design uses (absent when there's only driver A). */
+  driverChoice?: { value: string; options: { id: string; name: string }[]; onChange: (id: string) => void };
 }) {
   const d = props.design;
   const common = {
@@ -920,6 +922,17 @@ export function DesignCard(props: {
       onDuplicate={props.onDuplicate}
       onDelete={props.onDelete}
     >
+      {props.driverChoice && (
+        <div className="fields design-driver">
+          <Select<string>
+            label="Driver"
+            value={props.driverChoice.value}
+            options={props.driverChoice.options.map((o) => ({ value: o.id, text: `${o.id}: ${o.name}` }))}
+            help="Which driver this design uses (drivers A–D are set up on the Driver tab). Duplicate a design and give the copy another driver to compare them in the same box."
+            onChange={props.driverChoice.onChange}
+          />
+        </div>
+      )}
       {d.kind === "sealed" && <SealedBody {...common} design={d} onChange={props.onChange} />}
       {d.kind === "vented" && <VentedBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} />}
       {d.kind === "bandpass" && (

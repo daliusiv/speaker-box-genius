@@ -10,6 +10,8 @@ interface DesignBase {
   name: string;
   on: boolean;
   vb_l: number;
+  /** Which driver this design uses: "B", "C" or "D" from AppState.extraDrivers; absent = driver A. */
+  driverId?: string;
 }
 
 export interface SealedDesign extends DesignBase {
@@ -199,6 +201,31 @@ export interface MeasuredCurve {
 
 export const MAX_MEASURED = 4;
 
+/** Everything that describes one driver and how it's used (count, loading, coils, wiring). */
+export const DRIVER_KEYS = [
+  "driverName",
+  "driverBrand",
+  "nominal_ohms",
+  "ts",
+  "le_mh",
+  "l2_mh",
+  "r2_ohm",
+  "xmax_mm",
+  "pe_w",
+  "drivers",
+  "wiring",
+  "isobaric",
+  "isoCoils",
+  "dvc",
+] as const;
+export type DriverSlot = Pick<AppState, (typeof DRIVER_KEYS)[number]>;
+/** Driver B, C or D (driver A is the AppState's own driver fields). */
+export interface ExtraDriver extends DriverSlot {
+  id: "B" | "C" | "D";
+}
+export const MAX_DRIVERS = 4;
+const EXTRA_IDS: ExtraDriver["id"][] = ["B", "C", "D"];
+
 export interface AppState {
   v: 3;
   driverName: string;
@@ -241,6 +268,8 @@ export interface AppState {
   eq: EqItem[];
   /** Measurements overlaid on the charts (travel with the link). */
   measured: MeasuredCurve[];
+  /** Drivers B, C, D to compare (driver A is the fields above); designs pick one with driverId. */
+  extraDrivers: ExtraDriver[];
   designs: DesignState[];
   volume: {
     /** Id of the design whose Vb follows the calculator, or "none". */
@@ -403,6 +432,7 @@ export const DEFAULT_STATE: AppState = {
   },
   eq: [],
   measured: [],
+  extraDrivers: [],
   designs: defaultDesigns(),
   volume: {
     link: "none",
@@ -684,6 +714,43 @@ function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
   return merged;
 }
 
+/** One driver's fields from raw (decoded) data, with defaults for anything missing or malformed. */
+function driverSlotFrom(raw: Raw, d: DriverSlot): DriverSlot {
+  return {
+    driverName: typeof raw.driverName === "string" ? raw.driverName : d.driverName,
+    driverBrand: typeof raw.driverBrand === "string" ? raw.driverBrand : "",
+    nominal_ohms: raw.nominal_ohms ?? d.nominal_ohms,
+    ts: raw.ts ?? d.ts,
+    le_mh: raw.le_mh ?? d.le_mh,
+    l2_mh: nonNeg(raw.l2_mh),
+    r2_ohm: nonNeg(raw.r2_ohm),
+    xmax_mm: raw.xmax_mm ?? d.xmax_mm,
+    pe_w: raw.pe_w ?? d.pe_w,
+    drivers: raw.drivers ?? d.drivers,
+    wiring: raw.wiring === "series" ? "series" : "parallel",
+    isobaric: raw.isobaric === true,
+    isoCoils: raw.isoCoils === "series" ? "series" : "parallel",
+    dvc: {
+      on: raw.dvc?.on === true,
+      entered: ["one", "parallel", "series"].includes(raw.dvc?.entered) ? raw.dvc.entered : "parallel",
+      wired: raw.dvc?.wired === "series" ? "series" : "parallel",
+    },
+  };
+}
+
+function extraDriversFrom(raw: unknown): ExtraDriver[] {
+  if (!Array.isArray(raw)) return [];
+  const out: ExtraDriver[] = [];
+  for (const x of raw) {
+    if (!x || typeof x !== "object") continue;
+    const id = EXTRA_IDS.includes(x.id) ? (x.id as ExtraDriver["id"]) : EXTRA_IDS.find((k) => !out.some((o) => o.id === k));
+    if (!id || out.some((o) => o.id === id)) continue;
+    out.push({ id, ...driverSlotFrom(x, DEFAULT_STATE) });
+    if (out.length >= MAX_DRIVERS - 1) break;
+  }
+  return out;
+}
+
 /** Reads state from a URL hash, falling back to defaults for anything missing. */
 export function decodeState(hash: string): AppState | null {
   const m = /(?:^#?|&)s=([A-Za-z0-9_-]+)/.exec(hash);
@@ -697,34 +764,20 @@ export function decodeState(hash: string): AppState | null {
       const fixed = fixDesign(x, designs);
       if (fixed) designs.push(fixed);
     }
+    const extraDrivers = extraDriversFrom(raw.extraDrivers);
+    // A design pointing at a driver that isn't there falls back to driver A.
+    for (const x of designs) if (x.driverId !== undefined && !extraDrivers.some((e) => e.id === x.driverId)) delete x.driverId;
     return {
       v: 3,
-      driverName: typeof raw.driverName === "string" ? raw.driverName : d.driverName,
-      driverBrand: typeof raw.driverBrand === "string" ? raw.driverBrand : "",
-      nominal_ohms: raw.nominal_ohms ?? d.nominal_ohms,
-      ts: raw.ts ?? d.ts,
-      le_mh: raw.le_mh ?? d.le_mh,
-      l2_mh: nonNeg(raw.l2_mh),
-      r2_ohm: nonNeg(raw.r2_ohm),
-      xmax_mm: raw.xmax_mm ?? d.xmax_mm,
-      pe_w: raw.pe_w ?? d.pe_w,
+      ...driverSlotFrom(raw, d),
       power: raw.power ?? d.power,
       drive: raw.drive === "volts" ? "volts" : "watts",
       volts: typeof raw.volts === "number" && raw.volts > 0 && Number.isFinite(raw.volts) ? raw.volts : d.volts,
-      drivers: raw.drivers ?? d.drivers,
-      wiring: raw.wiring === "series" ? "series" : "parallel",
-      isobaric: raw.isobaric === true,
-      isoCoils: raw.isoCoils === "series" ? "series" : "parallel",
       roomGain: {
         ...d.roomGain,
         ...(raw.roomGain ?? {}),
         mode: ["off", "car", "room"].includes(raw.roomGain?.mode) ? raw.roomGain.mode : "off",
         slope: raw.roomGain?.slope === 6 ? 6 : 12,
-      },
-      dvc: {
-        on: raw.dvc?.on === true,
-        entered: ["one", "parallel", "series"].includes(raw.dvc?.entered) ? raw.dvc.entered : "parallel",
-        wired: raw.dvc?.wired === "series" ? "series" : "parallel",
       },
       highPass: { ...d.highPass, ...raw.highPass },
       baffle: { ...d.baffle, ...(raw.baffle ?? {}) },
@@ -733,10 +786,95 @@ export function decodeState(hash: string): AppState | null {
         ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf"].includes(e.type)).slice(0, 12)
         : [],
       measured: measuredFrom(raw.measured),
+      extraDrivers,
       designs,
       volume: { ...d.volume, ...raw.volume },
     };
   } catch {
     return null;
   }
+}
+
+
+// ---------------------------------------------------------------------------
+// Several drivers
+// ---------------------------------------------------------------------------
+
+/** The driver fields of driver A (the state's own) or of driver B/C/D. */
+export function driverSlotOf(s: AppState, id?: string): DriverSlot {
+  const x = id ? s.extraDrivers.find((e) => e.id === id) : undefined;
+  if (x) {
+    const { id: _id, ...slot } = x;
+    return slot;
+  }
+  const out = {} as Record<string, unknown>;
+  for (const k of DRIVER_KEYS) out[k] = s[k];
+  return out as DriverSlot;
+}
+
+/**
+ * The state as one driver sees it: the same settings and designs, with that driver's fields in
+ * place of driver A's. Everything that reads "the driver" from the state works per driver with it.
+ */
+export function viewFor(s: AppState, id?: string): AppState {
+  if (!id) return s;
+  const x = s.extraDrivers.find((e) => e.id === id);
+  if (!x) return s;
+  const { id: _id, ...slot } = x;
+  return { ...s, ...slot };
+}
+
+/** A design's own view of the state (its driver). */
+export const viewOfDesign = (s: AppState, d: { driverId?: string }) => viewFor(s, d.driverId);
+
+/** Changes some of a driver's fields: driver A's on the state itself, B/C/D's in extraDrivers. */
+export function patchDriver(s: AppState, id: string | undefined, patch: Partial<DriverSlot>): AppState {
+  if (!id || id === "A") return { ...s, ...patch };
+  return { ...s, extraDrivers: s.extraDrivers.map((e) => (e.id === id ? { ...e, ...patch } : e)) };
+}
+
+/** Adds a driver (a copy of `from`, or of driver A) under the next free letter; null when all four are in use. */
+export function addDriver(s: AppState, from?: DriverSlot): { state: AppState; id: ExtraDriver["id"] } | null {
+  const id = EXTRA_IDS.find((k) => !s.extraDrivers.some((e) => e.id === k));
+  if (!id) return null;
+  return { state: { ...s, extraDrivers: [...s.extraDrivers, { id, ...(from ?? driverSlotOf(s)) }] }, id };
+}
+
+/** Removes driver B/C/D; its designs go back to driver A. */
+export function removeDriver(s: AppState, id: string): AppState {
+  return {
+    ...s,
+    extraDrivers: s.extraDrivers.filter((e) => e.id !== id),
+    designs: s.designs.map((d) => (d.driverId === id ? (({ driverId: _x, ...rest }) => rest as DesignState)(d) : d)),
+  };
+}
+
+/** Letter and name of each driver in use: A first. */
+export function driverList(s: AppState): { id: string; name: string }[] {
+  return [{ id: "A", name: s.driverName }, ...s.extraDrivers.map((e) => ({ id: e.id, name: e.driverName }))];
+}
+
+/**
+ * Applies an edit made on driver `sel`'s view (see viewFor) back to the real state: the
+ * driver fields go into that driver's slot, everything else as it was edited. Box-level
+ * driver details (displacement, cutout) stay with driver A's box; designs the edit adds use
+ * driver `sel`.
+ */
+export function routeDriverEdit(prev: AppState, sel: string, next: AppState): AppState {
+  if (!sel || sel === "A" || !prev.extraDrivers.some((e) => e.id === sel)) return next;
+  const slot = {} as Record<string, unknown>;
+  const keepA = {} as Record<string, unknown>;
+  for (const k of DRIVER_KEYS) {
+    slot[k] = next[k];
+    keepA[k] = prev[k];
+  }
+  const known = new Set(prev.designs.map((d) => d.id));
+  const base: AppState = {
+    ...next,
+    ...(keepA as Partial<AppState>),
+    extraDrivers: prev.extraDrivers,
+    volume: prev.volume,
+    designs: next.designs.map((d) => (known.has(d.id) ? d : { ...d, driverId: sel })),
+  };
+  return patchDriver(base, sel, slot as Partial<DriverSlot>);
 }
