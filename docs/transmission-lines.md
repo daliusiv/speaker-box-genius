@@ -66,7 +66,13 @@ The line's own resonances (acoustic impedance at the driver) fall on exactly the
 What the comparison found and fixed:
 - The cone's mass in lines and horns (see Model): impedance peaks had been up to 10 % low.
 - SPL: Hornresp works SPL out from the power each opening radiates (a baffled piston's radiation resistance), not from on-axis pressure. The two agree at low frequency and part once the mouth is large next to the wavelength: about 1.7 dB at 500 Hz for an 850 cm² mouth. The app shows on-axis SPL; the engine option `splFrom: "power"` gives Hornresp's.
-- Export: Hornresp drops the rear chamber and lets the back of the cone radiate when Lrc = 0, so front horns are now exported with Lrc set (the depth of a cube of that volume; with chamber resonances masked it changes nothing else). Records 08–09 (stuffed) are still to do.
+- Export: Hornresp drops the rear chamber and lets the back of the cone radiate when Lrc = 0, so front horns are now exported with Lrc set (the depth of a cube of that volume; with chamber resonances masked it changes nothing else). Stuffing in Hornresp's records was also exported in the wrong unit (rayls/cm; Hornresp reads Fr1–Fr4 as mks rayls/m).
+
+Stuffed lines (8 kg/m³ polyester = 481.65 rayls/m, run in Hornresp's Loudspeaker Wizard, which is the only place it uses segment filling; read off its charts, so no fixtures):
+
+- 08, straight TL filled throughout: acoustic power within about 1 dB from 20 Hz to 1 kHz; acoustic impedance at the driver within 5–10 % with every peak and dip at the same frequency (ours a little more damped below 40 Hz, a little more absorbent above 200 Hz); electrical impedance peak 63 Hz / 13.8 Ω against Hornresp's ~63 Hz / ~14.0 Ω, within about 0.4 Ω elsewhere.
+- 09, offset TL filled behind the driver: impedance peaks 21.5 Hz / 30.6 Ω and 60.4 Hz / 19.0 Ω against ~21.5 Hz / ~30.3 Ω and ~60 Hz / ~19.5 Ω; driver input power within 0.02 W from 10 Hz to 2 kHz.
+- Hornresp reckons 481.65 rayls/m over 30 L as 0.297 kg of Polyfill (about 9.9 kg/m³), against our 8 kg/m³ of polyester: the two fibre models put the same filling in the same ballpark.
 
 For each case, the user saves the Hornresp record and exports SPL and impedance (File → Export → Chart data), with stuffing off (Fr = 0) and then on:
 
