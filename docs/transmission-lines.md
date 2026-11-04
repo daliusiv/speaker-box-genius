@@ -59,13 +59,14 @@ Results (Hornresp 55.30, DSA215-8 at 2.83 V, half space, Hornresp's air c = 344 
 | 04 TQWT (Con) | 0.03 dB | 0.15 % / 1.4 % |
 | 05 MLTL | 0.06 dB | 0.18 % / 1.6 % |
 | 06 tapped horn | 0.04 dB | 0.09 % / 0.9 % |
+| 07 front-loaded horn (Exp, 20 L rear, 1 L throat chamber) | 0.03 dB | 0.19 % / 1.4 % |
 
 The line's own resonances (acoustic impedance at the driver) fall on exactly the same frequencies as Hornresp's. The only large SPL differences are at the bottom of deep nulls: same frequency, different depth.
 
 What the comparison found and fixed:
 - The cone's mass in lines and horns (see Model): impedance peaks had been up to 10 % low.
 - SPL: Hornresp works SPL out from the power each opening radiates (a baffled piston's radiation resistance), not from on-axis pressure. The two agree at low frequency and part once the mouth is large next to the wavelength: about 1.7 dB at 500 Hz for an 850 cm² mouth. The app shows on-axis SPL; the engine option `splFrom: "power"` gives Hornresp's.
-- Export: Hornresp drops the rear chamber and lets the back of the cone radiate when Lrc = 0, so front horns are now exported with Lrc set (the depth of a cube of that volume; with chamber resonances masked it changes nothing else). Record 07 (front horn) needs re-running with the fixed record; 08–09 (stuffed) are still to do.
+- Export: Hornresp drops the rear chamber and lets the back of the cone radiate when Lrc = 0, so front horns are now exported with Lrc set (the depth of a cube of that volume; with chamber resonances masked it changes nothing else). Records 08–09 (stuffed) are still to do.
 
 For each case, the user saves the Hornresp record and exports SPL and impedance (File → Export → Chart data), with stuffing off (Fr = 0) and then on:
 
