@@ -7,31 +7,39 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
-      - name: Fetch samples
+      - name: Sample spec lists per category
+        shell: python3 {0}
         run: |
-          set +e
-          which pdftotext || (sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null)
-          mkdir out && cd out
-          UA="SpeakerBoxGenius-importer/1.0 (+https://github.com/daliusiv/speaker-box-genius; with SB Acoustics' permission)"
-          get() { curl -sSL -m 40 -A "$UA" -o "$2" -w "%{http_code} %{size_download} $1\n" "$1"; sleep 2; }
-          get "https://sbacoustics.com/product-sitemap.xml" ps.xml
-          echo "== product urls (all)"; grep -oE '<loc>https://sbacoustics.com/product/[^<]+' ps.xml | sed 's/<loc>//' | sed 's|https://sbacoustics.com/product/||' | tr '\n' ' '; echo
-          get "https://sbacoustics.com/wp-json/wc/store/v1/products?per_page=2" api.json
-          echo "== api keys"; jq -r '.[0] | keys | join(" ")' api.json
-          echo "== api categories/attributes"; jq -c '.[0] | {categories: [.categories[].slug], attributes, extensions}' api.json | head -c 3000; echo
-          get "https://sbacoustics.com/wp-json/wc/store/v1/products/categories?per_page=100" cats.json
-          echo "== categories"; jq -r '.[] | "\(.slug) \(.count)"' cats.json | tr '\n' ';'; echo
-          get "https://sbacoustics.com/product/7%C2%BD-satori-mw19tx-4-textreme/" p1.html
-          echo "== p1 text with Qms"; python3 -c "
-          import re,sys
-          t=re.sub(r'<script.*?</script>|<style.*?</style>',' ',open('p1.html',encoding='utf8',errors='ignore').read(),flags=re.S)
-          t=re.sub(r'\s+',' ',re.sub(r'<[^>]+>',' | ',t))
-          i=t.find('Qms'); print(t[max(0,i-1500):i+2500] if i>=0 else 'no Qms in text')
-          "
-          echo "== p1 html lines with Qms"; grep -n -iE 'Qms' p1.html | head -4 | cut -c1-400
-          echo "== p1 pdf text"; get "https://sbacoustics.com/wp-content/uploads/2024/04/7.5in-SATORI-MW19TX-4.pdf" p1.pdf; pdftotext -layout p1.pdf - | head -75
-          s=$(grep -oE '<loc>https://sbacoustics.com/product/[^<]*sb34[^<]*' ps.xml | head -1 | sed 's/<loc>//'); echo "== sub page $s"
-          if [ -n "$s" ]; then get "$s" p2.html; pdf=$(grep -oE 'https://sbacoustics.com/wp-content/uploads/[^" ]+\.pdf' p2.html | head -1); echo "pdf $pdf"; get "$pdf" p2.pdf; pdftotext -layout p2.pdf - | head -75; fi
-          s=$(grep -oE '<loc>https://sbacoustics.com/product/[^<]*(pr|passive)[^<]*' ps.xml | head -3 | sed 's/<loc>//'); echo "== passive? $s"
+          import json, re, time, urllib.request
+          UA = "SpeakerBoxGenius-importer/1.0 (+https://github.com/daliusiv/speaker-box-genius; with SB Acoustics' permission)"
+          def get(u):
+              time.sleep(1.5)
+              with urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": UA}), timeout=40) as r:
+                  return r.read().decode("utf8", "ignore")
+          prods = []
+          for page in range(1, 6):
+              batch = json.loads(get(f"https://sbacoustics.com/wp-json/wc/store/v1/products?per_page=100&page={page}"))
+              if not batch: break
+              prods += batch
+          print("== products", len(prods))
+          from collections import Counter
+          c = Counter(s for p in prods for s in [x["slug"] for x in p["categories"]])
+          print("== per category", dict(c))
+          want = ["passive-radiators", "soft-passive-radiators", "subwoofers", "shallow-subwoofers", "widebanders", "full-range", "midranges", "midwoofers-oem", "woofers", "coaxials", "satori-woofers", "nrx-woofers"]
+          seen = set()
+          for cat in want:
+              ps = [p for p in prods if cat in [x["slug"] for x in p["categories"]] and p["id"] not in seen]
+              if not ps: continue
+              p = ps[0]; seen.add(p["id"])
+              html = get(p["permalink"])
+              m = re.search(r">\s*Specs\s*<(.*?)(Downloads|</section>)", html, re.S)
+              lis = re.findall(r"<li[^>]*>(.*?)</li>", m.group(1), re.S) if m else []
+              lis = [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", x)).strip() for x in lis]
+              pdfs = sorted(set(re.findall(r'https://sbacoustics.com/wp-content/uploads/[^" ]+\.pdf', html)))
+              print(f"\n== {cat}: {p['name']} | {p['permalink']} | cats {[x['slug'] for x in p['categories']]}")
+              print("   ", " || ".join(lis))
+              print("    pdf:", pdfs[:2])
+          # Names, to see DVC/variants
+          print("\n== all names"); print(" ; ".join(sorted(p["name"] for p in prods)))
