@@ -34,6 +34,8 @@ export interface Series {
   y: Float64Array | null;
   /** SVG dash pattern, e.g. "6 4", for measured or reference curves. */
   dash?: string;
+  /** Short tag shown in the colour dot (a driver's letter), for the phone readout. */
+  tag?: string;
   /** A secondary curve (e.g. one part of a design's output): drawn thinner and fainter. */
   thin?: boolean;
   /** This curve's own limit: where it runs above it, a red glow is drawn behind it. */
@@ -350,7 +352,7 @@ export function LogChart({
 
         <g clipPath={`url(#${clipId})`}>
           {limits.map((l, li) => (
-            <g key={l.label}>
+            <g key={`${l.label}-${l.value}-${li}`}>
               <line
                 className={limitStyle === "guide" ? "guide" : "limit"}
                 x1={PAD.l}
@@ -486,6 +488,29 @@ export function LogChart({
           </g>
         )}
       </svg>
+      </div>
+      {/* Phones: the values sit in a strip under the plot, so the curves stay in view. */}
+      <div className="chart-strip" role="status">
+        {hover === null ? (
+          <span className="muted">Tap the chart for values</span>
+        ) : (
+          <>
+            <b>
+              {freq[hover]!.toFixed(freq[hover]! < 100 ? 1 : 0)} Hz{unit ? ` · ${unit}` : ""}
+            </b>
+            {visible
+              .filter((s) => !s.thin)
+              .map((s) => (
+                <span key={s.label} className={`strip-item${faded.length > 0 && fadedBy(faded, s.label) ? " faint" : ""}`} title={s.label}>
+                  <span className="dot" style={{ background: s.color }} aria-hidden="true">
+                    {s.tag}
+                  </span>
+                  <span className="sr-only">{s.label}: </span>
+                  {Number.isFinite(s.y![hover!]!) ? s.y![hover!]!.toFixed(digits) : "–"}
+                </span>
+              ))}
+          </>
+        )}
       </div>
     </figure>
   );

@@ -120,3 +120,17 @@ export function Select<T extends string | number>(props: {
     </label>
   );
 }
+
+/** True on phones and narrow tablets (the layout with the bottom tab bar); follows rotation and resizing. */
+export function useNarrow(): boolean {
+  const q = "(max-width: 860px)";
+  const [narrow, setNarrow] = useState(() => (typeof window !== "undefined" && window.matchMedia ? window.matchMedia(q).matches : false));
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const m = window.matchMedia(q);
+    const on = () => setNarrow(m.matches);
+    m.addEventListener("change", on);
+    return () => m.removeEventListener("change", on);
+  }, []);
+  return narrow;
+}

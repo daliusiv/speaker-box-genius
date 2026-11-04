@@ -2397,3 +2397,112 @@ body.print-build #print-root .fold-chamber {
   font-weight: 700;
   text-align: center;
 }
+.preset-tag {
+  flex: none;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 18%, transparent);
+  color: var(--muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+/* Chart values on phones: a strip under the plot (the floating box is for desktops) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.chart-strip {
+  display: none;
+}
+@media (max-width: 860px) {
+  .chart-tip,
+  .chart-hint {
+    display: none;
+  }
+  .chart-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 0.75rem;
+    min-height: 2.9em;
+    padding: 0.35rem 0.1rem 0;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+  }
+  .chart-strip .strip-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .chart-strip .strip-item.faint {
+    opacity: 0.45;
+  }
+
+}
+
+.dot {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* Summary on phones: four columns, details on tap */
+.summary-compact {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.summary-compact th,
+.summary-compact td {
+  padding: 0.4rem 0.3rem;
+  text-align: right;
+  white-space: nowrap;
+}
+.summary-compact th:first-child {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: left;
+  font-weight: 600;
+  min-width: 0;
+}
+.summary-compact th:first-child span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.summary-compact thead th {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+.summary-row {
+  cursor: pointer;
+  border-top: 1px solid var(--border);
+}
+.summary-compact td.over {
+  color: var(--over);
+  font-weight: 600;
+}
+.summary-more td {
+  padding-top: 0;
+  text-align: left;
+  white-space: normal;
+  color: var(--muted);
+  font-size: 0.85rem;
+}

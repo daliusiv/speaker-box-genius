@@ -33,7 +33,7 @@ import {
   type DesignState,
 } from "./state.ts";
 import { loadDriver, loadIndex, type DbIndex } from "./library.ts";
-import { Card, Num, REPO, Select } from "./components.tsx";
+import { Card, Num, REPO, Select, useNarrow } from "./components.tsx";
 import { DriverBrowser } from "./Library.tsx";
 import { PwaStatus, usePwa } from "./Pwa.tsx";
 import { GettingStarted, LinkNote, useWelcome } from "./Welcome.tsx";
@@ -84,7 +84,7 @@ const LIMIT_KINDS: Record<string, { label: string; short: string; color: string 
   thermal: { label: "Power (Pe)", short: "power handling", color: "#78716c" },
 };
 
-type ChartId = "pr" | "port" | "maxspl" | "impedance" | "za" | "delay";
+type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay";
 
 export function App(props: { initial: AppState | null }) {
   const { state, setState, undo, redo, canUndo, canRedo } = useUndoable<AppState>(() => props.initial ?? DEFAULT_STATE);
@@ -191,11 +191,14 @@ export function App(props: { initial: AppState | null }) {
       // not remembered
     }
   };
+  // Phones show one chart under the response at a time (excursion is one of them).
+  const narrow = useNarrow();
   const [chartPick, setChartPick] = useState<ChartId>(() => {
+    const first: ChartId = window.matchMedia?.("(max-width: 860px)").matches ? "excursion" : "maxspl";
     try {
-      return (localStorage.getItem("sbg.chart") as ChartId | null) ?? "maxspl";
+      return (localStorage.getItem("sbg.chart") as ChartId | null) ?? first;
     } catch {
-      return "maxspl";
+      return first;
     }
   });
   const chooseChart = (c: ChartId) => {
@@ -297,7 +300,7 @@ export function App(props: { initial: AppState | null }) {
         ]
       : [];
   const series = (pick: (r: SimulationResult) => Float64Array | null): Series[] =>
-    designs.map((d) => ({ label: d.label, color: d.color, dash: d.dash, y: pick(d.result) }));
+    designs.map((d) => ({ label: d.label, color: d.color, tag: d.tag, dash: d.dash, y: pick(d.result) }));
 
   // The short link once it's ready for this exact state; until then (150 ms after an edit) the long form, which is always correct.
   const shareUrl = () =>
@@ -571,6 +574,7 @@ export function App(props: { initial: AppState | null }) {
   const hasPr = prDesigns.length > 0;
   const hasPort = designs.some((d) => d.result.portVelocity || d.result.rearPortVelocity);
   const chartTabs: { id: ChartId; label: string }[] = [
+    ...(narrow ? [{ id: "excursion" as const, label: "Excursion" }] : []),
     ...(hasPr ? [{ id: "pr" as const, label: "PR excursion" }] : []),
     ...(hasPort ? [{ id: "port" as const, label: "Port speed" }] : []),
     { id: "maxspl", label: "Max SPL" },
@@ -1346,7 +1350,7 @@ export function App(props: { initial: AppState | null }) {
       <main className="charts">
         {welcome.linkNote && <LinkNote onDismiss={welcome.dismissLinkNote} onTips={welcome.showTips} />}
         {welcome.tips && <GettingStarted onDismiss={welcome.dismissTips} />}
-        <Summary designs={designs} state={state} missing={solved.missing.length > 0} />
+        <Summary designs={designs} state={state} missing={solved.missing.length > 0} narrow={narrow} />
 
         {designs.length > 0 && (
           <ChartEmphasis.Provider value={fadedLabels}>
@@ -1386,6 +1390,7 @@ export function App(props: { initial: AppState | null }) {
                         {
                           label: d.label,
                           color: d.color,
+                          tag: d.tag,
                           dash: d.dash,
                           y: d.result.spl.map((v) => v - ref),
                           notes: Array.from(d.result.spl, (v) => `${v.toFixed(1)} dB SPL`),
@@ -1421,33 +1426,53 @@ export function App(props: { initial: AppState | null }) {
                   }
                 : {
                     series: designs
-                      .flatMap((d) => [{ label: d.label, color: d.color, dash: d.dash, y: d.result.spl }, ...partsOf(d, (y) => y)])
+                      .flatMap((d) => [{ label: d.label, color: d.color, tag: d.tag, dash: d.dash, y: d.result.spl }, ...partsOf(d, (y) => y)])
                       .concat(measuredSeries(state.measured, "spl", freq, designs)),
                   })}
             />
+            {narrow && (
+              <TabRow<ChartId>
+                tabs={chartTabs}
+                selected={chartTab}
+                onSelect={chooseChart}
+                ariaLabel="Charts"
+                className="chart-tabs"
+              />
+            )}
             <LogChart
               forum
+              hidden={narrow && chartTab !== "excursion"}
               title="Cone excursion (peak, one way)"
               unit="mm"
               freq={freq}
-              series={designs.map((d) => ({ label: d.label, color: d.color, dash: d.dash, y: d.result.excursionMm, over: viewOfDesign(state, d.design).xmax_mm }))}
+              series={designs.map((d) => ({ label: d.label, color: d.color, tag: d.tag, dash: d.dash, y: d.result.excursionMm, over: viewOfDesign(state, d.design).xmax_mm }))}
               limits={designs
                 .map((d) => viewOfDesign(state, d.design).xmax_mm)
                 .filter((x, i, all) => all.indexOf(x) === i)
-                .map((x) => ({
+                .map((x, i, all) => ({
                 value: x,
-                label: state.extraDrivers.length > 0 ? `Xmax ${x} mm (${driverList(state).filter((k) => viewFor(state, k.id === "A" ? undefined : k.id).xmax_mm === x).map((k) => k.id).join(", ")})` : `Xmax ${x} mm`,
+                // Several drivers: one label for all their Xmax lines, so the labels don't overlap.
+                label:
+                  all.length === 1
+                    ? `Xmax ${x} mm`
+                    : i === 0
+                      ? `Xmax ${driverList(state)
+                          .map((k) => `${k.id} ${viewFor(state, k.id === "A" ? undefined : k.id).xmax_mm}`)
+                          .join(" · ")} mm`
+                      : "",
                 color: LIMIT_RED,
               }))}
               yMin={0}
             />
-            <TabRow<ChartId>
-              tabs={chartTabs}
-              selected={chartTab}
-              onSelect={chooseChart}
-              ariaLabel="More charts"
-              className="chart-tabs"
-            />
+            {!narrow && (
+              <TabRow<ChartId>
+                tabs={chartTabs}
+                selected={chartTab}
+                onSelect={chooseChart}
+                ariaLabel="More charts"
+                className="chart-tabs"
+              />
+            )}
             {hasPr && (
               <LogChart
                 forum
@@ -1471,6 +1496,7 @@ export function App(props: { initial: AppState | null }) {
                   ...designs.map((d) => ({
                     label: d.design.kind === "bandpass" ? `${d.label} (front port)` : d.label,
                     color: d.color,
+                    tag: d.tag,
                     dash: d.dash,
                     y: d.result.portVelocity,
                     over: PORT_LIMIT,
@@ -1495,6 +1521,7 @@ export function App(props: { initial: AppState | null }) {
               series={designs.map((d) => ({
                 label: d.label,
                 color: d.color,
+                tag: d.tag,
                 dash: d.dash,
                 y: d.result.maxSpl,
                 notes: d.result.limitedBy.map((l) => LIMIT_KINDS[l]?.short ?? ""),
@@ -1657,7 +1684,8 @@ function portContext(state: AppState, designs: Design[], id: string) {
   };
 }
 
-function Summary({ designs, state, missing }: { designs: Design[]; state: AppState; missing: boolean }) {
+function Summary({ designs, state, missing, narrow }: { designs: Design[]; state: AppState; missing: boolean; narrow?: boolean }) {
+  const [open, setOpen] = useState<string | null>(null);
   const fmt = (v: number | null | undefined, digits = 1) => (v === null || v === undefined ? "–" : v.toFixed(digits));
   const peak = (a: Float64Array | null, freq: Float64Array, fMin: number) => {
     if (!a) return null;
@@ -1669,6 +1697,73 @@ function Summary({ designs, state, missing }: { designs: Design[]; state: AppSta
   if (designs.length === 0) return <p className="muted summary">Turn on at least one enclosure.</p>;
   // Without a high-pass filter, ignore the subsonic region where excursion runs away.
   const fMin = state.highPass.on ? 10 : 15;
+  if (narrow) {
+    // Phones: name, volume, F3 and what (if anything) is over its limit; the rest one tap away.
+    return (
+      <div className="summary">
+        <table className="summary-compact">
+          <thead>
+            <tr>
+              <th />
+              <th>Vb</th>
+              <th>F3</th>
+              <th>Limits</th>
+            </tr>
+          </thead>
+          <tbody>
+            {designs.map(({ design: d, tag, color, vb_l, result: r }) => {
+              const x = peak(r.excursionMm, r.freq, fMin);
+              const xpr = prPeak(r, fMin);
+              const vpFront = peak(r.portVelocity, r.freq, fMin);
+              const vpRear = peak(r.rearPortVelocity, r.freq, fMin);
+              const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
+              const over = [
+                x !== null && x > viewOfDesign(state, d).xmax_mm ? "Xmax" : "",
+                xpr?.over ? "PR Xmax" : "",
+                vp !== null && vp > PORT_LIMIT ? "Port speed" : "",
+              ].filter(Boolean);
+              const isOpen = open === d.id;
+              return [
+                <tr key={d.id} className="summary-row" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : d.id)}>
+                  <th>
+                    <span className="dot" style={{ background: color }} aria-hidden="true">
+                      {tag}
+                    </span>
+                    <span>{shortName(d.name)}</span>
+                  </th>
+                  <td>{fmtQ(vb_l, "vol", state.settings.units)}</td>
+                  <td>
+                    {fmt(r.summary.f3)}
+                    {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
+                  </td>
+                  <td className={over.length ? "over" : "muted"}>{over.length ? `⚠ ${over[0]}` : "OK"}</td>
+                </tr>,
+                isOpen && (
+                  <tr key={`${d.id}-more`} className="summary-more">
+                    <td colSpan={4}>
+                      {d.kind === "bandpass"
+                        ? `Fb ${fmt(r.summary.fbRear ?? r.summary.fc)} / ${fmt(r.summary.fb)} Hz`
+                        : r.summary.fb !== undefined
+                          ? `Fb ${fmt(r.summary.fb)} Hz`
+                          : `Fc ${fmt(r.summary.fc)} Hz`}
+                      {r.summary.qtc !== undefined && r.summary.qtc !== null ? ` · Qtc ${fmt(r.summary.qtc, 2)}` : ""}
+                      {` · cone ${fmt(x)} mm`}
+                      {xpr ? ` · PR ${fmt(xpr.mm)} mm` : ""}
+                      {vp !== null ? ` · port ${fmt(vp)} m/s` : ""}
+                      {over.length ? ` · over: ${over.join(", ")}` : ""}
+                    </td>
+                  </tr>
+                ),
+              ];
+            })}
+          </tbody>
+        </table>
+        <p className="hint">
+          Tap a row for its details. Peaks above {fMin} Hz.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="summary">
       <div className="summary-scroll">

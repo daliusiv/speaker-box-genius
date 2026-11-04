@@ -12,6 +12,8 @@ interface DesignBase {
   vb_l: number;
   /** Which driver this design uses: "B", "C" or "D" from AppState.extraDrivers; absent = driver A. */
   driverId?: string;
+  /** The preset it was last sized with (a tag on the card), e.g. "QB3" or "Qtc 0.707". */
+  preset?: string;
 }
 
 export interface SealedDesign extends DesignBase {
@@ -711,6 +713,13 @@ function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
     merged.losses = bandpassLossesOf(d.losses);
   }
   if (typeof merged.id !== "string" || all.some((x) => x.id === merged.id)) merged.id = base.id;
+  // Older versions put the preset in the name ("Ported QB3"): move it to the tag.
+  const old = / (Qtc [\d.]+|QB3|B4|Keele)$/.exec(merged.name ?? "");
+  if (old && merged.preset === undefined) {
+    merged.preset = old[1];
+    merged.name = merged.name.slice(0, -old[0].length);
+  }
+  if (typeof merged.preset !== "string" || merged.preset.length > 20) delete merged.preset;
   return merged;
 }
 
