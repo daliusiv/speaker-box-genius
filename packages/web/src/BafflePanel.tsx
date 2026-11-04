@@ -42,7 +42,7 @@ export function BafflePanel(props: { state: AppState; sd_cm2?: number; onChange:
   return (
     <Card title="Baffle step">
       <div className="fields">
-        <Select<"off" | "on">
+        <Select<"off" | "on"> help="Infinite baffle assumes the box is flush in a wall (like WinISD). Free-standing adds the baffle step: bass spreads all round and falls up to 6 dB."
           label="Baffle"
           value={b.on ? "on" : "off"}
           options={[
@@ -54,7 +54,7 @@ export function BafflePanel(props: { state: AppState; sd_cm2?: number; onChange:
         {b.on && (
           <>
             {isBox && (
-              <Select<"box" | "own">
+              <Select<"box" | "own"> help="Take the baffle (front panel) size from the volume calculator's box, or type it in."
                 label="Baffle size"
                 value={b.fromBox ? "box" : "own"}
                 options={[
@@ -71,8 +71,8 @@ export function BafflePanel(props: { state: AppState; sd_cm2?: number; onChange:
               </>
             ) : (
               <>
-                <Num label="Width" q="len" value={b.width_cm} min={1} onChange={(width_cm) => set({ width_cm })} />
-                <Num label="Height" q="len" value={b.height_cm} min={1} onChange={(height_cm) => set({ height_cm })} />
+                <Num help="Width of the front panel. Narrower baffles move the baffle step higher in frequency." label="Width" q="len" value={b.width_cm} min={1} onChange={(width_cm) => set({ width_cm })} />
+                <Num help="Height of the front panel." label="Height" q="len" value={b.height_cm} min={1} onChange={(height_cm) => set({ height_cm })} />
               </>
             )}
             <Num label="From left" q="len" value={b.x_cm} min={0} title="Driver centre, from the left edge" onChange={(x_cm) => set({ x_cm })} />

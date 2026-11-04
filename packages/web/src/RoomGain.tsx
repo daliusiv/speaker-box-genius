@@ -12,7 +12,7 @@ export function RoomGainPanel(props: { value: Room; room: { f0: number; slopeDbP
   return (
     <Card title="Room / cabin gain">
       <div className="fields">
-        <Select<Room["mode"]>
+        <Select<Room["mode"]> help="Adds the low-frequency lift of a closed space: a car cabin (strong) or a room (gentler)."
           label="Space"
           value={g.mode}
           options={[
@@ -24,9 +24,9 @@ export function RoomGainPanel(props: { value: Room; room: { f0: number; slopeDbP
         />
         {g.mode !== "off" && (
           <>
-            <Num label="Longest inside" q="len" value={g.length_cm} min={1} onChange={(length_cm) => set({ length_cm })} />
+            <Num help="Longest inside dimension of the room or cabin. Sets where the lift starts." label="Longest inside" q="len" value={g.length_cm} min={1} onChange={(length_cm) => set({ length_cm })} />
             <Fixed label="Lift starts" unit="Hz" value={props.room ? props.room.f0.toFixed(0) : "–"} title="Transition frequency, c / (2 × longest dimension)" />
-            <Select<"12" | "6">
+            <Select<"12" | "6"> help="How fast the lift rises below the transition: 12 dB/oct for a sealed space like a car, 6 for a leaky room."
               label="Slope"
               value={String(g.slope) as "12" | "6"}
               options={[
@@ -35,7 +35,7 @@ export function RoomGainPanel(props: { value: Room; room: { f0: number; slopeDbP
               ]}
               onChange={(x) => set({ slope: x === "6" ? 6 : 12 })}
             />
-            <Num label="Max lift" unit="dB" value={g.max_db} min={0} onChange={(max_db) => set({ max_db })} />
+            <Num help="The most lift allowed, in dB: real spaces stop gaining at some point." label="Max lift" unit="dB" value={g.max_db} min={0} onChange={(max_db) => set({ max_db })} />
           </>
         )}
       </div>

@@ -2332,3 +2332,55 @@ body.print-build #print-root .fold-chamber {
   stroke: #3b82f6;
   stroke-width: 2;
 }
+
+/* Help strip for the field in focus (or under the mouse) */
+.help-dock {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 60;
+  transform: translateX(-50%);
+  width: min(40rem, calc(100vw - 1.5rem));
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
+  pointer-events: none;
+  animation: help-in 0.12s ease-out;
+}
+.help-dock b {
+  color: var(--accent);
+}
+@keyframes help-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+}
+@media (max-width: 860px) {
+  .help-dock {
+    bottom: calc(4.6rem + env(safe-area-inset-bottom));
+  }
+  /* With the keyboard open the strip sits just above it (set from script). */
+  .help-dock.over-keyboard {
+    margin-bottom: 0.4rem;
+  }
+}
+@media print {
+  .help-dock {
+    display: none;
+  }
+}
+/* A field with help: its label reads as explainable on computers. */
+@media (hover: hover) and (pointer: fine) {
+  [data-help] > span:first-child {
+    text-decoration: underline dotted color-mix(in srgb, var(--muted) 60%, transparent);
+    text-underline-offset: 3px;
+    cursor: help;
+  }
+}

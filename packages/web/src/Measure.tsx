@@ -115,8 +115,8 @@ export function MeasurePanel(props: Props) {
         Load a free-air sweep from DATS, REW, ARTA, etc. (.zma, .txt or .csv: frequency, ohms and phase if you have it).
       </p>
       <div className="fields">
-        <Num label="Re (DC)" unit="Ω" value={reDc} min={0} onChange={(re) => refit(re, coil)} />
-        <Select<CoilModel>
+        <Num help="DC resistance of the voice coil, measured with a meter (or the sweep's lowest value). The fit depends on it." label="Re (DC)" unit="Ω" value={reDc} min={0} onChange={(re) => refit(re, coil)} />
+        <Select<CoilModel> help="How the coil's inductance is modelled in the fit: Le + L2/R2 matches a real sweep better; Le only matches WinISD."
           label="Coil model"
           value={coil}
           options={[
@@ -172,8 +172,8 @@ export function MeasurePanel(props: Props) {
 
           <h3>Vas by added mass (optional)</h3>
           <div className="fields">
-            <Num label="Mass" unit="g" value={mass} onChange={setMass} />
-            <Num label="Sd" unit="cm²" value={sdUsed ?? 0} min={0} onChange={(v) => setSd(v > 0 ? v : null)} />
+            <Num help="Mass you added to the cone for the second sweep (grams). The drop in resonance gives Vas." label="Mass" unit="g" value={mass} onChange={setMass} />
+            <Num help="Cone area used for Vas. Taken from the T/S values; type it if they're missing." label="Sd" unit="cm²" value={sdUsed ?? 0} min={0} onChange={(v) => setSd(v > 0 ? v : null)} />
           </div>
           <div className="row">
             <label className="file-button secondary">

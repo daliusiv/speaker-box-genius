@@ -58,6 +58,7 @@ import { RoomGainPanel } from "./RoomGain.tsx";
 import { BafflePanel } from "./BafflePanel.tsx";
 import { AddDesign, DesignCard } from "./Designs.tsx";
 import { MeasuredCard, measuredSeries } from "./Measured.tsx";
+import { HelpDock } from "./HelpDock.tsx";
 import { reportUrl, ShareMenu } from "./Share.tsx";
 import { EqPanel } from "./Eq.tsx";
 import { MeasurePanel, type Measurement } from "./Measure.tsx";
@@ -585,7 +586,11 @@ export function App(props: { initial: AppState | null }) {
           </p>
         </div>
         <div className="top-actions">
-          <div className="power">
+          <div
+            className="power"
+            data-help-title={state.drive === "volts" ? "Voltage" : "Power"}
+            data-help="The drive for every chart: amplifier power in watts (turned into volts with Re), or a voltage. Excursion, port speed and the limits all follow it."
+          >
             <span id="drive-label">{state.drive === "volts" ? "Voltage" : "Power"}</span>
             {state.drive === "volts" ? (
               <input
@@ -684,6 +689,8 @@ export function App(props: { initial: AppState | null }) {
               />
               <input
                 className="name"
+                data-help-title="Driver name"
+                data-help="A name for this driver, used in shared links, forum posts and exports. Load a driver from the database to fill everything in."
                 value={state.driverName}
                 onChange={(e) => set("driverName", e.currentTarget.value)}
                 aria-label="Driver name"
@@ -765,8 +772,8 @@ export function App(props: { initial: AppState | null }) {
               {wdrMsg && <p className="hint">{wdrMsg}</p>}
               <h3>Large signal and system</h3>
               <div className="fields">
-                <Num label="Znom" unit="Ω" value={state.nominal_ohms} onChange={(v) => set("nominal_ohms", v)} />
-                <Num label="Le" unit="mH" value={state.le_mh} min={0} onChange={(v) => set("le_mh", v)} />
+                <Num help="Nominal impedance printed on the driver (4, 8 Ω…). Only used when the drive is set as watts into the nominal impedance; the simulation itself uses Re." label="Znom" unit="Ω" value={state.nominal_ohms} onChange={(v) => set("nominal_ohms", v)} />
+                <Num help="Voice-coil inductance from the datasheet. It makes the impedance rise with frequency and rolls off the top end; Settings can leave it out, like WinISD." label="Le" unit="mH" value={state.le_mh} min={0} onChange={(v) => set("le_mh", v)} />
                 <Num
                   label="L2"
                   unit="mH"
@@ -783,14 +790,14 @@ export function App(props: { initial: AppState | null }) {
                   title="Optional: resistance across L2 (eddy-current losses). Used only when L2 is also set."
                   onChange={(v) => set("r2_ohm", v)}
                 />
-                <Num label="Xmax" unit="mm" value={state.xmax_mm} onChange={(v) => set("xmax_mm", v)} />
-                <Num label="Pe" unit="W" value={state.pe_w} onChange={(v) => set("pe_w", v)} />
-                <Num
+                <Num help="Maximum one-way excursion the cone can make while staying linear (from the datasheet). The excursion chart turns red above it." label="Xmax" unit="mm" value={state.xmax_mm} onChange={(v) => set("xmax_mm", v)} />
+                <Num help="Thermal power rating: how much power the voice coil can take continuously. Sets the thermal limit in the Max SPL chart." label="Pe" unit="W" value={state.pe_w} onChange={(v) => set("pe_w", v)} />
+                <Num help="How many drivers (or isobaric pairs) share the box. More drivers move more air; the box volume is shared between them."
                   label={state.isobaric ? "Pairs" : "Drivers"}
                   value={state.drivers}
                   onChange={(v) => set("drivers", Math.max(1, Math.round(v)))}
                 />
-                <Select<"standard" | "isobaric">
+                <Select<"standard" | "isobaric"> help="Standard: each driver faces out. Isobaric: two drivers work as one (face to face or front to back), needing half the box for the same bass but 3 dB less efficiency."
                   label="Loading"
                   value={state.isobaric ? "isobaric" : "standard"}
                   options={[
@@ -800,7 +807,7 @@ export function App(props: { initial: AppState | null }) {
                   onChange={(x) => set("isobaric", x === "isobaric")}
                 />
                 {state.isobaric && (
-                  <Select<"series" | "parallel">
+                  <Select<"series" | "parallel"> help="How the two coils of each isobaric pair are wired together: parallel halves the impedance, series doubles it."
                     label="Pair coils"
                     value={state.isoCoils}
                     options={[
@@ -810,7 +817,7 @@ export function App(props: { initial: AppState | null }) {
                     onChange={(x) => set("isoCoils", x)}
                   />
                 )}
-                <Select<"single" | "dual">
+                <Select<"single" | "dual"> help="Dual voice coil (DVC) drivers have two coils you can wire in series or parallel. Choose Dual to get those options."
                   label="Voice coils"
                   value={state.dvc.on ? "dual" : "single"}
                   options={[
@@ -821,7 +828,7 @@ export function App(props: { initial: AppState | null }) {
                 />
                 {state.dvc.on && (
                   <>
-                    <Select<"one" | "parallel" | "series">
+                    <Select<"one" | "parallel" | "series"> help="Datasheets for DVC drivers give T/S values for one coil or for both coils wired a certain way. Say which, so the wiring below is calculated correctly."
                       label="Values are for"
                       value={state.dvc.entered}
                       options={[
@@ -831,7 +838,7 @@ export function App(props: { initial: AppState | null }) {
                       ]}
                       onChange={(entered) => set("dvc", { ...state.dvc, entered })}
                     />
-                    <Select<"parallel" | "series">
+                    <Select<"parallel" | "series"> help="How you will wire the two voice coils: series doubles the impedance, parallel halves it. It changes the load on the amplifier, not the bass shape."
                       label="Coils wired"
                       value={state.dvc.wired}
                       options={[
@@ -843,7 +850,7 @@ export function App(props: { initial: AppState | null }) {
                   </>
                 )}
                 {state.drivers > 1 && (
-                  <Select<"parallel" | "series">
+                  <Select<"parallel" | "series"> help="How several drivers (or pairs) are wired to the amplifier: parallel lowers the impedance, series raises it."
                     label="Wiring"
                     value={state.wiring}
                     options={[
@@ -1005,7 +1012,7 @@ export function App(props: { initial: AppState | null }) {
           <div className="tab-panel" role="tabpanel" id="panel-signal" aria-labelledby="tab-signal">
             <Card title="High-pass filter" on={hp.on} onToggle={(on) => set("highPass", { ...hp, on })}>
               <div className="fields">
-                <Select<HighPassType>
+                <Select<HighPassType> help="Filter shape. Butterworth is maximally flat; Linkwitz-Riley is the usual crossover shape (−6 dB at the corner)."
                   label="Type"
                   value={hp.type}
                   options={[
@@ -1016,7 +1023,7 @@ export function App(props: { initial: AppState | null }) {
                     set("highPass", { ...hp, type, order: type === "linkwitz-riley" && hp.order % 2 ? hp.order + 1 : hp.order })
                   }
                 />
-                <Select<number>
+                <Select<number> help="How steeply the filter cuts below its frequency: 12 dB/oct is gentle, 24 dB/oct protects a ported box much better."
                   label="Slope"
                   value={hp.order}
                   options={(hp.type === "butterworth" ? [1, 2, 3, 4] : [2, 4]).map((o) => ({
@@ -1025,7 +1032,7 @@ export function App(props: { initial: AppState | null }) {
                   }))}
                   onChange={(order) => set("highPass", { ...hp, order })}
                 />
-                <Num label="Freq" unit="Hz" value={hp.freq} onChange={(freq) => set("highPass", { ...hp, freq })} />
+                <Num help="Corner frequency of the high-pass (subsonic) filter. A few Hz below a ported box's tuning keeps the cone from flapping below it." label="Freq" unit="Hz" value={hp.freq} onChange={(freq) => set("highPass", { ...hp, freq })} />
               </div>
               <p className="hint">A subsonic filter protects ported and PR boxes from over-excursion below tuning.</p>
             </Card>
@@ -1061,7 +1068,7 @@ export function App(props: { initial: AppState | null }) {
           <div className="tab-panel" role="tabpanel" id="panel-settings" aria-labelledby="tab-settings">
             <Card title="Settings">
               <div className="fields">
-                <Select<"metric" | "imperial">
+                <Select<"metric" | "imperial"> help="Show lengths and volumes in metric (cm, L) or imperial (inches, ft³). Values are kept the same, only the display changes."
                   label="Units"
                   value={state.settings.units}
                   options={[
@@ -1070,7 +1077,7 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(units) => set("settings", { ...state.settings, units })}
                 />
-                <Select<"standard" | "winisd" | "hornresp">
+                <Select<"standard" | "winisd" | "hornresp"> help="Air density and speed of sound. Standard is 20 °C; pick WinISD's or Hornresp's values to compare results like for like."
                   label="Air"
                   value={state.settings.air}
                   options={[
@@ -1080,14 +1087,14 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(air) => set("settings", { ...state.settings, air })}
                 />
-                <Num
+                <Num help="Resistance of the amplifier output plus the speaker cable. It adds to Re: a little less output and a slightly higher Q."
                   label="Amp + cable"
                   unit="Ω"
                   value={state.settings.rg}
                   min={0}
                   onChange={(rg) => set("settings", { ...state.settings, rg })}
                 />
-                <Select<"yes" | "no">
+                <Select<"yes" | "no"> help="Whether the simulation includes the voice-coil inductance (Le, and L2/R2 when given). WinISD leaves it out by default."
                   label="Coil inductance"
                   value={state.settings.inductance ? "yes" : "no"}
                   options={[
@@ -1099,25 +1106,25 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(x) => set("settings", { ...state.settings, inductance: x === "yes" })}
                 />
-                <Num
+                <Num help="Box leakage loss as a Q at the tuning frequency: lower means a leakier box. 10 is WinISD's default (a typical well-built box)."
                   label="Leak Ql"
                   value={state.settings.losses.ql}
                   min={1}
                   onChange={(ql) => set("settings", { ...state.settings, losses: { ...state.settings.losses, ql } })}
                 />
-                <Num
+                <Num help="Absorption loss (stuffing, wall flex) as a Q: lower means more loss. 100 is WinISD's default (little stuffing)."
                   label="Absorb Qa"
                   value={state.settings.losses.qa}
                   min={1}
                   onChange={(qa) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qa } })}
                 />
-                <Num
+                <Num help="Port friction loss as a Q: lower means a lossier port. 100 is WinISD's default."
                   label="Port Qp"
                   value={state.settings.losses.qp}
                   min={1}
                   onChange={(qp) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qp } })}
                 />
-                <Select<"off" | "on">
+                <Select<"off" | "on"> help="Port compression: at high air speed a port loses output to turbulence. On estimates that loss at the current power (approximate)."
                   label="Port compression"
                   value={state.settings.portCompression ? "on" : "off"}
                   options={[
@@ -1134,7 +1141,7 @@ export function App(props: { initial: AppState | null }) {
                   title="Voice-coil temperature: 20 °C = the datasheet's cold values (like WinISD). A hot coil has a higher Re: less output, higher Q."
                   onChange={(t) => set("settings", { ...state.settings, coilTemp_C: Math.min(250, Math.max(20, t)) })}
                 />
-                <Select<"lumped" | "pipe">
+                <Select<"lumped" | "pipe"> help="Air mass (like WinISD) treats a port as a slug of air. Pipe also shows the port's own pipe resonances higher up (vented boxes)."
                   label="Ports"
                   value={state.settings.portModel}
                   options={[
@@ -1143,7 +1150,7 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(portModel) => set("settings", { ...state.settings, portModel })}
                 />
-                <Select<"on-axis" | "power">
+                <Select<"on-axis" | "power"> help="How SPL is worked out for lines and horns: in front of the box, or from the power each opening radiates as Hornresp does."
                   label="Line/horn SPL"
                   value={state.settings.lineSpl}
                   options={[
@@ -1152,7 +1159,7 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(lineSpl) => set("settings", { ...state.settings, lineSpl })}
                 />
-                <Select<"peak" | "rms">
+                <Select<"peak" | "rms"> help="Port air speed shown as the peak value or as RMS (peak ÷ 1.41). The chuffing line moves with it."
                   label="Port speed"
                   value={state.settings.velocity}
                   options={[
@@ -1432,6 +1439,7 @@ export function App(props: { initial: AppState | null }) {
           idPrefix="ptab-"
         />
       </nav>
+      <HelpDock />
       {toast && (
         <div className="toast" role="status" key={toast.id}>
           <span>{toast.text}</span>

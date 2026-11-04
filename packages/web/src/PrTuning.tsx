@@ -163,7 +163,7 @@ export function PrTuning(props: {
           </div>
           <p className="hint tuning-goal">{GOALS.find((g) => g.id === goal)!.hint}.</p>
           {goal === "smallest" && (
-            <label className="tuning-target">
+            <label className="tuning-target" data-help="The lowest −3 dB point the smallest box must still reach.">
               <span>Reach F3 of</span>
               <input
                 type="number"
