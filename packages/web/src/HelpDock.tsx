@@ -1,16 +1,43 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 /**
  * One help strip for every field: when a field with `data-help` gets focus (a tap on a phone,
- * a click or Tab on a computer), or its label is hovered with a mouse, a strip at the bottom of
- * the screen says what it is and what it does. No icons beside the fields, nothing in the
- * layout moves, and on phones it sits above the on-screen keyboard.
+ * a click or Tab on a computer), or its label is hovered with a mouse, a strip says what it is
+ * and what it does. No icons beside the fields and nothing in the layout moves.
+ *
+ * Placement: at the bottom of what's visible (above the phone tab bar, or above the on-screen
+ * keyboard), unless that would cover the field itself, which is where the browser scrolls a
+ * field when the keyboard opens; then at the top of what's visible.
  */
 export function HelpDock() {
   const [help, setHelp] = useState<{ title: string; text: string } | null>(null);
-  const [lift, setLift] = useState(0);
   const focused = useRef<Element | null>(null);
   const hovered = useRef<Element | null>(null);
+  const dock = useRef<HTMLDivElement>(null);
+
+  /** Puts the strip where it doesn't cover the field in use. */
+  const place = () => {
+    const el = dock.current;
+    if (!el) return;
+    const vv = window.visualViewport;
+    const visTop = vv ? vv.offsetTop : 0;
+    const visH = vv ? vv.height : window.innerHeight;
+    const keyboard = window.innerHeight - visH > 120;
+    // The phone tab bar is hidden behind the keyboard while it's open.
+    const nav = document.querySelector(".phone-nav");
+    const navH = !keyboard && nav && getComputedStyle(nav).display !== "none" ? nav.getBoundingClientRect().height : 0;
+    const gap = 8;
+    const h = el.offsetHeight;
+    const atBottom = visTop + visH - navH - gap - h;
+    const atTop = visTop + gap;
+    let top = atBottom;
+    const field = (focused.current ?? hovered.current)?.getBoundingClientRect();
+    if (field) {
+      const covers = (t: number) => Math.max(0, Math.min(t + h, field.bottom) - Math.max(t, field.top));
+      if (covers(atBottom) > 0 && covers(atTop) < covers(atBottom)) top = atTop;
+    }
+    el.style.top = `${Math.round(top)}px`;
+  };
 
   useEffect(() => {
     const read = (el: Element | null) => {
@@ -39,29 +66,32 @@ export function HelpDock() {
       hovered.current = host;
       show();
     };
+    // The keyboard opening, the browser scrolling the field into view, the user scrolling.
+    const onMove = () => requestAnimationFrame(place);
     document.addEventListener("focusin", onFocusIn);
     document.addEventListener("focusout", onFocusOut);
     if (canHover) document.addEventListener("pointerover", onOver);
-    // Keep the strip above the on-screen keyboard (the visual viewport shrinks when it opens).
     const vv = window.visualViewport;
-    const onViewport = () => {
-      if (!vv) return;
-      setLift(Math.max(0, window.innerHeight - (vv.height + vv.offsetTop)));
-    };
-    vv?.addEventListener("resize", onViewport);
-    vv?.addEventListener("scroll", onViewport);
+    vv?.addEventListener("resize", onMove);
+    vv?.addEventListener("scroll", onMove);
+    window.addEventListener("scroll", onMove, { passive: true });
+    window.addEventListener("resize", onMove);
     return () => {
       document.removeEventListener("focusin", onFocusIn);
       document.removeEventListener("focusout", onFocusOut);
       document.removeEventListener("pointerover", onOver);
-      vv?.removeEventListener("resize", onViewport);
-      vv?.removeEventListener("scroll", onViewport);
+      vv?.removeEventListener("resize", onMove);
+      vv?.removeEventListener("scroll", onMove);
+      window.removeEventListener("scroll", onMove);
+      window.removeEventListener("resize", onMove);
     };
   }, []);
 
+  useLayoutEffect(place, [help]);
+
   if (!help) return null;
   return (
-    <div className={`help-dock${lift > 0 ? " over-keyboard" : ""}`} style={lift > 0 ? { bottom: lift } : undefined} role="status" aria-live="polite">
+    <div ref={dock} className="help-dock" role="status" aria-live="polite">
       {help.title && <b>{help.title}</b>} {help.text}
     </div>
   );
