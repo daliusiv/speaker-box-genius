@@ -2220,3 +2220,52 @@ label.check {
   margin: 0.3rem 0;
   font-size: 0.9rem;
 }
+.measured-row {
+  border-top: 1px solid var(--border);
+  padding: 0.4rem 0 0.2rem;
+}
+.measured-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+input.measured-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.15rem 0.3rem;
+  font: inherit;
+  font-weight: 600;
+}
+input.measured-name:focus {
+  border-color: var(--border);
+}
+.swatch.dashed {
+  display: inline-block;
+  width: 18px;
+  height: 0;
+  border-top: 3px dashed;
+}
+label.file-button.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.measured-head > input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: auto;
+  margin: 0;
+}
+.measured-head > .swatch.dashed {
+  flex: 0 0 22px;
+  width: 22px;
+}
+.measured-head > .hint {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+}
+.measured-head > input.measured-name {
+  width: auto;
+}

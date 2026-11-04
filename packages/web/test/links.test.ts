@@ -124,3 +124,25 @@ test("old long links still open", async () => {
 test("broken links decode to null instead of throwing", async () => {
   for (const h of ["#z=AAAA", "#z=!!", "#s=AAAA", "#nothing", ""]) assert.equal(await decodeStateAny(h), null, h);
 });
+
+test("measured curves travel with the link, and the link stays postable", async () => {
+  const { parseCurve, thinCurve } = await import("@sbg/engine");
+  // A realistic REW export: 1/48-octave points from 10 Hz to 20 kHz with ripple and noise.
+  const lines: string[] = ["* Freq(Hz) SPL(dB) Phase(degrees)"];
+  for (let i = 0; i <= 48 * 11; i++) {
+    const f = 10 * 2 ** (i / 48);
+    lines.push(`${f.toFixed(3)} ${(85 - 24 / (1 + (f / 35) ** 2) + 2 * Math.sin(i / 7) + ((i * 37) % 11) / 20).toFixed(3)} ${(i % 360) - 180}`);
+  }
+  const c = thinCurve(parseCurve(lines.join("\n"), "spl"), 24, 5, 2000);
+  const s: AppState = {
+    ...DEFAULT_STATE,
+    measured: [{ id: "m1", name: "Ground plane 1 m", kind: "spl", on: true, f: c.f, v: c.v, offset_db: -3.2, matchTo: DEFAULT_STATE.designs[1]!.id }],
+  };
+  const hash = await encodeStateShort(s);
+  const back = await decodeStateAny(hash);
+  assert.deepEqual(back!.measured, s.measured);
+  assert.ok(hash.length < 2000, `short link with a measurement: ${hash.length} characters`);
+  // Garbage is dropped, not trusted.
+  const bad = decodeState(encodeState({ ...s, measured: [{ ...s.measured[0]!, f: [1, 2], v: [1] }] as AppState["measured"] }));
+  assert.deepEqual(bad!.measured, []);
+});
