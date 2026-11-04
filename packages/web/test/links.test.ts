@@ -59,6 +59,8 @@ function variants(): [string, AppState][] {
           ], fold: { width_cm: 24, folds: 3 } },
         { ...ported, flare_cm: 2.5 },
         { ...(newDesign("line", d.designs) as LineDesign), id: "d9", name: "TH", end: "tapped", tapAt_cm: 77, mouth: "custom", mouthDistance_cm: 12 },
+        { ...(newDesign("line", d.designs) as LineDesign), id: "d10", name: "FLH", end: "horn", rearChamber_l: 33.5, throatChamber_l: 4.2,
+          sections: [{ length_cm: 250, endArea_cm2: 9000, taper: "exponential", fill_kgm3: 0 }] },
       ],
     }],
   ];
@@ -72,6 +74,7 @@ test("a line design survives a link exactly", async () => {
   assert.equal(back!.baffle.on, true);
   assert.equal(back!.settings.portCompression, true);
   assert.deepEqual(back!.designs[2], s.designs[2]);
+  assert.deepEqual(back!.designs[3], s.designs[3]);
 });
 
 test("old single-piece line links open as sections", () => {

@@ -5,6 +5,7 @@ import { lineFoldOf, lineLength, linkedDesign, prTotal, volumeFor, type Design }
 import { useUnits } from "./units.ts";
 import { encodeStateShort, type AppState, type DesignState, type LineDesign } from "./state.ts";
 import { qrSvg } from "./qrDraw.ts";
+import { FoldDrawing } from "./LineBody.tsx";
 
 const KIND: Record<DesignState["kind"], string> = { sealed: "Sealed", vented: "Ported", pr: "Passive radiator", bandpass: "Bandpass", line: "Transmission line" };
 
@@ -43,7 +44,7 @@ export function BuildSheet(props: {
   const lenUnit = system === "imperial" ? "" : " mm";
   const d = linkedDesign(s);
   // What to build: the calculator's box, or one of the transmission lines folded into a box.
-  const lines = s.designs.filter((x): x is LineDesign => x.kind === "line");
+  const lines = s.designs.filter((x): x is LineDesign => x.kind === "line" && x.end !== "horn");
   const [what, setWhat] = useState<string>("box");
   const line = lines.find((x) => x.id === what) ?? null;
 
@@ -183,6 +184,12 @@ export function BuildSheet(props: {
             <>The box in the volume calculator. Choose a design under “Used by” to add its port or passive radiators.</>
           )}
         </p>
+        {line && (
+          <div className="build-fold">
+            <FoldDrawing d={line} wall_mm={v.wall_mm} driverCutout={driverCutout > 0 ? driverCutout : undefined} />
+            <span className="hint">Side view, front on the left: dividers, driver and the {line.end === "port" ? "port" : "mouth"} on the back.</span>
+          </div>
+        )}
         <p className="hint">
           Outside {len(outside.width)} × {len(outside.height)} × {len(outside.depth)}
           {lenUnit} (W × H × D), {len(v.wall_mm)}
@@ -259,7 +266,12 @@ export function BuildSheet(props: {
                     {lenUnit} gap at the {r.down ? "bottom" : "top"}
                   </li>
                 ))}
-              {line?.end === "tapped" && <li>Tapped horn: the driver mounts on an inner panel; its front opens into the line at the tap, {Math.round(line.tapAt_cm)} cm along. Plan this by hand: the cut list shows the outer box and dividers only.</li>}
+              {line?.end === "tapped" && fold?.driverOnDivider && (
+                <li>
+                  Tapped horn: the driver mounts on divider {fold.driverOnDivider.index + 1}, its rear in run {fold.driverOnDivider.index + 1} and its front facing run{" "}
+                  {fold.driverOnDivider.index + 2} (the tap). Fit it before closing the box, or make the side panel removable for access.
+                </li>
+              )}
               {line && line.sections.some((x) => x.fill_kgm3 > 0) && (
                 <li>
                   Stuffing:{" "}

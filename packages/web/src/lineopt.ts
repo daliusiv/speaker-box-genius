@@ -73,14 +73,15 @@ export function tuneLine(driver: DriverInput, d: LineDesign, target: number, sim
   };
 }
 
-export type PresetId = "tl" | "tqwt" | "otl" | "mltl" | "th";
+export type PresetId = "tl" | "tqwt" | "otl" | "mltl" | "th" | "flh";
 
 export const PRESETS: { id: PresetId; label: string; title: string }[] = [
   { id: "tl", label: "Classic TL", title: "Tapered line, driver at the closed end, stuffed for two thirds; tuned to Fs" },
   { id: "tqwt", label: "TQWT", title: "Tapered quarter-wave tube (Voigt pipe): narrow closed end opening to a wide mouth, driver a third along, lightly stuffed" },
   { id: "otl", label: "Offset TL", title: "Straight line with the driver a fifth of the way along (suppresses the 5th harmonic), stuffed behind the driver" },
-  { id: "mltl", label: "MLTL", title: "Mass-loaded line: straight, driver about a quarter along, port at the mouth; tuned like a vented box" },
-  { id: "th", label: "Tapped horn", title: "Starting point: expanding horn, driver's rear at the closed end, front tapped in 45 % along; tuned near Fs" },
+  { id: "mltl", label: "MLTL", title: "Mass-loaded line: straight, driver a quarter along and stuffed behind it, port at the mouth (sized for the power); tuned like a vented box" },
+  { id: "th", label: "Tapped horn", title: "Starting point: expanding horn, driver's rear just below the closed end, front tapped level with it in the next run (folded twice); tuned near Fs" },
+  { id: "flh", label: "Front horn", title: "Front-loaded exponential horn: throat half the cone area, mouth sized for the cutoff (half space), sealed rear chamber, throat chamber for a top end about 4 × the cutoff" },
 ];
 
 /** Split [0, L] into stuffed and empty sections along a taper from s1 to s2. */
@@ -90,6 +91,32 @@ function twoPart(L: number, s1: number, s2: number, stuffedTo: number, fill: num
   if (stuffedTo > 0) sections.push({ length_cm: r1(stuffedTo), endArea_cm2: at(stuffedTo / L), taper: "linear", fill_kgm3: fill });
   if (L - stuffedTo > 0) sections.push({ length_cm: r1(L - stuffedTo), endArea_cm2: r1(s2), taper: "linear", fill_kgm3: 0 });
   return { closedArea_cm2: r1(s1), sections };
+}
+
+/**
+ * A front-loaded exponential horn for this driver with flare cutoff `fc`: throat ½ Sd
+ * (compression 2:1), mouth for a normalised circumference of 1 in half space (area λ²/8π),
+ * sealed rear chamber ½ Vas, throat chamber for an upper roll-off near 4 × fc.
+ */
+export function frontHorn(d: LineDesign, driver: DriverInput, drivers: number, fc: number): LineDesign {
+  const sd = driver.sd_cm2 * drivers;
+  const s1 = 0.5 * sd;
+  const lambda = C / fc;
+  const s2 = Math.max(s1 * 2, ((lambda * lambda) / (8 * Math.PI)) * 1e4);
+  const m = (4 * Math.PI * fc) / C;
+  const L = (Math.log(s2 / s1) / m) * 100;
+  const vtc = ((s1 / 1e4) * C) / (2 * Math.PI * 4 * fc) * 1000;
+  return {
+    ...d,
+    end: "horn",
+    closedArea_cm2: r1(s1),
+    sections: [{ length_cm: r1(L), endArea_cm2: Math.round(s2), taper: "exponential", fill_kgm3: 0 }],
+    driverAt_cm: 0,
+    rearChamber_l: r1(Math.max(2, (driver.vas_l * drivers) / 2)),
+    throatChamber_l: r1(vtc),
+    mouth: "front",
+    targetFb: r1(fc),
+  };
 }
 
 /** A preset sized for the driver, before tuning. */
@@ -114,10 +141,18 @@ export function presetFor(id: PresetId, d: LineDesign, driver: DriverInput, alig
       const L = 0.4 * (C / (4 * a.fb)) * 100;
       const area = (1.5 * a.vb_l * 1000) / L;
       const portD = 2 * Math.sqrt((0.2 * sd) / Math.PI);
-      return { ...base, end: "port", ...twoPart(L, area, area, L / 2, 4), driverAt_cm: r1(L / 4), portDiameter_cm: r1(portD), portLength_cm: 10, targetFb: r1(a.fb) };
+      return { ...base, end: "port", ...twoPart(L, area, area, L / 4, 8), driverAt_cm: r1(L / 4), portDiameter_cm: r1(portD), portLength_cm: 10, targetFb: r1(a.fb) };
     }
     case "th":
-      return { ...base, end: "tapped", ...twoPart(lq, sd, 4 * sd, 0, 0), driverAt_cm: 0, tapAt_cm: r1(0.45 * lq), targetFb: r1(driver.fs) };
+    {
+      // Rear a little way from the closed end (the driver must fit on the divider below the
+      // top), the tap level with it in the next run up when folded twice.
+      const dia = 2 * Math.sqrt(driver.sd_cm2 / Math.PI);
+      const rear = Math.max(0.08 * lq, 0.8 * dia);
+      return { ...base, end: "tapped", ...twoPart(lq, sd, 4 * sd, 0, 0), driverAt_cm: r1(rear), tapAt_cm: r1((2 * lq) / 3 - rear), targetFb: r1(driver.fs) };
+    }
+    case "flh":
+      return frontHorn(base, driver, drivers, Math.max(40, Math.round(driver.fs)));
   }
 }
 
@@ -220,6 +255,58 @@ export function bestLine(driver: DriverInput, d: LineDesign, sim: SimulationOpti
   };
 }
 
+/** Peak air speed (m/s) at the mouth or port of a line, at the drive in `sim`. */
+export function exitVelocity(driver: DriverInput, d: LineDesign, sim: SimulationOptions, wall_mm = 18): number | null {
+  try {
+    const r = simulate(driver, lineInputOf(d, wall_mm), { ...sim, fMin: 10, fMax: 400, points: 160, highPass: null, eq: [] });
+    if (!r.portVelocity) return null;
+    let v = 0;
+    for (const x of r.portVelocity) v = Math.max(v, x);
+    return v;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A mass-loaded line's port sized for the drive: widened (and flared, r = 0.2 × Ø) until the
+ * peak air speed is under `limit`, the port length retuned each time. Never wider than 80 %
+ * of the line's mouth (it would stop being a port).
+ */
+export function sizeMltlPort(driver: DriverInput, d: LineDesign, sim: SimulationOptions, wall_mm = 18, limit = 15): LineDesign | string {
+  if (d.end !== "port") return d;
+  const mouth = d.sections.at(-1)!.endArea_cm2;
+  const maxD = 2 * Math.sqrt((0.8 * mouth) / Math.PI);
+  let cur = d;
+  for (let i = 0; i < 6; i++) {
+    const v = exitVelocity(driver, cur, sim, wall_mm);
+    if (v === null || v <= limit) return cur;
+    // Air speed scales about inversely with the area: grow the diameter by √(v / limit).
+    let dia = Math.min(maxD, cur.portDiameter_cm * Math.sqrt((v / limit) * 1.05));
+    if (dia <= cur.portDiameter_cm + 0.05) {
+      if (cur.portFlare_cm > 0) return cur; // as wide as it can be
+      dia = cur.portDiameter_cm;
+    }
+    const next = { ...cur, portDiameter_cm: r1(dia), portFlare_cm: r1(0.2 * dia) };
+    const tuned = tuneLine(driver, next, d.targetFb, sim, wall_mm);
+    if (typeof tuned === "string") return cur;
+    cur = { ...tuned, targetFb: d.targetFb };
+  }
+  return cur;
+}
+
+/** A preset for this driver, tuned (and, for an MLTL, its port sized for the drive). */
+export function makePreset(id: PresetId, driver: DriverInput, d: LineDesign, sim: SimulationOptions, align: AlignmentDriver | null, drivers: number, wall_mm = 18): LineDesign | string {
+  const base = presetFor(id, d, driver, align, drivers);
+  if (typeof base === "string") return base;
+  if (base.end === "horn") return { ...base, vb_l: r1(lineVolume(base)) }; // sized by its cutoff, not tuned
+  const tuned = tuneLine(driver, base, base.targetFb, sim, wall_mm);
+  if (typeof tuned === "string") return tuned;
+  const out = { ...tuned, targetFb: base.targetFb };
+  const sized = sizeMltlPort(driver, out, sim, wall_mm);
+  return typeof sized === "string" ? out : { ...sized, vb_l: r1(lineVolume(sized)) };
+}
+
 /** One line type, sized from its preset and tuned, as simulated at the chosen drive. */
 export interface LineCompare {
   id: PresetId;
@@ -247,11 +334,9 @@ export interface LineCompare {
 export function compareOne(id: PresetId, driver: DriverInput, d: LineDesign, sim: SimulationOptions, align: AlignmentDriver | null, drivers: number, wall_mm = 18): LineCompare {
   const label = PRESETS.find((x) => x.id === id)!.label;
   const empty = { id, label, design: null, fb: null, f3: null, ripple: null, length_cm: 0, volume_l: 0, excursion_mm: null, exitVelocity: null, tags: [] };
-  const base = presetFor(id, d, driver, align, drivers);
-  if (typeof base === "string") return { ...empty, error: base };
-  const tuned = tuneLine(driver, base, base.targetFb, sim, wall_mm);
-  if (typeof tuned === "string") return { ...empty, error: tuned };
-  const design = { ...tuned, targetFb: base.targetFb, vb_l: r1(lineVolume(tuned)) };
+  const made = makePreset(id, driver, d, sim, align, drivers, wall_mm);
+  if (typeof made === "string") return { ...empty, error: made };
+  const design = { ...made, vb_l: r1(lineVolume(made)) };
   try {
     const r = simulate(driver, lineInputOf(design, wall_mm), { ...sim, fMin: 10, fMax: 400, points: 200, highPass: null, eq: [] });
     const score = scoreLine(driver, design, sim, wall_mm);

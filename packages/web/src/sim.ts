@@ -169,6 +169,7 @@ export function lineFoldOf(d: LineDesign, wall_mm: number, driverCutout?: number
     driverAt_mm: d.driverAt_cm * 10,
     driverCutout,
     port: d.end === "port" ? { holeDiameter: (d.portDiameter_cm + 2 * d.portFlare_cm) * 10, length: d.portLength_cm * 10 } : undefined,
+    ...(d.end === "tapped" ? { tap_mm: d.tapAt_cm * 10 } : {}),
   });
 }
 
@@ -177,7 +178,7 @@ export function lineInputOf(d: LineDesign, wall_mm = 18): LineInput {
   const L = lineLength(d);
   let mouthDistance = 0;
   if (d.mouth === "custom") mouthDistance = d.mouthDistance_cm;
-  else if (d.mouth === "back") {
+  else if (d.mouth === "back" && d.end !== "horn") {
     try {
       mouthDistance = lineFoldOf(d, wall_mm).outside.depth / 10;
     } catch {
@@ -187,8 +188,9 @@ export function lineInputOf(d: LineDesign, wall_mm = 18): LineInput {
   return {
     kind: "line",
     segments: lineSegmentsOf(d),
-    driverAt_cm: Math.min(Math.max(0, d.driverAt_cm), L - 0.1),
+    driverAt_cm: d.end === "horn" ? 0 : Math.min(Math.max(0, d.driverAt_cm), L - 0.1),
     ...(d.end === "tapped" ? { tap_cm: d.tapAt_cm } : {}),
+    ...(d.end === "horn" ? { frontLoaded: { rear_l: Math.max(0.01, d.rearChamber_l), throat_l: Math.max(0, d.throatChamber_l) } } : {}),
     ...(d.end === "port"
       ? { port: { shape: "round" as const, diameter_cm: d.portDiameter_cm, length_cm: d.portLength_cm, ...(d.portFlare_cm > 0 ? { flare_cm: d.portFlare_cm } : {}) } }
       : {}),
@@ -196,10 +198,11 @@ export function lineInputOf(d: LineDesign, wall_mm = 18): LineInput {
   };
 }
 
-/** Inside volume of a line design (litres), port excluded. */
+/** Inside volume of a line design (litres), port excluded; a horn's chambers included. */
 export function lineVolume(d: LineDesign): number {
   try {
-    return lineNetwork(lineInputOf(d)).volume_l;
+    const chambers = d.end === "horn" ? Math.max(0, d.rearChamber_l) + Math.max(0, d.throatChamber_l) : 0;
+    return lineNetwork(lineInputOf(d)).volume_l + chambers;
   } catch {
     return 0;
   }

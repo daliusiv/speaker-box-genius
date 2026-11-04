@@ -29,6 +29,11 @@ export interface FoldInput {
   driverCutout?: number;
   /** Port at the mouth (MLTL): its hole and length. */
   port?: { holeDiameter: number; length: number };
+  /**
+   * Tapped horn: where the driver's front opens into the line (mm from the closed end).
+   * The driver then mounts on the divider between the run with its rear and the next run.
+   */
+  tap_mm?: number;
 }
 
 export interface Run {
@@ -53,6 +58,10 @@ export interface Fold {
   mouth: { panel: "back" | "front"; at: "top" | "bottom"; height: number };
   /** Distance of the driver centre from the top of the front panel (outside), mm. */
   driverFromTop: number | null;
+  /** Tapped horn: the divider the driver mounts on (0-based) and its centre from the top (outside, mm). */
+  driverOnDivider?: { index: number; fromTop: number };
+  /** Tapped horn: the tap position (mm along the line) that lines up with the rear across the divider. */
+  tapLinedUp_mm?: number;
   warnings: string[];
 }
 
@@ -134,7 +143,51 @@ export function foldLine(i: FoldInput): Fold {
   const mouth = { panel: "back" as const, at: mouthAt as "top" | "bottom", height: last.depth };
   const holes: Hole[] = [];
   let driverFromTop: number | null = null;
-  if (i.driverAt_mm <= runs[0]!.to) {
+  let driverOnDivider: Fold["driverOnDivider"];
+  let tapLinedUp_mm: number | undefined;
+  // Height (inside, from the top) of a point along the line within run k.
+  const yIn = (k: number, x: number) => {
+    const r = runs[k]!;
+    const t = Math.min(1, Math.max(0, (x - r.from) / (r.to - r.from)));
+    return r.down ? t * H : (1 - t) * H;
+  };
+  const runOf = (x: number) => Math.max(0, runs.findIndex((r) => x >= r.from - 1e-6 && x <= r.to + 1e-6));
+  if (i.tap_mm !== undefined) {
+    // Tapped horn: the driver straddles a divider, rear in one run and front in the next.
+    const kr = runOf(i.driverAt_mm);
+    const kf = runOf(i.tap_mm);
+    if (n < 2) {
+      warnings.push("A tapped horn needs at least one fold: the driver mounts on a divider between the rear and the front of the line.");
+    } else if (kf !== kr + 1) {
+      warnings.push(`The driver's rear (run ${kr + 1}) and the front tap (run ${kf + 1}) must be in neighbouring runs, so the driver can sit on the divider between them: change the number of folds or the tap.`);
+    } else {
+      const yr = yIn(kr, i.driverAt_mm);
+      const yf = yIn(kf, i.tap_mm);
+      const rf = runs[kf]!;
+      // Keep it inside the run (a point at the very end would sit in the turn).
+      const span = rf.to - rf.from;
+      tapLinedUp_mm = rf.from + Math.min(0.97, Math.max(0.03, rf.down ? yr / H : 1 - yr / H)) * span;
+      const fromTop = i.wall + (yr + yf) / 2;
+      driverOnDivider = { index: kr, fromTop };
+      const cut = i.driverCutout && i.driverCutout > 0 ? i.driverCutout : 0;
+      if (cut > 0) {
+        holes.push({ name: "Driver cutout", qty: 1, diameter: cut, where: `Divider ${kr + 1}, centre ${Math.round(fromTop)} mm from the top of the box` });
+        if (cut > W) warnings.push(`The driver cutout (${Math.round(cut)} mm) is wider than the line (${Math.round(W)} mm): widen the line.`);
+        const tol = Math.max(cut / 4, 20);
+        if (Math.abs(yr - yf) > tol)
+          warnings.push(
+            `The rear (${Math.round(i.wall + yr)} mm from the top) and the front tap (${Math.round(i.wall + yf)} mm) are at different heights across divider ${kr + 1}: a tap at about ${Math.round(tapLinedUp_mm / 10)} cm lines them up.`,
+          );
+        const top = i.wall + Math.min(yr, yf) - cut / 2;
+        const gapK = gaps[kr]!;
+        // The divider hangs from the top when run kr goes down, so it stops a gap short of the bottom.
+        const divTop = runs[kr]!.down ? i.wall : i.wall + gapK;
+        const divBottom = runs[kr]!.down ? i.wall + H - gapK : i.wall + H;
+        if (top < divTop || i.wall + Math.max(yr, yf) + cut / 2 > divBottom) warnings.push(`The driver doesn't fit on divider ${kr + 1} at that height: move the rear and the tap along the line.`);
+      }
+      if (Math.min(runs[kr]!.depth, rf.depth) < 60) warnings.push("The runs either side of the driver are very shallow: the magnet may not fit.");
+    }
+  } else if (i.driverAt_mm <= runs[0]!.to) {
     // Run 1 goes down from the closed end at the top.
     driverFromTop = i.wall + i.driverAt_mm;
     if (i.driverCutout && i.driverCutout > 0) {
@@ -161,5 +214,5 @@ export function foldLine(i: FoldInput): Fold {
     area_m2: box.panels.reduce((a, p) => a + p.qty * p.a * p.b, 0) / 1e6 + dividers.reduce((a, d) => a + d.a * d.b, 0) / 1e6,
     warnings: [...warnings],
   };
-  return { runs, gaps, inside, outside, cut, mouth, driverFromTop, warnings };
+  return { runs, gaps, inside, outside, cut, mouth, driverFromTop, warnings, ...(driverOnDivider ? { driverOnDivider } : {}), ...(tapLinedUp_mm !== undefined ? { tapLinedUp_mm } : {}) };
 }
