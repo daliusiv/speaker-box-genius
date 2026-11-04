@@ -12,7 +12,7 @@ import {
   type VentedAlignment,
 } from "@sbg/engine";
 import { airOf, alignmentDriver, portOf, prGroupsOf, solveDriver } from "./sim.ts";
-import { viewFor, type AppState, type DesignState, type PrDesign } from "./state.ts";
+import type { AppState, DesignState, PrDesign } from "./state.ts";
 
 /** Preset names that older versions appended to a design's name ("Ported QB3"). */
 const PRESET_SUFFIX = / (Qtc [\d.]+|QB3|B4|Keele)$/;
@@ -51,26 +51,14 @@ export const ventedAlignmentFor = (a: AlignmentDriver, drivers: number): VentedA
  * design whose volume comes from the volume calculator are left as they are, with a reason.
  */
 export function sizeAllForDriver(s: AppState): { state: AppState; changed: string[]; skipped: string[] } {
+  const align = alignmentDriver(solveDriver(s), s);
   const changed: string[] = [];
   const skipped: string[] = [];
+  if (!align) return { state: s, changed, skipped: ["Enter the driver's parameters first."] };
   const air = airOf(s);
-  // Each design is sized for its own driver (A, or B–D).
-  const byDriver = new Map<string, { align: AlignmentDriver | null; qb3: VentedAlignment | null; drivers: number }>();
-  const forDriver = (id = "A") => {
-    if (!byDriver.has(id)) {
-      const view = viewFor(s, id === "A" ? undefined : id);
-      const align = alignmentDriver(solveDriver(view), view);
-      byDriver.set(id, { align, qb3: align ? ventedAlignmentFor(align, view.drivers) : null, drivers: view.drivers });
-    }
-    return byDriver.get(id)!;
-  };
-  if (s.designs.every((d) => !forDriver(d.driverId).align)) return { state: s, changed, skipped: ["Enter the driver's parameters first."] };
+  const drivers = s.drivers;
+  const qb3 = ventedAlignmentFor(align, drivers);
   const designs = s.designs.map((d): DesignState => {
-    const { align, qb3, drivers } = forDriver(d.driverId);
-    if (!align) {
-      skipped.push(`${d.name}: enter driver ${d.driverId ?? "A"}'s parameters first`);
-      return d;
-    }
     if (s.volume.link === d.id) {
       skipped.push(`${d.name}: its volume comes from the volume calculator`);
       return d;

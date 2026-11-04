@@ -19,16 +19,10 @@ import {
   decodeStateAny,
   encodeState,
   encodeStateShort,
-  addDriver,
-  driverList,
   MAX_DESIGNS,
-  MAX_DRIVERS,
   newDesign,
   newId,
-  removeDriver,
-  routeDriverEdit,
-  viewFor,
-  viewOfDesign,
+  swapCompare,
   type AppState,
   type DesignState,
 } from "./state.ts";
@@ -57,8 +51,8 @@ import {
   simOptionsOf,
   roomGainOf,
   runDesigns,
+  compareShort,
   solveDriver,
-  solvedDrivers,
   vbOf,
   type Design,
 } from "./sim.ts";
@@ -265,42 +259,19 @@ export function App(props: { initial: AppState | null }) {
 
   const set = <K extends keyof AppState>(k: K, v: AppState[K]) => setState((s) => ({ ...s, [k]: v }));
 
-  // Several drivers: the Driver tab edits one of them (A = the state's own fields, B–D in extraDrivers).
-  const [drvPick, setDrvPick] = useState("A");
-  const drvSel = drvPick === "A" || state.extraDrivers.some((e) => e.id === drvPick) ? drvPick : "A";
-  const ed = useMemo(() => viewFor(state, drvSel === "A" ? undefined : drvSel), [state, drvSel]);
-  const solvedBy = useMemo(() => solvedDrivers(state, solved), [state, solved]);
-  const solvedEd = solvedBy.get(drvSel) ?? solved;
-  /** An edit made on the selected driver's view, written back to that driver. */
-  const setStepDrv = (fn: (s: AppState) => AppState) =>
-    setStep((s) => routeDriverEdit(s, drvSel, fn(viewFor(s, drvSel === "A" ? undefined : drvSel))));
-  // Comparing drivers: the selected driver's curves bold, the others faint.
-  const fadedLabels = useMemo(
-    () => (state.extraDrivers.length > 0 ? designs.filter((d) => (d.design.driverId ?? "A") !== drvSel).map((d) => d.label) : []),
-    [designs, drvSel, state.extraDrivers.length],
-  );
-  /** Copies of driver A's boxes for driver `id` (as many as there's room for). */
-  const withCopiesFor = (s: AppState, id: string): { state: AppState; copied: number; of: number } => {
-    const src = s.designs.filter((d) => d.driverId === undefined);
-    const designs = [...s.designs];
-    for (const d of src.slice(0, Math.max(0, MAX_DESIGNS - s.designs.length))) {
-      const { driverId: _a, ...rest } = structuredClone(d);
-      designs.push({ ...rest, id: newId(designs), driverId: id, vb_l: Math.round(vbOf(s, d) * 10) / 10 } as DesignState);
-    }
-    return { state: { ...s, designs }, copied: designs.length - s.designs.length, of: src.length };
-  };
-  const setD = <K extends keyof AppState>(k: K, v: AppState[K]) =>
-    setState((s) => routeDriverEdit(s, drvSel, { ...viewFor(s, drvSel === "A" ? undefined : drvSel), [k]: v }));
+  // Comparison driver: its curves faint (and dashed) behind the main ones.
+  const fadedLabels = useMemo(() => designs.filter((d) => d.compare).map((d) => d.label), [designs]);
+  const mainDesigns = useMemo(() => designs.filter((d) => !d.compare), [designs]);
   // A line's cone and mouth curves, when switched on.
   const partsOf = (d: Design, map: (y: Float64Array) => Float64Array): Series[] =>
-    showParts && d.result.parts
+    showParts && d.result.parts && !d.compare
       ? [
           { label: `${d.label} · cone`, color: d.color, y: map(d.result.parts.cone), dash: "6 4", thin: true },
           { label: `${d.label} · mouth`, color: d.color, y: map(d.result.parts.mouth), dash: "1.5 3", thin: true },
         ]
       : [];
   const series = (pick: (r: SimulationResult) => Float64Array | null): Series[] =>
-    designs.map((d) => ({ label: d.label, color: d.color, tag: d.tag, dash: d.dash, y: pick(d.result) }));
+    designs.map((d) => ({ label: d.label, color: d.color, dash: d.dash, y: pick(d.result) }));
 
   // The short link once it's ready for this exact state; until then (150 ms after an edit) the long form, which is always correct.
   const shareUrl = () =>
@@ -313,7 +284,7 @@ export function App(props: { initial: AppState | null }) {
       if (/^\[Box\]/im.test(text)) return importWpr(file.name, text);
       const d = parseWdr(text);
       offerSizing([d.brand, d.model].filter(Boolean).join(" ") || file.name);
-      setStepDrv((s) => ({
+      setStep((s) => ({
         ...s,
         driverName: [d.brand, d.model].filter(Boolean).join(" ") || file.name.replace(/\.wdr$/i, ""),
         driverBrand: d.brand,
@@ -347,7 +318,7 @@ export function App(props: { initial: AppState | null }) {
       const d = p.driver;
       const label = [d.brand, d.model].filter(Boolean).join(" ") || fileName.replace(/\.wpr$/i, "");
       notify(`Imported ${fileName}.`);
-      setStepDrv((s) => {
+      setStep((s) => {
         let design: DesignState | null = null;
         if (p.box.type === "vented" && p.port) {
           const v = newDesign("vented", s.designs);
@@ -486,26 +457,26 @@ export function App(props: { initial: AppState | null }) {
   };
 
   const exportWdr = () => {
-    if (solvedEd.missing.length > 0) {
+    if (solved.missing.length > 0) {
       setWdrMsg("Enter enough parameters to simulate before exporting.");
       return;
     }
-    const name = ed.driverName.trim();
-    const brand = ed.driverBrand && name.startsWith(ed.driverBrand) ? ed.driverBrand : "";
+    const name = state.driverName.trim();
+    const brand = state.driverBrand && name.startsWith(state.driverBrand) ? state.driverBrand : "";
     const text = writeWdr({
       brand,
       model: name.slice(brand.length).trim() || name,
-      nominal_ohms: ed.nominal_ohms,
-      ts: solvedEd.values,
-      le_mh: ed.le_mh,
-      xmax_mm: ed.xmax_mm,
-      pe_w: ed.pe_w,
-      displacement_l: ed.volume.driverDisp_l,
+      nominal_ohms: state.nominal_ohms,
+      ts: solved.values,
+      le_mh: state.le_mh,
+      xmax_mm: state.xmax_mm,
+      pe_w: state.pe_w,
+      displacement_l: state.volume.driverDisp_l,
     });
     const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${ed.driverName.replace(/[^\w.-]+/g, " ").trim() || "driver"}.wdr`;
+    a.download = `${state.driverName.replace(/[^\w.-]+/g, " ").trim() || "driver"}.wdr`;
     a.click();
     URL.revokeObjectURL(url);
     setWdrMsg("Exported a WinISD driver file.");
@@ -547,14 +518,14 @@ export function App(props: { initial: AppState | null }) {
     return (d.result.prGroups ?? []).map((g, k) => ({
       label: d.design.kind === "pr" && k === 0 ? d.label : `${d.label}: ${names[k] ?? `group ${k + 1}`}`,
       color: d.color,
-      dash: k === 0 ? undefined : k === 1 ? "6 3" : "2 3",
+      dash: d.dash ?? (k === 0 ? undefined : k === 1 ? "6 3" : "2 3"),
       y: g.excursionMm,
       over: g.xmax_mm ?? undefined,
     }));
   });
 
   // Lines and horns: the line's acoustic impedance (Hornresp's Za), resistance solid, reactance dashed.
-  const zaDesigns = designs.filter((d) => d.result.acousticImpedance);
+  const zaDesigns = mainDesigns.filter((d) => d.result.acousticImpedance);
   const zaSeries: Series[] = zaDesigns.flatMap((d) => {
     const za = d.result.acousticImpedance!;
     return [
@@ -586,7 +557,7 @@ export function App(props: { initial: AppState | null }) {
 
   // Passive radiators put a deep notch in the response at their own resonance, where the
   // group delay swings far negative; mark it instead of drawing a cliff off the chart.
-  const notchMarkers = designs.flatMap((d) => {
+  const notchMarkers = mainDesigns.flatMap((d) => {
     const gd = d.result.groupDelayMs;
     let i0 = -1;
     for (let i = 0; i < gd.length; i++) if (gd[i]! < -20 && (i0 < 0 || gd[i]! < gd[i0]!)) i0 = i;
@@ -595,26 +566,18 @@ export function App(props: { initial: AppState | null }) {
     return [{ f, label: `${d.label}: notch ${f < 100 ? f.toFixed(1) : f.toFixed(0)} Hz`, color: d.color }];
   });
 
-  // Passive radiator finder: the driver and drive as the charts use them.
-  // Passive radiator finder and the other box tools, per driver (A–D).
-  const finders = useMemo(() => {
-    const m = new Map<string, FinderContext>();
-    for (const { id } of driverList(state)) {
-      const view = viewFor(state, id === "A" ? undefined : id);
-      const sv = solvedBy.get(id) ?? solved;
-      m.set(id, {
-        driver: sv.missing.length > 0 ? null : driverInputOf(view, sv),
-        sim: simOptionsOf(view),
-        losses: { ql: state.settings.losses.ql, qa: state.settings.losses.qa },
-        fMin: state.highPass.on ? 10 : 15,
-        align: alignmentDriver(sv, view),
-        drivers: view.drivers,
-      });
-    }
-    return m;
-  }, [state, solved, solvedBy]);
-  const finderCtx = finders.get("A")!;
-  const finderOf = (d: { driverId?: string }) => finders.get(d.driverId ?? "A") ?? finderCtx;
+  // Passive radiator finder and the other box tools: the main driver and drive as the charts use them.
+  const finderCtx = useMemo<FinderContext>(
+    () => ({
+      driver: solved.missing.length > 0 ? null : driverInputOf(state, solved),
+      sim: simOptionsOf(state),
+      losses: { ql: state.settings.losses.ql, qa: state.settings.losses.qa },
+      fMin: state.highPass.on ? 10 : 15,
+      align: alignmentDriver(solved, state),
+      drivers: state.drivers,
+    }),
+    [state, solved],
+  );
 
   const signalOn = (state.highPass.on ? 1 : 0) + state.eq.filter((e) => e.on).length + (state.roomGain.mode !== "off" ? 1 : 0);
   const tabBadges: Partial<Record<PanelId, string>> = {
@@ -700,86 +663,7 @@ export function App(props: { initial: AppState | null }) {
         <PanelTabs value={panel} onChange={choosePanel} badges={tabBadges} className="desktop-tabs" />
         {panel === "driver" && (
           <div className="tab-panel" role="tabpanel" id="panel-driver" aria-labelledby="tab-driver">
-            <Card title={state.extraDrivers.length > 0 ? `Driver ${drvSel}` : "Driver"}>
-              <div className="driver-chips" role="group" aria-label="Drivers" data-help-title="Drivers" data-help="Up to four drivers to compare. Tap one to edit it; each box design picks its driver (Boxes tab). Add a driver, then load or type its values.">
-                {driverList(state).map((x) => (
-                  <button
-                    key={x.id}
-                    type="button"
-                    className={`chip${x.id === drvSel ? " on" : ""}`}
-                    aria-pressed={x.id === drvSel}
-                    onClick={() => setDrvPick(x.id)}
-                    title={x.name}
-                  >
-                    <b>{x.id}</b> {x.name.length > 22 ? `${x.name.slice(0, 21)}…` : x.name}
-                  </button>
-                ))}
-                {state.extraDrivers.length < MAX_DRIVERS - 1 && (
-                  <button
-                    type="button"
-                    className="chip"
-                    onClick={() => {
-                      const r = addDriver(state, undefined);
-                      if (!r) return;
-                      // The new driver gets its own copies of driver A's boxes, so the charts compare them straight away.
-                      const c = withCopiesFor(r.state, r.id);
-                      const copied = c.copied;
-                      const src = { length: c.of };
-                      setStep(c.state);
-                      setDrvPick(r.id);
-                      notify(
-                        `Added driver ${r.id} (a copy of A for now)${copied > 0 ? ` with ${copied === src.length ? "copies of your boxes" : `copies of ${copied} of your boxes (the most there's room for)`}, shown as “· ${r.id}” on the charts` : ""}. Now load or type driver ${r.id}'s values.`,
-                      );
-                    }}
-                  >
-                    + Add driver
-                  </button>
-                )}
-              </div>
-              {drvSel === "A" && state.extraDrivers.length > 0 && (
-                <p className="hint">
-                  Editing driver A. Its curves are bold on the charts and the other drivers&rsquo; faint (dashed for B, dotted for C); tap a
-                  driver to bring its curves forward.
-                </p>
-              )}
-              {drvSel !== "A" && (
-                <p className="hint">
-                  Editing driver {drvSel}.{" "}
-                  {state.designs.filter((d) => d.driverId === drvSel).length === 0 ? (
-                    <>
-                      No box uses it yet.{" "}
-                      <button
-                        type="button"
-                        className="link"
-                        disabled={state.designs.length >= MAX_DESIGNS}
-                        onClick={() => {
-                          const c = withCopiesFor(state, drvSel);
-                          setStep(c.state);
-                          notify(c.copied > 0 ? `Copied ${c.copied} box${c.copied > 1 ? "es" : ""} for driver ${drvSel} (“· ${drvSel}” on the charts).` : "No room for more boxes (8 at most).");
-                        }}
-                      >
-                        Copy your boxes for driver {drvSel}
-                      </button>
-                    </>
-                  ) : (
-                    `Its curves are bold on the charts; the other drivers' are faint. Used by ${state.designs
-                      .filter((d) => d.driverId === drvSel)
-                      .map((d) => d.name)
-                      .join(", ")}.`
-                  )}{" "}
-                  <button
-                    type="button"
-                    className="link"
-                    onClick={() => {
-                      setStep((s) => removeDriver(s, drvSel));
-                      setDrvPick("A");
-                      notify(`Removed driver ${drvSel}; its designs use driver A.`);
-                    }}
-                  >
-                    Remove driver {drvSel}
-                  </button>
-                </p>
-              )}
+            <Card title="Driver">
               <DriverBrowser
                 rows={db?.drivers}
                 onPick={(id) =>
@@ -787,7 +671,7 @@ export function App(props: { initial: AppState | null }) {
                     (d) => {
                       offerSizing(d.name);
                       setDriverSource(d.source ? { name: d.name, ...d.source } : null);
-                      setStepDrv((s) => ({
+                      setStep((s) => ({
                         ...s,
                         driverName: d.name,
                         driverBrand: d.brand,
@@ -817,11 +701,11 @@ export function App(props: { initial: AppState | null }) {
                 className="name"
                 data-help-title="Driver name"
                 data-help="A name for this driver, used in shared links, forum posts and exports. Load a driver from the database to fill everything in."
-                value={ed.driverName}
-                onChange={(e) => setD("driverName", e.currentTarget.value)}
+                value={state.driverName}
+                onChange={(e) => set("driverName", e.currentTarget.value)}
                 aria-label="Driver name"
               />
-              {driverSource && driverSource.name === ed.driverName && (
+              {driverSource && driverSource.name === state.driverName && (
                 <p className="driver-source muted">
                   {driverSource.url ? (
                     <a href={driverSource.url} target="_blank" rel="noopener">
@@ -845,15 +729,66 @@ export function App(props: { initial: AppState | null }) {
                   )}
                 </p>
               )}
+              <div className="compare-row" data-help-title="Compare with another driver" data-help="Shows a second driver in every box as faint dashed curves, with the same number of drivers, wiring and settings. Swap makes it the main driver (to edit it or size boxes for it).">
+                {state.compare ? (
+                  <p className="compare-strip">
+                    <span>
+                      Comparing with <b>{state.compare.driverName}</b> <span className="muted">(dashed)</span>
+                    </span>
+                    <button
+                      type="button"
+                      className="link"
+                      onClick={() => {
+                        setStep((s) => swapCompare(s));
+                        notify(`${state.compare!.driverName} is now the main driver; ${state.driverName} is the comparison.`);
+                      }}
+                    >
+                      Swap
+                    </button>
+                    <button type="button" className="icon" aria-label="Stop comparing" title="Stop comparing" onClick={() => setStep((s) => ({ ...s, compare: null }))}>
+                      ✕
+                    </button>
+                  </p>
+                ) : null}
+                <DriverBrowser
+                  rows={db?.drivers}
+                  button={state.compare ? "Compare with a different driver…" : "Compare with…"}
+                  title="Compare with another driver"
+                  hideMissing
+                  onPick={(id) =>
+                    loadDriver(id).then(
+                      (d) => {
+                        setStep((s) => ({
+                          ...s,
+                          compare: {
+                            driverName: d.name,
+                            driverBrand: d.brand,
+                            nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
+                            ts: d.ts,
+                            le_mh: d.le_mh ?? 0,
+                            l2_mh: d.l2_mh ?? 0,
+                            r2_ohm: d.r2_ohm ?? 0,
+                            xmax_mm: d.xmax_mm ?? s.xmax_mm,
+                            pe_w: d.pe_w ?? s.pe_w,
+                            dvc: d.dvcWiring ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring } : { ...s.dvc, on: false },
+                          },
+                        }));
+                        notify(`Comparing with ${d.name}: dashed curves in every box.`);
+                      },
+                      () => alert("Couldn't load that driver."),
+                    )
+                  }
+                />
+              </div>
               <TsEditor
-                entered={ed.ts}
-                solved={solvedEd}
-                onChange={(ts) => setD("ts", ts)}
+                entered={state.ts}
+                solved={solved}
+                onChange={(ts) => set("ts", ts)}
                 pasting={pasting}
                 onPastingChange={setPasting}
                 onPaste={(ts, x) => {
                   offerSizing("Pasted driver");
-                  setStepDrv((s) => ({
+                  setStep((s) => ({
                     ...s,
                     driverName: "Pasted driver",
                     driverBrand: "",
@@ -876,12 +811,12 @@ export function App(props: { initial: AppState | null }) {
                   pasting={pasting}
                   onPaste={() => setPasting(!pasting)}
                   onClear={() => {
-                    setStepDrv((s) => ({ ...s, ts: {} }));
+                    setStep((s) => ({ ...s, ts: {} }));
                     notify("Cleared the T/S values.");
                   }}
                   onImport={() => wdrInput.current?.click()}
                   onExport={exportWdr}
-                  submitUrl={submitDriverUrl(ed)}
+                  submitUrl={submitDriverUrl(state)}
                 />
                 <input
                   ref={wdrInput}
@@ -898,105 +833,105 @@ export function App(props: { initial: AppState | null }) {
               {wdrMsg && <p className="hint">{wdrMsg}</p>}
               <h3>Large signal and system</h3>
               <div className="fields">
-                <Num help="Nominal impedance printed on the driver (4, 8 Ω…). Only used when the drive is set as watts into the nominal impedance; the simulation itself uses Re." label="Znom" unit="Ω" value={ed.nominal_ohms} onChange={(v) => setD("nominal_ohms", v)} />
-                <Num help="Voice-coil inductance from the datasheet. It makes the impedance rise with frequency and rolls off the top end; Settings can leave it out, like WinISD." label="Le" unit="mH" value={ed.le_mh} min={0} onChange={(v) => setD("le_mh", v)} />
+                <Num help="Nominal impedance printed on the driver (4, 8 Ω…). Only used when the drive is set as watts into the nominal impedance; the simulation itself uses Re." label="Znom" unit="Ω" value={state.nominal_ohms} onChange={(v) => set("nominal_ohms", v)} />
+                <Num help="Voice-coil inductance from the datasheet. It makes the impedance rise with frequency and rolls off the top end; Settings can leave it out, like WinISD." label="Le" unit="mH" value={state.le_mh} min={0} onChange={(v) => set("le_mh", v)} />
                 <Num
                   label="L2"
                   unit="mH"
-                  value={ed.l2_mh}
+                  value={state.l2_mh}
                   min={0}
                   title="Optional: second, lossy inductance (L2R2 coil model). 0 = plain Le. Fill in from a measured sweep."
-                  onChange={(v) => setD("l2_mh", v)}
+                  onChange={(v) => set("l2_mh", v)}
                 />
                 <Num
                   label="R2"
                   unit="Ω"
-                  value={ed.r2_ohm}
+                  value={state.r2_ohm}
                   min={0}
                   title="Optional: resistance across L2 (eddy-current losses). Used only when L2 is also set."
-                  onChange={(v) => setD("r2_ohm", v)}
+                  onChange={(v) => set("r2_ohm", v)}
                 />
-                <Num help="Maximum one-way excursion the cone can make while staying linear (from the datasheet). The excursion chart turns red above it." label="Xmax" unit="mm" value={ed.xmax_mm} onChange={(v) => setD("xmax_mm", v)} />
-                <Num help="Thermal power rating: how much power the voice coil can take continuously. Sets the thermal limit in the Max SPL chart." label="Pe" unit="W" value={ed.pe_w} onChange={(v) => setD("pe_w", v)} />
+                <Num help="Maximum one-way excursion the cone can make while staying linear (from the datasheet). The excursion chart turns red above it." label="Xmax" unit="mm" value={state.xmax_mm} onChange={(v) => set("xmax_mm", v)} />
+                <Num help="Thermal power rating: how much power the voice coil can take continuously. Sets the thermal limit in the Max SPL chart." label="Pe" unit="W" value={state.pe_w} onChange={(v) => set("pe_w", v)} />
                 <Num help="How many drivers (or isobaric pairs) share the box. More drivers move more air; the box volume is shared between them."
-                  label={ed.isobaric ? "Pairs" : "Drivers"}
-                  value={ed.drivers}
-                  onChange={(v) => setD("drivers", Math.max(1, Math.round(v)))}
+                  label={state.isobaric ? "Pairs" : "Drivers"}
+                  value={state.drivers}
+                  onChange={(v) => set("drivers", Math.max(1, Math.round(v)))}
                 />
                 <Select<"standard" | "isobaric"> help="Standard: each driver faces out. Isobaric: two drivers work as one (face to face or front to back), needing half the box for the same bass but 3 dB less efficiency."
                   label="Loading"
-                  value={ed.isobaric ? "isobaric" : "standard"}
+                  value={state.isobaric ? "isobaric" : "standard"}
                   options={[
                     { value: "standard", text: "Standard" },
                     { value: "isobaric", text: "Isobaric pairs" },
                   ]}
-                  onChange={(x) => setD("isobaric", x === "isobaric")}
+                  onChange={(x) => set("isobaric", x === "isobaric")}
                 />
-                {ed.isobaric && (
+                {state.isobaric && (
                   <Select<"series" | "parallel"> help="How the two coils of each isobaric pair are wired together: parallel halves the impedance, series doubles it."
                     label="Pair coils"
-                    value={ed.isoCoils}
+                    value={state.isoCoils}
                     options={[
                       { value: "parallel", text: "Parallel (half the impedance)" },
                       { value: "series", text: "Series (double the impedance)" },
                     ]}
-                    onChange={(x) => setD("isoCoils", x)}
+                    onChange={(x) => set("isoCoils", x)}
                   />
                 )}
                 <Select<"single" | "dual"> help="Dual voice coil (DVC) drivers have two coils you can wire in series or parallel. Choose Dual to get those options."
                   label="Voice coils"
-                  value={ed.dvc.on ? "dual" : "single"}
+                  value={state.dvc.on ? "dual" : "single"}
                   options={[
                     { value: "single", text: "Single" },
                     { value: "dual", text: "Dual (DVC)" },
                   ]}
-                  onChange={(x) => setD("dvc", { ...state.dvc, on: x === "dual" })}
+                  onChange={(x) => set("dvc", { ...state.dvc, on: x === "dual" })}
                 />
-                {ed.dvc.on && (
+                {state.dvc.on && (
                   <>
                     <Select<"one" | "parallel" | "series"> help="Datasheets for DVC drivers give T/S values for one coil or for both coils wired a certain way. Say which, so the wiring below is calculated correctly."
                       label="Values are for"
-                      value={ed.dvc.entered}
+                      value={state.dvc.entered}
                       options={[
                         { value: "parallel", text: "Both coils in parallel" },
                         { value: "series", text: "Both coils in series" },
                         { value: "one", text: "One coil" },
                       ]}
-                      onChange={(entered) => setD("dvc", { ...state.dvc, entered })}
+                      onChange={(entered) => set("dvc", { ...state.dvc, entered })}
                     />
                     <Select<"parallel" | "series"> help="How you will wire the two voice coils: series doubles the impedance, parallel halves it. It changes the load on the amplifier, not the bass shape."
                       label="Coils wired"
-                      value={ed.dvc.wired}
+                      value={state.dvc.wired}
                       options={[
                         { value: "parallel", text: "In parallel" },
                         { value: "series", text: "In series" },
                       ]}
-                      onChange={(wired) => setD("dvc", { ...state.dvc, wired })}
+                      onChange={(wired) => set("dvc", { ...state.dvc, wired })}
                     />
                   </>
                 )}
-                {ed.drivers > 1 && (
+                {state.drivers > 1 && (
                   <Select<"parallel" | "series"> help="How several drivers (or pairs) are wired to the amplifier: parallel lowers the impedance, series raises it."
                     label="Wiring"
-                    value={ed.wiring}
+                    value={state.wiring}
                     options={[
-                      { value: "parallel", text: `${ed.isobaric ? "Pairs" : "Drivers"} in parallel` },
-                      { value: "series", text: `${ed.isobaric ? "Pairs" : "Drivers"} in series` },
+                      { value: "parallel", text: `${state.isobaric ? "Pairs" : "Drivers"} in parallel` },
+                      { value: "series", text: `${state.isobaric ? "Pairs" : "Drivers"} in series` },
                     ]}
-                    onChange={(x) => setD("wiring", x)}
+                    onChange={(x) => set("wiring", x)}
                   />
                 )}
               </div>
-              {ed.dvc.on && solvedEd.missing.length === 0 && (
+              {state.dvc.on && solved.missing.length === 0 && (
                 <p className="hint">
-                  As wired: Re {(solvedEd.values.re! * dvcFactors(ed).re).toFixed(2)} Ω, Qes{" "}
-                  {(solvedEd.values.qes! * dvcFactors(ed).qes).toFixed(3)}. Wiring only changes the impedance (and how much the
+                  As wired: Re {(solved.values.re! * dvcFactors(state).re).toFixed(2)} Ω, Qes{" "}
+                  {(solved.values.qes! * dvcFactors(state).qes).toFixed(3)}. Wiring only changes the impedance (and how much the
                   cable resistance matters); the response at a given power stays the same.
                 </p>
               )}
               <p className="hint">
-                {ed.isobaric
-                  ? `Each pair is two drivers working as one (face to face or one behind the other): same Fs and Qts, half the Vas, so about half the box. ${ed.drivers * 2} drivers in total. `
+                {state.isobaric
+                  ? `Each pair is two drivers working as one (face to face or one behind the other): same Fs and Qts, half the Vas, so about half the box. ${state.drivers * 2} drivers in total. `
                   : "Multiple drivers share each box. "}
                 Wiring changes the impedance the amplifier sees and the voltage each driver gets; power is what the amplifier
                 delivers into the whole set.
@@ -1012,9 +947,9 @@ export function App(props: { initial: AppState | null }) {
                   setMeasureOpen(false);
                   setMeasurement(null);
                 }}
-                sd_cm2={solvedEd.values.sd_cm2}
+                sd_cm2={solved.values.sd_cm2}
                 onUse={(ts, coil) =>
-                  setStepDrv((s) => {
+                  setStep((s) => {
                     // Keep Vas / Sd the user had, unless the measurement provides them; drop values it supersedes.
                     const keep: typeof s.ts = {};
                     if (s.ts.vas_l !== undefined && ts.mms_g === undefined) keep.vas_l = s.ts.vas_l;
@@ -1069,30 +1004,17 @@ export function App(props: { initial: AppState | null }) {
                 vb_l={vbOf(state, d)}
                 linked={state.volume.link === d.id}
                 lineFb={d.kind === "line" ? (designs.find((x) => x.design.id === d.id)?.result.summary.fb ?? null) : undefined}
-                driverDisp_l={state.volume.driverDisp_l * viewOfDesign(state, d).drivers * (viewOfDesign(state, d).isobaric ? 2 : 1)}
+                driverDisp_l={state.volume.driverDisp_l * state.drivers * (state.isobaric ? 2 : 1)}
                 wall_mm={state.volume.wall_mm}
                 canDelete={state.designs.length > 1}
                 db={db}
                 air={airOf(state)}
-                align={finderOf(d).align}
-                drivers={finderOf(d).drivers}
-                driverChoice={
-                  state.extraDrivers.length > 0
-                    ? { value: d.driverId ?? "A", options: driverList(state), onChange: (id: string) =>
-                          setStep((s) => ({
-                            ...s,
-                            designs: s.designs.map((x) => {
-                              if (x.id !== d.id) return x;
-                              const { driverId: _old, ...rest } = x;
-                              return (id === "A" ? rest : { ...rest, driverId: id }) as DesignState;
-                            }),
-                          })) }
-                    : undefined
-                }
+                align={finderCtx.align}
+                drivers={state.drivers}
                 portCtx={portContext(state, designs, d.id)}
                 losses={state.settings.losses}
                 onDimensions={() => openDimensions(d)}
-                finder={finderOf(d)}
+                finder={finderCtx}
                 onFound={(d, patch, summary, physical) => {
                   // One undo step: the design, and the PR's displacement and cutout for the volume calculator and build sheet.
                   setStep((s) => ({
@@ -1120,7 +1042,7 @@ export function App(props: { initial: AppState | null }) {
                 onDuplicate={() => duplicateDesign(d)}
                 onDelete={() => deleteDesign(d)}
                 onImportDriver={(x) =>
-                  setStep((s0) => routeDriverEdit(s0, d.driverId ?? "A", ((s: AppState) => ({
+                  setStep((s) => ({
                     ...s,
                     driverName: x.name,
                     driverBrand: "",
@@ -1130,7 +1052,7 @@ export function App(props: { initial: AppState | null }) {
                     r2_ohm: 0,
                     ...(x.xmax_mm !== undefined ? { xmax_mm: x.xmax_mm } : {}),
                     dvc: { ...s.dvc, on: false },
-                  }))(viewOfDesign(s0, d))))
+                  }))
                 }
                 onPrPhysical={(x) =>
                   setState((s) => ({
@@ -1197,8 +1119,8 @@ export function App(props: { initial: AppState | null }) {
             <BuildSheet
               state={state}
               designs={designs}
-              driverName={viewOfDesign(state, state.designs.find((x) => x.id === state.volume.link) ?? {}).driverName}
-              driverSd_cm2={finderOf(state.designs.find((x) => x.id === state.volume.link) ?? {}).driver?.sd_cm2}
+              driverName={state.driverName}
+              driverSd_cm2={finderCtx.driver?.sd_cm2}
               onChange={(v) => set("volume", v)}
             />
           </div>
@@ -1390,14 +1312,13 @@ export function App(props: { initial: AppState | null }) {
                         {
                           label: d.label,
                           color: d.color,
-                          tag: d.tag,
                           dash: d.dash,
                           y: d.result.spl.map((v) => v - ref),
                           notes: Array.from(d.result.spl, (v) => `${v.toFixed(1)} dB SPL`),
                         },
                         ...partsOf(d, (y) => y.map((v) => v - ref)),
                       ];
-                    }).concat(measuredSeries(state.measured, "spl", freq, designs, true)),
+                    }).concat(measuredSeries(state.measured, "spl", freq, mainDesigns, true)),
                     limits: [
                       { value: -3, label: "−3 dB", color: "var(--muted)" },
                       { value: -6, label: "−6 dB", color: "var(--muted)" },
@@ -1405,11 +1326,12 @@ export function App(props: { initial: AppState | null }) {
                     limitStyle: "guide" as const,
                     yStep: 6,
                     yMin: -30,
-                    points: designs.flatMap((d) => {
+                    // F3 dots for the main driver only; the comparison's F3 is in the summary.
+                    points: mainDesigns.flatMap((d) => {
                       const ref = d.result.summary.referenceSpl;
                       const rel = d.result.spl.map((v) => v - ref);
                       // F3 is the box's own: without the baffle step (which isn't a box property), drawn on the curve as shown.
-                      const step = baffleDbFor(state, d.result.freq, finderOf(d.design).driver?.sd_cm2);
+                      const step = baffleDbFor(state, d.result.freq, finderCtx.driver?.sd_cm2);
                       const own = step ? rel.map((v, i) => v - step[i]!) : rel;
                       const pts =
                         d.design.kind === "line"
@@ -1426,8 +1348,8 @@ export function App(props: { initial: AppState | null }) {
                   }
                 : {
                     series: designs
-                      .flatMap((d) => [{ label: d.label, color: d.color, tag: d.tag, dash: d.dash, y: d.result.spl }, ...partsOf(d, (y) => y)])
-                      .concat(measuredSeries(state.measured, "spl", freq, designs)),
+                      .flatMap((d) => [{ label: d.label, color: d.color, dash: d.dash, y: d.result.spl }, ...partsOf(d, (y) => y)])
+                      .concat(measuredSeries(state.measured, "spl", freq, mainDesigns)),
                   })}
             />
             {narrow && (
@@ -1445,23 +1367,26 @@ export function App(props: { initial: AppState | null }) {
               title="Cone excursion (peak, one way)"
               unit="mm"
               freq={freq}
-              series={designs.map((d) => ({ label: d.label, color: d.color, tag: d.tag, dash: d.dash, y: d.result.excursionMm, over: viewOfDesign(state, d.design).xmax_mm }))}
-              limits={designs
-                .map((d) => viewOfDesign(state, d.design).xmax_mm)
-                .filter((x, i, all) => all.indexOf(x) === i)
-                .map((x, i, all) => ({
-                value: x,
-                // Several drivers: one label for all their Xmax lines, so the labels don't overlap.
-                label:
-                  all.length === 1
-                    ? `Xmax ${x} mm`
-                    : i === 0
-                      ? `Xmax ${driverList(state)
-                          .map((k) => `${k.id} ${viewFor(state, k.id === "A" ? undefined : k.id).xmax_mm}`)
-                          .join(" · ")} mm`
-                      : "",
-                color: LIMIT_RED,
+              series={designs.map((d) => ({
+                label: d.label,
+                color: d.color,
+                dash: d.dash,
+                y: d.result.excursionMm,
+                over: d.compare && state.compare ? state.compare.xmax_mm : state.xmax_mm,
               }))}
+              limits={[
+                {
+                  value: state.xmax_mm,
+                  label:
+                    state.compare && fadedLabels.length > 0 && state.compare.xmax_mm !== state.xmax_mm
+                      ? `Xmax ${state.xmax_mm} · vs ${state.compare.xmax_mm} mm`
+                      : `Xmax ${state.xmax_mm} mm`,
+                  color: LIMIT_RED,
+                },
+                ...(state.compare && fadedLabels.length > 0 && state.compare.xmax_mm !== state.xmax_mm
+                  ? [{ value: state.compare.xmax_mm, label: "", color: LIMIT_RED }]
+                  : []),
+              ]}
               yMin={0}
             />
             {!narrow && (
@@ -1496,7 +1421,6 @@ export function App(props: { initial: AppState | null }) {
                   ...designs.map((d) => ({
                     label: d.design.kind === "bandpass" ? `${d.label} (front port)` : d.label,
                     color: d.color,
-                    tag: d.tag,
                     dash: d.dash,
                     y: d.result.portVelocity,
                     over: PORT_LIMIT,
@@ -1521,12 +1445,11 @@ export function App(props: { initial: AppState | null }) {
               series={designs.map((d) => ({
                 label: d.label,
                 color: d.color,
-                tag: d.tag,
                 dash: d.dash,
                 y: d.result.maxSpl,
                 notes: d.result.limitedBy.map((l) => LIMIT_KINDS[l]?.short ?? ""),
               }))}
-              ribbons={designs.map((d) => ({ label: d.label, color: d.color, kinds: d.result.limitedBy }))}
+              ribbons={mainDesigns.map((d) => ({ label: d.label, color: d.color, kinds: d.result.limitedBy }))}
               ribbonKinds={LIMIT_KINDS}
             />
             <LogChart
@@ -1536,7 +1459,7 @@ export function App(props: { initial: AppState | null }) {
               freq={freq}
               series={[
                 ...series((r) => r.impedanceOhm),
-                ...measuredSeries(state.measured, "impedance", freq, designs),
+                ...measuredSeries(state.measured, "impedance", freq, mainDesigns),
                 ...(measurement
                   ? [
                       { label: "Measured (free air)", color: "#78716c", dash: "6 4", y: resampleMagnitude(measurement.data, freq) },
@@ -1585,7 +1508,7 @@ export function App(props: { initial: AppState | null }) {
           </CrosshairProvider>
           </ChartEmphasis.Provider>
         )}
-        {designs.length > 0 && <MeasuredCard measured={state.measured} designs={designs} onChange={(measured) => setStep((s) => ({ ...s, measured }))} />}
+        {mainDesigns.length > 0 && <MeasuredCard measured={state.measured} designs={mainDesigns} onChange={(measured) => setStep((s) => ({ ...s, measured }))} />}
 
         <footer className="muted">
           Small-signal lumped model: no voice-coil or port compression, no Bl/Cms non-linearity. Box losses Ql{" "}
@@ -1695,6 +1618,8 @@ function Summary({ designs, state, missing, narrow }: { designs: Design[]; state
   };
   if (missing) return <p className="warn summary">Enter the driver's parameters to see the simulation.</p>;
   if (designs.length === 0) return <p className="muted summary">Turn on at least one enclosure.</p>;
+  // Each box, then the comparison driver in that box.
+  designs = designs.filter((d) => !d.compare).flatMap((d) => [d, ...designs.filter((c) => c.compare && c.design.id === d.design.id)]);
   // Without a high-pass filter, ignore the subsonic region where excursion runs away.
   const fMin = state.highPass.on ? 10 : 15;
   if (narrow) {
@@ -1711,24 +1636,40 @@ function Summary({ designs, state, missing, narrow }: { designs: Design[]; state
             </tr>
           </thead>
           <tbody>
-            {designs.map(({ design: d, tag, color, vb_l, result: r }) => {
+            {designs.map(({ design: d, label, compare, color, vb_l, result: r }) => {
               const x = peak(r.excursionMm, r.freq, fMin);
+              const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
               const xpr = prPeak(r, fMin);
               const vpFront = peak(r.portVelocity, r.freq, fMin);
               const vpRear = peak(r.rearPortVelocity, r.freq, fMin);
               const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
               const over = [
-                x !== null && x > viewOfDesign(state, d).xmax_mm ? "Xmax" : "",
+                x !== null && x > xmax ? "Xmax" : "",
                 xpr?.over ? "PR Xmax" : "",
                 vp !== null && vp > PORT_LIMIT ? "Port speed" : "",
               ].filter(Boolean);
+              if (compare) {
+                // The compare driver in the same box: one dimmed line under the box's own row.
+                return (
+                  <tr key={`${d.id}-vs`} className="summary-vs">
+                    <th>
+                      <span className="dot dot-vs" style={{ borderColor: color }} aria-hidden="true" />
+                      <span title={label}>vs {state.compare ? compareShort(state.compare.driverName, state.compare.driverBrand) : ""}</span>
+                    </th>
+                    <td />
+                    <td>
+                      {fmt(r.summary.f3)}
+                      {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
+                    </td>
+                    <td className={over.length ? "over" : "muted"}>{over.length ? `⚠ ${over[0]}` : "OK"}</td>
+                  </tr>
+                );
+              }
               const isOpen = open === d.id;
               return [
                 <tr key={d.id} className="summary-row" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : d.id)}>
                   <th>
-                    <span className="dot" style={{ background: color }} aria-hidden="true">
-                      {tag}
-                    </span>
+                    <span className="dot" style={{ background: color }} aria-hidden="true" />
                     <span>{shortName(d.name)}</span>
                   </th>
                   <td>{fmtQ(vb_l, "vol", state.settings.units)}</td>
@@ -1781,16 +1722,17 @@ function Summary({ designs, state, missing, narrow }: { designs: Design[]; state
           </tr>
         </thead>
         <tbody>
-          {designs.map(({ design: d, label, color, vb_l, result: r }) => {
+          {designs.map(({ design: d, label, compare, color, vb_l, result: r }) => {
             const x = peak(r.excursionMm, r.freq, fMin);
+            const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
             const xpr = prPeak(r, fMin);
             const vpFront = peak(r.portVelocity, r.freq, fMin);
             const vpRear = peak(r.rearPortVelocity, r.freq, fMin);
             const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
             return (
-              <tr key={d.id}>
+              <tr key={compare ? `${d.id}-vs` : d.id} className={compare ? "summary-vs" : undefined}>
                 <th>
-                  <span className="swatch" style={{ background: color }} aria-hidden="true" />
+                  <span className={compare ? "swatch swatch-vs" : "swatch"} style={compare ? { borderColor: color } : { background: color }} aria-hidden="true" />
                   <span title={label}>{shortName(label)}</span>
                 </th>
                 <td>
@@ -1808,7 +1750,7 @@ function Summary({ designs, state, missing, narrow }: { designs: Design[]; state
                   Hz
                 </td>
                 <td>{fmt(r.summary.qtc, 2)}</td>
-                <td className={x !== null && x > viewOfDesign(state, d).xmax_mm ? "over" : ""}>{fmt(x)} mm</td>
+                <td className={x !== null && x > xmax ? "over" : ""}>{fmt(x)} mm</td>
                 <td
                   className={xpr?.over ? "over" : ""}
                   title={(r.prGroups?.length ?? 0) > 1 ? "The PR group closest to (or furthest past) its own Xmax" : undefined}

@@ -3,7 +3,7 @@ import { coilLabel, driveLabel, lineFoldOf, PORT_LIMIT, prGroupLabels, prPeak, t
 import { foldShapes } from "./foldShapes.ts";
 import { REPO } from "./components.tsx";
 import { fmtQ } from "./units.ts";
-import { encodeStateShort, viewOfDesign, type AppState } from "./state.ts";
+import { encodeStateShort, type AppState } from "./state.ts";
 import { drawQr } from "./qrDraw.ts";
 
 const SITE = "daliusiv.github.io/speaker-box-genius";
@@ -29,7 +29,7 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
   };
   const n = (v: number | null | undefined, unit: string, digits = 1) =>
     v === null || v === undefined || !Number.isFinite(v) ? "–" : `${v.toFixed(digits)} ${unit}`;
-  return designs.map(({ design: d, label, color, vb_l, result: r }) => {
+  return designs.map(({ design: d, label, color, vb_l, result: r, compare }) => {
     const x = peak(r.excursionMm, r.freq);
     const xpr = prPeak(r, fMin);
     const vpFront = peak(r.portVelocity, r.freq);
@@ -47,7 +47,7 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
         false,
         false,
         false,
-        x !== null && x > viewOfDesign(state, d).xmax_mm,
+        x !== null && x > (compare && state.compare ? state.compare.xmax_mm : state.xmax_mm),
         xpr?.over ?? false,
         vp !== null && vp > PORT_LIMIT,
       ],
@@ -62,6 +62,7 @@ function subtitle(state: AppState): string {
   if (state.highPass.on) parts.push(`${state.highPass.order * 6} dB/oct high-pass at ${state.highPass.freq} Hz`);
   if (state.roomGain.mode !== "off") parts.push(`${state.roomGain.mode === "car" ? "cabin" : "room"} gain from ${(34320 / (2 * state.roomGain.length_cm)).toFixed(0)} Hz`);
   parts.push(`Xmax ${state.xmax_mm} mm`);
+  if (state.compare) parts.push(`compared with ${state.compare.driverName} (dashed)`);
   return parts.join(" · ");
 }
 
@@ -103,8 +104,8 @@ export function curvesCsv(state: AppState, designs: Design[]): string {
   if (designs.length === 0) return "";
   const vel = state.settings.velocity === "rms" ? "RMS" : "peak";
   const cols: { head: string; data: Float64Array }[] = [];
-  for (const { design: d, result: r } of designs) {
-    const add = (what: string, data: Float64Array | null) => data && cols.push({ head: `${d.name}: ${what}`, data });
+  for (const { design: d, label, result: r } of designs) {
+    const add = (what: string, data: Float64Array | null) => data && cols.push({ head: `${label}: ${what}`, data });
     add("SPL (dB)", r.spl);
     add("Cone excursion (mm peak)", r.excursionMm);
     if (r.prGroups && (r.prGroups.length > 1 || d.kind === "bandpass")) {
@@ -215,6 +216,7 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
   const chartBlock = chartH + 48;
   // Folded transmission lines and horns: a side view each, in a row under the charts.
   const folds = designs
+    .filter((d) => !d.compare)
     .flatMap((d) => {
       if (d.design.kind !== "line") return [];
       try {

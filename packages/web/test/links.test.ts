@@ -26,11 +26,10 @@ function variants(): [string, AppState][] {
   return [
     ["default", d],
     [
-      "a second driver, used by one design",
+      "compared with a second driver",
       {
         ...d,
-        extraDrivers: [{ id: "B" as const, driverName: "Other 12", driverBrand: "", nominal_ohms: 4, ts: { fs: 24, qms: 4, qes: 0.35, vas_l: 120, re: 3.2, sd_cm2: 480 }, le_mh: 1, l2_mh: 0, r2_ohm: 0, xmax_mm: 15, pe_w: 400, drivers: 2, wiring: "series" as const, isobaric: false, isoCoils: "parallel" as const, dvc: d.dvc }],
-        designs: d.designs.map((x, i) => (i === 1 ? { ...x, driverId: "B" } : x)),
+        compare: { driverName: "Other 12", driverBrand: "", nominal_ohms: 4, ts: { fs: 24, qms: 4, qes: 0.35, vas_l: 120, re: 3.2, sd_cm2: 480 }, le_mh: 1, l2_mh: 0, r2_ohm: 0, xmax_mm: 15, pe_w: 400, dvc: d.dvc },
       },
     ],
     ["a value cleared from the T/S editor stays cleared", { ...d, ts: noFs }],

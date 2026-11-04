@@ -22,19 +22,25 @@ import {
   type VolumeResult,
 } from "@sbg/engine";
 import type { AppState, DesignState, LineDesign, PortFields, PrDesign, PrGroupState, Settings } from "./state.ts";
-import { viewFor } from "./state.ts";
+import { compareView } from "./state.ts";
 
 /** One colour per design slot; distinguishable in light and dark mode. */
 export const PALETTE = ["#3b82f6", "#f97316", "#22c55e", "#a855f7", "#e11d48", "#0d9488", "#ca8a04", "#64748b"];
 
 export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators", bandpass: "Bandpass", line: "Transmission line" } as const;
 
-/** Curve style per driver, so a second driver's boxes stand apart on the charts. */
-export const DRIVER_DASH: Record<string, string | undefined> = { A: undefined, B: "7 4", C: "2 3", D: "9 3 2 3" };
+/** Line style of the comparison driver's curves. */
+export const COMPARE_DASH = "7 4";
 
-/** A design's name for charts and tables: with its driver's letter once there are several drivers. */
-export const designLabel = (s: AppState, d: { name: string; driverId?: string }) =>
-  s.extraDrivers.length > 0 ? `${d.name} · ${d.driverId ?? "A"}` : d.name;
+/** A short name for the comparison driver in labels ("RSS315HF-4" from "Dayton Audio RSS315HF-4"). */
+export const compareShort = (name: string, brand: string) => {
+  const n = name.trim();
+  const rest = brand && n.startsWith(brand) ? n.slice(brand.length).trim() : n;
+  // The model number names a driver best ("18 Sound 8NTLS2000" → "8NTLS2000").
+  const model = rest.split(/\s+/).find((w) => /\d/.test(w) && /[a-z]/i.test(w));
+  const out = model ?? rest;
+  return out.length > 18 ? `${out.slice(0, 17)}…` : out || "comparison";
+};
 
 export function colorOf(s: AppState, id: string): string {
   const i = s.designs.findIndex((d) => d.id === id);
@@ -43,12 +49,12 @@ export function colorOf(s: AppState, id: string): string {
 
 export interface Design {
   design: DesignState;
-  /** Name for charts and tables: with " · B" (its driver) once there are several drivers. */
+  /** Name for charts and tables ("Ported", or "Ported vs RSS315HF" for the comparison run). */
   label: string;
-  /** Line style for its driver: A solid, B dashed, C dotted, D dash-dot. */
+  /** Line style: dashed for the comparison driver. */
   dash?: string;
-  /** Its driver's letter, when there are several drivers. */
-  tag?: string;
+  /** The same box with the comparison driver (drawn faint and dashed). */
+  compare?: boolean;
   color: string;
   vb_l: number;
   result: SimulationResult;
@@ -311,31 +317,26 @@ export function simOptionsOf(s: AppState) {
   };
 }
 
-/** Each driver's solved T/S values (A from `solved`, B–D solved here), keyed by letter. */
-export function solvedDrivers(s: AppState, solved: SolveResult): Map<string, SolveResult> {
-  const m = new Map<string, SolveResult>([["A", solved]]);
-  for (const e of s.extraDrivers) m.set(e.id, solveDriver(viewFor(s, e.id)));
-  return m;
+/**
+ * Every box with the main driver, then (when comparing) every box again with the comparison
+ * driver, flagged `compare`. Lookups by design id find the main run first.
+ */
+export function runDesigns(s: AppState, solved: SolveResult): Design[] {
+  const main = runFor(s, solved, false);
+  const view = compareView(s);
+  if (!view || main.length === 0) return main;
+  const cmp = runFor(view, solveDriver(view), true);
+  const short = compareShort(view.driverName, view.driverBrand);
+  return [...main, ...cmp.map((d) => ({ ...d, label: `${d.design.name} vs ${short}`, dash: COMPARE_DASH, compare: true }))];
 }
 
-export function runDesigns(s: AppState, solved: SolveResult): Design[] {
-  const solvedBy = solvedDrivers(s, solved);
-  // Driver input and options per driver, worked out once each.
-  const perDriver = new Map<string, { driver: DriverInput; opts: ReturnType<typeof simOptionsOf> } | null>();
-  const forDriver = (id: string) => {
-    if (!perDriver.has(id)) {
-      const view = viewFor(s, id === "A" ? undefined : id);
-      const sv = solvedBy.get(id) ?? solved;
-      perDriver.set(id, sv.missing.length > 0 ? null : { driver: driverInputOf(view, sv), opts: simOptionsOf(view) });
-    }
-    return perDriver.get(id)!;
-  };
+function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] {
+  if (solved.missing.length > 0) return [];
+  const driver = driverInputOf(s, solved);
+  const opts = simOptionsOf(s);
   const out: Design[] = [];
   for (const d of s.designs) {
     if (!d.on) continue;
-    const dr = forDriver(d.driverId ?? "A");
-    if (!dr) continue;
-    const { driver, opts } = dr;
     const vb = vbOf(s, d);
     if (!(vb > 0)) continue;
     const eq = s.eq
@@ -361,7 +362,7 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
         result.maxSpl = result.maxSpl.map((v, i) => v + lift[i]!);
         if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + lift[i]!), mouth: result.parts.mouth.map((v, i) => v + lift[i]!) };
       }
-      out.push({ design: d, label: designLabel(s, d), dash: DRIVER_DASH[d.driverId ?? "A"], tag: s.extraDrivers.length > 0 ? (d.driverId ?? "A") : undefined, color: colorOf(s, d.id), vb_l: vb, result });
+      out.push({ design: d, label: d.name, compare: isCompare || undefined, color: colorOf(s, d.id), vb_l: vb, result });
     } catch {
       // Invalid input mid-edit: skip this design until the numbers make sense again.
     }
