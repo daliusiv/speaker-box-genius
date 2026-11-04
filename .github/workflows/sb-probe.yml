@@ -1,0 +1,37 @@
+name: SB Acoustics probe (temporary)
+on:
+  push:
+    branches: [sb-probe]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch samples
+        run: |
+          which pdftotext || (sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils >/dev/null)
+          mkdir out && cd out
+          UA="SpeakerBoxGenius-importer/1.0 (+https://github.com/daliusiv/speaker-box-genius; with SB Acoustics' permission)"
+          get() { curl -sSL -A "$UA" -o "$2" -w "%{http_code} %{size_download} %{content_type} $1\n" "$1" || true; sleep 2; }
+          get "https://sbacoustics.com/robots.txt" robots.txt
+          echo "== robots.txt"; cat robots.txt | head -40
+          get "https://sbacoustics.com/sitemap_index.xml" smi.xml
+          get "https://sbacoustics.com/wp-sitemap.xml" wps.xml
+          get "https://sbacoustics.com/product-sitemap.xml" ps.xml
+          echo "== sitemap index"; grep -oE '<loc>[^<]+' smi.xml wps.xml | head -30
+          echo "== product sitemap (first 15, count)"; grep -oE '<loc>[^<]+' ps.xml | head -15; grep -c '<loc>' ps.xml || true
+          get "https://sbacoustics.com/wp-json/wc/store/v1/products?per_page=3" api.json
+          echo "== store api"; head -c 6000 api.json; echo
+          get "https://sbacoustics.com/product/7%C2%BD-satori-mw19tx-4-textreme/" p1.html
+          get "https://sbacoustics.com/product/10in-sb29nrx75-6/" p2.html
+          for p in p1 p2; do
+            echo "== $p title"; grep -oE '<title>[^<]+' $p.html | head -1
+            echo "== $p breadcrumbs/categories"; grep -oE 'product_cat-[a-z0-9-]+' $p.html | sort -u | head -10
+            echo "== $p pdf links"; grep -oE 'https?://[^" ]+\.pdf' $p.html | sort -u | head -5
+            echo "== $p tables"; grep -c '<table' $p.html
+            echo "== $p text around Fs"; sed -e 's/<[^>]*>/ /g' $p.html | tr -s ' \n\t' ' ' | grep -oE '.{0,300}(Fs|Free air resonance).{0,1600}' | head -3
+            echo "== $p raw html around Qms"; grep -n -m3 -iE 'Qms' $p.html | cut -c1-600
+          done
+          pdf=$(grep -oE 'https?://[^" ]+\.pdf' p1.html | head -1)
+          if [ -n "$pdf" ]; then get "$pdf" p1.pdf; echo "== p1 pdf text"; pdftotext -layout p1.pdf - | head -70; fi
