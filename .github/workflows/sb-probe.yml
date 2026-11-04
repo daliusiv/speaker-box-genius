@@ -7,39 +7,11 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
-      - name: Sample spec lists per category
-        shell: python3 {0}
-        run: |
-          import json, re, time, urllib.request
-          UA = "SpeakerBoxGenius-importer/1.0 (+https://github.com/daliusiv/speaker-box-genius; with SB Acoustics' permission)"
-          def get(u):
-              time.sleep(1.5)
-              with urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": UA}), timeout=40) as r:
-                  return r.read().decode("utf8", "ignore")
-          prods = []
-          for page in range(1, 6):
-              batch = json.loads(get(f"https://sbacoustics.com/wp-json/wc/store/v1/products?per_page=100&page={page}"))
-              if not batch: break
-              prods += batch
-          print("== products", len(prods))
-          from collections import Counter
-          c = Counter(s for p in prods for s in [x["slug"] for x in p["categories"]])
-          print("== per category", dict(c))
-          want = ["dv", "coax", "1in", "passive-radiators", "soft-passive-radiators", "subwoofers", "shallow-subwoofers", "widebanders", "full-range", "midranges", "midwoofers-oem", "woofers", "coaxials", "satori-woofers", "nrx-woofers"]
-          seen = set()
-          for cat in want:
-              pick = {"dv": lambda p: "-DV" in p["name"], "coax": lambda p: "COAX" in p["name"], "1in": lambda p: "SB36WBAC21-8" in p["name"]}.get(cat, lambda p: cat in [x["slug"] for x in p["categories"]])
-              ps = [p for p in prods if pick(p) and p["id"] not in seen]
-              if not ps: continue
-              p = ps[0]; seen.add(p["id"])
-              html = get(p["permalink"])
-              lis = [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", x)).strip() for x in re.findall(r"<li[^>]*>(.*?)</li>", html, re.S)]
-              lis = [x for x in lis if re.search(r"\d", x) and len(x) < 90 and not x.startswith(("1", "2", "3", "4", "5", "6", "7", "8", "9"))]
-              pdfs = sorted(set(re.findall(r'https://sbacoustics.com/wp-content/uploads/[^" ]+\.pdf', html)))
-              print(f"\n== {cat}: {p['name']} | {p['permalink']} | cats {[x['slug'] for x in p['categories']]}")
-              print("   ", " || ".join(lis))
-              print("    pdf:", pdfs[:2])
-          # Names, to see DVC/variants
-
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Dry run of the importer
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/sb.ts --dry-run
