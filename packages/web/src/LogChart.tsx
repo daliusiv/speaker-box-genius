@@ -489,28 +489,31 @@ export function LogChart({
         )}
       </svg>
       </div>
-      {/* Phones: the values sit in a strip under the plot, so the curves stay in view. */}
+      {/* Phones: a legend under the plot, one curve per line, with its value at the tapped frequency.
+          Every curve always has its line, so the chart's height doesn't jump on a tap. */}
       <div className="chart-strip" role="status">
-        {hover === null ? (
-          <span className="muted">Tap the chart for values</span>
-        ) : (
-          <>
+        <div className="strip-head">
+          {hover === null ? (
+            <span className="muted">Tap the chart for values</span>
+          ) : (
             <b>
               {freq[hover]!.toFixed(freq[hover]! < 100 ? 1 : 0)} Hz{unit ? ` · ${unit}` : ""}
             </b>
-            {visible
-              .filter((s) => !s.thin)
-              .map((s) => (
-                <span key={s.label} className={`strip-item${faded.length > 0 && fadedBy(faded, s.label) ? " faint" : ""}`} title={s.label}>
-                  <span className="dot" style={{ background: s.color }} aria-hidden="true">
-                    {s.tag}
-                  </span>
-                  <span className="sr-only">{s.label}: </span>
-                  {Number.isFinite(s.y![hover!]!) ? s.y![hover!]!.toFixed(digits) : "–"}
-                </span>
-              ))}
-          </>
-        )}
+          )}
+        </div>
+        {visible
+          .filter((s) => !s.thin)
+          .map((s) => (
+            <div key={s.label} className={`strip-item${faded.length > 0 && fadedBy(faded, s.label) ? " faint" : ""}`}>
+              <svg className="strip-line" viewBox="0 0 22 8" aria-hidden="true">
+                <line x1="1" y1="4" x2="21" y2="4" stroke={s.color} strokeWidth="3" strokeDasharray={s.dash} strokeLinecap="round" />
+              </svg>
+              <span className="strip-name">{shortName(s.label)}</span>
+              <span className="strip-value">
+                {hover === null ? "" : Number.isFinite(s.y![hover]!) ? s.y![hover]!.toFixed(digits) : "–"}
+              </span>
+            </div>
+          ))}
       </div>
     </figure>
   );

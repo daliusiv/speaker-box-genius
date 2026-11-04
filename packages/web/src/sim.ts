@@ -326,8 +326,14 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
   const view = compareView(s);
   if (!view || main.length === 0) return main;
   const cmp = runFor(view, solveDriver(view), true);
-  const short = compareShort(view.driverName, view.driverBrand);
-  return [...main, ...cmp.map((d) => ({ ...d, label: `${d.design.name} vs ${short}`, dash: COMPARE_DASH, compare: true }))];
+  // "Box · driver" for both, so every legend says which driver a curve is.
+  const mine = compareShort(s.driverName, s.driverBrand);
+  let theirs = compareShort(view.driverName, view.driverBrand);
+  if (theirs === mine) theirs = `${theirs} (compare)`;
+  return [
+    ...main.map((d) => ({ ...d, label: `${d.design.name} · ${mine}` })),
+    ...cmp.map((d) => ({ ...d, label: `${d.design.name} · ${theirs}`, dash: COMPARE_DASH, compare: true })),
+  ];
 }
 
 function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] {

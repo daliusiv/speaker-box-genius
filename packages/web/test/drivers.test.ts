@@ -37,7 +37,8 @@ test("a comparison driver adds a dashed run in every box, in the box's colour", 
     assert.equal(d.dash, COMPARE_DASH);
     assert.equal(d.color, main[i]!.color);
     assert.equal(d.design.id, main[i]!.design.id);
-    assert.match(d.label, /vs /);
+    assert.equal(d.label, `${d.design.name} · Other 12`);
+    assert.equal(main[i]!.label, `${d.design.name} · ${DEFAULT_STATE.driverName.split(" ").find((w) => /\d/.test(w) && /[a-z]/i.test(w)) ?? DEFAULT_STATE.driverName}`);
   });
   // Different driver, different curves; the main runs are unchanged.
   assert.notDeepEqual(Array.from(vs[0]!.result.spl), Array.from(main[0]!.result.spl));
