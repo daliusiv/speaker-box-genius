@@ -31,7 +31,7 @@ export function measuredSeries(all: MeasuredCurve[], kind: CurveKind, freq: Floa
         const ref = relative ? ((designs.find((d) => d.design.id === m.matchTo) ?? designs[0])?.result.summary.referenceSpl ?? 0) : 0;
         for (let i = 0; i < y.length; i++) y[i] = y[i]! + m.offset_db - ref;
       }
-      return { label: `${m.name} (measured)`, color: measuredColor(all, m.id), dash: DASH, y };
+      return { label: `${m.name} (measured)`, color: measuredColor(all, m.id), dash: DASH, y, noRank: true };
     });
 }
 
