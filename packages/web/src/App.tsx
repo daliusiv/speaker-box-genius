@@ -156,6 +156,22 @@ export function App(props: { initial: AppState | null }) {
       return "relative";
     }
   });
+  // Transmission lines: show the cone and the mouth on their own as well as the sum.
+  const [showParts, setShowParts] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("sbg.parts") === "on";
+    } catch {
+      return false;
+    }
+  });
+  const toggleParts = () => {
+    setShowParts(!showParts);
+    try {
+      localStorage.setItem("sbg.parts", showParts ? "off" : "on");
+    } catch {
+      // not remembered
+    }
+  };
   const chooseSplMode = (m: "relative" | "absolute") => {
     setSplMode(m);
     try {
@@ -234,6 +250,14 @@ export function App(props: { initial: AppState | null }) {
   const freq = designs[0]?.result.freq ?? new Float64Array();
 
   const set = <K extends keyof AppState>(k: K, v: AppState[K]) => setState((s) => ({ ...s, [k]: v }));
+  // A line's cone and mouth curves, when switched on.
+  const partsOf = (d: Design, map: (y: Float64Array) => Float64Array): Series[] =>
+    showParts && d.result.parts
+      ? [
+          { label: `${d.design.name} · cone`, color: d.color, y: map(d.result.parts.cone), dash: "6 4", thin: true },
+          { label: `${d.design.name} · mouth`, color: d.color, y: map(d.result.parts.mouth), dash: "1.5 3", thin: true },
+        ]
+      : [];
   const series = (pick: (r: SimulationResult) => Float64Array | null): Series[] =>
     designs.map((d) => ({ label: d.design.name, color: d.color, y: pick(d.result) }));
 
@@ -1103,6 +1127,17 @@ export function App(props: { initial: AppState | null }) {
               unit="dB"
               freq={freq}
               actions={
+                <>
+                {designs.some((d) => d.result.parts) && (
+                  <button
+                    className={`chip${showParts ? " on" : ""}`}
+                    aria-pressed={showParts}
+                    onClick={toggleParts}
+                    title="Transmission lines: the cone (dashed) and the mouth (dotted) on their own, as well as the sum"
+                  >
+                    Cone + mouth
+                  </button>
+                )}
                 <div className="unit-switch" role="group" aria-label="SPL scale">
                   <button aria-pressed={splMode === "relative"} onClick={() => chooseSplMode("relative")} title="Each design's passband at 0 dB, with −3 and −6 dB lines">
                     Relative
@@ -1111,17 +1146,21 @@ export function App(props: { initial: AppState | null }) {
                     dB SPL
                   </button>
                 </div>
+                </>
               }
               {...(splMode === "relative"
                 ? {
-                    series: designs.map((d) => {
+                    series: designs.flatMap((d) => {
                       const ref = d.result.summary.referenceSpl;
-                      return {
-                        label: d.design.name,
-                        color: d.color,
-                        y: d.result.spl.map((v) => v - ref),
-                        notes: Array.from(d.result.spl, (v) => `${v.toFixed(1)} dB SPL`),
-                      };
+                      return [
+                        {
+                          label: d.design.name,
+                          color: d.color,
+                          y: d.result.spl.map((v) => v - ref),
+                          notes: Array.from(d.result.spl, (v) => `${v.toFixed(1)} dB SPL`),
+                        },
+                        ...partsOf(d, (y) => y.map((v) => v - ref)),
+                      ];
                     }),
                     limits: [
                       { value: -3, label: "−3 dB", color: "var(--muted)" },
@@ -1148,7 +1187,7 @@ export function App(props: { initial: AppState | null }) {
                       }));
                     }),
                   }
-                : { series: series((r) => r.spl) })}
+                : { series: designs.flatMap((d) => [{ label: d.design.name, color: d.color, y: d.result.spl }, ...partsOf(d, (y) => y)]) })}
             />
             <LogChart
               forum
