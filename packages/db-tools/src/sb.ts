@@ -149,7 +149,8 @@ export function parseProduct(p: StoreProduct, html: string, retrieved: string): 
   if ("skip" in k) return { kind: "skip", reason: k.skip, ...base };
   if (!model) return { kind: "skip", reason: "no model name", ...base };
 
-  const s = readSpecs(specItems(html));
+  const items = specItems(html);
+  const s = readSpecs(items);
   const pdf = html.match(/href="(https:\/\/sbacoustics\.com\/wp-content\/uploads\/[^"]+\.pdf)"/i)?.[1];
   const sources: Driver["sources"] = [{ kind: "datasheet", url: p.permalink, retrieved, note: PERMISSION_NOTE }];
   if (pdf) sources.push({ kind: "datasheet", url: encodeURI(decodeURI(pdf)), retrieved, note: "SB Acoustics datasheet (PDF)." });
@@ -170,7 +171,12 @@ export function parseProduct(p: StoreProduct, html: string, retrieved: string): 
     const xmech = firstNumber(s.xmech?.replace(/±/g, ""));
     const xmax = xmaxStated ?? xmech;
     if (mms === undefined || sd === undefined || xmax === undefined) {
-      return { kind: "skip", reason: `passive radiator without Mms, Sd and Xmax/Xmech (found: ${Object.keys(s).join(", ") || "nothing"})`, ...base };
+      const near = items.filter((t) => /excursion|x\s?m(ax|ech)|travel|stroke/i.test(t) && t.length < 80);
+      return {
+        kind: "skip",
+        reason: `passive radiator without Mms, Sd and Xmax/Xmech (found: ${Object.keys(s).join(", ") || "nothing"}${near.length ? `; excursion-like items: "${near.join('", "')}"` : ""})`,
+        ...base,
+      };
     }
     if (xmaxStated === undefined) notes.push(`Xmax is the published maximum mechanical excursion (Xmech ±${xmech} mm), not a linear limit.`);
     const params: PassiveRadiator["params"] = { mms_g: mms, sd_cm2: sd, xmax_mm: xmax };
@@ -283,6 +289,9 @@ async function fetchText(url: string): Promise<string> {
   }
 }
 
+/** Notes every entry of a kind gets: kept on the entry, left out of the "check these" list. */
+const ROUTINE = [/half the published linear coil travel/, /OEM only/, /^Coaxial:/, /^Dual voice coil/, /maximum mechanical excursion/];
+
 async function main() {
   const dry = process.argv.includes("--dry-run");
   const delay = Number(process.env.DELAY_MS ?? 1500);
@@ -332,7 +341,8 @@ async function main() {
       continue;
     }
     written.push(line);
-    if (r.notes.length) adjusted.push(`${line} — ${r.notes.join(" ")}`);
+    const check = r.notes.filter((n) => !ROUTINE.some((re) => re.test(n)));
+    if (check.length) adjusted.push(`${line} — ${check.join(" ")}`);
     if (!dry) {
       const dir = join(REPO_ROOT, r.kind === "driver" ? "drivers" : "passive-radiators", "sb-acoustics");
       mkdirSync(dir, { recursive: true });
@@ -354,6 +364,8 @@ async function main() {
     `Products listed: ${products.length}. Written: ${written.length}. Adjusted: ${adjusted.length}. Skipped: ${skipped.length}. Not box drivers (tweeters, kits, accessories…): ${notImported.length}.`,
     "",
     "Source: product pages on sbacoustics.com, used with SB Acoustics' permission (see docs/data-permissions.md). Entries for the same models from driver-base are replaced.",
+    "",
+    "Routine, noted on each entry: Xmax is half the published linear coil travel (SB doesn't list Xmax); passive radiators' Xmax is their published mechanical limit (Xmech); coaxials keep the woofer's values; dual voice coil drivers are entered with the coils in parallel; OEM-only models say so.",
     "",
     "### Adjusted or noted (check these against the datasheet)",
     ...(adjusted.length ? adjusted.map((x) => `- ${x}`) : ["- none"]),

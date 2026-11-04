@@ -42,7 +42,7 @@ test("names, units and categories", () => {
 test("MW19TX-4: every value, Xmax from the coil travel, menu items ignored", () => {
   assert.equal(readSpecs(specItems(page(MW19TX))).fs, "32 Hz");
   const r = parseProduct(product("7½″ SATORI MW19TX-4 / TeXtreme", ["midwoofers", "satori-midwoofers"], "mw19tx"), page(MW19TX), "2026-11-04");
-  assert.equal(r.kind, "driver", r.reason);
+  assert.equal(r.kind, "driver", r.reason ?? "");
   const d = r.driver!;
   assert.deepEqual(validateDriver(d), []);
   assert.equal(d.model, "MW19TX-4");
@@ -64,7 +64,7 @@ test("dual voice coil sub: per-coil values, parallel Bl", () => {
     "Equivalent volume, Vas 49.7 ltr.", "Compliance, Cms 0.36 mm/N", "Mechanical loss, Rms 3.8 kg/s", "Rated power handling* 300 W",
   ];
   const r = parseProduct(product("10″ SW26DBAC76-3-DV / Aluminum", ["oem", "shallow-subwoofers-oem"]), page(items), "2026-11-04");
-  assert.equal(r.kind, "driver", r.reason);
+  assert.equal(r.kind, "driver", r.reason ?? "");
   const d = r.driver!;
   assert.deepEqual(validateDriver(d), []);
   assert.equal(d.voice_coils, 2);
@@ -86,7 +86,7 @@ test("coaxial: the woofer block only", () => {
     "Nominal Impedance 4 Ω", "DC resistance, Re 3.6 Ω", "Free air resonance, Fs 1350 Hz", "Rated power handling* 30 W",
   ];
   const r = parseProduct(product("6″ SB17BAC35-8-COAX/ aluminum", ["coaxial-family-product", "coaxials"]), page(items), "2026-11-04");
-  assert.equal(r.kind, "driver", r.reason);
+  assert.equal(r.kind, "driver", r.reason ?? "");
   assert.equal(r.driver!.ts.fs, 35.2);
   assert.equal(r.driver!.ts.re, 5.2);
   assert.equal(r.driver!.nominal_ohms, 8);
@@ -100,7 +100,7 @@ test("passive radiator: Xmech used for Xmax, said so", () => {
     "Equivalent volume, Vas 31.2 liters", "Net weight 0.89 kg",
   ];
   const r = parseProduct(product("8″ SB23MFCL-00 / Polyprophylene", ["passive-radiators", "soft-passive-radiators"]), page(items), "2026-11-04");
-  assert.equal(r.kind, "passive-radiator", r.reason);
+  assert.equal(r.kind, "passive-radiator", r.reason ?? "");
   const pr = r.pr!;
   assert.deepEqual(validatePassiveRadiator(pr), []);
   assert.deepEqual(pr.params, { mms_g: 141, sd_cm2: 210, xmax_mm: 19, fs: 19, qms: 15.3, vas_l: 31.2, cms_mm_per_n: 0.5 });
