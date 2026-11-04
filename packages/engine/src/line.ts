@@ -240,6 +240,11 @@ export interface LineNetwork {
   za(w: number): Complex;
   /** ρc / area where Za is taken (at the driver, or the horn's throat), Pa·s/m³. */
   zaRef: number;
+  /**
+   * Pressure and volume velocity along the line for unit cone volume velocity (all the
+   * cones together), from the closed end (x = 0) to the mouth, then on through a port.
+   */
+  profile(w: number): ProfilePoint[];
   /** Volume velocity leaving the mouth (or port) per unit cone volume velocity into the line. */
   exitPerCone(w: number): Complex;
   /** Volume velocity leaving the mouth for a pressure p at the driver (open lines). */
@@ -263,6 +268,16 @@ export interface LineNetwork {
 }
 
 const ONE: M2 = [cx(1), cx(0), cx(0), cx(1)];
+
+/** One point along the line: position from the closed end (m), area (m²), pressure and volume velocity. */
+export interface ProfilePoint {
+  x: number;
+  area: number;
+  p: Complex;
+  u: Complex;
+  /** In the port of a mass-loaded line (beyond the line's mouth). */
+  port: boolean;
+}
 
 export function lineNetwork(line: LineInput, air: Air = STANDARD_AIR): LineNetwork {
   if (line.segments.length === 0) throw new Error("A transmission line needs at least one piece");
@@ -372,6 +387,43 @@ export function lineNetwork(line: LineInput, air: Air = STANDARD_AIR): LineNetwo
       return zAheadIn();
     },
     zaRef: (air.rho * air.c) / (slices[iR]?.area ?? mouthArea),
+    profile(w) {
+      chains(w);
+      const pts: ProfilePoint[] = [];
+      // Walk a run of slices from a known state, one slice at a time: [p'; U'] = T⁻¹ [p; U].
+      const walk = (list: Slice[], p0: Complex, u0: Complex, x0: number, dir: 1 | -1) => {
+        if (list.length === 0) return;
+        let p = p0;
+        let u = u0;
+        let x = x0;
+        pts.push({ x, area: list[0]?.area ?? 0, p, u, port: false });
+        for (const sl of list) {
+          const [A, B, C, D] = sliceMatrix(sl, w, air);
+          const pn = sub(mul(D, p), mul(B, u));
+          const un = sub(mul(A, u), mul(C, p));
+          p = pn;
+          u = un;
+          x += dir * sl.len;
+          pts.push({ x, area: sl.area, p, u, port: x > length_m + 1e-9 });
+        }
+      };
+      if (flh) {
+        const pt = zFront(zAheadIn(), w);
+        walk(ahead, pt, div(pt, zAheadIn()), 0, 1);
+      } else if (tapped) {
+        const { pr, pf } = tappedPressures();
+        const [, B, , D] = tMiddle;
+        walk(behind, pr, mul(pr, yBehind()), xr, -1);
+        walk(middle, pr, sub(div(mul(D, pr), B), div(pf, B)), xr, 1);
+        walk(ahead, pf, div(pf, zAheadIn()), xf, 1);
+      } else {
+        const pd = this.zLoad(w);
+        chains(w);
+        walk(behind, pd, mul(pd, yBehind()), xr, -1);
+        walk(ahead, pd, div(pd, zAheadIn()), xr, 1);
+      }
+      return pts.sort((a, b) => a.x - b.x);
+    },
     exitPerCone(w) {
       chains(w);
       if (flh) return mouthFlow(zFront(zAheadIn(), w)); // pressure at the throat for unit cone flow

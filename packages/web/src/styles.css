@@ -2277,3 +2277,58 @@ body.print-build #print-root .fold-chamber {
   fill: #ddd;
   opacity: 1;
 }
+
+/* Pressure and air speed along a line */
+.profile-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.3rem 0;
+}
+.profile-freq {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.9rem;
+}
+.profile-freq input[type="range"] {
+  width: 100%;
+}
+.profile-res {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+.profile-frame {
+  fill: none;
+  stroke: var(--grid);
+}
+.profile-grid {
+  stroke: var(--grid);
+  stroke-width: 0.6;
+}
+.profile-stuffed {
+  fill: color-mix(in srgb, var(--muted) 18%, transparent);
+}
+.profile-port {
+  fill: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+.profile-driver {
+  stroke: var(--muted);
+  stroke-dasharray: 3 3;
+}
+.profile-limit {
+  stroke: var(--over);
+  stroke-dasharray: 5 3;
+}
+.profile-p {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.profile-v {
+  fill: none;
+  stroke: #3b82f6;
+  stroke-width: 2;
+}

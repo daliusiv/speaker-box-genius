@@ -18,6 +18,7 @@
 ## Charts and settings
 
 - **Line load (Za)** chart, for lines and horns: the line's acoustic impedance as Hornresp's Za chart shows it (at the driver; at a front horn's throat without its chambers), resistance and reactance divided by ρc/S there. Checked against Hornresp's Za export for record 01 (`hornresp.test.ts`).
+- **Pressure and air speed inside** (line card): at a chosen frequency (slider, or one tap on each of the line's resonances, the peaks of Za), the sound pressure level and peak air speed from the closed end (or throat) to the mouth and on through a port, at the drive on the Signal tab. Stuffed stretches and the port are shaded, the driver (and tap) marked. Engine: `lineProfile()` walks the line's slice matrices from the driver; checked that a quarter wave puts the pressure at the closed end and the air speed at the mouth, that the flows either side of an offset driver add up to the cone's, and that the mouth's (or port's) air speed equals the Port speed chart.
 - Settings: **Line/horn SPL** "From radiated power (like Hornresp)" (engine `splFrom: "power"`), and **Air** "Hornresp defaults" (ρ 1.205, c 344). With both, and 2.83 V drive, the app's curves line up with Hornresp's.
 
 ## Front-loaded horns

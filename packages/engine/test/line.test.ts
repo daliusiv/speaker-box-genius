@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { baffledPistonImpedance, lineNetwork, type LineInput } from "../src/line.ts";
-import { simulate } from "../src/simulate.ts";
+import { lineProfile, simulate } from "../src/simulate.ts";
 import { ventedFb } from "../src/model.ts";
 
 const D = { fs: 40, qms: 4, qes: 0.45, vas_l: 30, re: 5.5, sd_cm2: 130, xmax_mm: 6, pe_w: 60 };
@@ -192,4 +192,62 @@ test("a line's cone and mouth parts add up to its response; the mouth carries th
   }
   const th = simulate(D, { ...TL, tap_cm: 60 }, OPT);
   assert.equal(th.parts, null);
+});
+
+// ---------------------------------------------------------------------------
+// Pressure and air speed along the line
+// ---------------------------------------------------------------------------
+
+const PD = { fs: 35, qms: 1.87, qes: 0.4, vas_l: 37.4, re: 5.9, sd_cm2: 211.2, le_mh: 1, xmax_mm: 5.5, pe_w: 80 };
+
+test("profile: a straight line's quarter wave puts the pressure at the closed end and the air speed at the mouth", () => {
+  const L = 150;
+  const tl: LineInput = { kind: "line", segments: [{ length_cm: L, startArea_cm2: 200, endArea_cm2: 200, taper: "linear" }], driverAt_cm: 0 };
+  const f = 343.2 / (4 * L / 100) * 0.98; // just under the quarter wave (the mouth's end correction)
+  const pr = lineProfile(PD, tl, f, { power: 2.83, convention: "volts" });
+  const first = pr.points[0]!;
+  const last = pr.points.at(-1)!;
+  assert.ok(Math.abs(last.x_cm - L) < 1e-6 && first.x_cm === 0);
+  assert.ok(first.spl_db > last.spl_db + 15, `closed end ${first.spl_db.toFixed(1)} dB, mouth ${last.spl_db.toFixed(1)} dB`);
+  const vMax = Math.max(...pr.points.map((p) => p.velocity_ms));
+  assert.ok(last.velocity_ms > 0.95 * vMax, "fastest air at the mouth");
+});
+
+test("profile: the mouth's air speed is the chart's exit speed; flows either side of an offset driver add up to the cone's", () => {
+  const tl: LineInput = {
+    kind: "line",
+    segments: [
+      { length_cm: 50, startArea_cm2: 200, endArea_cm2: 200, taper: "linear" },
+      { length_cm: 120, startArea_cm2: 200, endArea_cm2: 160, taper: "linear", fill_kgm3: 6 },
+    ],
+    driverAt_cm: 50,
+  };
+  for (const f of [30, 55, 120]) {
+    const opts = { power: 10, fMin: f, fMax: f * 1.0001, points: 2 };
+    const r = simulate(PD, tl, opts);
+    const pr = lineProfile(PD, tl, f, { power: 10 });
+    const v = pr.points.at(-1)!.velocity_ms;
+    assert.ok(Math.abs(v / r.portVelocity![0]! - 1) < 1e-3, `${f} Hz: profile ${v}, chart ${r.portVelocity![0]}`);
+  }
+  // Unit flow: behind + ahead at the driver = 1.
+  const net = lineNetwork(tl);
+  const pts = net.profile(2 * Math.PI * 70);
+  const at = pts.filter((p) => Math.abs(p.x - 0.5) < 1e-9);
+  assert.equal(at.length, 2);
+  const sum = { re: at[0]!.u.re + at[1]!.u.re, im: at[0]!.u.im + at[1]!.u.im };
+  assert.ok(Math.abs(sum.re - 1) < 1e-9 && Math.abs(sum.im) < 1e-9, JSON.stringify(sum));
+  assert.ok(Math.abs(at[0]!.p.re - at[1]!.p.re) < 1e-9, "one pressure at the driver");
+});
+
+test("profile: MLTL port and tapped horn", () => {
+  const ml: LineInput = { kind: "line", segments: [{ length_cm: 110, startArea_cm2: 220, endArea_cm2: 220, taper: "linear" }], driverAt_cm: 27.5, port: { shape: "round", diameter_cm: 6, length_cm: 12 } };
+  const r = simulate(PD, ml, { power: 10, fMin: 40, fMax: 40.004, points: 2 });
+  const pr = lineProfile(PD, ml, 40, { power: 10 });
+  const end = pr.points.at(-1)!;
+  assert.ok(end.port && end.x_cm > pr.length_cm, "the port comes after the line");
+  assert.ok(Math.abs(end.velocity_ms / r.portVelocity![0]! - 1) < 1e-3, `${end.velocity_ms} vs ${r.portVelocity![0]}`);
+  const th: LineInput = { kind: "line", segments: [{ length_cm: 220, startArea_cm2: 200, endArea_cm2: 850, taper: "linear" }], driverAt_cm: 20, tap_cm: 120 };
+  const t = lineProfile(PD, th, 50, { power: 10 });
+  assert.ok(t.points.every((p) => Number.isFinite(p.spl_db) && Number.isFinite(p.velocity_ms)));
+  assert.ok(Math.abs(t.points.at(-1)!.x_cm - 220) < 1e-6);
 });

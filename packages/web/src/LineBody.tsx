@@ -6,6 +6,7 @@ import { bestLine, compareOne, frontHorn, makePreset, PRESETS, presetFor, rankLi
 import type { LineDesign, LineSection } from "./state.ts";
 import { foldShapes } from "./foldShapes.ts";
 import { fromHornresp, toHornresp, type HornrespImport } from "./hornresp.ts";
+import { LineProfileView } from "./LineProfile.tsx";
 
 export type ImportedDriver = NonNullable<HornrespImport["driver"]>;
 
@@ -696,6 +697,8 @@ export function LineBody(p: {
           </div>
         </div>
       </details>
+
+      <LineProfileView d={d} driver={p.driver} sim={p.sim} fb={p.fb} />
 
       <HornrespPanel d={d} driver={p.driver} sim={p.sim} drivers={p.drivers} onDesign={(patch) => set(patch)} onImportDriver={p.onImportDriver} />
 
