@@ -1,6 +1,6 @@
 import { abs, add, arg, cx, div, inv, mul, parallel, scale, sub, type Complex } from "./complex.ts";
 import { STANDARD_AIR, type Air } from "./constants.ts";
-import { baffledPistonImpedance, lineNetwork, pistonPowerFactor } from "./line.ts";
+import { baffledPistonImpedance, lineNetwork, pistonPowerFactor, type LineInput } from "./line.ts";
 import { eqResponse, highPassResponse, type EqStage, type HighPass } from "./filters.ts";
 import {
   boxCompliance,
@@ -806,4 +806,50 @@ function bandpassNetwork(
       return { radiated, frontPortEach: f.port, rearPortEach: r.port, frontPrEach: f.prs, rearPrEach: r.prs };
     },
   };
+}
+
+export interface LineProfile {
+  f: number;
+  /** Points from the closed end (or a horn's throat) to the mouth, then through a port. */
+  points: {
+    x_cm: number;
+    area_cm2: number;
+    /** Sound pressure level inside the line (dB re 20 µPa, RMS). */
+    spl_db: number;
+    /** Peak air speed (m/s): volume velocity over the area. */
+    velocity_ms: number;
+    port: boolean;
+  }[];
+  /** Line length (cm), without a port. */
+  length_cm: number;
+  /** Peak one-way cone excursion at this frequency (mm), as on the excursion chart. */
+  excursion_mm: number;
+}
+
+/**
+ * Pressure and air speed along a transmission line or horn at one frequency, at the drive in
+ * `opts` (filters and EQ included): the standing waves inside, where stuffing works hardest
+ * (high air speed) and where the pressure peaks.
+ */
+export function lineProfile(driverIn: DriverInput, line: LineInput, f: number, opts: SimulationOptions = {}): LineProfile {
+  const air = opts.air ?? STANDARD_AIR;
+  const r = simulate(driverIn, line, { ...opts, fMin: f, fMax: f * 1.0001, points: 2 });
+  const base = driverModel(driverIn, air);
+  const d = opts.isobaric ? isobaricPair(base, opts.isobaric.coils) : base;
+  const n = opts.drivers ?? 1;
+  const w = 2 * Math.PI * f;
+  const x = r.excursionMm[0]! / 1000; // peak, per driver
+  const uPeak = n * d.sd * w * x; // all the cones together
+  const net = lineNetwork(line, air);
+  const pts = net.profile(w).map((pt) => {
+    const pPeak = Math.hypot(pt.p.re, pt.p.im) * uPeak;
+    return {
+      x_cm: pt.x * 100,
+      area_cm2: pt.area * 1e4,
+      spl_db: 20 * Math.log10(Math.max(pPeak / Math.SQRT2, 1e-9) / 2e-5),
+      velocity_ms: pt.area > 0 ? (Math.hypot(pt.u.re, pt.u.im) * uPeak) / pt.area : 0,
+      port: pt.port,
+    };
+  });
+  return { f, points: pts, length_cm: net.length_m * 100, excursion_mm: x * 1000 };
 }
