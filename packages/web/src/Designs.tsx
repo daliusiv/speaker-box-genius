@@ -15,6 +15,7 @@ import { Fixed, Num, Select } from "./components.tsx";
 import { PassiveRadiatorBrowser } from "./Library.tsx";
 import { loadPrChoice, type DbIndex } from "./library.ts";
 import { PrTuning } from "./PrTuning.tsx";
+import { LineBody } from "./LineBody.tsx";
 
 /** What the volume calculator and build sheet need from a chosen PR. */
 export interface PrPhysical {
@@ -882,6 +883,8 @@ export function DesignCard(props: {
   onDuplicate: () => void;
   onDelete: () => void;
   onPrPhysical: (x: PrPhysical) => void;
+  /** Transmission lines: simulated tuning. */
+  lineFb?: number | null;
 }) {
   const d = props.design;
   const common = {
@@ -906,6 +909,18 @@ export function DesignCard(props: {
       {d.kind === "bandpass" && (
         <BandpassBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} db={props.db} losses={props.losses} />
       )}
+      {d.kind === "line" && (
+        <LineBody
+          design={d}
+          onChange={props.onChange}
+          driver={props.finder.driver}
+          sim={props.finder.sim}
+          align={props.align}
+          drivers={props.drivers}
+          fb={props.lineFb ?? null}
+          exitVelocity={props.portCtx.portVelocity}
+        />
+      )}
       {d.kind === "pr" && (
         <PrBody
           {...common}
@@ -917,7 +932,7 @@ export function DesignCard(props: {
           onFound={(patch, summary, physical) => props.onFound(d, patch, summary, physical)}
         />
       )}
-      <p className="dims-link hint">
+      {d.kind !== "line" && <p className="dims-link hint">
         {props.linked ? (
           <>
             {d.kind === "bandpass" ? "Rear chamber volume" : "Box volume"} comes from the volume calculator ·{" "}
@@ -934,7 +949,7 @@ export function DesignCard(props: {
             {d.kind === "bandpass" ? "Size the rear chamber from dimensions…" : "Size from dimensions…"}
           </button>
         )}
-      </p>
+      </p>}
     </DesignShell>
   );
 }
@@ -943,7 +958,7 @@ export function AddDesign(props: { disabled: boolean; onAdd: (k: DesignKind) => 
   return (
     <div className="add-design">
       <span>Add design:</span>
-      {(["sealed", "vented", "pr", "bandpass"] as const).map((k) => (
+      {(["sealed", "vented", "pr", "bandpass", "line"] as const).map((k) => (
         <button key={k} className="secondary" disabled={props.disabled} onClick={() => props.onAdd(k)}>
           + {KIND_LABEL[k]}
         </button>

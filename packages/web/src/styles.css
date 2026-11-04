@@ -2059,3 +2059,36 @@ dialog.finder .lib-inner {
   display: block;
   font-size: 0.8rem;
 }
+
+/* Transmission line drawing */
+.line-drawing {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0.2rem 0 0.6rem;
+}
+.line-body {
+  fill: color-mix(in srgb, var(--accent) 10%, transparent);
+  stroke: var(--fg);
+  stroke-width: 1.5;
+}
+.line-closed {
+  stroke: var(--fg);
+  stroke-width: 4;
+}
+.line-hatch {
+  stroke: var(--muted);
+  stroke-width: 1.2;
+}
+.line-port {
+  fill: color-mix(in srgb, var(--accent) 25%, transparent);
+  stroke: var(--fg);
+  stroke-width: 1.5;
+}
+.line-driver {
+  fill: var(--accent);
+}
+.line-label {
+  font-size: 10px;
+  fill: var(--muted);
+}

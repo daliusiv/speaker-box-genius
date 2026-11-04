@@ -9,6 +9,7 @@ import {
   newDesign,
   type AppState,
   type BandpassDesign,
+  type LineDesign,
   type PrDesign,
   type VentedDesign,
 } from "../src/state.ts";
@@ -45,8 +46,27 @@ function variants(): [string, AppState][] {
         bp,
       ],
     }],
+    ["transmission lines, flared ports, baffle step and port compression", {
+      ...d,
+      settings: { ...d.settings, portCompression: true },
+      baffle: { ...d.baffle, on: true, fromBox: false, width_cm: 22, x_cm: 11 },
+      designs: [
+        { ...(newDesign("line", d.designs) as LineDesign), taper: "exponential", driverAt_cm: 40, port: true, portLength_cm: 18.5 },
+        { ...ported, flare_cm: 2.5 },
+        { ...(newDesign("line", d.designs) as LineDesign), id: "d9", name: "TQWT", fill_kgm3: 0 },
+      ],
+    }],
   ];
 }
+
+test("a line design survives a link exactly", async () => {
+  const s = variants().at(-1)![1];
+  const back = await decodeStateAny(await encodeStateShort(s));
+  assert.deepEqual(back!.designs[0], s.designs[0]);
+  assert.equal(back!.designs[1]!.kind === "vented" && back!.designs[1]!.flare_cm, 2.5);
+  assert.equal(back!.baffle.on, true);
+  assert.equal(back!.settings.portCompression, true);
+});
 
 test("short links decode to exactly what the long form gives", async () => {
   for (const [name, s] of variants()) {

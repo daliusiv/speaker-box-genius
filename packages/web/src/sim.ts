@@ -2,6 +2,8 @@ import {
   STANDARD_AIR,
   WINISD_AIR,
   baffleStepDb,
+  lineNetwork,
+  type LineInput,
   type Air,
   type Baffle,
   netVolume,
@@ -18,12 +20,12 @@ import {
   type SolveResult,
   type VolumeResult,
 } from "@sbg/engine";
-import type { AppState, DesignState, PortFields, PrDesign, PrGroupState, Settings } from "./state.ts";
+import type { AppState, DesignState, LineDesign, PortFields, PrDesign, PrGroupState, Settings } from "./state.ts";
 
 /** One colour per design slot; distinguishable in light and dark mode. */
 export const PALETTE = ["#3b82f6", "#f97316", "#22c55e", "#a855f7", "#e11d48", "#0d9488", "#ca8a04", "#64748b"];
 
-export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators", bandpass: "Bandpass" } as const;
+export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators", bandpass: "Bandpass", line: "Transmission line" } as const;
 
 export function colorOf(s: AppState, id: string): string {
   const i = s.designs.findIndex((d) => d.id === id);
@@ -104,6 +106,7 @@ export const linkedDesign = (s: AppState) => s.designs.find((d) => d.id === s.vo
 
 /** Box volume a design should use: the calculator's result if it is linked, else its own field. */
 export function vbOf(s: AppState, d: DesignState): number {
+  if (d.kind === "line") return lineVolume(d);
   return s.volume.link === d.id ? volumeFor(s, d).effective_l : d.vb_l;
 }
 
@@ -143,9 +146,42 @@ export function alignmentDriver(solved: SolveResult, s: AppState) {
   return { fs: v.fs!, qms: v.qms!, qes: v.qes! * dvcFactors(s).qes, vas_l: v.vas_l! / (s.isobaric ? 2 : 1) };
 }
 
+/** Engine input for a line design: the stuffed part and the rest as separate pieces. */
+export function lineInputOf(d: LineDesign): LineInput {
+  const L = d.length_cm;
+  const area = (t: number) => {
+    const s1 = d.closedArea_cm2;
+    const s2 = d.mouthArea_cm2;
+    if (d.taper === "conical") return (Math.sqrt(s1) + (Math.sqrt(s2) - Math.sqrt(s1)) * t) ** 2;
+    if (d.taper === "exponential") return s1 * (s2 / s1) ** t;
+    return s1 + (s2 - s1) * t;
+  };
+  const fillTo = Math.min(L, Math.max(0, d.fill_kgm3 > 0 ? d.fillLength_cm : 0));
+  const segments: LineInput["segments"] = [];
+  if (fillTo > 0) segments.push({ length_cm: fillTo, startArea_cm2: area(0), endArea_cm2: area(fillTo / L), taper: d.taper, fill_kgm3: d.fill_kgm3 });
+  if (L - fillTo > 0) segments.push({ length_cm: L - fillTo, startArea_cm2: area(fillTo / L), endArea_cm2: area(1), taper: d.taper });
+  return {
+    kind: "line",
+    segments,
+    driverAt_cm: Math.min(Math.max(0, d.driverAt_cm), L - 0.1),
+    ...(d.port ? { port: { shape: "round" as const, diameter_cm: d.portDiameter_cm, length_cm: d.portLength_cm } } : {}),
+  };
+}
+
+/** Inside volume of a line design (litres), port excluded. */
+export function lineVolume(d: LineDesign): number {
+  try {
+    return lineNetwork(lineInputOf(d)).volume_l;
+  } catch {
+    return 0;
+  }
+}
+
 function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"]): EnclosureInput {
   const { ql, qa, qp } = losses;
   switch (d.kind) {
+    case "line":
+      return lineInputOf(d);
     case "sealed":
       return { kind: "sealed", vb_l: vb, ql, qa };
     case "vented":
