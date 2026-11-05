@@ -1,0 +1,35 @@
+{
+  "brand": "B&C Speakers",
+  "model": "18PS76",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 39,
+    "qms": 6.1,
+    "qes": 0.29,
+    "vas_l": 207,
+    "re": 5,
+    "sd_cm2": 1210,
+    "qts": 0.27,
+    "le_mh": 1.9,
+    "bl": 25.8,
+    "mms_g": 149,
+    "xmax_mm": 7,
+    "pe_w": 600
+  },
+  "physical": {
+    "cutout_mm": 422,
+    "depth_mm": 202,
+    "displacement_l": 9
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/18/8/18PS76",
+      "retrieved": "2026-11-05",
+      "note": "T/S data supplied by B&C Speakers (2026-11-05) and published with their permission; the link is the product page on their website. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

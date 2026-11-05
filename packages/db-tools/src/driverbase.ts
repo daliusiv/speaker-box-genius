@@ -28,7 +28,7 @@ export const ATTRIBUTION =
   "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes.";
 
 /** Brands we import from the manufacturer directly, so driver-base copies are skipped. */
-export const DIRECT_BRANDS = new Set(["Dayton Audio", "SB Acoustics"]);
+export const DIRECT_BRANDS = new Set(["Dayton Audio", "SB Acoustics", "B&C Speakers"]);
 
 /** driver-base manufacturer name → our brand folder and _brand.json. */
 export const BRANDS: Record<string, { slug: string; brand: Brand }> = {

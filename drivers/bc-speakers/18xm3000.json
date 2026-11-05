@@ -1,0 +1,35 @@
+{
+  "brand": "B&C Speakers",
+  "model": "18XM3000",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 35,
+    "qms": 8,
+    "qes": 0.41,
+    "vas_l": 175,
+    "re": 5.3,
+    "sd_cm2": 1210,
+    "qts": 0.39,
+    "le_mh": 2.45,
+    "bl": 26.4,
+    "mms_g": 245,
+    "xmax_mm": 12,
+    "pe_w": 1500
+  },
+  "physical": {
+    "cutout_mm": 422,
+    "depth_mm": 241,
+    "displacement_l": 11
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/18/8/18XM3000",
+      "retrieved": "2026-11-05",
+      "note": "T/S data supplied by B&C Speakers (2026-11-05) and published with their permission; the link is the product page on their website. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

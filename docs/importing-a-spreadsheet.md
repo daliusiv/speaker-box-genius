@@ -21,7 +21,7 @@ Read the report (written to `<brand>-import-report.md`), fix anything with `--ma
 | `--brand NAME` | Brand as it should appear. Existing brands keep their folder (`Faital Pro` → `drivers/faital-pro/`). |
 | `--file PATH` | `.xlsx`, `.csv`, `.tsv` or `.txt`. Old `.xls` files need saving as `.xlsx` first. |
 | `--date YYYY-MM-DD` | When the file was received (goes in `sources[].retrieved`). |
-| `--url TEMPLATE` | Product page for rows without a URL column. `{model}` and `{slug}` are filled in, e.g. `https://www.example.com/products/{slug}`. |
+| `--url TEMPLATE` | Product page for rows without a URL column. `{model}`, `{slug}` and `{Any column header}` (that row's cell) are filled in, e.g. `https://www.example.com/products/{slug}` or, for B&C, `https://www.bcspeakers.com/en/products/lf-driver/{inches}/{Nominal Impedance (Ω)}/{model}`. |
 | `--sheet NAME` | Worksheet to read (default: the first). |
 | `--header-row N` | The row with the column names, if it isn't found automatically. |
 | `--map "Header=field[:unit]"` | Name a column the importer doesn't recognise, e.g. `--map "Resonanzfrequenz=fs"` or `--map "Hub=xmax:mm"`. Fields: `model url kind size impedance fs qts qes qms vas cms re le bl mms sd xmax xmech pe cutout depth displacement added_mass coils wiring`. |

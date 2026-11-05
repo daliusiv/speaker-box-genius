@@ -153,3 +153,14 @@ test("--map names an unrecognised column; rows without a link use --url", () => 
   const noUrl = convertRows(rows, findLayout(rows, maps), opts());
   assert.equal(noUrl[0]!.kind, "skip");
 });
+
+test("xlsx: formula strings with xml:space=\"preserve\" are read (B&C's comparison matrix)", async () => {
+  const { rowsOfWorksheet } = await import("../src/sheet.ts");
+  const xml =
+    '<sheetData><row r="1"><c r="A1" t="str"><v>name</v></c><c r="B1" t="str"><v xml:space="preserve"> Fs (Hz)</v></c></row>' +
+    '<row r="2"><c r="A2" t="str"><v>10BG76</v></c><c r="B2"><v>48</v></c></row></sheetData>';
+  assert.deepEqual(rowsOfWorksheet(xml), [
+    ["name", "Fs (Hz)"],
+    ["10BG76", "48"],
+  ]);
+});

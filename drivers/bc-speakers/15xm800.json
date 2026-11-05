@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "15XM800",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 42,
+    "qms": 5.9,
+    "qes": 0.26,
+    "vas_l": 164,
+    "re": 5.1,
+    "sd_cm2": 855,
+    "qts": 0.25,
+    "le_mh": 1.3,
+    "bl": 22.1,
+    "mms_g": 88,
+    "xmax_mm": 5,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 354,
+    "depth_mm": 169
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/15/8/15XM800",
+      "retrieved": "2026-11-05",
+      "note": "T/S data supplied by B&C Speakers (2026-11-05) and published with their permission; the link is the product page on their website. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

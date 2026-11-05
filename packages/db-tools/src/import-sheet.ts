@@ -12,7 +12,8 @@
  *   --file PATH           .csv, .tsv, .txt or .xlsx (required)
  *   --date YYYY-MM-DD     when the file was received (default: today)
  *   --note TEXT           source note on every entry (default: "<brand> T/S data supplied by <brand>, used with permission …")
- *   --url TEMPLATE        product page for rows without a URL column; {model} and {slug} are filled in
+ *   --url TEMPLATE        product page for rows without a URL column; {model}, {slug} and
+ *                         {Any column header} (that row's cell) are filled in
  *   --sheet NAME          worksheet to read (.xlsx; default the first)
  *   --header-row N        1-based row holding the column names (default: found automatically)
  *   --map "Header=field[:unit]"  name a column the importer doesn't recognise (repeatable)
@@ -85,6 +86,10 @@ export type Field = (typeof FIELDS)[number];
 const ALIASES: [RegExp, Field | null][] = [
   // Ignored on purpose: program/peak power, cone displacement volume, efficiency, etc.
   [/program|peak|music|max(imum)? power|^pmax|^vd\b|displacement volume|cone volume|sensitivity|spl|efficiency|^no\b|^eta|weight|^price|ean|upc/, null],
+  // A voice coil's winding depth and the magnetic gap's depth aren't the driver's depth.
+  [/winding depth|gap depth|coil depth/, null],
+  // B&C: "Air Volume Occupied by Driver" is the driver's own displacement.
+  [/volume occupied|air volume occupied/, "displacement"],
   [/^(model|part|part ?(no|number|#)|product|product name|item|article|code|sku|reference|ref)$/, "model"],
   [/url|link|^page$|web ?(page|site)?$|datasheet|product page/, "url"],
   [/^(type|category|kind|family|product type|driver type|application|range)$/, "kind"],
@@ -114,7 +119,8 @@ const ALIASES: [RegExp, Field | null][] = [
 
 /** Unit factors to the units DbRecord uses, by field. Keys are regexes tested against the unit text. */
 const UNITS: Partial<Record<Field, [RegExp, number][]>> = {
-  vas: [[/ft|cu/, 28.3168], [/m3|m³/, 1000], [/cm3|cm³|cc/, 0.001], [/l|dm/, 1]],
+  // dm³ is litres: test it before m³ (which "dm³" also contains).
+  vas: [[/ft|cu/, 28.3168], [/dm/, 1], [/cm3|cm³|cc/, 0.001], [/m3|m³/, 1000], [/l/, 1]],
   cms: [[/µm|um|micro/, 0.001], [/mm/, 1], [/m\s*\/\s*n|m\/n/, 1000]],
   le: [[/µh|uh|micro/, 0.001], [/mh/, 1], [/^h$/, 1000]],
   mms: [[/kg/, 1000], [/g/, 1]],
@@ -298,6 +304,17 @@ export function convertRows(rows: Rows, layout: Layout, opts: Options): Result[]
   };
 
   const data = rows.slice(layout.firstDataRow).filter((r) => text(r, "model"));
+  // --url templates: {model}, {slug}, or any column's header for that row's cell
+  // (B&C: …/lf-driver/{inches}/{Nominal Impedance (Ω)}/{model}).
+  const headers = (rows[layout.headerRow] ?? []).map((h) => String(h ?? "").trim().toLowerCase());
+  const fillUrl = (tpl: string, row: string[], model: string) =>
+    tpl.replace(/\{([^}]+)\}/g, (all, name: string) => {
+      if (name === "model") return encodeURIComponent(model);
+      if (name === "slug") return slugOf(model);
+      const i = headers.indexOf(name.trim().toLowerCase());
+      const v = i >= 0 ? String(row[i] ?? "").trim() : "";
+      return v ? encodeURIComponent(v) : all;
+    });
   // The same model in several impedances becomes one entry each (as for driver-base).
   const models = new Map<string, number>();
   for (const r of data) {
@@ -314,7 +331,11 @@ export function convertRows(rows: Rows, layout: Layout, opts: Options): Result[]
       continue;
     }
     const rowUrl = text(row, "url");
-    const url = rowUrl && /^https?:\/\//.test(rowUrl) ? rowUrl : opts.url?.replace("{model}", encodeURIComponent(model)).replace("{slug}", slugOf(model));
+    const url = rowUrl && /^https?:\/\//.test(rowUrl) ? rowUrl : opts.url ? fillUrl(opts.url, row, model) : undefined;
+    if (url && /\{[^}]+\}/.test(url)) {
+      results.push({ kind: "skip", model, reason: `the --url template has a column this row has no value for (${url})` });
+      continue;
+    }
     if (!url) {
       results.push({ kind: "skip", model, reason: "no product page link (add a URL column or use --url)" });
       continue;
@@ -509,7 +530,7 @@ function main() {
     brand,
     brandSlug,
     date,
-    note: arg("note") ?? `${brand.name} T/S data supplied by ${brand.name} (${date}), used with ${brand.name}'s permission. See docs/data-permissions.md.`,
+    note: arg("note") ?? `T/S data supplied by ${brand.name} (${date}) and published with their permission; the link is the product page on their website. See docs/data-permissions.md.`,
     url: arg("url"),
     kind,
     type: arg("type") as DriverType | undefined,

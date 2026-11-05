@@ -1,0 +1,35 @@
+{
+  "brand": "B&C Speakers",
+  "model": "320K/C-A (16 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 16,
+  "size_in": 12,
+  "ts": {
+    "fs": 82,
+    "qms": 14,
+    "qes": 0.61,
+    "vas_l": 52,
+    "re": 12,
+    "sd_cm2": 522,
+    "qts": 0.59,
+    "le_mh": 2.2,
+    "bl": 16.8,
+    "mms_g": 28,
+    "xmax_mm": 2,
+    "pe_w": 120
+  },
+  "physical": {
+    "cutout_mm": 286,
+    "depth_mm": 136,
+    "displacement_l": 3
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/12/16/320K%2FC-A",
+      "retrieved": "2026-11-05",
+      "note": "T/S data supplied by B&C Speakers (2026-11-05) and published with their permission; the link is the product page on their website. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

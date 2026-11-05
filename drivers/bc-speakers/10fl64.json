@@ -1,0 +1,35 @@
+{
+  "brand": "B&C Speakers",
+  "model": "10FL64",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 63,
+    "qms": 5.4,
+    "qes": 0.34,
+    "vas_l": 23,
+    "re": 5.6,
+    "sd_cm2": 320,
+    "qts": 0.32,
+    "le_mh": 0.7,
+    "bl": 16,
+    "mms_g": 38,
+    "xmax_mm": 5,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 233,
+    "depth_mm": 105,
+    "displacement_l": 2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/10/8/10FL64",
+      "retrieved": "2026-11-05",
+      "note": "T/S data supplied by B&C Speakers (2026-11-05) and published with their permission; the link is the product page on their website. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

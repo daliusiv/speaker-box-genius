@@ -1,0 +1,35 @@
+{
+  "brand": "B&C Speakers",
+  "model": "15RBX100 (8 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 44,
+    "qms": 5.65,
+    "qes": 0.4,
+    "vas_l": 100,
+    "re": 5.3,
+    "sd_cm2": 908,
+    "qts": 0.38,
+    "le_mh": 1.2,
+    "bl": 24,
+    "mms_g": 154,
+    "xmax_mm": 9,
+    "pe_w": 1000
+  },
+  "physical": {
+    "cutout_mm": 354,
+    "depth_mm": 173,
+    "displacement_l": 5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/15/8/15RBX100",
+      "retrieved": "2026-11-05",
+      "note": "T/S data supplied by B&C Speakers (2026-11-05) and published with their permission; the link is the product page on their website. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}
