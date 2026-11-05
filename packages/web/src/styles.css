@@ -98,11 +98,33 @@ p {
   min-width: 0;
 }
 
+/* One height for the logo, undo/redo, Share and ☰, so the header lines up. */
+.top {
+  --head-h: 2.25rem;
+}
+
+@media (pointer: coarse) {
+  .top {
+    --head-h: 2.75rem;
+  }
+}
+
 .top .logo {
   flex: none;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.55rem;
+  height: var(--head-h);
+  width: auto;
+  aspect-ratio: 240 / 344;
+}
+
+.top h1 {
+  white-space: nowrap;
+}
+
+.top .share > button,
+.top button.menu-button,
+.top .undo-redo button.icon {
+  height: var(--head-h);
+  min-height: 0;
 }
 
 .top-actions {
@@ -1376,21 +1398,23 @@ figure.chart[hidden] {
     min-width: 0;
   }
 
+  /* The name scales with the room it has (its column), so it never wraps. */
+  .top > .title > div {
+    flex: 1;
+    container-type: inline-size;
+  }
+
   .top h1 {
-    font-size: 1.1rem;
+    font-size: clamp(0.7rem, 10.2cqi, 1.3rem);
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip;
   }
 
   .top > .title p {
     display: none;
   }
 
-  .top .logo {
-    width: 2rem;
-    height: 2rem;
-  }
 
   .top-actions {
     display: contents;
@@ -1418,16 +1442,28 @@ figure.chart[hidden] {
   }
 }
 
-/* Narrow phones: the name on two short lines beside the logo; the tiniest show the logo only. */
-@media (max-width: 480px) {
-  .top h1 {
-    font-size: 0.95rem;
-    line-height: 1.15;
-    white-space: normal;
+/* Small phones: tighter buttons leave the name more room. */
+@media (max-width: 440px) {
+  .top {
+    gap: 0.35rem;
+  }
+
+  .top .share > button {
+    padding-inline: 0.65rem;
+  }
+
+  .top .undo-redo {
+    gap: 0;
+  }
+
+  .top .undo-redo button.icon {
+    min-width: 2.1rem;
+    padding-inline: 0.3rem;
   }
 }
 
-@media (max-width: 370px) {
+/* The very narrowest (320 px): no readable size fits, so the logo stands alone. */
+@media (max-width: 339px) {
   .top h1 {
     position: absolute;
     width: 1px;
