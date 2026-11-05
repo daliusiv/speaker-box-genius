@@ -2,25 +2,41 @@
 
 *A modern, zero-install, web-based replacement for WinISD: enclosure and passive radiator simulation, a real-world volume calculator, and shareable live links.*
 
-Drafted 2 Nov 2026 · Rev 2: non-commercial source-available licence, GitHub Pages only (no server), driver database stored in the repo.
+Drafted 2 Nov 2026 · Rev 2: non-commercial source-available licence, GitHub Pages only (no server), driver database stored in the repo · **Rev 3 (5 Nov 2026): updated to what has been built.** Each section now says what shipped and where the build departed from the plan; ✅ done, 🟡 partly done, ⬜ not started.
 
-**Project constraints (decided):**
+**Project constraints (decided, all held):**
 - Public GitHub repo; anyone can contribute, **nobody can resell it** → non-commercial licence (see §2).
-- **Hosted on GitHub Pages only.** No servers, no paid services, no backend of any kind.
+- **Hosted on GitHub Pages only.** No servers, no paid services, no backend of any kind. Live at **https://speakerboxgenius.com** (custom domain; the old github.io address redirects).
 - **The driver database lives in the repo** and grows through pull requests.
+
+---
+
+## 0. Where it stands (5 Nov 2026)
+
+Phases 0–2 are done, most of Phase 3 is done, and much of the "later" list has shipped too (bandpass, transmission lines and horns, port compression, cut list). The app is live but **not publicly launched**: the next step is a private beta with 5–10 forum regulars, then the launch posts.
+
+| Phase | Status | Still open |
+|---|---|---|
+| 0. Engine and validation | ✅ | — |
+| 1. MVP | ✅ | Soft launch (held back on purpose, see §11) |
+| 2. Power-user features | ✅ | — |
+| 3. Community | 🟡 | Design gallery with OG images, embeddable widget, PR deploy previews |
+| Later / stretch | 🟡 | Large-signal (nonlinear) model, 3D box preview, i18n |
+
+Beyond the plan: transmission lines and horns with Hornresp import/export, a published [validation page](https://speakerboxgenius.com/validation/), 15 SEO guides, compare-with-a-second-driver, PR finder, hot voice coil, ports modelled as pipes, amplifier volts and amps at max SPL.
 
 ---
 
 ## 1. Product goals
 
 **Must do better than WinISD at:**
-1. **Entering T/S parameters.** Nothing gets silently overwritten. You choose which values are measured or locked, and the app derives the rest and flags any inconsistencies.
-2. **Passive radiators as a first-class option.** Single and dual PRs, added mass, PR excursion vs X_max, all on the same chart as sealed and ported designs.
-3. **Port behaviour.** Air velocity vs frequency at a given input power, with a clear chuffing redline.
-4. **True net volume.** Built-in shape calculator that subtracts driver, PR, port, bracing and crossover displacement, and feeds the result straight into the sim.
-5. **Sharing.** One link opens the exact live simulation. Easy to post to Reddit or diyAudio.
+1. ✅ **Entering T/S parameters.** Nothing gets silently overwritten. You type any set of values in any order, the app derives the rest and flags inconsistencies. Datasheet text can be pasted in.
+2. ✅ **Passive radiators as a first-class option.** 1, 2 or 4 PRs (and mixed groups in bandpass chambers), added mass, PR excursion vs X_max, on the same chart as sealed and ported designs. Plus a PR finder and a best-tuning tool.
+3. ✅ **Port behaviour.** Air velocity vs frequency at a given input power, with a chuffing line (peak or RMS), port compression, flared ports and ports as pipes.
+4. ✅ **True net volume.** Shape calculator that subtracts driver, PR, port, bracing and crossover displacement, live-linked to a design, plus a build sheet and cut list.
+5. ✅ **Sharing.** One short link opens the exact live simulation; forum image with QR code; ready-to-paste Reddit and diyAudio posts; share preview card.
 
-**Not in v1:** transmission lines and horns (Hornresp already does these), crossover design for full speakers (VituixCAD covers this), room simulation beyond a simple room-gain curve.
+**Not in v1 (as planned):** crossover design for full speakers (VituixCAD covers this), room simulation beyond a simple room-gain curve. **Changed:** transmission lines and horns were planned as out of scope but shipped as a beta, validated against Hornresp.
 
 ---
 
@@ -28,344 +44,323 @@ Drafted 2 Nov 2026 · Rev 2: non-commercial source-available licence, GitHub Pag
 
 *Not legal advice. Worth a quick check with someone who knows licensing before the first public release.*
 
-"Contributions welcome, but no reselling" means a **non-commercial licence**. Strictly speaking that makes the project **source-available rather than OSI "open source"**. PolyForm Noncommercial is not OSI-approved. In practice that's fine for a hobby community tool, but describe it accurately in the README (e.g. "free and source-available for non-commercial use").
+**Status: ✅ done.** Code under PolyForm Noncommercial 1.0.0 (`LICENSE`), data and docs under CC BY-NC-SA 4.0 (`LICENSE-DATA`). `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue templates (bug, new driver, new passive radiator, data correction), a PR template and `CODEOWNERS` are in place. A lawyer's glance before the public launch is still advised.
 
 | Part of the repo | Licence | Effect |
 |---|---|---|
-| Code (`packages/*`) | **PolyForm Noncommercial 1.0.0** | Anyone can use, modify and share for personal, hobby, educational and non-profit purposes. Selling it or using it in a paid product needs your permission. Short and written for software |
-| Driver database (`drivers/`) | **CC BY-NC-SA 4.0** | Anyone can copy and build on the data with attribution, non-commercially. Derivatives must stay under the same terms, so nobody can take the DB and lock it up |
+| Code (`packages/*`, `site/`) | **PolyForm Noncommercial 1.0.0** | Anyone can use, modify and share for personal, hobby, educational and non-profit purposes. Selling it or using it in a paid product needs permission |
+| Driver database (`drivers/`, `passive-radiators/`) | **CC BY-NC-SA 4.0** | Anyone can copy and build on the data with attribution, non-commercially. Derivatives must stay under the same terms |
 | Docs and images | CC BY-NC-SA 4.0 | Same terms as the data |
 
-**Contributions:**
-- Add a lightweight **Contributor License Agreement** (e.g. via the free CLA Assistant GitHub app) or at least a DCO sign-off. A CLA lets you, as maintainer, grant commercial exceptions or change the licence later. Without one, every contributor's code stays under the original terms forever and you can't relicense.
-- Add `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue and PR templates, and `CODEOWNERS` (you review engine changes; trusted community members can review driver PRs).
+**Contributions:** a licence-grant **CLA** ([`CLA.md`](../CLA.md), decided 4 Nov 2026): contributors keep copyright and grant the maintainer a licence on any terms, so commercial exceptions or a relicence stay possible. Checked by `.github/workflows/cla.yml` (sign by PR comment; signatures on the `cla-signatures` branch). The maintainer's own PRs, bots and database-only PRs are exempt.
 
-**Alternative to consider:** AGPL-3.0 is real open source, and anyone hosting a modified version must publish their changes. It does *not* forbid reselling, though. Since you want no reselling, go with PolyForm NC.
-
-**Data-licence compatibility:** you can only import outside driver data whose licence allows it under NC-SA terms. GPL-licensed databases (e.g. check QSpeakers' licence) or "all rights reserved" sites **cannot** be imported. Manufacturer datasheet *numbers* (facts) entered by hand by contributors, with a datasheet link, are the safe main route.
+**Data-licence compatibility:** only outside data whose licence allows NC-SA reuse is imported. In practice: Dayton Audio and SB Acoustics with written permission (`docs/data-permissions.md`), driver-base (CC BY 4.0) for other brands, and datasheet numbers entered by hand with a link. loudspeakerdatabase.com and GPL or "all rights reserved" sources are not used.
 
 ---
 
-## 3. Architecture overview
+## 3. Architecture overview (as built)
 
 ```
-┌──────────────── Browser (static site on GitHub Pages / PWA) ────────────────┐
-│  UI (React + TypeScript)                                                     │
-│   ├─ Driver panel (T/S editor w/ locking, import)                            │
-│   ├─ Designs list (A/B/C/D: sealed, vented, 1×PR, 2×PR …)                    │
-│   ├─ Chart area (SPL, excursion, port velocity, impedance, GD, max SPL)      │
-│   └─ Volume calculator side panel                                            │
-│                                                                              │
-│  State store (Zustand) ⇄ URL hash (versioned, compressed)                    │
-│                                                                              │
-│  Web Worker: @sbg/engine  (pure TS, no DOM; later optionally WASM)           │
-│   ├─ Lumped-element circuit solver (complex, per frequency)                  │
-│   ├─ T/S parameter solver (constraint graph)                                 │
-│   ├─ Impedance fitter (Levenberg–Marquardt)                                  │
-│   └─ File parsers (.zma, .frd, DATS, WinISD .wdr)                            │
-│                                                                              │
-│  Driver DB: static JSON shards fetched from the same Pages site              │
-└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────── Browser (static site on GitHub Pages, installable PWA) ─────────┐
+│  UI (React 19 + TypeScript, Vite)                                           │
+│   ├─ Driver card: Main and Compare pickers, T/S editor, measure, import     │
+│   ├─ Designs: up to 8 (sealed, vented, PR, bandpass, line/horn)             │
+│   ├─ Charts: hand-written SVG (LogChart), legend, leader marker, redlines   │
+│   └─ Volume calculator, build sheet, PR tools, signal (filters, EQ, room)   │
+│                                                                             │
+│  State: React state ⇄ URL hash (versioned; short links deflated with the    │
+│  browser's CompressionStream, defaults stripped). Projects in localStorage. │
+│                                                                             │
+│  @sbg/engine (pure TS, no DOM), run on the main thread                      │
+│   ├─ Lumped-element solver (complex, per frequency); 1-D line/horn model    │
+│   ├─ T/S solver (entered vs derived), consistency checks, datasheet parser  │
+│   ├─ Impedance fitter (free-air and added-mass T/S, L2R2 coil)              │
+│   └─ Parsers: .zma/.frd/.txt/.csv, WinISD .wdr/.wpr, Hornresp records       │
+│                                                                             │
+│  Driver DB: index.json + one shard per brand, from the same Pages site      │
+└─────────────────────────────────────────────────────────────────────────────┘
             ▲ built and deployed by
-┌──────────────────────── GitHub Actions (free for public repos) ─────────────┐
-│  CI: lint, typecheck, engine golden tests, driver-JSON schema validation     │
-│  Build: validate drivers/ → bundle into search index + shards → Vite build   │
-│  Deploy: actions/deploy-pages on every push to main                          │
-│  Bot: "Submit a driver" issue form → auto-opens a PR with the JSON file      │
-└──────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────── GitHub Actions ─────────────────────────────────────┐
+│  CI: driver DB validation, tests (node:test), typecheck, build              │
+│  Deploy: Vite build + content pages (site/build.ts) → Pages on push to main │
+│  Bots: issue form → PR for drivers and PRs; Dayton/SB import (by hand)      │
+│  CLA check on pull requests                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Main decision:** all simulation runs in the browser, and GitHub itself is the backend. Pages serves the app, the repo stores the database, Issues and PRs handle contributions, and Actions does the build, validation and moderation tooling. Running costs: £0.
+**Main decision (held):** all simulation runs in the browser and GitHub is the backend. Running costs: the domain only.
 
-**GitHub Pages limits to design around:** static files only (no server code), published sites capped at 1 GB, and a soft bandwidth limit of about 100 GB/month. The app plus driver DB should be a few MB, so there's plenty of room. Use hash-based routing (`/#/…`) so deep links never 404, and set Vite's `base` to `/<repo-name>/` (or use a custom domain).
+**Content pages:** `site/pages/*.md` are built by `site/build.ts` (no dependencies) into plain HTML pages next to the app: the guides, the WinISD and Hornresp comparison pages, and `/validation/` (from `docs/validation/results.json`). The build also writes `sitemap.xml` and `robots.txt`.
 
-### Tech stack
+### Tech stack: plan vs built
 
-| Concern | Choice | Why |
-|---|---|---|
-| Language | TypeScript (strict) | The engine and UI share types |
-| UI | React + Vite (or SvelteKit if preferred) | Large ecosystem, fast HMR |
-| State | Zustand + Immer | Small, and serialises easily to the URL |
-| Charts | uPlot (or custom Canvas) | Handles thousands of points across multiple overlaid series at 60 fps while sliders move. Recharts/Chart.js are too slow for this |
-| Complex math | Small hand-rolled `Complex` lib, typed arrays | Avoids allocations in the hot loop |
-| Worker comms | Comlink | Keeps the solver off the main thread |
-| URL compression | lz-string or fflate + base64url | Keeps links short |
-| Testing | Vitest + Playwright | Golden-file tests for the engine, E2E for the UI |
-| Monorepo | pnpm workspaces | `engine`, `web`, `schema`, `db-tools` |
-| Hosting/CI | GitHub Pages + GitHub Actions | Free for public repos, no infrastructure to run |
-| Schema validation | Zod (shared) + JSON Schema export | The same schema validates PRs in CI and data in the app |
+| Concern | Planned | Built | Why it changed |
+|---|---|---|---|
+| Language | TypeScript (strict) | ✅ Same | |
+| UI | React + Vite | ✅ React 19 + Vite 7 | |
+| State | Zustand + Immer | React state + URL hash | Not needed; one state object serialises to the URL directly |
+| Charts | uPlot | Hand-written SVG (`LogChart`) | Full control over phone layout, legend, leader marker and redlines; fast enough |
+| Complex math | Hand-rolled `Complex`, typed arrays | ✅ Same | |
+| Worker comms | Web Worker + Comlink | Main thread | Solves are fast enough; the PR finder runs in slices with a progress bar instead |
+| URL compression | lz-string or fflate | Browser `CompressionStream` (deflate-raw) | No dependency |
+| Testing | Vitest + Playwright | `node:test` (278 tests); Playwright for manual checks | No dependency |
+| Monorepo | pnpm workspaces | ✅ `engine`, `web`, `schema`, `db-tools` | |
+| Hosting/CI | GitHub Pages + Actions | ✅ Same, custom domain | |
+| Schema validation | Zod + JSON Schema | Hand-written types and checks in `db-tools` | No dependency |
+
+The web app's only runtime dependencies are React and React DOM.
 
 ---
 
 ## 4. The simulation engine (the core)
 
-### 4.1 Model
+### 4.1 Model ✅
 
-A **lumped-element equivalent circuit** solved in the frequency domain at about 400–800 log-spaced points from 5 Hz to 500 Hz. This is the same approach WinISD uses, so results should match closely.
+A **lumped-element equivalent circuit** solved in the frequency domain at log-spaced points, the same approach as WinISD.
 
-Elements:
-- **Driver:** Re, Le (with an optional semi-inductance / Wright / LR-2 model to handle lossy inductance correctly), Bl, Mms, Cms, Rms, Sd. Supports N drivers in series, parallel or series-parallel, and isobaric (compound) loading.
-- **Box:** acoustic compliance Cab from net Vb, plus leakage loss (Ql, default 7–10), absorption loss (Qa), and an optional fill factor that increases effective Vb.
-- **Port:** acoustic mass Map using effective length with selectable end corrections (flanged/free, 0.613 / 0.849 × r), port loss Qp, and round or slot geometry (slot ports can use a box wall, which changes the end correction). Multiple ports supported.
-- **Passive radiator:** Mmp (with added-mass input), Cmp, Rmp (from Qmp), Sdp, Xmax_PR. N PRs (1, 2 or 4) combined as parallel acoustic branches, or modelled individually when they differ.
-- **Radiation:** sum of all volume velocities (driver − ports/PRs, with correct sign), half-space or full-space toggle, optional baffle-step/room-gain overlay.
+- **Driver:** Re, Le (plain, or L2R2 for lossy coils), Bl, Mms, Cms, Rms, Sd. Any number of drivers in series or parallel, **isobaric** pairs, **dual voice coil** drivers, **hot voice coil** (Re rises with temperature).
+- **Box:** Cab from net Vb, leakage (Ql), absorption (Qa), port loss (Qp), all set in Settings and read from WinISD projects.
+- **Port:** acoustic mass with end corrections, round or slot ports, several ports, flared ends, **port compression**, and an option to model ports as **pipes** (with their own resonances).
+- **Passive radiator:** Mmp with added mass, Cmp, Rmp, Sdp, Xmax; 1, 2 or 4 identical PRs, and PR groups in bandpass chambers.
+- **Bandpass:** 4th and 6th order, each chamber ported, closed or with PRs, with inter-chamber leakage.
+- **Lines and horns (beta):** 1-D duct of tapered sections (parallel, conical, exponential), stuffing (Delany–Bazley), offset driver, MLTL port, tapped horn, front-loaded horn with chambers.
+- **Radiation:** half or full space, baffle step, car-cabin or room gain.
 
-### 4.2 Outputs (per design, per frequency)
+### 4.2 Outputs (per design, per frequency) ✅
 
 | Output | How it's calculated |
 |---|---|
-| SPL @ input power | Sum of volume velocities → far-field pressure |
+| SPL @ input power | Sum of volume velocities → far-field pressure (or radiated power, like Hornresp) |
 | Driver cone excursion | X = U_d / (jω·Sd), peak in mm, with an **X_max redline** |
 | PR excursion | X = U_pr / (jω·Sdp) with a **PR X_max redline**, per PR |
-| Port air velocity | v = U_p / Sp, peak m/s, with a **chuffing redline** (configurable; default warning ~17 m/s, about 5% of c) |
-| Impedance | |Z| and phase, for checking against a measured .zma |
+| Port air velocity | v = U_p / Sp, peak or RMS m/s, with a **chuffing line** |
+| Impedance | Magnitude, against a measured .zma overlay |
 | Group delay | −dφ/dω |
-| Max SPL | Lowest of: thermal limit (Pe), X_max limit, PR X_max limit, port-velocity limit, shown as a single limiting curve with each region labelled by which limit applies |
+| Max SPL | Lowest of thermal, X_max, PR X_max and port-velocity limits, with a band showing which limit applies |
 | Max power | Power at which each limit is first hit, per frequency (the drive setting, before filters and EQ) |
 | Amplifier at max | The amplifier's RMS voltage, current and real power needed to reach Max SPL at each frequency, after the high-pass filter and EQ, into the speaker's impedance (shown as the Max SPL chart's **Volts** and **Amps** views) |
+| Lines and horns | Line load (Za), cone and mouth contributions, pressure and air speed along the line |
 
-**Input power convention:** WinISD uses V = √(P·Re). Use the same as the default for familiarity, offer "2.83 V" and "V = √(P·Z_nom)" as alternatives, and always show which one is active.
+**Input power convention:** V = √(P·Re) by default (like WinISD), or drive in volts (e.g. 2.83 V). The active one is always shown.
 
-### 4.3 Signal-chain extras (phase 2)
-High-pass filters (Butterworth/LR/Bessel, orders 1–4), Linkwitz Transform, parametric/shelf EQ, amplifier output impedance and cable resistance. These are needed because subwoofer builds are almost always EQ'd and/or high-passed, and the excursion results are misleading without them.
+### 4.3 Signal-chain extras ✅
+High-pass filters (Butterworth any order 1–4, Linkwitz–Riley 2 and 4), Linkwitz Transform, peaking and shelving EQ, amplifier and cable resistance. ⬜ Bessel high-pass not added.
 
-### 4.4 Accuracy plan
-- **Golden tests:** pick 6–8 well-known drivers (e.g. Dayton RSS/UM, SB Acoustics, a car-audio woofer, a small full-range with PRs). Model each in WinISD, Hornresp and VituixCAD, export the curves, and require the engine to match within **±0.1 dB SPL and ±2% excursion**.
-- **Analytic checks:** sealed box Qtc/Fc match the closed-form equations, and the vented box Fb matches Helmholtz.
-- **Property tests:** energy/sign sanity, and that an infinite box tends toward the infinite-baffle result.
-- **Known limits, stated in the UI:** small-signal linear model only, so no Bl(x)/Cms(x) nonlinearity, port compression or thermal compression in v1. Add a "model limitations" info popover.
+### 4.4 Accuracy ✅
+- **Validation against WinISD 0.7.0.950:** 15 cases, 114 values from real WinISD projects (sealed, ported, PR, both bandpass types, isobaric, DVC, parallel drivers, high-pass, Le, leakage). Response within about 0.01 dB for sealed and ported boxes.
+- **Validation against Hornresp 55.30:** 7 lines and horns, SPL mean 0.03–0.08 dB, impedance mean 0.09–0.19 %.
+- Every comparison is a CI test, and the results are published at **[speakerboxgenius.com/validation](https://speakerboxgenius.com/validation/)**, rebuilt from the same code (see `docs/validation.md`).
+- Analytic and property tests for alignments, filters, isobaric equivalence, amplifier figures and more.
+- **Known limits:** small-signal model, so no Bl(x)/Cms(x) nonlinearity. (Port compression and hot-coil compression were added.)
 
-### 4.5 Performance target
-Up to 8 designs × 800 points recalculated in **under 5 ms** in the worker, so dragging any slider updates in real time. Lumped solves are cheap, so plain TypeScript with typed arrays is enough. Keep WASM (Rust) as an option, not the plan.
-
----
-
-## 5. T/S parameter editor: fixing the "wrong order overwrites my values" problem
-
-**Approach: a constraint graph, not a cascade.**
-
-- Parameters are nodes: fs, Qts, Qes, Qms, Vas, Re, Le, Bl, Mms, Mmd, Cms, Kms, Rms, Sd, Xmax, Pe, η0, SPL.
-- Relationships are equations: fs = 1/(2π√(Mms·Cms)), Vas = ρc²·Sd²·Cms, Qes = 2π·fs·Mms·Re / Bl², and so on.
-- Each field has a state: **Entered** (what the user typed), **Locked** (pinned), or **Derived** (calculated and shown greyed out).
-- When a field changes, the solver only recalculates Derived fields. It **never** overwrites Entered or Locked values.
-- **Over-determined input** (e.g. user enters fs, Qes, Vas, Sd, Mms and Cms): show a consistency badge, such as "Vas implies Cms = 1.12 mm/N but you entered 1.05 mm/N (6% off)", with one-click "trust this one" buttons.
-- **Under-determined input:** list exactly which parameters are still missing for each output (e.g. "Need Sd or Vas to compute excursion").
-- Every field accepts units (L / ft³ / in³, mm / in, g / kg …) and lets you paste "Vas = 44.2 L" directly.
-- **Datasheet paste box:** paste a block of text from a PDF datasheet, and a parser pulls out recognised parameters for review before they're applied.
+### 4.5 Performance ✅
+Up to 8 designs recalculate as you type or drag, on the main thread. The only slow job, the PR finder trying every PR in the database, runs in slices with a progress bar and a stop button.
 
 ---
 
-## 6. Imports and exports
+## 5. T/S parameter editor ✅
 
-| Format | Direction | Notes |
+- **Entered vs derived:** what you type is kept; everything else is derived and shown in grey. Typing order doesn't matter, and nothing you typed is overwritten.
+- **Consistency:** over-determined input is flagged with what doesn't agree.
+- Fields accept units (L, ft³, in³, mm, in, g …); **datasheet text can be pasted** and the parameters are picked out.
+- Help on every field.
+- ⬜ A separate **Locked** state was not needed: entered values already stay put.
+
+---
+
+## 6. Imports and exports ✅
+
+| Format | Direction | Status |
 |---|---|---|
-| `.zma` / `.txt` impedance (freq, |Z|, phase) | Import | Overlays the measured impedance on the simulated curve. Also feeds the T/S fitter |
-| DATS export | Import | DATS saves .zma plus a T/S text file. Parse both |
-| `.frd` | Import | Optional measured SPL overlay |
-| WinISD `.wdr` driver files | Import + Export | **Key migration path:** lots of users have folders of these |
-| WinISD `.wpr` projects | Import (best effort) | Nice to have |
-| CSV of any curve | Export | |
-| PNG/SVG chart | Export | Forum-ready, with the shared link printed on the image |
-
-**T/S from impedance (phase 2):** fit Re, fs, Qms, Qes, Le-model to a .zma with Levenberg–Marquardt, using added-mass or known-Sd/Vas methods for Mms/Vas. This turns a DATS sweep straight into a usable driver profile.
+| `.zma` / `.txt` / `.csv` impedance | Import | ✅ Overlay, and feeds the T/S fitter (free-air plus added-mass sweep for Vas) |
+| DATS, REW, ARTA exports | Import | ✅ |
+| `.frd` | Import | ✅ Measured SPL overlay |
+| WinISD `.wdr` drivers | Import + Export | ✅ Also a bulk CLI (`pnpm db:import-wdr`) |
+| WinISD `.wpr` projects | Import | ✅ Sealed, vented, PR, bandpass, filters, losses, isobaric, DVC |
+| Hornresp records | Import + Export | ✅ Lines and horns |
+| CSV of every curve | Export | ✅ |
+| Forum image (PNG) | Export | ✅ Summary, charts and a QR code to the live design |
+| JSON project file | Import + Export | ✅ |
+| Build sheet | Print | ✅ Panels, cutouts, cut list on stock sheets |
 
 ---
 
-## 7. Driver database (stored in the repo, built by the community)
+## 7. Driver database ✅
 
-**Finding:** loudspeakerdatabase.com does not appear to offer a public API, and I couldn't find any published terms that allow reuse. Don't scrape it or import from it. You could ask its owner to link to or contribute to this project. The repo database is the source of truth.
+**About 1,360 drivers and 46 passive radiators from 15 brands.** Dayton Audio and SB Acoustics come direct with written permission (import workflows run by hand), driver-base (CC BY 4.0) covers the other brands. All records are `community` status so far; ⬜ the reviewed `verified` status isn't in use yet. Waiting on more manufacturer permissions.
 
-### 7.1 Layout in the repo
+### 7.1 Layout in the repo (as built)
 ```
 drivers/
-├─ _schema/driver.schema.json        # generated from packages/schema (Zod)
+├─ README.md
 ├─ dayton-audio/
-│  ├─ _brand.json                    # brand name, website, country
-│  ├─ rss265hf-4.json
-│  └─ um12-22.json
+│  ├─ _brand.json                    # brand name, website
+│  ├─ rss265hf-4.json                # one file per driver; path = stable ID
+│  └─ …
 ├─ sb-acoustics/ …
 passive-radiators/
-├─ dayton-audio/dsa270-pr.json       # PRs are first-class: Mmp, Cmp, Qmp, Sd, Xmax, max added mass
-measurements/                        # optional: contributed .zma files backing a "measured" entry
-└─ dayton-audio/rss265hf-4/2026-11-alice.zma
+└─ dayton-audio/dsa270-pr.json
 ```
-- **One file per driver** means PRs are small, merge conflicts are rare, git blame shows who added what, and reviews are easy.
-- File path = stable ID (`dayton-audio/rss265hf-4`). Shared links refer to drivers by ID **and** also carry the T/S values, so old links keep working even if a record changes later.
+Shared links carry the driver's ID **and** its T/S values, so old links keep working if a record changes. ⬜ The planned `measurements/` folder (contributed sweeps backing a "measured" entry) doesn't exist yet.
 
 ### 7.2 Record schema
-```json
-{
-  "brand": "Dayton Audio", "model": "RSS265HF-4", "type": "woofer",
-  "nominal_ohms": 4, "size_in": 10,
-  "ts": { "fs": 22.0, "qms": 3.9, "qes": 0.42, "vas_l": 63.8, "re": 3.3, "le_mh": 1.4,
-          "bl": 11.4, "mms_g": 88.6, "sd_cm2": 330, "xmax_mm": 14.2, "pe_w": 300 },
-  "physical": { "displacement_l": 1.9, "cutout_mm": 230, "depth_mm": 140 },
-  "sources": [
-    { "kind": "datasheet", "url": "https://…", "retrieved": "2026-11-02" },
-    { "kind": "measured", "by": "github:alice", "method": "DATS v3, added mass",
-      "file": "measurements/dayton-audio/rss265hf-4/2026-11-alice.zma" }
-  ],
-  "status": "verified"
-}
-```
-(Example numbers are placeholders.) Every value must have a source. `status` is `community` → `verified` once a reviewer has checked the numbers against the datasheet link.
+As planned: brand, model, type, size, impedance, `ts`, `physical`, `sources` (datasheet link required) and `status`.
 
-### 7.3 Contribution paths (from easiest to most technical)
-1. **"Submit this driver" button in the app.** After entering or importing T/S parameters, the button opens a pre-filled **GitHub Issue Form** (`.github/ISSUE_TEMPLATE/new-driver.yml`) with the values encoded. The user only needs a GitHub account; no git knowledge.
-2. **Issue-to-PR bot (GitHub Action):** when an issue labelled `new-driver` is opened, the action parses the form, writes the JSON file, runs validation, opens a PR and links it back to the issue. A maintainer reviews and merges.
-3. **Bulk WinISD import:** a CLI in `packages/db-tools` (`pnpm db:import-wdr ./folder`) converts `.wdr` files into JSON for contributors with large libraries. They must add datasheet links before submitting.
-4. **Direct PR** for people comfortable with git.
+### 7.3 Contribution paths
+1. ✅ **Send to the database** from the app opens a pre-filled GitHub issue form (drivers and passive radiators).
+2. ✅ **Issue-to-PR bot** (`database-submissions.yml`): parses the form, writes the JSON, validates it and opens a PR, or comments on the issue if something is wrong.
+3. ✅ **Bulk WinISD import** CLI.
+4. ✅ **Direct PR.**
+5. ✅ **Data correction / removal** issue form.
 
-### 7.4 CI checks on every driver PR
-- JSON Schema validation (types, units, required fields, `sources` present).
-- **T/S consistency check** using the engine's own parameter solver: e.g. fs, Qes, Vas and Sd must agree with Mms, Cms and Bl within 5%, otherwise the PR fails with a readable explanation.
-- Plausibility ranges (fs 5–5000 Hz, Qts 0.1–3, etc.), duplicate detection (same brand + model), and filename/ID rules.
-- A bot comment shows a preview: the parameters as a table, plus a link to the PR's deploy preview with the driver loaded in a sample sealed/vented box.
+### 7.4 CI checks on every database PR
+- ✅ Field and type validation, sources required, duplicate and filename checks.
+- ✅ **T/S consistency check** with the engine's own equations (warning above 5 %, error above 15 %).
+- ⬜ Bot preview comment with a deploy-preview link (preview deploys deferred).
 
-### 7.5 How the app loads it
-At build time, `db-tools` compiles `drivers/` into:
-- `index.json`: brand, model, type, size and a few key parameters for every driver (small enough for instant client-side fuzzy search, using MiniSearch).
-- One shard per brand (`drivers/dayton-audio.json`), fetched only when needed and cached by the service worker so it works offline.
-
-Even 10,000 drivers stays at a few MB in total.
-
-## 8. Real-world volume calculator (side panel)
-
-**Gross shapes:** rectangular box, cylinder (sonotube), sphere, truncated pyramid (frustum), wedge/trapezoid prism, plus a "custom" sum of shapes for complex builds.
-
-**Inputs:** external dimensions plus wall thickness (with per-face overrides) → internal gross volume. Or enter internal dimensions directly.
-
-**Deductions (each one listed, can be toggled on/off):**
-- Driver(s): from the database if known, otherwise estimated from cutout and depth (truncated cone plus magnet cylinder)
-- Passive radiators: frame plus surround volume × N
-- Ports: outer tube volume inside the box (OD, wall, internal length). Slot ports subtract the panel volume
-- Bracing: list of braces (L×W×T), or window braces (outer minus window), or a "% of gross" shortcut
-- Crossover board, plate amp, terminal cup, other items
-
-**Additions:** optional stuffing factor (e.g. +10–25% effective Vb for heavy fill), clearly labelled as an approximation.
-
-**Output:** Net Vb, which goes **live** into the selected design. Change the wall thickness and the SPL chart updates. There's also a "solve for dimensions" mode: give a target net Vb plus a ratio (golden ratio or fixed footprint), and it returns the external dimensions. A cut list is a later stretch goal.
+### 7.5 How the app loads it ✅
+At build time `db-tools` compiles the database into `index.json` (for search) and one shard per brand, fetched when needed and cached for offline use. Search is hand-written (⬜ MiniSearch not needed).
 
 ---
 
-## 9. UX and layout
+## 8. Real-world volume calculator ✅
 
-- **Left rail:** Drivers (library search, editor, imports) and Designs list (A/B/C/D, colour-coded, each with type, net Vb, tuning, and visibility toggle).
-- **Centre:** stacked, synchronised charts with a shared frequency axis and crosshair. Default stack: **SPL / Excursion (driver and PRs) / Port velocity**, with tabs for Impedance, Group delay, Max SPL, Max power. Redlines are drawn as dashed horizontal lines, and the curve turns red/hatched where it crosses a limit.
-- **Global power slider** (watts or volts) in the header updates every design.
-- **Right panel:** volume calculator (collapsible).
-- **Alignment helpers:** one click to apply QB3, SBB4, SC4 or Bessel for vented, Qtc 0.5/0.577/0.707 for sealed, and PR mass optimisation ("add mass to tune Fb = X Hz").
-- **Comparison mode:** "Sealed vs Ported vs 2×PR for this driver" creates three designs at once with sensible starting volumes.
-- **Mobile:** read-only friendly, so shared links look good on a phone. Editing is desktop-first.
-- Light and dark themes. Keyboard shortcuts for power users.
+- **Shapes:** box, cylinder, sphere, truncated pyramid. ⬜ Wedge/trapezoid prism and "sum of shapes" not added.
+- **Inputs:** external dimensions plus wall thickness, or internal dimensions.
+- **Deductions:** drivers, passive radiators, ports, bracing and crossover board, each listed.
+- **Output:** net Vb, **live-linked** to a design. Size for a target volume keeping the box's proportions or using the golden ratio.
+- **Build sheet** with panel sizes, cutouts, port and braces, and a **cut list laid out on stock sheets**, metric or imperial (to 1/16″), with a print view. (Was a stretch goal.)
 
 ---
 
-## 10. Shareable links (no server)
+## 9. UX and layout ✅ (with changes)
 
-**Design stored in the URL:**
-- Serialise the store into a **versioned** schema (`v: 1`), strip defaults, compress (fflate deflate-raw), and base64url-encode into the URL **hash** (`…github.io/speaker-box-genius/#s=…`). The hash never reaches any server, and GitHub Pages serves it like any other URL.
-- A typical 3-design project should come to well under 1–2 KB. A schema-migration layer means old links keep working forever.
-- Drivers are referenced by DB ID **plus** their T/S values, so links with custom or unreleased drivers still work.
-- "Copy link", "Copy BBCode for diyAudio" and "Copy Markdown for Reddit" buttons.
+- **Driver card** with Main and **Compare** pickers (a second driver drawn dashed in every box, with Swap).
+- **Designs:** up to 8, colour-coded, each easy to show/hide, rename or duplicate.
+- **Charts:** SPL (relative or dB SPL, F3 marked), excursion, PR excursion, port speed, Max SPL (SPL / Volts / Amps), impedance, group delay, Za. Over-limit parts glow red; hover or tap reads every curve; a **leader marker** shows the best curve.
+- **Drive** in W or V at the top, for every design.
+- **Alignment presets:** Qtc 0.5 / 0.577 / 0.707 for sealed; QB3, B4 and Keele for ported. ⬜ SBB4, SC4 and Bessel vented alignments not added.
+- **PR tools:** finder, best tuning, added mass for a tuning.
+- **Phones: full editing**, not only viewing (changed from the plan): tall charts, a legend under each chart, one chart at a time.
+- **Dark theme only** (changed from the plan; the print build sheet stays white).
+- Undo/redo with keyboard shortcuts, help on every input, a welcome tour.
+- ⬜ Not yet: full-screen/landscape chart view, swiping between charts, a beginner/advanced switch.
 
-**Trade-off of having no server:**
-- **No short links and no per-link preview images.** A static host can't create a link preview (OG image) for each design. Pasted links will show the generic site preview card instead.
-- **Workaround 1, image plus link:** "Export for forum" renders a PNG of the charts with a QR code and a short summary baked in (driver, box, tuning). Users upload the image and paste the link underneath. This gives the same result as a preview card on every forum.
-- **Workaround 2, design gallery in the repo (phase 3):** users can submit a design to `gallery/` with a PR or issue form (same bot pattern as drivers). At build time, Actions creates a static page for each gallery entry with its own pre-rendered OG image (headless chart render in CI). This gives short URLs like `/g/rss265-2xpr-50l` **with** real link previews, using only GitHub Pages. It also doubles as a browsable library of proven builds.
+---
+
+## 10. Shareable links (no server) ✅
+
+- The whole design lives in the URL **hash**, versioned, with defaults stripped and deflated: **short links** (`#z=…`). Old links are migrated (e.g. the earlier A–D multi-driver links).
+- Drivers are referenced by ID **plus** their T/S values.
+- **Share** gives the link, a **forum image** with a QR code, and ready-to-paste **Reddit (Markdown)** and **diyAudio (BBCode)** posts.
+- A site-wide **share preview card** (og:image) for pasted links. Per-design preview images still need the gallery (below).
+- ⬜ **Design gallery in the repo** (`gallery/`, static pages with per-design OG images and short `/g/…` URLs): not started.
+
+---
 
 ## 11. Phased roadmap
 
-Rough estimates for one experienced developer working steadily. Roughly double them for evenings and weekends.
+### Phase 0: Engine spike and validation ✅
+- ✅ Complex math, sealed and vented solve, SPL/excursion/port velocity.
+- ✅ Golden tests against WinISD (one well-documented driver, the DSA215-8, across 15 project setups rather than 3 drivers).
+- ✅ **Exit criteria met:** within ±0.1 dB on sealed and ported cases.
 
-### Phase 0: Engine spike and validation (1–2 weeks)
-- Complex math lib, sealed and vented circuit solve, SPL/excursion/port velocity.
-- Golden tests against WinISD for 3 drivers.
-- **Exit criteria:** matches WinISD within ±0.1 dB on all test cases.
+### Phase 1: MVP ✅
+- ✅ T/S editor (entered vs derived, consistency, datasheet paste).
+- ✅ Sealed, vented, single and dual PR.
+- ✅ SPL, excursion, PR excursion, port velocity and impedance charts with redlines and power/voltage drive.
+- ✅ Volume calculator with deductions, live-linked.
+- ✅ Multiple designs overlaid.
+- ✅ URL sharing, PNG (forum image) export.
+- ✅ WinISD `.wdr` import.
+- ✅ Repo set up: licences, CONTRIBUTING, CLA check, issue templates, CI, Pages deploy.
+- ✅ Database: ~1,360 drivers and 46 PRs (planned ~50 and ~10).
+- ✅ PWA offline support, installable.
+- ⏸️ **Soft launch:** held back on purpose. Next: private beta with 5–10 trusted forum regulars, then r/diyaudio, diyAudio, AVS, Parts Express Tech Talk, r/CarAV, r/BudgetAudiophile, Show HN.
 
-### Phase 1: MVP (4–6 weeks)
-- T/S editor with the constraint solver and locking.
-- Sealed, vented, single PR and dual PR (identical PRs).
-- Charts: SPL, driver excursion, PR excursion, port velocity, impedance, with redlines and a power slider.
-- Volume calculator: box, cylinder, sphere, frustum, plus driver/port/PR/brace deductions, live-linked.
-- Multiple designs overlaid on one chart.
-- URL-hash sharing, PNG export.
-- WinISD `.wdr` import.
-- Repo set up: licences, CONTRIBUTING, CLA bot, issue templates, Actions CI and Pages deploy.
-- First ~50 drivers and ~10 passive radiators in the repo, entered by hand from datasheets, with schema validation in CI.
-- PWA offline support.
-- **Launch:** soft-launch on diyAudio and r/diyaudio for feedback.
+### Phase 2: Power-user features ✅
+- ✅ Multiple drivers (series/parallel), isobaric, DVC, multiple ports, slot ports. 🟡 Non-identical PRs only as groups in bandpass chambers.
+- ✅ High-pass filters, Linkwitz Transform, EQ; Max SPL and Max power; amplifier volts and amps.
+- ✅ .zma/.frd import with overlay; T/S fitting from impedance.
+- ✅ In-app driver search and "Send to the database".
+- ✅ Alignment presets, PR tools, size for a target volume.
 
-### Phase 2: Power-user features (4–6 weeks)
-- Multiple drivers (series/parallel/isobaric), non-identical PRs, multiple ports, slot ports.
-- Filters, Linkwitz Transform, EQ; Max SPL and Max power charts.
-- .zma/DATS import with overlay; T/S fitting from impedance.
-- In-app driver search and the "Submit this driver" issue form.
-- Alignment presets, PR mass solver, solve-for-dimensions.
-
-### Phase 3: Community and virality (3–4 weeks)
-- Issue-to-PR driver bot, CI consistency checks and preview comments (the basic JSON + schema DB ships in Phase 1).
-- Design gallery with pre-rendered static pages and OG images.
-- Local project library (IndexedDB) plus JSON project file import/export. No accounts needed.
-- Embeddable iframe widget for blogs and build logs.
+### Phase 3: Community and virality 🟡
+- ✅ Issue-to-PR database bot and CI consistency checks. ⬜ Preview comments (needs PR preview deploys, deferred).
+- ✅ Saved projects in the browser plus JSON project files. (localStorage rather than IndexedDB.)
+- ✅ **SEO content pages:** 15 guides with live examples, WinISD and Hornresp alternative pages, sitemap; Google Search Console set up.
+- ✅ **Validation page** built from the test results.
+- ⬜ Design gallery with pre-rendered pages and OG images.
+- ⬜ Embeddable iframe widget for blogs and build logs.
+- ⬜ About page (licence in plain words, privacy, credits) and privacy-friendly analytics before launch.
 
 ### Later / stretch
-4th and 6th order bandpass, simple TL/quarter-wave, nonlinear Bl(x)/Kms(x) large-signal sim, port compression, 3D box preview and cut-list/flat-pack export, i18n.
+- ✅ 4th and 6th order bandpass.
+- ✅ Transmission lines, quarter-wave, MLTL, tapped and front-loaded horns (beta), validated against Hornresp.
+- ✅ Port compression, hot voice coil, ports as pipes, baffle step, room/cabin gain.
+- ✅ Cut list on stock sheets.
+- 🟡 Tapped-horn preset gives poor designs (≈500 L); improve it, then write its guide.
+- ⬜ Nonlinear Bl(x)/Kms(x) large-signal sim.
+- ⬜ 3D box preview, flat-pack export.
+- ⬜ i18n.
 
 ---
 
-## 12. Repo structure
+## 12. Repo structure (as built)
 
 ```
 speaker-box-genius/
 ├─ LICENSE                 # PolyForm Noncommercial 1.0.0 (code)
-├─ LICENSE-DATA            # CC BY-NC-SA 4.0 (drivers/, passive-radiators/, gallery/, docs/)
-├─ CONTRIBUTING.md         # how to add a driver, how to run tests, CLA note
+├─ LICENSE-DATA            # CC BY-NC-SA 4.0 (database, docs)
+├─ CLA.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md
 ├─ .github/
-│  ├─ workflows/
-│  │  ├─ ci.yml            # lint, typecheck, engine tests, DB validation
-│  │  ├─ deploy-pages.yml  # build + deploy to GitHub Pages on push to main
-│  │  └─ driver-bot.yml    # issue form → PR
-│  ├─ ISSUE_TEMPLATE/      # new-driver.yml, new-pr.yml, bug.yml, gallery.yml
+│  ├─ workflows/           # ci, deploy-pages, cla, database-submissions, dayton-import, sb-import
+│  ├─ ISSUE_TEMPLATE/      # bug, new-driver, new-passive-radiator, data-correction
+│  ├─ pull_request_template.md
 │  └─ CODEOWNERS
 ├─ packages/
-│  ├─ engine/              # pure TS: circuits, solvers, T/S graph, fitters, parsers
-│  │  └─ test/golden/      # reference curves from WinISD/Hornresp/VituixCAD
-│  ├─ schema/              # Zod types: drivers, URL state + migrations → JSON Schema
-│  ├─ db-tools/            # validate, consistency-check, bundle, .wdr import CLI
-│  └─ web/                 # React app (UI, store, charts, worker, PWA)
+│  ├─ engine/              # pure TS: solver, lines, T/S, fitters, parsers, alignments, cut list
+│  │  ├─ validation/       # WinISD and Hornresp cases + report generator
+│  │  └─ test/             # node:test suites; fixtures/ holds WinISD and Hornresp files
+│  ├─ schema/              # shared types
+│  ├─ db-tools/            # validate, bundle, .wdr import, issue → driver, Dayton/SB/driver-base import
+│  └─ web/                 # React app
+├─ site/                   # content pages (guides, validation) and their builder
 ├─ drivers/                # one JSON per driver, by brand
 ├─ passive-radiators/      # one JSON per PR, by brand
-├─ measurements/           # optional contributed .zma backing "measured" entries
-├─ gallery/                # phase 3: community designs (URL-state JSON + notes)
-└─ docs/                   # model equations, validation reports
+└─ docs/                   # build plan, validation, transmission lines, data sources and permissions
 ```
 
-Keep `engine` free of any UI dependency so it stays reusable. Under PolyForm NC, other non-commercial tools can use it too.
-
-## 13. Risks and mitigations
-
-| Risk | Mitigation |
-|---|---|
-| Users don't trust a new tool's numbers | Publish the validation reports. Golden tests in CI. Show the equations in docs |
-| Driver DB licensing / bad data | Data entered by hand from datasheets, with sources required. CI consistency checks. `verified` status from reviewers. No scraping, no importing incompatible licences |
-| Someone resells it anyway | Clear licence plus "Required Notice" line. The CLA keeps your ability to enforce or grant exceptions. Accept that NC licences mainly deter rather than prevent |
-| NC licence puts some contributors off | Say clearly in the README why it's non-commercial (to protect the community from being resold). Keep contributing as easy as possible |
-| Review bottleneck as maintainer | CODEOWNERS for drivers/ with trusted reviewers. Automated checks do most of the work |
-| WinISD habits (people expect its exact behaviour) | Match its defaults (Ql = 10, power convention). Offer "WinISD mode" for end corrections |
-| Model misused beyond linear range | Clear limitation notes. Turn the curve red past X_max. Port-velocity warnings |
-| Long URLs breaking in some forums / no link previews | Compression. Forum-export PNG with QR code. Gallery pages with static OG images |
-| Scope creep (horns, TL, crossovers) | Stated non-goals. Defer to Hornresp/VituixCAD |
+The engine has no UI dependency, so other non-commercial tools can reuse it.
 
 ---
 
-## 14. Open questions to decide
+## 13. Risks and mitigations
 
-1. **Name and repo slug:** this sets the Pages URL (`<user>.github.io/<repo>`). A custom domain (~£10/yr) is optional and can be added later without breaking hash links if you redirect.
-2. ~~**CLA or DCO?**~~ **Decided 4 Nov 2026: a licence-grant CLA** ([`CLA.md`](../CLA.md)), checked by `.github/workflows/cla.yml` (sign by PR comment, signatures on the `cla-signatures` branch). Contributors keep copyright; database-only PRs are exempt.
-3. **Framework preference:** React vs Svelte?
-4. **Which 6–8 reference drivers** to use for the golden-test suite? These are also good first entries in the DB.
-5. **Your GitHub username/org** for the Required Notice and CODEOWNERS.
+| Risk | Mitigation | Status |
+|---|---|---|
+| Users don't trust a new tool's numbers | Published validation page, golden tests in CI, guides with sources | ✅ |
+| Driver DB licensing / bad data | Permissions on file, sources required, CI consistency checks, data-correction form | ✅ (`verified` reviews not started) |
+| Someone resells it anyway | Licence plus CLA keeps the ability to enforce or grant exceptions | ✅ |
+| NC licence puts some contributors off | Explained in the README; contributing kept easy (issue forms, bot) | ✅ |
+| Review bottleneck as maintainer | CODEOWNERS, automated checks | 🟡 No other reviewers yet |
+| WinISD habits | WinISD defaults (Ql 10, power convention), WinISD mode, `.wpr` import | ✅ |
+| Model misused beyond linear range | Limitation notes, red past X_max, port-speed warnings, Max SPL limits | ✅ |
+| Long URLs / no link previews | Short deflated links, forum image with QR code, site preview card | 🟡 Per-design previews need the gallery |
+| Scope creep | Lines and horns were taken on (beta, validated); crossovers stay out | 🟡 |
+| **Competition** (other web WinISD clones appearing, Nov 2026) | Get the private beta out; lean on validation, PR tools and sharing | New |
+
+---
+
+## 14. Open questions
+
+1. ~~**Name and repo slug**~~ **Decided:** Speaker Box Genius, `daliusiv/speaker-box-genius`, custom domain speakerboxgenius.com.
+2. ~~**CLA or DCO?**~~ **Decided 4 Nov 2026: a licence-grant CLA** ([`CLA.md`](../CLA.md)), checked by `.github/workflows/cla.yml`. Contributors keep copyright; database-only PRs are exempt.
+3. ~~**Framework preference**~~ **Decided:** React.
+4. ~~**Reference drivers for golden tests**~~ **Decided:** Dayton Audio DSA215-8 (with the DSA270-PR) across 15 WinISD and 7 Hornresp setups.
+5. ~~**GitHub username/org**~~ **Decided:** `daliusiv`.
+6. **New:** when to run the private beta, and who to invite.
+7. **New:** PR preview deploys (declined for now; options: a gh-pages preview action, or Cloudflare/Netlify).
 
 ---
 
