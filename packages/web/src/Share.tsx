@@ -259,7 +259,7 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
       g.roundRect(W - pad - qr - 8, 16, qr + 16, qr + 36, 12);
       g.fill();
       drawQr(g, url, W - pad - qr, 20, qr, scale);
-      g.fillStyle = "#1c1917";
+      g.fillStyle = "#090a0f";
       g.font = `600 15px ${font}`;
       g.textAlign = "center";
       g.fillText("Scan: live design", W - pad - qr / 2, 20 + qr + 22);

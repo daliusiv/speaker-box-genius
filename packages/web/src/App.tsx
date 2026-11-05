@@ -79,7 +79,7 @@ const LIMIT_KINDS: Record<string, { label: string; short: string; color: string 
   xmax: { label: "Cone Xmax", short: "cone Xmax", color: "#dc2626" },
   "pr-xmax": { label: "PR Xmax", short: "PR Xmax", color: "#9333ea" },
   port: { label: "Port speed", short: "port speed", color: "#d97706" },
-  thermal: { label: "Power (Pe)", short: "power handling", color: "#78716c" },
+  thermal: { label: "Power (Pe)", short: "power handling", color: "#6b7389" },
 };
 
 type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay";
@@ -1627,10 +1627,10 @@ export function App(props: { initial: AppState | null }) {
                 ...measuredSeries(state.measured, "impedance", freq, mainDesigns),
                 ...(measurement
                   ? [
-                      { label: "Measured (free air)", color: "#78716c", dash: "6 4", y: resampleMagnitude(measurement.data, freq) },
+                      { label: "Measured (free air)", color: "#6b7389", dash: "6 4", y: resampleMagnitude(measurement.data, freq) },
                       {
                         label: "Fit (free air)",
-                        color: "#a8a29e",
+                        color: "#8e96aa",
                         dash: "2 3",
                         y: freq.map((f) => impedanceMagnitude(measurement.fit, f)),
                       },
@@ -1646,7 +1646,7 @@ export function App(props: { initial: AppState | null }) {
                 unit="× ρc/S"
                 freq={freq}
                 series={zaSeries}
-                limits={[{ value: 1, label: "1 = the duct's own impedance", color: "#a8a29e" }]}
+                limits={[{ value: 1, label: "1 = the duct's own impedance", color: "#8e96aa" }]}
                 limitStyle="guide"
                 digits={2}
                 {...zaRange}
