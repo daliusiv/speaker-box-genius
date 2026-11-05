@@ -40,6 +40,11 @@ export interface Series {
   thin?: boolean;
   /** This curve's own limit: where it runs above it, a red glow is drawn behind it. */
   over?: number;
+  /** Below this frequency the limit is `deepOver` instead (a tuned box's deep bass, graded). */
+  deepBelow?: number;
+  deepOver?: number;
+  /** Below this frequency nothing is checked (no glow). */
+  deepFloor?: number;
   /** A short note per point, shown in the hover readout (e.g. what limits the design there). */
   notes?: readonly string[];
   /** Left out when marking the leader (e.g. a measurement, which isn't a box to choose). */
@@ -82,12 +87,21 @@ export interface Limit {
   color: string;
 }
 
+/** A shaded band from the left edge up to `below` Hz, with its own limit drawn across it only. */
+export interface Zone {
+  below: number;
+  value: number;
+  label: string;
+  color: string;
+}
+
 interface Props {
   title: string;
   unit: string;
   freq: Float64Array;
   series: Series[];
   limits?: Limit[];
+  zones?: Zone[];
   markers?: Marker[];
   points?: Point[];
   ribbons?: Ribbon[];
@@ -179,6 +193,7 @@ export function LogChart({
   freq,
   series,
   limits = [],
+  zones = [],
   markers = [],
   points = [],
   ribbons = [],
@@ -250,6 +265,7 @@ export function LogChart({
     lo = Math.min(lo, l.value);
     hi = Math.max(hi, l.value * 1.1);
   }
+  for (const z of zones) hi = Math.max(hi, z.value * 1.1);
   if (!Number.isFinite(lo)) {
     lo = 0;
     hi = 1;
@@ -303,7 +319,9 @@ export function LogChart({
   for (let v = lo; v <= hi + step / 2; v += step) yTicks.push(v);
 
   /** The parts of a curve above `limit`, as a path (for the over-limit glow). */
-  const overPathOf = (y: Float64Array, limit: number) => {
+  const overPathOf = (y: Float64Array, over: number, deepBelow?: number, deepOver?: number, deepFloor?: number) => {
+    const limit = (i: number) =>
+      deepFloor !== undefined && freq[i]! < deepFloor ? Infinity : deepBelow !== undefined && deepOver !== undefined && freq[i]! < deepBelow ? deepOver : over;
     let d = "";
     let pen = false;
     for (let i = 0; i < y.length; i++) {
@@ -311,7 +329,7 @@ export function LogChart({
       const prev = i > 0 ? y[i - 1]! : NaN;
       const next = i + 1 < y.length ? y[i + 1]! : NaN;
       // Include the neighbours of over-limit points so the glow reaches the crossing.
-      const on = Number.isFinite(v) && (v > limit || prev > limit || next > limit);
+      const on = Number.isFinite(v) && (v > limit(i) || prev > limit(i - 1) || next > limit(i + 1));
       if (!on) {
         pen = false;
         continue;
@@ -534,6 +552,19 @@ export function LogChart({
         )}
 
         <g clipPath={`url(#${clipId})`}>
+          {zones.map((z, zi) => {
+            const x2 = Math.min(W - PAD.r, Math.max(PAD.l, xOf(z.below)));
+            if (x2 <= PAD.l) return null;
+            return (
+              <g key={`zone-${zi}`}>
+                <rect x={PAD.l} y={PAD.t} width={x2 - PAD.l} height={PH} fill={z.color} opacity={0.08} />
+                <line className="limit" x1={PAD.l} x2={x2} y1={yOf(z.value)} y2={yOf(z.value)} stroke={z.color} {...sw(1.5)} />
+                <text className="limit-label" x={PAD.l + 4} y={yOf(z.value) - 4} textAnchor="start" fill={z.color} {...fs(11)}>
+                  {z.label}
+                </text>
+              </g>
+            );
+          })}
           {limits.map((l, li) => (
             <g key={`${l.label}-${l.value}-${li}`}>
               <line
@@ -573,7 +604,7 @@ export function LogChart({
               <path
                 key={`over-${s.label}`}
                 className="over-glow"
-                d={overPathOf(s.y!, s.over)}
+                d={overPathOf(s.y!, s.over, s.deepBelow, s.deepOver, s.deepFloor)}
                 fill="none"
                 stroke={OVER_RED}
                 strokeLinecap="round"

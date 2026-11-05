@@ -478,11 +478,18 @@ export function DesignAssistant(props: {
                       Output at {goal.loudAt_hz} Hz is set by {LIMIT_TEXT[r.limitedBy]}.
                       {r.peak_db > 1.5 ? ` A ${r.peak_db.toFixed(1)} dB hump above F3.` : ""}
                     </p>
-                    {r.over.length > 0 && (
+                    {r.over.length > 0 ? (
                       <p className="warn assist-over">
-                        At {goal.power_w} W it goes past {r.over.map((o) => (o === "xmax" ? "the cone's Xmax" : o === "port" ? "the port's chuffing limit" : "the PR's Xmax")).join(" and ")}
-                        {r.box === "vented" ? " (above the tuning; a subsonic filter takes care of below)" : ""}: use less power there.
+                        ⚠ At {goal.power_w} W it goes past {r.over.map((o) => (o === "xmax" ? "the cone's Xmax" : o === "port" ? "the port's chuffing limit" : "the PR's Xmax")).join(" and ")}
+                        {r.safe_w !== undefined ? `; it's within its limits up to about ${r.safe_w} W` : ""}.
                       </p>
+                    ) : r.deep ? (
+                      <p className="assist-deep">
+                        Deep bass: below {r.deep.below_hz} Hz the cone goes past Xmax at {goal.power_w} W (within it up to {r.deep.safe_w} W). Fine for most music, which has little
+                        energy that low; an amp with a subsonic filter removes it.
+                      </p>
+                    ) : (
+                      <p className="assist-safe">✓ Within its limits at {goal.power_w} W, with or without a subsonic filter.</p>
                     )}
                     {r.notes.map((n) => (
                       <p key={n} className="hint assist-note">

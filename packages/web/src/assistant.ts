@@ -6,8 +6,8 @@
  * drive) gets the box sizing the app's presets use (sealed Qtc 0.707, ported QB3/B4 or
  * Keele), capped at the largest box allowed, with the widest round port that fits (by the
  * app's own check). In a box smaller than its alignment, a ported box is tuned for the lowest
- * F3 without a peak, and gets the lowest subsonic filter that keeps the cone within Xmax
- * below tuning (opened with the project, so the app shows what was scored). For
+ * F3 without a peak. No filter is assumed (a passive speaker on any amp): limits are graded
+ * as the app grades them (limitsOf), so a deep-bass note is shown, not hidden. For
  * "smallest" the box is shrunk until F3 just reaches the target. Each design is simulated at
  * the user's power (with cabin gain for a car), and scored on F3, output at the frequency
  * that matters and box size. Pure functions, so they run in tests and in the dialog's slices.
@@ -18,7 +18,6 @@ import {
   sealedVolumeForAlignment,
   simulate,
   type Air,
-  type HighPass,
   type SimulationResult,
 } from "@sbg/engine";
 import type { DbIndex, LoadedDriver } from "./library.ts";
@@ -97,8 +96,6 @@ export interface AssistantResult {
   vb_l: number;
   fb?: number;
   port?: { diameter_cm: number; length_cm: number; count: number };
-  /** Ported: the subsonic filter scored with it (Hz, 24 dB/oct Butterworth); opened with the project. */
-  highPass_hz?: number;
   /** How the drivers (and a DVC driver's coils) are wired, and the load the amplifier sees. */
   wiring: "parallel" | "series";
   dvcWired?: "parallel" | "series";
@@ -109,8 +106,12 @@ export interface AssistantResult {
   loud_db: number;
   /** What sets the output there: "power" (the amplifier), or the first limit. */
   limitedBy: "power" | "thermal" | "xmax" | "port" | "pr-xmax" | "none";
-  /** Limits crossed at the full power above the useful range (cone Xmax, port speed). */
+  /** Limits crossed at the goal's power, as the app grades them (cone Xmax, port speed). */
   over: LimitKind[];
+  /** Over a limit: the power that keeps every limit (W). */
+  safe_w?: number;
+  /** Past Xmax only in deep bass (below 0.7 × Fb): from where, and the power that keeps it within (W). */
+  deep?: { below_hz: number; safe_w: number };
   /** Highest point of the relative response above F3 (dB): a hump. */
   peak_db: number;
   /** Relative response at CURVE_FREQS, for a small sketch. */
@@ -246,8 +247,8 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
   const opts = { ...simOptionsOf(s), fMin: 10, fMax: 300, points: 90, highPass: null, eq: [] };
   const losses = s.settings.losses;
 
-  const run = (design: DesignState, vb: number, highPass: HighPass | null = null) => {
-    const r = simulate(drv, enclosureOf(design, vb, losses, s.volume.wall_mm), { ...opts, highPass });
+  const run = (design: DesignState, vb: number) => {
+    const r = simulate(drv, enclosureOf(design, vb, losses, s.volume.wall_mm), opts);
     if (room) {
       const lift = r.freq.map((f) => roomGainDb(f, room));
       r.spl = r.spl.map((v, i) => v + lift[i]!);
@@ -290,30 +291,13 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
   };
 
   const out: AssistantResult[] = [];
-  /**
-   * Below a ported box's tuning the cone unloads: the lowest subsonic filter (24 dB/oct, from
-   * half the tuning up to it) that keeps the peak excursion within Xmax at the goal's power.
-   * When even the tuning is too low (the cone is over above it too), 0.7 × Fb, the usual choice.
-   */
-  const subsonicFor = (design: DesignState, vb: number, fb: number): HighPass => {
-    const hp = (freq: number): HighPass => ({ type: "butterworth", order: 4, freq: Math.round(freq) });
-    const fits = (h: HighPass) => (limitsOf(run(design, vb, h), d.xmax_mm!, 10).x ?? 0) <= d.xmax_mm!;
-    if (!fits(hp(fb))) return hp(0.7 * fb);
-    for (let k = 0.5; k < 1; k += 0.05) if (fits(hp(k * fb))) return hp(k * fb);
-    return hp(fb);
-  };
-
   const finish = (box: AssistantBox, design: DesignState, vb: number, notes: string[], fb?: number, port?: AssistantResult["port"]) => {
-    const hp = box === "vented" && fb ? subsonicFor(design, vb, fb) : null;
-    const r = run(design, vb, hp);
+    const r = run(design, vb);
     // No roll-off found in range (a tiny box for a high-Fs pro driver, say): nothing to rank on.
     const f3 = r.summary.f3;
     if (f3 === null) return;
-    // "Smallest" was sized without the filter; if the filter pushes F3 past the target, it's not a fit.
-    if (hp && goal.priority === "small" && f3 > goal.targetF3_hz + 0.5) return;
-    // Limits as the app shows them: from 10 Hz with a high-pass filter, 15 Hz without.
-    const lim = limitsOf(r, d.xmax_mm!, hp ? 10 : 15);
-    if (hp) notes = [...notes, `Subsonic filter ${hp.freq} Hz (24 dB/oct), set in Signal`];
+    const lim = limitsOf(r, d.xmax_mm!, false);
+    const watts = (scale: number) => Number((goal.power_w * scale * scale).toPrecision(2));
     const spl = at(r.freq, r.spl, goal.loudAt_hz);
     const max = at(r.freq, r.maxSpl, goal.loudAt_hz);
     const i = r.freq.findIndex((f) => f >= goal.loudAt_hz);
@@ -328,7 +312,6 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
       vb_l: r1(vb),
       ...(fb ? { fb: r1(fb) } : {}),
       ...(port ? { port } : {}),
-      ...(hp ? { highPass_hz: hp.freq } : {}),
       wiring: wiring.wiring,
       ...(wiring.dvc ? { dvcWired: wiring.dvc } : {}),
       load_ohm: wiring.load,
@@ -336,6 +319,8 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
       loud_db: r1(Math.min(spl, max)),
       limitedBy: max < spl ? limit : "power",
       over: lim.over,
+      ...(lim.over.length ? { safe_w: watts(lim.safeScale) } : {}),
+      ...(lim.deep ? { deep: { below_hz: Math.round(lim.deep.below_hz), safe_w: watts(lim.deep.scale) } } : {}),
       peak_db: r1(peakOf(r)),
       curve: CURVE_FREQS.map((f) => r1(at(r.freq, r.spl, f) - (room ? roomGainDb(f, room) : 0) - relRef)),
       notes,
@@ -407,13 +392,14 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
   return out;
 }
 
-/** Best first, by the goal's priority; designs over a limit at full power after those that aren't. */
+/** Best first, by the goal's priority; designs over a limit at full power (graded as the app does) after all those within. */
 export function rankResults(results: AssistantResult[], goal: AssistantGoal): AssistantResult[] {
+  // Within every limit first; deep-bass-only results among them (a small nudge when balanced).
   const ok = (r: AssistantResult) => (r.over.length === 0 ? 0 : 1);
   const f3 = (r: AssistantResult) => r.f3;
   let list = [...results];
   if (goal.priority === "deep") list.sort((a, b) => ok(a) - ok(b) || f3(a) - f3(b) || b.loud_db - a.loud_db);
-  else if (goal.priority === "loud") list.sort((a, b) => b.loud_db - a.loud_db || f3(a) - f3(b));
+  else if (goal.priority === "loud") list.sort((a, b) => ok(a) - ok(b) || b.loud_db - a.loud_db || f3(a) - f3(b));
   else if (goal.priority === "small") list.sort((a, b) => ok(a) - ok(b) || a.vb_l - b.vb_l || f3(a) - f3(b));
   else {
     // Balanced: the sum of each result's place on F3, output and size (and a penalty for a hump).
@@ -424,8 +410,8 @@ export function rankResults(results: AssistantResult[], goal: AssistantGoal): As
     const pf = place(f3);
     const pl = place((r) => -r.loud_db);
     const pv = place((r) => r.vb_l);
-    const score = (r: AssistantResult) => pf.get(r.key)! + pl.get(r.key)! + 0.6 * pv.get(r.key)! + Math.max(0, r.peak_db - 1.5) * 0.3 + ok(r);
-    list.sort((a, b) => score(a) - score(b));
+    const score = (r: AssistantResult) => pf.get(r.key)! + pl.get(r.key)! + 0.6 * pv.get(r.key)! + Math.max(0, r.peak_db - 1.5) * 0.3 + (r.deep ? 0.3 : 0);
+    list.sort((a, b) => ok(a) - ok(b) || score(a) - score(b));
   }
   // Badges: the best of the list on each measure.
   const top = list.slice(0, 50);
@@ -478,11 +464,8 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
     wiring: t.wiring,
     isobaric: false,
     compare: null,
-    // The ported box's subsonic filter, as scored (it applies to every box; a sealed one barely notices).
-    highPass: (() => {
-      const hz = rs.slice(0, MAX_DESIGNS).find((r) => r.highPass_hz)?.highPass_hz;
-      return hz ? { on: true, type: "butterworth" as const, order: 4, freq: hz } : { ...s.highPass, on: false };
-    })(),
+    // Scored on any amp, with no filter.
+    highPass: { ...s.highPass, on: false },
     roomGain: goal.use === "car" ? t.roomGain : s.roomGain.mode === "car" ? { ...s.roomGain, mode: "off" } : s.roomGain,
     designs,
   };

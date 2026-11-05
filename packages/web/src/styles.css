@@ -3059,6 +3059,14 @@ button.strip-box.is-over {
   color: var(--over);
 }
 
+.strip-box .deep,
+.summary-compact td.deep,
+.deep-note,
+button.over-link.deep,
+.summary-jump.deep {
+  color: var(--warn);
+}
+
 .strip-box .ok {
   color: #86efac;
   font-weight: 500;
@@ -3535,6 +3543,18 @@ button.assist-tile.on {
 .assist-over {
   margin: 0;
   font-size: 0.82rem;
+}
+
+.assist-deep {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--warn);
+}
+
+.assist-safe {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #86efac;
 }
 
 .assist-facts {

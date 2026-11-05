@@ -74,7 +74,7 @@ for (const use of ["car", "home", "hifi"] as const) {
       const top = results.slice(0, 10).filter((r) => r.over.length === 0);
       const f3 = (r: AssistantResult) => r.f3;
       if (priority === "deep") for (let i = 1; i < top.length; i++) assert.ok(f3(top[i - 1]!) <= f3(top[i]!));
-      if (priority === "loud") for (let i = 1; i < 10; i++) assert.ok(results[i - 1]!.loud_db >= results[i]!.loud_db);
+      if (priority === "loud") for (let i = 1; i < top.length; i++) assert.ok(top[i - 1]!.loud_db >= top[i]!.loud_db);
       if (priority === "small") for (const r of results) assert.ok(f3(r) <= goal.targetF3_hz + 0.5, `${r.name} ${r.box} F3 ${r.f3}`);
       console.log(`${use}/${priority}: ${tried} drivers, ${results.length} designs, ${Math.round(ms)} ms; top: ${results[0]!.name} ${results[0]!.box} ${results[0]!.vb_l} L F3 ${results[0]!.f3.toFixed(1)} ${results[0]!.loud_db} dB`);
     });
@@ -98,20 +98,24 @@ test("opening results starts a project with that driver and its boxes, simulated
   }
 });
 
-test("what a result promises is what the app shows: same limits, and the port fits", () => {
+test("what a result promises is what the app shows: same grade, and the port fits", () => {
   for (const use of ["hifi", "car"] as const) {
     const goal = goalFor(use, "balanced");
-    for (const r of runAll(goal).results.slice(0, 25)) {
+    const results = runAll(goal).results;
+    for (const r of results.slice(0, 25)) {
       const s = openResults(DEFAULT_STATE, loaded(r.driverId), [r], goal);
+      assert.equal(s.highPass.on, false);
       const d = runDesigns(s, solveDriver(s))[0]!;
       // The app samples more finely: a peak right at a limit may land either side of it.
-      const app = limitsOf(d.result, s.xmax_mm!, s.highPass.on ? 10 : 15);
+      const app = limitsOf(d.result, s.xmax_mm!, false);
       if (!r.over.includes("xmax")) assert.ok(app.x! <= s.xmax_mm! * 1.02, `${use}: ${r.name} ${r.box} ${app.x} mm`);
       if (!r.over.includes("port") && app.vp !== null) assert.ok(app.vp <= PORT_LIMIT * 1.02, `${use}: ${r.name} port ${app.vp} m/s`);
-      if (r.port) {
-        assert.ok(r.port.length_cm <= portRoom_cm(r.vb_l, r.port.diameter_cm), `${r.name}: port ${r.port.length_cm} cm`);
-        assert.equal(s.highPass.freq, r.highPass_hz);
-      }
+      assert.equal(!!app.deep, !!r.deep, `${use}: ${r.name} ${r.box} deep bass`);
+      if (r.port) assert.ok(r.port.length_cm <= portRoom_cm(r.vb_l, r.port.diameter_cm), `${r.name}: port ${r.port.length_cm} cm`);
     }
+    // Graded, not hidden: within limits first, and deep-bass results carry their safe power.
+    const firstOver = results.findIndex((r) => r.over.length > 0);
+    if (firstOver >= 0) assert.ok(results.slice(firstOver).every((r) => r.over.length > 0), `${use}: a result within limits after one over`);
+    for (const r of results) if (r.deep) assert.ok(r.deep.safe_w < goal.power_w && r.deep.below_hz > 20);
   }
 });
