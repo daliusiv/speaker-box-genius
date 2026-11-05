@@ -121,7 +121,8 @@ Elements:
 | Impedance | |Z| and phase, for checking against a measured .zma |
 | Group delay | −dφ/dω |
 | Max SPL | Lowest of: thermal limit (Pe), X_max limit, PR X_max limit, port-velocity limit, shown as a single limiting curve with each region labelled by which limit applies |
-| Max power | Power at which each limit is first hit, per frequency |
+| Max power | Power at which each limit is first hit, per frequency (the drive setting, before filters and EQ) |
+| Amplifier at max | The amplifier's RMS voltage, current and real power needed to reach Max SPL at each frequency, after the high-pass filter and EQ, into the speaker's impedance (shown as the Max SPL chart's **Volts** and **Amps** views) |
 
 **Input power convention:** WinISD uses V = √(P·Re). Use the same as the default for familiarity, offer "2.83 V" and "V = √(P·Z_nom)" as alternatives, and always show which one is active.
 

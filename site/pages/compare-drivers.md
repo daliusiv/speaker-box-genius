@@ -58,6 +58,7 @@ The comparison driver uses the same number of drivers, wiring and settings as th
 
 - **Response** in the boxes you can actually build, not just F3 on paper.
 - **Max SPL**: which driver plays louder in the bottom octave, and what stops it (Xmax, port speed or power handling).
+- **The amplifier each one needs**: switch the Max SPL chart to **Volts** or **Amps**. Here, to use its full 600 W rating the HO needs up to **46 V** from the amplifier, where the HF needs 35 V: a bigger amplifier, not just a bigger number on the box.
 - **Cone excursion** at your amplifier's power: a driver with less Xmax may be fine in a sealed box and in trouble in a ported one.
 - **Impedance**, if you're matching an amplifier or wiring several drivers.
 

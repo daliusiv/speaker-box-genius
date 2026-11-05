@@ -118,7 +118,10 @@ export function curvesCsv(state: AppState, designs: Design[]): string {
     add("Impedance phase (deg)", r.impedancePhaseDeg);
     add("Group delay (ms)", r.groupDelayMs);
     add("Max SPL (dB)", r.maxSpl);
-    add("Max power (W)", r.maxPowerW);
+    add("Max drive power (W, before filter and EQ)", r.maxPowerW);
+    add("Amp volts at max SPL (V RMS)", r.ampAtMax.volts);
+    add("Amp current at max SPL (A RMS)", r.ampAtMax.amps);
+    add("Amp power at max SPL (W)", r.ampAtMax.watts);
   }
   const q = (s: string) => `"${s.replace(/"/g, '""')}"`;
   const freq = designs[0]!.result.freq;

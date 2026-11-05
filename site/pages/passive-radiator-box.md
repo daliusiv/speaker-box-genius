@@ -82,7 +82,7 @@ At 35 W with the 30 Hz high-pass filter, the woofer peaks at **5.2 mm** and the 
 
 Without the high-pass filter, the same 35 W pushes the woofer to 12 mm (more than twice its Xmax) down at 15 Hz, where the PR no longer holds it back. A PR box almost always needs a high-pass filter (a "subsonic" filter) just below the tuning.
 
-The **Max SPL** chart puts it together: the loudest the box can play at each frequency, and whether the woofer, the PR or the amplifier's power is the limit there.
+The **Max SPL** chart puts it together: the loudest the box can play at each frequency, and whether the woofer, the PR or the amplifier's power is the limit there. Switch it to **Volts** or **Amps** to see what the amplifier must deliver to get there.
 
 ## Step 5: compare it with a port
 

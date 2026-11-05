@@ -161,6 +161,23 @@ export function App(props: { initial: AppState | null }) {
       return "relative";
     }
   });
+  // Max SPL chart: the SPL itself, or the amplifier voltage or current it takes to get there.
+  const [maxMode, setMaxMode] = useState<"spl" | "volts" | "amps">(() => {
+    try {
+      const v = localStorage.getItem("sbg.max");
+      return v === "volts" || v === "amps" ? v : "spl";
+    } catch {
+      return "spl";
+    }
+  });
+  const chooseMaxMode = (m: "spl" | "volts" | "amps") => {
+    setMaxMode(m);
+    try {
+      localStorage.setItem("sbg.max", m);
+    } catch {
+      // not remembered
+    }
+  };
   // Transmission lines: show the cone and the mouth on their own as well as the sum.
   const [showParts, setShowParts] = useState<boolean>(() => {
     try {
@@ -1464,18 +1481,57 @@ export function App(props: { initial: AppState | null }) {
             )}
             <LogChart
               hidden={chartTab !== "maxspl"}
-              best="high"
-              shortTitle="Max SPL"
-              title="Maximum SPL (first limit reached)"
-              unit="dB"
+              best={maxMode === "spl" ? "high" : "low"}
+              shortTitle={maxMode === "spl" ? "Max SPL" : maxMode === "volts" ? "Amp volts for max SPL" : "Amp current for max SPL"}
+              title={
+                maxMode === "spl"
+                  ? "Maximum SPL (first limit reached)"
+                  : maxMode === "volts"
+                    ? "Amplifier voltage needed for maximum SPL (RMS, at the amplifier's terminals)"
+                    : "Amplifier current needed for maximum SPL (RMS)"
+              }
+              unit={maxMode === "spl" ? "dB" : maxMode === "volts" ? "V" : "A"}
               freq={freq}
-              series={designs.map((d) => ({
-                label: d.label,
-                color: d.color,
-                dash: d.dash,
-                y: d.result.maxSpl,
-                notes: d.result.limitedBy.map((l) => LIMIT_KINDS[l]?.short ?? ""),
-              }))}
+              yMin={maxMode === "spl" ? undefined : 0}
+              actions={
+                <div className="unit-switch" role="group" aria-label="Show">
+                  <button aria-pressed={maxMode === "spl"} onClick={() => chooseMaxMode("spl")} title="The loudest each design can play, and what limits it">
+                    SPL
+                  </button>
+                  <button
+                    aria-pressed={maxMode === "volts"}
+                    onClick={() => chooseMaxMode("volts")}
+                    title="The amplifier's output voltage (RMS) needed to reach that maximum SPL, after the high-pass filter and EQ"
+                  >
+                    Volts
+                  </button>
+                  <button
+                    aria-pressed={maxMode === "amps"}
+                    onClick={() => chooseMaxMode("amps")}
+                    title="The current (RMS) the amplifier must deliver into the speaker's impedance to reach that maximum SPL"
+                  >
+                    Amps
+                  </button>
+                </div>
+              }
+              series={designs.map((d) => {
+                const a = d.result.ampAtMax;
+                const limit = (i: number) => LIMIT_KINDS[d.result.limitedBy[i]!]?.short ?? "";
+                const n1 = (v: number) => (Number.isFinite(v) ? (v < 10 ? v.toFixed(1) : v.toFixed(0)) : "–");
+                return {
+                  label: d.label,
+                  color: d.color,
+                  dash: d.dash,
+                  y: maxMode === "spl" ? d.result.maxSpl : maxMode === "volts" ? a.volts : a.amps,
+                  notes: Array.from(d.result.maxSpl, (_, i) =>
+                    maxMode === "spl"
+                      ? `${limit(i)} · amp ${n1(a.volts[i]!)} V, ${n1(a.amps[i]!)} A`
+                      : maxMode === "volts"
+                        ? `${n1(a.amps[i]!)} A, ${n1(a.watts[i]!)} W · ${limit(i)}`
+                        : `${n1(a.volts[i]!)} V, ${n1(a.watts[i]!)} W · ${limit(i)}`,
+                  ),
+                };
+              })}
               ribbons={mainDesigns.map((d) => ({ label: d.label, color: d.color, kinds: d.result.limitedBy }))}
               ribbonKinds={LIMIT_KINDS}
             />

@@ -45,7 +45,7 @@ A **Dayton Audio RSS265HF-4** 10″ subwoofer (4 Ω, 350 W) in a sealed box for 
 | Output at 60 Hz, **100 W** | 103.7 dB | **100.7 dB** | **100.7 dB** |
 | Cone excursion at 100 W | 9.0 mm | 6.4 mm | 6.4 mm |
 | **Maximum SPL at 25 / 30 / 40 Hz** | 97.4 / 100.4 / 105.4 dB | **the same** | **the same** |
-| Power to reach it at 30 Hz | 200 W | 400 W | 400 W |
+| Amplifier needed at 30 Hz to reach it | 26 V, 3.0 A | 26 V, **5.9 A** | **52 V**, 3.0 A |
 
 ![The isobaric pair in 18.7 L (blue) has exactly the single driver's response in 37.3 L (F3 42.0 Hz, Qtc 0.707). In the full 37.3 L box (orange) the pair is over-damped (Qtc 0.59): a softer, more gradual corner.](img/iso-spl.png)
 
@@ -60,7 +60,7 @@ A **Dayton Audio RSS265HF-4** 10″ subwoofer (4 Ω, 350 W) in a sealed box for 
 - **Coils in parallel:** the same output per volt as one driver, but the impedance **halves** (here to 1.8 Ω), so the amplifier delivers twice the current and twice the power for the same voltage [3]. Check your amplifier is stable into that load.
 - **Coils in series:** the impedance **doubles** (7.1 Ω), and the output per volt is **6 dB lower** [4]. You need twice the voltage for the same output; into twice the impedance, that's twice the power, the same 3 dB-per-watt penalty.
 
-**The maximum output is the same as one driver** in its full-size box. Only one cone radiates, with the same area and the same Xmax, so it hits the same excursion limit at the same SPL [5]. The pair needs twice the power to get there (400 W instead of 200 W), but it can also **handle** twice the power, so thermally it has more headroom.
+**The maximum output is the same as one driver** in its full-size box. Only one cone radiates, with the same area and the same Xmax, so it hits the same excursion limit at the same SPL [5]. The pair needs twice the power to get there: at 30 Hz, the same 26 V but twice the current (5.9 A) with the coils in parallel, or twice the voltage (52 V) with them in series. It can also **handle** twice the power, so thermally it has more headroom. Switch the app's **Max SPL** chart to **Volts** or **Amps** to see what your amplifier has to deliver at each frequency.
 
 **The cone moves less at the same power** (6.4 mm instead of 9.0 mm at 100 W), because the power is shared between two motors.
 
