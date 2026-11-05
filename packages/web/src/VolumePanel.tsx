@@ -75,9 +75,9 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
         <Num help="Wall thickness (e.g. 18 mm MDF). Taken off every side to get the inside volume." label="Walls" q="mm" value={v.wall_mm} min={0} onChange={(x) => set("wall_mm", x)} />
       </div>
 
-      <h3>Find dimensions</h3>
+      <h3>Size the box</h3>
       <div className="fields">
-        <Num help="The net volume you want; Find dimensions sizes the box for it." label="Target" q="vol" value={aim} onChange={setAim} />
+        <Num help="The net volume you want; Size the box sets the dimensions for it." label="Target" q="vol" value={aim} onChange={setAim} />
         <Select<"keep" | "golden"> help="Keep the box's current proportions, or use the golden ratio (spreads its internal standing waves)."
           label="Ratio"
           value={v.shape === "box" ? proportions : "keep"}
@@ -94,7 +94,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
       </div>
       <div className="row">
         <button className="secondary" onClick={find}>
-          Find dimensions
+          Size the box
         </button>
       </div>
       <p className="hint">

@@ -101,7 +101,6 @@ export function EqPanel(props: { state: AppState; designs: Design[]; onChange: (
         );
       })}
       <div className="add-design">
-        <span>Add:</span>
         <button className="secondary" onClick={() => add("linkwitz")}>
           + Linkwitz Transform
         </button>

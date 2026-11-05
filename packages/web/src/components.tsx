@@ -29,6 +29,12 @@ export function Card(props: {
   );
 }
 
+/**
+ * Labels too long for the narrow label column sit above their input instead, so they never
+ * wrap or get cut off ("Coil inductance", "Added mass"). Short ones ("Fs", "Vas") stay beside it.
+ */
+export const stackClass = (label: string) => (label.length > 5 ? "stack" : undefined);
+
 /** Converted values are rounded for display (4 significant figures); metric ones keep up to 6. */
 const tidy = (v: number, converted = false) => String(Number(v.toPrecision(converted ? 4 : 6)));
 
@@ -62,7 +68,7 @@ export function Num(props: {
   }, [shown]);
   const min = (props.min ?? Number.MIN_VALUE) * u.k;
   return (
-    <label data-help={props.help ?? props.title}>
+    <label className={stackClass(props.label)} data-help={props.help ?? props.title}>
       <span>{props.label}</span>
       <input
         inputMode="decimal"
@@ -85,7 +91,7 @@ export function Fixed(props: { label: string; unit?: string; value?: string; num
   const u = props.q ? units.unit(props.q) : null;
   const text = props.num !== undefined && u ? (props.num * u.k).toFixed(u.digits) : (props.value ?? "–");
   return (
-    <label data-help={props.help ?? props.title} tabIndex={props.help ?? props.title ? 0 : undefined}>
+    <label className={stackClass(props.label)} data-help={props.help ?? props.title} tabIndex={props.help ?? props.title ? 0 : undefined}>
       <span>{props.label}</span>
       <output className="fixed">{text}</output>
       <span className="unit">{u ? u.unit : (props.unit ?? "")}</span>
@@ -102,7 +108,7 @@ export function Select<T extends string | number>(props: {
   onChange: (v: T) => void;
 }) {
   return (
-    <label className="full" data-help={props.help}>
+    <label className={`full${props.label.length > 6 ? " long" : ""}`} data-help={props.help}>
       <span>{props.label}</span>
       <select
         value={String(props.value)}
@@ -133,4 +139,43 @@ export function useNarrow(): boolean {
     return () => m.removeEventListener("change", on);
   }, []);
   return narrow;
+}
+
+/**
+ * The drive readout ("100 W"): tap or click it to type an exact value, since the slider is
+ * hard to set precisely on a phone. Enter or leaving the field applies it; Escape cancels.
+ */
+export function DriveValue(props: { value: number; unit: string; min: number; max: number; onChange: (v: number) => void }) {
+  const [text, setText] = useState<string | null>(null);
+  const done = (apply: boolean) => {
+    if (apply && text !== null) {
+      const v = Number(text.replace(",", ".").replace(/[^\d.]/g, ""));
+      if (Number.isFinite(v) && v > 0) props.onChange(Math.min(props.max, Math.max(props.min, v)));
+    }
+    setText(null);
+  };
+  return (
+    <b>
+      {text === null ? (
+        <button type="button" className="drive-value" title="Type an exact value" aria-label={`${props.value} ${props.unit}: type an exact value`} onClick={() => setText(String(props.value))}>
+          {props.value} {props.unit}
+        </button>
+      ) : (
+        <input
+          className="drive-value"
+          inputMode="decimal"
+          autoFocus
+          aria-label={`Drive (${props.unit})`}
+          value={text}
+          onFocus={(e) => e.currentTarget.select()}
+          onChange={(e) => setText(e.currentTarget.value)}
+          onBlur={() => done(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") done(true);
+            if (e.key === "Escape") done(false);
+          }}
+        />
+      )}
+    </b>
+  );
 }

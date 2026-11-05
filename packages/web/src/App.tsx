@@ -27,7 +27,7 @@ import {
   type DesignState,
 } from "./state.ts";
 import { loadDriver, loadIndex, type DbIndex } from "./library.ts";
-import { Card, Num, REPO, Select, useNarrow } from "./components.tsx";
+import { Card, DriveValue, Num, REPO, Select, useNarrow } from "./components.tsx";
 import { DriverBrowser } from "./Library.tsx";
 import { PwaStatus, usePwa } from "./Pwa.tsx";
 import { GettingStarted, LinkNote, useWelcome } from "./Welcome.tsx";
@@ -640,7 +640,11 @@ export function App(props: { initial: AppState | null }) {
                 onChange={(e) => set("power", Math.round(10 ** e.currentTarget.valueAsNumber * 10) / 10)}
               />
             )}
-            <b>{driveLabel(state)}</b>
+            {state.drive === "volts" ? (
+              <DriveValue value={state.volts} unit="V" min={0.1} max={100} onChange={(volts) => set("volts", Number(volts.toPrecision(3)))} />
+            ) : (
+              <DriveValue value={state.power} unit="W" min={1} max={10000} onChange={(power) => set("power", Math.round(power * 10) / 10)} />
+            )}
             <div
               className="unit-switch"
               role="group"
@@ -1105,31 +1109,45 @@ export function App(props: { initial: AppState | null }) {
         )}
         {panel === "signal" && (
           <div className="tab-panel" role="tabpanel" id="panel-signal" aria-labelledby="tab-signal">
-            <Card title="High-pass filter" on={hp.on} onToggle={(on) => set("highPass", { ...hp, on })}>
+            <Card title="High-pass filter">
               <div className="fields">
-                <Select<HighPassType> help="Filter shape. Butterworth is maximally flat; Linkwitz-Riley is the usual crossover shape (−6 dB at the corner)."
-                  label="Type"
-                  value={hp.type}
+                <Select<HighPassType | "off"> help="A high-pass (subsonic) filter in front of the amplifier. Butterworth is maximally flat; Linkwitz-Riley is the usual crossover shape (−6 dB at the corner)."
+                  label="Filter"
+                  value={hp.on ? hp.type : "off"}
                   options={[
+                    { value: "off", text: "Off" },
                     { value: "butterworth", text: "Butterworth" },
                     { value: "linkwitz-riley", text: "Linkwitz-Riley" },
                   ]}
                   onChange={(type) =>
-                    set("highPass", { ...hp, type, order: type === "linkwitz-riley" && hp.order % 2 ? hp.order + 1 : hp.order })
+                    set(
+                      "highPass",
+                      type === "off"
+                        ? { ...hp, on: false }
+                        : { ...hp, on: true, type, order: type === "linkwitz-riley" && hp.order % 2 ? hp.order + 1 : hp.order },
+                    )
                   }
                 />
-                <Select<number> help="How steeply the filter cuts below its frequency: 12 dB/oct is gentle, 24 dB/oct protects a ported box much better."
-                  label="Slope"
-                  value={hp.order}
-                  options={(hp.type === "butterworth" ? [1, 2, 3, 4] : [2, 4]).map((o) => ({
-                    value: o,
-                    text: `${o * 6} dB/oct`,
-                  }))}
-                  onChange={(order) => set("highPass", { ...hp, order })}
-                />
-                <Num help="Corner frequency of the high-pass (subsonic) filter. A few Hz below a ported box's tuning keeps the cone from flapping below it." label="Freq" unit="Hz" value={hp.freq} onChange={(freq) => set("highPass", { ...hp, freq })} />
+                {hp.on && (
+                  <>
+                    <Select<number> help="How steeply the filter cuts below its frequency: 12 dB/oct is gentle, 24 dB/oct protects a ported box much better."
+                      label="Slope"
+                      value={hp.order}
+                      options={(hp.type === "butterworth" ? [1, 2, 3, 4] : [2, 4]).map((o) => ({
+                        value: o,
+                        text: `${o * 6} dB/oct`,
+                      }))}
+                      onChange={(order) => set("highPass", { ...hp, order })}
+                    />
+                    <Num help="Corner frequency of the high-pass (subsonic) filter. A few Hz below a ported box's tuning keeps the cone from flapping below it." label="Freq" unit="Hz" value={hp.freq} onChange={(freq) => set("highPass", { ...hp, freq })} />
+                  </>
+                )}
               </div>
-              <p className="hint">A subsonic filter protects ported and PR boxes from over-excursion below tuning.</p>
+              <p className="hint">
+                {hp.on
+                  ? `${hp.order * 6} dB/oct ${hp.type === "butterworth" ? "Butterworth" : "Linkwitz-Riley"} at ${hp.freq} Hz, on every design.`
+                  : "A subsonic filter protects ported and PR boxes from over-excursion below tuning."}
+              </p>
             </Card>
 
             <EqPanel state={state} designs={designs} onChange={(eq) => set("eq", eq)} />
@@ -1201,6 +1219,10 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(x) => set("settings", { ...state.settings, inductance: x === "yes" })}
                 />
+              </div>
+
+              <h3 className="set-head">Box losses</h3>
+              <div className="fields">
                 <Num help="Box leakage loss as a Q at the tuning frequency: lower means a leakier box. 10 is WinISD's default (a typical well-built box)."
                   label="Leak Ql"
                   value={state.settings.losses.ql}
@@ -1219,15 +1241,19 @@ export function App(props: { initial: AppState | null }) {
                   min={1}
                   onChange={(qp) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qp } })}
                 />
-                <Select<"off" | "on"> help="Port compression: at high air speed a port loses output to turbulence. On estimates that loss at the current power (approximate)."
-                  label="Port compression"
-                  value={state.settings.portCompression ? "on" : "off"}
-                  options={[
-                    { value: "off", text: "Off (like WinISD)" },
-                    { value: "on", text: "On (approximate, at this power)" },
-                  ]}
-                  onChange={(x) => set("settings", { ...state.settings, portCompression: x === "on" })}
-                />
+              </div>
+              <details className="more">
+                <summary>About box losses</summary>
+                <p className="hint">
+                  Box losses are Q values at the tuning frequency: lower means more loss. 10 / 100 / 100 matches WinISD&rsquo;s
+                  defaults. A bandpass can also set its own losses for each chamber. For like-for-like checks against WinISD,
+                  choose its air values, its amplifier resistance (Amp + cable) and leave out Le, or simply import the WinISD
+                  project (.wpr).
+                </p>
+              </details>
+
+              <h3 className="set-head">Voice coil</h3>
+              <div className="fields">
                 <Num
                   label="Voice coil"
                   unit="°C"
@@ -1236,6 +1262,26 @@ export function App(props: { initial: AppState | null }) {
                   title="Voice-coil temperature: 20 °C = the datasheet's cold values (like WinISD). A hot coil has a higher Re: less output, higher Q."
                   onChange={(t) => set("settings", { ...state.settings, coilTemp_C: Math.min(250, Math.max(20, t)) })}
                 />
+              </div>
+              {state.settings.coilTemp_C > 20 && (
+                <p className="hint">
+                  At {state.settings.coilTemp_C} °C the coil&rsquo;s resistance is {Math.round((coilHeatFactor(state.settings.coilTemp_C) - 1) * 100)}% higher
+                  {solved.values.re !== undefined ? ` (Re ${(solved.values.re * dvcFactors(state).re).toFixed(2)} → ${(solved.values.re * dvcFactors(state).re * coilHeatFactor(state.settings.coilTemp_C)).toFixed(2)} Ω)` : ""}, so the
+                  same amplifier voltage gives about {(20 * Math.log10(coilHeatFactor(state.settings.coilTemp_C))).toFixed(1)}&nbsp;dB less above the bass,
+                  and Qes (so the box&rsquo;s Q) rises by the same ratio, propping up the response near resonance.
+                </p>
+              )}
+              <details className="more">
+                <summary>About a hot voice coil</summary>
+                <p className="hint">
+                  20 °C uses the datasheet&rsquo;s cold values. Coils heat with sustained power, only a little at moderate levels
+                  but to 150&nbsp;°C or more near their rated power. Copper and aluminium both rise about 0.4&nbsp;% per °C. This is
+                  power compression: the dB SPL view shows the lost output, the Relative view the change in shape (and F3).
+                </p>
+              </details>
+
+              <h3 className="set-head">Ports</h3>
+              <div className="fields">
                 <Select<"lumped" | "pipe"> help="Air mass (like WinISD) treats a port as a slug of air. Pipe also shows the port's own pipe resonances higher up (vented boxes)."
                   label="Ports"
                   value={state.settings.portModel}
@@ -1245,14 +1291,14 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(portModel) => set("settings", { ...state.settings, portModel })}
                 />
-                <Select<"on-axis" | "power"> help="How SPL is worked out for lines and horns: in front of the box, or from the power each opening radiates as Hornresp does."
-                  label="Line/horn SPL"
-                  value={state.settings.lineSpl}
+                <Select<"off" | "on"> help="Port compression: at high air speed a port loses output to turbulence. On estimates that loss at the current power (approximate)."
+                  label="Port compression"
+                  value={state.settings.portCompression ? "on" : "off"}
                   options={[
-                    { value: "on-axis", text: "In front of the box" },
-                    { value: "power", text: "From radiated power (like Hornresp)" },
+                    { value: "off", text: "Off (like WinISD)" },
+                    { value: "on", text: "On (approximate, at this power)" },
                   ]}
-                  onChange={(lineSpl) => set("settings", { ...state.settings, lineSpl })}
+                  onChange={(x) => set("settings", { ...state.settings, portCompression: x === "on" })}
                 />
                 <Select<"peak" | "rms"> help="Port air speed shown as the peak value or as RMS (peak ÷ 1.41). The chuffing line moves with it."
                   label="Port speed"
@@ -1264,40 +1310,38 @@ export function App(props: { initial: AppState | null }) {
                   onChange={(velocity) => set("settings", { ...state.settings, velocity })}
                 />
               </div>
-              <p className="hint">
-                Box losses are Q values at the tuning frequency: lower means more loss. 10 / 100 / 100 matches WinISD's
-                defaults. A bandpass can also set its own losses for each chamber. For like-for-like checks against WinISD,
-                choose its air values, its amplifier resistance (Signal tab, Rg) and leave out Le, or simply import the
-                WinISD project (.wpr). The {PORT_LIMIT} m/s chuffing line applies to
-                whichever port-speed convention you pick.
-              </p>
-              <p className="hint">
-                Voice coil: {state.settings.coilTemp_C > 20 ? (
-                  <>
-                    at {state.settings.coilTemp_C} °C the coil&rsquo;s resistance is {Math.round((coilHeatFactor(state.settings.coilTemp_C) - 1) * 100)}% higher
-                    {solved.values.re !== undefined ? ` (Re ${(solved.values.re * dvcFactors(state).re).toFixed(2)} → ${(solved.values.re * dvcFactors(state).re * coilHeatFactor(state.settings.coilTemp_C)).toFixed(2)} Ω)` : ""}, so the
-                    same amplifier voltage gives about {(20 * Math.log10(coilHeatFactor(state.settings.coilTemp_C))).toFixed(1)}&nbsp;dB less above the bass,
-                    and Qes (so the box&rsquo;s Q) rises by the same ratio, propping up the response near resonance. This is power
-                    compression: the dB SPL view shows the lost output, the Relative view the change in shape (and F3).
-                  </>
-                ) : (
-                  <>20 °C uses the datasheet&rsquo;s cold values. </>
-                )}{" "}
-                Coils heat with sustained power, only a little at moderate levels but to 150&nbsp;°C or more near their rated power.
-                Copper and aluminium both rise about 0.4&nbsp;% per °C.
-              </p>
-              <p className="hint">
-                Ports as pipes: a port is also a pipe open at both ends, resonating at about c&nbsp;/&nbsp;2L (a 40&nbsp;cm port near
-                380&nbsp;Hz) and letting midrange out as a narrow peak. &ldquo;Pipe&rdquo; draws those resonances (charts then run to
-                1&nbsp;kHz); in the bass it matches the air-mass model within a few tenths of a dB. Vented boxes only; the box&rsquo;s own
-                standing waves, which drive the port hardest when they coincide, aren&rsquo;t simulated.
-              </p>
-              <p className="hint">
-                Lines and horns: Hornresp works SPL out from the power each opening radiates. That matches the
-                in-front-of-the-box SPL in the bass and reads lower once a mouth is large next to the wavelength (about
-                1.5 dB at 500 Hz for an 850 cm² mouth). For like-for-like checks against Hornresp, pick its air and
-                &ldquo;From radiated power&rdquo;, and set the drive to 2.83 V.
-              </p>
+              <details className="more">
+                <summary>About ports as pipes and port speed</summary>
+                <p className="hint">
+                  A port is also a pipe open at both ends, resonating at about c&nbsp;/&nbsp;2L (a 40&nbsp;cm port near 380&nbsp;Hz) and
+                  letting midrange out as a narrow peak. &ldquo;Pipe&rdquo; draws those resonances (charts then run to 1&nbsp;kHz); in the
+                  bass it matches the air-mass model within a few tenths of a dB. Vented boxes only; the box&rsquo;s own standing
+                  waves, which drive the port hardest when they coincide, aren&rsquo;t simulated. The {PORT_LIMIT}&nbsp;m/s chuffing line
+                  applies to whichever port-speed convention you pick.
+                </p>
+              </details>
+
+              <h3 className="set-head">Lines and horns</h3>
+              <div className="fields">
+                <Select<"on-axis" | "power"> help="How SPL is worked out for lines and horns: in front of the box, or from the power each opening radiates as Hornresp does."
+                  label="Line/horn SPL"
+                  value={state.settings.lineSpl}
+                  options={[
+                    { value: "on-axis", text: "In front of the box" },
+                    { value: "power", text: "From radiated power (like Hornresp)" },
+                  ]}
+                  onChange={(lineSpl) => set("settings", { ...state.settings, lineSpl })}
+                />
+              </div>
+              <details className="more">
+                <summary>About line and horn SPL</summary>
+                <p className="hint">
+                  Hornresp works SPL out from the power each opening radiates. That matches the in-front-of-the-box SPL in the
+                  bass and reads lower once a mouth is large next to the wavelength (about 1.5 dB at 500 Hz for an 850 cm²
+                  mouth). For like-for-like checks against Hornresp, pick its air and &ldquo;From radiated power&rdquo;, and set the
+                  drive to 2.83 V.
+                </p>
+              </details>
             </Card>
           </div>
         )}
@@ -1595,20 +1639,30 @@ export function App(props: { initial: AppState | null }) {
         {mainDesigns.length > 0 && <MeasuredCard measured={state.measured} designs={mainDesigns} onChange={(measured) => setStep((s) => ({ ...s, measured }))} />}
 
         <footer className="muted">
-          Small-signal lumped model: no voice-coil or port compression, no Bl/Cms non-linearity. Box losses Ql{" "}
-          {state.settings.losses.ql}, Qa {state.settings.losses.qa}, Qp {state.settings.losses.qp}. <a href="/guides/">Guides</a> · <a href="/validation/">Validation</a> · Free for non-commercial use · <a href={`${REPO}/blob/main/LICENSE`}>Licence</a> · <a href={`${REPO}/blob/main/docs/data-sources.md`}>Driver data: credits, corrections</a> · <a href={REPO}>GitHub</a>
-          {" · "}
-          <a href={reportUrl(shareUrl())} target="_blank" rel="noopener">
-            Report a problem
-          </a>
-          {!welcome.tips && (
-            <>
-              {" · "}
-              <button type="button" className="link" onClick={welcome.showTips}>
-                Getting started tips
-              </button>
-            </>
-          )}
+          <p>
+            Small-signal lumped model: no Bl/Cms non-linearity (port compression and a hot voice coil are in Settings). Box losses Ql{" "}
+            {state.settings.losses.ql}, Qa {state.settings.losses.qa}, Qp {state.settings.losses.qp}. Free for non-commercial use.
+          </p>
+          <ul className="footer-links">
+            <li><a href="/drivers/">Drivers</a></li>
+            <li><a href="/guides/">Guides</a></li>
+            <li><a href="/validation/">Validation</a></li>
+            <li><a href={`${REPO}/blob/main/LICENSE`}>Licence</a></li>
+            <li><a href={`${REPO}/blob/main/docs/data-sources.md`}>Driver data: credits, corrections</a></li>
+            <li><a href={REPO}>GitHub</a></li>
+            <li>
+              <a href={reportUrl(shareUrl())} target="_blank" rel="noopener">
+                Report a problem
+              </a>
+            </li>
+            {!welcome.tips && (
+              <li>
+                <button type="button" className="link" onClick={welcome.showTips}>
+                  Getting started tips
+                </button>
+              </li>
+            )}
+          </ul>
         </footer>
       </main>
       <nav className="phone-nav" aria-label="Screens">
