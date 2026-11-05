@@ -245,7 +245,7 @@ export function lineVolume(d: LineDesign): number {
   }
 }
 
-function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"], wall_mm = 18): EnclosureInput {
+export function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"], wall_mm = 18): EnclosureInput {
   const { ql, qa, qp } = losses;
   switch (d.kind) {
     case "line":

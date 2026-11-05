@@ -17,7 +17,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **Sealed**, **ported** (vented) and **passive radiator** boxes
 - **4th- and 6th-order bandpass**, each chamber with its own port or passive radiators
 - **Transmission lines (beta)**: open lines, mass-loaded lines, **tapped horns** and **front-loaded horns**, built from tapered sections (parallel, conical or exponential), with stuffing, the driver anywhere along the line and a drawing of the folded box
-- **Stuffing** per sealed, ported or passive radiator design: lined walls, a fibre fill by weight (g/L or lb/ft³, with the grams to weigh out) or your own measured values, so an empty and a stuffed box can sit on one chart
+- **Stuffing** per sealed, ported or passive radiator design: lined walls, a fibre fill by weight (g/L or lb/ft³, with the grams to weigh out) or your own measured values, so an empty and a stuffed box can sit on one chart; **fit to a measured impedance sweep** (.zma) finds the volume a finished box really acts as and its Qa
 - Up to **8 designs side by side** on the same charts, each easy to switch on or off, rename or duplicate
 
 ### Charts

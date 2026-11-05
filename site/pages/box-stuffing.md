@@ -180,7 +180,7 @@ Each sealed, ported and passive radiator design has a **Stuffing** setting under
 | **None** | The net volume and the Qa in **Settings** | An empty box |
 | **Lined walls** | The net volume, Qa 50 | Ported and PR boxes (the usual choice), or a lightly damped sealed box |
 | **Filled with fibre** | A typical gain and Qa for the amount you enter in g/L (lb/ft³ in imperial units): about +20 % and Qa 20–30 for a sealed box at 16–24 g/L; less gain and much more loss (Qa 10–20) for a filled ported or PR box. Past about 28 g/L the gain falls, and packed fill makes the box act smaller | Sealed boxes |
-| **Custom (measured)** | Your own gain (%) and Qa | When you've measured your box (below) |
+| **Custom (measured)** | Your own gain (%) and Qa, typed in or fitted to a measured impedance sweep | When you've measured your box (below) |
 
 The filled values are typical, read from the measurements above, not a prediction for your fibre: no formula predicts a given material and amount well [1][2]. That's why **Custom** is there.
 
@@ -190,21 +190,20 @@ Because each design has its own stuffing, you can compare an empty box with a st
 
 ## How to measure what your stuffing did
 
-The surest way to know how big your stuffed box acts is to measure it, the way Nousaine did:
+The surest way to know how big your stuffed box acts is to measure it, the way Nousaine did. The app can do the arithmetic for you:
 
-1. Measure the driver's own **Fs** and **Vas** first (see the [Thiele/Small parameters guide](/guides/thiele-small-parameters/); the app can fit them from a free-air impedance sweep).
-2. Measure the box's impedance with the stuffing in place (DATS, REW, ARTA or similar), and find the peak: that's the box resonance, **fc**.
-3. Work out the box volume the driver sees:
+1. Measure the driver's own **Fs** and **Vas** first (see the [Thiele/Small parameters guide](/guides/thiele-small-parameters/); the app can fit them from a free-air impedance sweep). The result below is only as good as these.
+2. Measure the box's impedance with the stuffing in place (DATS, REW, ARTA or similar) and save it as a `.zma` file.
+3. On the design's card, open **Fit to a measured impedance sweep** under **Stuffing**, load the sweep and press **Fit**. The app compares its simulation of your driver in the box with the measurement around the resonance peaks and finds the volume the box acts as and its **Qa**. **Match** says how close the fitted simulation gets; more than about 10 % off means something besides the stuffing differs (the driver's parameters, a leak, the port), and the app says what to check.
+4. **Use these values** sets the design's stuffing to **Custom** with them and shows the impedance chart, with your sweep drawn over the simulation.
+
+To check by hand, the box resonance **fc** is the impedance peak, and the box volume the driver sees is:
 
 ```
 Vb(effective) = Vas / ((fc / Fs)² − 1)
 ```
 
-For the RSS265HF-4 (Fs 25.6 Hz, Vas 54 L), the empty 18 L box peaks at 51.2 Hz. If the stuffed box peaks at 47.4 Hz, it's acting like 54 / ((47.4 / 25.6)² − 1) = **22.2 L**, about 23 % bigger.
-
-4. Load the measurement in the app's **Measured** card (`.zma`). Set the design's **Stuffing** to **Custom**, enter the gain you worked out under **Acts bigger** (+23 % in the example), and lower its **Qa** until the simulated peak is as low as the measured one. The [box losses guide](/guides/box-losses/) explains the fitting, and [why a measurement doesn't match the simulation](/guides/simulation-vs-measurement/) covers the other usual causes.
-
-The formula ignores the voice coil's inductance and the box's losses, and it's only as good as the driver's Vas, so treat the result as within about 10 %.
+For the RSS265HF-4 (Fs 25.6 Hz, Vas 54 L), the empty 18 L box peaks at 51.2 Hz. If the stuffed box peaks at 47.4 Hz, it's acting like 54 / ((47.4 / 25.6)² − 1) = **22.2 L**, about 23 % bigger. That formula ignores the voice coil's inductance and the box's losses; the app's fit uses the whole curve and includes both. Either way, treat the result as within about 10 %. For a ported box, the fit works on both impedance peaks; [why a measurement doesn't match the simulation](/guides/simulation-vs-measurement/) covers the other usual causes of a mismatch, and the [box losses guide](/guides/box-losses/) explains the loss Qs.
 
 ## The forum claims, checked
 

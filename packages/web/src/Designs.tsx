@@ -27,7 +27,7 @@ import { useUnits } from "./units.ts";
 import { bandpassLossesFrom } from "./state.ts";
 import { prTuning, withPreset, ventedAlignmentFor } from "./presets.ts";
 import { PrFinder, type FinderContext } from "./PrFinder.tsx";
-import { StuffingFields } from "./StuffingFields.tsx";
+import { StuffingFields, type StuffingFitContext } from "./StuffingFields.tsx";
 import { stuffFactor, stuffable, stuffingEffect, type StuffableKind } from "./stuffing.ts";
 
 /** The preset chip's label: which flat vented alignment this driver gets. */
@@ -953,6 +953,8 @@ export function DesignCard(props: {
   onDuplicate: () => void;
   onDelete: () => void;
   onPrPhysical: (x: PrPhysical) => void;
+  /** Fitting stuffing to a measured impedance sweep (sealed, ported and PR designs). */
+  fit?: StuffingFitContext;
   /** Transmission lines: simulated tuning. */
   lineFb?: number | null;
   /** Transmission lines: replace the driver with one read from a Hornresp record. */
@@ -1018,7 +1020,7 @@ export function DesignCard(props: {
         />
       )}
       {stuffable(d.kind) && (
-        <StuffingFields design={d as DesignState & { kind: StuffableKind }} built_l={props.built_l} air={props.air} onChange={props.onChange} />
+        <StuffingFields design={d as DesignState & { kind: StuffableKind }} built_l={props.built_l} air={props.air} fit={props.fit} onChange={props.onChange} />
       )}
       {d.kind !== "line" && <p className="dims-link hint">
         {props.linked ? (
