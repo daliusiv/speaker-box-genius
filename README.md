@@ -80,8 +80,8 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 Results are checked against the established tools, and every comparison runs as an automated test:
 
-- **WinISD**: within 0.01 dB for sealed and ported boxes, with matching tuning for passive radiator boxes, and checks for bandpass, isobaric, dual voice coil, parallel drivers, high-pass filters and leakage. See [`docs/validation.md`](docs/validation.md).
-- **Hornresp**: transmission lines, tapped horns and front horns, including impedance and the line load (Za). See [`docs/transmission-lines.md`](docs/transmission-lines.md).
+- **WinISD**: within 0.01 dB for sealed and ported boxes, with matching tuning for passive radiator boxes, and checks for bandpass, isobaric, dual voice coil, parallel drivers, high-pass filters and leakage. See the [validation page](https://speakerboxgenius.com/validation/).
+- **Hornresp**: transmission lines, tapped horns and front horns, including impedance and the line load (Za). See the [validation page](https://speakerboxgenius.com/validation/#hornresp) and [`docs/transmission-lines.md`](docs/transmission-lines.md).
 
 The model is small-signal and lumped (one-dimensional for lines): it doesn't include port compression or Bl and Cms non-linearity.
 

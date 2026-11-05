@@ -92,4 +92,4 @@ In the app: on the **Driver** tab, set **Loading** to **Isobaric pairs** and cho
 3. [diyAudio: push-pull coupled basses](https://www.diyaudio.com/community/threads/push-pull-coupled-basses.165084/page-2): isobaric pairs in parallel keep the voltage sensitivity and lose 3 dB of efficiency; push-pull arrangements and even-order distortion.
 4. [diyAudio: isobaric series and parallel](https://www.diyaudio.com/community/goto/post?id=7975086): with the coils in series, the response is 6 dB lower for the same input voltage.
 5. [CarAudio.com: isobaric help](https://www.caraudio.com/threads/gt-gt-gt-need-isobaric-help-lt-lt-lt.460083/): maximum SPL of an isobaric pair equals a single driver in twice the box, with twice the power.
-6. Speaker Box Genius [validation against WinISD](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/validation.md): isobaric pairs in sealed and ported boxes (tests 9 and 10).
+6. Speaker Box Genius [validation against WinISD](https://speakerboxgenius.com/validation/#winisd-iso-sealed): isobaric pairs in sealed and ported boxes (tests 9 and 10).

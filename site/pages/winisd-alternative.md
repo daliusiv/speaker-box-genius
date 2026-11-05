@@ -51,7 +51,7 @@ Speaker Box Genius is built around those four problems.
 
 ## Does it give the same answers?
 
-Yes. The app is checked against **WinISD 0.7.0.950** using real WinISD project files: sealed, ported, passive radiator, both bandpass types, isobaric pairs, dual voice coil drivers, several drivers in parallel, high-pass filters and box losses. The response agrees within about **0.01 dB** for sealed and ported boxes, excursion and port speed within reading accuracy, and every comparison runs as an automated test whenever the code changes. The full tables are in [the validation notes](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/validation.md).
+Yes. The app is checked against **WinISD 0.7.0.950** using real WinISD project files: sealed, ported, passive radiator, both bandpass types, isobaric pairs, dual voice coil drivers, several drivers in parallel, high-pass filters and box losses. The response agrees within about **0.01 dB** for sealed and ported boxes, excursion and port speed within reading accuracy, and every comparison runs as an automated test whenever the code changes. Every case, value and known difference is on the [validation page](/validation/#winisd).
 
 For like-for-like comparisons, set **Air** to **WinISD defaults** in Settings, and show port speed as peak (WinISD plots peak). Importing a `.wpr` project sets these for you.
 

@@ -55,7 +55,7 @@ Tries driver positions (0–40 % along) against stuffing (none, or the first 1�
 
 ## Validation against Hornresp
 
-Results (Hornresp 55.30, DSA215-8 at 2.83 V, half space, Hornresp's air c = 344 m/s, ρ = 1.205 kg/m³, SPL from radiated power as Hornresp does). Each case is a permanent test in `packages/engine/test/hornresp.test.ts`, with Hornresp's exports under `test/fixtures/hornresp/`:
+Results (Hornresp 55.30, DSA215-8 at 2.83 V, half space, Hornresp's air c = 344 m/s, ρ = 1.205 kg/m³, SPL from radiated power as Hornresp does). Each case is a permanent test in `packages/engine/test/hornresp.test.ts`, with Hornresp's exports under `test/fixtures/hornresp/`; the [validation page](https://speakerboxgenius.com/validation/#hornresp) shows every case with both curves:
 
 | Case | SPL 10 Hz–1 kHz, mean | Ze 10 Hz–1 kHz, mean / worst |
 |---|---|---|

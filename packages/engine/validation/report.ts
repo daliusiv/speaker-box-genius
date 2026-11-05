@@ -1,0 +1,182 @@
+/**
+ * The validation report: every WinISD and Hornresp comparison, with our values, the
+ * differences and the curves to plot. site/build.ts turns it into the /validation/ page.
+ *
+ *   pnpm validation:report      rewrites docs/validation/results.json
+ *
+ * The file holds no dates or commit ids, so it only changes when a result does; a test
+ * (test/validation-report.test.ts) fails when it's out of date.
+ */
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { simulate } from "../src/simulate.ts";
+import { WINISD_CASES, WINISD_VERSION, QUANTITY, runCase, type Quantity, type Setup } from "./winisd.ts";
+import { HORNRESP_F_MAX, HORNRESP_NOTES, HORNRESP_TITLES, HORNRESP_TOL, HORNRESP_VERSION, hornrespIds, runHornresp } from "./hornresp.ts";
+
+export const REPORT_FILE = join(import.meta.dirname, "..", "..", "..", "docs", "validation", "results.json");
+
+/** Rounds for a stable, readable file. */
+const r = (x: number, digits = 4) => (Number.isFinite(x) ? Number(x.toFixed(digits)) : null);
+
+/** Quantities drawn as curves (the others are single numbers). */
+const CURVES: Partial<Record<Quantity, (s: Setup, res: ReturnType<typeof simulate>) => Float64Array | number[]>> = {
+  tf: (_, res) => Array.from(res.spl, (v) => v - res.summary.referenceSpl),
+  spl: (_, res) => res.spl,
+  x: (_, res) => res.excursionMm,
+  xpr: (_, res) => res.prExcursionMm!,
+  vport: (_, res) => res.portVelocity!,
+  vrear: (_, res) => res.rearPortVelocity!,
+  z: (s, res) => Array.from(res.impedanceOhm, (v) => v * (s.zScale ?? 1)),
+  gd: (_, res) => res.groupDelayMs,
+  maxSpl: (_, res) => res.maxSpl,
+  maxPower: (_, res) => res.maxPowerW,
+};
+
+export interface ReportCheck {
+  /** See Report.quantities for its label and unit. */
+  what: Quantity;
+  f: number;
+  winisd: number;
+  ours: number | null;
+  diff: number | null;
+  tol: number;
+  graph?: boolean;
+  limit?: string;
+  note?: string;
+  pass: boolean;
+}
+
+export interface Curve {
+  what: Quantity;
+  /** Our curve: [frequency, value] pairs. */
+  ours: [number, number | null][];
+  /** WinISD's read-outs. */
+  points: [number, number][];
+}
+
+export interface WinIsdCaseReport {
+  id: string;
+  title: string;
+  fixture: string;
+  setup: string;
+  notes?: string;
+  pass: boolean;
+  checks: ReportCheck[];
+  curves: Curve[];
+}
+
+export interface HornrespCaseReport {
+  id: string;
+  title: string;
+  setup: string;
+  pass: boolean;
+  stats: { splMean: number; splP95: number; splWorst: number; zeMean: number; zeWorst: number; zaMean?: number };
+  /** Which parts are within tolerance. */
+  parts: { spl: boolean; ze: boolean; za?: boolean };
+  /** [frequency, Hornresp, ours] */
+  spl: [number, number, number][];
+  ze: [number, number, number][];
+}
+
+export interface Report {
+  /** Label and unit of each quantity; for relative ones (rel) a check's diff and tol are fractions. */
+  quantities: typeof QUANTITY;
+  winisd: { version: string; driver: string; cases: WinIsdCaseReport[] };
+  hornresp: { version: string; driver: string; fMax: number; tol: typeof HORNRESP_TOL; notes: string; cases: HornrespCaseReport[] };
+}
+
+function winisdCase(k: (typeof WINISD_CASES)[number]): WinIsdCaseReport {
+  const { setup, results } = runCase(k);
+  const checks: ReportCheck[] = results.map((c) => ({
+    what: c.what,
+    f: c.f,
+    winisd: c.winisd,
+    ours: r(c.ours),
+    diff: r(c.diff, 5),
+    tol: r(c.tol, 5)!,
+    ...(c.graph ? { graph: true } : {}),
+    ...(c.limit ? { limit: c.limit } : {}),
+    ...(c.note ? { note: c.note } : {}),
+    pass: c.pass,
+  }));
+
+  // One curve per plotted quantity, spanning its read-outs.
+  const curves: Curve[] = [];
+  for (const what of [...new Set(results.map((c) => c.what))]) {
+    const curve = CURVES[what];
+    if (!curve) continue;
+    const pts = results.filter((c) => c.what === what);
+    const fs = pts.map((c) => c.f);
+    const fMin = Math.min(10, ...fs.map((f) => f / 1.5));
+    const fMax = Math.max(200, ...fs.map((f) => f * 1.5));
+    const res = simulate(setup.driver, setup.box, { ...setup.opts, fMin, fMax, points: 120 });
+    const y = curve(setup, res);
+    curves.push({
+      what,
+      ours: Array.from(res.freq, (f, i) => [r(f, 3)!, r(y[i]!, 4)] as [number, number | null]),
+      points: pts.map((c) => [c.f, c.winisd]),
+    });
+  }
+  return { id: k.id, title: k.title, fixture: k.fixture, setup: k.setupText, ...(k.notes ? { notes: k.notes } : {}), pass: checks.every((c) => c.pass), checks, curves };
+}
+
+function hornrespCase(id: string): HornrespCaseReport {
+  const run = runHornresp(id);
+  const t = HORNRESP_TITLES[id] ?? { title: id, text: "" };
+  // Every other point is plenty for the charts.
+  const thin = (xs: { f: number; ref: number; ours: number }[], digits: number) =>
+    xs.filter((_, i) => i % 2 === 0 || i === xs.length - 1).map((p) => [r(p.f, 2)!, r(p.ref, digits)!, r(p.ours, digits)!] as [number, number, number]);
+  const s = run.stats;
+  return {
+    id,
+    title: t.title,
+    setup: t.text,
+    pass: run.pass.spl && run.pass.ze && run.pass.za !== false,
+    stats: {
+      splMean: r(s.splMean)!,
+      splP95: r(s.splP95)!,
+      splWorst: r(s.splWorst)!,
+      zeMean: r(s.zeMean)!,
+      zeWorst: r(s.zeWorst)!,
+      ...(s.zaMean !== undefined ? { zaMean: r(s.zaMean)! } : {}),
+    },
+    parts: run.pass,
+    spl: thin(run.spl, 2),
+    ze: thin(run.ze, 3),
+  };
+}
+
+export function buildReport(): Report {
+  return {
+    quantities: QUANTITY,
+    winisd: {
+      version: WINISD_VERSION,
+      driver: "Dayton Audio DSA215-8; 100 W, amplifier resistance 0.1 Ω, losses Ql 10 / Qa 100 / Qp 100 and WinISD's air, unless a case says otherwise",
+      cases: WINISD_CASES.map(winisdCase),
+    },
+    hornresp: {
+      version: HORNRESP_VERSION,
+      driver: "Dayton Audio DSA215-8 (Le 1 mH) at 2.83 V in half space, Hornresp's air (c 344 m/s, ρ 1.205 kg/m³), SPL from radiated power",
+      fMax: HORNRESP_F_MAX,
+      tol: HORNRESP_TOL,
+      notes: HORNRESP_NOTES,
+      cases: hornrespIds().map(hornrespCase),
+    },
+  };
+}
+
+/** Indented JSON with each point, check and other flat object on one line, so diffs show what changed. */
+export const reportJson = (rep: Report = buildReport()) =>
+  JSON.stringify(rep, null, 1)
+    .replace(/\[\s*([^[\]{}]*?)\s*\]/g, (_, inner: string) => `[${inner.split(/,\s*/).join(",")}]`)
+    .replace(/\{\s*([^{}[\]]*?)\s*\}/g, (_, inner: string) => `{ ${inner.split(/,\n\s*/).join(", ")} }`) + "\n";
+
+if (process.argv[1] && import.meta.filename === process.argv[1]) {
+  mkdirSync(dirname(REPORT_FILE), { recursive: true });
+  const rep = buildReport();
+  writeFileSync(REPORT_FILE, reportJson(rep));
+  const w = rep.winisd.cases, h = rep.hornresp.cases;
+  const failing = [...w.filter((c) => !c.pass).map((c) => `WinISD ${c.id}`), ...h.filter((c) => !c.pass).map((c) => `Hornresp ${c.id}`)];
+  console.log(`Wrote ${REPORT_FILE}: ${w.length} WinISD cases (${w.reduce((n, c) => n + c.checks.length, 0)} checks), ${h.length} Hornresp cases.`);
+  if (failing.length) console.log(`Outside tolerance: ${failing.join(", ")}`);
+}
