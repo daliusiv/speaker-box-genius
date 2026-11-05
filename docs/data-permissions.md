@@ -9,8 +9,18 @@ Manufacturers who have given permission for their published data to be used in t
 
 ## Requests pending
 
-- Scan-Speak: email drafted 3 Nov 2026. Their website terms restrict copying datasheet information without written consent, so **no automated import until they reply**.
-- Parts Express, Tymphany, Markaudio, Tang Band, Faital Pro, B&C Speakers, 18 Sound, Beyma: emails drafted 3 Nov 2026.
+- Scan-Speak: emailed, no reply yet. Their website terms restrict copying datasheet information without written consent, so **no automated import until they reply**.
+- Parts Express: emailed, no reply yet.
+- Faital Pro, B&C Speakers, 18 Sound, Beyma, Peerless (Tymphany), Markaudio, Tang Band: emailed 5 Nov 2026 asking for permission and a CSV or Excel export of their T/S data.
+- Kicker, Skar Audio, Sundown Audio, Rockford Fosgate (car audio): emailed 5 Nov 2026.
+- Wavecor, Visaton, SEAS, PRV Audio, Morel, Sica, Redcatt, Purifi, Eton, Accuton, HiVi, Fountek: emailed 5 Nov 2026. Visaton's and Accuton's website terms require prior written consent, so **nothing from them until they reply**.
+- GRS and the US Dynavox range are sold by Parts Express and covered by that request.
+
+## Not yet contacted
+
+- JL Audio: no contact route found yet.
+
+A permission that comes with a spreadsheet is imported with `pnpm db:import-sheet`; see [`importing-a-spreadsheet.md`](importing-a-spreadsheet.md).
 
 ## Rules that apply whatever the permission
 

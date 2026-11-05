@@ -1,0 +1,9 @@
+Example Audio – T/S parameters 2026;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;
+Model;Type;Nominal diameter;Nominal impedance;Fs;Qts;Qes;Qms;Vas;Re;Le;BL;Mms;Sd;Xmax;AES power;Program power;Cutout;Voice coils;Page
+;;in;Ω;Hz;;;;l;Ω;mH;T·m;g;cm²;mm;W;W;mm;;
+10EX300;Woofer;10;8;35;0,40;0,43;6,7;72,4;5,3;1,1;12,6;58,2;382;8,32;250;500;233;1;https://example.com/10ex300
+15EX800;Subwoofer;15;8;36;0,32;;5,2;133;5,5;1,8;22;150;855;7,5;800;1600;355;1;https://example.com/15ex800
+EX1;HF compression driver;1;8;;;;;;5,6;;;;;;;;;1;https://example.com/ex1
+12EXD;Subwoofer;12;2;30;0,45;0,5;5;60;1,6;2;12;150;480;12;600;1200;280;2;https://example.com/12exd
+10EXPR;Passive radiator;10;;20;;;;;;;;180;350;15;;;233;;https://example.com/10expr
