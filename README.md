@@ -12,7 +12,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 ## Features
 
-- **Design assistant:** say what you're building (car sub, home sub, hi-fi woofer, tower…), your limits (box size, amplifier power and minimum load, number and size of drivers, box types, brands) and what matters most (deepest, loudest, smallest, balanced). It tries every suitable driver in the database in a sealed and a ported box sized the way the presets would (with a plain, flared or slot port that fits), and, for towers, mass-loaded and classic transmission lines for the best few drivers; it simulates them at your power, grades them on any amp (deep bass below 0.7 × the tuning in amber, not failed), and ranks them; one tap starts your project with a result (or with the same driver in two boxes). New projects, and your first visit, start here.
+- **Design assistant:** say what you're building (car sub, home sub, hi-fi woofer, tower…), your limits (box size, amplifier power and minimum load, number and size of drivers, box types, brands) and what matters most (deepest, loudest, smallest, balanced). It tries every suitable driver in the database in a sealed and a ported box sized the way the presets would (with a plain, flared or slot port that fits), and, for the best few drivers, mass-loaded and classic transmission lines (towers) or 4th- and 6th-order bandpass boxes (subwoofers); it simulates them at your power, grades them on any amp (deep bass below 0.7 × the tuning in amber, not failed), and ranks them; one tap starts your project with a result (or with the same driver in two boxes). New projects, and your first visit, start here.
 
 ### Box types
 

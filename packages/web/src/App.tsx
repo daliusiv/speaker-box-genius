@@ -1897,7 +1897,15 @@ export function App(props: { initial: AppState | null }) {
           setStep(() => next);
           setDriverSource(d.source ? { name: d.name, ...d.source } : null);
           setAssistant(false);
-          const boxes = rs.map((r) => (r.box === "line" ? `${r.vb_l} L ${r.line?.label ?? "line"}` : `${r.vb_l} L ${r.box === "sealed" ? "sealed" : "ported"} box`)).join(" and ");
+          const boxes = rs
+            .map((r) =>
+              r.box === "line"
+                ? `${r.vb_l} L ${r.line?.label ?? "line"}`
+                : r.box === "bandpass"
+                  ? `${r.vb_l} L ${r.bandpass?.order === "4" ? "4th" : "6th"}-order bandpass box`
+                  : `${r.vb_l} L ${r.box === "sealed" ? "sealed" : "ported"} box`,
+            )
+            .join(" and ");
           notify(`Started with the ${d.name} in a ${boxes}, at ${goal.power_w} W${goal.use === "car" ? " with cabin gain" : ""}.`);
           showChart("response", []);
         }}

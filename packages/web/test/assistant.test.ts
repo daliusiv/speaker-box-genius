@@ -5,7 +5,7 @@ import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { PORT_LIMIT, limitsOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { LINE_MAX_CM, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { LINE_MAX_CM, evaluateDriver, goalFor, lineShortlist, portCandidates, shortlist, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -167,4 +167,35 @@ test("transmission lines: for towers, sized to the box limit, foldable, and they
   // Not offered for a car (no room to fold one), even if asked for.
   const car = { ...goalFor("car", "balanced"), boxes: ["sealed", "vented", "line"] as AssistantGoal["boxes"] };
   assert.deepEqual(evaluateDriver(DEFAULT_STATE, short[0]!, loaded(short[0]!.id), car, "lines"), []);
+});
+
+test("bandpass: 4th and 6th order for subwoofers, within the box limit, a band up to 80 Hz, and they open as scored", () => {
+  for (const use of ["home", "car"] as const) {
+    const goal = { ...goalFor(use, "balanced"), boxes: ["sealed", "vented", "bandpass"] as AssistantGoal["boxes"] };
+    const boxes = runAll(goal).results;
+    const short = shortlist(boxes, new Map(rows.map((r) => [r.id, r])), 12);
+    const bps = short.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id), goal, "bandpass"));
+    assert.ok(bps.some((r) => r.bandpass!.order === "4") && bps.some((r) => r.bandpass!.order === "6p"), `${use}: both orders`);
+    for (const r of bps) {
+      const b = r.bandpass!;
+      assert.ok(b.rear_l + b.front_l <= goal.maxVolume_l * 1.02 && Math.abs(r.vb_l - (b.rear_l + b.front_l)) < 0.2, `${r.name} ${r.vb_l} L`);
+      assert.ok(b.f3High >= 80 && r.f3 <= 1.6 * goal.targetF3_hz, `${r.name} band ${r.f3}–${b.f3High}`);
+      assert.ok(r.peak_db <= 3.05, `${r.name} ripple ${r.peak_db}`);
+      const fits = (p: typeof b.frontPort, vol: number) => p.length_cm <= portRoom_cm(vol, p.kind === "slot" ? p.slotHeight_cm : p.diameter_cm);
+      assert.ok(fits(b.frontPort, b.front_l) && (!b.rearPort || fits(b.rearPort, b.rear_l)), `${r.name} ports fit`);
+      const s = openResults(DEFAULT_STATE, loaded(r.driverId), [r], goal);
+      const des = s.designs[0] as import("../src/state.ts").BandpassDesign;
+      assert.equal(des.kind, "bandpass");
+      assert.equal(des.order, b.order);
+      const res = runDesigns(s, solveDriver(s))[0]!.result;
+      assert.ok(Math.abs(res.summary.f3! - r.f3) < 0.05 * r.f3, `${r.name} F3 ${res.summary.f3} vs ${r.f3}`);
+      assert.ok(Math.abs(res.summary.fb! - b.frontFb) < 0.1 * b.frontFb, `${r.name} front Fb ${res.summary.fb} vs ${b.frontFb}`);
+      const app = limitsOf(res, s.xmax_mm!, false);
+      if (!r.over.includes("port") && app.vp !== null) assert.ok(app.vp <= PORT_LIMIT * 1.02, `${r.name} port ${app.vp}`);
+    }
+  }
+  // Not offered for a speaker: a bandpass box lets nothing out above its band.
+  const hifi = { ...goalFor("hifi", "balanced"), boxes: ["bandpass"] as AssistantGoal["boxes"] };
+  const row = rows.find((r) => r.size_in === 8 && r.qts! < 0.5)!;
+  assert.deepEqual(evaluateDriver(DEFAULT_STATE, row, loaded(row.id), hifi, "bandpass"), []);
 });

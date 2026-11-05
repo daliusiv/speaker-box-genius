@@ -4,10 +4,13 @@ import {
   CURVE_FREQS,
   PRIORITIES,
   USES,
+  BANDPASS_SHORTLIST,
+  BANDPASS_USES,
   LINE_USES,
   evaluateDriver,
   goalFor,
   lineShortlist,
+  shortlist,
   prefilter,
   rankResults,
   type AssistantBox,
@@ -16,6 +19,7 @@ import {
   type AssistantPriority,
   type AssistantResult,
   type AssistantUse,
+  type IndexRow,
 } from "./assistant.ts";
 import { loadDriver, type DbIndex, type LoadedDriver } from "./library.ts";
 import type { AppState } from "./state.ts";
@@ -25,7 +29,9 @@ import { Logo, UseIcon } from "./Logo.tsx";
 const KEY = "sbg.assistant";
 const STEPS = ["What for", "Limits", "Priority", "Results"] as const;
 const SIZES = [4, 5, 5.25, 6.5, 8, 10, 12, 15, 18, 21];
-const BOX_LABEL: Record<AssistantBox, string> = { sealed: "Sealed", vented: "Ported", line: "Line" };
+const BOX_LABEL: Record<AssistantBox, string> = { sealed: "Sealed", vented: "Ported", line: "Line", bandpass: "Bandpass" };
+/** Whether a box type is offered for a use. */
+const offered = (b: AssistantBox, use: AssistantGoal["use"]) => (b === "line" ? LINE_USES.includes(use) : b === "bandpass" ? BANDPASS_USES.includes(use) : true);
 const PAGE = 20;
 
 function readGoal(): AssistantGoal | null {
@@ -85,6 +91,14 @@ function Sketch({ curve }: { curve: number[] }) {
  * priority can be switched there directly. Results come in as they're worked out, in short
  * slices between paints, with a Stop.
  */
+/** A bandpass box in words: its chambers, ports and band. */
+function bandpassText(b: NonNullable<AssistantResult["bandpass"]>, fmt: (v: number, q: "len") => string, vol: (l: number) => string): string {
+  const front = `a ${vol(b.front_l)} front chamber tuned to ${b.frontFb} Hz with ${portText(b.frontPort, fmt)}`;
+  const rear = b.order === "4" ? `A ${vol(b.rear_l)} sealed rear chamber, ${front}` : `A ${vol(b.rear_l)} rear chamber tuned to ${b.rearFb} Hz with ${b.rearPort ? portText(b.rearPort, fmt) : "a port"}, ${front}`;
+  const gain = Math.abs(b.gain_db) >= 0.5 ? `, ${b.gain_db > 0 ? "+" : "−"}${Math.abs(b.gain_db).toFixed(1)} dB on a plain cone` : "";
+  return `${rear}. Band up to ${b.f3High.toFixed(0)} Hz${gain}; the sound leaves through the port${b.order === "4" ? "" : "s"}.`;
+}
+
 /** A suggested port in words: "a 7.5 cm port 14 cm long", "a 6 cm flared port …", "a 27 × 3 cm slot …". */
 function portText(p: AssistantPort, fmt: (v: number, q: "len") => string): string {
   const long = `${fmt(p.length_cm, "len")} long`;
@@ -201,7 +215,7 @@ export function DesignAssistant(props: {
           setError((e as Error).message);
           return;
         }
-        if (i >= cands.length) return wantLines ? startLines() : finish();
+        if (i >= cands.length) return wantLines || wantBandpass ? startLines() : finish();
         setProgress({ label: "Trying each driver", done: i, total: cands.length });
         // Show the best so far while the rest are worked out (about twice a second).
         if (performance.now() - rankedAt > 500) {
@@ -210,29 +224,40 @@ export function DesignAssistant(props: {
         }
         timer = setTimeout(slice, 0);
       };
-      // Transmission lines, after the boxes: the best few drivers (each takes a few dozen
-      // simulations), one driver per slice, the list re-ranked as each one comes in.
+      // Transmission lines and bandpass boxes, after the boxes: the best few drivers (each a
+      // slower search), the list re-ranked as they come in.
       const wantLines = goal.boxes.includes("line") && LINE_USES.includes(goal.use);
+      const wantBandpass = goal.boxes.includes("bandpass") && BANDPASS_USES.includes(goal.use);
       const startLines = () => {
         const ranked = rankResults(out, goal);
         setResults(ranked);
-        const short = lineShortlist(ranked, new Map(cands.map((r) => [r.id, r])));
+        const rowsById = new Map(cands.map((r) => [r.id, r]));
+        const tasks: { row: IndexRow; stage: "lines" | "bandpass" }[] = [
+          ...(wantBandpass ? shortlist(ranked, rowsById, BANDPASS_SHORTLIST).map((row) => ({ row, stage: "bandpass" as const })) : []),
+          ...(wantLines ? lineShortlist(ranked, rowsById).map((row) => ({ row, stage: "lines" as const })) : []),
+        ];
+        const label = wantLines && wantBandpass ? "Lines and bandpass boxes for the best drivers" : wantLines ? "Transmission lines for the best drivers" : "Bandpass boxes for the best drivers";
         let j = 0;
         const lineSlice = () => {
           if (!live) return;
-          if (j >= short.length) return finish();
-          setProgress({ label: "Transmission lines for the best drivers", done: j, total: short.length });
-          const row = short[j++]!;
-          const d = loadedRef.current.get(row.id);
-          try {
-            if (d) out.push(...evaluateDriver(props.base, row, d, goal, "lines"));
-          } catch {
-            // A line that won't simulate is left out; the rest carry on.
+          if (j >= tasks.length) return finish();
+          setProgress({ label, done: j, total: tasks.length });
+          const t0 = performance.now();
+          // Bandpass searches are quick: several per slice; a line is one.
+          while (j < tasks.length && performance.now() - t0 < 30) {
+            const { row, stage } = tasks[j++]!;
+            const d = loadedRef.current.get(row.id);
+            try {
+              if (d) out.push(...evaluateDriver(props.base, row, d, goal, stage));
+            } catch {
+              // One that won't simulate is left out; the rest carry on.
+            }
+            if (stage === "lines") break;
           }
           setResults(rankResults(out, goal));
           timer = setTimeout(lineSlice, 0);
         };
-        setProgress({ label: "Transmission lines for the best drivers", done: 0, total: short.length });
+        setProgress({ label, done: 0, total: tasks.length });
         timer = setTimeout(lineSlice, 30);
       };
       stopRef.current = () => finish(true);
@@ -273,7 +298,7 @@ export function DesignAssistant(props: {
       </div>
     ) : null;
 
-  const kinds = (["sealed", "vented", "line"] as const).filter((k) => (results ?? []).some((r) => r.box === k));
+  const kinds = (["sealed", "vented", "bandpass", "line"] as const).filter((k) => (results ?? []).some((r) => r.box === k));
   const listed = (results ?? []).filter((r) => only === "all" || r.box === only);
   const vol = (l: number) => fmt(l, "vol", unit("vol").unit === "L" ? (l < 10 ? 1 : 0) : 2);
   const chips: { label: string; step: number }[] = [
@@ -281,7 +306,7 @@ export function DesignAssistant(props: {
     { label: `≤ ${vol(goal.maxVolume_l)}`, step: 1 },
     { label: `${goal.power_w} W${goal.minLoad_ohm ? ` · ≥ ${goal.minLoad_ohm} Ω` : ""}`, step: 1 },
     { label: `${goal.drivers} × ${goal.sizeMin_in}–${goal.sizeMax_in}″`, step: 1 },
-    { label: goal.boxes.filter((b) => b !== "line" || LINE_USES.includes(goal.use)).map((b) => BOX_LABEL[b]).join(" + ") || "No box types", step: 1 },
+    { label: goal.boxes.filter((b) => offered(b, goal.use)).map((b) => BOX_LABEL[b]).join(" + ") || "No box types", step: 1 },
     ...(goal.brands.length ? [{ label: goal.brands.length === 1 ? goal.brands[0]! : `${goal.brands.length} brands`, step: 1 }] : []),
   ];
 
@@ -408,6 +433,11 @@ export function DesignAssistant(props: {
                     <input type="checkbox" checked={goal.boxes.includes("line")} onChange={() => toggleBox("line")} /> Transmission line
                   </label>
                 )}
+                {BANDPASS_USES.includes(goal.use) && (
+                  <label className="check" title="4th order (sealed rear, ported front) and 6th order (both chambers ported): more output in a band, but all of it leaves through the ports. Worked out for the best few drivers after the boxes.">
+                    <input type="checkbox" checked={goal.boxes.includes("bandpass")} onChange={() => toggleBox("bandpass")} /> Bandpass (4th / 6th order)
+                  </label>
+                )}
               </div>
               {goal.boxes.length === 0 && <p className="warn">Choose at least one box type.</p>}
               <details className="more assist-brands">
@@ -514,7 +544,9 @@ export function DesignAssistant(props: {
                   <div key={r.key} className="assist-card">
                     <div className="assist-card-head">
                       <b>{r.name}</b>
-                      <span className="preset-tag">{r.box === "line" && r.line ? r.line.label : BOX_LABEL[r.box]}</span>
+                      <span className="preset-tag">
+                        {r.box === "line" && r.line ? r.line.label : r.bandpass ? `Bandpass ${r.bandpass.order === "4" ? "4th" : "6th"} order` : BOX_LABEL[r.box]}
+                      </span>
                       {r.badges?.map((b) => (
                         <span key={b} className="finder-best">
                           {b}
@@ -536,6 +568,7 @@ export function DesignAssistant(props: {
                       <Sketch curve={r.curve} />
                     </div>
                     <p className="assist-facts">
+                      {r.bandpass ? `${bandpassText(r.bandpass, fmt, vol)} ` : ""}
                       {r.box === "line" && r.line
                         ? `A line ${fmt(r.line.length_cm, "len")} long (to fold into a tall cabinet), tuned to ${r.fb} Hz${r.line.design.end === "port" ? `, with a ${fmt(r.line.design.portDiameter_cm, "len")} port at the end` : ", open at the end"}. `
                         : ""}
@@ -567,7 +600,10 @@ export function DesignAssistant(props: {
                     <div className="assist-card-actions">
                       {(() => {
                         // Sealed ↔ ported, or a line with the same driver's ported box.
-                        const sibling = results!.find((x) => x.driverId === r.driverId && x.box !== r.box && (r.box === "line" ? x.box === "vented" : x.box !== "line"));
+                        // Sealed ↔ ported; a line or a bandpass box with the same driver's ported box.
+                        const sibling = results!.find(
+                          (x) => x.driverId === r.driverId && x.box !== r.box && (r.box === "line" || r.box === "bandpass" ? x.box === "vented" : x.box === "sealed" || x.box === "vented"),
+                        );
                         const open = (rs: AssistantResult[]) => {
                           const d = loadedRef.current.get(r.driverId);
                           if (d) props.onOpen(d, rs, goal);
@@ -576,7 +612,7 @@ export function DesignAssistant(props: {
                           <>
                             {sibling && (
                               <button type="button" className="secondary" title="Start with this driver in both boxes, to compare them" onClick={() => open(r.box === "sealed" ? [r, sibling] : [sibling, r])}>
-                                {r.box === "line" ? "Open with ported too" : "Open with sealed + ported"}
+                                {r.box === "line" || r.box === "bandpass" ? "Open with ported too" : "Open with sealed + ported"}
                               </button>
                             )}
                             <button type="button" title="Start your project with this driver and box" onClick={() => open([r])}>
