@@ -35,6 +35,9 @@ jobs:
       - name: Build web app
         run: pnpm --filter @sbg/web build
 
+      - name: Build guide pages, sitemap and robots.txt
+        run: pnpm build:site
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
