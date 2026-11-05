@@ -2794,6 +2794,19 @@ button.as-text {
   .chart figcaption .chart-title[aria-expanded="true"] {
     white-space: normal;
   }
+  /* The full title gets a line of its own, and the buttons go under it (instead of being squeezed). */
+  .chart figcaption:has(.chart-title[aria-expanded="true"]) {
+    flex-wrap: wrap;
+  }
+  .chart figcaption .chart-title[aria-expanded="true"] {
+    flex-basis: 100%;
+  }
+  .chart figcaption .unit-switch {
+    flex: none;
+  }
+  .chart figcaption .unit-switch button {
+    white-space: nowrap;
+  }
   .chart figcaption .unit-switch button,
   .chart figcaption > button:not(.chart-title) {
     padding: 0.2rem 0.5rem;
