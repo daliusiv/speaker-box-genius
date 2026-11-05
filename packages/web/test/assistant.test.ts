@@ -4,7 +4,7 @@ import { TS_PARAMS, type TsParam, type TsValues } from "@sbg/engine";
 import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
-import { runDesigns, solveDriver } from "../src/sim.ts";
+import { PORT_LIMIT, limitsOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
 import { evaluateDriver, goalFor, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
@@ -95,5 +95,23 @@ test("opening results starts a project with that driver and its boxes, simulated
     const d = runDesigns(s, solveDriver(s)).find((y) => y.design.kind === x.box)!;
     assert.equal(d.vb_l, x.vb_l);
     assert.ok(Math.abs(d.result.summary.f3! - x.f3) < 1.5, `${x.box}: ${d.result.summary.f3} vs ${x.f3}`);
+  }
+});
+
+test("what a result promises is what the app shows: same limits, and the port fits", () => {
+  for (const use of ["hifi", "car"] as const) {
+    const goal = goalFor(use, "balanced");
+    for (const r of runAll(goal).results.slice(0, 25)) {
+      const s = openResults(DEFAULT_STATE, loaded(r.driverId), [r], goal);
+      const d = runDesigns(s, solveDriver(s))[0]!;
+      // The app samples more finely: a peak right at a limit may land either side of it.
+      const app = limitsOf(d.result, s.xmax_mm!, s.highPass.on ? 10 : 15);
+      if (!r.over.includes("xmax")) assert.ok(app.x! <= s.xmax_mm! * 1.02, `${use}: ${r.name} ${r.box} ${app.x} mm`);
+      if (!r.over.includes("port") && app.vp !== null) assert.ok(app.vp <= PORT_LIMIT * 1.02, `${use}: ${r.name} port ${app.vp} m/s`);
+      if (r.port) {
+        assert.ok(r.port.length_cm <= portRoom_cm(r.vb_l, r.port.diameter_cm), `${r.name}: port ${r.port.length_cm} cm`);
+        assert.equal(s.highPass.freq, r.highPass_hz);
+      }
+    }
   }
 });

@@ -486,6 +486,15 @@ const peakAbove = (a: Float64Array | null | undefined, freq: Float64Array, fMin:
 };
 
 /**
+ * Room for a straight port inside the box (cm): the longest inside dimension (from the volume
+ * calculator, else a cube of this volume, the safe case), less one port diameter (or slot
+ * height) of air between the port's inner end and the opposite wall.
+ */
+export function portRoom_cm(vb_l: number, clearance_cm: number, internalMax_cm: number | null = null): number {
+  return (internalMax_cm ?? Math.cbrt(vb_l * 1000)) - clearance_cm;
+}
+
+/**
  * A design's peaks above fMin (the subsonic region is ignored without a high-pass filter) and
  * which limits they cross: cone Xmax, the passive radiators' Xmax, the port's chuffing line.
  */

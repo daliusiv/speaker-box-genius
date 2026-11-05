@@ -4,8 +4,10 @@
  *
  * Each driver that passes the quick filters (size, kind, brand, a load the amplifier can
  * drive) gets the box sizing the app's presets use (sealed Qtc 0.707, ported QB3/B4 or
- * Keele), capped at the largest box allowed, with the widest round port that fits. In a box
- * smaller than its alignment, a ported box is tuned for the lowest F3 without a peak. For
+ * Keele), capped at the largest box allowed, with the widest round port that fits (by the
+ * app's own check). In a box smaller than its alignment, a ported box is tuned for the lowest
+ * F3 without a peak, and gets the lowest subsonic filter that keeps the cone within Xmax
+ * below tuning (opened with the project, so the app shows what was scored). For
  * "smallest" the box is shrunk until F3 just reaches the target. Each design is simulated at
  * the user's power (with cabin gain for a car), and scored on F3, output at the frequency
  * that matters and box size. Pure functions, so they run in tests and in the dialog's slices.
@@ -16,11 +18,12 @@ import {
   sealedVolumeForAlignment,
   simulate,
   type Air,
+  type HighPass,
   type SimulationResult,
 } from "@sbg/engine";
 import type { DbIndex, LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
-import { airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
+import { airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
 import { MAX_DESIGNS, ROOM_PRESETS, newDesign, type AppState, type DesignState, type VentedDesign } from "./state.ts";
 
 export type AssistantUse = "car" | "home" | "hifi" | "other";
@@ -94,6 +97,8 @@ export interface AssistantResult {
   vb_l: number;
   fb?: number;
   port?: { diameter_cm: number; length_cm: number; count: number };
+  /** Ported: the subsonic filter scored with it (Hz, 24 dB/oct Butterworth); opened with the project. */
+  highPass_hz?: number;
   /** How the drivers (and a DVC driver's coils) are wired, and the load the amplifier sees. */
   wiring: "parallel" | "series";
   dvcWired?: "parallel" | "series";
@@ -180,16 +185,15 @@ export function withDriver(s: AppState, d: LoadedDriver): AppState {
 const PORT_SIZES = [20, 15, 12.5, 10, 7.5, 6, 5, 4, 3];
 
 /**
- * The widest round port (fewest chuffing problems) that still fits: straight, along the
- * longest inside dimension of a golden-ratio box (1.618 ∛V), with a port's diameter of air
- * left between its inner end and the back wall. Two ports when one would need more than 20 cm.
+ * The widest round port (fewest chuffing problems) that still fits straight, by the same rule
+ * as the app's "Port too long to fit" check (portRoom_cm: a cube of this volume, less a port
+ * diameter). Two ports when one won't fit.
  */
 export function choosePort(vb_l: number, fb: number, air: Air): { diameter_cm: number; length_cm: number; count: number } | null {
-  const longest = 1.618 * Math.cbrt(vb_l * 1000);
   for (const count of [1, 2]) {
     for (const d of PORT_SIZES) {
       const len = portLengthForFb(vb_l, { shape: "round", diameter_cm: d, length_cm: 10 }, fb, count, undefined, air);
-      if (len > 1 && len + d <= longest) return { diameter_cm: d, length_cm: r1(len), count };
+      if (len > 1 && len <= portRoom_cm(vb_l, d)) return { diameter_cm: d, length_cm: r1(len), count };
     }
   }
   return null;
@@ -242,8 +246,8 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
   const opts = { ...simOptionsOf(s), fMin: 10, fMax: 300, points: 90, highPass: null, eq: [] };
   const losses = s.settings.losses;
 
-  const run = (design: DesignState, vb: number) => {
-    const r = simulate(drv, enclosureOf(design, vb, losses, s.volume.wall_mm), opts);
+  const run = (design: DesignState, vb: number, highPass: HighPass | null = null) => {
+    const r = simulate(drv, enclosureOf(design, vb, losses, s.volume.wall_mm), { ...opts, highPass });
     if (room) {
       const lift = r.freq.map((f) => roomGainDb(f, room));
       r.spl = r.spl.map((v, i) => v + lift[i]!);
@@ -286,14 +290,30 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
   };
 
   const out: AssistantResult[] = [];
+  /**
+   * Below a ported box's tuning the cone unloads: the lowest subsonic filter (24 dB/oct, from
+   * half the tuning up to it) that keeps the peak excursion within Xmax at the goal's power.
+   * When even the tuning is too low (the cone is over above it too), 0.7 × Fb, the usual choice.
+   */
+  const subsonicFor = (design: DesignState, vb: number, fb: number): HighPass => {
+    const hp = (freq: number): HighPass => ({ type: "butterworth", order: 4, freq: Math.round(freq) });
+    const fits = (h: HighPass) => (limitsOf(run(design, vb, h), d.xmax_mm!, 10).x ?? 0) <= d.xmax_mm!;
+    if (!fits(hp(fb))) return hp(0.7 * fb);
+    for (let k = 0.5; k < 1; k += 0.05) if (fits(hp(k * fb))) return hp(k * fb);
+    return hp(fb);
+  };
+
   const finish = (box: AssistantBox, design: DesignState, vb: number, notes: string[], fb?: number, port?: AssistantResult["port"]) => {
-    const r = run(design, vb);
+    const hp = box === "vented" && fb ? subsonicFor(design, vb, fb) : null;
+    const r = run(design, vb, hp);
     // No roll-off found in range (a tiny box for a high-Fs pro driver, say): nothing to rank on.
     const f3 = r.summary.f3;
     if (f3 === null) return;
-    // Below a ported box's tuning the cone unloads: that's for a subsonic filter, not a limit here.
-    const fMin = box === "vented" && fb ? Math.max(15, 0.75 * fb) : 15;
-    const lim = limitsOf(r, d.xmax_mm!, fMin);
+    // "Smallest" was sized without the filter; if the filter pushes F3 past the target, it's not a fit.
+    if (hp && goal.priority === "small" && f3 > goal.targetF3_hz + 0.5) return;
+    // Limits as the app shows them: from 10 Hz with a high-pass filter, 15 Hz without.
+    const lim = limitsOf(r, d.xmax_mm!, hp ? 10 : 15);
+    if (hp) notes = [...notes, `Subsonic filter ${hp.freq} Hz (24 dB/oct), set in Signal`];
     const spl = at(r.freq, r.spl, goal.loudAt_hz);
     const max = at(r.freq, r.maxSpl, goal.loudAt_hz);
     const i = r.freq.findIndex((f) => f >= goal.loudAt_hz);
@@ -308,6 +328,7 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
       vb_l: r1(vb),
       ...(fb ? { fb: r1(fb) } : {}),
       ...(port ? { port } : {}),
+      ...(hp ? { highPass_hz: hp.freq } : {}),
       wiring: wiring.wiring,
       ...(wiring.dvc ? { dvcWired: wiring.dvc } : {}),
       load_ohm: wiring.load,
@@ -457,6 +478,11 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
     wiring: t.wiring,
     isobaric: false,
     compare: null,
+    // The ported box's subsonic filter, as scored (it applies to every box; a sealed one barely notices).
+    highPass: (() => {
+      const hz = rs.slice(0, MAX_DESIGNS).find((r) => r.highPass_hz)?.highPass_hz;
+      return hz ? { on: true, type: "butterworth" as const, order: 4, freq: hz } : { ...s.highPass, on: false };
+    })(),
     roomGain: goal.use === "car" ? t.roomGain : s.roomGain.mode === "car" ? { ...s.roomGain, mode: "off" } : s.roomGain,
     designs,
   };
