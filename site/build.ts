@@ -289,7 +289,7 @@ async function buildDriverPages(write: (path: string, html: string) => void, gui
       write(driverPath(p.id), layout({ ...page, path: driverPath(p.id), imagePath, content: page.content, guides, style, moreGuides: false }));
     }
   } finally {
-    cards?.close();
+    await cards?.close();
   }
   const byBrand = [...new Set(pages.map((p) => p.brandSlug))]
     .map((slug) => ({ slug, name: db.brands.get(slug)?.name ?? pages.find((p) => p.brandSlug === slug)!.brand, pages: pages.filter((p) => p.brandSlug === slug) }))

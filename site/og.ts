@@ -91,32 +91,47 @@ export class Rasterizer {
   static async start(chrome: string): Promise<Rasterizer> {
     const r = new Rasterizer();
     r.dir = mkdtempSync(join(tmpdir(), "sbg-chrome-"));
-    r.proc = spawn(chrome, ["--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars", "--no-first-run", "--remote-debugging-port=0", `--user-data-dir=${r.dir}`, "about:blank"], { stdio: "ignore" });
+    r.proc = spawn(chrome, ["--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars", "--no-first-run", "--remote-debugging-port=0", `--user-data-dir=${r.dir}`, "about:blank"], {
+      stdio: "ignore",
+      // Its own process group, so closing stops Chrome's helper processes too.
+      detached: process.platform !== "win32",
+    });
+    try {
+      await r.connect();
+    } catch (e) {
+      await r.close();
+      throw e;
+    }
+    await r.send("Page.enable");
+    await r.send("Emulation.setDeviceMetricsOverride", { width: CARD_W, height: CARD_H, deviceScaleFactor: 1, mobile: false });
+    return r;
+  }
+
+  /** Finds the port Chrome chose and connects to its tab. */
+  private async connect() {
     // Chrome writes the port it picked to DevToolsActivePort.
-    const file = join(r.dir, "DevToolsActivePort");
-    for (let i = 0; i < 200 && !existsSync(file); i++) await new Promise((ok) => setTimeout(ok, 50));
+    const file = join(this.dir, "DevToolsActivePort");
+    // Allow 30 s: a cold start on a busy CI machine can be slow.
+    for (let i = 0; i < 600 && !existsSync(file); i++) await new Promise((ok) => setTimeout(ok, 50));
     if (!existsSync(file)) throw new Error("Chrome didn't start");
     const port = readFileSync(file, "utf8").split("\n")[0];
     const tabs = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()) as { type: string; webSocketDebuggerUrl: string }[];
     const tab = tabs.find((t) => t.type === "page");
     if (!tab) throw new Error("Chrome has no tab");
-    r.ws = new WebSocket(tab.webSocketDebuggerUrl);
+    this.ws = new WebSocket(tab.webSocketDebuggerUrl);
     await new Promise<void>((ok, fail) => {
-      r.ws.onopen = () => ok();
-      r.ws.onerror = () => fail(new Error("Couldn't connect to Chrome"));
+      this.ws.onopen = () => ok();
+      this.ws.onerror = () => fail(new Error("Couldn't connect to Chrome"));
     });
-    r.ws.onmessage = (ev) => {
+    this.ws.onmessage = (ev) => {
       const m = JSON.parse(String(ev.data));
       if (m.id !== undefined) {
-        const w = r.waiting.get(m.id);
-        r.waiting.delete(m.id);
+        const w = this.waiting.get(m.id);
+        this.waiting.delete(m.id);
         if (m.error) w?.fail(new Error(m.error.message));
         else w?.ok(m.result);
-      } else if (m.method === "Page.loadEventFired") r.loaded?.();
+      } else if (m.method === "Page.loadEventFired") this.loaded?.();
     };
-    await r.send("Page.enable");
-    await r.send("Emulation.setDeviceMetricsOverride", { width: CARD_W, height: CARD_H, deviceScaleFactor: 1, mobile: false });
-    return r;
   }
 
   private send(method: string, params: object = {}): Promise<any> {
@@ -136,11 +151,35 @@ export class Rasterizer {
     return Buffer.from(data, "base64");
   }
 
-  close() {
+  /**
+   * Stops Chrome, waits for it to exit (it keeps writing to its profile while shutting down),
+   * then removes the profile. Cleanup never fails the build: the cards are already written.
+   */
+  async close() {
     try {
       this.ws.close();
     } catch {}
-    this.proc.kill();
-    rmSync(this.dir, { recursive: true, force: true });
+    const stop = (signal: NodeJS.Signals) => {
+      try {
+        // The whole group (Chrome and its helpers), where there is one.
+        if (process.platform !== "win32" && this.proc.pid) process.kill(-this.proc.pid, signal);
+        else this.proc.kill(signal);
+      } catch {}
+    };
+    if (this.proc.exitCode === null && this.proc.signalCode === null) {
+      const exited = new Promise<void>((ok) => this.proc.once("exit", () => ok()));
+      stop("SIGTERM");
+      // Give it 5 s, then insist.
+      const timer = setTimeout(() => stop("SIGKILL"), 5000);
+      await exited;
+      clearTimeout(timer);
+    }
+    // Helpers can outlive the main process by a moment.
+    stop("SIGKILL");
+    try {
+      rmSync(this.dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+    } catch (e) {
+      console.warn(`Couldn't remove Chrome's temporary profile ${this.dir}: ${(e as Error).message}`);
+    }
   }
 }
