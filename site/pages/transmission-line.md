@@ -65,7 +65,7 @@ The stuffing's job is to damp the line's higher resonances without killing the f
 | 6 kg/m³ | 32.5 Hz | 14.3 dB |
 | 10 kg/m³ | 33.8 Hz | 12.3 dB |
 
-An empty line is a mess of peaks and dips. A little stuffing does most of the work; more keeps smoothing it, but costs bass. In the app, stuffing is set per section, in kg/m³ (light polyester fibre is around 4–8 kg/m³). **Best line** searches the driver position and the stuffing for the smoothest response or the deepest bass, then retunes the length.
+An empty line is a mess of peaks and dips. A little stuffing does most of the work; more keeps smoothing it, but costs bass. In the app, stuffing is set per section, in kg/m³ (light polyester fibre is around 4–8 kg/m³). Why fibre slows sound and makes air act springier is explained in the [box stuffing guide](/guides/box-stuffing/). **Best line** searches the driver position and the stuffing for the smoothest response or the deepest bass, then retunes the length.
 
 ## Step 3: look inside the line
 

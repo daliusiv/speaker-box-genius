@@ -59,7 +59,7 @@ A flared (rounded-over) end is wider than the tube, so the air in the flare is a
 
 - **The box is bigger than you think**: the dimensions you entered are outside dimensions, or the walls are thinner than planned. A box 10 % bigger tunes the example to 37.9 Hz.
 - **The port's ends are crowded** (above): close to a wall, brace or the driver's magnet.
-- **Stuffing**: fibre in a ported box makes the box act slightly bigger (the air's compression changes from adiabatic towards isothermal), which lowers the tuning a little. It also adds losses.
+- **Stuffing**: fibre in a ported box makes the box act slightly bigger (the air's compression changes from adiabatic towards isothermal), which lowers the tuning a little. It also adds losses. The [box stuffing guide](/guides/box-stuffing/) has measured tuning shifts and how much fill to use.
 - **Soft panels**: a box that flexes acts slightly bigger, and loses energy.
 
 ## How to measure the real tuning

@@ -83,7 +83,7 @@ The simulation uses the **net** inside volume: what's left after the driver, the
 | Minus the port tube (0.51 L) | 14.8 L | 41.6 Hz |
 | Minus 5 % bracing | 14.1 L | 42.7 Hz |
 
-Three Hertz of tuning error from volume alone. Stuffing works the other way: fibre in a box makes it act a little larger, by up to about 15–25 % for a sealed box filled with fibre, depending on the material and how densely it's packed.
+Three Hertz of tuning error from volume alone. Stuffing works the other way: fibre in a box makes it act a little larger, by up to about 15–25 % for a sealed box filled with fibre, depending on the material and how densely it's packed (see the [box stuffing guide](/guides/box-stuffing/)).
 
 **How to close it:** use the app's **volume calculator**: enter the inside dimensions and it subtracts the driver's displacement, the port, the bracing and the crossover board, then links the net volume to the design.
 

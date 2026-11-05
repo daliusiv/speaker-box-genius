@@ -50,6 +50,7 @@ The ported boxes play **6–7 dB louder** at 30–40 Hz, which is a lot (about f
 - **Mounting position matters** (boot, firing forward or back, through a ski hatch) in ways no simulation captures. Use the simulation to choose the box, then tune by ear or with a measurement.
 - **Protect the driver.** Ported car boxes need a subsonic filter too; see [the subsonic filter guide](/guides/subsonic-filter/).
 - **Check the port speed.** Car audio runs high power, and a chuffing port is easy to hear in a quiet cabin.
+- **Polyfill in a sealed box** makes it act 15–25 % bigger, which helps when the box has to be small. How much to use is in the [box stuffing guide](/guides/box-stuffing/).
 
 ## Doing it in the app
 

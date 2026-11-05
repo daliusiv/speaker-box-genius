@@ -74,12 +74,12 @@ Fit the driver's parameters first: an error in the driver's Qms looks just like 
 
 ## Sealed boxes
 
-A sealed box can't use a port's resonance, so its losses matter less, but they're not zero: leakage lowers its output at the bottom a little. In the app the same Ql applies: for the DSA215-8's sealed box, Ql 10 instead of 100 moves the F3 from 76 Hz to 80 Hz. Stuffing in a sealed box mostly makes it act a little larger (and raises its losses), which is why stuffed sealed boxes are often simulated as larger than they are.
+A sealed box can't use a port's resonance, so its losses matter less, but they're not zero: leakage lowers its output at the bottom a little. In the app the same Ql applies: for the DSA215-8's sealed box, Ql 10 instead of 100 moves the F3 from 76 Hz to 80 Hz. Stuffing in a sealed box mostly makes it act a little larger (and raises its losses), which is why stuffed sealed boxes are often simulated as larger than they are. How much larger, and how to model and measure it, is in the [box stuffing guide](/guides/box-stuffing/).
 
 ## What to use
 
 - **Designing, before you build:** Ql **7–10**, Qa and Qp **100**. That's the conservative middle of the range, and WinISD's default, so results compare.
-- **A heavily stuffed box:** lower Qa (20–50).
+- **A heavily stuffed box:** lower Qa (20–50); see the [box stuffing guide](/guides/box-stuffing/).
 - **Checking a built box:** measure the impedance and fit the losses as above.
 - **Comparing with WinISD:** keep its defaults, 10 / 100 / 100.
 
