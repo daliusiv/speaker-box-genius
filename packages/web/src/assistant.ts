@@ -420,41 +420,44 @@ export function rankResults(results: AssistantResult[], goal: AssistantGoal): As
 }
 
 /**
- * Opening a result: its driver becomes the main driver (wired as the result was), the
- * power and room match the goal, and its box is added to the designs. Null when there are
- * already MAX_DESIGNS designs.
+ * Starting a project from results (one, or the same driver's sealed and ported boxes): its
+ * driver becomes the main one, wired as scored, at the goal's power and room, and its boxes
+ * replace the designs (the assistant starts projects; it doesn't add to one).
  */
-export function openResult(s: AppState, d: LoadedDriver, r: AssistantResult, goal: AssistantGoal): AppState | null {
-  if (s.designs.length >= MAX_DESIGNS) return null;
-  const t = trialState(s, d, goal, { load: r.load_ohm, wiring: r.wiring, dvc: r.dvcWired });
+export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[], goal: AssistantGoal): AppState {
+  const r0 = rs[0]!;
+  const t = trialState(s, d, goal, { load: r0.load_ohm, wiring: r0.wiring, dvc: r0.dvcWired });
   const model = d.name.startsWith(d.brand) ? d.name.slice(d.brand.length).trim() : d.name;
-  const base = newDesign(r.box, s.designs);
-  const kind = r.box === "sealed" ? "Sealed" : "Ported";
-  const design: DesignState =
-    r.box === "vented" && r.port
-      ? { ...(base as VentedDesign), name: `${kind} ${model}`, vb_l: r.vb_l, shape: "round", flare_cm: 0, ...r.port, targetFb: r.fb ?? 30, preset: "Assistant" }
-      : { ...base, name: `${kind} ${model}`, vb_l: r.vb_l, preset: "Assistant" };
+  const designs: DesignState[] = [];
+  for (const r of rs.slice(0, MAX_DESIGNS)) {
+    const base = newDesign(r.box, designs);
+    const kind = r.box === "sealed" ? "Sealed" : "Ported";
+    designs.push(
+      r.box === "vented" && r.port
+        ? { ...(base as VentedDesign), name: `${kind} ${model}`, vb_l: r.vb_l, shape: "round", flare_cm: 0, ...r.port, targetFb: r.fb ?? 30, preset: "Assistant" }
+        : { ...base, name: `${kind} ${model}`, vb_l: r.vb_l, preset: "Assistant" },
+    );
+  }
   return {
     ...s,
-    ...{
-      driverName: t.driverName,
-      driverBrand: t.driverBrand,
-      nominal_ohms: t.nominal_ohms,
-      ts: t.ts,
-      le_mh: t.le_mh,
-      l2_mh: t.l2_mh,
-      r2_ohm: t.r2_ohm,
-      xmax_mm: t.xmax_mm,
-      pe_w: t.pe_w,
-      volume: t.volume,
-      dvc: t.dvc,
-      drive: t.drive,
-      power: t.power,
-      drivers: t.drivers,
-      wiring: t.wiring,
-      isobaric: false,
-      roomGain: goal.use === "car" ? t.roomGain : s.roomGain.mode === "car" ? { ...s.roomGain, mode: "off" } : s.roomGain,
-    },
-    designs: [...s.designs, design],
+    driverName: t.driverName,
+    driverBrand: t.driverBrand,
+    nominal_ohms: t.nominal_ohms,
+    ts: t.ts,
+    le_mh: t.le_mh,
+    l2_mh: t.l2_mh,
+    r2_ohm: t.r2_ohm,
+    xmax_mm: t.xmax_mm,
+    pe_w: t.pe_w,
+    volume: { ...t.volume, link: "none" },
+    dvc: t.dvc,
+    drive: t.drive,
+    power: t.power,
+    drivers: t.drivers,
+    wiring: t.wiring,
+    isobaric: false,
+    compare: null,
+    roomGain: goal.use === "car" ? t.roomGain : s.roomGain.mode === "car" ? { ...s.roomGain, mode: "off" } : s.roomGain,
+    designs,
   };
 }

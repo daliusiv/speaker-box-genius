@@ -5,7 +5,7 @@ import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { runDesigns, solveDriver } from "../src/sim.ts";
-import { evaluateDriver, goalFor, loadOptions, openResult, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { evaluateDriver, goalFor, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -81,14 +81,19 @@ for (const use of ["car", "home", "hifi"] as const) {
   }
 }
 
-test("opening a result adds its box with that driver, and the app simulates it as scored", () => {
+test("opening results starts a project with that driver and its boxes, simulated as scored", () => {
   const goal = goalFor("car", "balanced");
-  const r = runAll(goal).results.find((x) => x.box === "vented")!;
-  const s = openResult(DEFAULT_STATE, loaded(r.driverId), r, goal)!;
-  assert.equal(s.designs.length, DEFAULT_STATE.designs.length + 1);
+  const all = runAll(goal).results;
+  const r = all.find((x) => x.box === "vented")!;
+  const both = all.filter((x) => x.driverId === r.driverId);
+  assert.equal(both.length, 2);
+  const s = openResults(DEFAULT_STATE, loaded(r.driverId), both, goal);
+  assert.deepEqual(s.designs.map((d) => d.kind).sort(), ["sealed", "vented"]);
   assert.equal(s.power, goal.power_w);
   assert.equal(s.roomGain.mode, "car");
-  const d = runDesigns(s, solveDriver(s)).at(-1)!;
-  assert.equal(d.vb_l, r.vb_l);
-  assert.ok(Math.abs(d.result.summary.f3! - r.f3) < 1.5, `${d.result.summary.f3} vs ${r.f3}`);
+  for (const x of both) {
+    const d = runDesigns(s, solveDriver(s)).find((y) => y.design.kind === x.box)!;
+    assert.equal(d.vb_l, x.vb_l);
+    assert.ok(Math.abs(d.result.summary.f3! - x.f3) < 1.5, `${x.box}: ${d.result.summary.f3} vs ${x.f3}`);
+  }
 });

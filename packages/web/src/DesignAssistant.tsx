@@ -85,10 +85,8 @@ export function DesignAssistant(props: {
   onClose: () => void;
   db: DbIndex | null;
   base: AppState;
-  /** Opening a result: its driver becomes the main one and its box is added. */
-  onOpen: (d: LoadedDriver, r: AssistantResult, goal: AssistantGoal) => void;
-  /** Whether another design can be added (8 at most). */
-  canAdd: boolean;
+  /** Starting a project from one result, or the same driver's sealed and ported results. */
+  onOpen: (d: LoadedDriver, rs: AssistantResult[], goal: AssistantGoal) => void;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [goal, setGoalRaw] = useState<AssistantGoal>(() => readGoal() ?? goalFor("car"));
@@ -106,7 +104,8 @@ export function DesignAssistant(props: {
     if (!d) return;
     if (props.open && !d.open) {
       d.showModal();
-      setStep(readGoal() ? 3 : 0);
+      // A new project starts at "What for", with the last limits remembered.
+      setStep(0);
     }
     if (!props.open && d.open) d.close();
   }, [props.open]);
@@ -270,7 +269,10 @@ export function DesignAssistant(props: {
         <div className="assist-body">
           {step === 0 && (
             <>
-              <p className="hint">What are you building? This sets sensible starting limits; you can change any of them next.</p>
+              <p className="hint">
+                What are you building? The assistant tries every suitable driver in the database and starts your project with the one you pick. This
+                sets sensible starting limits; you can change any of them next.
+              </p>
               <div className="assist-tiles">
                 {(Object.keys(USES) as AssistantUse[]).map((u) => (
                   <button
@@ -292,6 +294,9 @@ export function DesignAssistant(props: {
                   </button>
                 ))}
               </div>
+              <button type="button" className="link assist-skip" onClick={close}>
+                I already have a driver: skip the assistant
+              </button>
             </>
           )}
 
@@ -472,17 +477,25 @@ export function DesignAssistant(props: {
                       </p>
                     ))}
                     <div className="assist-card-actions">
-                      <button
-                        type="button"
-                        disabled={!props.canAdd}
-                        title={props.canAdd ? "Make it the main driver and add this box to your designs" : "8 designs already: delete one first"}
-                        onClick={() => {
+                      {(() => {
+                        const sibling = results!.find((x) => x.driverId === r.driverId && x.box !== r.box);
+                        const open = (rs: AssistantResult[]) => {
                           const d = loadedRef.current.get(r.driverId);
-                          if (d) props.onOpen(d, r, goal);
-                        }}
-                      >
-                        Open
-                      </button>
+                          if (d) props.onOpen(d, rs, goal);
+                        };
+                        return (
+                          <>
+                            {sibling && (
+                              <button type="button" className="secondary" title="Start with this driver in both boxes, to compare them" onClick={() => open(r.box === "sealed" ? [r, sibling] : [sibling, r])}>
+                                Open with sealed + ported
+                              </button>
+                            )}
+                            <button type="button" title="Start your project with this driver and box" onClick={() => open([r])}>
+                              Open
+                            </button>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
@@ -494,8 +507,8 @@ export function DesignAssistant(props: {
               </div>
               <p className="hint finder-note">
                 Each driver in the database that fits your limits, in the box the app's presets would give it (sealed Qtc 0.707, ported QB3/B4 or Keele), no
-                bigger than your maximum, simulated at {goal.power_w} W{goal.use === "car" ? " with the car's cabin gain (output includes it; F3 is the box's own, before cabin gain, as in the summary table)" : ""}. Opening a result makes its driver
-                the main one for every design and adds its box. Database values are the manufacturers' published figures: check the datasheet before you buy.
+                bigger than your maximum, simulated at {goal.power_w} W{goal.use === "car" ? " with the car's cabin gain (output includes it; F3 is the box's own, before cabin gain, as in the summary table)" : ""}. Opening a result starts the project
+                with its driver and box. Database values are the manufacturers' published figures: check the datasheet before you buy.
               </p>
             </>
           )}
