@@ -778,12 +778,6 @@ export function App(props: { initial: AppState | null }) {
           <div className="tab-panel" role="tabpanel" id="panel-driver" aria-labelledby="tab-driver">
             <Card title="Driver">
               {/* Two dropdown-like pickers: the main driver, and an optional one to compare with. */}
-              <div className="assist-entry">
-                <button type="button" className="secondary" onClick={launchAssistant}>
-                  ✦ Design assistant…
-                </button>
-                <span className="hint">Find a driver and box for what you're building</span>
-              </div>
               <div className="driver-pickers">
                 <div
                   className="dp-row"

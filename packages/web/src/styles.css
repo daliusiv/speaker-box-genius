@@ -3546,18 +3546,6 @@ button.assist-tile.on {
   justify-content: flex-end;
 }
 
-.assist-entry {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.3rem 0.7rem;
-  margin-bottom: 0.7rem;
-}
-
-.assist-entry .hint {
-  margin: 0;
-}
-
 .welcome-assist {
   margin: 0 0 0.6rem;
 }
