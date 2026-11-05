@@ -5,7 +5,7 @@ import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { PORT_LIMIT, limitsOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { evaluateDriver, goalFor, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { evaluateDriver, goalFor, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -111,11 +111,32 @@ test("what a result promises is what the app shows: same grade, and the port fit
       if (!r.over.includes("xmax")) assert.ok(app.x! <= s.xmax_mm! * 1.02, `${use}: ${r.name} ${r.box} ${app.x} mm`);
       if (!r.over.includes("port") && app.vp !== null) assert.ok(app.vp <= PORT_LIMIT * 1.02, `${use}: ${r.name} port ${app.vp} m/s`);
       assert.equal(!!app.deep, !!r.deep, `${use}: ${r.name} ${r.box} deep bass`);
-      if (r.port) assert.ok(r.port.length_cm <= portRoom_cm(r.vb_l, r.port.diameter_cm), `${r.name}: port ${r.port.length_cm} cm`);
+      if (r.port) assert.ok(r.port.length_cm <= portRoom_cm(r.vb_l, r.port.kind === "slot" ? r.port.slotHeight_cm : r.port.diameter_cm), `${r.name}: port ${r.port.length_cm} cm`);
     }
     // Graded, not hidden: within limits first, and deep-bass results carry their safe power.
     const firstOver = results.findIndex((r) => r.over.length > 0);
     if (firstOver >= 0) assert.ok(results.slice(firstOver).every((r) => r.over.length > 0), `${use}: a result within limits after one over`);
     for (const r of results) if (r.deep) assert.ok(r.deep.safe_w < goal.power_w && r.deep.below_hz > 20);
   }
+});
+
+test("ports: flared and slot ports when a plain tube can't fit or would chuff, and they open as built", () => {
+  // 20 L at 45 Hz: a plain tube that fits is narrow; a slot along a wall and a flared tube are offered too.
+  const c = portCandidates(20, 45, { rho: 1.204, c: 343.2 });
+  assert.deepEqual(c.map((p) => p.kind), ["straight", "flared", "slot"]);
+  for (const p of c) {
+    const clear = p.kind === "slot" ? p.slotHeight_cm : p.diameter_cm;
+    assert.ok(p.length_cm <= portRoom_cm(20, clear), `${p.kind} ${p.length_cm} cm`);
+  }
+  const goal = goalFor("hifi", "balanced");
+  const results = runAll(goal).results;
+  const kinds = new Set(results.filter((r) => r.port).map((r) => r.port!.kind));
+  assert.ok(kinds.has("flared") || kinds.has("slot"), [...kinds].join());
+  // Every ported result within the port-speed line used the simplest port that does it.
+  const flaredOrSlot = results.find((r) => r.port && r.port.kind !== "straight" && !r.over.includes("port"))!;
+  assert.ok(flaredOrSlot, "a flared or slot port within the chuffing line");
+  const s = openResults(DEFAULT_STATE, loaded(flaredOrSlot.driverId), [flaredOrSlot], goal);
+  const v = s.designs[0] as import("../src/state.ts").VentedDesign;
+  assert.equal(v.shape, flaredOrSlot.port!.kind === "slot" ? "slot" : "round");
+  assert.ok(Math.abs(runDesigns(s, solveDriver(s))[0]!.result.summary.fb! - flaredOrSlot.fb!) < 1, "opens at the tuning scored");
 });

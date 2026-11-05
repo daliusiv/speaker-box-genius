@@ -4,8 +4,8 @@
  *
  * Each driver that passes the quick filters (size, kind, brand, a load the amplifier can
  * drive) gets the box sizing the app's presets use (sealed Qtc 0.707, ported QB3/B4 or
- * Keele), capped at the largest box allowed, with the widest round port that fits (by the
- * app's own check). In a box smaller than its alignment, a ported box is tuned for the lowest
+ * Keele), capped at the largest box allowed, with the simplest port that fits (by the app's
+ * own check) and stays under the chuffing line: a plain tube, a flared tube, or a slot. In a box smaller than its alignment, a ported box is tuned for the lowest
  * F3 without a peak. No filter is assumed (a passive speaker on any amp): limits are graded
  * as the app grades them (limitsOf), so a deep-bass note is shown, not hidden. For
  * "smallest" the box is shrunk until F3 just reaches the target. Each design is simulated at
@@ -22,7 +22,7 @@ import {
 } from "@sbg/engine";
 import type { DbIndex, LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
-import { airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
+import { PORT_LIMIT, airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
 import { MAX_DESIGNS, ROOM_PRESETS, newDesign, type AppState, type DesignState, type VentedDesign } from "./state.ts";
 
 export type AssistantUse = "car" | "home" | "hifi" | "other";
@@ -85,6 +85,11 @@ export const goalFor = (use: AssistantUse, priority: AssistantPriority = "balanc
 /** A database driver to try: its index row and, once loaded, its full record. */
 export type IndexRow = DbIndex["drivers"][number];
 
+/** A port the assistant suggests, as a vented design's fields: a straight or flared tube, or a slot. */
+export type AssistantPort =
+  | { kind: "straight" | "flared"; diameter_cm: number; flare_cm: number; length_cm: number; count: number }
+  | { kind: "slot"; slotWidth_cm: number; slotHeight_cm: number; length_cm: number; count: number };
+
 export interface AssistantResult {
   /** driverId:box */
   key: string;
@@ -95,7 +100,7 @@ export interface AssistantResult {
   /** Net volume of the box (L), all drivers together. */
   vb_l: number;
   fb?: number;
-  port?: { diameter_cm: number; length_cm: number; count: number };
+  port?: AssistantPort;
   /** How the drivers (and a DVC driver's coils) are wired, and the load the amplifier sees. */
   wiring: "parallel" | "series";
   dvcWired?: "parallel" | "series";
@@ -200,6 +205,47 @@ export function choosePort(vb_l: number, fb: number, air: Air): { diameter_cm: n
   return null;
 }
 
+const SLOT_HEIGHTS = [8, 6, 5, 4, 3, 2.5, 2, 1.5];
+/** How much faster than the chuffing line a flared port's throat may run (its mouths set the noise). */
+const FLARED_THROAT = 2;
+const r05 = (v: number) => Math.round(v * 2) / 2;
+
+/**
+ * The ports worth trying, simplest to build first, each the largest of its kind that fits
+ * straight (portRoom_cm): a plain tube; a tube with round-overs at both ends (a flared port,
+ * radius ¼ of the throat as the app suggests, judged at its wider mouths); a slot as wide as
+ * the box (a cube's side) along a wall, which only needs its height clear of the opposite wall.
+ */
+export function portCandidates(vb_l: number, fb: number, air: Air): AssistantPort[] {
+  const out: AssistantPort[] = [];
+  const straight = choosePort(vb_l, fb, air);
+  if (straight) out.push({ kind: "straight", flare_cm: 0, ...straight });
+  for (const d of PORT_SIZES) {
+    const flare = Math.max(1, r05(d / 4));
+    const len = portLengthForFb(vb_l, { shape: "round", diameter_cm: d, length_cm: 10, flare_cm: flare }, fb, 1, undefined, air);
+    if (len >= 2 * flare + 1 && len <= portRoom_cm(vb_l, d)) {
+      out.push({ kind: "flared", diameter_cm: d, flare_cm: flare, length_cm: r1(len), count: 1 });
+      break;
+    }
+  }
+  const width = Math.floor(Math.cbrt(vb_l * 1000) * 2) / 2;
+  for (const h of SLOT_HEIGHTS) {
+    if (h * 3 > width) continue;
+    const len = portLengthForFb(vb_l, { shape: "slot", width_cm: width, height_cm: h, length_cm: 10 }, fb, 1, undefined, air);
+    if (len > 1 && len <= portRoom_cm(vb_l, h)) {
+      out.push({ kind: "slot", slotWidth_cm: width, slotHeight_cm: h, length_cm: r1(len), count: 1 });
+      break;
+    }
+  }
+  return out;
+}
+
+/** A port's fields for a vented design. */
+export function portFieldsOf(p: AssistantPort): Partial<VentedDesign> {
+  const { kind, ...rest } = p;
+  return kind === "slot" ? { shape: "slot", flare_cm: 0, ...rest } : { shape: "round", ...rest };
+}
+
 /** The value of `y` at frequency `f` (linear in log f). */
 function at(freq: Float64Array, y: Float64Array, f: number): number {
   if (f <= freq[0]!) return y[0]!;
@@ -271,9 +317,29 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
 
   const sealed = newDesign("sealed", []);
   const vented = newDesign("vented", []) as VentedDesign;
+  const withPort = (vb: number, fb: number, port: AssistantPort): VentedDesign => ({ ...vented, vb_l: vb, targetFb: r1(fb), ...portFieldsOf(port) });
+  /** For finding the tuning: the simplest port that fits (the port barely changes the response). */
   const ventedAt = (vb: number, fb: number) => {
-    const port = choosePort(vb, fb, air);
-    return port ? { design: { ...vented, vb_l: vb, shape: "round" as const, flare_cm: 0, targetFb: r1(fb), ...port }, port } : null;
+    const port = portCandidates(vb, fb, air)[0];
+    return port ? { design: withPort(vb, fb, port), port } : null;
+  };
+  /**
+   * The final port: the simplest that stays under the chuffing line at the goal's power, else
+   * the quietest. A flared port is judged at its mouths (as the app does), but a narrow throat
+   * still roars and compresses: its throat may not pass FLARED_THROAT × the line either.
+   */
+  const bestPort = (vb: number, fb: number) => {
+    let best: { design: VentedDesign; port: AssistantPort; v: number } | null = null;
+    for (const port of portCandidates(vb, fb, air)) {
+      const design = withPort(vb, fb, port);
+      const l = limitsOf(run(design, vb), d.xmax_mm!, false);
+      const vp = l.vp ?? Infinity;
+      const throat = port.kind === "flared" ? (vp * ((port.diameter_cm + 2 * port.flare_cm) / port.diameter_cm) ** 2) / FLARED_THROAT : 0;
+      const v = Math.max(vp, throat);
+      if (v <= PORT_LIMIT) return { design, port };
+      if (!best || v < best.v) best = { design, port, v };
+    }
+    return best;
   };
   /** In a box smaller than the alignment's: the tuning with the lowest F3 that keeps the response flat (no hump over 1.5 dB). */
   const bestFb = (vb: number) => {
@@ -385,7 +451,7 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
           fb = hiFb;
         }
       }
-      const v = fb !== null ? ventedAt(vb, fb) : null;
+      const v = fb !== null ? bestPort(vb, fb) : null;
       if (v && fb !== null) finish("vented", v.design, vb, notes, fb, v.port);
     }
   }
@@ -441,7 +507,7 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
     const kind = r.box === "sealed" ? "Sealed" : "Ported";
     designs.push(
       r.box === "vented" && r.port
-        ? { ...(base as VentedDesign), name: `${kind} ${model}`, vb_l: r.vb_l, shape: "round", flare_cm: 0, ...r.port, targetFb: r.fb ?? 30, preset: "Assistant" }
+        ? { ...(base as VentedDesign), name: `${kind} ${model}`, vb_l: r.vb_l, ...portFieldsOf(r.port), targetFb: r.fb ?? 30, preset: "Assistant" }
         : { ...base, name: `${kind} ${model}`, vb_l: r.vb_l, preset: "Assistant" },
     );
   }

@@ -10,6 +10,7 @@ import {
   rankResults,
   type AssistantBox,
   type AssistantGoal,
+  type AssistantPort,
   type AssistantPriority,
   type AssistantResult,
   type AssistantUse,
@@ -81,6 +82,16 @@ function Sketch({ curve }: { curve: number[] }) {
  * priority can be switched there directly. Results come in as they're worked out, in short
  * slices between paints, with a Stop.
  */
+/** A suggested port in words: "a 7.5 cm port 14 cm long", "a 6 cm flared port …", "a 27 × 3 cm slot …". */
+function portText(p: AssistantPort, fmt: (v: number, q: "len") => string): string {
+  const long = `${fmt(p.length_cm, "len")} long`;
+  if (p.kind === "slot") return `a ${fmt(p.slotWidth_cm, "len")} × ${fmt(p.slotHeight_cm, "len")} slot along a wall, ${long}`;
+  const n = p.count > 1 ? `${p.count} × ` : "a ";
+  return p.kind === "flared"
+    ? `${n}${fmt(p.diameter_cm, "len")} flared port (${fmt(p.flare_cm, "len")} round-overs at both ends), ${long}`
+    : `${n}${fmt(p.diameter_cm, "len")} port ${long}`;
+}
+
 export function DesignAssistant(props: {
   open: boolean;
   onClose: () => void;
@@ -472,7 +483,7 @@ export function DesignAssistant(props: {
                     </div>
                     <p className="assist-facts">
                       {r.box === "vented" && r.port
-                        ? `Tuned to ${r.fb} Hz, ${r.port.count > 1 ? `${r.port.count} × ` : ""}${fmt(r.port.diameter_cm, "len")} port ${fmt(r.port.length_cm, "len")} long. `
+                        ? `Tuned to ${r.fb} Hz, ${portText(r.port, fmt)}. `
                         : ""}
                       {wiringText(r, goal.drivers)}
                       Output at {goal.loudAt_hz} Hz is set by {LIMIT_TEXT[r.limitedBy]}.
