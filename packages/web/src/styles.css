@@ -87,6 +87,24 @@ p {
   gap: 1rem;
 }
 
+/* The app icon beside the name, as on the site pages. */
+.top > .title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.top > .title > div {
+  min-width: 0;
+}
+
+.top .logo {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.55rem;
+}
+
 .top-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1355,7 +1373,7 @@ figure.chart[hidden] {
     align-items: center;
   }
 
-  .top > div:first-child {
+  .top > .title {
     grid-area: title;
     min-width: 0;
   }
@@ -1368,8 +1386,13 @@ figure.chart[hidden] {
   }
 
   /* "Early preview": the header stays two rows. */
-  .top > div:first-child > p {
+  .top > .title p {
     display: none;
+  }
+
+  .top .logo {
+    width: 2rem;
+    height: 2rem;
   }
 
   .unit-switch {

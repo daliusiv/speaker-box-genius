@@ -720,9 +720,12 @@ export function App(props: { initial: AppState | null }) {
     <UnitsContext.Provider value={state.settings.units}>
     <div className={`layout phone-${phoneView}`}>
       <header className="top">
-        <div>
-          <h1>Speaker Box Genius</h1>
-          <p className="muted">Early preview</p>
+        <div className="title">
+          <img className="logo" src="/icons/icon-192.png" alt="" width={40} height={40} />
+          <div>
+            <h1>Speaker Box Genius</h1>
+            <p className="muted">Early preview</p>
+          </div>
         </div>
         <div className="top-actions">
           <div
