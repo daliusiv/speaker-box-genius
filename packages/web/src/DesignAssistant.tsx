@@ -210,25 +210,26 @@ export function DesignAssistant(props: {
   const next = () => setStep((s) => Math.min(3, s + 1));
   const toggleBox = (b: AssistantBox) => setGoal({ boxes: goal.boxes.includes(b) ? goal.boxes.filter((x) => x !== b) : [...goal.boxes, b] });
 
-  const nav = (
-    <div className="assist-nav">
-      {step > 0 && step < 3 && (
-        <button type="button" className="secondary" onClick={() => setStep(step - 1)}>
-          Back
-        </button>
-      )}
-      {step < 2 && (
-        <button type="button" className="secondary" onClick={next}>
-          Next
-        </button>
-      )}
-      {step < 3 && (
-        <button type="button" onClick={() => setStep(3)} disabled={goal.boxes.length === 0}>
-          Show results
-        </button>
-      )}
-    </div>
-  );
+  // Back (after the first step) and one main button: Next, then "Show results" on the last step.
+  const nav =
+    step < 3 ? (
+      <div className="assist-nav">
+        {step > 0 && (
+          <button type="button" className="secondary" onClick={() => setStep(step - 1)}>
+            Back
+          </button>
+        )}
+        {step < 2 ? (
+          <button type="button" onClick={next}>
+            Next
+          </button>
+        ) : (
+          <button type="button" onClick={() => setStep(3)} disabled={goal.boxes.length === 0}>
+            Show results
+          </button>
+        )}
+      </div>
+    ) : null;
 
   const vol = (l: number) => fmt(l, "vol", unit("vol").unit === "L" ? (l < 10 ? 1 : 0) : 2);
   const chips: { label: string; step: number }[] = [
