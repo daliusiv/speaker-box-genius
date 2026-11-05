@@ -21,6 +21,9 @@ import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
 import { exampleLinks } from "./examples.ts";
 import { readReport, validationContent, VALIDATION_STYLE } from "./validation.ts";
+import { CHART_STYLE, chart } from "./chart.ts";
+import { cardSvg, findChrome, Rasterizer } from "./og.ts";
+import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, loadDb, prCandidate, relatedDrivers, shareLink, type DriverPage } from "./drivers.ts";
 
 export const SITE = "https://speakerboxgenius.com";
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -174,6 +177,7 @@ a{color:var(--accent)}
 .nav a[aria-current]{color:var(--fg)}
 @media (max-width:520px){.brand span{display:none}.nav{gap:.8rem}.nav .button{padding:.45rem .8rem}}
 @media (max-width:400px){.top{padding:.9rem .8rem;gap:.5rem}.nav{gap:.65rem;font-size:.95rem}.nav .button{padding:.4rem .65rem}}
+@media (max-width:440px){.nav .wide:not([aria-current]){display:none}.nav .opt{display:none}}
 .button{display:inline-block;padding:.55rem 1rem;border-radius:.6rem;background:var(--accent);color:#1c1917;font-weight:650;text-decoration:none;white-space:nowrap}
 main{max-width:46rem;margin:0 auto;padding:.5rem 1.1rem 3rem}
 h1{font-size:2.1rem;line-height:1.15;margin:1rem 0 .6rem;letter-spacing:-.01em}
@@ -206,13 +210,15 @@ footer a{color:var(--muted)}
 /** A whole HTML page around some content. */
 /** The top bar's sections; the one a page belongs to is marked as current. */
 const NAV = [
+  { href: "/drivers/", label: "Drivers", match: (p: string) => p.startsWith("/drivers/") },
   { href: "/guides/", label: "Guides", match: (p: string) => p.startsWith("/guides/") || p.endsWith("-alternative/") },
-  { href: "/validation/", label: "Validation", match: (p: string) => p === "/validation/" },
+  // Left out of the top bar on narrow phones (it's in the footer).
+  { href: "/validation/", label: "Validation", match: (p: string) => p === "/validation/", wide: true },
 ];
 
-export function layout(o: { title: string; description: string; path: string; image?: string; content: string; guides: Page[]; style?: string }): string {
+export function layout(o: { title: string; description: string; path: string; image?: string; imagePath?: string; content: string; guides: Page[]; style?: string; moreGuides?: boolean }): string {
   const url = `${SITE}${o.path}`;
-  const image = `${SITE}${o.image ? `/guides/img/${o.image}` : "/og-image.png"}`;
+  const image = `${SITE}${o.imagePath ?? (o.image ? `/guides/img/${o.image}` : "/og-image.png")}`;
   const ld = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -223,7 +229,7 @@ export function layout(o: { title: string; description: string; path: string; im
     author: { "@type": "Person", name: "Dalius Ivanovas" },
     publisher: { "@type": "Organization", name: "Speaker Box Genius", url: SITE },
   };
-  const others = o.guides.filter((g) => g.path !== o.path);
+  const others = o.moreGuides === false ? [] : o.guides.filter((g) => g.path !== o.path);
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -249,18 +255,68 @@ export function layout(o: { title: string; description: string; path: string; im
 <body>
 <header class="top">
 <a class="brand" href="/"><img src="/icons/icon-192.png" alt=""><span>Speaker Box Genius</span></a>
-<nav class="nav">${NAV.map((n) => `<a href="${n.href}"${n.match(o.path) ? ' aria-current="page"' : ""}>${n.label}</a>`).join("")}<a class="button" href="/">Open the app</a></nav>
+<nav class="nav">${NAV.map((n) => `<a href="${n.href}"${"wide" in n ? ' class="wide"' : ""}${n.match(o.path) ? ' aria-current="page"' : ""}>${n.label}</a>`).join("")}<a class="button" href="/">Open<span class="opt"> the</span> app</a></nav>
 </header>
 <main>
 ${o.content}
 </main>
 <footer>
 ${others.length ? `<p>More guides: ${others.map((g) => `<a href="${g.path}">${escapeHtml(g.title)}</a>`).join(" · ")}</p>` : ""}
-<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/guides/">Guides</a> · <a href="/validation/">Validation</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
+<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/validation/">Validation</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
 </footer>
 </body>
 </html>
 `;
+}
+
+/** /drivers/, one index per brand, and one page per driver with suggested boxes (site/drivers.ts). */
+async function buildDriverPages(write: (path: string, html: string) => void, guides: Page[], outDir: string): Promise<void> {
+  const db = loadDb();
+  const prs = db.passiveRadiators.map(prCandidate);
+  const pages = db.drivers.map((e) => designDriver(e, prs)).filter((p): p is DriverPage => p !== null);
+  const style = CHART_STYLE + DRIVERS_STYLE;
+  const cards = await startCards();
+  try {
+    for (const p of pages) {
+      const page = driverContent(p, { all: await shareLink(SITE, p.state), related: relatedDrivers(p, pages) }, chart);
+      let imagePath: string | undefined;
+      if (cards) {
+        // The page's share card, next to it; pages without one keep the site's card.
+        imagePath = `${driverPath(p.id)}card.jpg`;
+        mkdirSync(join(outDir, driverPath(p.id)), { recursive: true });
+        writeFileSync(join(outDir, imagePath), await cards.image(cardSvg(cardData(p))));
+      }
+      write(driverPath(p.id), layout({ ...page, path: driverPath(p.id), imagePath, content: page.content, guides, style, moreGuides: false }));
+    }
+  } finally {
+    cards?.close();
+  }
+  const byBrand = [...new Set(pages.map((p) => p.brandSlug))]
+    .map((slug) => ({ slug, name: db.brands.get(slug)?.name ?? pages.find((p) => p.brandSlug === slug)!.brand, pages: pages.filter((p) => p.brandSlug === slug) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  for (const b of byBrand) {
+    write(brandPath(b.slug), layout({ title: `${b.name} drivers: box designs`, description: `Suggested sealed, ported and passive radiator boxes for ${b.pages.length} ${b.name} drivers.`, path: brandPath(b.slug), content: brandContent(b.name, b.pages), guides, style, moreGuides: false }));
+  }
+  write("/drivers/", layout({ title: "Driver box designs", description: `Suggested sealed, ported and passive radiator boxes for ${pages.length} drivers, with charts and live designs to open and change.`, path: "/drivers/", content: driversIndexContent(byBrand), guides, style, moreGuides: false }));
+}
+
+/**
+ * Headless Chrome for the driver pages' share cards (site/og.ts), or null: when SBG_CARDS=0,
+ * when there's no Chrome, or when it won't start (the pages then use the site's card).
+ */
+async function startCards(): Promise<Rasterizer | null> {
+  if (process.env.SBG_CARDS === "0") return null;
+  const chrome = findChrome();
+  if (!chrome) {
+    console.warn("No Chrome found (set CHROME_PATH): driver pages use the site's share card.");
+    return null;
+  }
+  try {
+    return await Rasterizer.start(chrome);
+  } catch (e) {
+    console.warn(`Chrome didn't start (${(e as Error).message}): driver pages use the site's share card.`);
+    return null;
+  }
 }
 
 /** The commit being built: GitHub Actions' GITHUB_SHA, else git, else none. */
@@ -306,9 +362,11 @@ export async function build(outDir: string): Promise<string[]> {
       path: "/validation/",
       content: validationContent(readReport(), { commit: buildCommit(), date: new Date() }),
       guides,
-      style: VALIDATION_STYLE,
+      style: CHART_STYLE + VALIDATION_STYLE,
     }),
   );
+
+  await buildDriverPages(write, guides, outDir);
 
   const imgDir = join(HERE, "img");
   if (existsSync(imgDir)) {
@@ -328,7 +386,7 @@ export async function build(outDir: string): Promise<string[]> {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const out = process.argv[2] ?? join(HERE, "../packages/web/dist");
   build(out).then(
-    (paths) => console.log(`Built ${paths.length} pages: ${paths.join(", ")}`),
+    (paths) => console.log(`Built ${paths.length} pages (${paths.filter((p) => p.startsWith("/drivers/")).length} driver pages)`),
     (e) => {
       console.error(e);
       process.exit(1);

@@ -6,6 +6,7 @@
 import { readFileSync } from "node:fs";
 import type { Report, WinIsdCaseReport, HornrespCaseReport, Curve } from "../packages/engine/validation/report.ts";
 import { REPORT_FILE } from "../packages/engine/validation/report.ts";
+import { chart } from "./chart.ts";
 
 const REPO = "https://github.com/daliusiv/speaker-box-genius";
 
@@ -34,77 +35,6 @@ function notes(md: string): string {
         : `<p>${inline(block)}</p>`,
     )
     .join("\n");
-}
-
-// ---------------------------------------------------------------------------
-// Charts: small static SVGs, log frequency axis.
-// ---------------------------------------------------------------------------
-
-const W = 640;
-const H = 230;
-const PAD = { l: 46, r: 18, t: 12, b: 28 };
-
-function niceTicks(lo: number, hi: number, n = 5): number[] {
-  const span = hi - lo || 1;
-  const raw = span / n;
-  const mag = 10 ** Math.floor(Math.log10(raw));
-  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= n) ?? 10 * mag;
-  const out: number[] = [];
-  for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(Number(v.toFixed(10)));
-  return out;
-}
-
-interface Series {
-  points: [number, number][];
-  /** "line" for our curve, "ref" for the reference curve, "dots" for read-outs. */
-  style: "line" | "ref" | "dots";
-}
-
-export function chart(o: { label: string; unit: string; series: Series[]; aria: string }): string {
-  const all = o.series.flatMap((s) => s.points).filter((p) => Number.isFinite(p[1]));
-  const fMin = Math.min(...all.map((p) => p[0]));
-  const fMax = Math.max(...all.map((p) => p[0]));
-  let yMin = Math.min(...all.map((p) => p[1]));
-  let yMax = Math.max(...all.map((p) => p[1]));
-  const padY = (yMax - yMin || Math.abs(yMax) || 1) * 0.06;
-  yMin -= padY;
-  yMax += padY;
-  const yt = niceTicks(yMin, yMax);
-  yMin = Math.min(yMin, yt[0]!);
-  yMax = Math.max(yMax, yt[yt.length - 1]!);
-  const x = (f: number) => PAD.l + ((Math.log10(f) - Math.log10(fMin)) / (Math.log10(fMax) - Math.log10(fMin))) * (W - PAD.l - PAD.r);
-  const y = (v: number) => PAD.t + (1 - (v - yMin) / (yMax - yMin)) * (H - PAD.t - PAD.b);
-  const xt = [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000].filter((f) => f >= fMin * 0.999 && f <= fMax * 1.001);
-  const r1 = (v: number) => v.toFixed(1);
-
-  const grid = [
-    ...xt.map((f) => `<line x1="${r1(x(f))}" x2="${r1(x(f))}" y1="${PAD.t}" y2="${H - PAD.b}"/>`),
-    ...yt.map((v) => `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${r1(y(v))}" y2="${r1(y(v))}"/>`),
-  ].join("");
-  const labels = [
-    ...xt.map((f) => `<text x="${r1(x(f))}" y="${H - 9}" text-anchor="middle">${f >= 1000 ? `${f / 1000}k` : f}</text>`),
-    ...yt.map((v) => `<text x="${PAD.l - 6}" y="${r1(y(v) + 4)}" text-anchor="end">${minus(String(v))}</text>`),
-  ].join("");
-
-  const body = o.series
-    .map((s) => {
-      if (s.style === "dots") return s.points.map(([f, v]) => `<circle class="pt" cx="${r1(x(f))}" cy="${r1(y(v))}" r="4.5"/>`).join("");
-      // Break the path where a value is missing.
-      let d = "";
-      let pen = false;
-      for (const [f, v] of s.points) {
-        if (!Number.isFinite(v)) {
-          pen = false;
-          continue;
-        }
-        d += `${pen ? "L" : "M"}${r1(x(f))} ${r1(y(v))}`;
-        pen = true;
-      }
-      return `<path class="${s.style}" d="${d}"/>`;
-    })
-    .join("");
-
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}"><g class="grid">${grid}</g><g class="ax">${labels}<text x="${PAD.l}" y="${PAD.t - 2}" class="unit">${esc(o.unit)}</text></g>${body}</svg>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -226,19 +156,6 @@ td small,th small{color:var(--muted);font-weight:400}
 .case{margin:2rem 0 2.5rem;scroll-margin-top:1rem}
 .case h3{margin-bottom:.2rem}
 .setup{margin:.2rem 0 .6rem;color:var(--muted);font-size:.95rem}
-.charts{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr))}
-.charts figure{margin:0;padding:.5rem .5rem .3rem;border:1px solid var(--border);border-radius:.7rem;background:var(--card)}
-.charts figcaption{margin:0 0 0 .3rem}
-.chart{display:block;width:100%;height:auto}
-.chart .grid line{stroke:#292524;stroke-width:1}
-.chart .ax text{fill:#a8a29e;font:13px system-ui,sans-serif}
-.chart .line{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linejoin:round}
-.chart .ref{fill:none;stroke:#e7e5e4;stroke-opacity:.5;stroke-width:6;stroke-linejoin:round;stroke-linecap:round}
-.chart .pt{fill:#f5f5f4;stroke:#0c0a09;stroke-width:1.5}
-.key{display:flex;flex-wrap:wrap;gap:1rem;color:var(--muted);font-size:.9rem}
-.key span::before{content:"";display:inline-block;width:1.4rem;height:0;margin:0 .4rem .25rem 0;vertical-align:middle;border-top:2.5px solid var(--accent)}
-.key .k-ref::before{border-top:6px solid rgba(231,229,228,.5)}
-.key .k-pt::before{width:.6rem;height:.6rem;border:0;border-radius:50%;background:#f5f5f4}
 .known{margin-top:1rem;padding:.2rem 1rem;border-left:3px solid var(--accent);border-radius:.4rem;background:var(--card)}
 .known h4{margin:.7rem 0 0;font-size:.95rem}
 .known p,.known li{font-size:.95rem}

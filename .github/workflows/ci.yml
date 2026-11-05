@@ -35,3 +35,6 @@ jobs:
 
       - name: Build
         run: pnpm build
+        env:
+          # Driver pages' share cards are drawn with Chrome at deploy; skip them here.
+          SBG_CARDS: "0"
