@@ -65,7 +65,7 @@ export function useWelcome() {
   };
 }
 
-export function GettingStarted(props: { onDismiss: () => void }) {
+export function GettingStarted(props: { onDismiss: () => void; onAssistant?: () => void }) {
   return (
     <section className="card welcome" aria-labelledby="welcome-title">
       <div className="welcome-head">
@@ -74,9 +74,18 @@ export function GettingStarted(props: { onDismiss: () => void }) {
           ×
         </button>
       </div>
+      {props.onAssistant && (
+        <p className="welcome-assist">
+          Not sure which driver or box?{" "}
+          <button type="button" className="link" onClick={props.onAssistant}>
+            Ask the Design assistant
+          </button>
+          : tell it what you're building and your limits, and it ranks drivers and boxes from the database.
+        </p>
+      )}
       <ol>
         <li>
-          <b>Load your driver.</b> In <i>Driver</i>, use <i>Browse drivers</i> (about 200 in the database) or type the
+          <b>Load your driver.</b> In <i>Driver</i>, use <i>Browse drivers</i> (over 1,400 in the database) or type the
           parameters in; <i>Driver tools</i> pastes from a datasheet or imports a WinISD file. Values you type are never
           overwritten; the rest are calculated.
         </li>

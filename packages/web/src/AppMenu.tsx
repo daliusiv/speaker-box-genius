@@ -27,6 +27,8 @@ export function AppMenu(props: {
   /** Set while the browser offers to install the app. */
   install: (() => Promise<void>) | null;
   showTips: () => void;
+  /** Open the design assistant. */
+  onAssistant: () => void;
   /** The current design's link, for "Report a problem". */
   reportUrl: () => string;
 }) {
@@ -108,6 +110,9 @@ export function AppMenu(props: {
             </div>
 
             <p className="menu-label">Project</p>
+            <button role="menuitem" onClick={act(props.onAssistant)}>
+              Design assistant… <span className="menu-note">find a driver and box</span>
+            </button>
             <a role="menuitem" className="menu-link" href={location.pathname} target="_blank" rel="noopener" onClick={() => close(false)}>
               New project <span className="menu-note">new tab</span>
             </a>

@@ -284,6 +284,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - ✅ .zma/.frd import with overlay; T/S fitting from impedance.
 - ✅ In-app driver search and "Send to the database".
 - ✅ Alignment presets, PR tools, size for a target volume.
+- 🟡 **Design assistant** (Nov 2026): goal → limits → priority → ranked drivers and boxes from the database, one tap to open. Stage A: sealed and ported. ⬜ Stage B: passive radiator boxes (pairing each driver with a database PR), "fit my space" from W × H × D, shareable results.
 
 ### Phase 3: Community and virality 🟡
 - ✅ Issue-to-PR database bot and CI consistency checks. ⬜ Preview comments (needs PR preview deploys, deferred).

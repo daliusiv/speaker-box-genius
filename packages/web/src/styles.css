@@ -3353,3 +3353,223 @@ button.menu-button[aria-expanded="true"] {
     animation: none;
   }
 }
+
+/* ---- Design assistant ---- */
+
+dialog.library.assistant {
+  height: min(820px, calc(100dvh - 2rem));
+}
+
+.assistant .lib-inner {
+  padding-bottom: 0.8rem;
+}
+
+.assist-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+}
+
+.assist-steps button.link {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.assist-steps button[aria-current] {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.assist-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.assist-body > p {
+  margin: 0;
+}
+
+.assist-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.6rem;
+}
+
+button.assist-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--fg);
+  text-align: left;
+}
+
+button.assist-tile span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+button.assist-tile.on {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.assist-checks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+}
+
+.assist-checks > span {
+  color: var(--muted);
+}
+
+.assist-brand-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.2rem 0.8rem;
+  margin: 0.4rem 0;
+}
+
+.assist-nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+}
+
+.assist-nav:empty {
+  display: none;
+}
+
+.assist-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.assist-priority {
+  align-self: flex-start;
+}
+
+.assist-priority button {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.82rem;
+}
+
+.assist-results {
+  overflow: visible;
+}
+
+.assist-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.assist-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.5rem;
+}
+
+.assist-card-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.assist-nums {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.assist-nums b {
+  color: var(--fg);
+  font-size: 1rem;
+}
+
+.assist-sketch {
+  flex: none;
+  width: 7.5rem;
+  height: 2.5rem;
+}
+
+.assist-sketch path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+}
+
+.assist-sketch-ref {
+  stroke: var(--faint);
+  stroke-dasharray: 2 3;
+}
+
+.assist-facts,
+.assist-note,
+.assist-over {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.assist-facts {
+  color: var(--muted);
+}
+
+.assist-card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.assist-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.7rem;
+  margin-bottom: 0.7rem;
+}
+
+.assist-entry .hint {
+  margin: 0;
+}
+
+.welcome-assist {
+  margin: 0 0 0.6rem;
+}
+
+/* The results scroll with the rest of the assistant's body, not on their own. */
+.finder-results.assist-results {
+  flex: none;
+  overflow: visible;
+  min-height: auto;
+}
+
+/* The body scrolls; nothing in it may shrink to fit (the sort switch hides its overflow). */
+.assist-body > * {
+  flex-shrink: 0;
+}
