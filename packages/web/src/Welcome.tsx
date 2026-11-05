@@ -86,8 +86,8 @@ export function GettingStarted(props: { onDismiss: () => void }) {
           Made a mistake? <i>Undo</i> (Ctrl+Z) takes it back.
         </li>
         <li>
-          <b>Read the charts.</b> Dashed red lines are limits: cone and PR Xmax, port chuffing. Raise <i>Power</i> at the
-          top to see where each design runs out, and check <i>Maximum SPL</i> for what limits it first. Red in the table
+          <b>Read the charts.</b> Dashed red lines are limits: cone and PR Xmax, port chuffing. Raise <i>Power</i> above the
+          charts to see where each design runs out, and check <i>Maximum SPL</i> for what limits it first. Red in the table
           means over a limit.
         </li>
         <li>

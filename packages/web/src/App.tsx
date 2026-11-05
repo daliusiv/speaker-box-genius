@@ -55,6 +55,7 @@ import {
   compareShort,
   solveDriver,
   vbOf,
+  switchDrive,
   builtVbOf,
   limitsOf,
   LIMIT_CHART,
@@ -71,7 +72,7 @@ import { reportUrl, ShareMenu } from "./Share.tsx";
 import { EqPanel } from "./Eq.tsx";
 import { MeasurePanel, type Measurement } from "./Measure.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
-import { ProjectsMenu } from "./Projects.tsx";
+import { AppMenu } from "./AppMenu.tsx";
 import { submitDriverUrl } from "./submit.ts";
 
 const LIMIT_RED = "#dc2626";
@@ -720,59 +721,20 @@ export function App(props: { initial: AppState | null }) {
     <UnitsContext.Provider value={state.settings.units}>
     <div className={`layout phone-${phoneView}`}>
       <header className="top">
-        <div>
-          <h1>Speaker Box Genius</h1>
-          <p className="muted">
-            Early preview · <a href={REPO}>GitHub</a> · <a href={`${REPO}/blob/main/docs/build-plan.md`}>Roadmap</a>
-          </p>
+        <div className="title">
+          {/* The app icon's speaker without its card (site/brand.ts draws the same shapes). */}
+          <svg className="logo" viewBox="136 84 240 344" aria-hidden="true">
+            <rect x="136" y="84" width="240" height="344" rx="26" fill="#2a2f40" />
+            <circle cx="256" cy="168" r="32" fill="#8e96aa" />
+            <circle cx="256" cy="310" r="80" fill="none" stroke="#f97316" strokeWidth="26" />
+            <circle cx="256" cy="310" r="30" fill="#8e96aa" />
+          </svg>
+          <div>
+            <h1>Speaker Box Genius</h1>
+            <p className="muted">Early preview</p>
+          </div>
         </div>
         <div className="top-actions">
-          <div
-            className="power"
-            data-help-title={state.drive === "volts" ? "Voltage" : "Power"}
-            data-help="The drive for every chart: amplifier power in watts (turned into volts with Re), or a voltage. Excursion, port speed and the limits all follow it."
-          >
-            <span id="drive-label">{state.drive === "volts" ? "Voltage" : "Power"}</span>
-            {state.drive === "volts" ? (
-              <input
-                type="range"
-                aria-labelledby="drive-label"
-                min={-1}
-                max={2}
-                step={0.005}
-                value={Math.log10(state.volts)}
-                onChange={(e) => set("volts", Number((10 ** e.currentTarget.valueAsNumber).toPrecision(3)))}
-              />
-            ) : (
-              <input
-                type="range"
-                aria-labelledby="drive-label"
-                min={0}
-                max={4}
-                step={0.01}
-                value={Math.log10(state.power)}
-                onChange={(e) => set("power", Math.round(10 ** e.currentTarget.valueAsNumber * 10) / 10)}
-              />
-            )}
-            {state.drive === "volts" ? (
-              <DriveValue value={state.volts} unit="V" min={0.1} max={100} onChange={(volts) => set("volts", Number(volts.toPrecision(3)))} />
-            ) : (
-              <DriveValue value={state.power} unit="W" min={1} max={10000} onChange={(power) => set("power", Math.round(power * 10) / 10)} />
-            )}
-            <div
-              className="unit-switch"
-              role="group"
-              aria-label="Drive by"
-              title="Watts: V = √(P·Re), like WinISD. Volts: a fixed voltage, like the 2.83 V datasheets quote."
-            >
-              <button aria-pressed={state.drive === "watts"} onClick={() => setStep((s) => ({ ...s, drive: "watts" }))}>
-                W
-              </button>
-              <button aria-pressed={state.drive === "volts"} onClick={() => setStep((s) => ({ ...s, drive: "volts" }))}>
-                V
-              </button>
-            </div>
-          </div>
           <div className="undo-redo" role="group" aria-label="History">
             <button className="secondary icon" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo (Ctrl+Z)">
               ↶
@@ -781,15 +743,18 @@ export function App(props: { initial: AppState | null }) {
               ↷
             </button>
           </div>
-          <ProjectsMenu
-            install={pwa.install}
+          <ShareMenu state={state} designs={designs} shareUrl={shareUrl} />
+          <AppMenu
             state={state}
+            install={pwa.install}
             onOpen={(s) => {
               setStep(s);
               notify(`Opened “${s.driverName}”.`);
             }}
+            notify={(m) => notify(m)}
+            showTips={welcome.showTips}
+            reportUrl={() => reportUrl(shareUrl())}
           />
-          <ShareMenu state={state} designs={designs} shareUrl={shareUrl} />
           <PwaStatus pwa={pwa} />
         </div>
       </header>
@@ -1478,6 +1443,53 @@ export function App(props: { initial: AppState | null }) {
       </aside>
 
       <main className="charts">
+        {/* The drive for every chart, right above them: sticky, so it stays in reach while scrolling. */}
+        <div
+          className="power drive-bar"
+          data-help-title={state.drive === "volts" ? "Voltage" : "Power"}
+          data-help="The drive for every chart: amplifier power in watts (turned into volts with Re), or a voltage. Excursion, port speed and the limits all follow it."
+        >
+          <span id="drive-label">{state.drive === "volts" ? "Voltage" : "Power"}</span>
+          {state.drive === "volts" ? (
+            <input
+              type="range"
+              aria-labelledby="drive-label"
+              min={-1}
+              max={2}
+              step={0.005}
+              value={Math.log10(state.volts)}
+              onChange={(e) => set("volts", Number((10 ** e.currentTarget.valueAsNumber).toPrecision(3)))}
+            />
+          ) : (
+            <input
+              type="range"
+              aria-labelledby="drive-label"
+              min={0}
+              max={4}
+              step={0.01}
+              value={Math.log10(state.power)}
+              onChange={(e) => set("power", Math.round(10 ** e.currentTarget.valueAsNumber * 10) / 10)}
+            />
+          )}
+          {state.drive === "volts" ? (
+            <DriveValue value={state.volts} unit="V" min={0.1} max={100} onChange={(volts) => set("volts", Number(volts.toPrecision(3)))} />
+          ) : (
+            <DriveValue value={state.power} unit="W" min={1} max={10000} onChange={(power) => set("power", Math.round(power * 10) / 10)} />
+          )}
+          <div
+            className="unit-switch"
+            role="group"
+            aria-label="Drive by"
+            title="Watts: V = √(P·Re), like WinISD. Volts: a fixed voltage, like the 2.83 V datasheets quote."
+          >
+            <button aria-pressed={state.drive === "watts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "watts") }))}>
+              W
+            </button>
+            <button aria-pressed={state.drive === "volts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "volts") }))}>
+              V
+            </button>
+          </div>
+        </div>
         {welcome.linkNote && <LinkNote onDismiss={welcome.dismissLinkNote} onTips={welcome.showTips} />}
         {welcome.tips && <GettingStarted onDismiss={welcome.dismissTips} />}
         <Summary designs={designs} state={state} missing={solved.missing.length > 0} narrow={narrow} onJump={jumpTo} />

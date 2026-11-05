@@ -227,6 +227,17 @@ export function logFrequencies(fMin: number, fMax: number, points: number): Floa
 
 const finiteOr = (v: number | undefined, d: number) => (v === undefined ? d : v);
 
+/**
+ * Resistance the amplifier sees across the whole driver bank (cold Re, after isobaric pairing
+ * and series/parallel wiring): what simulate() turns watts into volts with, V = √(P · R).
+ */
+export function bankResistance(driverIn: DriverInput, opts: Pick<SimulationOptions, "isobaric" | "drivers" | "wiring"> = {}): number {
+  const base = driverModel(driverIn);
+  const re = (opts.isobaric ? isobaricPair(base, opts.isobaric.coils) : base).re;
+  const n = opts.drivers ?? 1;
+  return (opts.wiring ?? "parallel") === "parallel" ? re / n : re * n;
+}
+
 export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: SimulationOptions = {}): SimulationResult {
   const air = opts.air ?? STANDARD_AIR;
   const base = driverModel(driverIn, air);

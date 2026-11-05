@@ -87,6 +87,46 @@ p {
   gap: 1rem;
 }
 
+/* The app icon beside the name, as on the site pages. */
+.top > .title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.top > .title > div {
+  min-width: 0;
+}
+
+/* One height for the logo, undo/redo, Share and ☰, so the header lines up. */
+.top {
+  --head-h: 2.25rem;
+}
+
+@media (pointer: coarse) {
+  .top {
+    --head-h: 2.75rem;
+  }
+}
+
+.top .logo {
+  flex: none;
+  height: var(--head-h);
+  width: auto;
+  aspect-ratio: 240 / 344;
+}
+
+.top h1 {
+  white-space: nowrap;
+}
+
+.top .share > button,
+.top button.menu-button,
+.top .undo-redo button.icon {
+  height: var(--head-h);
+  min-height: 0;
+}
+
 .top-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1344,80 +1384,52 @@ figure.chart[hidden] {
     bottom: calc(5rem + env(safe-area-inset-bottom));
   }
 
-  /* Header in two rows: title + undo/redo, then power + menus. */
+  /* Header in one row: logo and name, undo/redo, Share, ☰ (the drive sits above the charts). */
   .top {
     display: grid;
-    grid-template-columns: 1fr auto auto;
-    grid-template-areas:
-      "title projects share"
-      "power power history";
-    gap: 0.6rem 0.5rem;
+    grid-template-columns: 1fr auto auto auto;
+    grid-template-areas: "title history share menu";
+    gap: 0.5rem;
     align-items: center;
   }
 
-  .top > div:first-child {
+  .top > .title {
     grid-area: title;
     min-width: 0;
   }
 
-  .top h1 {
-    font-size: 1.1rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  /* The name scales with the room it has (its column), so it never wraps. */
+  .top > .title > div {
+    flex: 1;
+    container-type: inline-size;
   }
 
-  /* The GitHub and roadmap links are in the footer too; the header stays two rows. */
-  .top > div:first-child > p {
+  .top h1 {
+    font-size: clamp(0.7rem, 10.2cqi, 1.3rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+  }
+
+  .top > .title p {
     display: none;
   }
 
-  .unit-switch {
-    flex: none;
-  }
-
-  .power input[type="range"] {
-    min-width: 3rem;
-  }
-
-  /* The slider, its value and the W/V switch say what it is; keep the word for screen readers. */
-  .power > span:first-child {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  .power b {
-    min-width: 0;
-  }
 
   .top-actions {
     display: contents;
   }
 
   .top-actions > :nth-child(1) {
-    grid-area: power;
-    min-width: 0;
-  }
-
-  .top-actions > :nth-child(2) {
     grid-area: history;
   }
 
-  .top-actions > :nth-child(3) {
-    grid-area: projects;
-  }
-
-  .top-actions > :nth-child(4) {
+  .top-actions > :nth-child(2) {
     grid-area: share;
   }
 
-  /* No room in the two-row header: phones install from the Projects menu instead. */
-  .top-actions > .install-button {
-    display: none;
+  .top-actions > :nth-child(3) {
+    grid-area: menu;
   }
 
   .top-actions > .offline-badge {
@@ -1425,20 +1437,39 @@ figure.chart[hidden] {
     justify-self: start;
   }
 
-  .power {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-
-  .power input[type="range"] {
-    flex: 1 1 auto;
+  .drive-bar input[type="range"] {
     min-width: 4rem;
-    width: auto;
+  }
+}
+
+/* Small phones: tighter buttons leave the name more room. */
+@media (max-width: 440px) {
+  .top {
+    gap: 0.35rem;
   }
 
-  .power b {
-    white-space: nowrap;
+  .top .share > button {
+    padding-inline: 0.65rem;
+  }
+
+  .top .undo-redo {
+    gap: 0;
+  }
+
+  .top .undo-redo button.icon {
+    min-width: 2.1rem;
+    padding-inline: 0.3rem;
+  }
+}
+
+/* The very narrowest (320 px): no readable size fits, so the logo stands alone. */
+@media (max-width: 339px) {
+  .top h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 }
 
@@ -1548,9 +1579,35 @@ button.check-fix {
   color: var(--on-accent);
 }
 
-@media (min-width: 861px) {
-  .power input[type="range"] {
-    width: 10rem;
+/* The drive above the charts: a full-width slider that stays in reach while scrolling. */
+.drive-bar {
+  position: sticky;
+  top: 0;
+  z-index: 29;
+  margin: 0 0 -0.4rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.drive-bar input[type="range"] {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 6rem;
+}
+
+.drive-bar > span:first-child {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+@media (max-width: 860px) {
+  .drive-bar {
+    margin: 0;
+    padding: 0.4rem 0.7rem;
   }
 }
 
@@ -3130,4 +3187,149 @@ button.strip-box.is-over {
   align-items: flex-end;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+/* ---- ☰ menu: a dropdown on wide screens, a panel from the right on phones ---- */
+
+.app-menu {
+  position: relative;
+}
+
+/* The same box as the Share button beside it, on every screen. */
+button.menu-button {
+  min-width: 2.6rem;
+  min-height: 2.4rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+button.menu-button[aria-expanded="true"] {
+  border-color: var(--accent);
+}
+
+.app-menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  /* Above the phone status strip (30) and bottom bar (40); below toasts and help (50+). */
+  z-index: 46;
+  display: flex;
+  flex-direction: column;
+  width: 18rem;
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+  padding: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+.app-menu-backdrop {
+  display: none;
+}
+
+.app-menu-head {
+  display: none;
+}
+
+.app-menu-panel > button,
+.app-menu-panel .saved-row button[role="menuitem"],
+.app-menu-panel .menu-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  text-align: left;
+  background: none;
+  color: var(--fg);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.app-menu-panel > button:hover,
+.app-menu-panel .saved-row button[role="menuitem"]:hover,
+.app-menu-panel .menu-link:hover,
+.app-menu-panel [role="menuitem"]:focus-visible {
+  background: var(--bg);
+}
+
+.app-menu-panel .menu-more {
+  color: var(--accent);
+}
+
+.menu-note {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.app-menu-panel hr {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0.3rem 0;
+}
+
+.app-menu-panel .hint {
+  margin: 0.3rem 0.5rem 0.2rem;
+}
+
+@media (max-width: 860px) {
+  .app-menu-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: rgb(0 0 0 / 0.5);
+  }
+
+  .app-menu-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(20rem, 88vw);
+    max-height: none;
+    border-radius: 0;
+    border-width: 0 0 0 1px;
+    padding: calc(0.5rem + env(safe-area-inset-top)) 0.5rem calc(1rem + env(safe-area-inset-bottom));
+    animation: menu-in 0.18s ease-out;
+  }
+
+  .app-menu-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.3rem 0.5rem 0.5rem 0.9rem;
+  }
+
+  .app-menu-panel > button,
+  .app-menu-panel .saved-row button[role="menuitem"],
+  .app-menu-panel .menu-link {
+    min-height: 2.75rem;
+    align-items: center;
+  }
+}
+
+@keyframes menu-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-menu-panel {
+    animation: none;
+  }
 }
