@@ -4,13 +4,12 @@ import {
   CURVE_FREQS,
   PRIORITIES,
   USES,
-  BANDPASS_SHORTLIST,
   BANDPASS_USES,
   LINE_USES,
   evaluateDriver,
   goalFor,
+  bandpassShortlist,
   lineShortlist,
-  shortlist,
   prefilter,
   rankResults,
   type AssistantBox,
@@ -22,6 +21,7 @@ import {
   type IndexRow,
 } from "./assistant.ts";
 import { loadDriver, type DbIndex, type LoadedDriver } from "./library.ts";
+import type { WorkerJob, WorkerReply } from "./assistantWorker.ts";
 import type { AppState } from "./state.ts";
 import { useUnits } from "./units.ts";
 import { Logo, UseIcon } from "./Logo.tsx";
@@ -149,6 +149,9 @@ export function DesignAssistant(props: {
   const [only, setOnly] = useState<AssistantBox | "all">("all");
   const loadedRef = useRef(new Map<string, LoadedDriver>());
   const stopRef = useRef<(() => void) | null>(null);
+  /** Second pass: show the designs found so far now (re-ranks the list). */
+  const mergeRef = useRef<(() => void) | null>(null);
+  const [pending, setPending] = useState(0);
   const settingsKey = JSON.stringify([props.base.settings]);
   const goalKey = JSON.stringify(goal);
 
@@ -161,12 +164,22 @@ export function DesignAssistant(props: {
     setStopped(false);
     setShown(PAGE);
     setOnly("all");
+    setPending(0);
     const cands = prefilter(props.db.drivers, goal);
     const out: AssistantResult[] = [];
+    // Lines and bandpass boxes found in the second pass: held back (the list doesn't jump
+    // under your finger) until it ends, or until you ask to see them.
+    const extra: AssistantResult[] = [];
+    let worker: Worker | null = null;
     const finish = (wasStopped = false) => {
       live = false;
       clearTimeout(timer);
+      worker?.terminate();
+      worker = null;
       stopRef.current = null;
+      mergeRef.current = null;
+      out.push(...extra.splice(0));
+      setPending(0);
       setProgress(null);
       setStopped(wasStopped);
       setResults(rankResults(out, goal));
@@ -231,34 +244,72 @@ export function DesignAssistant(props: {
       const startLines = () => {
         const ranked = rankResults(out, goal);
         setResults(ranked);
-        const rowsById = new Map(cands.map((r) => [r.id, r]));
-        const tasks: { row: IndexRow; stage: "lines" | "bandpass" }[] = [
-          ...(wantBandpass ? shortlist(ranked, rowsById, BANDPASS_SHORTLIST).map((row) => ({ row, stage: "bandpass" as const })) : []),
-          ...(wantLines ? lineShortlist(ranked, rowsById).map((row) => ({ row, stage: "lines" as const })) : []),
+        const picked: { row: IndexRow; stage: "lines" | "bandpass" }[] = [
+          ...(wantBandpass ? bandpassShortlist(ranked, cands).map((row) => ({ row, stage: "bandpass" as const })) : []),
+          ...(wantLines ? lineShortlist(ranked, cands).map((row) => ({ row, stage: "lines" as const })) : []),
         ];
-        const label = wantLines && wantBandpass ? "Lines and bandpass boxes for the best drivers" : wantLines ? "Transmission lines for the best drivers" : "Bandpass boxes for the best drivers";
-        let j = 0;
-        const lineSlice = () => {
+        const tasks = picked.flatMap((t) => {
+          const driver = loadedRef.current.get(t.row.id);
+          return driver ? [{ ...t, driver }] : [];
+        });
+        const label = wantLines && wantBandpass ? "Lines and bandpass boxes" : wantLines ? "Transmission lines" : "Bandpass boxes";
+        const report = (done: number) => {
           if (!live) return;
-          if (j >= tasks.length) return finish();
-          setProgress({ label, done: j, total: tasks.length });
-          const t0 = performance.now();
-          // Bandpass searches are quick: several per slice; a line is one.
-          while (j < tasks.length && performance.now() - t0 < 30) {
-            const { row, stage } = tasks[j++]!;
-            const d = loadedRef.current.get(row.id);
-            try {
-              if (d) out.push(...evaluateDriver(props.base, row, d, goal, stage));
-            } catch {
-              // One that won't simulate is left out; the rest carry on.
-            }
-            if (stage === "lines") break;
-          }
-          setResults(rankResults(out, goal));
-          timer = setTimeout(lineSlice, 0);
+          setProgress({ label, done, total: tasks.length });
+          setPending(extra.length);
         };
-        setProgress({ label, done: 0, total: tasks.length });
-        timer = setTimeout(lineSlice, 30);
+        mergeRef.current = () => {
+          out.push(...extra.splice(0));
+          setPending(0);
+          setResults(rankResults(out, goal));
+        };
+        report(0);
+        // In a worker when the browser can (no jank); else here, in slices between paints.
+        const inSlices = () => {
+          let j = 0;
+          const slice = () => {
+            if (!live) return;
+            if (j >= tasks.length) return finish();
+            const t0 = performance.now();
+            while (j < tasks.length && performance.now() - t0 < 30) {
+              const { row, driver, stage } = tasks[j++]!;
+              try {
+                extra.push(...evaluateDriver(props.base, row, driver, goal, stage));
+              } catch {
+                // One that won't simulate is left out; the rest carry on.
+              }
+              if (stage === "lines") break;
+            }
+            report(j);
+            timer = setTimeout(slice, 0);
+          };
+          timer = setTimeout(slice, 30);
+        };
+        try {
+          worker = new Worker(new URL("./assistantWorker.ts", import.meta.url), { type: "module" });
+        } catch {
+          worker = null;
+        }
+        if (!worker) return inSlices();
+        let heard = false;
+        worker.onmessage = (e: MessageEvent<WorkerReply>) => {
+          heard = true;
+          if (!live) return;
+          if (e.data.type === "result") {
+            extra.push(...e.data.results);
+            report(e.data.done);
+          } else finish();
+        };
+        worker.onerror = (e) => {
+          e.preventDefault();
+          worker?.terminate();
+          worker = null;
+          if (!live) return;
+          // It never started (couldn't load): do the work here instead; else keep what came in.
+          if (!heard) inSlices();
+          else finish();
+        };
+        worker.postMessage({ base: props.base, goal, tasks } satisfies WorkerJob);
       };
       stopRef.current = () => finish(true);
       setProgress({ label: "Trying each driver", done: 0, total: cands.length });
@@ -267,7 +318,9 @@ export function DesignAssistant(props: {
     return () => {
       live = false;
       clearTimeout(timer);
+      worker?.terminate();
       stopRef.current = null;
+      mergeRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.open, step, props.db, goalKey, settingsKey]);
@@ -524,6 +577,11 @@ export function DesignAssistant(props: {
                     </span>
                   </div>
                   <progress value={progress.done} max={Math.max(1, progress.total)} />
+                  {pending > 0 && (
+                    <button type="button" className="link assist-pending" onClick={() => mergeRef.current?.()}>
+                      {pending} new {pending === 1 ? "design" : "designs"}: show {pending === 1 ? "it" : "them"} now
+                    </button>
+                  )}
                   {stopRef.current && (
                     <button type="button" className="icon" onClick={() => stopRef.current?.()} aria-label="Stop" title="Stop (keeps the results so far)">
                       ✕

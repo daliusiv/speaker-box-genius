@@ -55,6 +55,8 @@ export const BANDPASS_SHORTLIST = 30;
 export const LINE_SHORTLIST = 10;
 /** Longest line the assistant suggests (cm): about three runs of a metre-tall cabinet. */
 export const LINE_MAX_CM = 300;
+/** Narrowest a line may get on average, as a share of the cones' area. */
+export const LINE_MIN_AREA = 0.8;
 
 export interface AssistantGoal {
   use: AssistantUse;
@@ -254,23 +256,42 @@ export function choosePort(vb_l: number, fb: number, air: Air): { diameter_cm: n
 const LINE_LABEL: Record<(typeof LINE_TYPES)[number], string> = { mltl: "MLTL", tl: "Classic TL" };
 
 /**
- * The drivers worth trying in a line: the best distinct drivers from the boxes (within their
- * limits first, as ranked), with a Qts that suits a line (up to about 0.55).
+ * The drivers worth trying in a slower box type: half the best drivers from the boxes (as
+ * ranked, so the strongest drivers get a go), half the candidates that suit the type best by
+ * their parameters (`key`, lowest first), so a driver that's only middling in a plain box but
+ * made for this type isn't missed. Only drivers that pass `ok`.
  */
-export function lineShortlist(ranked: AssistantResult[], rows: Map<string, IndexRow>, n = LINE_SHORTLIST): IndexRow[] {
-  return shortlist(ranked, rows, n, (row) => row.qts! <= 0.55);
+export function shortlist(
+  ranked: AssistantResult[],
+  cands: IndexRow[],
+  n: number,
+  ok: (row: IndexRow) => boolean = () => true,
+  key: (row: IndexRow) => number = () => 0,
+): IndexRow[] {
+  const byId = new Map(cands.map((r) => [r.id, r]));
+  const out: IndexRow[] = [];
+  const add = (row: IndexRow | undefined, limit: number) => {
+    if (row && out.length < limit && !out.includes(row) && ok(row)) out.push(row);
+  };
+  for (const r of ranked) add(byId.get(r.driverId), Math.ceil(n / 2));
+  for (const row of [...cands].filter(ok).sort((a, b) => key(a) - key(b))) add(row, n);
+  return out;
 }
 
-/** The best distinct drivers from the ranked boxes (that pass `ok`), for the slower box types. */
-export function shortlist(ranked: AssistantResult[], rows: Map<string, IndexRow>, n: number, ok: (row: IndexRow) => boolean = () => true): IndexRow[] {
-  const out: IndexRow[] = [];
-  for (const r of ranked) {
-    if (out.length >= n) break;
-    const row = rows.get(r.driverId);
-    if (!row || out.includes(row) || !ok(row)) continue;
-    out.push(row);
-  }
-  return out;
+/**
+ * Lines: a Qts of about 0.25–0.55 (lower starves a line of bass, higher suits a TQWT), the
+ * lowest Fs first (a line is about bass extension).
+ */
+export function lineShortlist(ranked: AssistantResult[], cands: IndexRow[], n = LINE_SHORTLIST): IndexRow[] {
+  return shortlist(ranked, cands, n, (row) => row.qts! >= 0.25 && row.qts! <= 0.55, (row) => row.fs!);
+}
+
+/**
+ * Bandpass boxes: a Qts of about 0.2–0.55, closest to 0.38 first (a flat 4th-order band with
+ * some gain), then the lowest Fs.
+ */
+export function bandpassShortlist(ranked: AssistantResult[], cands: IndexRow[], n = BANDPASS_SHORTLIST): IndexRow[] {
+  return shortlist(ranked, cands, n, (row) => row.qts! >= 0.2 && row.qts! <= 0.55, (row) => Math.abs(row.qts! - 0.38) / 0.05 + row.fs! / 20);
 }
 
 const SLOT_HEIGHTS = [8, 6, 5, 4, 3, 2.5, 2, 1.5];
@@ -690,6 +711,12 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
       if (typeof sized !== "string") cur = sized;
       const vb = lineVolume(cur);
       if (!(vb > 0) || vb > goal.maxVolume_l * 1.02 || lineLength(cur) > LINE_MAX_CM) continue;
+      // Narrowed too far: a line much thinner than the cones chokes them (and sounds boxy),
+      // which the simulation underplays. Judged on its average cross-section, since a tapered
+      // line is meant to be narrower at one end.
+      const areas = [cur.closedArea_cm2, ...cur.sections.map((x) => x.endArea_cm2)];
+      const mean = areas.reduce((a, b) => a + b, 0) / areas.length;
+      if (mean < LINE_MIN_AREA * drv.sd_cm2 * goal.drivers) continue;
       const design: LineDesign = { ...cur, vb_l: r1(vb) };
       const fb = run(design, vb).summary.fb;
       if (fb === undefined || Math.abs(fb / preset.targetFb - 1) > 0.25) continue;

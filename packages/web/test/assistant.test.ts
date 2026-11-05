@@ -5,7 +5,7 @@ import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { PORT_LIMIT, limitsOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { LINE_MAX_CM, evaluateDriver, goalFor, lineShortlist, portCandidates, shortlist, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -145,14 +145,22 @@ test("transmission lines: for towers, sized to the box limit, foldable, and they
   const goal = goalFor("tower", "balanced");
   assert.ok(goal.boxes.includes("line"));
   const boxes = runAll(goal).results;
-  const short = lineShortlist(boxes, new Map(rows.map((r) => [r.id, r])), 5);
-  assert.ok(short.length > 0 && short.every((r) => r.qts! <= 0.55));
+  const cands = prefilter(rows, goal);
+  const short = lineShortlist(boxes, cands, 6);
+  assert.ok(short.length === 6 && short.every((r) => r.qts! >= 0.25 && r.qts! <= 0.55));
+  // Half from the boxes' ranking, half by suiting a line (the lowest Fs) even if they ranked low.
+  const lowFs = cands.filter((r) => r.qts! >= 0.25 && r.qts! <= 0.55).sort((a, b) => a.fs! - b.fs!)[0]!;
+  assert.ok(short.includes(lowFs), "the lowest-Fs line candidate is tried");
   const lines = short.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id), goal, "lines"));
   assert.ok(lines.length >= 3, `${lines.length} lines`);
   for (const r of lines) {
     assert.equal(r.box, "line");
     assert.ok(r.vb_l <= goal.maxVolume_l * 1.02, `${r.name} ${r.line!.label} ${r.vb_l} L`);
     assert.ok(r.line!.length_cm <= LINE_MAX_CM, `${r.name} ${r.line!.length_cm} cm`);
+    const des = r.line!.design;
+    const areas = [des.closedArea_cm2, ...des.sections.map((x) => x.endArea_cm2)];
+    const sd = rows.find((x) => x.id === r.driverId)!.sd_cm2!;
+    assert.ok(areas.reduce((a, b) => a + b, 0) / areas.length >= LINE_MIN_AREA * sd * 0.99, `${r.name} ${r.line!.label} too thin`);
     const s = openResults(DEFAULT_STATE, loaded(r.driverId), [r], goal);
     assert.equal(s.designs[0]!.kind, "line");
     const d = runDesigns(s, solveDriver(s))[0]!;
@@ -173,7 +181,7 @@ test("bandpass: 4th and 6th order for subwoofers, within the box limit, a band u
   for (const use of ["home", "car"] as const) {
     const goal = { ...goalFor(use, "balanced"), boxes: ["sealed", "vented", "bandpass"] as AssistantGoal["boxes"] };
     const boxes = runAll(goal).results;
-    const short = shortlist(boxes, new Map(rows.map((r) => [r.id, r])), 12);
+    const short = bandpassShortlist(boxes, prefilter(rows, goal), 12);
     const bps = short.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id), goal, "bandpass"));
     assert.ok(bps.some((r) => r.bandpass!.order === "4") && bps.some((r) => r.bandpass!.order === "6p"), `${use}: both orders`);
     for (const r of bps) {

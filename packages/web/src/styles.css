@@ -3681,3 +3681,9 @@ dialog.assistant .lib-inner:focus {
     font-weight: 700;
   }
 }
+
+.finder-progress .assist-pending {
+  grid-column: 1 / -1;
+  justify-self: start;
+  font-size: 0.85rem;
+}
