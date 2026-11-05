@@ -290,6 +290,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - ✅ Saved projects in the browser plus JSON project files. (localStorage rather than IndexedDB.)
 - ✅ **SEO content pages:** 15 guides with live examples, WinISD and Hornresp alternative pages, sitemap; Google Search Console set up.
 - ✅ **Validation page** built from the test results.
+- ✅ **Driver pages:** one page per driver (about 1,230) with suggested sealed, ported and PR boxes, charts, parameters, a live link and its own share card (`site/drivers.ts`, `site/og.ts`).
 - ⬜ Design gallery with pre-rendered pages and OG images.
 - ⬜ Embeddable iframe widget for blogs and build logs.
 - ⬜ About page (licence in plain words, privacy, credits) and privacy-friendly analytics before launch.

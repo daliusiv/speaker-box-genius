@@ -87,7 +87,7 @@ The model is small-signal and lumped (one-dimensional for lines): it doesn't inc
 
 ## The driver database
 
-The database lives in this repo, in [`drivers/`](drivers) and [`passive-radiators/`](passive-radiators): about 1,360 drivers and 46 passive radiators. Sources and credits are in [`docs/data-sources.md`](docs/data-sources.md). It isn't affiliated with or endorsed by any manufacturer. Spotted a mistake? [Ask for a correction or removal](../../issues/new?template=data-correction.yml).
+The database lives in this repo, in [`drivers/`](drivers) and [`passive-radiators/`](passive-radiators): about 1,360 drivers and 46 passive radiators. Sources and credits are in [`docs/data-sources.md`](docs/data-sources.md). Every driver with enough parameters also gets a page on the site with suggested sealed, ported and passive radiator boxes: [speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/). It isn't affiliated with or endorsed by any manufacturer. Spotted a mistake? [Ask for a correction or removal](../../issues/new?template=data-correction.yml).
 
 ## Contributing
 
@@ -107,6 +107,8 @@ pnpm test          # engine, database and app tests
 pnpm dev           # run the web app locally
 pnpm build         # production build (what GitHub Pages serves)
 ```
+
+`pnpm build` also builds the content pages (`site/`): the guides, the validation page and a page per driver. Each driver page gets a share card drawn with headless Chrome, found at `CHROME_PATH` or the usual install paths; set `SBG_CARDS=0` to skip them (CI does).
 
 Merging to `main` builds and deploys to GitHub Pages automatically.
 
