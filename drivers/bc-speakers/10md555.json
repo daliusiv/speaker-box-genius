@@ -1,0 +1,35 @@
+{
+  "brand": "B&C Speakers",
+  "model": "10MD555",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 76,
+    "qms": 4.8,
+    "qes": 0.22,
+    "vas_l": 20,
+    "re": 5.8,
+    "sd_cm2": 320,
+    "qts": 0.21,
+    "le_mh": 1.2,
+    "bl": 19.6,
+    "mms_g": 31,
+    "xmax_mm": 1.5,
+    "pe_w": 350
+  },
+  "physical": {
+    "cutout_mm": 230,
+    "depth_mm": 124,
+    "displacement_l": 2.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/10/8/10MD555",
+      "retrieved": "2026-11-05",
+      "note": "T/S data supplied by B&C Speakers (2026-11-05) and published with their permission; the link is the product page on their website. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

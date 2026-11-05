@@ -8,7 +8,7 @@ Every entry in `drivers/` and `passive-radiators/` lists where its numbers came 
 
 ## Manufacturers who gave permission
 
-See [`data-permissions.md`](data-permissions.md). Dayton Audio entries are imported directly from daytonaudio.com with Dayton Audio's permission. SB Acoustics entries are imported directly from sbacoustics.com with SB Acoustics' permission (they replace the SB Acoustics entries that came from driver-base).
+See [`data-permissions.md`](data-permissions.md). Dayton Audio entries are imported directly from daytonaudio.com with Dayton Audio's permission. SB Acoustics entries are imported directly from sbacoustics.com with SB Acoustics' permission (they replace the SB Acoustics entries that came from driver-base). B&C Speakers entries come from B&C's own LF driver comparison matrix (Excel), with their permission; B&C Speakers is the source of that data, and every entry links to its product page on bcspeakers.com (they also replace the driver-base entries).
 
 ## driver-base (CC BY 4.0)
 

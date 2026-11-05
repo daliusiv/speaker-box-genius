@@ -6,12 +6,13 @@ Manufacturers who have given permission for their published data to be used in t
 |---|---|---|---|
 | Dayton Audio | 3 Nov 2026 | Jill Chupka, Product Coordinator (email) | Use the published Thiele/Small parameters from Dayton Audio specification sheets to expand the driver database. |
 | SB Acoustics | 4 Nov 2026 | Mark Thomsen, International Sales & Marketing Manager, SB Audience / SB Acoustics (email) | Post the published specs; no export file exists, so they may be gathered with a script. |
+| B&C Speakers | 5 Nov 2026 | B&C Speakers S.p.A., Techadvice (email, techadvice@bcspeakers.com) | Publish the T/S parameters of their transducers in this free, non-commercial database, provided B&C Speakers is clearly identified as the source and each entry links to its product page on bcspeakers.com. They pointed to the LF Drivers and Coaxial "Comparison Matrix" Excel file as the source. |
 
 ## Requests pending
 
 - Scan-Speak: emailed, no reply yet. Their website terms restrict copying datasheet information without written consent, so **no automated import until they reply**.
 - Parts Express: emailed, no reply yet.
-- Faital Pro, B&C Speakers, 18 Sound, Beyma, Peerless (Tymphany), Markaudio, Tang Band: emailed 5 Nov 2026 asking for permission and a CSV or Excel export of their T/S data.
+- Faital Pro, 18 Sound, Beyma, Peerless (Tymphany), Markaudio, Tang Band: emailed 5 Nov 2026 asking for permission and a CSV or Excel export of their T/S data.
 - Kicker, Skar Audio, Sundown Audio, Rockford Fosgate (car audio): emailed 5 Nov 2026.
 - Wavecor, Visaton, SEAS, PRV Audio, Morel, Sica, Redcatt, Purifi, Eton, Accuton, HiVi, Fountek: emailed 5 Nov 2026. Visaton's and Accuton's website terms require prior written consent, so **nothing from them until they reply**.
 - GRS and the US Dynavox range are sold by Parts Express and covered by that request.

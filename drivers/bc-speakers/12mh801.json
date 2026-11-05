@@ -1,0 +1,35 @@
+{
+  "brand": "B&C Speakers",
+  "model": "12MH801",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 53,
+    "qms": 5.6,
+    "qes": 0.22,
+    "vas_l": 76,
+    "re": 5,
+    "sd_cm2": 522,
+    "qts": 0.21,
+    "le_mh": 0.57,
+    "bl": 18.6,
+    "mms_g": 46,
+    "xmax_mm": 6,
+    "pe_w": 350
+  },
+  "physical": {
+    "cutout_mm": 282,
+    "depth_mm": 135,
+    "displacement_l": 3.3
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/12/8/12MH801",
+      "retrieved": "2026-11-05",
+      "note": "T/S data supplied by B&C Speakers (2026-11-05) and published with their permission; the link is the product page on their website. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

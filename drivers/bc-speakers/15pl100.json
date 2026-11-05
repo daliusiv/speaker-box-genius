@@ -1,0 +1,34 @@
+{
+  "brand": "B&C Speakers",
+  "model": "15PL100",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 37,
+    "qms": 6.6,
+    "qes": 0.21,
+    "vas_l": 154,
+    "re": 5,
+    "sd_cm2": 855,
+    "qts": 0.2,
+    "le_mh": 1.7,
+    "bl": 26.8,
+    "mms_g": 121,
+    "xmax_mm": 7,
+    "pe_w": 700
+  },
+  "physical": {
+    "cutout_mm": 354,
+    "depth_mm": 173
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/15/8/15PL100",
+      "retrieved": "2026-11-05",
+      "note": "T/S data supplied by B&C Speakers (2026-11-05) and published with their permission; the link is the product page on their website. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

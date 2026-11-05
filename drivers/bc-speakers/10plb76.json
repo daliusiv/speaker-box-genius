@@ -1,0 +1,35 @@
+{
+  "brand": "B&C Speakers",
+  "model": "10PLB76",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 52,
+    "qms": 3.4,
+    "qes": 0.2,
+    "vas_l": 31,
+    "re": 4.8,
+    "sd_cm2": 320,
+    "qts": 0.19,
+    "le_mh": 0.32,
+    "bl": 18.4,
+    "mms_g": 43,
+    "xmax_mm": 6,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 230,
+    "depth_mm": 124,
+    "displacement_l": 2.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/10/8/10PLB76",
+      "retrieved": "2026-11-05",
+      "note": "T/S data supplied by B&C Speakers (2026-11-05) and published with their permission; the link is the product page on their website. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

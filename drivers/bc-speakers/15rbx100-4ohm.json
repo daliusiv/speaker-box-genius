@@ -1,0 +1,35 @@
+{
+  "brand": "B&C Speakers",
+  "model": "15RBX100 (4 Ω)",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 42,
+    "qms": 6.3,
+    "qes": 0.38,
+    "vas_l": 105,
+    "re": 3.7,
+    "sd_cm2": 908,
+    "qts": 0.35,
+    "le_mh": 0.9,
+    "bl": 21.3,
+    "mms_g": 159,
+    "xmax_mm": 9,
+    "pe_w": 1000
+  },
+  "physical": {
+    "cutout_mm": 354,
+    "depth_mm": 173,
+    "displacement_l": 5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/15/4/15RBX100",
+      "retrieved": "2026-11-05",
+      "note": "T/S data supplied by B&C Speakers (2026-11-05) and published with their permission; the link is the product page on their website. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,35 @@
+{
+  "brand": "B&C Speakers",
+  "model": "10MBX809",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 65,
+    "qms": 5.6,
+    "qes": 0.27,
+    "vas_l": 28,
+    "re": 5.5,
+    "sd_cm2": 346,
+    "qts": 0.26,
+    "le_mh": 0.39,
+    "bl": 16.9,
+    "mms_g": 32,
+    "xmax_mm": 4,
+    "pe_w": 350
+  },
+  "physical": {
+    "cutout_mm": 230,
+    "depth_mm": 125,
+    "displacement_l": 1.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bcspeakers.com/en/products/lf-driver/10/8/10MBX809",
+      "retrieved": "2026-11-05",
+      "note": "T/S data supplied by B&C Speakers (2026-11-05) and published with their permission; the link is the product page on their website. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

@@ -156,6 +156,11 @@ export function readXlsx(buf: Buffer, sheetName?: string): Rows {
   if (!xml) throw new Error(`Worksheet ${path} missing`);
 
   const shared = [...(get("xl/sharedStrings.xml") ?? "").matchAll(/<si>([\s\S]*?)<\/si>/g)].map((m) => tText(m[1]!));
+  return rowsOfWorksheet(xml, shared);
+}
+
+/** The cells of a worksheet's XML, as text rows (empty rows dropped). */
+export function rowsOfWorksheet(xml: string, shared: string[] = []): Rows {
   const rows: Rows = [];
   for (const rm of xml.matchAll(/<row\b[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g)) {
     const row: string[] = [];
@@ -164,7 +169,8 @@ export function readXlsx(buf: Buffer, sheetName?: string): Rows {
       const body = cm[2] ?? "";
       const ref = attrs.match(/\br="([A-Z]+)\d+"/)?.[1];
       const t = attrs.match(/\bt="([^"]*)"/)?.[1];
-      const v = body.match(/<v>([\s\S]*?)<\/v>/)?.[1];
+      // <v> can carry attributes (xml:space="preserve" on formula strings).
+      const v = body.match(/<v\b[^>]*>([\s\S]*?)<\/v>/)?.[1];
       let value = "";
       if (t === "s" && v !== undefined) value = shared[Number(v)] ?? "";
       else if (t === "inlineStr") value = tText(body);
