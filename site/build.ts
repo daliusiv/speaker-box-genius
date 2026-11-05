@@ -94,9 +94,12 @@ export function markdown(md: string): string {
       i++;
       continue;
     }
-    const button = /^\[\[([^|\]]+)\|([^\]]+)\]\]$/.exec(line.trim());
-    if (button) {
-      out.push(`<p class="cta"><a class="button" href="${escapeHtml(button[2]!)}">${inline(button[1]!)} →</a></p>`);
+    // A line of one or more [[Label|link]] buttons.
+    if (/^(\[\[[^|\]]+\|[^\]]+\]\]\s*)+$/.test(line.trim())) {
+      const buttons = [...line.matchAll(/\[\[([^|\]]+)\|([^\]]+)\]\]/g)].map(
+        (b) => `<a class="button" href="${escapeHtml(b[2]!)}">${inline(b[1]!)} →</a>`,
+      );
+      out.push(`<p class="cta">${buttons.join(" ")}</p>`);
       i++;
       continue;
     }
@@ -182,7 +185,8 @@ figcaption{margin-top:.4rem;color:var(--muted);font-size:.9rem}
 table{width:100%;border-collapse:collapse;font-size:.95rem}
 th,td{padding:.45rem .6rem;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
 th{color:var(--muted);font-weight:600}
-.cta{margin:1.5rem 0}
+.cta{display:flex;flex-wrap:wrap;gap:.6rem;margin:1.5rem 0}
+.cta .button{white-space:normal}
 .cards{display:grid;gap:1rem;padding:0;list-style:none}
 .cards li{padding:1rem 1.1rem;border:1px solid var(--border);border-radius:.8rem;background:var(--card)}
 .cards a{font-weight:650;font-size:1.1rem;text-decoration:none}
