@@ -23,6 +23,7 @@ import {
 } from "@sbg/engine";
 import type { AppState, DesignState, LineDesign, PortFields, PrDesign, PrGroupState, Settings } from "./state.ts";
 import { compareView } from "./state.ts";
+import { stuffFactor, stuffable, stuffingEffect } from "./stuffing.ts";
 
 /** One colour per design slot; distinguishable in light and dark mode. */
 export const PALETTE = ["#3b82f6", "#f97316", "#22c55e", "#a855f7", "#e11d48", "#0d9488", "#ca8a04", "#64748b"];
@@ -56,7 +57,10 @@ export interface Design {
   /** The same box with the comparison driver (drawn faint and dashed). */
   compare?: boolean;
   color: string;
+  /** Net volume as built (a bandpass's rear chamber). */
   vb_l: number;
+  /** The volume it acts as, when stuffing makes that differ from vb_l. */
+  acting_l?: number;
   result: SimulationResult;
 }
 
@@ -119,16 +123,26 @@ export function volumeFor(s: AppState, d: DesignState | undefined): VolumeResult
         : undefined,
     bracing_pct: v.bracing_pct,
     other_l: v.other_l,
-    fill_pct: v.fill_pct,
   });
 }
 
 export const linkedDesign = (s: AppState) => s.designs.find((d) => d.id === s.volume.link);
 
-/** Box volume a design should use: the calculator's result if it is linked, else its own field. */
-export function vbOf(s: AppState, d: DesignState): number {
+/** A design's net volume as built: the calculator's result if it is linked, else its own field. */
+export function builtVbOf(s: AppState, d: DesignState): number {
   if (d.kind === "line") return lineVolume(d);
-  return s.volume.link === d.id ? volumeFor(s, d).effective_l : d.vb_l;
+  return s.volume.link === d.id ? volumeFor(s, d).net_l : d.vb_l;
+}
+
+/** The volume a design acts as, which the simulation and tuning use: the built volume, scaled by its stuffing. */
+export function vbOf(s: AppState, d: DesignState): number {
+  return builtVbOf(s, d) * stuffFactor(d);
+}
+
+/** Box losses for a design: Settings', with the Qa its stuffing sets. */
+export function lossesFor(s: AppState, d: DesignState): Settings["losses"] {
+  const qa = stuffable(d.kind) ? stuffingEffect(d.stuffing, d.kind).qa : null;
+  return qa === null ? s.settings.losses : { ...s.settings.losses, qa };
 }
 
 /** Hornresp's air: c = 344 m/s, ρ = 1.205 kg/m³. */
@@ -343,13 +357,14 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
   const out: Design[] = [];
   for (const d of s.designs) {
     if (!d.on) continue;
-    const vb = vbOf(s, d);
+    const built = builtVbOf(s, d);
+    const vb = built * stuffFactor(d);
     if (!(vb > 0)) continue;
     const eq = s.eq
       .filter((e) => e.on && (e.target === "all" || e.target === d.id))
       .map(({ id: _id, on: _on, target: _t, ...stage }) => stage as EqStage);
     try {
-      const result = simulate(driver, enclosureOf(d, vb, s.settings.losses, s.volume.wall_mm), { ...opts, eq });
+      const result = simulate(driver, enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm), { ...opts, eq });
       if (s.settings.velocity === "rms") {
         if (result.portVelocity) result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
         if (result.rearPortVelocity) result.rearPortVelocity = result.rearPortVelocity.map((v) => v / Math.SQRT2);
@@ -368,7 +383,7 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
         result.maxSpl = result.maxSpl.map((v, i) => v + lift[i]!);
         if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + lift[i]!), mouth: result.parts.mouth.map((v, i) => v + lift[i]!) };
       }
-      out.push({ design: d, label: d.name, compare: isCompare || undefined, color: colorOf(s, d.id), vb_l: vb, result });
+      out.push({ design: d, label: d.name, compare: isCompare || undefined, color: colorOf(s, d.id), vb_l: built, ...(vb !== built ? { acting_l: vb } : {}), result });
     } catch {
       // Invalid input mid-edit: skip this design until the numbers make sense again.
     }
@@ -496,7 +511,7 @@ const GOLDEN = { w: 1, h: 1.618, d: 0.618 };
 
 /**
  * Outside dimensions that give a design the target box volume (the calculator's
- * effective volume: net after every deduction, plus the stuffing gain). The shape is
+ * net volume, after every deduction). The shape is
  * scaled as a whole, keeping its proportions, or for a box set to golden-ratio
  * proportions first. Wall thickness and deductions stay as they are. Null when no
  * size reaches the target (deductions alone exceed it).
@@ -522,7 +537,7 @@ export function dimensionsFor(
     topWidth_cm: base.topWidth_cm * k,
     topDepth_cm: base.topDepth_cm * k,
   });
-  const vol = (k: number) => volumeFor({ ...s, volume: scaled(k) }, d).effective_l;
+  const vol = (k: number) => volumeFor({ ...s, volume: scaled(k) }, d).net_l;
   if (!(target_l > 0)) return null;
   let lo = 0.02;
   let hi = 1;

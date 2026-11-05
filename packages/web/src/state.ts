@@ -1,4 +1,5 @@
 import type { EqStage, HighPassType, PassiveRadiatorInput, TsValues } from "@sbg/engine";
+import { stuffable, stuffingFrom, type Stuffing } from "./stuffing.ts";
 
 export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line";
 export type ShapeKind = "box" | "cylinder" | "sphere" | "frustum";
@@ -12,6 +13,11 @@ interface DesignBase {
   vb_l: number;
   /** The preset it was last sized with (a tag on the card), e.g. "QB3" or "Qtc 0.707". */
   preset?: string;
+  /**
+   * Sealed, ported and PR boxes: fibre fill or lining. `vb_l` stays the real net volume;
+   * the simulation uses the bigger volume the stuffing makes it act as, and its Qa. Absent = none.
+   */
+  stuffing?: Stuffing;
 }
 
 export interface SealedDesign extends DesignBase {
@@ -288,7 +294,6 @@ export interface AppState {
     portWall_mm: number;
     bracing_pct: number;
     other_l: number;
-    fill_pct: number;
     /** Build sheet: driver and PR cutouts (0 = unknown), stock sheet size and saw kerf (mm). */
     driverCutout_mm: number;
     prCutout_mm: number;
@@ -449,7 +454,6 @@ export const DEFAULT_STATE: AppState = {
     portWall_mm: 3,
     bracing_pct: 3,
     other_l: 0,
-    fill_pct: 0,
     driverCutout_mm: 0,
     prCutout_mm: 0,
     sheetW_mm: 2440,
@@ -718,6 +722,9 @@ function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
     merged.name = merged.name.slice(0, -old[0].length);
   }
   if (typeof merged.preset !== "string" || merged.preset.length > 20) delete merged.preset;
+  const st = stuffable(merged.kind) ? stuffingFrom(d.stuffing) : undefined;
+  if (st) merged.stuffing = st;
+  else delete merged.stuffing;
   return merged;
 }
 
@@ -775,6 +782,15 @@ export function decodeState(hash: string): AppState | null {
         designs.push(fixed);
       }
     }
+    // Before 5 Nov 2026 stuffing was a volume gain in the calculator, for the design it fed:
+    // it becomes that design's own stuffing (same gain, Settings' Qa) when it can take one.
+    const { fill_pct: oldFill, ...rawVolume } = (raw.volume ?? {}) as Raw;
+    if (typeof oldFill === "number" && oldFill > 0) {
+      const fed = designs.find((x) => x.id === rawVolume.link);
+      if (fed && stuffable(fed.kind) && !fed.stuffing) {
+        fed.stuffing = { mode: "custom", gL: 16, gain_pct: Math.min(40, oldFill), qa: qOr(raw.settings?.losses?.qa, d.settings.losses.qa) };
+      }
+    }
     const compare = compareFrom(raw.compare ?? (Array.isArray(raw.extraDrivers) ? raw.extraDrivers[0] : null));
     return {
       v: 3,
@@ -797,7 +813,7 @@ export function decodeState(hash: string): AppState | null {
       measured: measuredFrom(raw.measured),
       compare,
       designs,
-      volume: { ...d.volume, ...raw.volume },
+      volume: { ...d.volume, ...rawVolume },
     };
   } catch {
     return null;

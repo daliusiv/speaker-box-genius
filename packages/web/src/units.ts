@@ -5,18 +5,23 @@ import { createContext, useContext } from "react";
  * are the same whichever units the viewer prefers; only inputs and read-outs convert.
  */
 export type UnitSystem = "metric" | "imperial";
-export type Quantity = "vol" | "len" | "mm";
+export type Quantity = "vol" | "len" | "mm" | "density" | "mass";
 
 const TABLE: Record<UnitSystem, Record<Quantity, { unit: string; k: number; digits: number }>> = {
   metric: {
     vol: { unit: "L", k: 1, digits: 1 },
     len: { unit: "cm", k: 1, digits: 1 },
     mm: { unit: "mm", k: 1, digits: 0 },
+    density: { unit: "g/L", k: 1, digits: 0 },
+    mass: { unit: "g", k: 1, digits: 0 },
   },
   imperial: {
     vol: { unit: "ft³", k: 1 / 28.316846592, digits: 2 },
     len: { unit: "in", k: 1 / 2.54, digits: 2 },
     mm: { unit: "in", k: 1 / 25.4, digits: 3 },
+    // Stuffing: g/L ↔ lb/ft³ (1 lb/ft³ = 16.02 g/L), grams ↔ pounds.
+    density: { unit: "lb/ft³", k: 1 / 16.0185, digits: 2 },
+    mass: { unit: "lb", k: 1 / 453.592, digits: 2 },
   },
 };
 

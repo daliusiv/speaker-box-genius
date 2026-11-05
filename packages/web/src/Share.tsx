@@ -29,7 +29,7 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
   };
   const n = (v: number | null | undefined, unit: string, digits = 1) =>
     v === null || v === undefined || !Number.isFinite(v) ? "–" : `${v.toFixed(digits)} ${unit}`;
-  return designs.map(({ design: d, label, color, vb_l, result: r, compare }) => {
+  return designs.map(({ design: d, label, color, vb_l, acting_l, result: r, compare }) => {
     const x = peak(r.excursionMm, r.freq);
     const xpr = prPeak(r, fMin);
     const vpFront = peak(r.portVelocity, r.freq);
@@ -38,7 +38,10 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
     const vol =
       d.kind === "bandpass"
         ? `${fmtQ(vb_l, "vol", state.settings.units)} + ${fmtQ(d.frontVb_l, "vol", state.settings.units)}`
-        : fmtQ(vb_l, "vol", state.settings.units);
+        : acting_l !== undefined
+          ? // Stuffed: the net volume as built → the volume it acts as.
+            `${fmtQ(vb_l, "vol", state.settings.units).split(" ")[0]} → ${fmtQ(acting_l, "vol", state.settings.units)}`
+          : fmtQ(vb_l, "vol", state.settings.units);
     return {
       name: label,
       color,
@@ -66,6 +69,10 @@ function subtitle(state: AppState): string {
   return parts.join(" · ");
 }
 
+/** Explains "a → b" volumes when a design is stuffed. */
+const STUFFED_NOTE = "Vb a → b: the net volume as built → the volume its stuffing makes it act as.";
+const anyStuffed = (designs: Design[]) => designs.some((d) => d.acting_l !== undefined);
+
 export function markdownPost(state: AppState, designs: Design[], url: string): string {
   const rows = summaryRows(state, designs);
   return [
@@ -75,6 +82,7 @@ export function markdownPost(state: AppState, designs: Design[], url: string): s
     `|${HEAD.map(() => "---").join("|")}|`,
     ...rows.map((r) => `| ${r.name} | ${r.cells.join(" | ")} |`),
     "",
+    ...(anyStuffed(designs) ? [`*${STUFFED_NOTE}*`, ""] : []),
     `[Open the live simulation](${url}) in Speaker Box Genius`,
   ].join("\n");
 }
@@ -91,6 +99,7 @@ export function bbcodePost(state: AppState, designs: Design[], url: string): str
         (r.cells[5] !== "–" ? `, peak port ${r.cells[5]}` : ""),
     ),
     "[/list]",
+    ...(anyStuffed(designs) ? [`[i]${STUFFED_NOTE}[/i]`] : []),
     `[url=${url}]Open the live simulation in Speaker Box Genius[/url]`,
   ].join("\n");
 }
