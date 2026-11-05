@@ -17,6 +17,7 @@ import {
 import { loadDriver, type DbIndex, type LoadedDriver } from "./library.ts";
 import type { AppState } from "./state.ts";
 import { useUnits } from "./units.ts";
+import { Logo, UseIcon } from "./Logo.tsx";
 
 const KEY = "sbg.assistant";
 const STEPS = ["What for", "Limits", "Priority", "Results"] as const;
@@ -249,9 +250,17 @@ export function DesignAssistant(props: {
         if (e.target === e.currentTarget) close();
       }}
     >
-      <div className="lib-inner">
-        <header>
-          <h2>Design assistant</h2>
+      {/* Focus lands on the dialog itself, not its close button (which then looked selected). */}
+      <div className="lib-inner" tabIndex={-1} autoFocus>
+        <header className="assist-head">
+          {/* The first screen many people see: the app's name and logo, as in its header. */}
+          <div className="assist-brand">
+            <Logo className="logo" />
+            <div>
+              <b>Speaker Box Genius</b>
+              <h2>Design assistant</h2>
+            </div>
+          </div>
           <button type="button" className="icon" onClick={close} aria-label="Close">
             ×
           </button>
@@ -289,8 +298,11 @@ export function DesignAssistant(props: {
                       setStep(1);
                     }}
                   >
-                    <b>{USES[u].label}</b>
-                    <span>{USES[u].hint}</span>
+                    <UseIcon use={u} />
+                    <span className="assist-tile-text">
+                      <b>{USES[u].label}</b>
+                      <span>{USES[u].hint}</span>
+                    </span>
                   </button>
                 ))}
               </div>

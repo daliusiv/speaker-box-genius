@@ -76,6 +76,7 @@ import { AppMenu } from "./AppMenu.tsx";
 import { openResults, withDriver } from "./assistant.ts";
 import { ASSISTANT_HASH, START_IN_ASSISTANT, untouched } from "./start.ts";
 import { DesignAssistant } from "./DesignAssistant.tsx";
+import { Logo } from "./Logo.tsx";
 import { submitDriverUrl } from "./submit.ts";
 
 const LIMIT_RED = "#dc2626";
@@ -738,13 +739,7 @@ export function App(props: { initial: AppState | null }) {
     <div className={`layout phone-${phoneView}`}>
       <header className="top">
         <div className="title">
-          {/* The app icon's speaker without its card (site/brand.ts draws the same shapes). */}
-          <svg className="logo" viewBox="136 84 240 344" aria-hidden="true">
-            <rect x="136" y="84" width="240" height="344" rx="26" fill="#2a2f40" />
-            <circle cx="256" cy="168" r="32" fill="#8e96aa" />
-            <circle cx="256" cy="310" r="80" fill="none" stroke="#f97316" strokeWidth="26" />
-            <circle cx="256" cy="310" r="30" fill="#8e96aa" />
-          </svg>
+          <Logo />
           <div>
             <h1>Speaker Box Genius</h1>
             <p className="muted">Early preview</p>
