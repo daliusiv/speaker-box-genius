@@ -3,7 +3,8 @@
   color-scheme: dark;
   --bg: #0c0a09;
   --fg: #f5f5f4;
-  --muted: #a8a29e;
+  /* Muted text: #b5b0aa keeps small notes comfortable to read on the cards. */
+  --muted: #b5b0aa;
   --accent: #fb923c;
   --card: #1c1917;
   --border: #292524;
@@ -275,6 +276,11 @@ td.over {
 .limit-label {
   font-size: 11px;
   font-weight: 600;
+  /* A dark halo keeps the label readable over curves and gridlines. */
+  paint-order: stroke;
+  stroke: var(--card);
+  stroke-width: 5px;
+  stroke-linejoin: round;
 }
 
 .cursor {
@@ -288,6 +294,23 @@ td.over {
 
 footer {
   font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* Links spaced for fingers, wrapping as needed. */
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.footer-links a,
+.footer-links button.link {
+  display: inline-block;
+  padding: 0.3rem 0;
 }
 
 /* ---- library picker ---- */
@@ -696,9 +719,16 @@ button.clear {
   line-height: 1;
 }
 
+/* The calculated result, set apart from the inputs above it. */
 .breakdown {
-  margin-top: 0.8rem;
+  margin-top: 0.9rem;
   font-size: 0.9rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  border-collapse: separate;
+  border-spacing: 0;
+  padding: 0.3rem 0.4rem;
 }
 
 .breakdown th {
@@ -708,8 +738,11 @@ button.clear {
 
 .breakdown tr.total th,
 .breakdown tr.total td {
+  padding-top: 0.5rem;
   font-weight: 700;
-  border-top: 1px solid var(--border);
+  font-size: 1rem;
+  color: var(--fg);
+  border-top: 1px solid var(--muted);
 }
 
 /* Selects and anything else that needs the whole row */
@@ -1424,7 +1457,7 @@ figure.chart[hidden] {
 .marker-label {
   paint-order: stroke;
   stroke: var(--card);
-  stroke-width: 4px;
+  stroke-width: 5px;
   stroke-linejoin: round;
 }
 
@@ -1686,7 +1719,7 @@ button.check-chip.open {
   font-weight: 600;
   paint-order: stroke;
   stroke: var(--card);
-  stroke-width: 4px;
+  stroke-width: 5px;
   stroke-linejoin: round;
 }
 
@@ -2716,4 +2749,123 @@ button.as-text {
     font-size: 0.8rem;
     white-space: nowrap;
   }
+}
+
+/* ---- Long labels (components.tsx stackClass): above the input, never wrapped or cut off ---- */
+label.stack,
+.fields:has(> label.stack) > label:not(.full) {
+  grid-template-columns: 1fr auto;
+  row-gap: 0.2rem;
+}
+
+/* In a group with a long label, every field stacks, so the inputs line up. */
+label.stack > span:first-child,
+.fields:has(> label.stack) > label:not(.full) > span:first-child {
+  grid-column: 1 / -1;
+}
+
+/* A stacked field next to an inline one: line their inputs up along the bottom. */
+.fields {
+  align-items: end;
+}
+
+/* Full-width selects: a wider label column for long labels; on phones every label goes above. */
+label.full.long {
+  grid-template-columns: 8.5rem 1fr;
+}
+
+@media (max-width: 640px) {
+  label.full,
+  label.full.long {
+    grid-template-columns: 1fr;
+    row-gap: 0.2rem;
+  }
+}
+
+/* ---- Settings: groups, each with its explanation folded under it ---- */
+.set-head {
+  margin: 1.1rem 0 0.5rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+details.more {
+  margin-top: 0.5rem;
+}
+
+details.more summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 0.88rem;
+  padding: 0.35rem 0;
+}
+
+details.more .hint {
+  margin-top: 0.2rem;
+}
+
+/* ---- Touch screens: thumb-sized targets ---- */
+/* Delete sits apart from Duplicate on every screen, so one isn't hit for the other. */
+.design-head button.icon + button.icon {
+  margin-left: 0.75rem;
+}
+
+/* Undo/redo when there's nothing to undo: dimmed, but still visible. */
+.undo-redo button.icon:disabled {
+  opacity: 1;
+  color: #57534e;
+}
+
+@media (pointer: coarse) {
+  .unit-switch button {
+    min-width: 2.6rem;
+    min-height: 2.5rem;
+    font-size: 0.9rem;
+  }
+
+  .undo-redo button.icon,
+  .design-head button.icon {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+
+  .design-head input[type="checkbox"] {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin: 0 0.25rem;
+  }
+
+  .presets {
+    gap: 0.5rem;
+  }
+
+  button.chip {
+    min-height: 2.25rem;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.85rem;
+  }
+
+  .phone-tabs [role="tab"] {
+    min-height: 2.9rem;
+  }
+}
+
+/* The drive readout: looks like text, tap it to type a value. */
+.power button.drive-value {
+  padding: 0.35rem 0.2rem;
+  background: none;
+  color: var(--fg);
+  font-weight: 700;
+  border-bottom: 1px dashed var(--muted);
+  border-radius: 0;
+}
+
+.power input.drive-value {
+  width: 4.6rem;
+  font-weight: 700;
 }
