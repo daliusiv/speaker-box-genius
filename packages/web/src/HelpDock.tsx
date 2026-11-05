@@ -106,8 +106,9 @@ export function HelpDock() {
       const now = vv ? vv.height + vv.offsetTop * 1e-3 : window.innerHeight;
       still = now === last ? still + 1 : 0;
       last = now;
-      // Stop once nothing has moved for ~10 frames (or after a second, whatever happens).
-      if (still < 10 && performance.now() - start < 1000) settling.current = requestAnimationFrame(tick);
+      // Stop once nothing has moved for ~20 frames (a third of a second: the keyboard can start
+      // sliding a moment after focus), or after 1.5 s whatever happens.
+      if (still < 20 && performance.now() - start < 1500) settling.current = requestAnimationFrame(tick);
     };
     settling.current = requestAnimationFrame(tick);
   };
