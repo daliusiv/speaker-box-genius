@@ -12,6 +12,8 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 ## Features
 
+- **Design assistant:** say what you're building (car sub, home sub, hi-fi woofer…), your limits (box size, amplifier power and minimum load, number and size of drivers, box types, brands) and what matters most (deepest, loudest, smallest, balanced). It tries every suitable driver in the database in a sealed and a ported box sized the way the presets would, simulates them at your power, and ranks them; one tap opens a result.
+
 ### Box types
 
 - **Sealed**, **ported** (vented) and **passive radiator** boxes

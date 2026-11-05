@@ -73,6 +73,8 @@ import { EqPanel } from "./Eq.tsx";
 import { MeasurePanel, type Measurement } from "./Measure.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
 import { AppMenu } from "./AppMenu.tsx";
+import { openResult, withDriver } from "./assistant.ts";
+import { DesignAssistant } from "./DesignAssistant.tsx";
 import { submitDriverUrl } from "./submit.ts";
 
 const LIMIT_RED = "#dc2626";
@@ -152,6 +154,7 @@ export function App(props: { initial: AppState | null }) {
   // The short link for the current state, once compressed (compression is asynchronous).
   const link = useRef<{ state: AppState; hash: string } | null>(null);
   const [db, setDb] = useState<DbIndex | null>(null);
+  const [assistant, setAssistant] = useState(false);
   /** Credit line for the driver loaded from the database; shown while its name is unchanged. */
   const [driverSource, setDriverSource] = useState<{ name: string; url?: string; via?: "driver-base" } | null>(null);
   const [wdrMsg, setWdrMsg] = useState("");
@@ -757,6 +760,7 @@ export function App(props: { initial: AppState | null }) {
             }}
             notify={(m) => notify(m)}
             showTips={welcome.showTips}
+            onAssistant={() => setAssistant(true)}
             reportUrl={() => reportUrl(shareUrl())}
           />
           <PwaStatus pwa={pwa} />
@@ -770,6 +774,12 @@ export function App(props: { initial: AppState | null }) {
           <div className="tab-panel" role="tabpanel" id="panel-driver" aria-labelledby="tab-driver">
             <Card title="Driver">
               {/* Two dropdown-like pickers: the main driver, and an optional one to compare with. */}
+              <div className="assist-entry">
+                <button type="button" className="secondary" onClick={() => setAssistant(true)}>
+                  ✦ Design assistant…
+                </button>
+                <span className="hint">Find a driver and box for what you're building</span>
+              </div>
               <div className="driver-pickers">
                 <div
                   className="dp-row"
@@ -796,27 +806,7 @@ export function App(props: { initial: AppState | null }) {
                         (d) => {
                           offerSizing(d.name);
                           setDriverSource(d.source ? { name: d.name, ...d.source } : null);
-                          setStep((s) => ({
-                            ...s,
-                            driverName: d.name,
-                            driverBrand: d.brand,
-                            nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
-                            ts: d.ts,
-                            le_mh: d.le_mh ?? 0,
-                            l2_mh: d.l2_mh ?? 0,
-                            r2_ohm: d.r2_ohm ?? 0,
-                            xmax_mm: d.xmax_mm ?? s.xmax_mm,
-                            pe_w: d.pe_w ?? s.pe_w,
-                            volume: {
-                              ...s.volume,
-                              ...(d.displacement_l !== undefined ? { driverDisp_l: d.displacement_l } : {}),
-                              driverCutout_mm: d.cutout_mm ?? 0,
-                            },
-                            // DVC drivers start wired the way their published values were measured.
-                            dvc: d.dvcWiring
-                              ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring }
-                              : { ...s.dvc, on: false },
-                          }));
+                          setStep((s) => withDriver(s, d));
                         },
                         () => alert("Couldn't load that driver."),
                       )
@@ -1495,7 +1485,7 @@ export function App(props: { initial: AppState | null }) {
           </div>
         </div>
         {welcome.linkNote && <LinkNote onDismiss={welcome.dismissLinkNote} onTips={welcome.showTips} />}
-        {welcome.tips && <GettingStarted onDismiss={welcome.dismissTips} />}
+        {welcome.tips && <GettingStarted onDismiss={welcome.dismissTips} onAssistant={() => setAssistant(true)} />}
         <Summary designs={designs} state={state} missing={solved.missing.length > 0} narrow={narrow} onJump={jumpTo} />
 
         {designs.length > 0 && (
@@ -1883,6 +1873,25 @@ export function App(props: { initial: AppState | null }) {
           </ul>
         </footer>
       </main>
+      <DesignAssistant
+        open={assistant}
+        onClose={() => setAssistant(false)}
+        db={db}
+        base={state}
+        canAdd={state.designs.length < MAX_DESIGNS}
+        onOpen={(d, r, goal) => {
+          const next = openResult(state, d, r, goal);
+          if (!next) return;
+          setStep(() => next);
+          setDriverSource(d.source ? { name: d.name, ...d.source } : null);
+          setAssistant(false);
+          const added = next.designs.at(-1)!;
+          notify(
+            `Added “${added.name}”. ${d.name} is now the main driver for every design, at ${goal.power_w} W${goal.use === "car" ? " with cabin gain" : ""}.`,
+          );
+          showChart("response", [added.id]);
+        }}
+      />
       <nav className="phone-nav" aria-label="Screens">
         <PanelTabs
           value={panel}

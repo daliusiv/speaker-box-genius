@@ -7,7 +7,7 @@
  * Keele), so a page shows what the app would give. On top of that, each page picks a port
  * that fits the box and the best passive radiator from the database (the PR finder).
  */
-import { RHO, C, TS_PARAMS, estimateDriverDisplacement, evaluatePrCandidates, portLengthForFb, rankPrResults, type PrCandidate, type TsParam, type TsValues } from "../packages/engine/src/index.ts";
+import { RHO, C, TS_PARAMS, estimateDriverDisplacement, evaluatePrCandidates, rankPrResults, type PrCandidate, type TsParam, type TsValues } from "../packages/engine/src/index.ts";
 import { loadDatabase, type Entry } from "../packages/db-tools/src/load.ts";
 import type { Driver, PassiveRadiator } from "../packages/schema/src/index.ts";
 import { DEFAULT_STATE, encodeStateShort, type AppState, type DesignState } from "../packages/web/src/state.ts";
@@ -66,24 +66,8 @@ export function prCandidate(e: Entry<PassiveRadiator>): PrCandidate & { params: 
   return { id: e.id, name: `${e.data.brand} ${e.data.model}`, pr: params, params, od_cm: cut !== undefined ? cut / 10 + 2.5 : undefined };
 }
 
-/** Round port sizes tried, largest first (cm, inside diameter). */
-const PORT_SIZES = [20, 15, 12.5, 10, 7.5, 6, 5, 4, 3];
-
-/**
- * The widest round port (fewest chuffing problems) that still fits: straight, along the
- * longest inside dimension of a golden-ratio box (1.618 ∛V), with a port's diameter of air
- * left between its inner end and the back wall. Two ports when one would need more than 20 cm.
- */
-export function choosePort(vb_l: number, fb: number, air: ReturnType<typeof airOf>): { diameter_cm: number; length_cm: number; count: number } | null {
-  const longest = 1.618 * Math.cbrt(vb_l * 1000);
-  for (const count of [1, 2]) {
-    for (const d of PORT_SIZES) {
-      const len = portLengthForFb(vb_l, { shape: "round", diameter_cm: d, length_cm: 10 }, fb, count, undefined, air);
-      if (len > 1 && len + d <= longest) return { diameter_cm: d, length_cm: r1(len), count };
-    }
-  }
-  return null;
-}
+export { choosePort } from "../packages/web/src/assistant.ts";
+import { choosePort } from "../packages/web/src/assistant.ts";
 
 export interface DriverPage {
   id: string;
