@@ -79,3 +79,16 @@ test("the example links open the designs the guides describe", async () => {
   const iso = await decodeStateAny(links["iso-pair"]!.split("#")[1]!);
   assert.equal(iso?.isobaric, true);
 });
+
+test("the validation page shows every case from results.json, with the top bar", async () => {
+  const out = mkdtempSync(join(tmpdir(), "site-"));
+  const paths = await build(out);
+  assert.ok(paths.includes("/validation/"));
+  const html = readFileSync(join(out, "validation/index.html"), "utf8");
+  const rep = JSON.parse(readFileSync(join(import.meta.dirname, "../docs/validation/results.json"), "utf8"));
+  for (const c of rep.winisd.cases) assert.match(html, new RegExp(`id="winisd-${c.id}"`));
+  for (const c of rep.hornresp.cases) assert.match(html, new RegExp(`id="hornresp-${c.id}"`));
+  assert.match(html, /<a href="\/validation\/" aria-current="page">Validation<\/a>/);
+  assert.match(readFileSync(join(out, "sitemap.xml"), "utf8"), /speakerboxgenius\.com\/validation\//);
+  assert.match(readFileSync(join(out, "guides/index.html"), "utf8"), /<a href="\/guides\/" aria-current="page">Guides<\/a>/);
+});

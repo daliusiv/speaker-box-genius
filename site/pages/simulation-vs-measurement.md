@@ -129,4 +129,4 @@ For a subwoofer this barely matters. For a woofer crossed over at a few hundred 
 7. R. H. Small, "Vented-Box Loudspeaker Systems, Part I: Small-Signal Analysis", *J. Audio Eng. Soc.* 21 (5), 363–372, June 1973. [AES E-Library](https://aes2.org/publications/elibrary-page/?id=1967).
 8. Claus Futtrup, [Designing Loudspeaker Boxes](https://www.cfuttrup.com/blogspot/Book_05_Futtrup.pdf): the history of QL = 7 as a starting value.
 9. W. M. Leach Jr., "Loudspeaker Voice-Coil Inductance Losses: Circuit Models, Parameter Estimation, and Effect on Frequency Response", *J. Audio Eng. Soc.* 50 (6), 442–450, 2002. [Author's page](https://leachlegacy.ece.gatech.edu/papers/vcinduc.html).
-10. Speaker Box Genius [validation against WinISD](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/validation.md), including the L2R2 comparison with measured drivers.
+10. Speaker Box Genius [validation against WinISD and Hornresp](https://speakerboxgenius.com/validation/), and [the L2R2 comparison with measured drivers](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/validation.md#l2r2-voice-coil-model-against-measured-drivers).

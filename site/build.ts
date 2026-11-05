@@ -12,12 +12,15 @@
  *   {{link:pr-example}}               the share link of an example design (site/examples.ts)
  *   [[Open this design|pr-example]]   a button opening that example in the app
  *
- * Also writes a /guides/ index, sitemap.xml and robots.txt, and copies site/img to /guides/img/.
+ * Also writes a /guides/ index, the /validation/ page (site/validation.ts, from
+ * docs/validation/results.json), sitemap.xml and robots.txt, and copies site/img to /guides/img/.
  */
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { execSync } from "node:child_process";
 import { exampleLinks } from "./examples.ts";
+import { readReport, validationContent, VALIDATION_STYLE } from "./validation.ts";
 
 export const SITE = "https://speakerboxgenius.com";
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -163,9 +166,14 @@ const STYLE = `
 html{background:var(--bg);color:var(--fg)}
 body{margin:0;font:17px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 a{color:var(--accent)}
-.top{display:flex;align-items:center;justify-content:space-between;gap:1rem;max-width:46rem;margin:0 auto;padding:1rem 1.1rem}
+.top{display:flex;align-items:center;justify-content:space-between;gap:.8rem;max-width:46rem;margin:0 auto;padding:1rem 1.1rem}
 .brand{display:flex;align-items:center;gap:.6rem;color:var(--fg);font-weight:700;text-decoration:none}
 .brand img{width:2rem;height:2rem;border-radius:.45rem}
+.nav{display:flex;align-items:center;gap:1rem}
+.nav a:not(.button){color:var(--muted);text-decoration:none;font-weight:600}
+.nav a[aria-current]{color:var(--fg)}
+@media (max-width:520px){.brand span{display:none}.nav{gap:.8rem}.nav .button{padding:.45rem .8rem}}
+@media (max-width:400px){.top{padding:.9rem .8rem;gap:.5rem}.nav{gap:.65rem;font-size:.95rem}.nav .button{padding:.4rem .65rem}}
 .button{display:inline-block;padding:.55rem 1rem;border-radius:.6rem;background:var(--accent);color:#1c1917;font-weight:650;text-decoration:none;white-space:nowrap}
 main{max-width:46rem;margin:0 auto;padding:.5rem 1.1rem 3rem}
 h1{font-size:2.1rem;line-height:1.15;margin:1rem 0 .6rem;letter-spacing:-.01em}
@@ -196,7 +204,13 @@ footer a{color:var(--muted)}
 `;
 
 /** A whole HTML page around some content. */
-export function layout(o: { title: string; description: string; path: string; image?: string; content: string; guides: Page[] }): string {
+/** The top bar's sections; the one a page belongs to is marked as current. */
+const NAV = [
+  { href: "/guides/", label: "Guides", match: (p: string) => p.startsWith("/guides/") || p.endsWith("-alternative/") },
+  { href: "/validation/", label: "Validation", match: (p: string) => p === "/validation/" },
+];
+
+export function layout(o: { title: string; description: string; path: string; image?: string; content: string; guides: Page[]; style?: string }): string {
   const url = `${SITE}${o.path}`;
   const image = `${SITE}${o.image ? `/guides/img/${o.image}` : "/og-image.png"}`;
   const ld = {
@@ -230,23 +244,33 @@ export function layout(o: { title: string; description: string; path: string; im
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <script type="application/ld+json">${JSON.stringify(ld)}</script>
-<style>${STYLE}</style>
+<style>${STYLE}${o.style ?? ""}</style>
 </head>
 <body>
 <header class="top">
-<a class="brand" href="/"><img src="/icons/icon-192.png" alt="">Speaker Box Genius</a>
-<a class="button" href="/">Open the app</a>
+<a class="brand" href="/"><img src="/icons/icon-192.png" alt=""><span>Speaker Box Genius</span></a>
+<nav class="nav">${NAV.map((n) => `<a href="${n.href}"${n.match(o.path) ? ' aria-current="page"' : ""}>${n.label}</a>`).join("")}<a class="button" href="/">Open the app</a></nav>
 </header>
 <main>
 ${o.content}
 </main>
 <footer>
 ${others.length ? `<p>More guides: ${others.map((g) => `<a href="${g.path}">${escapeHtml(g.title)}</a>`).join(" · ")}</p>` : ""}
-<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/guides/">Guides</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
+<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/guides/">Guides</a> · <a href="/validation/">Validation</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
 </footer>
 </body>
 </html>
 `;
+}
+
+/** The commit being built: GitHub Actions' GITHUB_SHA, else git, else none. */
+function buildCommit(): string | undefined {
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
+  try {
+    return execSync("git rev-parse HEAD", { cwd: HERE, stdio: ["ignore", "pipe", "ignore"] }).toString().trim() || undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export async function build(outDir: string): Promise<string[]> {
@@ -273,6 +297,18 @@ export async function build(outDir: string): Promise<string[]> {
     `<ul class="cards">${guides.map((g) => `<li><a href="${g.path}">${escapeHtml(g.title)}</a><p>${escapeHtml(g.description)}</p></li>`).join("")}</ul>`,
   ].join("\n");
   write("/guides/", layout({ title: "Guides", description: "Speaker box design guides with live, editable examples.", path: "/guides/", content: index, guides }));
+
+  write(
+    "/validation/",
+    layout({
+      title: "Validation against WinISD and Hornresp",
+      description: "Every WinISD and Hornresp comparison Speaker Box Genius is tested against: the cases, how far apart the results are, and the known differences.",
+      path: "/validation/",
+      content: validationContent(readReport(), { commit: buildCommit(), date: new Date() }),
+      guides,
+      style: VALIDATION_STYLE,
+    }),
+  );
 
   const imgDir = join(HERE, "img");
   if (existsSync(imgDir)) {
