@@ -90,7 +90,7 @@ Beyond the plan: transmission lines and horns with Hornresp import/export, a pub
 
 **Main decision (held):** all simulation runs in the browser and GitHub is the backend. Running costs: the domain only.
 
-**Content pages:** `site/pages/*.md` are built by `site/build.ts` (no dependencies) into plain HTML pages next to the app: the guides, the WinISD and Hornresp comparison pages, and `/validation/` (from `docs/validation/results.json`). The build also writes `sitemap.xml` and `robots.txt`.
+**Content pages:** `site/pages/*.md` are built by `site/build.ts` (no dependencies) into plain HTML pages next to the app: the guides, the WinISD and Hornresp comparison pages, `/validation/` (from `docs/validation/results.json`), and `/drivers/`: a page per database driver with suggested boxes (`site/drivers.ts`) and its own share card, drawn by headless Chrome at deploy (`site/og.ts`). The build also writes `sitemap.xml` and `robots.txt`.
 
 ### Tech stack: plan vs built
 
@@ -103,7 +103,7 @@ Beyond the plan: transmission lines and horns with Hornresp import/export, a pub
 | Complex math | Hand-rolled `Complex`, typed arrays | ✅ Same | |
 | Worker comms | Web Worker + Comlink | Main thread | Solves are fast enough; the PR finder runs in slices with a progress bar instead |
 | URL compression | lz-string or fflate | Browser `CompressionStream` (deflate-raw) | No dependency |
-| Testing | Vitest + Playwright | `node:test` (278 tests); Playwright for manual checks | No dependency |
+| Testing | Vitest + Playwright | `node:test` (280 tests); Playwright for manual checks | No dependency |
 | Monorepo | pnpm workspaces | ✅ `engine`, `web`, `schema`, `db-tools` | |
 | Hosting/CI | GitHub Pages + Actions | ✅ Same, custom domain | |
 | Schema validation | Zod + JSON Schema | Hand-written types and checks in `db-tools` | No dependency |
@@ -253,7 +253,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - The whole design lives in the URL **hash**, versioned, with defaults stripped and deflated: **short links** (`#z=…`). Old links are migrated (e.g. the earlier A–D multi-driver links).
 - Drivers are referenced by ID **plus** their T/S values.
 - **Share** gives the link, a **forum image** with a QR code, and ready-to-paste **Reddit (Markdown)** and **diyAudio (BBCode)** posts.
-- A site-wide **share preview card** (og:image) for pasted links. Per-design preview images still need the gallery (below).
+- A site-wide **share preview card** (og:image) for pasted links, and one per driver page. Per-design preview images still need the gallery (below).
 - ⬜ **Design gallery in the repo** (`gallery/`, static pages with per-design OG images and short `/g/…` URLs): not started.
 
 ---
