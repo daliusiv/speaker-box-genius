@@ -76,7 +76,7 @@ In Speaker Box Genius:
 - **What you type is never changed.** Your values show in bold; the values the app works out show in grey. Type them in any order.
 - **Contradictions are flagged.** If you type more values than needed and they don't agree (datasheets often differ by a few percent), the app tells you which ones it's using.
 - **Paste from the datasheet.** Under **Driver tools**, choose **Paste from datasheet…** and paste the parameter block: the values are picked out, and units like "1.9 ft³" or "35630 mm²" are converted.
-- **Or skip typing:** pick the driver from the database of about 1,360 drivers.
+- **Or skip typing:** pick the driver from the database of about 1,360 drivers. Each one also has [its own page](/drivers/) with its parameters and suggested boxes.
 
 ## Datasheets aren't exact
 

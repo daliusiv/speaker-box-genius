@@ -20,4 +20,6 @@ Entries for 18 Sound, B&C Speakers, Beyma, Celestion, Eminence, Faital Pro, HOQS
 
 driver-base compiles the values from each manufacturer's own product pages. **Changes made by Speaker Box Genius:** converted to this database's format and units; nominal size rounded to the usual inch size; Qes calculated from Qts and Qms (or Vas from Cms and Sd) where only those were published; a few values that contradict the rest dropped or corrected, with the reason in that entry's `notes`. Entries whose values disagree too much to correct were left out. The importer is `packages/db-tools/src/driverbase.ts`; each run writes a report of what was written, adjusted and skipped.
 
+Each driver's page on the site (`/drivers/<brand>/<model>/`) credits its source the same way: the manufacturer's datasheet, or driver-base with a link to its CC BY 4.0 licence.
+
 Our compilation of these entries is shared under this database's licence (CC BY-NC-SA 4.0, see [`LICENSE-DATA`](../LICENSE-DATA)); the driver-base material in it remains available under CC BY 4.0 from driver-base itself.
