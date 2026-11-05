@@ -2794,6 +2794,19 @@ button.as-text {
   .chart figcaption .chart-title[aria-expanded="true"] {
     white-space: normal;
   }
+  /* The full title gets a line of its own, and the buttons go under it (instead of being squeezed). */
+  .chart figcaption:has(.chart-title[aria-expanded="true"]) {
+    flex-wrap: wrap;
+  }
+  .chart figcaption .chart-title[aria-expanded="true"] {
+    flex-basis: 100%;
+  }
+  .chart figcaption .unit-switch {
+    flex: none;
+  }
+  .chart figcaption .unit-switch button {
+    white-space: nowrap;
+  }
   .chart figcaption .unit-switch button,
   .chart figcaption > button:not(.chart-title) {
     padding: 0.2rem 0.5rem;
@@ -3099,17 +3112,24 @@ button.strip-box.is-over {
 }
 
 /* In a top corner of the plot, away from the handle (and the finger on it). */
-.handle-bubble {
-  position: absolute;
-  z-index: 3;
-  max-width: 70%;
-  padding: 0.35rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--card) 94%, transparent);
-  box-shadow: 0 6px 18px rgb(0 0 0 / 0.4);
-  font-size: 0.82rem;
-  pointer-events: none;
+/* Edit mode: the dragged handle's value, on a line of its own above the plot (never over it). */
+.handle-readout {
+  min-height: 1.5em;
+  margin: 0.35rem 0 0.1rem;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.handle-readout b {
+  color: var(--fg);
+}
+
+@media (max-width: 860px) {
+  /* Room for two lines, so a long readout doesn't push the chart down mid-drag. */
+  .handle-readout {
+    min-height: 2.6em;
+  }
 }
 
 .chart.editing svg {

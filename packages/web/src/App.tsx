@@ -211,7 +211,11 @@ export function App(props: { initial: AppState | null }) {
     setPicked(null);
     setEditingRaw(true);
   };
+  // Editing works on the relative view: the scale it was on comes back when the editor closes.
+  const modeBeforeEdit = useRef<"relative" | "absolute" | null>(null);
   const closeEditor = () => {
+    if (modeBeforeEdit.current) setSplMode(modeBeforeEdit.current);
+    modeBeforeEdit.current = null;
     setEditingRaw(false);
     setEditFrom(null);
     setPicked(null);
@@ -1569,7 +1573,9 @@ export function App(props: { initial: AppState | null }) {
                   aria-pressed={editing}
                   onClick={() => {
                     if (editing) return closeEditor();
-                    chooseSplMode("relative");
+                    // Not chooseSplMode: the remembered scale stays as it was, and Done puts it back.
+                    modeBeforeEdit.current = splMode;
+                    setSplMode("relative");
                     openEditor();
                   }}
                   title="Drag on the chart: a box's tuning, or an EQ point"
