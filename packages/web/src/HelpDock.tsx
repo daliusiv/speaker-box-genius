@@ -52,6 +52,8 @@ export function HelpDock() {
     const onFocusIn = (e: FocusEvent) => {
       focused.current = e.target as Element;
       show();
+      // The keyboard is about to slide up: follow it until it has settled.
+      settle();
     };
     const onFocusOut = () => {
       focused.current = null;
@@ -67,7 +69,7 @@ export function HelpDock() {
       show();
     };
     // The keyboard opening, the browser scrolling the field into view, the user scrolling.
-    const onMove = () => requestAnimationFrame(place);
+    const onMove = () => settle();
     document.addEventListener("focusin", onFocusIn);
     document.addEventListener("focusout", onFocusOut);
     if (canHover) document.addEventListener("pointerover", onOver);
@@ -86,6 +88,30 @@ export function HelpDock() {
       window.removeEventListener("resize", onMove);
     };
   }, []);
+
+  /**
+   * Re-place every frame until the visible area has stopped changing. The keyboard slides in
+   * over a few hundred milliseconds, and the first time it opens the browser may report its
+   * final size only after the last resize event (the strip then stayed under the keyboard).
+   */
+  const settling = useRef(0);
+  const settle = () => {
+    cancelAnimationFrame(settling.current);
+    const start = performance.now();
+    let last = -1;
+    let still = 0;
+    const tick = () => {
+      place();
+      const vv = window.visualViewport;
+      const now = vv ? vv.height + vv.offsetTop * 1e-3 : window.innerHeight;
+      still = now === last ? still + 1 : 0;
+      last = now;
+      // Stop once nothing has moved for ~10 frames (or after a second, whatever happens).
+      if (still < 10 && performance.now() - start < 1000) settling.current = requestAnimationFrame(tick);
+    };
+    settling.current = requestAnimationFrame(tick);
+  };
+  useEffect(() => () => cancelAnimationFrame(settling.current), []);
 
   useLayoutEffect(place, [help]);
 
