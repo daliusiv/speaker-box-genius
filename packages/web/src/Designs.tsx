@@ -223,6 +223,7 @@ function PortChecks(props: {
 
   // Will it fit? Keep at least one port diameter (or slot height) clear of the opposite wall.
   const clearance = v.shape === "round" ? v.diameter_cm : v.slotHeight_cm;
+  const cube = Math.cbrt(vb_l * 1000);
   const room = portRoom_cm(vb_l, clearance, ctx.internalMax_cm);
   if (v.length_cm > room) {
     notes.push({
