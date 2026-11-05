@@ -54,7 +54,11 @@ import {
   compareShort,
   solveDriver,
   vbOf,
+  limitsOf,
+  LIMIT_CHART,
+  LIMIT_NAME,
   type Design,
+  type LimitKind,
 } from "./sim.ts";
 import { RoomGainPanel } from "./RoomGain.tsx";
 import { BafflePanel } from "./BafflePanel.tsx";
@@ -233,6 +237,24 @@ export function App(props: { initial: AppState | null }) {
     setPhoneView(v);
     window.scrollTo({ top: 0 });
   };
+  /**
+   * Shows the chart for a limit (cone, PR or port), scrolls to it and flashes it, with the
+   * boxes in `ids` picked out; no limit means the response chart.
+   */
+  const jumpTo = (kind: LimitKind | null, ids: string[]) => {
+    const chart = kind ? LIMIT_CHART[kind] : "response";
+    if (chart !== "response" && (chart !== "excursion" || narrow)) chooseChart(chart);
+    setPhoneView("charts");
+    setFocusIds(ids.length ? ids : null);
+    setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(`figure[data-chart="${chart}"]`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.remove("flash");
+      void el.offsetWidth; // restart the animation
+      el.classList.add("flash");
+    }, 60);
+  };
   const welcome = useWelcome();
   const pwa = usePwa();
 
@@ -278,6 +300,17 @@ export function App(props: { initial: AppState | null }) {
 
   // Comparison driver: its curves faint (and dashed) behind the main ones.
   const fadedLabels = useMemo(() => designs.filter((d) => d.compare).map((d) => d.label), [designs]);
+  // After a jump to a limit, the boxes over it stand out for a few seconds (the rest fade).
+  const [focusIds, setFocusIds] = useState<string[] | null>(null);
+  useEffect(() => {
+    if (!focusIds) return;
+    const t = setTimeout(() => setFocusIds(null), 3500);
+    return () => clearTimeout(t);
+  }, [focusIds]);
+  const emphasis = useMemo(
+    () => (focusIds ? designs.filter((d) => d.compare || !focusIds.includes(d.design.id)).map((d) => d.label) : fadedLabels),
+    [focusIds, designs, fadedLabels],
+  );
   const mainDesigns = useMemo(() => designs.filter((d) => !d.compare), [designs]);
   // A line's cone and mouth curves, when switched on.
   const partsOf = (d: Design, map: (y: Float64Array) => Float64Array): Series[] =>
@@ -682,6 +715,7 @@ export function App(props: { initial: AppState | null }) {
 
       <aside className="panel">
         <PanelTabs value={panel} onChange={choosePanel} badges={tabBadges} className="desktop-tabs" />
+        {narrow && solved.missing.length === 0 && <StatusStrip designs={designs} state={state} onJump={jumpTo} />}
         {panel === "driver" && (
           <div className="tab-panel" role="tabpanel" id="panel-driver" aria-labelledby="tab-driver">
             <Card title="Driver">
@@ -1350,13 +1384,14 @@ export function App(props: { initial: AppState | null }) {
       <main className="charts">
         {welcome.linkNote && <LinkNote onDismiss={welcome.dismissLinkNote} onTips={welcome.showTips} />}
         {welcome.tips && <GettingStarted onDismiss={welcome.dismissTips} />}
-        <Summary designs={designs} state={state} missing={solved.missing.length > 0} narrow={narrow} />
+        <Summary designs={designs} state={state} missing={solved.missing.length > 0} narrow={narrow} onJump={jumpTo} />
 
         {designs.length > 0 && (
-          <ChartEmphasis.Provider value={fadedLabels}>
+          <ChartEmphasis.Provider value={emphasis}>
           <CrosshairProvider>
             <LogChart
               forum
+              chartId="response"
               best="high"
               shortTitle={`${splMode === "relative" ? "Response" : "SPL"} · ${driveLabel(state)}${hp.on ? " · high-pass" : ""}`}
               title={`${splMode === "relative" ? "Relative response" : "SPL"} at ${driveLabel(state)}${coilLabel(state)}, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : state.baffle.on ? "free-standing (baffle step)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
@@ -1443,6 +1478,7 @@ export function App(props: { initial: AppState | null }) {
             )}
             <LogChart
               forum
+              chartId="excursion"
               hidden={narrow && chartTab !== "excursion"}
               best="low"
               shortTitle="Cone excursion"
@@ -1483,6 +1519,7 @@ export function App(props: { initial: AppState | null }) {
             {hasPr && (
               <LogChart
                 forum
+                chartId="pr"
                 hidden={chartTab !== "pr"}
                 best="low"
               shortTitle="PR excursion"
@@ -1497,6 +1534,7 @@ export function App(props: { initial: AppState | null }) {
             {hasPort && (
               <LogChart
                 forum
+                chartId="port"
                 hidden={chartTab !== "port"}
                 best="low"
               shortTitle="Port speed"
@@ -1745,7 +1783,63 @@ function portContext(state: AppState, designs: Design[], id: string) {
   };
 }
 
-function Summary({ designs, state, missing, narrow }: { designs: Design[]; state: AppState; missing: boolean; narrow?: boolean }) {
+/**
+ * Phones, on the control screens: one line per box with its F3 and whether it's over a limit,
+ * kept at the top while you scroll, so changing a box shows its effect without going to the
+ * charts. Tapping a box goes to the chart for its limit (or the response).
+ */
+function StatusStrip({ designs, state, onJump }: { designs: Design[]; state: AppState; onJump: (kind: LimitKind | null, ids: string[]) => void }) {
+  const mains = designs.filter((d) => !d.compare);
+  if (mains.length === 0) return null;
+  const fMin = state.highPass.on ? 10 : 15;
+  return (
+    <div className="status-strip" role="group" aria-label="Boxes at a glance">
+      {mains.map((d) => {
+        const l = limitsOf(d.result, state.xmax_mm, fMin);
+        const f3 = d.result.summary.f3;
+        const first = l.over[0] ?? null;
+        return (
+          <button
+            key={d.design.id}
+            type="button"
+            className={`strip-box${first ? " is-over" : ""}`}
+            onClick={() => onJump(first, [d.design.id])}
+            title={first ? `Show the ${LIMIT_NAME[first]} chart` : "Show the response"}
+          >
+            <span className="dot" style={{ background: d.color }} aria-hidden="true" />
+            <span className="strip-name">{shortName(d.label)}</span>
+            <span className="strip-f3">{f3 === null ? "–" : `F3 ${f3.toFixed(0)}`}</span>
+            <span className={first ? "over" : "ok"}>{first ? `⚠ ${LIMIT_NAME[first]}${l.over.length > 1 ? ` +${l.over.length - 1}` : ""}` : "OK"}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** A summary value: plain, or (over its limit) a link to the chart that shows it. */
+function OverValue({ over, text, onJump }: { over: boolean; text: string; onJump: () => void }) {
+  if (!over) return <>{text}</>;
+  return (
+    <button type="button" className="over-link" onClick={onJump} title="Show it on its chart">
+      {text}
+    </button>
+  );
+}
+
+function Summary({
+  designs,
+  state,
+  missing,
+  narrow,
+  onJump,
+}: {
+  designs: Design[];
+  state: AppState;
+  missing: boolean;
+  narrow?: boolean;
+  onJump?: (kind: LimitKind | null, ids: string[]) => void;
+}) {
   const [open, setOpen] = useState<string | null>(null);
   const [folded, setFolded] = useState(true);
   const fmt = (v: number | null | undefined, digits = 1) => (v === null || v === undefined ? "–" : v.toFixed(digits));
@@ -1765,31 +1859,40 @@ function Summary({ designs, state, missing, narrow }: { designs: Design[]; state
     // Phones: folded to one line by default, so the charts start near the top of the screen.
     // Open: name, volume, F3 and what (if anything) is over its limit; the rest one tap away.
     const mains = designs.filter((d) => !d.compare);
-    const overCount = mains.filter(({ result: r }) => {
-      const x = peak(r.excursionMm, r.freq, fMin);
-      const vpF = peak(r.portVelocity, r.freq, fMin);
-      const vpR = peak(r.rearPortVelocity, r.freq, fMin);
-      const vp = vpF === null ? vpR : Math.max(vpF, vpR ?? 0);
-      return (x !== null && x > state.xmax_mm) || prPeak(r, fMin)?.over || (vp !== null && vp > PORT_LIMIT);
-    }).length;
+    const overs = mains.map((d) => ({ id: d.design.id, over: limitsOf(d.result, state.xmax_mm, fMin).over })).filter((x) => x.over.length > 0);
+    const overCount = overs.length;
+    // The jump goes to the first limit crossed (cone, then PR, then port), picking out every box over it.
+    const firstKind = (["xmax", "pr", "port"] as const).find((k) => overs.some((x) => x.over.includes(k))) ?? null;
     const f3s = mains.map((d) => d.result.summary.f3).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
     return (
       <div className={`summary${folded ? " folded" : ""}`}>
-        <button type="button" className="summary-fold" aria-expanded={!folded} onClick={() => setFolded(!folded)}>
-          <span className="summary-dots" aria-hidden="true">
-            {mains.map((d) => (
-              <span key={d.design.id} className="dot" style={{ background: d.color }} />
-            ))}
-          </span>
-          <span>
-            {mains.length} {mains.length === 1 ? "box" : "boxes"}
-            {f3s.length > 0 && ` · F3 ${fmt(Math.min(...f3s), 0)}${f3s.length > 1 ? `–${fmt(Math.max(...f3s), 0)}` : ""} Hz`}
-          </span>
-          <span className={overCount ? "over" : "muted"}>{overCount ? `⚠ ${overCount} over a limit` : "all OK"}</span>
-          <span className="caret muted" aria-hidden="true">
-            {folded ? "▾" : "▴"}
-          </span>
-        </button>
+        <div className="summary-line">
+          <button type="button" className="summary-fold" aria-expanded={!folded} onClick={() => setFolded(!folded)}>
+            <span className="summary-dots" aria-hidden="true">
+              {mains.map((d) => (
+                <span key={d.design.id} className="dot" style={{ background: d.color }} />
+              ))}
+            </span>
+            <span>
+              {mains.length} {mains.length === 1 ? "box" : "boxes"}
+              {f3s.length > 0 && ` · F3 ${fmt(Math.min(...f3s), 0)}${f3s.length > 1 ? `–${fmt(Math.max(...f3s), 0)}` : ""} Hz`}
+            </span>
+            {!overCount && <span className="muted">all OK</span>}
+            <span className="caret muted" aria-hidden="true">
+              {folded ? "▾" : "▴"}
+            </span>
+          </button>
+          {overCount > 0 && firstKind && (
+            <button
+              type="button"
+              className="summary-jump"
+              onClick={() => onJump?.(firstKind, overs.filter((x) => x.over.includes(firstKind)).map((x) => x.id))}
+              title={`Show the ${LIMIT_NAME[firstKind]} chart`}
+            >
+              ⚠ {overCount} over a limit ›
+            </button>
+          )}
+        </div>
         {!folded && (
         <>
         <table className="summary-compact">
@@ -1843,7 +1946,23 @@ function Summary({ designs, state, missing, narrow }: { designs: Design[]; state
                     {fmt(r.summary.f3)}
                     {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
                   </td>
-                  <td className={over.length ? "over" : "muted"}>{over.length ? `⚠ ${over[0]}` : "OK"}</td>
+                  <td className={over.length ? "over" : "muted"}>
+                    {over.length ? (
+                      <button
+                        type="button"
+                        className="over-link"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const k = limitsOf(r, xmax, fMin).over[0];
+                          if (k) onJump?.(k, [d.id]);
+                        }}
+                      >
+                        ⚠ {over[0]} ›
+                      </button>
+                    ) : (
+                      "OK"
+                    )}
+                  </td>
                 </tr>,
                 isOpen && (
                   <tr key={`${d.id}-more`} className="summary-more">
@@ -1918,14 +2037,18 @@ function Summary({ designs, state, missing, narrow }: { designs: Design[]; state
                   Hz
                 </td>
                 <td>{fmt(r.summary.qtc, 2)}</td>
-                <td className={x !== null && x > xmax ? "over" : ""}>{fmt(x)} mm</td>
+                <td className={x !== null && x > xmax ? "over" : ""}>
+                  <OverValue over={x !== null && x > xmax} text={`${fmt(x)} mm`} onJump={() => onJump?.("xmax", [d.id])} />
+                </td>
                 <td
                   className={xpr?.over ? "over" : ""}
                   title={(r.prGroups?.length ?? 0) > 1 ? "The PR group closest to (or furthest past) its own Xmax" : undefined}
                 >
-                  {xpr === null ? "–" : `${fmt(xpr.mm)} mm`}
+                  {xpr === null ? "–" : <OverValue over={xpr.over} text={`${fmt(xpr.mm)} mm`} onJump={() => onJump?.("pr", [d.id])} />}
                 </td>
-                <td className={vp !== null && vp > PORT_LIMIT ? "over" : ""}>{vp === null ? "–" : `${fmt(vp)} m/s`}</td>
+                <td className={vp !== null && vp > PORT_LIMIT ? "over" : ""}>
+                  {vp === null ? "–" : <OverValue over={vp > PORT_LIMIT} text={`${fmt(vp)} m/s`} onJump={() => onJump?.("port", [d.id])} />}
+                </td>
               </tr>
             );
           })}
@@ -1935,7 +2058,7 @@ function Summary({ designs, state, missing, narrow }: { designs: Design[]; state
       <p className="hint swipe-hint">Swipe the table sideways for peak excursion and port speed.</p>
       <p className="hint">
         Peaks are taken above {fMin} Hz{state.highPass.on ? "" : " (turn on the high-pass filter to model a subsonic filter)"}.
-        Red means over the limit.
+        Red means over the limit: click it to see the chart.
       </p>
     </div>
   );

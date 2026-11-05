@@ -1477,7 +1477,7 @@ figure.chart[hidden] {
 }
 
 button.check-chip {
-  padding: 0.2rem 0.6rem;
+  padding: 0.3rem 0.7rem;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--bg);
@@ -1486,10 +1486,11 @@ button.check-chip {
   font-weight: 600;
 }
 
+/* Problems stand out: a filled amber badge. */
 button.check-chip.warn {
-  border-color: color-mix(in srgb, var(--warn) 45%, transparent);
-  background: color-mix(in srgb, var(--warn) 12%, transparent);
-  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 75%, transparent);
+  background: color-mix(in srgb, var(--warn) 22%, transparent);
+  color: #fde68a;
 }
 
 button.check-chip.open {
@@ -1499,6 +1500,16 @@ button.check-chip.open {
 
 .check-detail {
   margin: 0.45rem 0 0;
+  font-size: 0.85rem;
+}
+
+.check-detail p {
+  margin: 0;
+}
+
+button.check-fix {
+  margin-top: 0.45rem;
+  padding: 0.35rem 0.8rem;
   font-size: 0.85rem;
 }
 
@@ -2868,4 +2879,126 @@ details.more .hint {
 .power input.drive-value {
   width: 4.6rem;
   font-weight: 700;
+}
+
+/* ---- Jumping to a limit ---- */
+.summary-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summary-line .summary-fold {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+button.summary-jump {
+  flex: none;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--over) 60%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--over) 15%, transparent);
+  color: var(--over);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+button.over-link {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--over);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+/* The chart a jump lands on flashes once. */
+figure.chart.flash {
+  animation: chart-flash 1.6s ease-out;
+}
+
+@keyframes chart-flash {
+  0%,
+  30% {
+    box-shadow: 0 0 0 3px var(--accent);
+  }
+  100% {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+
+/* ---- Phones: the boxes at a glance, pinned above the controls ---- */
+.status-strip {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  margin: 0 -0.5rem 0.6rem;
+  padding: 0.45rem 0.5rem;
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+
+.status-strip::-webkit-scrollbar {
+  display: none;
+}
+
+button.strip-box {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.5rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+button.strip-box.is-over {
+  border-color: color-mix(in srgb, var(--over) 55%, transparent);
+}
+
+.strip-box .dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+
+.strip-box .strip-f3 {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.strip-box .over {
+  color: var(--over);
+}
+
+.strip-box .ok {
+  color: #86efac;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  figure.chart.flash {
+    animation: none;
+    box-shadow: 0 0 0 3px var(--accent);
+  }
+}
+
+/* A grid column sized 1fr grows to fit wide content; let the panel shrink to the screen. */
+.panel {
+  min-width: 0;
 }

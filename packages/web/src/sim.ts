@@ -457,6 +457,35 @@ export function prPeak(r: SimulationResult, fMin: number): { mm: number; xmax: n
   return best && { mm: best.mm, xmax: best.xmax, over: best.xmax !== null && best.mm > best.xmax };
 }
 
+/** A limit a design can go over, and the chart that shows it. */
+export type LimitKind = "xmax" | "pr" | "port";
+export const LIMIT_CHART: Record<LimitKind, "excursion" | "pr" | "port"> = { xmax: "excursion", pr: "pr", port: "port" };
+export const LIMIT_NAME: Record<LimitKind, string> = { xmax: "Xmax", pr: "PR Xmax", port: "Port speed" };
+
+const peakAbove = (a: Float64Array | null | undefined, freq: Float64Array, fMin: number) => {
+  if (!a) return null;
+  let m = 0;
+  for (let i = 0; i < a.length; i++) if (freq[i]! >= fMin && a[i]! > m) m = a[i]!;
+  return m;
+};
+
+/**
+ * A design's peaks above fMin (the subsonic region is ignored without a high-pass filter) and
+ * which limits they cross: cone Xmax, the passive radiators' Xmax, the port's chuffing line.
+ */
+export function limitsOf(r: SimulationResult, xmax_mm: number, fMin: number) {
+  const x = peakAbove(r.excursionMm, r.freq, fMin);
+  const xpr = prPeak(r, fMin);
+  const vpFront = peakAbove(r.portVelocity, r.freq, fMin);
+  const vpRear = peakAbove(r.rearPortVelocity, r.freq, fMin);
+  const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
+  const over: LimitKind[] = [];
+  if (x !== null && x > xmax_mm) over.push("xmax");
+  if (xpr?.over) over.push("pr");
+  if (vp !== null && vp > PORT_LIMIT) over.push("port");
+  return { x, xpr, vp, over };
+}
+
 /** The drive level as people read it: "100 W" or "2.83 V". */
 export const driveLabel = (s: Pick<AppState, "drive" | "power" | "volts">) => (s.drive === "volts" ? `${s.volts} V` : `${s.power} W`);
 /** ", voice coil at 100 °C" when the coil is simulated hot; empty when cold. */
