@@ -1555,14 +1555,17 @@ export function App(props: { initial: AppState | null }) {
                 >
                   ✎ Edit
                 </button>
-                <div className="unit-switch" role="group" aria-label="SPL scale">
-                  <button aria-pressed={splMode === "relative"} onClick={() => chooseSplMode("relative")} title="Each design's passband at 0 dB, with −3 and −6 dB lines">
-                    Relative
-                  </button>
-                  <button aria-pressed={splMode === "absolute"} onClick={() => chooseSplMode("absolute")} title="Sound pressure level in dB SPL">
-                    dB SPL
-                  </button>
-                </div>
+                {/* Editing works on the relative view, so the scale switch steps aside until Done. */}
+                {!editing && (
+                  <div className="unit-switch" role="group" aria-label="SPL scale">
+                    <button aria-pressed={splMode === "relative"} onClick={() => chooseSplMode("relative")} title="Each design's passband at 0 dB, with −3 and −6 dB lines">
+                      Relative
+                    </button>
+                    <button aria-pressed={splMode === "absolute"} onClick={() => chooseSplMode("absolute")} title="Sound pressure level in dB SPL">
+                      dB SPL
+                    </button>
+                  </div>
+                )}
                 </>
               }
               {...(splMode === "relative"
