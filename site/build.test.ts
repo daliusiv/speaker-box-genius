@@ -31,6 +31,7 @@ test("builds every guide, the index, sitemap and robots.txt, with live example l
   assert.ok(paths.includes("/guides/passive-radiator-box/"));
   assert.ok(paths.includes("/winisd-alternative/"));
   assert.ok(paths.includes("/guides/"));
+  for (const p of ["/guides/transmission-line/", "/guides/port-chuffing/", "/hornresp-alternative/"]) assert.ok(paths.includes(p), p);
   const pr = readFileSync(join(out, "guides/passive-radiator-box/index.html"), "utf8");
   assert.match(pr, /<title>How to design a passive radiator box · Speaker Box Genius<\/title>/);
   assert.match(pr, /<link rel="canonical" href="https:\/\/speakerboxgenius.com\/guides\/passive-radiator-box\/">/);
@@ -49,4 +50,9 @@ test("the example links open the designs the guides describe", async () => {
   const s = await decodeStateAny(links["pr-example"]!.split("#")[1]!);
   assert.equal(s?.driverName, "Dayton Audio DSA215-8");
   assert.deepEqual(s?.designs.map((d) => d.kind), ["vented", "pr"]);
+  const tl = await decodeStateAny(links["tl-example"]!.split("#")[1]!);
+  assert.deepEqual(tl?.designs.map((d) => d.name), ["Classic TL", "Offset TL", "MLTL"]);
+  const port = await decodeStateAny(links["port-example"]!.split("#")[1]!);
+  assert.equal(port?.driverName, "Dayton Audio RSS315HF-4");
+  assert.equal(port?.designs.length, 3);
 });
