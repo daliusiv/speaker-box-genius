@@ -55,6 +55,7 @@ import {
   compareShort,
   solveDriver,
   vbOf,
+  switchDrive,
   builtVbOf,
   limitsOf,
   LIMIT_CHART,
@@ -1481,10 +1482,10 @@ export function App(props: { initial: AppState | null }) {
             aria-label="Drive by"
             title="Watts: V = √(P·Re), like WinISD. Volts: a fixed voltage, like the 2.83 V datasheets quote."
           >
-            <button aria-pressed={state.drive === "watts"} onClick={() => setStep((s) => ({ ...s, drive: "watts" }))}>
+            <button aria-pressed={state.drive === "watts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "watts") }))}>
               W
             </button>
-            <button aria-pressed={state.drive === "volts"} onClick={() => setStep((s) => ({ ...s, drive: "volts" }))}>
+            <button aria-pressed={state.drive === "volts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "volts") }))}>
               V
             </button>
           </div>

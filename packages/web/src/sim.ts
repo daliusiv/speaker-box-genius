@@ -11,6 +11,7 @@ import {
   roomGainDb,
   simulate,
   transitionFrequency,
+  bankResistance,
   solveTs,
   type DriverInput,
   type EqStage,
@@ -499,6 +500,27 @@ export function limitsOf(r: SimulationResult, xmax_mm: number, fMin: number) {
   if (xpr?.over) over.push("pr");
   if (vp !== null && vp > PORT_LIMIT) over.push("port");
   return { x, xpr, vp, over };
+}
+
+/**
+ * The same drive in the other unit, as the simulation converts it (V = √(P·R), R the whole
+ * driver bank's Re): switching W ↔ V keeps the charts where they are. Null without a complete
+ * driver. The other unit's stored value is kept when it already matches (within 1 %), so
+ * switching back and forth doesn't drift by rounding.
+ */
+export function switchDrive(s: AppState, to: "watts" | "volts"): Pick<AppState, "drive" | "power" | "volts"> {
+  if (s.drive === to) return { drive: to, power: s.power, volts: s.volts };
+  const solved = solveDriver(s);
+  if (solved.missing.length > 0) return { drive: to, power: s.power, volts: s.volts };
+  const r = bankResistance(driverInputOf(s, solved), { drivers: s.drivers, wiring: s.wiring, isobaric: s.isobaric ? { coils: s.isoCoils } : null });
+  if (!(r > 0)) return { drive: to, power: s.power, volts: s.volts };
+  const near = (a: number, b: number) => Math.abs(a - b) <= 0.01 * Math.max(a, b);
+  if (to === "volts") {
+    const v = Math.sqrt(s.power * r);
+    return { drive: to, power: s.power, volts: near(v, s.volts) ? s.volts : Math.min(100, Math.max(0.1, Number(v.toPrecision(3)))) };
+  }
+  const p = (s.volts * s.volts) / r;
+  return { drive: to, volts: s.volts, power: near(p, s.power) ? s.power : Math.min(10000, Math.max(1, Math.round(p * 10) / 10)) };
 }
 
 /** The drive level as people read it: "100 W" or "2.83 V". */
