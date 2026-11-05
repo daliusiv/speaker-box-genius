@@ -48,3 +48,22 @@ test("fit explains what's missing", () => {
   const noTs = { ...s, ts: { fs: 30 } } as AppState;
   assert.match(String(fitStuffing(noTs, d, sweep(s, d, 0, 100))), /driver's parameters/);
 });
+
+test("a free-air sweep of the driver is recognised instead of fitted", () => {
+  const s = DEFAULT_STATE;
+  const d = s.designs[0]! as DesignState & { kind: StuffableKind };
+  // Free air: the same driver in a box so big it doesn't stiffen the cone (peak at Fs).
+  const freeAir = sweep(s, { ...d, vb_l: 1e5 }, 0, 100);
+  assert.match(String(fitStuffing(s, d, freeAir)), /free-air sweep/);
+});
+
+test("a fit that runs into its limits or matches badly isn't offered as usable", () => {
+  const s = DEFAULT_STATE;
+  const d = s.designs[0]! as DesignState & { kind: StuffableKind };
+  const good = fitStuffing(s, d, sweep(s, d, 20, 30));
+  assert.ok(typeof good === "object" && good.usable);
+  const tooBig = fitStuffing(s, d, sweep(s, d, 80, 40));
+  assert.ok(typeof tooBig === "object" && !tooBig.usable);
+  const ripply = fitStuffing(s, d, sweep(s, d, 20, 30, 0.4));
+  assert.ok(typeof ripply === "object" && !ripply.usable, JSON.stringify(ripply));
+});

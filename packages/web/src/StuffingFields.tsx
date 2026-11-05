@@ -25,6 +25,8 @@ export interface StuffingFitContext {
   state: AppState;
   onMeasured: (m: MeasuredCurve[]) => void;
   onShowImpedance: () => void;
+  /** Undo the last change (the app's undo). */
+  onUndo: () => void;
 }
 
 const MODES: { value: StuffingMode; text: string }[] = [
@@ -175,6 +177,12 @@ function FitFromMeasurement(props: { design: DesignState & { kind: StuffableKind
     setResult({ key: JSON.stringify([m.id, props.design, s.ts, s.drivers, s.wiring, s.isobaric, s.dvc, s.settings.losses, s.settings.air]), fit: fitStuffing(s, props.design, m) });
   };
 
+  const use = (f: StuffingFit) => {
+    props.onUse(f);
+    setDone(`Stuffing set to Custom: ${f.gain_pct >= 0 ? "+" : ""}${f.gain_pct}%, Qa ${f.qa}. The impedance chart shows the simulation over your sweep.`);
+    props.ctx.onShowImpedance();
+  };
+
   const load = async (file: File) => {
     try {
       const m = await readMeasured(file, "impedance", state.measured);
@@ -202,6 +210,22 @@ function FitFromMeasurement(props: { design: DesignState & { kind: StuffableKind
             onChange={(id) => setPick(id)}
           />
         )}
+        {chosen && (
+          <button
+            type="button"
+            className="icon"
+            aria-label={`Remove ${chosen.name}`}
+            title="Remove this sweep (from the charts too)"
+            onClick={() => {
+              onMeasured(state.measured.filter((m) => m.id !== chosen.id));
+              setPick("");
+              setResult(null);
+              setDone("");
+            }}
+          >
+            ×
+          </button>
+        )}
         <label className={`file-button${state.measured.length >= MAX_MEASURED ? " disabled" : ""}`}>
           + Load a sweep (.zma)
           <input
@@ -223,7 +247,21 @@ function FitFromMeasurement(props: { design: DesignState & { kind: StuffableKind
         )}
       </div>
       {msg && <p className="warn">{msg}</p>}
-      {done && !shown && <p className="hint">{done}</p>}
+      {done && !shown && (
+        <p className="hint">
+          {done}{" "}
+          <button
+            type="button"
+            className="link"
+            onClick={() => {
+              props.ctx.onUndo();
+              setDone("");
+            }}
+          >
+            Undo
+          </button>
+        </p>
+      )}
       {typeof shown === "string" && <p className="warn">{shown}</p>}
       {shown && typeof shown === "object" && (
         <>
@@ -241,19 +279,20 @@ function FitFromMeasurement(props: { design: DesignState & { kind: StuffableKind
           <p className="hint">
             Net volume {fmt(shown.built_l, "vol")}, compared {Math.round(shown.band[0])}–{Math.round(shown.band[1])} Hz.
           </p>
-          <div className="row">
-            <button
-              type="button"
-              className="secondary"
-              onClick={() => {
-                props.onUse(shown);
-                setDone(`Stuffing set to Custom: ${shown.gain_pct >= 0 ? "+" : ""}${shown.gain_pct}%, Qa ${shown.qa}. The impedance chart shows the simulation over your sweep.`);
-                props.ctx.onShowImpedance();
-              }}
-            >
-              Use these values
-            </button>
-          </div>
+          {shown.usable ? (
+            <div className="row">
+              <button type="button" className="secondary" onClick={() => use(shown)}>
+                Use these values
+              </button>
+            </div>
+          ) : (
+            <p className="warn">
+              Stuffing doesn't explain this measurement, so these values aren't applied: fix what's above first (or check it's a sweep of this box).{" "}
+              <button type="button" className="link" onClick={() => use(shown)}>
+                Use them anyway
+              </button>
+            </p>
+          )}
         </>
       )}
     </details>

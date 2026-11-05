@@ -27,11 +27,20 @@ export interface StuffingFit {
   error_pct: number;
   /** Things to check before trusting the result. */
   warnings: string[];
+  /**
+   * False when the fit ran into the ends of its search (a box ±40 % or more off, Qa at its
+   * floor) or still matches badly: then stuffing doesn't explain the measurement, and the
+   * values shouldn't be applied without a second look.
+   */
+  usable: boolean;
 }
 
 const GAIN = [-45, 40] as const;
 const QA = [1.5, 300] as const;
 const POINTS = 64;
+
+/** Worse than this RMS mismatch (%), the result isn't offered as is. */
+export const FIT_MAX_ERROR = 15;
 
 /** The tallest impedance peak between 8 and 400 Hz (Hz), or null if the curve has none. */
 function mainPeak(f: number[], v: number[]): number | null {
@@ -59,6 +68,22 @@ export function fitStuffing(s: AppState, d: DesignState & { kind: StuffableKind 
 
   const driver = driverInputOf(s, solved);
   const opts = { ...simOptionsOf(s), fMin: lo, fMax: hi, points: POINTS, highPass: null, eq: [] };
+
+  // A free-air sweep of the driver (its peak at about Fs) can't be fitted to a box, whose peak
+  // sits well away from Fs: say so instead of fitting nonsense.
+  const fs = driver.fs;
+  try {
+    const empty = simulate(driver, enclosureOf(d, built, s.settings.losses, s.volume.wall_mm), { ...simOptionsOf(s), fMin: 5, fMax: 600, points: 240, highPass: null, eq: [] });
+    const fBox = mainPeak([...empty.freq], [...empty.impedanceOhm]);
+    if (Math.abs(fpk / fs - 1) < 0.1 && fBox !== null && Math.abs(fBox / fs - 1) > 0.15) {
+      return (
+        `This looks like a free-air sweep of the driver: its peak is at ${fpk.toFixed(1)} Hz, right at the driver's Fs (${fs.toFixed(1)} Hz), while in this box the peak should be near ${fBox.toFixed(0)} Hz. ` +
+        "Measure the driver mounted in the finished box for this fit. A free-air sweep belongs in Driver → Driver tools → Measure from an impedance sweep, which fits the driver's own T/S parameters from it."
+      );
+    }
+  } catch {
+    // The fit below reports a design that can't be simulated.
+  }
   let target: Float64Array | null = null;
 
   const cost = (gain: number, qa: number): number => {
@@ -130,5 +155,8 @@ export function fitStuffing(s: AppState, d: DesignState & { kind: StuffableKind 
   if (qaRaw >= QA[1] * 0.95) warnings.push("Hardly any absorption loss: Qa is at the top of its range.");
   if (qaRaw <= QA[0] * 1.05) warnings.push("Qa is at the bottom of its range: the peaks are more damped than stuffing alone explains (leaks, or Settings' Ql too high?).");
 
-  return { gain_pct: gain, qa, built_l: built, acting_l: built * (1 + gain / 100), band: [lo, hi], error_pct, warnings };
+  const atLimit = best.g >= GAIN[1] - 0.5 || best.g <= GAIN[0] + 0.5 || qaRaw <= QA[0] * 1.05;
+  const usable = !atLimit && error_pct <= FIT_MAX_ERROR;
+
+  return { gain_pct: gain, qa, built_l: built, acting_l: built * (1 + gain / 100), band: [lo, hi], error_pct, warnings, usable };
 }
