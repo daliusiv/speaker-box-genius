@@ -78,6 +78,10 @@ export interface DbRecord {
   depth_mm?: number | null;
   power_aes_watts?: number | null;
   power_eia_watts?: number | null;
+  /** Not in driver-base: set by the spreadsheet importer for dual voice coil drivers. */
+  voice_coils?: 1 | 2;
+  /** How a DVC driver's coils were wired for the published values. */
+  ts_wiring?: "series" | "parallel";
 }
 
 export interface Converted {
@@ -174,14 +178,37 @@ export const INFO_NOTE = /^(Coaxial driver|Guitar\/bass speaker)/;
 
 /** Convert one record. `models` counts records per brand + model, to tell impedance variants apart. */
 export function convert(r: DbRecord, models: Map<string, number>): Converted {
-  const notes: string[] = [];
   const b = BRANDS[r.manufacturer];
-  if (DIRECT_BRANDS.has(r.manufacturer)) return { kind: "skip", reason: "imported directly from the manufacturer", notes };
-  if (!b) return { kind: "skip", reason: `unknown manufacturer "${r.manufacturer}"`, notes };
-  if (!KINDS.has(r.driver_kind)) return { kind: "skip", reason: `kind "${r.driver_kind}" isn't imported`, notes };
-  if (DVC.test(r.model)) {
-    return { kind: "skip", reason: "dual voice coil: driver-base doesn't say how the coils were wired for the published values", notes };
-  }
+  if (DIRECT_BRANDS.has(r.manufacturer)) return { kind: "skip", reason: "imported directly from the manufacturer", notes: [] };
+  if (!b) return { kind: "skip", reason: `unknown manufacturer "${r.manufacturer}"`, notes: [] };
+  if (!KINDS.has(r.driver_kind)) return { kind: "skip", reason: `kind "${r.driver_kind}" isn't imported`, notes: [] };
+  return convertRecord(r, models, {
+    brand: b.brand,
+    brandSlug: b.slug,
+    note: ATTRIBUTION,
+    dvc: "dual voice coil: driver-base doesn't say how the coils were wired for the published values",
+  });
+}
+
+/** Who the values are from: the brand folder and the note every entry's source carries. */
+export interface ConvertContext {
+  brand: Brand;
+  brandSlug: string;
+  /** Goes in `sources[0].note`. */
+  note: string;
+  /** Why dual voice coil models are skipped. */
+  dvc: string;
+}
+
+/**
+ * Convert one record with the checks and repairs every bulk import shares
+ * (driver-base, and manufacturer spreadsheets via import-sheet.ts).
+ */
+export function convertRecord(r: DbRecord, models: Map<string, number>, ctx: ConvertContext): Converted {
+  const notes: string[] = [];
+  const b = { brand: ctx.brand, slug: ctx.brandSlug };
+  const dvc = r.voice_coils === 2 || (r.voice_coils === undefined && DVC.test(r.model));
+  if (dvc && !r.ts_wiring) return { kind: "skip", reason: ctx.dvc, notes };
   const url = r.source_urls?.find((u) => /^https?:\/\//.test(u));
   if (!url) return { kind: "skip", reason: "no manufacturer page", notes };
 
@@ -271,6 +298,7 @@ export function convert(r: DbRecord, models: Map<string, number>): Converted {
     model,
     type: typeOf(r, size_in, ts.fs),
     nominal_ohms: z.ohms,
+    ...(dvc ? { voice_coils: 2 as const, ts_wiring: r.ts_wiring } : {}),
     ...(size_in ? { size_in } : {}),
     ts,
     ...(Object.keys(physical).length ? { physical } : {}),
@@ -279,7 +307,7 @@ export function convert(r: DbRecord, models: Map<string, number>): Converted {
         kind: "datasheet",
         url,
         ...(/^\d{4}-\d{2}-\d{2}$/.test(retrieved) ? { retrieved } : {}),
-        note: ATTRIBUTION,
+        note: ctx.note,
       },
     ],
     status: "community",

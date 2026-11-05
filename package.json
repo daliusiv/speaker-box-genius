@@ -18,6 +18,7 @@
     "typecheck": "tsc -p packages/schema && tsc -p packages/engine && tsc -p packages/db-tools && tsc -p packages/web",
     "db:import-wdr": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/import-wdr.ts",
     "db:import-driverbase": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/driverbase.ts",
+    "db:import-sheet": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/import-sheet.ts",
     "validation:report": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/report.ts"
   },
   "devDependencies": {
