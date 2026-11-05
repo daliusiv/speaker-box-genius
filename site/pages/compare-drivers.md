@@ -45,6 +45,8 @@ So the "better" driver depends on the box you can build: a small sealed sub want
 
 ## Doing it in the app
 
+Shortlisting? Each driver's [page](/drivers/) shows its suggested boxes, so you can narrow the list before comparing.
+
 1. Pick the first driver on the **Driver** tab, and add the boxes you're considering on the **Boxes** tab.
 2. Next to **Compare**, pick the second driver. It appears in every box as a dashed curve, in the same colour, on every chart.
 3. Read the summary: each box shows a "vs" row for the second driver, with its F3 and whether it goes over a limit.

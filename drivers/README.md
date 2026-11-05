@@ -9,7 +9,7 @@ drivers/
    └─ <model-slug>.json
 ```
 
-The file path is the driver's permanent ID (e.g. `dayton-audio/rss265hf-4`), so don't rename files once they're merged.
+The file path is the driver's permanent ID (e.g. `dayton-audio/rss265hf-4`), and also its page on the site (`speakerboxgenius.com/drivers/dayton-audio/rss265hf-4/`, with suggested boxes, built at every deploy), so don't rename files once they're merged.
 
 - **Format:** see [`docs/examples/drivers/example-audio/ex10-4.json`](../docs/examples/drivers/example-audio/ex10-4.json) (a made-up driver).
 - **Field definitions:** `packages/schema/src/index.ts`. Units are part of each field name (`vas_l` = litres, `sd_cm2` = cm², `xmax_mm` = mm one-way).

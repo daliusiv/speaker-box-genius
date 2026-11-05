@@ -35,6 +35,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **A T/S parameter editor that never overwrites what you typed.** Type any set of parameters in any order; the rest are calculated (shown in grey), and contradictions are flagged
 - **Paste straight from a datasheet**: the parameters are picked out of the text, with units like "1.9 ft³" or "35630 mm²" converted
 - **A driver database of about 1,360 drivers from 15 brands**, plus 46 passive radiators, searchable and filterable, with links to each manufacturer's datasheet
+- **A page for every driver** on the site ([speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/)), with suggested sealed, ported and passive radiator boxes, their charts, and a link that opens them in the app
 - **Compare with another driver**: a second driver drawn dashed in every box, with **Swap** to make it the main one
 - **Multiple drivers**: any number, wired in series or parallel, **isobaric** pairs and **dual voice coil** drivers
 - **Measure your own driver** from a free-air impedance sweep (DATS, REW, ARTA and others, as `.zma`, `.txt` or `.csv`), with an added-mass sweep for Vas
