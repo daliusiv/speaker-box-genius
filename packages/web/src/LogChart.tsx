@@ -110,6 +110,8 @@ interface Props {
   shortTitle?: string;
   /** Hidden charts stay rendered (the forum image can still use them). */
   hidden?: boolean;
+  /** Names the chart for jumping to it (figure[data-chart]). */
+  chartId?: string;
   /** Include this chart in the forum image. */
   forum?: boolean;
 }
@@ -161,6 +163,7 @@ export function LogChart({
   best,
   shortTitle,
   hidden,
+  chartId,
   forum,
 }: Props) {
   const clipId = useId();
@@ -325,7 +328,7 @@ export function LogChart({
   let legendX = PAD.l;
 
   return (
-    <figure className="chart" hidden={hidden} data-forum={forum ? "" : undefined}>
+    <figure className="chart" hidden={hidden} data-chart={chartId} data-forum={forum ? "" : undefined}>
       <figcaption>
         {tall && shortTitle && shortTitle !== title ? (
           <button type="button" className="chart-title as-text" onClick={() => setFullTitle((v) => !v)} title={title} aria-expanded={fullTitle}>

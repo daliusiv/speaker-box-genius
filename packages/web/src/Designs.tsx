@@ -209,7 +209,8 @@ function PortChecks(props: {
   const port = portOf(v);
   const leff = portEffectiveLength(port); // m
   const pipe = air.c / (2 * leff);
-  const notes: { warn: boolean; chip: string; text: string }[] = [];
+  const notes: CheckNote[] = [];
+  const sizeField = v.shape === "round" ? "Port Ø" : "Width";
 
   // Will it fit? Keep at least one port diameter (or slot height) clear of the opposite wall.
   const clearance = v.shape === "round" ? v.diameter_cm : v.slotHeight_cm;
@@ -222,6 +223,7 @@ function PortChecks(props: {
       text:
         `The port is ${fmt(v.length_cm, "len")} long, but ${ctx.internalMax_cm ? "this box" : "a cube-shaped box of this volume"} ` +
         `only has room for about ${fmt(Math.max(0, room), "len")} in a straight line. Use a bent (L-shaped) port, a slot along a wall, or a bigger port area with a shorter length.`,
+      fix: "Length",
     });
   }
 
@@ -245,6 +247,7 @@ function PortChecks(props: {
         : `Port air speed reaches ${ctx.portVelocity.toFixed(1)} m/s. To stay under ${PORT_LIMIT} m/s at this power: about ${size} ` +
           `(length ≈ ${fmt(newLen, "len")} for the same tuning)${ports > v.count ? `, or ${ports} ports of the current size` : ""}` +
           (v.shape === "round" && !(v.flare_cm! > 0) ? `. Flared ends also help a lot: try a flare radius of about ${fmt(v.diameter_cm / 4, "len")}.` : "."),
+      fix: sizeField,
     });
   }
 
@@ -257,6 +260,7 @@ function PortChecks(props: {
       text:
         `At ${ctx.drive ?? "this power"} the port loses about ${pc.db.toFixed(1)} dB around ${pc.f.toFixed(0)} Hz to turbulence (approximate model, shown in the SPL chart). ` +
         (v.shape === "round" && !(v.flare_cm! > 0) ? "More port area or flared ends reduce it." : "More port area reduces it further."),
+      fix: sizeField,
     });
   }
 
@@ -275,16 +279,46 @@ function PortChecks(props: {
         ? ` The box's longest inside dimension (${fmt(ctx.internalMax_cm ?? cube, "len")}${ctx.internalMax_cm ? "" : " for a cube"}) has its own standing wave at about ${boxMode.toFixed(0)} Hz, close to it: the box will drive the port hard there. Damping on the walls (and keeping the port's inner end away from the box's middle) helps, or change the port length a little.`
         : ` The box's own lowest standing wave is about ${boxMode.toFixed(0)} Hz${ctx.internalMax_cm ? "" : " (for a cube)"}.`) +
       " Settings → Ports → \u201cPipe\u201d draws the port's resonances on the SPL chart (the box's standing waves aren't simulated).",
+    fix: pipe < 300 || coincide ? "Length" : undefined,
   });
 
   return <CheckChips notes={notes} />;
 }
 
+/** A check on a design: a chip, its explanation, and the field that fixes it (by its label). */
+interface CheckNote {
+  warn: boolean;
+  chip: string;
+  text: string;
+  fix?: string;
+}
+
+/**
+ * Puts the cursor in the field with this label: the nearest one before `from` in the same
+ * card (a bandpass card has two "Port Ø" fields, one per chamber).
+ */
+function focusField(from: HTMLElement, label: string) {
+  let el: Element | null = from;
+  while (el && !el.classList.contains("card")) {
+    for (let sib = el.previousElementSibling; sib; sib = sib.previousElementSibling) {
+      const spans = [...sib.querySelectorAll("label > span:first-child")].filter((x) => x.textContent === label);
+      const input = spans.at(-1)?.parentElement?.querySelector("input");
+      if (input) {
+        input.scrollIntoView({ block: "center", behavior: "smooth" });
+        input.focus({ preventScroll: true });
+        input.select();
+        return;
+      }
+    }
+    el = el.parentElement;
+  }
+}
+
 /**
  * Checks as one-line chips (amber = a problem, plain = information); tapping a chip
- * opens its explanation and advice underneath.
+ * opens its explanation and advice underneath, with a button to the field that fixes it.
  */
-function CheckChips({ notes }: { notes: { warn: boolean; chip: string; text: string }[] }) {
+function CheckChips({ notes }: { notes: CheckNote[] }) {
   const [open, setOpen] = useState<string | null>(null);
   const shown = notes.find((n) => n.chip === open);
   return (
@@ -302,7 +336,16 @@ function CheckChips({ notes }: { notes: { warn: boolean; chip: string; text: str
           </button>
         ))}
       </div>
-      {shown && <p className={shown.warn ? "warn check-detail" : "hint check-detail"}>{shown.text}</p>}
+      {shown && (
+        <div className={shown.warn ? "warn check-detail" : "hint check-detail"}>
+          <p>{shown.text}</p>
+          {shown.fix && (
+            <button type="button" className="secondary check-fix" onClick={(e) => focusField(e.currentTarget.closest(".checks") as HTMLElement, shown.fix!)}>
+              Change {shown.fix} →
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
