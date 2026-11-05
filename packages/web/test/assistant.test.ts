@@ -4,8 +4,8 @@ import { TS_PARAMS, type TsParam, type TsValues } from "@sbg/engine";
 import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
-import { runDesigns, solveDriver } from "../src/sim.ts";
-import { evaluateDriver, goalFor, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { PORT_LIMIT, limitsOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
+import { evaluateDriver, goalFor, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -74,7 +74,7 @@ for (const use of ["car", "home", "hifi"] as const) {
       const top = results.slice(0, 10).filter((r) => r.over.length === 0);
       const f3 = (r: AssistantResult) => r.f3;
       if (priority === "deep") for (let i = 1; i < top.length; i++) assert.ok(f3(top[i - 1]!) <= f3(top[i]!));
-      if (priority === "loud") for (let i = 1; i < 10; i++) assert.ok(results[i - 1]!.loud_db >= results[i]!.loud_db);
+      if (priority === "loud") for (let i = 1; i < top.length; i++) assert.ok(top[i - 1]!.loud_db >= top[i]!.loud_db);
       if (priority === "small") for (const r of results) assert.ok(f3(r) <= goal.targetF3_hz + 0.5, `${r.name} ${r.box} F3 ${r.f3}`);
       console.log(`${use}/${priority}: ${tried} drivers, ${results.length} designs, ${Math.round(ms)} ms; top: ${results[0]!.name} ${results[0]!.box} ${results[0]!.vb_l} L F3 ${results[0]!.f3.toFixed(1)} ${results[0]!.loud_db} dB`);
     });
@@ -96,4 +96,47 @@ test("opening results starts a project with that driver and its boxes, simulated
     assert.equal(d.vb_l, x.vb_l);
     assert.ok(Math.abs(d.result.summary.f3! - x.f3) < 1.5, `${x.box}: ${d.result.summary.f3} vs ${x.f3}`);
   }
+});
+
+test("what a result promises is what the app shows: same grade, and the port fits", () => {
+  for (const use of ["hifi", "car"] as const) {
+    const goal = goalFor(use, "balanced");
+    const results = runAll(goal).results;
+    for (const r of results.slice(0, 25)) {
+      const s = openResults(DEFAULT_STATE, loaded(r.driverId), [r], goal);
+      assert.equal(s.highPass.on, false);
+      const d = runDesigns(s, solveDriver(s))[0]!;
+      // The app samples more finely: a peak right at a limit may land either side of it.
+      const app = limitsOf(d.result, s.xmax_mm!, false);
+      if (!r.over.includes("xmax")) assert.ok(app.x! <= s.xmax_mm! * 1.02, `${use}: ${r.name} ${r.box} ${app.x} mm`);
+      if (!r.over.includes("port") && app.vp !== null) assert.ok(app.vp <= PORT_LIMIT * 1.02, `${use}: ${r.name} port ${app.vp} m/s`);
+      assert.equal(!!app.deep, !!r.deep, `${use}: ${r.name} ${r.box} deep bass`);
+      if (r.port) assert.ok(r.port.length_cm <= portRoom_cm(r.vb_l, r.port.kind === "slot" ? r.port.slotHeight_cm : r.port.diameter_cm), `${r.name}: port ${r.port.length_cm} cm`);
+    }
+    // Graded, not hidden: within limits first, and deep-bass results carry their safe power.
+    const firstOver = results.findIndex((r) => r.over.length > 0);
+    if (firstOver >= 0) assert.ok(results.slice(firstOver).every((r) => r.over.length > 0), `${use}: a result within limits after one over`);
+    for (const r of results) if (r.deep) assert.ok(r.deep.safe_w < goal.power_w && r.deep.below_hz > 20);
+  }
+});
+
+test("ports: flared and slot ports when a plain tube can't fit or would chuff, and they open as built", () => {
+  // 20 L at 45 Hz: a plain tube that fits is narrow; a slot along a wall and a flared tube are offered too.
+  const c = portCandidates(20, 45, { rho: 1.204, c: 343.2 });
+  assert.deepEqual(c.map((p) => p.kind), ["straight", "flared", "slot"]);
+  for (const p of c) {
+    const clear = p.kind === "slot" ? p.slotHeight_cm : p.diameter_cm;
+    assert.ok(p.length_cm <= portRoom_cm(20, clear), `${p.kind} ${p.length_cm} cm`);
+  }
+  const goal = goalFor("hifi", "balanced");
+  const results = runAll(goal).results;
+  const kinds = new Set(results.filter((r) => r.port).map((r) => r.port!.kind));
+  assert.ok(kinds.has("flared") || kinds.has("slot"), [...kinds].join());
+  // Every ported result within the port-speed line used the simplest port that does it.
+  const flaredOrSlot = results.find((r) => r.port && r.port.kind !== "straight" && !r.over.includes("port"))!;
+  assert.ok(flaredOrSlot, "a flared or slot port within the chuffing line");
+  const s = openResults(DEFAULT_STATE, loaded(flaredOrSlot.driverId), [flaredOrSlot], goal);
+  const v = s.designs[0] as import("../src/state.ts").VentedDesign;
+  assert.equal(v.shape, flaredOrSlot.port!.kind === "slot" ? "slot" : "round");
+  assert.ok(Math.abs(runDesigns(s, solveDriver(s))[0]!.result.summary.fb! - flaredOrSlot.fb!) < 1, "opens at the tuning scored");
 });

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { coilLabel, driveLabel, lineFoldOf, PORT_LIMIT, prGroupLabels, prPeak, type Design } from "./sim.ts";
+import { coilLabel, driveLabel, lineFoldOf, limitsOf, prGroupLabels, type Design } from "./sim.ts";
 import { foldShapes } from "./foldShapes.ts";
 import { REPO } from "./components.tsx";
 import { fmtQ } from "./units.ts";
@@ -20,21 +20,11 @@ const HEAD = ["Design", "Vb", "Fb / Fc", "F3", "Peak cone", "Peak PR", "Peak por
 
 /** Summary numbers shared by the forum text and the image. */
 function summaryRows(state: AppState, designs: Design[]): Row[] {
-  const fMin = state.highPass.on ? 10 : 15;
-  const peak = (a: Float64Array | null, f: Float64Array) => {
-    if (!a) return null;
-    let m = 0;
-    for (let i = 0; i < a.length; i++) if (f[i]! >= fMin && a[i]! > m) m = a[i]!;
-    return m;
-  };
   const n = (v: number | null | undefined, unit: string, digits = 1) =>
     v === null || v === undefined || !Number.isFinite(v) ? "–" : `${v.toFixed(digits)} ${unit}`;
   return designs.map(({ design: d, label, color, vb_l, acting_l, result: r, compare }) => {
-    const x = peak(r.excursionMm, r.freq);
-    const xpr = prPeak(r, fMin);
-    const vpFront = peak(r.portVelocity, r.freq);
-    const vpRear = peak(r.rearPortVelocity, r.freq);
-    const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
+    const lim = limitsOf(r, compare && state.compare ? state.compare.xmax_mm : state.xmax_mm, state.highPass.on);
+    const { x, xpr, vp } = lim;
     const vol =
       d.kind === "bandpass"
         ? `${fmtQ(vb_l, "vol", state.settings.units)} + ${fmtQ(d.frontVb_l, "vol", state.settings.units)}`
@@ -45,14 +35,14 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
     return {
       name: label,
       color,
-      cells: [vol, n(r.summary.fb ?? r.summary.fc, "Hz"), n(r.summary.f3, "Hz"), n(x, "mm"), n(xpr?.mm, "mm"), n(vp, "m/s")],
+      cells: [vol, n(r.summary.fb ?? r.summary.fc, "Hz"), n(r.summary.f3, "Hz"), lim.deep ? `${n(x, "mm")} (${lim.deep.x_mm.toFixed(1)} below ${lim.deep.below_hz.toFixed(0)} Hz)` : n(x, "mm"), n(xpr?.mm, "mm"), n(vp, "m/s")],
       over: [
         false,
         false,
         false,
-        x !== null && x > (compare && state.compare ? state.compare.xmax_mm : state.xmax_mm),
-        xpr?.over ?? false,
-        vp !== null && vp > PORT_LIMIT,
+        lim.over.includes("xmax"),
+        lim.over.includes("pr"),
+        lim.over.includes("port"),
       ],
     };
   });

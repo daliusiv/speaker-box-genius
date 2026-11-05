@@ -44,7 +44,6 @@ import {
   dvcFactors,
   PORT_LIMIT,
   prGroupLabels,
-  prPeak,
   prXmaxes,
   dimensionsFor,
   coilLabel, driveLabel,
@@ -58,6 +57,11 @@ import {
   switchDrive,
   builtVbOf,
   limitsOf,
+  driveAt,
+  deepSplitOf,
+  DEEP_ALLOW,
+  DEEP_FLOOR_HZ,
+  type Limits,
   LIMIT_CHART,
   LIMIT_NAME,
   type Design,
@@ -1655,7 +1659,19 @@ export function App(props: { initial: AppState | null }) {
                 dash: d.dash,
                 y: d.result.excursionMm,
                 over: d.compare && state.compare ? state.compare.xmax_mm : state.xmax_mm,
+                ...(() => {
+                  const split = deepSplitOf(d.result, state.highPass.on);
+                  const xmax = d.compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
+                  return split ? { deepBelow: split, deepOver: DEEP_ALLOW * xmax, deepFloor: DEEP_FLOOR_HZ } : {};
+                })(),
               }))}
+              zones={(() => {
+                // Deep bass of the tuned boxes (no high-pass filter): graded up to 2 × Xmax, not failed.
+                const splits = designs.filter((d) => !d.compare).map((d) => deepSplitOf(d.result, state.highPass.on)).filter((v): v is number => v !== null);
+                return splits.length
+                  ? [{ below: Math.max(...splits), value: DEEP_ALLOW * state.xmax_mm, label: `Deep bass: ${DEEP_ALLOW} × Xmax`, color: "#fbbf24" }]
+                  : [];
+              })()}
               limits={[
                 {
                   value: state.xmax_mm,
@@ -1966,6 +1982,11 @@ function portContext(state: AppState, designs: Design[], id: string) {
   };
 }
 
+/** A deep-bass note, in words: where, and the drive that keeps it within Xmax. */
+function deepText(deep: NonNullable<Limits["deep"]>, state: AppState): string {
+  return `Past Xmax only below ${deep.below_hz.toFixed(0)} Hz (0.7 × the tuning), within it up to ${driveAt(state, deep.scale)}: fine for most music, which has little energy that low. A subsonic filter removes it.`;
+}
+
 /**
  * Phones, on the control screens: one line per box with its F3 and whether it's over a limit,
  * kept at the top while you scroll, so changing a box shows its effect without going to the
@@ -1974,25 +1995,27 @@ function portContext(state: AppState, designs: Design[], id: string) {
 function StatusStrip({ designs, state, onJump }: { designs: Design[]; state: AppState; onJump: (kind: LimitKind | null, ids: string[]) => void }) {
   const mains = designs.filter((d) => !d.compare);
   if (mains.length === 0) return null;
-  const fMin = state.highPass.on ? 10 : 15;
   return (
     <div className="status-strip" role="group" aria-label="Boxes at a glance">
       {mains.map((d) => {
-        const l = limitsOf(d.result, state.xmax_mm, fMin);
+        const l = limitsOf(d.result, state.xmax_mm, state.highPass.on);
         const f3 = d.result.summary.f3;
         const first = l.over[0] ?? null;
+        const jump = first ?? (l.deep ? "xmax" : null);
         return (
           <button
             key={d.design.id}
             type="button"
             className={`strip-box${first ? " is-over" : ""}`}
-            onClick={() => onJump(first, [d.design.id])}
-            title={first ? `Show the ${LIMIT_NAME[first]} chart` : "Show the response"}
+            onClick={() => onJump(jump, [d.design.id])}
+            title={first ? `Show the ${LIMIT_NAME[first]} chart` : l.deep ? deepText(l.deep, state) : "Show the response"}
           >
             <span className="dot" style={{ background: d.color }} aria-hidden="true" />
             <span className="strip-name">{shortName(d.label)}</span>
             <span className="strip-f3">{f3 === null ? "–" : `F3 ${f3.toFixed(0)}`}</span>
-            <span className={first ? "over" : "ok"}>{first ? `⚠ ${LIMIT_NAME[first]}${l.over.length > 1 ? ` +${l.over.length - 1}` : ""}` : "OK"}</span>
+            <span className={first ? "over" : l.deep ? "deep" : "ok"}>
+              {first ? `⚠ ${LIMIT_NAME[first]}${l.over.length > 1 ? ` +${l.over.length - 1}` : ""}` : l.deep ? `Xmax <${l.deep.below_hz.toFixed(0)} Hz` : "OK"}
+            </span>
           </button>
         );
       })}
@@ -2026,24 +2049,20 @@ function Summary({
   const [open, setOpen] = useState<string | null>(null);
   const [folded, setFolded] = useState(true);
   const fmt = (v: number | null | undefined, digits = 1) => (v === null || v === undefined ? "–" : v.toFixed(digits));
-  const peak = (a: Float64Array | null, freq: Float64Array, fMin: number) => {
-    if (!a) return null;
-    let m = 0;
-    for (let i = 0; i < a.length; i++) if (freq[i]! >= fMin && a[i]! > m) m = a[i]!;
-    return m;
-  };
   if (missing) return <p className="warn summary">Enter the driver's parameters to see the simulation.</p>;
   if (designs.length === 0) return <p className="muted summary">Turn on at least one enclosure.</p>;
   // Each box, then the comparison driver in that box.
   designs = designs.filter((d) => !d.compare).flatMap((d) => [d, ...designs.filter((c) => c.compare && c.design.id === d.design.id)]);
-  // Without a high-pass filter, ignore the subsonic region where excursion runs away.
+  // Without a high-pass filter, a tuned box's deep bass is graded, not failed (limitsOf).
   const fMin = state.highPass.on ? 10 : 15;
   if (narrow) {
     // Phones: folded to one line by default, so the charts start near the top of the screen.
     // Open: name, volume, F3 and what (if anything) is over its limit; the rest one tap away.
     const mains = designs.filter((d) => !d.compare);
-    const overs = mains.map((d) => ({ id: d.design.id, over: limitsOf(d.result, state.xmax_mm, fMin).over })).filter((x) => x.over.length > 0);
+    const lims = mains.map((d) => ({ id: d.design.id, l: limitsOf(d.result, state.xmax_mm, state.highPass.on) }));
+    const overs = lims.map((x) => ({ id: x.id, over: x.l.over })).filter((x) => x.over.length > 0);
     const overCount = overs.length;
+    const deeps = lims.filter((x) => x.l.over.length === 0 && x.l.deep);
     // The jump goes to the first limit crossed (cone, then PR, then port), picking out every box over it.
     const firstKind = (["xmax", "pr", "port"] as const).find((k) => overs.some((x) => x.over.includes(k))) ?? null;
     const f3s = mains.map((d) => d.result.summary.f3).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
@@ -2060,7 +2079,7 @@ function Summary({
               {mains.length} {mains.length === 1 ? "box" : "boxes"}
               {f3s.length > 0 && ` · F3 ${fmt(Math.min(...f3s), 0)}${f3s.length > 1 ? `–${fmt(Math.max(...f3s), 0)}` : ""} Hz`}
             </span>
-            {!overCount && <span className="muted">all OK</span>}
+            {!overCount && !deeps.length && <span className="muted">all OK</span>}
             <span className="caret muted" aria-hidden="true">
               {folded ? "▾" : "▴"}
             </span>
@@ -2073,6 +2092,16 @@ function Summary({
               title={`Show the ${LIMIT_NAME[firstKind]} chart`}
             >
               ⚠ {overCount} over a limit ›
+            </button>
+          )}
+          {!overCount && deeps.length > 0 && (
+            <button
+              type="button"
+              className="summary-jump deep"
+              onClick={() => onJump?.("xmax", deeps.map((x) => x.id))}
+              title={deepText(deeps[0]!.l.deep!, state)}
+            >
+              Deep-bass Xmax ›
             </button>
           )}
         </div>
@@ -2089,17 +2118,10 @@ function Summary({
           </thead>
           <tbody>
             {designs.map(({ design: d, label, compare, color, vb_l, acting_l, result: r }) => {
-              const x = peak(r.excursionMm, r.freq, fMin);
               const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
-              const xpr = prPeak(r, fMin);
-              const vpFront = peak(r.portVelocity, r.freq, fMin);
-              const vpRear = peak(r.rearPortVelocity, r.freq, fMin);
-              const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
-              const over = [
-                x !== null && x > xmax ? "Xmax" : "",
-                xpr?.over ? "PR Xmax" : "",
-                vp !== null && vp > PORT_LIMIT ? "Port speed" : "",
-              ].filter(Boolean);
+              const lim = limitsOf(r, xmax, state.highPass.on);
+              const { x, xpr, vp, deep } = lim;
+              const over = lim.over.map((k) => LIMIT_NAME[k]);
               if (compare) {
                 // The compare driver in the same box: one dimmed line under the box's own row.
                 return (
@@ -2113,7 +2135,7 @@ function Summary({
                       {fmt(r.summary.f3)}
                       {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
                     </td>
-                    <td className={over.length ? "over" : "muted"}>{over.length ? `⚠ ${over[0]}` : "OK"}</td>
+                    <td className={over.length ? "over" : deep ? "deep" : "muted"}>{over.length ? `⚠ ${over[0]}` : deep ? `Xmax <${deep.below_hz.toFixed(0)} Hz` : "OK"}</td>
                   </tr>
                 );
               }
@@ -2129,18 +2151,30 @@ function Summary({
                     {fmt(r.summary.f3)}
                     {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
                   </td>
-                  <td className={over.length ? "over" : "muted"}>
+                  <td className={over.length ? "over" : deep ? "deep" : "muted"}>
                     {over.length ? (
                       <button
                         type="button"
                         className="over-link"
                         onClick={(e) => {
                           e.stopPropagation();
-                          const k = limitsOf(r, xmax, fMin).over[0];
+                          const k = lim.over[0];
                           if (k) onJump?.(k, [d.id]);
                         }}
                       >
                         ⚠ {over[0]} ›
+                      </button>
+                    ) : deep ? (
+                      <button
+                        type="button"
+                        className="over-link deep"
+                        title={deepText(deep, state)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onJump?.("xmax", [d.id]);
+                        }}
+                      >
+                        Xmax &lt;{deep.below_hz.toFixed(0)} Hz ›
                       </button>
                     ) : (
                       "OK"
@@ -2159,7 +2193,8 @@ function Summary({
                       {` · cone ${fmt(x)} mm`}
                       {xpr ? ` · PR ${fmt(xpr.mm)} mm` : ""}
                       {vp !== null ? ` · port ${fmt(vp)} m/s` : ""}
-                      {over.length ? ` · over: ${over.join(", ")}` : ""}
+                      {over.length ? ` · over: ${over.join(", ")} (within up to ${driveAt(state, lim.safeScale)})` : ""}
+                      {deep ? ` · ${deepText(deep, state)}` : ""}
                     </td>
                   </tr>
                 ),
@@ -2168,7 +2203,7 @@ function Summary({
           </tbody>
         </table>
         <p className="hint">
-          Tap a row for its details. Peaks above {fMin} Hz.
+          Tap a row for its details. Peaks above {fMin} Hz{state.highPass.on ? "" : "; a ported or PR box's deep bass (below 0.7 × its tuning) is graded, not failed"}.
         </p>
         </>
         )}
@@ -2193,12 +2228,10 @@ function Summary({
         </thead>
         <tbody>
           {designs.map(({ design: d, label, compare, color, vb_l, acting_l, result: r }) => {
-            const x = peak(r.excursionMm, r.freq, fMin);
             const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
-            const xpr = prPeak(r, fMin);
-            const vpFront = peak(r.portVelocity, r.freq, fMin);
-            const vpRear = peak(r.rearPortVelocity, r.freq, fMin);
-            const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
+            const lim = limitsOf(r, xmax, state.highPass.on);
+            const { x, xpr, vp, deep } = lim;
+            const xOver = lim.over.includes("xmax");
             return (
               <tr key={compare ? `${d.id}-vs` : d.id} className={compare ? "summary-vs" : undefined}>
                 <th>
@@ -2220,8 +2253,14 @@ function Summary({
                   Hz
                 </td>
                 <td>{fmt(r.summary.qtc, 2)}</td>
-                <td className={x !== null && x > xmax ? "over" : ""}>
-                  <OverValue over={x !== null && x > xmax} text={`${fmt(x)} mm`} onJump={() => onJump?.("xmax", [d.id])} />
+                <td className={xOver ? "over" : ""}>
+                  <OverValue over={xOver} text={`${fmt(x)} mm`} onJump={() => onJump?.("xmax", [d.id])} />
+                  {deep && (
+                    <span className="deep-note" title={deepText(deep, state)}>
+                      {" "}
+                      · {fmt(deep.x_mm)} &lt;{deep.below_hz.toFixed(0)} Hz
+                    </span>
+                  )}
                 </td>
                 <td
                   className={xpr?.over ? "over" : ""}
@@ -2240,7 +2279,14 @@ function Summary({
       </div>
       <p className="hint swipe-hint">Swipe the table sideways for peak excursion and port speed.</p>
       <p className="hint">
-        Peaks are taken above {fMin} Hz{state.highPass.on ? "" : " (turn on the high-pass filter to model a subsonic filter)"}.
+        {state.highPass.on ? (
+          <>Peaks are taken above {fMin} Hz. </>
+        ) : (
+          <>
+            Peaks are taken above {fMin} Hz, except a ported or PR box's deep bass: below 0.7 × its tuning (down to 20 Hz) the cone may reach 2 × Xmax, shown in
+            amber, before it counts as over, since music has little energy there. Turn on the high-pass filter to model a subsonic filter.{" "}
+          </>
+        )}
         Red means over the limit: click it to see the chart.
       </p>
     </div>

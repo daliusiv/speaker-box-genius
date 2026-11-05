@@ -22,7 +22,7 @@ export interface PrPhysical {
   displacement_l?: number;
   cutout_mm?: number;
 }
-import { KIND_LABEL, PORT_LIMIT, portOf } from "./sim.ts";
+import { KIND_LABEL, PORT_LIMIT, portOf, portRoom_cm } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { bandpassLossesFrom } from "./state.ts";
 import { prTuning, withPreset, ventedAlignmentFor } from "./presets.ts";
@@ -224,7 +224,7 @@ function PortChecks(props: {
   // Will it fit? Keep at least one port diameter (or slot height) clear of the opposite wall.
   const clearance = v.shape === "round" ? v.diameter_cm : v.slotHeight_cm;
   const cube = Math.cbrt(vb_l * 1000);
-  const room = (ctx.internalMax_cm ?? cube) - clearance;
+  const room = portRoom_cm(vb_l, clearance, ctx.internalMax_cm);
   if (v.length_cm > room) {
     notes.push({
       warn: true,

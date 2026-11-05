@@ -461,12 +461,12 @@ export const prGroupsOf = (d: PrDesign) => [
  * Worst passive radiator excursion of a design from `fMin` up: the group that comes
  * closest to (or furthest past) its own Xmax, so one figure can be shown and flagged.
  */
-export function prPeak(r: SimulationResult, fMin: number): { mm: number; xmax: number | null; over: boolean } | null {
+export function prPeak(r: SimulationResult, fMin: number, fMax = Infinity): { mm: number; xmax: number | null; over: boolean } | null {
   if (!r.prGroups) return null;
   let best: { mm: number; xmax: number | null; ratio: number } | null = null;
   for (const g of r.prGroups) {
     let m = 0;
-    for (let i = 0; i < g.excursionMm.length; i++) if (r.freq[i]! >= fMin && g.excursionMm[i]! > m) m = g.excursionMm[i]!;
+    for (let i = 0; i < g.excursionMm.length; i++) if (r.freq[i]! >= fMin && r.freq[i]! < fMax && g.excursionMm[i]! > m) m = g.excursionMm[i]!;
     const ratio = g.xmax_mm ? m / g.xmax_mm : 0;
     if (!best || ratio > best.ratio || (ratio === best.ratio && m > best.mm)) best = { mm: m, xmax: g.xmax_mm, ratio };
   }
@@ -478,28 +478,95 @@ export type LimitKind = "xmax" | "pr" | "port";
 export const LIMIT_CHART: Record<LimitKind, "excursion" | "pr" | "port"> = { xmax: "excursion", pr: "pr", port: "port" };
 export const LIMIT_NAME: Record<LimitKind, string> = { xmax: "Xmax", pr: "PR Xmax", port: "Port speed" };
 
-const peakAbove = (a: Float64Array | null | undefined, freq: Float64Array, fMin: number) => {
+const peakAbove = (a: Float64Array | null | undefined, freq: Float64Array, fMin: number, fMax = Infinity) => {
   if (!a) return null;
   let m = 0;
-  for (let i = 0; i < a.length; i++) if (freq[i]! >= fMin && a[i]! > m) m = a[i]!;
+  for (let i = 0; i < a.length; i++) if (freq[i]! >= fMin && freq[i]! < fMax && a[i]! > m) m = a[i]!;
   return m;
 };
 
 /**
- * A design's peaks above fMin (the subsonic region is ignored without a high-pass filter) and
- * which limits they cross: cone Xmax, the passive radiators' Xmax, the port's chuffing line.
+ * Deep bass, for a tuned box (ported, PR, bandpass, line) with no high-pass filter: below
+ * DEEP_SPLIT × its tuning the cone unloads and excursion runs away, but music has little
+ * energy there. Down to DEEP_FLOOR_HZ the cone may reach DEEP_ALLOW × Xmax (the usual
+ * damage margin) before it counts as over; past Xmax there is graded "deep bass" (amber),
+ * not a failure. Below the floor there's no music to check.
  */
-export function limitsOf(r: SimulationResult, xmax_mm: number, fMin: number) {
-  const x = peakAbove(r.excursionMm, r.freq, fMin);
-  const xpr = prPeak(r, fMin);
+export const DEEP_SPLIT = 0.7;
+export const DEEP_ALLOW = 2;
+export const DEEP_FLOOR_HZ = 20;
+
+/** Where a design's deep-bass zone starts (Hz), or null (sealed, a high-pass filter, a very low tuning). */
+export function deepSplitOf(r: SimulationResult, highPassOn: boolean): number | null {
+  const fb = r.summary.fb;
+  return !highPassOn && fb !== undefined && DEEP_SPLIT * fb > DEEP_FLOOR_HZ ? DEEP_SPLIT * fb : null;
+}
+
+/** A design against its limits at the drive simulated. */
+export interface Limits {
+  /** Peak cone excursion (mm) above the deep-bass zone (or the whole range checked). */
+  x: number | null;
+  xpr: { mm: number; xmax: number | null; over: boolean } | null;
+  /** Peak port air speed (m/s). */
+  vp: number | null;
+  over: LimitKind[];
+  /** Past Xmax only in the deep-bass zone (within DEEP_ALLOW × Xmax): where, how far, and the drive scale that keeps it within. */
+  deep: { below_hz: number; x_mm: number; scale: number } | null;
+  /** Drive scale (amplitude, ≤ 1) that keeps every limit (1 when nothing is over). */
+  safeScale: number;
+}
+
+/** A drive scaled in amplitude, in the user's unit: "15 W" or "8.7 V". */
+export function driveAt(s: Pick<AppState, "drive" | "power" | "volts">, scale: number): string {
+  if (s.drive === "volts") return `${(s.volts * scale).toPrecision(2)} V`;
+  const w = s.power * scale * scale;
+  return `${w >= 10 ? Math.round(w) : Number(w.toPrecision(2))} W`;
+}
+
+/**
+ * Room for a straight port inside the box (cm): the longest inside dimension (from the volume
+ * calculator, else a cube of this volume, the safe case), less one port diameter (or slot
+ * height) of air between the port's inner end and the opposite wall.
+ */
+export function portRoom_cm(vb_l: number, clearance_cm: number, internalMax_cm: number | null = null): number {
+  return (internalMax_cm ?? Math.cbrt(vb_l * 1000)) - clearance_cm;
+}
+
+/**
+ * A design's peaks and which limits they cross: cone Xmax, the passive radiators' Xmax, the
+ * port's chuffing line. With a high-pass filter, from 10 Hz. Without one, from 15 Hz, except
+ * a tuned box's deep-bass zone (deepSplitOf), which is graded instead (see DEEP_SPLIT).
+ */
+export function limitsOf(r: SimulationResult, xmax_mm: number, highPassOn: boolean): Limits {
+  const fMin = highPassOn ? 10 : 15;
+  const split = deepSplitOf(r, highPassOn);
+  const lo = split ?? fMin;
+  const x = peakAbove(r.excursionMm, r.freq, lo);
+  const xpr = prPeak(r, lo);
   const vpFront = peakAbove(r.portVelocity, r.freq, fMin);
   const vpRear = peakAbove(r.rearPortVelocity, r.freq, fMin);
   const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
+  const xDeep = split ? peakAbove(r.excursionMm, r.freq, DEEP_FLOOR_HZ, split) : null;
+  const prDeep = split ? prPeak(r, DEEP_FLOOR_HZ, split) : null;
+  // How far past each limit (1 = at it): the worst sets the safe drive.
+  const ratios = [
+    x !== null ? x / xmax_mm : 0,
+    xDeep !== null ? xDeep / (DEEP_ALLOW * xmax_mm) : 0,
+    xpr?.xmax ? xpr.mm / xpr.xmax : 0,
+    prDeep?.xmax ? prDeep.mm / (DEEP_ALLOW * prDeep.xmax) : 0,
+    vp !== null ? vp / PORT_LIMIT : 0,
+  ];
   const over: LimitKind[] = [];
-  if (x !== null && x > xmax_mm) over.push("xmax");
-  if (xpr?.over) over.push("pr");
-  if (vp !== null && vp > PORT_LIMIT) over.push("port");
-  return { x, xpr, vp, over };
+  if (ratios[0]! > 1 || ratios[1]! > 1) over.push("xmax");
+  if (ratios[2]! > 1 || ratios[3]! > 1) over.push("pr");
+  if (ratios[4]! > 1) over.push("port");
+  // Deep bass: past Xmax (cone or PR) in the zone, but within the allowance.
+  const deepRatio = Math.max(xDeep !== null ? xDeep / xmax_mm : 0, prDeep?.xmax ? prDeep.mm / prDeep.xmax : 0);
+  const deep =
+    split && deepRatio > 1 && !over.includes("xmax") && !over.includes("pr")
+      ? { below_hz: split, x_mm: xDeep ?? 0, scale: 1 / deepRatio }
+      : null;
+  return { x, xpr: xpr && { ...xpr, over: ratios[2]! > 1 || ratios[3]! > 1 }, vp, over, deep, safeScale: Math.min(1, 1 / Math.max(...ratios, 1e-9)) };
 }
 
 /**
