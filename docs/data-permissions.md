@@ -11,11 +11,12 @@ Manufacturers who have given permission for their published data to be used in t
 
 - Scan-Speak: emailed, no reply yet. Their website terms restrict copying datasheet information without written consent, so **no automated import until they reply**.
 - Parts Express: emailed, no reply yet.
+- Faital Pro, B&C Speakers, 18 Sound, Beyma, Peerless (Tymphany), Markaudio, Tang Band: emailed 5 Nov 2026 asking for permission and a CSV or Excel export of their T/S data.
+- Kicker, Skar Audio, Sundown Audio, Rockford Fosgate (car audio): emailed 5 Nov 2026.
 
-## Not yet contacted (drafts ready)
+## Not yet contacted
 
-- Faital Pro, B&C Speakers, 18 Sound, Beyma, Tymphany/Peerless, Markaudio, Tang Band: asking for permission and a CSV or Excel export of their T/S data.
-- Kicker, Skar Audio, Sundown Audio, JL Audio, Rockford Fosgate (car audio).
+- JL Audio: no contact route found yet.
 - Dayton Audio: the T/S values of seven passive radiators whose pages don't list them (E150HE-PR, E180HE-PR, SS8-PR, SS10-PR, SS12-PR, SS15-PR, SS18-PR).
 
 A permission that comes with a spreadsheet is imported with `pnpm db:import-sheet`; see [`importing-a-spreadsheet.md`](importing-a-spreadsheet.md).
