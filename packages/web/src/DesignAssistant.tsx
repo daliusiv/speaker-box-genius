@@ -17,6 +17,7 @@ import {
 import { loadDriver, type DbIndex, type LoadedDriver } from "./library.ts";
 import type { AppState } from "./state.ts";
 import { useUnits } from "./units.ts";
+import { Logo, UseIcon } from "./Logo.tsx";
 
 const KEY = "sbg.assistant";
 const STEPS = ["What for", "Limits", "Priority", "Results"] as const;
@@ -209,25 +210,26 @@ export function DesignAssistant(props: {
   const next = () => setStep((s) => Math.min(3, s + 1));
   const toggleBox = (b: AssistantBox) => setGoal({ boxes: goal.boxes.includes(b) ? goal.boxes.filter((x) => x !== b) : [...goal.boxes, b] });
 
-  const nav = (
-    <div className="assist-nav">
-      {step > 0 && step < 3 && (
-        <button type="button" className="secondary" onClick={() => setStep(step - 1)}>
-          Back
-        </button>
-      )}
-      {step < 2 && (
-        <button type="button" className="secondary" onClick={next}>
-          Next
-        </button>
-      )}
-      {step < 3 && (
-        <button type="button" onClick={() => setStep(3)} disabled={goal.boxes.length === 0}>
-          Show results
-        </button>
-      )}
-    </div>
-  );
+  // Back (after the first step) and one main button: Next, then "Show results" on the last step.
+  const nav =
+    step < 3 ? (
+      <div className="assist-nav">
+        {step > 0 && (
+          <button type="button" className="secondary" onClick={() => setStep(step - 1)}>
+            Back
+          </button>
+        )}
+        {step < 2 ? (
+          <button type="button" onClick={next}>
+            Next
+          </button>
+        ) : (
+          <button type="button" onClick={() => setStep(3)} disabled={goal.boxes.length === 0}>
+            Show results
+          </button>
+        )}
+      </div>
+    ) : null;
 
   const vol = (l: number) => fmt(l, "vol", unit("vol").unit === "L" ? (l < 10 ? 1 : 0) : 2);
   const chips: { label: string; step: number }[] = [
@@ -249,9 +251,17 @@ export function DesignAssistant(props: {
         if (e.target === e.currentTarget) close();
       }}
     >
-      <div className="lib-inner">
-        <header>
-          <h2>Design assistant</h2>
+      {/* Focus lands on the dialog itself, not its close button (which then looked selected). */}
+      <div className="lib-inner" tabIndex={-1} autoFocus>
+        <header className="assist-head">
+          {/* The first screen many people see: the app's name and logo, as in its header. */}
+          <div className="assist-brand">
+            <Logo className="logo" />
+            <div>
+              <b>Speaker Box Genius</b>
+              <h2>Design assistant</h2>
+            </div>
+          </div>
           <button type="button" className="icon" onClick={close} aria-label="Close">
             ×
           </button>
@@ -289,8 +299,11 @@ export function DesignAssistant(props: {
                       setStep(1);
                     }}
                   >
-                    <b>{USES[u].label}</b>
-                    <span>{USES[u].hint}</span>
+                    <UseIcon use={u} />
+                    <span className="assist-tile-text">
+                      <b>{USES[u].label}</b>
+                      <span>{USES[u].hint}</span>
+                    </span>
                   </button>
                 ))}
               </div>

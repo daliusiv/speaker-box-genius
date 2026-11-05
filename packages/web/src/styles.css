@@ -3546,18 +3546,6 @@ button.assist-tile.on {
   justify-content: flex-end;
 }
 
-.assist-entry {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.3rem 0.7rem;
-  margin-bottom: 0.7rem;
-}
-
-.assist-entry .hint {
-  margin: 0;
-}
-
 .welcome-assist {
   margin: 0 0 0.6rem;
 }
@@ -3581,4 +3569,89 @@ button.assist-tile.on {
 
 button.assist-skip {
   align-self: flex-start;
+}
+
+/* Assistant header: the logo and name, as in the app's own header. */
+.assist-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.assist-brand .logo {
+  flex: none;
+  height: 2.6rem;
+  width: auto;
+  aspect-ratio: 240 / 344;
+}
+
+.assist-brand b {
+  display: block;
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+
+.assist-brand h2 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Use tiles: an icon beside the label. */
+button.assist-tile:has(.use-icon) {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.use-icon {
+  flex: none;
+  width: 2.2rem;
+  height: 2.2rem;
+  color: var(--accent);
+}
+
+.assist-tile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+button.assist-tile .assist-tile-text b {
+  color: var(--fg);
+  font-size: inherit;
+}
+
+dialog.assistant .lib-inner:focus {
+  outline: none;
+}
+
+/* Wide screens: as tall as what's in it (step 1 is short), up to the window; phones keep the full screen. */
+@media (min-width: 641px) {
+  /* fit-content: a modal dialog is fixed with inset 0, so "auto" would fill the window. */
+  dialog.library.assistant {
+    height: fit-content;
+  }
+
+  dialog.assistant .lib-inner {
+    height: auto;
+    max-height: min(820px, calc(100dvh - 2rem));
+  }
+}
+
+/* Wide screens show the dialog over the app, whose header already has the logo and name:
+   just the title there. Phones (the dialog fills the screen) keep the logo and name. */
+@media (min-width: 641px) {
+  .assist-brand .logo,
+  .assist-brand b {
+    display: none;
+  }
+
+  .assist-brand h2 {
+    color: var(--fg);
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
 }
