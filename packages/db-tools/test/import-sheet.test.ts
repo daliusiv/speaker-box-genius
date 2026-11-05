@@ -38,6 +38,9 @@ test("headers: common manufacturer names map to fields, units come from brackets
   assert.equal(fieldOf("Vd"), null);
   assert.equal(fieldOf("Part No."), "model");
   assert.equal(fieldOf("Baffle cutout diameter"), "cutout");
+  // "displacement" contains "spl": it must not be taken for an SPL column and ignored.
+  assert.equal(fieldOf("Displacement (L)"), "displacement");
+  assert.equal(fieldOf("SPL (1W/1m)"), null);
   assert.equal(fieldOf("Colour"), undefined);
   assert.equal(unitOf("Vas (ft³)"), "ft³");
   assert.equal(unitOf("Sd cm2"), "cm2");

@@ -1,0 +1,35 @@
+{
+  "brand": "Purifi",
+  "model": "PTT5.25X04-NAA-05",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 29,
+    "qms": 5.9,
+    "qes": 0.28,
+    "vas_l": 11.8,
+    "re": 3.6,
+    "sd_cm2": 84.9,
+    "qts": 0.27,
+    "le_mh": 0.37,
+    "bl": 7.9,
+    "mms_g": 25.9,
+    "xmax_mm": 9.8,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 121,
+    "depth_mm": 75,
+    "displacement_l": 0.3
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/shop/ptt5-25x04-naa-05-ptt5-25x04-naa-05-3004",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

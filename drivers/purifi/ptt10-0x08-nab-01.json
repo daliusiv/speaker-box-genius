@@ -1,0 +1,35 @@
+{
+  "brand": "Purifi",
+  "model": "PTT10.0X08-NAB-01",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 22,
+    "qms": 6.1,
+    "qes": 0.42,
+    "vas_l": 81,
+    "re": 6.4,
+    "sd_cm2": 360,
+    "qts": 0.4,
+    "le_mh": 1.06,
+    "bl": 15.7,
+    "mms_g": 118,
+    "xmax_mm": 14.75,
+    "pe_w": 450
+  },
+  "physical": {
+    "cutout_mm": 242,
+    "depth_mm": 145,
+    "displacement_l": 1.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/shop/ptt10-0x08-nab-01-ptt10-0x08-nab-01-2566",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

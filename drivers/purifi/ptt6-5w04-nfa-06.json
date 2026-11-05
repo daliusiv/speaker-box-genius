@@ -1,0 +1,35 @@
+{
+  "brand": "Purifi",
+  "model": "PTT6.5W04-NFA-06",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 32,
+    "qms": 5.9,
+    "qes": 0.28,
+    "vas_l": 28.3,
+    "re": 3.7,
+    "sd_cm2": 132.7,
+    "qts": 0.26,
+    "le_mh": 0.33,
+    "bl": 7.6,
+    "mms_g": 21.3,
+    "xmax_mm": 5.9,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 148,
+    "depth_mm": 85.2,
+    "displacement_l": 0.31
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/shop/ptt6-5w04-nfa-06-ptt6-5w04-nfa-06-1914",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,35 @@
+{
+  "brand": "Purifi",
+  "model": "PTT6.5X08-NFA-01",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 31,
+    "qms": 6.6,
+    "qes": 0.32,
+    "vas_l": 26.5,
+    "re": 6,
+    "sd_cm2": 132.7,
+    "qts": 0.3,
+    "le_mh": 0.53,
+    "bl": 9.5,
+    "mms_g": 24.4,
+    "xmax_mm": 9.8,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 145,
+    "depth_mm": 85.2,
+    "displacement_l": 0.31
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://ptt.purifi-audio.com/shop/ptt6-5x08-nfa-01-ptt6-5x08-nfa-01-290",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

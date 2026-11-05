@@ -1,0 +1,25 @@
+{
+  "brand": "Purifi",
+  "model": "PTT8.0PR-NA2-01",
+  "type": "passive-radiator",
+  "size_in": 8,
+  "params": {
+    "mms_g": 132,
+    "sd_cm2": 235.1,
+    "xmax_mm": 15,
+    "fs": 14,
+    "qms": 9.4,
+    "vas_l": 72.8,
+    "cms_mm_per_n": 0.93
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/shop/ptt8-0pr-na2-01-ptt8-0pr-na2-01-1746",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax is the published mechanical limit (Xmech 15 mm); there's no separate linear figure."
+}
