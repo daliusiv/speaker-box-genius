@@ -118,6 +118,10 @@ interface Props {
   handles?: ChartHandle[];
   /** A line under the caption (edit mode's hint and buttons). */
   below?: ReactNode;
+  /** The handle picked (tapped, clicked or focused), or null when the plot itself is tapped. */
+  onSelect?: (id: string | null) => void;
+  /** The picked handle, drawn ringed. */
+  selected?: string | null;
 }
 
 /** A point on the chart that can be dragged (edit mode): a box's tuning, an EQ point. */
@@ -137,6 +141,8 @@ export interface ChartHandle {
   onDrag: (f: number, y: number, start: boolean) => void;
   /** Mouse wheel over the handle (EQ: Q). */
   onWheel?: (up: boolean) => void;
+  /** Delete / Backspace on the focused handle (EQ: remove the point). */
+  onRemove?: () => void;
 }
 
 const W = 640;
@@ -190,6 +196,8 @@ export function LogChart({
   forum,
   handles = [],
   below,
+  onSelect,
+  selected,
 }: Props) {
   const clipId = useId();
   const shared = useContext(Crosshair);
@@ -476,7 +484,11 @@ export function LogChart({
               best = h;
             }
           }
-          if (!best) return;
+          if (!best) {
+            onSelect?.(null);
+            return;
+          }
+          onSelect?.(best.id);
           e.preventDefault();
           e.currentTarget.setPointerCapture(e.pointerId);
           movedRef.current = false;
@@ -637,14 +649,22 @@ export function LogChart({
             return (
               <g
                 key={h.id}
-                className={`handle${dragging === h.id ? " dragging" : ""}`}
+                className={`handle${dragging === h.id ? " dragging" : ""}${selected === h.id ? " selected" : ""}`}
                 tabIndex={0}
                 role="slider"
                 aria-label={h.label}
                 aria-valuetext={h.text}
-                onFocus={() => setActive(h.id)}
+                onFocus={() => {
+                  setActive(h.id);
+                  onSelect?.(h.id);
+                }}
                 onBlur={() => setActive((a) => (a === h.id ? null : a))}
                 onKeyDown={(e) => {
+                  if ((e.key === "Delete" || e.key === "Backspace") && h.onRemove) {
+                    e.preventDefault();
+                    h.onRemove();
+                    return;
+                  }
                   const big = e.shiftKey;
                   const f = big ? 1.1 : 1.01;
                   const d = big ? 2 : 0.5;
