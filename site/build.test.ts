@@ -23,6 +23,7 @@ test("pages need front matter; unknown examples are an error", () => {
   assert.throws(() => parsePage("# no front matter"), /front matter/);
   assert.equal(parsePage("---\ntitle: T\ndescription: D\npath: guides/x\n---\nbody").path, "/guides/x/");
   assert.throws(() => resolveExamples("[[Open|nope]]", {}), /no example called "nope"/);
+  assert.equal((markdown("[[One|a]] [[Two|b]]").match(/class="button"/g) ?? []).length, 2);
 });
 
 test("builds every guide, the index, sitemap and robots.txt, with live example links", async () => {
@@ -40,6 +41,11 @@ test("builds every guide, the index, sitemap and robots.txt, with live example l
     "/guides/car-subwoofer/",
     "/guides/compare-drivers/",
     "/guides/thiele-small-parameters/",
+    "/guides/simulation-vs-measurement/",
+    "/guides/port-tuning/",
+    "/guides/box-losses/",
+    "/guides/linkwitz-transform/",
+    "/guides/isobaric/",
   ]) assert.ok(paths.includes(p), p);
   const pr = readFileSync(join(out, "guides/passive-radiator-box/index.html"), "utf8");
   assert.match(pr, /<title>How to design a passive radiator box · Speaker Box Genius<\/title>/);
@@ -68,4 +74,8 @@ test("the example links open the designs the guides describe", async () => {
   assert.equal(cmp?.compare?.driverName, "Dayton Audio RSS265HO-4");
   const car = await decodeStateAny(links["car-example"]!.split("#")[1]!);
   assert.equal(car?.roomGain.mode, "car");
+  const lt = await decodeStateAny(links["lt-example"]!.split("#")[1]!);
+  assert.equal(lt?.eq[0]?.type, "linkwitz");
+  const iso = await decodeStateAny(links["iso-pair"]!.split("#")[1]!);
+  assert.equal(iso?.isobaric, true);
 });

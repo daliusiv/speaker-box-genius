@@ -10,7 +10,7 @@ import { sizeAllForDriver } from "../packages/web/src/presets.ts";
 /** A fresh line design, as "+ Transmission line" adds one. */
 const newLine = (s: AppState) => newDesign("line", s.designs);
 import { portLengthForFb, type PortInput } from "../packages/engine/src/index.ts";
-import { alignmentDriver, driverInputOf, simOptionsOf, solveDriver } from "../packages/web/src/sim.ts";
+import { alignmentDriver, driverInputOf, runDesigns, simOptionsOf, solveDriver } from "../packages/web/src/sim.ts";
 import { compareLines } from "../packages/web/src/lineopt.ts";
 
 const ROOT = new URL("..", import.meta.url);
@@ -222,7 +222,86 @@ function tsExample(): AppState {
   };
 }
 
+/**
+ * The DSA215-8 with only the six core T/S values (no Mms or Bl, so changing one doesn't
+ * fight the others), in its QB3 ported box (16.2 L at 39.8 Hz, 5 cm port), driven at 2.83 V
+ * (the level measurements and datasheets use).
+ */
+function dsaPorted(): AppState {
+  const s = withDriver({ ...DEFAULT_STATE, drive: "volts", volts: 2.83 }, "dayton-audio/dsa215-8");
+  const t = s.ts;
+  const core = { fs: t.fs, qms: t.qms, qes: t.qes, vas_l: t.vas_l, re: t.re, sd_cm2: t.sd_cm2 } as AppState["ts"];
+  const v = byKind(s, "vented") as Vented;
+  return { ...s, ts: core, designs: [{ ...ventedWith(v, "Ported, QB3", 16.2, 39.8, { shape: "round", diameter_cm: 5 }), id: "d1" }] };
+}
+
+/** "Doesn't match": the box with the datasheet driver, compared with the same driver 15 % stiffer (Fs +15 %). */
+function mismatchExample(): AppState {
+  const s = dsaPorted();
+  return { ...s, compare: { ...asCompare(s), driverName: "Dayton Audio DSA215-8 (Fs +15 %)", ts: { ...s.ts, fs: s.ts.fs! * 1.15 } } };
+}
+
+/** Port tuning: the same port in the box as designed (16.2 L) and as built (14.1 L net, after the driver, port tube and bracing). */
+function portTuningExample(): AppState {
+  const s = dsaPorted();
+  const d = s.designs[0] as Vented;
+  return { ...s, designs: [{ ...d, name: "As designed, 16.2 L" }, { ...d, id: "d2", name: "As built, 14.1 L net", vb_l: 14.1 }] };
+}
+
+/** Box losses: the ported box with leakage Ql set as given. */
+function lossesExample(ql: number) {
+  return (): AppState => {
+    const s = dsaPorted();
+    return { ...s, settings: { ...s.settings, losses: { ...s.settings.losses, ql } } };
+  };
+}
+
+/**
+ * Linkwitz Transform: an RSS265HF-4 in 20 L sealed, with an LT from its own fc and Qtc to
+ * 25 Hz at Q 0.707, next to the same box without EQ and the 37 L Qtc 0.707 box; 40 W behind
+ * a 24 dB/oct high-pass at 18 Hz.
+ */
+function ltExample(): AppState {
+  const s = withDriver({ ...DEFAULT_STATE, power: 40, highPass: highPass(4, 18) }, "dayton-audio/rss265hf-4");
+  const sealed = byKind(s, "sealed") as Extract<DesignState, { kind: "sealed" }>;
+  const small = { ...sealed, id: "d1", name: "20 L + Linkwitz Transform", vb_l: 20 };
+  const plain = { ...s, designs: [small] };
+  const r = runDesigns(plain, solveDriver(plain))[0]!.result.summary;
+  const f0 = Math.round(r.fc! * 10) / 10;
+  const q0 = Math.round(r.qtc! * 1000) / 1000;
+  return {
+    ...s,
+    designs: [small, { ...sealed, id: "d2", name: "20 L, no EQ", vb_l: 20 }, { ...sealed, id: "d3", name: "37 L, no EQ", vb_l: 37.3 }],
+    eq: [{ id: "e1", on: true, target: "d1", type: "linkwitz", f0, q0, fp: 25, qp: 0.707 }],
+  };
+}
+
+/** Isobaric: an RSS265HF-4 single in its Qtc 0.707 box (37.3 L), or an isobaric pair (coils in parallel) in half of it, and in the full box. */
+function isoExample(pair: boolean) {
+  return (): AppState => {
+    const s = withDriver({ ...DEFAULT_STATE, power: 100, highPass: highPass(4, 18) }, "dayton-audio/rss265hf-4");
+    const sealed = byKind(s, "sealed") as Extract<DesignState, { kind: "sealed" }>;
+    if (!pair) return { ...s, designs: [{ ...sealed, id: "d1", name: "Single, 37.3 L", vb_l: 37.3 }] };
+    return {
+      ...s,
+      isobaric: true,
+      isoCoils: "parallel",
+      designs: [
+        { ...sealed, id: "d1", name: "Isobaric pair, 18.7 L", vb_l: 18.65 },
+        { ...sealed, id: "d2", name: "Isobaric pair, 37.3 L", vb_l: 37.3 },
+      ],
+    };
+  };
+}
+
 export const EXAMPLES: Record<string, () => AppState> = {
+  "mismatch-example": mismatchExample,
+  "port-tuning-example": portTuningExample,
+  "losses-ql10": lossesExample(10),
+  "losses-ql5": lossesExample(5),
+  "lt-example": ltExample,
+  "iso-single": isoExample(false),
+  "iso-pair": isoExample(true),
   "box-types-example": boxTypesExample,
   "subsonic-off": subsonicExample(false),
   "subsonic-on": subsonicExample(true),
