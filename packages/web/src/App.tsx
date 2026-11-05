@@ -73,7 +73,8 @@ import { EqPanel } from "./Eq.tsx";
 import { MeasurePanel, type Measurement } from "./Measure.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
 import { AppMenu } from "./AppMenu.tsx";
-import { openResult, withDriver } from "./assistant.ts";
+import { openResults, withDriver } from "./assistant.ts";
+import { ASSISTANT_HASH, START_IN_ASSISTANT, untouched } from "./start.ts";
 import { DesignAssistant } from "./DesignAssistant.tsx";
 import { submitDriverUrl } from "./submit.ts";
 
@@ -154,7 +155,15 @@ export function App(props: { initial: AppState | null }) {
   // The short link for the current state, once compressed (compression is asynchronous).
   const link = useRef<{ state: AppState; hash: string } | null>(null);
   const [db, setDb] = useState<DbIndex | null>(null);
-  const [assistant, setAssistant] = useState(false);
+  const [assistant, setAssistant] = useState(START_IN_ASSISTANT);
+  /**
+   * The assistant starts projects: in this tab while it's still the untouched example, else in
+   * a new tab with a fresh project (so the one in use stays as it is).
+   */
+  const launchAssistant = () => {
+    if (untouched(latest.current)) setAssistant(true);
+    else window.open(`${location.pathname}${ASSISTANT_HASH}`, "_blank", "noopener");
+  };
   /** Credit line for the driver loaded from the database; shown while its name is unchanged. */
   const [driverSource, setDriverSource] = useState<{ name: string; url?: string; via?: "driver-base" } | null>(null);
   const [wdrMsg, setWdrMsg] = useState("");
@@ -760,7 +769,7 @@ export function App(props: { initial: AppState | null }) {
             }}
             notify={(m) => notify(m)}
             showTips={welcome.showTips}
-            onAssistant={() => setAssistant(true)}
+            onAssistant={launchAssistant}
             reportUrl={() => reportUrl(shareUrl())}
           />
           <PwaStatus pwa={pwa} />
@@ -775,7 +784,7 @@ export function App(props: { initial: AppState | null }) {
             <Card title="Driver">
               {/* Two dropdown-like pickers: the main driver, and an optional one to compare with. */}
               <div className="assist-entry">
-                <button type="button" className="secondary" onClick={() => setAssistant(true)}>
+                <button type="button" className="secondary" onClick={launchAssistant}>
                   ✦ Design assistant…
                 </button>
                 <span className="hint">Find a driver and box for what you're building</span>
@@ -1485,7 +1494,7 @@ export function App(props: { initial: AppState | null }) {
           </div>
         </div>
         {welcome.linkNote && <LinkNote onDismiss={welcome.dismissLinkNote} onTips={welcome.showTips} />}
-        {welcome.tips && <GettingStarted onDismiss={welcome.dismissTips} onAssistant={() => setAssistant(true)} />}
+        {welcome.tips && <GettingStarted onDismiss={welcome.dismissTips} onAssistant={launchAssistant} />}
         <Summary designs={designs} state={state} missing={solved.missing.length > 0} narrow={narrow} onJump={jumpTo} />
 
         {designs.length > 0 && (
@@ -1878,18 +1887,14 @@ export function App(props: { initial: AppState | null }) {
         onClose={() => setAssistant(false)}
         db={db}
         base={state}
-        canAdd={state.designs.length < MAX_DESIGNS}
-        onOpen={(d, r, goal) => {
-          const next = openResult(state, d, r, goal);
-          if (!next) return;
+        onOpen={(d, rs, goal) => {
+          const next = openResults(state, d, rs, goal);
           setStep(() => next);
           setDriverSource(d.source ? { name: d.name, ...d.source } : null);
           setAssistant(false);
-          const added = next.designs.at(-1)!;
-          notify(
-            `Added “${added.name}”. ${d.name} is now the main driver for every design, at ${goal.power_w} W${goal.use === "car" ? " with cabin gain" : ""}.`,
-          );
-          showChart("response", [added.id]);
+          const boxes = rs.map((r) => `${r.vb_l} L ${r.box === "sealed" ? "sealed" : "ported"}`).join(" and ");
+          notify(`Started with the ${d.name} in a ${boxes} box, at ${goal.power_w} W${goal.use === "car" ? " with cabin gain" : ""}.`);
+          showChart("response", []);
         }}
       />
       <nav className="phone-nav" aria-label="Screens">

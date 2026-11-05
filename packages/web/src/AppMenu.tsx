@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { REPO } from "./components.tsx";
 import { useProjects } from "./Projects.tsx";
+import { ASSISTANT_HASH } from "./start.ts";
 import type { AppState } from "./state.ts";
 
 /** Saved projects shown before "All saved…". */
@@ -111,9 +112,9 @@ export function AppMenu(props: {
 
             <p className="menu-label">Project</p>
             <button role="menuitem" onClick={act(props.onAssistant)}>
-              Design assistant… <span className="menu-note">find a driver and box</span>
+              Design assistant… <span className="menu-note">start from a goal</span>
             </button>
-            <a role="menuitem" className="menu-link" href={location.pathname} target="_blank" rel="noopener" onClick={() => close(false)}>
+            <a role="menuitem" className="menu-link" href={`${location.pathname}${ASSISTANT_HASH}`} target="_blank" rel="noopener" onClick={() => close(false)}>
               New project <span className="menu-note">new tab</span>
             </a>
             <button role="menuitem" onClick={act(p.save)}>

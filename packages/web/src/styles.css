@@ -3573,3 +3573,12 @@ button.assist-tile.on {
 .assist-body > * {
   flex-shrink: 0;
 }
+
+.assist-card-actions {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+button.assist-skip {
+  align-self: flex-start;
+}
