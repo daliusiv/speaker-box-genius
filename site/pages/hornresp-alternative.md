@@ -40,7 +40,7 @@ The line model is a one-dimensional duct, the same approach as Hornresp and Akab
 
 The line's resonances fall on the same frequencies as Hornresp's, and the only bigger SPL differences are at the bottom of deep nulls (the same frequency, a different depth). Each case runs as an automated test whenever the code changes. Stuffed lines were checked against Hornresp's Loudspeaker Wizard charts: acoustic power within about 1 dB, and every impedance peak at the same frequency. Every case, with both curves on one chart, is on the [validation page](/validation/#hornresp); the model is described in [the transmission line notes](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/transmission-lines.md).
 
-For like-for-like comparisons, set these in **Settings**: **Air** to **Hornresp defaults**, and **Line/horn SPL** to **From radiated power (like Hornresp)**. Then drive at **2.83 V** (the **V** switch at the top).
+For like-for-like comparisons, set these in **Settings**: **Air** to **Hornresp defaults**, and **Line/horn SPL** to **From radiated power (like Hornresp)**. Then drive at **2.83 V** (the **V** switch on the Power bar above the charts).
 
 ## Your Hornresp records, both ways
 

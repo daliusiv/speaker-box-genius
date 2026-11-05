@@ -1362,14 +1362,12 @@ figure.chart[hidden] {
     bottom: calc(5rem + env(safe-area-inset-bottom));
   }
 
-  /* Header in two rows: title + undo/redo, then power + menus. */
+  /* Header in one row: logo and name, undo/redo, Share, ☰ (the drive sits above the charts). */
   .top {
     display: grid;
-    grid-template-columns: 1fr auto auto;
-    grid-template-areas:
-      "title share menu"
-      "power history history";
-    gap: 0.6rem 0.5rem;
+    grid-template-columns: 1fr auto auto auto;
+    grid-template-areas: "title history share menu";
+    gap: 0.5rem;
     align-items: center;
   }
 
@@ -1385,7 +1383,6 @@ figure.chart[hidden] {
     text-overflow: ellipsis;
   }
 
-  /* "Early preview": the header stays two rows. */
   .top > .title p {
     display: none;
   }
@@ -1395,54 +1392,20 @@ figure.chart[hidden] {
     height: 2rem;
   }
 
-  .unit-switch {
-    flex: none;
-  }
-
-  .power input[type="range"] {
-    min-width: 3rem;
-  }
-
-  /* The slider, its value and the W/V switch say what it is; keep the word for screen readers. */
-  .power > span:first-child {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  .power b {
-    min-width: 0;
-  }
-
   .top-actions {
     display: contents;
   }
 
   .top-actions > :nth-child(1) {
-    grid-area: power;
-    min-width: 0;
-  }
-
-  .top-actions > :nth-child(2) {
     grid-area: history;
   }
 
-  .top-actions > :nth-child(3) {
+  .top-actions > :nth-child(2) {
     grid-area: share;
   }
 
-  .top-actions > :nth-child(4) {
+  .top-actions > :nth-child(3) {
     grid-area: menu;
-  }
-
-  /* Share and ☰ sit side by side on the right; undo/redo spans both columns below them. */
-  .top-actions > :nth-child(3),
-  .top-actions > :nth-child(4),
-  .top-actions > :nth-child(2) {
-    justify-self: end;
   }
 
   .top-actions > .offline-badge {
@@ -1450,20 +1413,27 @@ figure.chart[hidden] {
     justify-self: start;
   }
 
-  .power {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-
-  .power input[type="range"] {
-    flex: 1 1 auto;
+  .drive-bar input[type="range"] {
     min-width: 4rem;
-    width: auto;
   }
+}
 
-  .power b {
-    white-space: nowrap;
+/* Narrow phones: the name on two short lines beside the logo; the tiniest show the logo only. */
+@media (max-width: 480px) {
+  .top h1 {
+    font-size: 0.95rem;
+    line-height: 1.15;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 370px) {
+  .top h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
 }
 
@@ -1573,9 +1543,35 @@ button.check-fix {
   color: var(--on-accent);
 }
 
-@media (min-width: 861px) {
-  .power input[type="range"] {
-    width: 10rem;
+/* The drive above the charts: a full-width slider that stays in reach while scrolling. */
+.drive-bar {
+  position: sticky;
+  top: 0;
+  z-index: 29;
+  margin: 0 0 -0.4rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.drive-bar input[type="range"] {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 6rem;
+}
+
+.drive-bar > span:first-child {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+@media (max-width: 860px) {
+  .drive-bar {
+    margin: 0;
+    padding: 0.4rem 0.7rem;
   }
 }
 
