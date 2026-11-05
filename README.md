@@ -72,7 +72,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **Forum image** with the summary, charts and a **QR code** to the live design, plus ready-to-paste **Reddit (Markdown)** and **diyAudio (BBCode)** posts
 - **CSV export** of every curve
 - **Hornresp import and export** for transmission lines and horns
-- **Projects** saved in your browser, or as a `.json` file you can keep or send, from the ☰ menu (with **New project**, which opens a fresh one in a new tab)
+- **Projects** saved in your browser, or as a `.json` file you can keep or send, from the ☰ menu (with **New project**, which starts in the design assistant, in a new tab if the current project is in use)
 - Undo and redo, and help on every input field (hover its label, or select the field)
 - Installable as an app on phones and computers
 

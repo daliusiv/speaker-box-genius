@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { REPO } from "./components.tsx";
 import { useProjects } from "./Projects.tsx";
-import { ASSISTANT_HASH } from "./start.ts";
 import type { AppState } from "./state.ts";
 
 /** Saved projects shown before "All saved…". */
@@ -28,7 +27,7 @@ export function AppMenu(props: {
   /** Set while the browser offers to install the app. */
   install: (() => Promise<void>) | null;
   showTips: () => void;
-  /** Open the design assistant. */
+  /** New project: open the design assistant (this tab if untouched, else a new one). */
   onAssistant: () => void;
   /** The current design's link, for "Report a problem". */
   reportUrl: () => string;
@@ -111,12 +110,10 @@ export function AppMenu(props: {
             </div>
 
             <p className="menu-label">Project</p>
+            {/* A new project starts in the design assistant: in this tab while the example is untouched, else a new tab. */}
             <button role="menuitem" onClick={act(props.onAssistant)}>
-              Design assistant… <span className="menu-note">start from a goal</span>
+              New project… <span className="menu-note">design assistant</span>
             </button>
-            <a role="menuitem" className="menu-link" href={`${location.pathname}${ASSISTANT_HASH}`} target="_blank" rel="noopener" onClick={() => close(false)}>
-              New project <span className="menu-note">new tab</span>
-            </a>
             <button role="menuitem" onClick={act(p.save)}>
               Save in this browser…
             </button>
