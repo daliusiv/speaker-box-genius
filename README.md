@@ -27,6 +27,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **Maximum SPL**: the loudest each box can play at every frequency, with a band showing what limits it there (Xmax, PR Xmax, port speed or thermal power), and the **amplifier voltage and current** needed to reach it, after the filter and EQ
 - **Impedance**, **group delay**, and **line load (Za)** for lines and horns
 - For lines: the **cone and mouth** contributions on their own, and **pressure and air speed along the line** at any frequency, showing where stuffing does the most
+- **Edit on the chart:** drag a ported or PR box's tuning, or an EQ point (frequency, gain, and Q with the mouse wheel), on the response chart, with mouse, finger or keyboard
 - Over-limit parts of a curve glow red; hover or tap for the values of every curve at that frequency, with the **leading curve marked** (highest SPL, lowest excursion, and so on)
 - Phone-friendly: tall charts, a legend under each chart, one chart at a time, and a strip of every box's F3 and limits pinned above the controls
 - Every warning leads somewhere: tap "over a limit" (or a red value) to jump to the chart that shows it, or a port warning to the field that fixes it

@@ -3005,3 +3005,70 @@ button.strip-box.is-over {
 .panel {
   min-width: 0;
 }
+
+/* ---- Editing on the chart: handles and their value bubble ---- */
+.handle {
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+
+.handle.dragging {
+  cursor: grabbing;
+}
+
+.handle-hit {
+  fill: transparent;
+}
+
+.handle-mark {
+  stroke: var(--fg);
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.6));
+}
+
+.handle:focus-visible .handle-mark,
+.handle.dragging .handle-mark {
+  stroke: var(--accent);
+}
+
+.handle-stem {
+  stroke-dasharray: 3 3;
+  opacity: 0.6;
+}
+
+.chart-body {
+  position: relative;
+}
+
+/* In a top corner of the plot, away from the handle (and the finger on it). */
+.handle-bubble {
+  position: absolute;
+  z-index: 3;
+  max-width: 70%;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.4);
+  font-size: 0.82rem;
+  pointer-events: none;
+}
+
+.chart.editing svg {
+  cursor: default;
+}
+
+.edit-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+  margin: 0.1rem 0 0.4rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.edit-bar button {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.85rem;
+}

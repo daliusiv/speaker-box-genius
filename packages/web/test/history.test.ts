@@ -48,3 +48,11 @@ test("no-op changes leave history alone; history is capped", () => {
   const many = run(Array.from({ length: MAX_STEPS + 50 }, (_, i) => set(i + 1, i * 10_000)));
   assert.equal(many.past.length, MAX_STEPS);
 });
+
+test("a drag is one undo step: it starts a step, and its later changes join it even after a pause", () => {
+  const set = (v: number, now: number, o: { start?: boolean; hold?: boolean } = {}): HistoryAction<number> => ({ type: "set", update: () => v, now, ...o });
+  // Typing (1, 2), then a drag (3, 4, 5) with a 5 s pause in the middle, then typing again.
+  const h = run([set(1, 0), set(2, 100), set(3, 200, { start: true }), set(4, 300, { hold: true }), set(5, 5300, { hold: true }), set(6, 9000)]);
+  assert.deepEqual(h.past, [0, 2, 5]);
+  assert.equal(h.present, 6);
+});
