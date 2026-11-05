@@ -24,6 +24,7 @@ import { loadDriver, type DbIndex, type LoadedDriver } from "./library.ts";
 import type { WorkerJob, WorkerReply } from "./assistantWorker.ts";
 import type { AppState } from "./state.ts";
 import { useUnits } from "./units.ts";
+import { portLimitOf } from "./sim.ts";
 import { Logo, UseIcon } from "./Logo.tsx";
 
 const KEY = "sbg.assistant";
@@ -116,6 +117,8 @@ export function DesignAssistant(props: {
   base: AppState;
   /** Starting a project from one result, or the same driver's sealed and ported results. */
   onOpen: (d: LoadedDriver, rs: AssistantResult[], goal: AssistantGoal) => void;
+  /** The chuffing line is the app's own setting (Settings → Ports): changed here, it changes there. */
+  onPortLimit: (ms: number) => void;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [goal, setGoalRaw] = useState<AssistantGoal>(() => readGoal() ?? goalFor("car"));
@@ -493,6 +496,18 @@ export function DesignAssistant(props: {
                 )}
               </div>
               {goal.boxes.length === 0 && <p className="warn">Choose at least one box type.</p>}
+              {goal.boxes.some((b) => b !== "sealed") && (
+                <div className="fields">
+                  <Num
+                    label="Chuffing line"
+                    unit="m/s"
+                    value={portLimitOf(props.base)}
+                    min={5}
+                    help="Port air speed above this counts as chuffing. 17 m/s keeps a hi-fi port quiet; car SPL builds often accept 25–30. The same setting as Settings → Ports."
+                    onChange={(v) => props.onPortLimit(v > 0 ? v : 17)}
+                  />
+                </div>
+              )}
               <details className="more assist-brands">
                 <summary>Brands: {goal.brands.length ? goal.brands.join(", ") : "all"}</summary>
                 <div className="assist-brand-list">
@@ -635,7 +650,7 @@ export function DesignAssistant(props: {
                         : ""}
                       {wiringText(r, goal.drivers)}
                       Output at {goal.loudAt_hz} Hz is set by {LIMIT_TEXT[r.limitedBy]}.
-                      {r.peak_db > 1.5 ? ` A ${r.peak_db.toFixed(1)} dB hump above F3.` : ""}
+                      {r.peak_db > 1.5 ? (r.bandpass ? ` ${r.peak_db.toFixed(1)} dB of ripple across the band.` : ` A ${r.peak_db.toFixed(1)} dB hump above F3.`) : ""}
                     </p>
                     {r.over.length > 0 ? (
                       <p className="warn assist-over">
@@ -690,7 +705,7 @@ export function DesignAssistant(props: {
               </div>
               <p className="hint finder-note">
                 Each driver in the database that fits your limits, in the box the app's presets would give it (sealed Qtc 0.707, ported QB3/B4 or Keele), no
-                bigger than your maximum{goal.boxes.includes("line") && LINE_USES.includes(goal.use) ? "; transmission lines (MLTL and classic TL from the app's line presets, narrowed to fit) for the best few drivers" : ""}, simulated at {goal.power_w} W{goal.use === "car" ? " with the car's cabin gain (output includes it; F3 is the box's own, before cabin gain, as in the summary table)" : ""}. Opening a result starts the project
+                bigger than your maximum, with ports judged against your {portLimitOf(props.base)} m/s chuffing line{goal.boxes.includes("line") && LINE_USES.includes(goal.use) ? "; transmission lines (MLTL and classic TL from the app's line presets, narrowed to fit) for the best few drivers" : ""}, simulated at {goal.power_w} W{goal.use === "car" ? " with the car's cabin gain (output includes it; F3 is the box's own, before cabin gain, as in the summary table)" : ""}. Opening a result starts the project
                 with its driver and box. Database values are the manufacturers' published figures: check the datasheet before you buy.
               </p>
             </>

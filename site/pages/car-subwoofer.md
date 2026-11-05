@@ -42,17 +42,19 @@ The ported boxes play **6–7 dB louder** at 30–40 Hz, which is a lot (about f
 - **Small, flat and accurate:** sealed. Size it for a Qtc around 0.7–0.8; in a car, a slightly small box is fine.
 - **Loudest for the watts:** ported, tuned in the low 30s or high 20s Hz, and EQ the hump down if you don't like it.
 - **Tight on space but want output:** a sealed box with more amplifier power usually beats a ported box that's been squeezed too small.
-- **Bandpass boxes** (4th and 6th order) are popular in cars for very high output in a narrow band; the app models those too.
+- **Bandpass boxes** (4th and 6th order) are popular in cars for very high output in a narrow band; the app models those too, and the [design assistant](/guides/design-assistant/) can suggest them (tick **Bandpass** in its limits).
 
 ## Things that are different in a car
 
 - **Cabin size matters.** A small hatchback boosts from higher up than a big SUV. In the app's **Signal** tab, set **Longest inside** (the cabin's longest inside dimension) under **Room / cabin gain**.
 - **Mounting position matters** (boot, firing forward or back, through a ski hatch) in ways no simulation captures. Use the simulation to choose the box, then tune by ear or with a measurement.
 - **Protect the driver.** Ported car boxes need a subsonic filter too; see [the subsonic filter guide](/guides/subsonic-filter/).
-- **Check the port speed.** Car audio runs high power, and a chuffing port is easy to hear in a quiet cabin.
+- **Check the port speed.** Car audio runs high power, and a chuffing port is easy to hear in a quiet cabin. If you accept some port noise at full power (common in SPL builds), raise the chuffing line in **Settings → Ports**.
 - **Polyfill in a sealed box** makes it act 15–25 % bigger, which helps when the box has to be small. How much to use is in the [box stuffing guide](/guides/box-stuffing/).
 
 ## Doing it in the app
+
+Not sure which sub to buy? The [design assistant](/guides/design-assistant/) tries every suitable one in the database in sealed, ported and bandpass boxes, with the cabin gain, at your power.
 
 1. Pick your sub from the database and set your amplifier power.
 2. On the **Signal** tab, under **Room / cabin gain**, set **Space** to **Car cabin**, and adjust **Longest inside** for your car.

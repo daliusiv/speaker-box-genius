@@ -4,7 +4,7 @@ import { TS_PARAMS, type TsParam, type TsValues } from "@sbg/engine";
 import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
-import { PORT_LIMIT, limitsOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
+import { PORT_LIMIT, limitsOf, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
 import { LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
@@ -206,4 +206,22 @@ test("bandpass: 4th and 6th order for subwoofers, within the box limit, a band u
   const hifi = { ...goalFor("hifi", "balanced"), boxes: ["bandpass"] as AssistantGoal["boxes"] };
   const row = rows.find((r) => r.size_in === 8 && r.qts! < 0.5)!;
   assert.deepEqual(evaluateDriver(DEFAULT_STATE, row, loaded(row.id), hifi, "bandpass"), []);
+});
+
+test("the chuffing line is the app's setting: raised, more ports pass, and the app agrees", () => {
+  const goal = goalFor("car", "balanced");
+  const loose = { ...DEFAULT_STATE, settings: { ...DEFAULT_STATE.settings, portLimit_ms: 30 } };
+  const vented = (base: typeof DEFAULT_STATE) =>
+    prefilter(rows, goal)
+      .slice(0, 80)
+      .flatMap((r) => evaluateDriver(base, r, loaded(r.id), goal))
+      .filter((r) => r.box === "vented");
+  const strict = vented(DEFAULT_STATE).filter((r) => r.over.includes("port")).length;
+  const relaxed = vented(loose);
+  assert.ok(relaxed.filter((r) => r.over.includes("port")).length < strict, "fewer over the port line at 30 m/s");
+  for (const r of relaxed.filter((x) => !x.over.includes("port")).slice(0, 10)) {
+    const s = openResults(loose, loaded(r.driverId), [r], goal);
+    const app = limitsOf(runDesigns(s, solveDriver(s))[0]!.result, s.xmax_mm!, false, portLimitOf(s));
+    assert.ok(!app.over.includes("port") || app.vp! <= 30 * 1.02, `${r.name}: app ${app.vp} m/s`);
+  }
 });

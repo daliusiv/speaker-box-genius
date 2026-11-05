@@ -192,6 +192,9 @@ const QTC_TITLES: Record<number, string> = {
 /** Only replace a default name, so the user's own names survive presets. */
 
 interface PortContext {
+  /** The chuffing line (displayed convention) and whether speeds are shown as RMS. */
+  portLimit?: number;
+  rms?: boolean;
   /** Peak port velocity in the displayed convention (above the subsonic cut-off), if simulated. */
   portVelocity: number | null;
   /** Bandpass: the same for the rear chamber's port. */
@@ -211,7 +214,7 @@ function PortChecks(props: {
   v: PortFields & { flare_cm?: number };
   vb_l: number;
   air: Air;
-  ctx: Pick<PortContext, "portVelocity" | "internalMax_cm" | "portVelocityAt" | "portCompression" | "drive">;
+  ctx: Pick<PortContext, "portVelocity" | "internalMax_cm" | "portVelocityAt" | "portCompression" | "drive" | "portLimit">;
 }) {
   const { v, vb_l, air, ctx } = props;
   const { fmt } = useUnits();
@@ -237,8 +240,9 @@ function PortChecks(props: {
   }
 
   // Chuffing: air speed scales with 1/area, so suggest the area that brings it under the line.
-  if (ctx.portVelocity !== null && ctx.portVelocity > PORT_LIMIT) {
-    const k = ctx.portVelocity / PORT_LIMIT;
+  const limit = ctx.portLimit ?? PORT_LIMIT;
+  if (ctx.portVelocity !== null && ctx.portVelocity > limit) {
+    const k = ctx.portVelocity / limit;
     const fbNow = ventedFb(vb_l, port, v.count, undefined, air);
     const bigger: typeof port =
       v.shape === "round"
@@ -253,7 +257,7 @@ function PortChecks(props: {
       chip: `Chuffing: ${ctx.portVelocity.toFixed(1)} m/s`,
       text: ends
         ? `Air speed at the flared ends reaches ${ctx.portVelocity.toFixed(1)} m/s. A bigger port, more ports or a larger flare radius brings it down (the flares set the noise, not the narrow middle).`
-        : `Port air speed reaches ${ctx.portVelocity.toFixed(1)} m/s. To stay under ${PORT_LIMIT} m/s at this power: about ${size} ` +
+        : `Port air speed reaches ${ctx.portVelocity.toFixed(1)} m/s. To stay under ${limit} m/s at this power: about ${size} ` +
           `(length ≈ ${fmt(newLen, "len")} for the same tuning)${ports > v.count ? `, or ${ports} ports of the current size` : ""}` +
           (v.shape === "round" && !(v.flare_cm! > 0) ? `. Flared ends also help a lot: try a flare radius of about ${fmt(v.diameter_cm / 4, "len")}.` : "."),
       fix: sizeField,
@@ -865,7 +869,7 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
       {b.frontOpening === "port" ? (
         <>
           <PortEditor port={b.front} vb_l={b.frontVb_l} air={p.air} onChange={(front) => set({ front })} />
-          <PortChecks v={b.front} vb_l={b.frontVb_l} air={p.air} ctx={{ portVelocity: p.portCtx.portVelocity, internalMax_cm: null }} />
+          <PortChecks v={b.front} vb_l={b.frontVb_l} air={p.air} ctx={{ portVelocity: p.portCtx.portVelocity, internalMax_cm: null, portLimit: p.portCtx.portLimit }} />
         </>
       ) : (
         <ChamberPrs
@@ -891,7 +895,7 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
                 v={b.rear}
                 vb_l={p.vb_l}
                 air={p.air}
-                ctx={{ portVelocity: p.portCtx.rearPortVelocity, internalMax_cm: p.portCtx.internalMax_cm }}
+                ctx={{ portVelocity: p.portCtx.rearPortVelocity, internalMax_cm: p.portCtx.internalMax_cm, portLimit: p.portCtx.portLimit }}
               />
             </>
           ) : (
@@ -999,6 +1003,8 @@ export function DesignCard(props: {
           drivers={props.drivers}
           fb={props.lineFb ?? null}
           exitVelocity={props.portCtx.portVelocity}
+          portLimit={props.portCtx.portLimit ?? PORT_LIMIT}
+          rms={props.portCtx.rms ?? false}
           compression={props.portCtx.portCompression ?? null}
           driverDisp_l={props.driverDisp_l ?? 0}
           wall_mm={props.wall_mm ?? 18}

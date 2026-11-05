@@ -26,7 +26,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 - **SPL**, relative or absolute (dB SPL), with each design's **F3** marked
 - **Cone excursion** with an **Xmax redline**, and **passive radiator excursion** with each PR's own Xmax
-- **Port air velocity** with a **chuffing-risk line** (peak or RMS)
+- **Port air velocity** with a **chuffing-risk line** (peak or RMS; 17 m/s by default, your own in Settings → Ports, used by every check and the design assistant)
 - **Maximum SPL**: the loudest each box can play at every frequency, with a band showing what limits it there (Xmax, PR Xmax, port speed or thermal power), and the **amplifier voltage and current** needed to reach it, after the filter and EQ
 - **Impedance**, **group delay**, and **line load (Za)** for lines and horns
 - For lines: the **cone and mouth** contributions on their own, and **pressure and air speed along the line** at any frequency, showing where stuffing does the most

@@ -23,7 +23,7 @@ import {
 import type { DbIndex, LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
 import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
-import { PORT_LIMIT, airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
+import { airOf, portLimitOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
 import {
   MAX_DESIGNS,
   ROOM_PRESETS,
@@ -382,6 +382,8 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
   const align = alignmentDriver(solved, s);
   if (!align) return [];
   const al = align; // non-null, for the nested searches
+  // The chuffing line from Settings, in peak (the simulation's convention here).
+  const vLimit = portLimitOf(s) * (s.settings.velocity === "rms" ? Math.SQRT2 : 1);
   const drv = driverInputOf(s, solved);
   const air = airOf(s);
   const room = roomGainOf(s);
@@ -427,11 +429,11 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
     let best: { design: VentedDesign; port: AssistantPort; v: number } | null = null;
     for (const port of portCandidates(vb, fb, air)) {
       const design = withPort(vb, fb, port);
-      const l = limitsOf(run(design, vb), d.xmax_mm!, false);
+      const l = limitsOf(run(design, vb), d.xmax_mm!, false, vLimit);
       const vp = l.vp ?? Infinity;
       const throat = port.kind === "flared" ? (vp * ((port.diameter_cm + 2 * port.flare_cm) / port.diameter_cm) ** 2) / FLARED_THROAT : 0;
       const v = Math.max(vp, throat);
-      if (v <= PORT_LIMIT) return { design, port };
+      if (v <= vLimit) return { design, port };
       if (!best || v < best.v) best = { design, port, v };
     }
     return best;
@@ -466,7 +468,7 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
     // No roll-off found in range (a tiny box for a high-Fs pro driver, say): nothing to rank on.
     const f3 = r.summary.f3;
     if (f3 === null) return;
-    const lim = limitsOf(r, d.xmax_mm!, false);
+    const lim = limitsOf(r, d.xmax_mm!, false, vLimit);
     const watts = (scale: number) => Number((goal.power_w * scale * scale).toPrecision(2));
     const spl = at(r.freq, r.spl, goal.loudAt_hz);
     const max = at(r.freq, r.maxSpl, goal.loudAt_hz);
@@ -576,7 +578,7 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
         loud,
         args: [order, rear, front, frontFb, rearFb],
         ...(() => {
-          const l = limitsOf(r, d.xmax_mm!, false);
+          const l = limitsOf(r, d.xmax_mm!, false, vLimit);
           return { over: l.over, safe: l.safeScale };
         })(),
         bp: {
@@ -707,7 +709,7 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
           cur = { ...again, targetFb: preset.targetFb };
         }
       }
-      const sized = sizeMltlPort(drv, cur, opts, wall);
+      const sized = sizeMltlPort(drv, cur, opts, wall, (vLimit * 15) / 17);
       if (typeof sized !== "string") cur = sized;
       const vb = lineVolume(cur);
       if (!(vb > 0) || vb > goal.maxVolume_l * 1.02 || lineLength(cur) > LINE_MAX_CM) continue;

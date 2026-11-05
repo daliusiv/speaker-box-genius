@@ -18,6 +18,8 @@ The sound from the back of the cone travels down the line and comes out of the m
 
 So a line is a balance between three things: **its length** (which sets the tuning), **its shape** (how its area changes along the way), and **its stuffing** (which smooths the response but costs some bass).
 
+> **Looking for a driver for a line?** Choose **Tower / floor-stander** in the [design assistant](/guides/design-assistant/): it tries mass-loaded and classic lines for the best drivers, narrowed to your volume, and opens the one you pick as a line design.
+
 ## The main types
 
 | Type | What it is | Good for |
