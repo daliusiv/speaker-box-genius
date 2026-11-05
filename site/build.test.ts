@@ -31,7 +31,16 @@ test("builds every guide, the index, sitemap and robots.txt, with live example l
   assert.ok(paths.includes("/guides/passive-radiator-box/"));
   assert.ok(paths.includes("/winisd-alternative/"));
   assert.ok(paths.includes("/guides/"));
-  for (const p of ["/guides/transmission-line/", "/guides/port-chuffing/", "/hornresp-alternative/"]) assert.ok(paths.includes(p), p);
+  for (const p of [
+    "/guides/transmission-line/",
+    "/guides/port-chuffing/",
+    "/hornresp-alternative/",
+    "/guides/sealed-vs-ported/",
+    "/guides/subsonic-filter/",
+    "/guides/car-subwoofer/",
+    "/guides/compare-drivers/",
+    "/guides/thiele-small-parameters/",
+  ]) assert.ok(paths.includes(p), p);
   const pr = readFileSync(join(out, "guides/passive-radiator-box/index.html"), "utf8");
   assert.match(pr, /<title>How to design a passive radiator box · Speaker Box Genius<\/title>/);
   assert.match(pr, /<link rel="canonical" href="https:\/\/speakerboxgenius.com\/guides\/passive-radiator-box\/">/);
@@ -55,4 +64,8 @@ test("the example links open the designs the guides describe", async () => {
   const port = await decodeStateAny(links["port-example"]!.split("#")[1]!);
   assert.equal(port?.driverName, "Dayton Audio RSS315HF-4");
   assert.equal(port?.designs.length, 3);
+  const cmp = await decodeStateAny(links["compare-example"]!.split("#")[1]!);
+  assert.equal(cmp?.compare?.driverName, "Dayton Audio RSS265HO-4");
+  const car = await decodeStateAny(links["car-example"]!.split("#")[1]!);
+  assert.equal(car?.roomGain.mode, "car");
 });
