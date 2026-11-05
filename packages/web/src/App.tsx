@@ -200,9 +200,22 @@ export function App(props: { initial: AppState | null }) {
     }
   };
   // Edit mode on the response chart: drag a box's tuning or an EQ point (relative view only).
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditingRaw] = useState(false);
+  // What the boxes and EQ were when the editor opened (Cancel puts them back), and the picked handle.
+  const [editFrom, setEditFrom] = useState<{ designs: AppState["designs"]; eq: AppState["eq"] } | null>(null);
+  const [picked, setPicked] = useState<string | null>(null);
+  const openEditor = () => {
+    setEditFrom({ designs: latest.current.designs, eq: latest.current.eq });
+    setPicked(null);
+    setEditingRaw(true);
+  };
+  const closeEditor = () => {
+    setEditingRaw(false);
+    setEditFrom(null);
+    setPicked(null);
+  };
   const chooseSplMode = (m: "relative" | "absolute") => {
-    if (m === "absolute") setEditing(false);
+    if (m === "absolute") closeEditor();
     setSplMode(m);
     try {
       localStorage.setItem("sbg.spl", m);
@@ -646,11 +659,30 @@ export function App(props: { initial: AppState | null }) {
             text: `${e.freq} Hz · ${e.gain_db > 0 ? "+" : ""}${e.gain_db} dB · Q ${e.q}`,
             onDrag: (f, g, start) => setState((s) => moveEq(s, e.id, f, g), start ? { start: true } : { hold: true }),
             onWheel: (up) => setState((s) => eqQ(s, e.id, up)),
+            onRemove: () => removeEq(e.id),
           }),
         ),
       ];
-  const addEqPoint = () =>
-    setStep((s) => ({ ...s, eq: [...s.eq, { id: newId(s.eq), on: true, target: "all", type: "peak", freq: 40, gain_db: -3, q: 2 }] }));
+  const addEqPoint = () => {
+    const id = newId(state.eq);
+    setStep((s) => ({ ...s, eq: [...s.eq, { id, on: true, target: "all", type: "peak", freq: 40, gain_db: -3, q: 2 }] }));
+    setPicked(`eq-${id}`);
+  };
+  const removeEq = (id: string) => {
+    setStep((s) => ({ ...s, eq: s.eq.filter((x) => x.id !== id) }));
+    setPicked(null);
+  };
+  // Cancel: the boxes and EQ as they were when the editor opened (one undo step), then close.
+  const editChanged = editFrom !== null && (editFrom.designs !== state.designs || editFrom.eq !== state.eq);
+  const cancelEdit = () => {
+    if (editFrom && editChanged) {
+      const from = editFrom;
+      setStep((s) => ({ ...s, designs: from.designs, eq: from.eq }));
+      notify("Chart edits cancelled.");
+    }
+    closeEditor();
+  };
+  const pickedEq = picked?.startsWith("eq-") ? state.eq.find((e) => `eq-${e.id}` === picked && draggableEq(e)) : undefined;
 
   // Passive radiators put a deep notch in the response at their own resonance, where the
   // group delay swings far negative; mark it instead of drawing a cliff off the chart.
@@ -1231,7 +1263,15 @@ export function App(props: { initial: AppState | null }) {
               </p>
             </Card>
 
-            <EqPanel state={state} designs={designs} onChange={(eq) => set("eq", eq)} />
+            <EqPanel
+              state={state}
+              designs={designs}
+              onChange={(eq) => set("eq", eq)}
+              onClear={() => {
+                setStep((s) => ({ ...s, eq: [] }));
+                notify("EQ cleared.");
+              }}
+            />
 
             <RoomGainPanel value={state.roomGain} room={roomGainOf(state)} onChange={(r) => set("roomGain", r)} />
 
@@ -1441,20 +1481,49 @@ export function App(props: { initial: AppState | null }) {
               chartId="response"
               best="high"
               handles={chartHandles}
+              onSelect={setPicked}
+              selected={picked}
               below={
                 editing ? (
                   <div className="edit-bar">
                     <span>
                       {chartHandles.length > 0
-                        ? `Drag ◆ to retune a ported or PR box, ● to move an EQ point${narrow ? "" : " (scroll on it to change its Q)"}.`
+                        ? `Drag ◆ to retune a ported or PR box, ● to move an EQ point${narrow ? " (tap it for Q and Remove)" : " (click it for Q and Remove, or scroll on it for Q)"}.`
                         : "Add a ported or passive radiator box, or an EQ point, to drag it here."}
                     </span>
-                    <button type="button" className="secondary" onClick={addEqPoint}>
-                      + EQ point
-                    </button>
-                    <button type="button" onClick={() => setEditing(false)}>
-                      Done
-                    </button>
+                    <span className="edit-actions">
+                      <button type="button" className="secondary" onClick={addEqPoint}>
+                        + EQ point
+                      </button>
+                      <button type="button" className="secondary" onClick={cancelEdit} disabled={!editChanged} title="Put the boxes and EQ back as they were when you opened the editor">
+                        Cancel
+                      </button>
+                      <button type="button" onClick={closeEditor}>
+                        Done
+                      </button>
+                    </span>
+                    {pickedEq && draggableEq(pickedEq) && (
+                      <div className="edit-point" role="group" aria-label="EQ point">
+                        <b>
+                          EQ {state.eq.filter(draggableEq).indexOf(pickedEq) + 1}
+                        </b>
+                        <span className="muted">
+                          {pickedEq.freq} Hz · {pickedEq.gain_db > 0 ? "+" : ""}
+                          {pickedEq.gain_db} dB
+                        </span>
+                        <span className="muted">Q</span>
+                        <button type="button" className="icon" aria-label="Wider (lower Q)" onClick={() => setState((s) => eqQ(s, pickedEq.id, false))}>
+                          −
+                        </button>
+                        <span className="q">{pickedEq.q}</span>
+                        <button type="button" className="icon" aria-label="Narrower (higher Q)" onClick={() => setState((s) => eqQ(s, pickedEq.id, true))}>
+                          +
+                        </button>
+                        <button type="button" className="secondary remove" aria-label="Remove this EQ point" title="Remove this EQ point (Delete)" onClick={() => removeEq(pickedEq.id)}>
+                          ✕<span className="wide-only"> Remove</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : undefined
               }
@@ -1478,8 +1547,9 @@ export function App(props: { initial: AppState | null }) {
                   className={`chip${editing ? " on" : ""}`}
                   aria-pressed={editing}
                   onClick={() => {
-                    if (!editing) chooseSplMode("relative");
-                    setEditing(!editing);
+                    if (editing) return closeEditor();
+                    chooseSplMode("relative");
+                    openEditor();
                   }}
                   title="Drag on the chart: a box's tuning, or an EQ point"
                 >

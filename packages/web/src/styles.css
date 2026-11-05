@@ -3027,7 +3027,8 @@ button.strip-box.is-over {
 }
 
 .handle:focus-visible .handle-mark,
-.handle.dragging .handle-mark {
+.handle.dragging .handle-mark,
+.handle.selected .handle-mark {
   stroke: var(--accent);
 }
 
@@ -3071,4 +3072,47 @@ button.strip-box.is-over {
 .edit-bar button {
   padding: 0.3rem 0.7rem;
   font-size: 0.85rem;
+}
+
+.edit-bar .edit-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+}
+
+/* The picked EQ point's own controls: Q and remove. */
+.edit-point {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  flex-basis: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--well);
+  color: var(--fg);
+}
+
+.edit-point .q {
+  min-width: 3.4rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.edit-point button.icon {
+  min-width: 2.4rem;
+  min-height: 2.2rem;
+  border: 1px solid var(--input-border);
+  color: var(--fg);
+}
+
+.edit-point .remove {
+  margin-left: auto;
+}
+
+@media (max-width: 480px) {
+  .edit-point .wide-only {
+    display: none;
+  }
 }

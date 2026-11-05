@@ -9,7 +9,7 @@ const TYPE_LABEL: Record<EqStage["type"], string> = {
   lowshelf: "Low shelf",
 };
 
-export function EqPanel(props: { state: AppState; designs: Design[]; onChange: (eq: EqItem[]) => void }) {
+export function EqPanel(props: { state: AppState; designs: Design[]; onChange: (eq: EqItem[]) => void; onClear?: () => void }) {
   const { state } = props;
   const eq = state.eq;
   const set = (item: EqItem) => props.onChange(eq.map((e) => (e.id === item.id ? item : e)));
@@ -110,6 +110,11 @@ export function EqPanel(props: { state: AppState; designs: Design[]; onChange: (
         <button className="secondary" onClick={() => add("lowshelf")}>
           + Low shelf
         </button>
+        {eq.length > 1 && props.onClear && (
+          <button className="secondary" onClick={props.onClear} title="Remove every EQ stage (Undo brings them back)">
+            Clear EQ
+          </button>
+        )}
       </div>
       <p className="hint">EQ sits before the amplifier, so boosts raise excursion and lower the power limit too.</p>
     </Card>
