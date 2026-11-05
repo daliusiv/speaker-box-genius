@@ -3652,3 +3652,18 @@ dialog.assistant .lib-inner:focus {
     max-height: min(820px, calc(100dvh - 2rem));
   }
 }
+
+/* Wide screens show the dialog over the app, whose header already has the logo and name:
+   just the title there. Phones (the dialog fills the screen) keep the logo and name. */
+@media (min-width: 641px) {
+  .assist-brand .logo,
+  .assist-brand b {
+    display: none;
+  }
+
+  .assist-brand h2 {
+    color: var(--fg);
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+}
