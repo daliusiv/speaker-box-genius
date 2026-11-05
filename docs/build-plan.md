@@ -103,7 +103,7 @@ Beyond the plan: transmission lines and horns with Hornresp import/export, a pub
 | Complex math | Hand-rolled `Complex`, typed arrays | ✅ Same | |
 | Worker comms | Web Worker + Comlink | Main thread | Solves are fast enough; the PR finder runs in slices with a progress bar instead |
 | URL compression | lz-string or fflate | Browser `CompressionStream` (deflate-raw) | No dependency |
-| Testing | Vitest + Playwright | `node:test` (280 tests); Playwright for manual checks | No dependency |
+| Testing | Vitest + Playwright | `node:test` (288 tests); Playwright for manual checks | No dependency |
 | Monorepo | pnpm workspaces | ✅ `engine`, `web`, `schema`, `db-tools` | |
 | Hosting/CI | GitHub Pages + Actions | ✅ Same, custom domain | |
 | Schema validation | Zod + JSON Schema | Hand-written types and checks in `db-tools` | No dependency |
