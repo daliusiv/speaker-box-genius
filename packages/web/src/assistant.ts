@@ -22,12 +22,22 @@ import {
 } from "@sbg/engine";
 import type { DbIndex, LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
-import { PORT_LIMIT, airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
-import { MAX_DESIGNS, ROOM_PRESETS, newDesign, type AppState, type DesignState, type VentedDesign } from "./state.ts";
+import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
+import { PORT_LIMIT, airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
+import { MAX_DESIGNS, ROOM_PRESETS, newDesign, type AppState, type DesignState, type LineDesign, type VentedDesign } from "./state.ts";
 
-export type AssistantUse = "car" | "home" | "hifi" | "other";
+export type AssistantUse = "car" | "home" | "hifi" | "tower" | "other";
 export type AssistantPriority = "balanced" | "deep" | "loud" | "small";
-export type AssistantBox = "sealed" | "vented";
+export type AssistantBox = "sealed" | "vented" | "line";
+
+/** Uses where a transmission line is offered (a tall cabinet that can fold one). */
+export const LINE_USES: readonly AssistantUse[] = ["hifi", "tower", "other"];
+/** The line types the assistant tries: mass-loaded and classic lines (TQWTs and offset lines grow too long to fold into a tower). */
+export const LINE_TYPES = ["mltl", "tl"] as const satisfies readonly PresetId[];
+/** How many of the best drivers from the boxes get lines too (a line takes ~30 simulations). */
+export const LINE_SHORTLIST = 10;
+/** Longest line the assistant suggests (cm): about three runs of a metre-tall cabinet. */
+export const LINE_MAX_CM = 300;
 
 export interface AssistantGoal {
   use: AssistantUse;
@@ -66,6 +76,11 @@ export const USES: Record<AssistantUse, { label: string; hint: string; goal: Omi
     hint: "The bass driver of a two-way speaker",
     goal: { maxVolume_l: 20, power_w: 50, minLoad_ohm: 4, drivers: 1, sizeMin_in: 4, sizeMax_in: 8, boxes: ["sealed", "vented"], loudAt_hz: 50, targetF3_hz: 45 },
   },
+  tower: {
+    label: "Tower / floor-stander",
+    hint: "The bass of a tall speaker: ported, sealed or a transmission line",
+    goal: { maxVolume_l: 60, power_w: 100, minLoad_ohm: 4, drivers: 1, sizeMin_in: 5, sizeMax_in: 10, boxes: ["sealed", "vented", "line"], loudAt_hz: 40, targetF3_hz: 35 },
+  },
   other: {
     label: "Something else",
     hint: "Start from general settings",
@@ -101,6 +116,8 @@ export interface AssistantResult {
   vb_l: number;
   fb?: number;
   port?: AssistantPort;
+  /** Transmission line: its type, length along the line, and the design itself (to open). */
+  line?: { type: (typeof LINE_TYPES)[number]; label: string; length_cm: number; design: LineDesign };
   /** How the drivers (and a DVC driver's coils) are wired, and the load the amplifier sees. */
   wiring: "parallel" | "series";
   dvcWired?: "parallel" | "series";
@@ -205,6 +222,23 @@ export function choosePort(vb_l: number, fb: number, air: Air): { diameter_cm: n
   return null;
 }
 
+const LINE_LABEL: Record<(typeof LINE_TYPES)[number], string> = { mltl: "MLTL", tl: "Classic TL" };
+
+/**
+ * The drivers worth trying in a line: the best distinct drivers from the boxes (within their
+ * limits first, as ranked), with a Qts that suits a line (up to about 0.55).
+ */
+export function lineShortlist(ranked: AssistantResult[], rows: Map<string, IndexRow>, n = LINE_SHORTLIST): IndexRow[] {
+  const out: IndexRow[] = [];
+  for (const r of ranked) {
+    if (out.length >= n) break;
+    const row = rows.get(r.driverId);
+    if (!row || out.includes(row) || !(row.qts! <= 0.55)) continue;
+    out.push(row);
+  }
+  return out;
+}
+
 const SLOT_HEIGHTS = [8, 6, 5, 4, 3, 2.5, 2, 1.5];
 /** How much faster than the chuffing line a flared port's throat may run (its mouths set the noise). */
 const FLARED_THROAT = 2;
@@ -278,8 +312,12 @@ export function trialState(base: AppState, d: LoadedDriver, goal: AssistantGoal,
   };
 }
 
-/** Every box type of the goal for one driver, simulated and scored; [] when it can't be tried. */
-export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, goal: AssistantGoal): AssistantResult[] {
+/**
+ * Every box type of the goal for one driver, simulated and scored; [] when it can't be tried.
+ * "boxes": sealed and ported (fast, for every candidate). "lines": the transmission lines
+ * (slow, for a shortlist of the best drivers from the boxes).
+ */
+export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, goal: AssistantGoal, stage: "boxes" | "lines" = "boxes"): AssistantResult[] {
   const wiring = loadOptions({ ohms: d.nominal_ohms ?? row.ohms, coil_ohms: row.coil_ohms }, goal)[0];
   if (!wiring || !(d.xmax_mm! > 0)) return [];
   const s = trialState(base, d, goal, wiring);
@@ -357,7 +395,7 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
   };
 
   const out: AssistantResult[] = [];
-  const finish = (box: AssistantBox, design: DesignState, vb: number, notes: string[], fb?: number, port?: AssistantResult["port"]) => {
+  const finish = (box: AssistantBox, design: DesignState, vb: number, notes: string[], fb?: number, port?: AssistantResult["port"], line?: AssistantResult["line"]) => {
     const r = run(design, vb);
     // No roll-off found in range (a tiny box for a high-Fs pro driver, say): nothing to rank on.
     const f3 = r.summary.f3;
@@ -378,6 +416,7 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
       vb_l: r1(vb),
       ...(fb ? { fb: r1(fb) } : {}),
       ...(port ? { port } : {}),
+      ...(line ? { line } : {}),
       wiring: wiring.wiring,
       ...(wiring.dvc ? { dvcWired: wiring.dvc } : {}),
       load_ohm: wiring.load,
@@ -392,6 +431,11 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
       notes,
     });
   };
+
+  if (stage === "lines") {
+    if (goal.boxes.includes("line") && LINE_USES.includes(goal.use)) evaluateLines();
+    return out;
+  }
 
   // Sealed: Qtc 0.707, or the largest box allowed (a higher Qtc); "smallest" shrinks it to the target F3.
   if (goal.boxes.includes("sealed")) {
@@ -416,6 +460,54 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
         }
       }
       if (ok) finish("sealed", { ...sealed, vb_l: vb }, vb, notes);
+    }
+  }
+
+  /**
+   * Transmission lines: each type from the app's line presets (sized for the driver), narrowed
+   * (cross-sections scaled) to hold no more than the largest box allowed, then tuned once and
+   * an MLTL's port sized for the goal's power. Lines too long to fold into a tower, or that
+   * won't tune near the preset's target, are left out.
+   */
+  function evaluateLines() {
+    const wall = s.volume.wall_mm;
+    const blank = newDesign("line", []) as LineDesign;
+    const narrowTo = (d: LineDesign, f: number): LineDesign => ({
+      ...d,
+      closedArea_cm2: r1(d.closedArea_cm2 * f),
+      sections: d.sections.map((x) => ({ ...x, endArea_cm2: r1(x.endArea_cm2 * f) })),
+      portDiameter_cm: r1(d.portDiameter_cm * Math.sqrt(f)),
+    });
+    for (const type of LINE_TYPES) {
+      const preset = presetFor(type, blank, drv, align, goal.drivers);
+      // Tuning keeps roughly the preset's length: one far too long to fold isn't worth tuning.
+      if (typeof preset === "string" || lineLength(preset) > 1.15 * LINE_MAX_CM) continue;
+      const wants = lineVolume(preset);
+      const narrowed = wants > goal.maxVolume_l ? narrowTo(preset, (0.95 * goal.maxVolume_l) / wants) : preset;
+      const tuned = tuneLine(drv, narrowed, preset.targetFb, opts, wall);
+      if (typeof tuned === "string") continue;
+      let cur: LineDesign = { ...tuned, targetFb: preset.targetFb };
+      // Tuning changes the length (and so the volume): narrow once more if it grew past the
+      // limit. An MLTL retunes quickly (its port); an open line's tuning barely moves with its
+      // width, and the check on Fb below catches it if it does.
+      if (lineVolume(cur) > goal.maxVolume_l * 1.02) {
+        cur = narrowTo(cur, (0.97 * goal.maxVolume_l) / lineVolume(cur));
+        if (cur.end === "port") {
+          const again = tuneLine(drv, cur, preset.targetFb, opts, wall);
+          if (typeof again === "string") continue;
+          cur = { ...again, targetFb: preset.targetFb };
+        }
+      }
+      const sized = sizeMltlPort(drv, cur, opts, wall);
+      if (typeof sized !== "string") cur = sized;
+      const vb = lineVolume(cur);
+      if (!(vb > 0) || vb > goal.maxVolume_l * 1.02 || lineLength(cur) > LINE_MAX_CM) continue;
+      const design: LineDesign = { ...cur, vb_l: r1(vb) };
+      const fb = run(design, vb).summary.fb;
+      if (fb === undefined || Math.abs(fb / preset.targetFb - 1) > 0.25) continue;
+      const label = LINE_LABEL[type];
+      const notes = wants > goal.maxVolume_l * 1.02 ? [`The ${label} preset wants ${r1(wants)} L; narrowed to fit your ${r1(goal.maxVolume_l)} L`] : [];
+      finish("line", design, vb, notes, fb, undefined, { type, label, length_cm: r1(lineLength(design)), design });
     }
   }
 
@@ -504,7 +596,11 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
   const designs: DesignState[] = [];
   for (const r of rs.slice(0, MAX_DESIGNS)) {
     const base = newDesign(r.box, designs);
-    const kind = r.box === "sealed" ? "Sealed" : "Ported";
+    const kind = r.box === "sealed" ? "Sealed" : r.box === "line" ? (r.line?.label ?? "Line") : "Ported";
+    if (r.box === "line" && r.line) {
+      designs.push({ ...r.line.design, id: base.id, on: true, name: `${kind} ${model}`, preset: "Assistant" } as LineDesign);
+      continue;
+    }
     designs.push(
       r.box === "vented" && r.port
         ? { ...(base as VentedDesign), name: `${kind} ${model}`, vb_l: r.vb_l, ...portFieldsOf(r.port), targetFb: r.fb ?? 30, preset: "Assistant" }

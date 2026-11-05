@@ -3446,6 +3446,10 @@ button.assist-tile.on {
   color: var(--muted);
 }
 
+.assist-checks label {
+  white-space: nowrap;
+}
+
 .assist-brand-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
@@ -3471,11 +3475,13 @@ button.assist-tile.on {
   gap: 0.35rem;
 }
 
-.assist-priority {
+.assist-priority,
+.assist-only {
   align-self: flex-start;
 }
 
-.assist-priority button {
+.assist-priority button,
+.assist-only button {
   padding: 0.3rem 0.7rem;
   font-size: 0.82rem;
 }

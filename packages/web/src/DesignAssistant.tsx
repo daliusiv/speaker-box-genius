@@ -4,8 +4,10 @@ import {
   CURVE_FREQS,
   PRIORITIES,
   USES,
+  LINE_USES,
   evaluateDriver,
   goalFor,
+  lineShortlist,
   prefilter,
   rankResults,
   type AssistantBox,
@@ -23,6 +25,7 @@ import { Logo, UseIcon } from "./Logo.tsx";
 const KEY = "sbg.assistant";
 const STEPS = ["What for", "Limits", "Priority", "Results"] as const;
 const SIZES = [4, 5, 5.25, 6.5, 8, 10, 12, 15, 18, 21];
+const BOX_LABEL: Record<AssistantBox, string> = { sealed: "Sealed", vented: "Ported", line: "Line" };
 const PAGE = 20;
 
 function readGoal(): AssistantGoal | null {
@@ -128,6 +131,8 @@ export function DesignAssistant(props: {
   const [stopped, setStopped] = useState(false);
   const [error, setError] = useState("");
   const [shown, setShown] = useState(PAGE);
+  /** Show one kind of box (e.g. only the lines), or all. */
+  const [only, setOnly] = useState<AssistantBox | "all">("all");
   const loadedRef = useRef(new Map<string, LoadedDriver>());
   const stopRef = useRef<(() => void) | null>(null);
   const settingsKey = JSON.stringify([props.base.settings]);
@@ -141,6 +146,7 @@ export function DesignAssistant(props: {
     setError("");
     setStopped(false);
     setShown(PAGE);
+    setOnly("all");
     const cands = prefilter(props.db.drivers, goal);
     const out: AssistantResult[] = [];
     const finish = (wasStopped = false) => {
@@ -195,7 +201,7 @@ export function DesignAssistant(props: {
           setError((e as Error).message);
           return;
         }
-        if (i >= cands.length) return finish();
+        if (i >= cands.length) return wantLines ? startLines() : finish();
         setProgress({ label: "Trying each driver", done: i, total: cands.length });
         // Show the best so far while the rest are worked out (about twice a second).
         if (performance.now() - rankedAt > 500) {
@@ -203,6 +209,31 @@ export function DesignAssistant(props: {
           setResults(rankResults(out, goal));
         }
         timer = setTimeout(slice, 0);
+      };
+      // Transmission lines, after the boxes: the best few drivers (each takes a few dozen
+      // simulations), one driver per slice, the list re-ranked as each one comes in.
+      const wantLines = goal.boxes.includes("line") && LINE_USES.includes(goal.use);
+      const startLines = () => {
+        const ranked = rankResults(out, goal);
+        setResults(ranked);
+        const short = lineShortlist(ranked, new Map(cands.map((r) => [r.id, r])));
+        let j = 0;
+        const lineSlice = () => {
+          if (!live) return;
+          if (j >= short.length) return finish();
+          setProgress({ label: "Transmission lines for the best drivers", done: j, total: short.length });
+          const row = short[j++]!;
+          const d = loadedRef.current.get(row.id);
+          try {
+            if (d) out.push(...evaluateDriver(props.base, row, d, goal, "lines"));
+          } catch {
+            // A line that won't simulate is left out; the rest carry on.
+          }
+          setResults(rankResults(out, goal));
+          timer = setTimeout(lineSlice, 0);
+        };
+        setProgress({ label: "Transmission lines for the best drivers", done: 0, total: short.length });
+        timer = setTimeout(lineSlice, 30);
       };
       stopRef.current = () => finish(true);
       setProgress({ label: "Trying each driver", done: 0, total: cands.length });
@@ -242,13 +273,15 @@ export function DesignAssistant(props: {
       </div>
     ) : null;
 
+  const kinds = (["sealed", "vented", "line"] as const).filter((k) => (results ?? []).some((r) => r.box === k));
+  const listed = (results ?? []).filter((r) => only === "all" || r.box === only);
   const vol = (l: number) => fmt(l, "vol", unit("vol").unit === "L" ? (l < 10 ? 1 : 0) : 2);
   const chips: { label: string; step: number }[] = [
     { label: USES[goal.use].label, step: 0 },
     { label: `≤ ${vol(goal.maxVolume_l)}`, step: 1 },
     { label: `${goal.power_w} W${goal.minLoad_ohm ? ` · ≥ ${goal.minLoad_ohm} Ω` : ""}`, step: 1 },
     { label: `${goal.drivers} × ${goal.sizeMin_in}–${goal.sizeMax_in}″`, step: 1 },
-    { label: goal.boxes.map((b) => (b === "sealed" ? "Sealed" : "Ported")).join(" + ") || "No box types", step: 1 },
+    { label: goal.boxes.filter((b) => b !== "line" || LINE_USES.includes(goal.use)).map((b) => BOX_LABEL[b]).join(" + ") || "No box types", step: 1 },
     ...(goal.brands.length ? [{ label: goal.brands.length === 1 ? goal.brands[0]! : `${goal.brands.length} brands`, step: 1 }] : []),
   ];
 
@@ -370,6 +403,11 @@ export function DesignAssistant(props: {
                 <label className="check">
                   <input type="checkbox" checked={goal.boxes.includes("vented")} onChange={() => toggleBox("vented")} /> Ported
                 </label>
+                {LINE_USES.includes(goal.use) && (
+                  <label className="check" title="Mass-loaded (MLTL) and classic transmission lines, folded into a tall cabinet. Worked out for the best few drivers after the boxes, so they take a few seconds more.">
+                    <input type="checkbox" checked={goal.boxes.includes("line")} onChange={() => toggleBox("line")} /> Transmission line
+                  </label>
+                )}
               </div>
               {goal.boxes.length === 0 && <p className="warn">Choose at least one box type.</p>}
               <details className="more assist-brands">
@@ -431,6 +469,22 @@ export function DesignAssistant(props: {
                   </button>
                 ))}
               </div>
+              {kinds.length > 1 && (
+                <div className="unit-switch assist-only" role="group" aria-label="Show">
+                  {(["all", ...kinds] as const).map((k) => (
+                    <button
+                      key={k}
+                      aria-pressed={only === k}
+                      onClick={() => {
+                        setOnly(k);
+                        setShown(PAGE);
+                      }}
+                    >
+                      {k === "all" ? "All" : k === "line" ? "Lines" : BOX_LABEL[k]}
+                    </button>
+                  ))}
+                </div>
+              )}
               {progress && (
                 <div className="finder-progress" role="status">
                   <div className="finder-progress-text">
@@ -456,11 +510,11 @@ export function DesignAssistant(props: {
                 </p>
               )}
               <div className="finder-results assist-results">
-                {(results ?? []).slice(0, shown).map((r) => (
+                {listed.slice(0, shown).map((r) => (
                   <div key={r.key} className="assist-card">
                     <div className="assist-card-head">
                       <b>{r.name}</b>
-                      <span className="preset-tag">{r.box === "sealed" ? "Sealed" : "Ported"}</span>
+                      <span className="preset-tag">{r.box === "line" && r.line ? r.line.label : BOX_LABEL[r.box]}</span>
                       {r.badges?.map((b) => (
                         <span key={b} className="finder-best">
                           {b}
@@ -482,6 +536,9 @@ export function DesignAssistant(props: {
                       <Sketch curve={r.curve} />
                     </div>
                     <p className="assist-facts">
+                      {r.box === "line" && r.line
+                        ? `A line ${fmt(r.line.length_cm, "len")} long (to fold into a tall cabinet), tuned to ${r.fb} Hz${r.line.design.end === "port" ? `, with a ${fmt(r.line.design.portDiameter_cm, "len")} port at the end` : ", open at the end"}. `
+                        : ""}
                       {r.box === "vented" && r.port
                         ? `Tuned to ${r.fb} Hz, ${portText(r.port, fmt)}. `
                         : ""}
@@ -509,7 +566,8 @@ export function DesignAssistant(props: {
                     ))}
                     <div className="assist-card-actions">
                       {(() => {
-                        const sibling = results!.find((x) => x.driverId === r.driverId && x.box !== r.box);
+                        // Sealed ↔ ported, or a line with the same driver's ported box.
+                        const sibling = results!.find((x) => x.driverId === r.driverId && x.box !== r.box && (r.box === "line" ? x.box === "vented" : x.box !== "line"));
                         const open = (rs: AssistantResult[]) => {
                           const d = loadedRef.current.get(r.driverId);
                           if (d) props.onOpen(d, rs, goal);
@@ -518,7 +576,7 @@ export function DesignAssistant(props: {
                           <>
                             {sibling && (
                               <button type="button" className="secondary" title="Start with this driver in both boxes, to compare them" onClick={() => open(r.box === "sealed" ? [r, sibling] : [sibling, r])}>
-                                Open with sealed + ported
+                                {r.box === "line" ? "Open with ported too" : "Open with sealed + ported"}
                               </button>
                             )}
                             <button type="button" title="Start your project with this driver and box" onClick={() => open([r])}>
@@ -530,15 +588,15 @@ export function DesignAssistant(props: {
                     </div>
                   </div>
                 ))}
-                {results && results.length > shown && (
+                {listed.length > shown && (
                   <button type="button" className="link" onClick={() => setShown(shown + PAGE)}>
-                    Show {Math.min(PAGE, results.length - shown)} more (of {results.length})
+                    Show {Math.min(PAGE, listed.length - shown)} more (of {listed.length})
                   </button>
                 )}
               </div>
               <p className="hint finder-note">
                 Each driver in the database that fits your limits, in the box the app's presets would give it (sealed Qtc 0.707, ported QB3/B4 or Keele), no
-                bigger than your maximum, simulated at {goal.power_w} W{goal.use === "car" ? " with the car's cabin gain (output includes it; F3 is the box's own, before cabin gain, as in the summary table)" : ""}. Opening a result starts the project
+                bigger than your maximum{goal.boxes.includes("line") && LINE_USES.includes(goal.use) ? "; transmission lines (MLTL and classic TL from the app's line presets, narrowed to fit) for the best few drivers" : ""}, simulated at {goal.power_w} W{goal.use === "car" ? " with the car's cabin gain (output includes it; F3 is the box's own, before cabin gain, as in the summary table)" : ""}. Opening a result starts the project
                 with its driver and box. Database values are the manufacturers' published figures: check the datasheet before you buy.
               </p>
             </>

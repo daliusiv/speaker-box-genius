@@ -5,7 +5,7 @@ import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { PORT_LIMIT, limitsOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { evaluateDriver, goalFor, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { LINE_MAX_CM, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -139,4 +139,32 @@ test("ports: flared and slot ports when a plain tube can't fit or would chuff, a
   const v = s.designs[0] as import("../src/state.ts").VentedDesign;
   assert.equal(v.shape, flaredOrSlot.port!.kind === "slot" ? "slot" : "round");
   assert.ok(Math.abs(runDesigns(s, solveDriver(s))[0]!.result.summary.fb! - flaredOrSlot.fb!) < 1, "opens at the tuning scored");
+});
+
+test("transmission lines: for towers, sized to the box limit, foldable, and they open as scored", () => {
+  const goal = goalFor("tower", "balanced");
+  assert.ok(goal.boxes.includes("line"));
+  const boxes = runAll(goal).results;
+  const short = lineShortlist(boxes, new Map(rows.map((r) => [r.id, r])), 5);
+  assert.ok(short.length > 0 && short.every((r) => r.qts! <= 0.55));
+  const lines = short.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id), goal, "lines"));
+  assert.ok(lines.length >= 3, `${lines.length} lines`);
+  for (const r of lines) {
+    assert.equal(r.box, "line");
+    assert.ok(r.vb_l <= goal.maxVolume_l * 1.02, `${r.name} ${r.line!.label} ${r.vb_l} L`);
+    assert.ok(r.line!.length_cm <= LINE_MAX_CM, `${r.name} ${r.line!.length_cm} cm`);
+    const s = openResults(DEFAULT_STATE, loaded(r.driverId), [r], goal);
+    assert.equal(s.designs[0]!.kind, "line");
+    const d = runDesigns(s, solveDriver(s))[0]!;
+    assert.ok(Math.abs(d.result.summary.f3! - r.f3) < 0.05 * r.f3, `${r.name} F3 ${d.result.summary.f3} vs ${r.f3}`);
+    const app = limitsOf(d.result, s.xmax_mm!, false);
+    if (!r.over.includes("xmax")) assert.ok(app.x! <= s.xmax_mm! * 1.02, `${r.name} line ${app.x} mm`);
+  }
+  // Ranked with the boxes, by the same rules.
+  const all = rankResults([...boxes, ...lines], goal);
+  const firstOver = all.findIndex((r) => r.over.length > 0);
+  if (firstOver >= 0) assert.ok(all.slice(firstOver).every((r) => r.over.length > 0));
+  // Not offered for a car (no room to fold one), even if asked for.
+  const car = { ...goalFor("car", "balanced"), boxes: ["sealed", "vented", "line"] as AssistantGoal["boxes"] };
+  assert.deepEqual(evaluateDriver(DEFAULT_STATE, short[0]!, loaded(short[0]!.id), car, "lines"), []);
 });
