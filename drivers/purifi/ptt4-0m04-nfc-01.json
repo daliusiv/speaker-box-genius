@@ -1,0 +1,34 @@
+{
+  "brand": "Purifi",
+  "model": "PTT4.0M04-NFC-01",
+  "type": "midrange",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 46,
+    "qms": 4.6,
+    "qes": 0.27,
+    "vas_l": 5.4,
+    "re": 3.4,
+    "sd_cm2": 56.7,
+    "qts": 0.25,
+    "le_mh": 0.26,
+    "bl": 6,
+    "mms_g": 9.9,
+    "xmax_mm": 2.9
+  },
+  "physical": {
+    "cutout_mm": 101,
+    "depth_mm": 73.5,
+    "displacement_l": 0.23
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/shop/ptt4-0m04-nfc-01-ptt4-0m04-nfc-01-1857",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

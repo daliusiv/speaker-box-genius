@@ -1,0 +1,35 @@
+{
+  "brand": "Purifi",
+  "model": "PTT5.25M08-NAA-05",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 41,
+    "qms": 6.3,
+    "qes": 0.3,
+    "vas_l": 9.4,
+    "re": 6.3,
+    "sd_cm2": 84.9,
+    "qts": 0.29,
+    "le_mh": 0.35,
+    "bl": 9.5,
+    "mms_g": 16.8,
+    "xmax_mm": 2.9,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 121,
+    "depth_mm": 75,
+    "displacement_l": 0.3
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/shop/ptt5-25m08-naa-05-ptt5-25m08-naa-05-3071",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

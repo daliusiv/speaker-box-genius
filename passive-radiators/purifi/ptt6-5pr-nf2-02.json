@@ -1,0 +1,25 @@
+{
+  "brand": "Purifi",
+  "model": "PTT6.5PR-NF2-02",
+  "type": "passive-radiator",
+  "size_in": 6.5,
+  "params": {
+    "mms_g": 81,
+    "sd_cm2": 132.7,
+    "xmax_mm": 15,
+    "fs": 17,
+    "qms": 11,
+    "vas_l": 26.2,
+    "cms_mm_per_n": 1.05
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/shop/ptt6-5pr-nf2-02-ptt6-5pr-nf2-02-1822",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax is the published mechanical limit (Xmech 15 mm); there's no separate linear figure."
+}

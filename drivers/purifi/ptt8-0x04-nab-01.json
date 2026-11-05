@@ -1,0 +1,35 @@
+{
+  "brand": "Purifi",
+  "model": "PTT8.0X04-NAB-01",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 26,
+    "qms": 5.3,
+    "qes": 0.38,
+    "vas_l": 70.4,
+    "re": 3.5,
+    "sd_cm2": 235.1,
+    "qts": 0.36,
+    "le_mh": 0.18,
+    "bl": 8,
+    "mms_g": 43.2,
+    "xmax_mm": 9.3,
+    "pe_w": 350
+  },
+  "physical": {
+    "cutout_mm": 193,
+    "depth_mm": 102,
+    "displacement_l": 0.64
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/shop/ptt8-0x04-nab-01-ptt8-0x04-nab-01-1956",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

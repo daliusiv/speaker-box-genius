@@ -85,7 +85,7 @@ export type Field = (typeof FIELDS)[number];
  */
 const ALIASES: [RegExp, Field | null][] = [
   // Ignored on purpose: program/peak power, cone displacement volume, efficiency, etc.
-  [/program|peak|music|max(imum)? power|^pmax|^vd\b|displacement volume|cone volume|sensitivity|spl|efficiency|^no\b|^eta|weight|^price|ean|upc/, null],
+  [/program|peak|music|max(imum)? power|^pmax|^vd\b|displacement volume|cone volume|sensitivity|\bspl\b|efficiency|^no\b|^eta|weight|^price|\bean\b|\bupc\b/, null],
   // A voice coil's winding depth and the magnetic gap's depth aren't the driver's depth.
   [/winding depth|gap depth|coil depth/, null],
   // B&C: "Air Volume Occupied by Driver" is the driver's own displacement.

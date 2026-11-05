@@ -1,0 +1,34 @@
+{
+  "brand": "Purifi",
+  "model": "PTT6.5M08-NAA-07",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 38,
+    "qms": 6.7,
+    "qes": 0.33,
+    "vas_l": 21.6,
+    "re": 6.2,
+    "sd_cm2": 132.7,
+    "qts": 0.31,
+    "le_mh": 0.36,
+    "bl": 9.6,
+    "mms_g": 20.8,
+    "xmax_mm": 2.9,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 148,
+    "depth_mm": 85.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/oem-transducers",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

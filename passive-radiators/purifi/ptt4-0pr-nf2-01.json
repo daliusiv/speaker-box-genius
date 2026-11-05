@@ -1,0 +1,25 @@
+{
+  "brand": "Purifi",
+  "model": "PTT4.0PR-NF2-01",
+  "type": "passive-radiator",
+  "size_in": 4,
+  "params": {
+    "mms_g": 30,
+    "sd_cm2": 56.7,
+    "xmax_mm": 14,
+    "fs": 24,
+    "qms": 7,
+    "vas_l": 6.4,
+    "cms_mm_per_n": 1.41
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/shop/ptt4-0pr-nf2-01-ptt4-0pr-nf2-01-263",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax is the published mechanical limit (Xmech 14 mm); there's no separate linear figure."
+}

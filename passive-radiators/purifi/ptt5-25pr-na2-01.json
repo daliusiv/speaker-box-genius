@@ -1,0 +1,25 @@
+{
+  "brand": "Purifi",
+  "model": "PTT5.25PR-NA2-01",
+  "type": "passive-radiator",
+  "size_in": 5.25,
+  "params": {
+    "mms_g": 52,
+    "sd_cm2": 84.9,
+    "xmax_mm": 14,
+    "fs": 21,
+    "qms": 8.3,
+    "vas_l": 11.7,
+    "cms_mm_per_n": 1.15
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/shop/ptt5-25pr-na2-01-ptt5-25pr-na2-01-3021",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax is the published mechanical limit (Xmech 14 mm); there's no separate linear figure."
+}

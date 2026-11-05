@@ -1,0 +1,34 @@
+{
+  "brand": "Purifi",
+  "model": "PTT4.0X08-NLC-02",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 4,
+  "ts": {
+    "fs": 42,
+    "qms": 4.6,
+    "qes": 0.42,
+    "vas_l": 5.5,
+    "re": 6.5,
+    "sd_cm2": 56.7,
+    "qts": 0.38,
+    "le_mh": 0.52,
+    "bl": 7,
+    "mms_g": 12,
+    "xmax_mm": 8.5,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 100,
+    "depth_mm": 73.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/oem-transducers",
+      "retrieved": "2026-11-05",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}
