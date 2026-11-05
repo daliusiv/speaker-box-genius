@@ -3116,3 +3116,13 @@ button.strip-box.is-over {
     display: none;
   }
 }
+
+/* A design's stuffing: below its box fields, set apart a little. */
+.stuffing {
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+}
+.stuffing p {
+  margin: 0.4rem 0 0;
+}

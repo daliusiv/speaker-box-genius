@@ -13,6 +13,11 @@ import {
 } from "@sbg/engine";
 import { airOf, alignmentDriver, portOf, prGroupsOf, solveDriver } from "./sim.ts";
 import type { AppState, DesignState, PrDesign } from "./state.ts";
+import { stuffFactor } from "./stuffing.ts";
+
+/** "31.1 L" or, for a stuffed box, "31.1 L (stuffed, acting as 37.3 L)". */
+const sizeText = (d: DesignState, acting: number) =>
+  stuffFactor(d) === 1 ? `${r1(acting)} L` : `${r1(acting / stuffFactor(d))} L (stuffed, acting as ${r1(acting)} L)`;
 
 /** Preset names that older versions appended to a design's name ("Ported QB3"). */
 const PRESET_SUFFIX = / (Qtc [\d.]+|QB3|B4|Keele)$/;
@@ -70,8 +75,8 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
           skipped.push(`${d.name}: the driver's Qts is already above 0.707`);
           return d;
         }
-        changed.push(`${d.name} → ${r1(vb)} L (Qtc 0.707)`);
-        return { ...d, vb_l: r1(vb), ...withPreset(d.name, "Qtc 0.707") };
+        changed.push(`${d.name} → ${sizeText(d, vb)} (Qtc 0.707)`);
+        return { ...d, vb_l: r1(vb / stuffFactor(d)), ...withPreset(d.name, "Qtc 0.707") };
       }
       case "vented": {
         if (!qb3) {
@@ -83,8 +88,8 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
           skipped.push(`${d.name}: its port is too small to tune ${r1(qb3.vb_l)} L to ${r1(qb3.fb)} Hz`);
           return d;
         }
-        changed.push(`${d.name} → ${r1(qb3.vb_l)} L at ${r1(qb3.fb)} Hz (${qb3.name})`);
-        return { ...d, vb_l: r1(qb3.vb_l), targetFb: r1(qb3.fb), length_cm: r1(len), ...withPreset(d.name, qb3.name) };
+        changed.push(`${d.name} → ${sizeText(d, qb3.vb_l)} at ${r1(qb3.fb)} Hz (${qb3.name})`);
+        return { ...d, vb_l: r1(qb3.vb_l / stuffFactor(d)), targetFb: r1(qb3.fb), length_cm: r1(len), ...withPreset(d.name, qb3.name) };
       }
       case "pr": {
         if (!qb3) {
@@ -96,10 +101,10 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
           skipped.push(`${d.name}: these PRs can't reach ${r1(qb3.fb)} Hz in ${r1(qb3.vb_l)} L`);
           return d;
         }
-        changed.push(`${d.name} → ${r1(qb3.vb_l)} L at ${r1(qb3.fb)} Hz (${qb3.name}, ${Math.round(add)} g added)`);
+        changed.push(`${d.name} → ${sizeText(d, qb3.vb_l)} at ${r1(qb3.fb)} Hz (${qb3.name}, ${Math.round(add)} g added)`);
         return {
           ...d,
-          vb_l: r1(qb3.vb_l),
+          vb_l: r1(qb3.vb_l / stuffFactor(d)),
           targetFb: r1(qb3.fb),
           addedMass_g: Math.round(add),
           ...withPreset(d.name, qb3.name),

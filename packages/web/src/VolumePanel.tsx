@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, Num, Select } from "./components.tsx";
 import { useUnits } from "./units.ts";
 import { dimensionsFor, linkedDesign, volumeFor } from "./sim.ts";
+import { stuffFactor } from "./stuffing.ts";
 import type { AppState, ShapeKind } from "./state.ts";
 
 const SHAPES: { value: ShapeKind; text: string }[] = [
@@ -18,13 +19,14 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
   const { fmt } = useUnits();
   const target = linkedDesign(s);
   const r = volumeFor(s, target);
+  const fill = target ? stuffFactor(target) : 1;
   const linkOptions: { value: string; text: string }[] = [
     { value: "none", text: "No design (just calculate)" },
     ...s.designs.filter((d) => d.kind !== "line").map((d) => ({ value: d.id, text: d.name || d.id })),
   ];
 
   // Find dimensions for a target volume (what the box volume will be in the simulation).
-  const [aim, setAim] = useState(() => Math.round(r.effective_l * 10) / 10);
+  const [aim, setAim] = useState(() => Math.round(r.net_l * 10) / 10);
   const [proportions, setProportions] = useState<"keep" | "golden">("keep");
   const [found, setFound] = useState("");
   const find = () => {
@@ -34,7 +36,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
       return;
     }
     props.onChange(dims);
-    const got = volumeFor({ ...s, volume: dims }, target).effective_l;
+    const got = volumeFor({ ...s, volume: dims }, target).net_l;
     setFound(`Done: ${describe(dims, fmt)} gives ${fmt(got, "vol", 2)}.`);
   };
 
@@ -98,7 +100,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
         </button>
       </div>
       <p className="hint">
-        Outside dimensions for this {v.fill_pct > 0 ? "effective volume (net plus the stuffing gain)" : "net volume"}, with the
+        Outside dimensions for this net volume, with the
         walls and everything below taken off.
       </p>
       {found && <p className="hint">{found}</p>}
@@ -110,7 +112,6 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
         <Num help="Wall thickness of the port tube: the tube's own volume is taken off too." label="Port wall" q="mm" value={v.portWall_mm} min={0} onChange={(x) => set("portWall_mm", x)} />
         <Num help="Bracing, as a share of the inside volume (5% is typical for a well-braced box)." label="Bracing" unit="%" value={v.bracing_pct} min={0} onChange={(x) => set("bracing_pct", x)} />
         <Num help="Anything else inside (crossover, amplifier plate, handles), in litres." label="Other" q="vol" value={v.other_l} min={0} onChange={(x) => set("other_l", x)} />
-        <Num help="Stuffing makes a box act a little bigger (fibre slows the air's pressure changes). Typically +10–20% with a good fill." label="Stuffing +" unit="%" value={v.fill_pct} min={0} onChange={(x) => set("fill_pct", x)} />
       </div>
 
       <table className="breakdown">
@@ -129,10 +130,10 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
             <th>Net</th>
             <td>{fmt(r.net_l, "vol", 2)}</td>
           </tr>
-          {v.fill_pct > 0 && (
+          {fill !== 1 && (
             <tr className="total">
-              <th>Effective (with stuffing)</th>
-              <td>{fmt(r.effective_l, "vol", 2)}</td>
+              <th>Acts as (stuffing)</th>
+              <td>{fmt(r.net_l * fill, "vol", 2)}</td>
             </tr>
           )}
         </tbody>
@@ -142,7 +143,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
           ? "Choose a design under “Used by” (or use “Size from dimensions…” on a design) to use this volume live in the simulation."
           : `“${target.name}” uses this volume, including deductions for its own ports or passive radiators.`}{" "}
         Driver displacement is filled in from the database when known (an estimate from cutout and depth otherwise).
-        Stuffing gain is approximate.
+        Stuffing is set on each design, not here: the fibre itself takes up only about 1% of the box.
       </p>
     </Card>
   );

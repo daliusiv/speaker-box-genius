@@ -173,14 +173,20 @@ The sealed figures follow Nousaine's rules of thumb: about 1.5 lb/ft³ for boxes
 
 ## Modelling stuffing in the app
 
-The app doesn't have a "polyfill" setting, because no formula predicts a given material and amount well; as Nousaine's and Putland's results show, the effect varies too much [1][2]. Model what the stuffing does instead:
+Each sealed, ported and passive radiator design has a **Stuffing** setting under its box fields. The **Vb** you enter stays the real net volume; the app simulates the volume the stuffing makes the box act as, with the absorption loss (Qa) it adds:
 
-1. **Sealed box, stuffed:** enter a box volume **15–25 %** bigger than the real net volume, and set **Absorb Qa** in **Settings** to about **20–50**.
-2. **Ported or PR box, lined:** keep the real volume; **Absorb Qa** about **50**.
-3. **Ported or PR box, filled:** **10–20 %** more volume with the same port, and **Absorb Qa** about **10–20**.
-4. **Don't subtract the fill** in the **Volume** calculator; it takes up only 1–2 % of the box.
+| Stuffing | What the app uses | When |
+|---|---|---|
+| **None** | The net volume and the Qa in **Settings** | An empty box |
+| **Lined walls** | The net volume, Qa 50 | Ported and PR boxes (the usual choice), or a lightly damped sealed box |
+| **Filled with fibre** | A typical gain and Qa for the amount you enter in g/L (lb/ft³ in imperial units): about +20 % and Qa 20–30 for a sealed box at 16–24 g/L; less gain and much more loss (Qa 10–20) for a filled ported or PR box. Past about 28 g/L the gain falls, and packed fill makes the box act smaller | Sealed boxes |
+| **Custom (measured)** | Your own gain (%) and Qa | When you've measured your box (below) |
 
-Losses in **Settings** apply to every design in the project, so compare stuffed designs with each other, or keep separate projects for empty and stuffed boxes.
+The filled values are typical, read from the measurements above, not a prediction for your fibre: no formula predicts a given material and amount well [1][2]. That's why **Custom** is there.
+
+With **Filled**, the card also shows how much fibre to weigh out for the box's net volume, and the build sheet repeats it. For a ported or PR box it shows how far the fill lowers the tuning. The presets (Qtc 0.707, QB3 and the others) size a stuffed box so that it *acts* as the alignment's volume, so you build a smaller box.
+
+Because each design has its own stuffing, you can compare an empty box with a stuffed one on the same charts: duplicate the design and set **Stuffing** on the copy. Settings' **Absorb Qa** still applies to every design without stuffing. Don't subtract the fill in the **Volume** calculator; it takes up only 1–2 % of the box.
 
 ## How to measure what your stuffing did
 
@@ -196,7 +202,7 @@ Vb(effective) = Vas / ((fc / Fs)² − 1)
 
 For the RSS265HF-4 (Fs 25.6 Hz, Vas 54 L), the empty 18 L box peaks at 51.2 Hz. If the stuffed box peaks at 47.4 Hz, it's acting like 54 / ((47.4 / 25.6)² − 1) = **22.2 L**, about 23 % bigger.
 
-4. Load the measurement in the app's **Measured** card (`.zma`), enter the effective volume, and lower **Absorb Qa** until the simulated peak is as low as the measured one. The [box losses guide](/guides/box-losses/) explains the fitting, and [why a measurement doesn't match the simulation](/guides/simulation-vs-measurement/) covers the other usual causes.
+4. Load the measurement in the app's **Measured** card (`.zma`). Set the design's **Stuffing** to **Custom**, enter the gain you worked out under **Acts bigger** (+23 % in the example), and lower its **Qa** until the simulated peak is as low as the measured one. The [box losses guide](/guides/box-losses/) explains the fitting, and [why a measurement doesn't match the simulation](/guides/simulation-vs-measurement/) covers the other usual causes.
 
 The formula ignores the voice coil's inductance and the box's losses, and it's only as good as the driver's Vas, so treat the result as within about 10 %.
 

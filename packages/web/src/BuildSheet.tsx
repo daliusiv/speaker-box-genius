@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { braceVolume, cutList, layoutSheets, piecesOf, type CutList, type Layout } from "@sbg/engine";
 import { Card, Num, REPO, Select } from "./components.tsx";
-import { lineFoldOf, lineLength, linkedDesign, prTotal, volumeFor, type Design } from "./sim.ts";
+import { lineFoldOf, lineLength, lineSegmentsOf, linkedDesign, prTotal, volumeFor, type Design } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { encodeStateShort, type AppState, type DesignState, type LineDesign } from "./state.ts";
 import { qrSvg } from "./qrDraw.ts";
 import { FoldDrawing } from "./LineBody.tsx";
+import { roundGrams, stuffFactor, stuffable, stuffingInstruction } from "./stuffing.ts";
 
 const KIND: Record<DesignState["kind"], string> = { sealed: "Sealed", vented: "Ported", pr: "Passive radiator", bandpass: "Bandpass", line: "Transmission line" };
 
@@ -178,7 +179,7 @@ export function BuildSheet(props: {
               {d.name.toLowerCase().startsWith(KIND[d.kind].toLowerCase()) ? "" : ` (${KIND[d.kind].toLowerCase()})`} with {drivers} × {props.driverName || "driver"}
               {sim?.result.summary.fb ? `, tuned to ${sim.result.summary.fb.toFixed(1)} Hz` : ""}
               {sim?.result.summary.f3 ? `, F3 ${sim.result.summary.f3.toFixed(1)} Hz` : ""}. Net volume {vol.net_l.toFixed(1)} L
-              {v.fill_pct > 0 ? ` (${vol.effective_l.toFixed(1)} L with stuffing)` : ""}.
+              {stuffFactor(d) !== 1 ? ` (acts as ${(vol.net_l * stuffFactor(d)).toFixed(1)} L with stuffing)` : ""}.
             </>
           ) : (
             <>The box in the volume calculator. Choose a design under “Used by” to add its port or passive radiators.</>
@@ -284,11 +285,18 @@ export function BuildSheet(props: {
                   {fold.driverOnDivider.index + 2} (the tap). Fit it before closing the box, or make the side panel removable for access.
                 </li>
               )}
+              {!line && d && stuffable(d.kind) && stuffingInstruction(d.stuffing, d.kind, vol.net_l) && (
+                <li>Stuffing: {stuffingInstruction(d.stuffing, d.kind, vol.net_l)}.</li>
+              )}
               {line && line.sections.some((x) => x.fill_kgm3 > 0) && (
                 <li>
                   Stuffing:{" "}
-                  {line.sections
-                    .map((x, k) => (x.fill_kgm3 > 0 ? `section ${k + 1} at ${x.fill_kgm3} kg/m³` : null))
+                  {lineSegmentsOf(line)
+                    .map((x, k) =>
+                      x.fill_kgm3! > 0
+                        ? `section ${k + 1} at ${x.fill_kgm3} kg/m³ (about ${roundGrams((x.fill_kgm3! * x.length_cm * (x.startArea_cm2 + x.endArea_cm2)) / 2 / 1000)} g)`
+                        : null,
+                    )
                     .filter(Boolean)
                     .join(", ")}
                   , loosely and evenly.

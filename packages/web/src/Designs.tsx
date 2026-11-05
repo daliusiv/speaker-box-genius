@@ -27,6 +27,8 @@ import { useUnits } from "./units.ts";
 import { bandpassLossesFrom } from "./state.ts";
 import { prTuning, withPreset, ventedAlignmentFor } from "./presets.ts";
 import { PrFinder, type FinderContext } from "./PrFinder.tsx";
+import { StuffingFields } from "./StuffingFields.tsx";
+import { stuffFactor, stuffable, stuffingEffect, type StuffableKind } from "./stuffing.ts";
 
 /** The preset chip's label: which flat vented alignment this driver gets. */
 const alignLabel = (a: AlignmentDriver | null, drivers: number) => {
@@ -52,8 +54,12 @@ const f1 = (v: number) => (Number.isFinite(v) ? v.toFixed(1) : "–");
 interface CommonProps<D extends DesignState> {
   design: D;
   color: string;
-  /** Effective Vb (from the volume calculator when linked). */
+  /** The volume the box acts as (the calculator's when linked, scaled by stuffing): for tuning and presets. */
   vb_l: number;
+  /** Net volume as built (the calculator's when linked). */
+  built_l: number;
+  /** How many times bigger stuffing makes the box act (1 = none): presets divide their volume by it. */
+  fill: number;
   linked: boolean;
   air: Air;
   /** Solved driver for alignment presets; null while parameters are incomplete. */
@@ -61,6 +67,9 @@ interface CommonProps<D extends DesignState> {
   drivers: number;
   onChange: (d: D) => void;
 }
+
+/** The volume to build for a preset's (acting) volume, to 0.1 L. */
+const toBuilt = (acting: number, fill: number) => Math.round((acting / fill) * 10) / 10;
 
 const LINKED_NOTE = "Presets change the box volume, so they're off while the volume calculator feeds this design.";
 
@@ -155,12 +164,12 @@ function SealedBody(p: CommonProps<DesignState & { kind: "sealed" }>) {
       return;
     }
     setMsg("");
-    p.onChange({ ...p.design, vb_l: Math.round(vb * 10) / 10, ...withPreset(p.design.name, `Qtc ${qtc}`) });
+    p.onChange({ ...p.design, vb_l: toBuilt(vb, p.fill), ...withPreset(p.design.name, `Qtc ${qtc}`) });
   };
   return (
     <>
       <div className="fields">
-        <VbField vb_l={p.vb_l} value={p.design.vb_l} linked={p.linked} onChange={(vb_l) => p.onChange({ ...p.design, vb_l })} />
+        <VbField vb_l={p.built_l} value={p.design.vb_l} linked={p.linked} onChange={(vb_l) => p.onChange({ ...p.design, vb_l })} />
       </div>
       <Presets note={p.linked ? LINKED_NOTE : undefined}>
         {[0.5, 0.577, 0.707].map((q) => (
@@ -378,7 +387,7 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
           ]}
           onChange={(shape) => set({ shape })}
         />
-        <VbField vb_l={p.vb_l} value={v.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
+        <VbField vb_l={p.built_l} value={v.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
         {v.shape === "round" ? (
           <>
             <Num help="Inside diameter of the port tube. Bigger means lower air speed (less chuffing) but a longer port for the same tuning." label="Port Ø" q="len" value={v.diameter_cm} onChange={(x) => set({ diameter_cm: x })} />
@@ -420,7 +429,7 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
             }
             setMsg("");
             set({
-              vb_l: Math.round(a.vb_l * 10) / 10,
+              vb_l: toBuilt(a.vb_l, p.fill),
               targetFb: Math.round(a.fb * 10) / 10,
               length_cm: Math.round(len * 10) / 10,
               ...withPreset(v.name, a.name),
@@ -503,7 +512,7 @@ function PrBody(
       </div>
       <p className="pr-name">{pr.prName}</p>
       <div className="fields">
-        <VbField vb_l={p.vb_l} value={pr.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
+        <VbField vb_l={p.built_l} value={pr.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
         <Num help="Number of identical passive radiators. More PRs means more cone area: less excursion each." label="PRs" value={pr.count} onChange={(v) => set({ count: Math.max(1, Math.round(v)) })} />
         <Num help="Mass glued onto the PR cone (grams). More mass tunes the box lower." label="Added mass" unit="g" value={pr.addedMass_g} min={0} onChange={(v) => set({ addedMass_g: v })} />
         <Fixed
@@ -568,7 +577,7 @@ function PrBody(
             }
             setMsg("");
             set({
-              vb_l: Math.round(a.vb_l * 10) / 10,
+              vb_l: toBuilt(a.vb_l, p.fill),
               targetFb: Math.round(a.fb * 10) / 10,
               addedMass_g: Math.round(add),
               ...withPreset(pr.name, a.name),
@@ -846,7 +855,7 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
     <>
       <div className="fields">
         <Select help="4th order: sealed rear, ported front. 6th order: both chambers vented (parallel to the outside, or series through the front)." label="Type" value={b.order} options={BP_ORDERS} onChange={(order) => set({ order })} />
-        <VbField label="Rear Vb" vb_l={p.vb_l} value={b.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
+        <VbField label="Rear Vb" vb_l={p.built_l} value={b.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
         <Num help="Air volume of the front chamber (the one the cone fires into)." label="Front Vb" q="vol" value={b.frontVb_l} onChange={(frontVb_l) => set({ frontVb_l })} />
       </div>
       <h3>Front chamber (to the outside)</h3>
@@ -920,7 +929,9 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
 export function DesignCard(props: {
   design: DesignState;
   color: string;
+  /** The volume it acts as (with stuffing) and the net volume as built. */
   vb_l: number;
+  built_l: number;
   linked: boolean;
   canDelete: boolean;
   db: DbIndex | null;
@@ -951,9 +962,12 @@ export function DesignCard(props: {
   wall_mm?: number;
 }) {
   const d = props.design;
+  const fill = stuffFactor(d);
   const common = {
     color: props.color,
     vb_l: props.vb_l,
+    built_l: props.built_l,
+    fill,
     linked: props.linked,
     air: props.air,
     align: props.align,
@@ -996,9 +1010,15 @@ export function DesignCard(props: {
           onChange={props.onChange}
           db={props.db}
           onPrPhysical={props.onPrPhysical}
-          finder={props.finder}
-          onFound={(patch, summary, physical) => props.onFound(d, patch, summary, physical)}
+          finder={{ ...props.finder, losses: { ...props.finder.losses, qa: stuffingEffect(d.stuffing, "pr").qa ?? props.finder.losses.qa } }}
+          onFound={(patch, summary, physical) =>
+            // The finder and tuning work with the volume the box acts as: build the stuffed volume.
+            props.onFound(d, patch.vb_l !== undefined ? { ...patch, vb_l: toBuilt(patch.vb_l, fill) } : patch, summary, physical)
+          }
         />
+      )}
+      {stuffable(d.kind) && (
+        <StuffingFields design={d as DesignState & { kind: StuffableKind }} built_l={props.built_l} air={props.air} onChange={props.onChange} />
       )}
       {d.kind !== "line" && <p className="dims-link hint">
         {props.linked ? (

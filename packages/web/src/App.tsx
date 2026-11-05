@@ -55,6 +55,7 @@ import {
   compareShort,
   solveDriver,
   vbOf,
+  builtVbOf,
   limitsOf,
   LIMIT_CHART,
   LIMIT_NAME,
@@ -1153,6 +1154,7 @@ export function App(props: { initial: AppState | null }) {
                 design={d}
                 color={colorOf(state, d.id)}
                 vb_l={vbOf(state, d)}
+                built_l={builtVbOf(state, d)}
                 linked={state.volume.link === d.id}
                 lineFb={d.kind === "line" ? (designs.find((x) => x.design.id === d.id)?.result.summary.fb ?? null) : undefined}
                 driverDisp_l={state.volume.driverDisp_l * state.drivers * (state.isobaric ? 2 : 1)}
@@ -1182,7 +1184,7 @@ export function App(props: { initial: AppState | null }) {
                   notify(`“${d.name}” now uses ${summary}.`);
                 }}
                 onUnlink={() => {
-                  const vb = Math.round(vbOf(state, d) * 10) / 10;
+                  const vb = Math.round(builtVbOf(state, d) * 10) / 10;
                   setStep((s) => ({
                     ...s,
                     designs: s.designs.map((x) => (x.id === d.id ? { ...x, vb_l: vb } : x)),
@@ -1350,7 +1352,7 @@ export function App(props: { initial: AppState | null }) {
                   min={1}
                   onChange={(ql) => set("settings", { ...state.settings, losses: { ...state.settings.losses, ql } })}
                 />
-                <Num help="Absorption loss (stuffing, wall flex) as a Q: lower means more loss. 100 is WinISD's default (little stuffing)."
+                <Num help="Absorption loss (stuffing, wall flex) as a Q: lower means more loss. 100 is WinISD's default (little stuffing). A design with its own Stuffing setting uses that setting's Qa instead."
                   label="Absorb Qa"
                   value={state.settings.losses.qa}
                   min={1}
@@ -1367,7 +1369,7 @@ export function App(props: { initial: AppState | null }) {
                 <summary>About box losses</summary>
                 <p className="hint">
                   Box losses are Q values at the tuning frequency: lower means more loss. 10 / 100 / 100 matches WinISD&rsquo;s
-                  defaults. A bandpass can also set its own losses for each chamber. For like-for-like checks against WinISD,
+                  defaults. A bandpass can also set its own losses for each chamber, and a sealed, ported or passive radiator design with Stuffing set uses that stuffing&rsquo;s Qa. For like-for-like checks against WinISD,
                   choose its air values, its amplifier resistance (Amp + cable) and leave out Le, or simply import the WinISD
                   project (.wpr).
                 </p>
@@ -2054,7 +2056,7 @@ function Summary({
             </tr>
           </thead>
           <tbody>
-            {designs.map(({ design: d, label, compare, color, vb_l, result: r }) => {
+            {designs.map(({ design: d, label, compare, color, vb_l, acting_l, result: r }) => {
               const x = peak(r.excursionMm, r.freq, fMin);
               const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
               const xpr = prPeak(r, fMin);
@@ -2090,7 +2092,7 @@ function Summary({
                     <span className="dot" style={{ background: color }} aria-hidden="true" />
                     <span>{shortName(d.name)}</span>
                   </th>
-                  <td>{fmtQ(vb_l, "vol", state.settings.units)}</td>
+                  <td>{volCell(vb_l, acting_l, state.settings.units)}</td>
                   <td>
                     {fmt(r.summary.f3)}
                     {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
@@ -2158,7 +2160,7 @@ function Summary({
           </tr>
         </thead>
         <tbody>
-          {designs.map(({ design: d, label, compare, color, vb_l, result: r }) => {
+          {designs.map(({ design: d, label, compare, color, vb_l, acting_l, result: r }) => {
             const x = peak(r.excursionMm, r.freq, fMin);
             const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
             const xpr = prPeak(r, fMin);
@@ -2172,7 +2174,7 @@ function Summary({
                   <span title={label}>{shortName(label)}</span>
                 </th>
                 <td>
-                  {fmtQ(vb_l, "vol", state.settings.units)}
+                  {volCell(vb_l, acting_l, state.settings.units)}
                   {d.kind === "bandpass" && ` + ${fmtQ(d.frontVb_l, "vol", state.settings.units)}`}
                 </td>
                 <td>
@@ -2265,4 +2267,14 @@ function minus3Points(freq: Float64Array, rel: ArrayLike<number>, bandLimited: b
     }
   }
   return out;
+}
+
+/** A design's volume for the summary tables: "40.0 L", or "40.0 → 48.0 L" when stuffing makes it act bigger. */
+function volCell(built: number, acting: number | undefined, units: "metric" | "imperial") {
+  if (acting === undefined) return fmtQ(built, "vol", units);
+  return (
+    <span title={`Built ${fmtQ(built, "vol", units)}; its stuffing makes it act as ${fmtQ(acting, "vol", units)}`}>
+      {fmtQ(built, "vol", units).split(" ")[0]} → {fmtQ(acting, "vol", units)}
+    </span>
+  );
 }
