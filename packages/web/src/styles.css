@@ -1350,7 +1350,7 @@ figure.chart[hidden] {
     grid-template-columns: 1fr auto auto;
     grid-template-areas:
       "title share menu"
-      "power power history";
+      "power history history";
     gap: 0.6rem 0.5rem;
     align-items: center;
   }
@@ -1413,6 +1413,13 @@ figure.chart[hidden] {
 
   .top-actions > :nth-child(4) {
     grid-area: menu;
+  }
+
+  /* Share and ☰ sit side by side on the right; undo/redo spans both columns below them. */
+  .top-actions > :nth-child(3),
+  .top-actions > :nth-child(4),
+  .top-actions > :nth-child(2) {
+    justify-self: end;
   }
 
   .top-actions > .offline-badge {
