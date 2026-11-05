@@ -1196,6 +1196,7 @@ export function App(props: { initial: AppState | null }) {
                   state,
                   onMeasured: (measured) => setStep((s) => ({ ...s, measured })),
                   onShowImpedance: () => showChart("impedance", [d.id]),
+                  onUndo: undo,
                 }}
                 onChange={updateDesign}
                 onDuplicate={() => duplicateDesign(d)}
