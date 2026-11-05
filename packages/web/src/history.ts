@@ -14,7 +14,16 @@ export interface History<S> {
 }
 
 export type HistoryAction<S> =
-  | { type: "set"; update: (s: S) => S; now: number; step?: boolean }
+  | {
+      type: "set";
+      update: (s: S) => S;
+      now: number;
+      step?: boolean;
+      /** Starts a new step but leaves it open, so a gesture's later changes (`hold`) join it. */
+      start?: boolean;
+      /** Joins the open step however long ago it changed (the rest of a drag, even after a pause). */
+      hold?: boolean;
+    }
   | { type: "undo" }
   | { type: "redo" };
 
@@ -30,7 +39,7 @@ export function historyReducer<S>(h: History<S>, a: HistoryAction<S>): History<S
       const next = a.update(h.present);
       if (Object.is(next, h.present)) return h;
       // `step` forces a step of its own (deleting a design right after typing must stay separately undoable).
-      const merge = !a.step && h.open && h.past.length > 0 && a.now - h.lastAt < MERGE_MS;
+      const merge = !a.step && !a.start && h.open && h.past.length > 0 && (a.hold || a.now - h.lastAt < MERGE_MS);
       return {
         past: merge ? h.past : [...h.past, h.present].slice(-MAX_STEPS),
         present: next,

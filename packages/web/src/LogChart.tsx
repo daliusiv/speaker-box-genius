@@ -114,6 +114,29 @@ interface Props {
   chartId?: string;
   /** Include this chart in the forum image. */
   forum?: boolean;
+  /** Edit mode: these handles can be dragged, and the hover readout pauses. */
+  handles?: ChartHandle[];
+  /** A line under the caption (edit mode's hint and buttons). */
+  below?: ReactNode;
+}
+
+/** A point on the chart that can be dragged (edit mode): a box's tuning, an EQ point. */
+export interface ChartHandle {
+  id: string;
+  f: number;
+  y: number;
+  color: string;
+  shape: "diamond" | "dot";
+  /** "x": slides along the frequency axis only; "xy": anywhere. */
+  axes: "x" | "xy";
+  /** What it is, for screen readers and the bubble ("Ported: tuning"). */
+  label: string;
+  /** The current value(s), shown in the bubble while dragging and read out by screen readers. */
+  text: string;
+  /** Called with the frequency and value under the pointer; the first call of a gesture has start set. */
+  onDrag: (f: number, y: number, start: boolean) => void;
+  /** Mouse wheel over the handle (EQ: Q). */
+  onWheel?: (up: boolean) => void;
 }
 
 const W = 640;
@@ -165,6 +188,8 @@ export function LogChart({
   hidden,
   chartId,
   forum,
+  handles = [],
+  below,
 }: Props) {
   const clipId = useId();
   const shared = useContext(Crosshair);
@@ -228,6 +253,36 @@ export function LogChart({
   lo = Math.floor(lo / step) * step;
   hi = Math.ceil(hi / step) * step;
   const yOf = (v: number) => PAD.t + (1 - (v - lo) / (hi - lo)) * PH;
+  const editing = handles.length > 0;
+  // The handle being dragged (or focused from the keyboard): its bubble shows.
+  const [active, setActive] = useState<string | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const movedRef = useRef(false);
+  // The wheel over a handle (EQ: its Q) mustn't scroll the page too, which needs a
+  // non-passive listener; React's onWheel can't prevent the scroll.
+  const handlesRef = useRef(handles);
+  handlesRef.current = handles;
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      const id = (e.target as Element | null)?.closest?.("[data-handle]")?.getAttribute("data-handle");
+      const h = id ? handlesRef.current.find((x) => x.id === id) : undefined;
+      if (!h?.onWheel) return;
+      e.preventDefault();
+      h.onWheel(e.deltaY < 0);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+  /** Pointer position → chart coordinates (frequency, value), kept inside the plot. */
+  const toData = (e: { clientX: number; clientY: number }, svg: SVGSVGElement) => {
+    const rect = svg.getBoundingClientRect();
+    const px = Math.min(W - PAD.r, Math.max(PAD.l, ((e.clientX - rect.left) / rect.width) * W));
+    const py = Math.min(PAD.t + PH, Math.max(PAD.t, ((e.clientY - rect.top) / rect.height) * (H + (ribbonsHeight ?? 0))));
+    return { f: fMin * Math.exp(((px - PAD.l) / PW) * lx), y: lo + (1 - (py - PAD.t) / PH) * (hi - lo) };
+  };
+  let ribbonsHeight: number | undefined;
 
   // Index of the sweep point nearest the crosshair frequency (in log terms).
   let hover: number | null = null;
@@ -278,6 +333,7 @@ export function LogChart({
   };
 
   const onMove = (e: PointerEvent<SVGSVGElement>) => {
+    if (editing) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const px = ((e.clientX - rect.left) / rect.width) * W;
     if (px < PAD.l || px > W - PAD.r) return setHoverF(null);
@@ -313,6 +369,7 @@ export function LogChart({
   const ROW = 11 * k;
   const usedKinds = Object.keys(ribbonKinds).filter((kind) => ribbons.some((r) => r.kinds.includes(kind)));
   const ribbonH = ribbons.length > 0 ? 8 * k + ribbons.length * ROW + 20 * k : 0;
+  ribbonsHeight = ribbonH;
   const edge = (i: number) =>
     i <= 0 ? PAD.l : i >= freq.length ? W - PAD.r : (xOf(freq[i - 1]!) + xOf(freq[i]!)) / 2;
   const runsOf = (kinds: readonly string[]) => {
@@ -328,7 +385,7 @@ export function LogChart({
   let legendX = PAD.l;
 
   return (
-    <figure className="chart" hidden={hidden} data-chart={chartId} data-forum={forum ? "" : undefined}>
+    <figure className={`chart${editing ? " editing" : ""}`} hidden={hidden} data-chart={chartId} data-forum={forum ? "" : undefined}>
       <figcaption>
         {tall && shortTitle && shortTitle !== title ? (
           <button type="button" className="chart-title as-text" onClick={() => setFullTitle((v) => !v)} title={title} aria-expanded={fullTitle}>
@@ -341,8 +398,9 @@ export function LogChart({
           <span className="chart-title">{title}</span>
         )}
         {actions}
-        <span className="chart-hint muted">Hover or tap for values</span>
+        <span className="chart-hint muted">{editing ? "Drag the handles" : "Hover or tap for values"}</span>
       </figcaption>
+      {below}
       {/* The values float over the plot, on the side away from the cursor, so nothing
           around the chart moves while you hover or drag (the caption never changes size). */}
       <div className="chart-body">
@@ -370,13 +428,63 @@ export function LogChart({
           ))}
         </div>
       )}
+      {handles
+        .filter((h) => h.id === (dragging ?? active) && h.f >= fMin && h.f <= fMax)
+        .map((h) => (
+          <div
+            key={h.id}
+            className="handle-bubble"
+            role="status"
+            // In a top corner of the plot, on the side away from the handle (where the finger is).
+            style={
+              xOf(h.f) > W / 2
+                ? { left: `${((PAD.l + 6) / W) * 100}%`, top: `${((PAD.t + 4) / (H + ribbonH)) * 100}%` }
+                : { right: `${((PAD.r + 6) / W) * 100}%`, top: `${((PAD.t + 4) / (H + ribbonH)) * 100}%` }
+            }
+          >
+            <b>{h.label}</b> {h.text}
+          </div>
+        ))}
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H + ribbonH}`}
         role="img"
         aria-label={title}
-        onPointerMove={onMove}
-        onPointerDown={onMove}
+        onPointerMove={(e) => {
+          if (!editing) return onMove(e);
+          const h = handles.find((x) => x.id === dragging);
+          if (!h) return;
+          const p = toData(e, e.currentTarget);
+          h.onDrag(p.f, h.axes === "xy" ? p.y : h.y, !movedRef.current);
+          movedRef.current = true;
+        }}
+        onPointerDown={(e) => {
+          if (!editing) return onMove(e);
+          // The handle nearest the pointer, within a finger's reach (so overlapping handles
+          // are still easy to pick apart).
+          const rect = e.currentTarget.getBoundingClientRect();
+          const scale = rect.width / W;
+          let best: ChartHandle | null = null;
+          let bestD = 26;
+          for (const h of handles) {
+            if (h.f < fMin || h.f > fMax) continue;
+            const hx = rect.left + xOf(h.f) * scale;
+            const hy = rect.top + yOf(Math.min(hi, Math.max(lo, h.y))) * scale;
+            const d = Math.hypot(e.clientX - hx, e.clientY - hy);
+            if (d < bestD) {
+              bestD = d;
+              best = h;
+            }
+          }
+          if (!best) return;
+          e.preventDefault();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          movedRef.current = false;
+          setDragging(best.id);
+          setActive(best.id);
+        }}
+        onPointerUp={() => setDragging(null)}
+        onPointerCancel={() => setDragging(null)}
         // A finger lifting also "leaves"; keep the values up after a tap (a tap elsewhere clears them).
         onPointerLeave={(e) => e.pointerType === "mouse" && setHoverF(null)}
       >
@@ -516,6 +624,49 @@ export function LogChart({
             </g>
           )}
         </g>
+
+        {handles
+          .filter((h) => h.f >= fMin && h.f <= fMax)
+          .map((h) => {
+            const x = xOf(h.f);
+            const y = yOf(Math.min(hi, Math.max(lo, h.y)));
+            const r = (dragging === h.id ? 9 : 7) * k;
+            const nudge = (df: number, dy: number) => {
+              h.onDrag(Math.min(fMax, Math.max(fMin, h.f * df)), h.axes === "xy" ? h.y + dy : h.y, false);
+            };
+            return (
+              <g
+                key={h.id}
+                className={`handle${dragging === h.id ? " dragging" : ""}`}
+                tabIndex={0}
+                role="slider"
+                aria-label={h.label}
+                aria-valuetext={h.text}
+                onFocus={() => setActive(h.id)}
+                onBlur={() => setActive((a) => (a === h.id ? null : a))}
+                onKeyDown={(e) => {
+                  const big = e.shiftKey;
+                  const f = big ? 1.1 : 1.01;
+                  const d = big ? 2 : 0.5;
+                  const keys: Record<string, [number, number]> = { ArrowLeft: [1 / f, 0], ArrowRight: [f, 0], ArrowUp: [1, d], ArrowDown: [1, -d] };
+                  const step = keys[e.key];
+                  if (!step || (h.axes === "x" && step[1] !== 0)) return;
+                  e.preventDefault();
+                  nudge(step[0], step[1]);
+                }}
+                data-handle={h.id}
+              >
+                {/* A finger-sized target around a small mark. */}
+                <circle className="handle-hit" cx={x} cy={y} r={22 * k} />
+                {h.axes === "xy" && <line className="handle-stem" x1={x} x2={x} y1={yOf(Math.min(hi, Math.max(lo, 0)))} y2={y} stroke={h.color} {...sw(1.5)} />}
+                {h.shape === "diamond" ? (
+                  <path className="handle-mark" d={`M${x} ${y - r * 1.3}L${x + r * 1.3} ${y}L${x} ${y + r * 1.3}L${x - r * 1.3} ${y}Z`} fill={h.color} {...sw(2)} />
+                ) : (
+                  <circle className="handle-mark" cx={x} cy={y} r={r} fill={h.color} {...sw(2)} />
+                )}
+              </g>
+            );
+          })}
 
         {ribbons.length > 0 && (
           <g className="ribbons">

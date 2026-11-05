@@ -5,8 +5,8 @@ import { historyReducer, initHistory } from "./history.ts";
 export function useUndoable<S>(initial: () => S) {
   const [h, dispatch] = useReducer(historyReducer<S>, undefined, () => initHistory(initial()));
   const setState = useCallback(
-    (v: S | ((s: S) => S), opts?: { step?: boolean }) =>
-      dispatch({ type: "set", update: typeof v === "function" ? (v as (s: S) => S) : () => v, now: Date.now(), step: opts?.step }),
+    (v: S | ((s: S) => S), opts?: { step?: boolean; start?: boolean; hold?: boolean }) =>
+      dispatch({ type: "set", update: typeof v === "function" ? (v as (s: S) => S) : () => v, now: Date.now(), step: opts?.step, start: opts?.start, hold: opts?.hold }),
     [],
   );
   const undo = useCallback(() => dispatch({ type: "undo" }), []);

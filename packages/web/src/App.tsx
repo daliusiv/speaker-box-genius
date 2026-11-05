@@ -9,7 +9,8 @@ import {
   type HighPassType,
   type SimulationResult,
 } from "@sbg/engine";
-import { ChartEmphasis, CrosshairProvider, LogChart, shortName, type Series } from "./LogChart.tsx";
+import { ChartEmphasis, CrosshairProvider, LogChart, shortName, type ChartHandle, type Series } from "./LogChart.tsx";
+import { draggableEq, eqQ, moveEq, retune, tunable } from "./chartEdit.ts";
 import { useUndoable } from "./useUndoable.ts";
 import { sizeAllForDriver } from "./presets.ts";
 import type { FinderContext } from "./PrFinder.tsx";
@@ -198,7 +199,10 @@ export function App(props: { initial: AppState | null }) {
       // not remembered
     }
   };
+  // Edit mode on the response chart: drag a box's tuning or an EQ point (relative view only).
+  const [editing, setEditing] = useState(false);
   const chooseSplMode = (m: "relative" | "absolute") => {
+    if (m === "absolute") setEditing(false);
     setSplMode(m);
     try {
       localStorage.setItem("sbg.spl", m);
@@ -604,6 +608,49 @@ export function App(props: { initial: AppState | null }) {
     { id: "delay", label: "Group delay" },
   ];
   const chartTab: ChartId = chartTabs.some((t) => t.id === chartPick) ? chartPick : chartTabs[0]!.id;
+
+  // Edit mode's handles: each ported or PR box's tuning (on its curve), and each EQ point.
+  const units = state.settings.units;
+  const chartHandles: ChartHandle[] = !editing
+    ? []
+    : [
+        ...mainDesigns
+          .filter((d) => tunable(d.design) && d.result.summary.fb !== undefined)
+          .map((d): ChartHandle => {
+            const fb = d.result.summary.fb!;
+            const x = d.design;
+            return {
+              id: `fb-${x.id}`,
+              f: fb,
+              y: valueAt(d.result.freq, d.result.spl, fb) - d.result.summary.referenceSpl,
+              color: d.color,
+              shape: "diamond",
+              axes: "x",
+              label: `${x.name}: tuning`,
+              text:
+                `Fb ${fb.toFixed(1)} Hz · ` +
+                (x.kind === "vented" ? `port ${fmtQ(x.length_cm, "len", units)}` : x.kind === "pr" ? `${x.addedMass_g} g added` : ""),
+              onDrag: (f, _y, start) => setState((s) => retune(s, x.id, f), start ? { start: true } : { hold: true }),
+            };
+          }),
+        ...state.eq.filter(draggableEq).map(
+          (e, i): ChartHandle => ({
+            id: `eq-${e.id}`,
+            f: e.freq,
+            y: e.gain_db,
+            // White, so an EQ point never looks like one of the boxes' curves.
+            color: "#e8ebf2",
+            shape: "dot",
+            axes: "xy",
+            label: `EQ ${i + 1} (${e.type === "peak" ? "peaking" : "low shelf"})`,
+            text: `${e.freq} Hz · ${e.gain_db > 0 ? "+" : ""}${e.gain_db} dB · Q ${e.q}`,
+            onDrag: (f, g, start) => setState((s) => moveEq(s, e.id, f, g), start ? { start: true } : { hold: true }),
+            onWheel: (up) => setState((s) => eqQ(s, e.id, up)),
+          }),
+        ),
+      ];
+  const addEqPoint = () =>
+    setStep((s) => ({ ...s, eq: [...s.eq, { id: newId(s.eq), on: true, target: "all", type: "peak", freq: 40, gain_db: -3, q: 2 }] }));
 
   // Passive radiators put a deep notch in the response at their own resonance, where the
   // group delay swings far negative; mark it instead of drawing a cliff off the chart.
@@ -1393,6 +1440,24 @@ export function App(props: { initial: AppState | null }) {
               forum
               chartId="response"
               best="high"
+              handles={chartHandles}
+              below={
+                editing ? (
+                  <div className="edit-bar">
+                    <span>
+                      {chartHandles.length > 0
+                        ? `Drag ◆ to retune a ported or PR box, ● to move an EQ point${narrow ? "" : " (scroll on it to change its Q)"}.`
+                        : "Add a ported or passive radiator box, or an EQ point, to drag it here."}
+                    </span>
+                    <button type="button" className="secondary" onClick={addEqPoint}>
+                      + EQ point
+                    </button>
+                    <button type="button" onClick={() => setEditing(false)}>
+                      Done
+                    </button>
+                  </div>
+                ) : undefined
+              }
               shortTitle={`${splMode === "relative" ? "Response" : "SPL"} · ${driveLabel(state)}${hp.on ? " · high-pass" : ""}`}
               title={`${splMode === "relative" ? "Relative response" : "SPL"} at ${driveLabel(state)}${coilLabel(state)}, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : state.baffle.on ? "free-standing (baffle step)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
               unit="dB"
@@ -1409,6 +1474,17 @@ export function App(props: { initial: AppState | null }) {
                     Cone + mouth
                   </button>
                 )}
+                <button
+                  className={`chip${editing ? " on" : ""}`}
+                  aria-pressed={editing}
+                  onClick={() => {
+                    if (!editing) chooseSplMode("relative");
+                    setEditing(!editing);
+                  }}
+                  title="Drag on the chart: a box's tuning, or an EQ point"
+                >
+                  ✎ Edit
+                </button>
                 <div className="unit-switch" role="group" aria-label="SPL scale">
                   <button aria-pressed={splMode === "relative"} onClick={() => chooseSplMode("relative")} title="Each design's passband at 0 dB, with −3 and −6 dB lines">
                     Relative

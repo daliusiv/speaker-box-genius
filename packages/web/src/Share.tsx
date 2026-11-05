@@ -165,6 +165,8 @@ function standaloneSvg(svg: SVGSVGElement, width: number, height: number): strin
     }
   });
   // React's generated ids contain characters that break url(#…) references outside the page.
+  // Edit-mode handles aren't part of the picture.
+  clone.querySelectorAll(".handle").forEach((el) => el.remove());
   clone.querySelectorAll("[id]").forEach((el, i) => {
     const old = el.id;
     const id = `x${i}`;
