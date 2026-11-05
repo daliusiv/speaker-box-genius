@@ -3126,3 +3126,8 @@ button.strip-box.is-over {
 .stuffing p {
   margin: 0.4rem 0 0;
 }
+.stuffing-fit .row {
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}

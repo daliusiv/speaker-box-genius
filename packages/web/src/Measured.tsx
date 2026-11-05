@@ -35,6 +35,18 @@ export function measuredSeries(all: MeasuredCurve[], kind: CurveKind, freq: Floa
     });
 }
 
+/** A measurement file as a curve to add to the others (thinned to 1/24 octave, 5 Hz–2 kHz); throws with the reason. */
+export async function readMeasured(file: File, kind: CurveKind, all: MeasuredCurve[]): Promise<MeasuredCurve> {
+  if (all.length >= MAX_MEASURED) throw new Error(`at most ${MAX_MEASURED} measurements`);
+  const text = new TextDecoder("latin1").decode(await file.arrayBuffer());
+  const c = thinCurve(parseCurve(text, kind), 24, 5, 2000);
+  if (c.f.length < 2) throw new Error("no points between 5 Hz and 2 kHz");
+  const used = new Set(all.map((m) => m.id));
+  let n = 1;
+  while (used.has(`m${n}`)) n++;
+  return { id: `m${n}`, name: file.name.replace(/\.[^.]+$/, "").slice(0, 40), kind, on: true, f: c.f, v: c.v, offset_db: 0, matchTo: "" };
+}
+
 export function MeasuredCard(p: { measured: MeasuredCurve[]; designs: Design[]; onChange: (m: MeasuredCurve[]) => void }) {
   const [msg, setMsg] = useState("");
   const all = p.measured;
@@ -51,14 +63,7 @@ export function MeasuredCard(p: { measured: MeasuredCurve[]; designs: Design[]; 
 
   const add = async (file: File, kind: CurveKind) => {
     try {
-      if (all.length >= MAX_MEASURED) throw new Error(`at most ${MAX_MEASURED} measurements`);
-      const text = new TextDecoder("latin1").decode(await file.arrayBuffer());
-      const c = thinCurve(parseCurve(text, kind), 24, 5, 2000);
-      if (c.f.length < 2) throw new Error("no points between 5 Hz and 2 kHz");
-      const used = new Set(all.map((m) => m.id));
-      let n = 1;
-      while (used.has(`m${n}`)) n++;
-      let m: MeasuredCurve = { id: `m${n}`, name: file.name.replace(/\.[^.]+$/, "").slice(0, 40), kind, on: true, f: c.f, v: c.v, offset_db: 0, matchTo: "" };
+      let m = await readMeasured(file, kind, all);
       let note = "";
       if (kind === "spl" && p.designs[0]) {
         // Measurements are rarely calibrated: start level-matched to the first design.

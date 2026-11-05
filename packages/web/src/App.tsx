@@ -259,8 +259,9 @@ export function App(props: { initial: AppState | null }) {
    * Shows the chart for a limit (cone, PR or port), scrolls to it and flashes it, with the
    * boxes in `ids` picked out; no limit means the response chart.
    */
-  const jumpTo = (kind: LimitKind | null, ids: string[]) => {
-    const chart = kind ? LIMIT_CHART[kind] : "response";
+  const jumpTo = (kind: LimitKind | null, ids: string[]) => showChart(kind ? LIMIT_CHART[kind] : "response", ids);
+  /** Bring a chart into view (switching to it, and to the charts on phones), flashing it with these designs emphasised. */
+  const showChart = (chart: ChartId | "response", ids: string[]) => {
     if (chart !== "response" && (chart !== "excursion" || narrow)) chooseChart(chart);
     setPhoneView("charts");
     setFocusIds(ids.length ? ids : null);
@@ -1191,6 +1192,11 @@ export function App(props: { initial: AppState | null }) {
                     volume: { ...s.volume, link: "none" },
                   }));
                 }}
+                fit={{
+                  state,
+                  onMeasured: (measured) => setStep((s) => ({ ...s, measured })),
+                  onShowImpedance: () => showChart("impedance", [d.id]),
+                }}
                 onChange={updateDesign}
                 onDuplicate={() => duplicateDesign(d)}
                 onDelete={() => deleteDesign(d)}
@@ -1713,6 +1719,7 @@ export function App(props: { initial: AppState | null }) {
               />
             )}
             <LogChart
+              chartId="maxspl"
               hidden={chartTab !== "maxspl"}
               best={maxMode === "spl" ? "high" : "low"}
               shortTitle={maxMode === "spl" ? "Max SPL" : maxMode === "volts" ? "Amp volts for max SPL" : "Amp current for max SPL"}
@@ -1769,6 +1776,7 @@ export function App(props: { initial: AppState | null }) {
               ribbonKinds={LIMIT_KINDS}
             />
             <LogChart
+              chartId="impedance"
               hidden={chartTab !== "impedance"}
               title="Impedance"
               unit="Ω"
@@ -1792,7 +1800,8 @@ export function App(props: { initial: AppState | null }) {
             />
             {zaDesigns.length > 0 && (
               <LogChart
-                hidden={chartTab !== "za"}
+                chartId="za"
+              hidden={chartTab !== "za"}
                 title="Line load Za"
                 unit="× ρc/S"
                 freq={freq}
@@ -1812,6 +1821,7 @@ export function App(props: { initial: AppState | null }) {
               </p>
             )}
             <LogChart
+              chartId="delay"
               hidden={chartTab !== "delay"}
               best="zero"
               title="Group delay"
