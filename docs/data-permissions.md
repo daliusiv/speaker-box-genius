@@ -17,7 +17,6 @@ Manufacturers who have given permission for their published data to be used in t
 ## Not yet contacted
 
 - JL Audio: no contact route found yet.
-- Dayton Audio: the T/S values of seven passive radiators whose pages don't list them (E150HE-PR, E180HE-PR, SS8-PR, SS10-PR, SS12-PR, SS15-PR, SS18-PR).
 
 A permission that comes with a spreadsheet is imported with `pnpm db:import-sheet`; see [`importing-a-spreadsheet.md`](importing-a-spreadsheet.md).
 
