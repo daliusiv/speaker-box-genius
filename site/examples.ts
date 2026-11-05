@@ -294,7 +294,61 @@ function isoExample(pair: boolean) {
   };
 }
 
+/** A copy of the state with the absorption loss Qa (in Settings, so it applies to every design) set. */
+const withQa = (s: AppState, qa: number): AppState => ({ ...s, settings: { ...s.settings, losses: { ...s.settings.losses, qa } } });
+
+/**
+ * Stuffing guide, sealed: an RSS265HF-4 in an 18 L box (half its Qtc 0.707 volume). Stuffing
+ * is modelled as a bigger box: +25 % (22.5 L) for the right amount, −14 % (15.5 L) for an
+ * overstuffed box, as Nousaine measured. `losses` adds the absorption stuffing brings (Qa 20)
+ * to the stuffed designs; without it, the links compare the volume effect alone, next to the
+ * empty box and the full-size 37.3 L box.
+ */
+function stuffingSealed(losses: boolean) {
+  return (): AppState => {
+    const s = withDriver({ ...DEFAULT_STATE, power: 100, highPass: highPass(4, 18) }, "dayton-audio/rss265hf-4");
+    const sealed = byKind(s, "sealed") as Extract<DesignState, { kind: "sealed" }>;
+    if (losses) {
+      return withQa(
+        {
+          ...s,
+          designs: [
+            { ...sealed, id: "d1", name: "18 L stuffed (acts as 22.5 L)", vb_l: 22.5 },
+            { ...sealed, id: "d2", name: "18 L overstuffed (acts as 15.5 L)", vb_l: 15.5 },
+          ],
+        },
+        20,
+      );
+    }
+    return {
+      ...s,
+      designs: [
+        { ...sealed, id: "d1", name: "18 L empty", vb_l: 18 },
+        { ...sealed, id: "d2", name: "18 L stuffed (acts as 22.5 L)", vb_l: 22.5 },
+        { ...sealed, id: "d3", name: "37.3 L empty (Qtc 0.707)", vb_l: 37.3 },
+      ],
+    };
+  };
+}
+
+/**
+ * Stuffing guide, ported: the DSA215-8's QB3 box (16.2 L, 5 cm port tuned to 39.8 Hz), empty
+ * or filled. Filling is modelled as +20 % volume with the same port (19.4 L) and Qa 10.
+ */
+function stuffingPorted(filled: boolean) {
+  return (): AppState => {
+    const s = dsaPorted();
+    const d = s.designs[0] as Vented;
+    if (!filled) return { ...s, designs: [{ ...d, name: "Empty, 16.2 L" }] };
+    return withQa({ ...s, designs: [{ ...d, name: "Filled (acts as 19.4 L, Qa 10)", vb_l: 19.4 }] }, 10);
+  };
+}
+
 export const EXAMPLES: Record<string, () => AppState> = {
+  "stuffing-sealed": stuffingSealed(false),
+  "stuffing-sealed-losses": stuffingSealed(true),
+  "stuffing-ported-empty": stuffingPorted(false),
+  "stuffing-ported-filled": stuffingPorted(true),
   "mismatch-example": mismatchExample,
   "port-tuning-example": portTuningExample,
   "losses-ql10": lossesExample(10),
