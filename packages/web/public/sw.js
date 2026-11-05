@@ -12,7 +12,8 @@
  * page links to and the whole database are saved, so the app works offline
  * after a single visit. Files from old versions are removed.
  */
-const CACHE = "sbg-v1";
+// Bump when files with unchanged names change (v2: the cool theme's icons).
+const CACHE = "sbg-v2";
 const SCOPE = new URL("./", self.location).href;
 const PAGE = SCOPE; // index.html
 const STATIC = ["manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];

@@ -164,7 +164,7 @@ export function resolveExamples(body: string, links: Record<string, string>, fil
 }
 
 const STYLE = `
-:root{color-scheme:dark;--bg:#0c0a09;--fg:#f5f5f4;--muted:#a8a29e;--accent:#fb923c;--card:#1c1917;--border:#292524}
+:root{color-scheme:dark;--bg:#090a0f;--fg:#e8ebf2;--muted:#8e96aa;--accent:#fb923c;--card:#12141c;--border:#222634}
 *{box-sizing:border-box}
 html{background:var(--bg);color:var(--fg)}
 body{margin:0;font:17px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
@@ -178,13 +178,13 @@ a{color:var(--accent)}
 @media (max-width:520px){.brand span{display:none}.nav{gap:.8rem}.nav .button{padding:.45rem .8rem}}
 @media (max-width:400px){.top{padding:.9rem .8rem;gap:.5rem}.nav{gap:.65rem;font-size:.95rem}.nav .button{padding:.4rem .65rem}}
 @media (max-width:440px){.nav .wide:not([aria-current]){display:none}.nav .opt{display:none}}
-.button{display:inline-block;padding:.55rem 1rem;border-radius:.6rem;background:var(--accent);color:#1c1917;font-weight:650;text-decoration:none;white-space:nowrap}
+.button{display:inline-block;padding:.55rem 1rem;border-radius:.6rem;background:var(--accent);color:#12141c;font-weight:650;text-decoration:none;white-space:nowrap}
 main{max-width:46rem;margin:0 auto;padding:.5rem 1.1rem 3rem}
 h1{font-size:2.1rem;line-height:1.15;margin:1rem 0 .6rem;letter-spacing:-.01em}
 h2{font-size:1.4rem;line-height:1.25;margin:2.2rem 0 .6rem}
 h3{font-size:1.1rem;margin:1.6rem 0 .4rem}
 .lede{color:var(--muted);font-size:1.12rem;margin-top:0}
-p,li{color:#e7e5e4}
+p,li{color:#d3d8e2}
 li{margin:.25rem 0}
 code{padding:.05rem .3rem;border-radius:.3rem;background:var(--card);font-size:.92em}
 pre{overflow-x:auto;padding:.8rem;border-radius:.6rem;background:var(--card)}
@@ -245,7 +245,7 @@ export function layout(o: { title: string; description: string; path: string; im
 <meta property="og:url" content="${url}">
 <meta property="og:image" content="${image}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#1c1917">
+<meta name="theme-color" content="#12141c">
 <meta name="color-scheme" content="dark">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">

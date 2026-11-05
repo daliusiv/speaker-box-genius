@@ -57,18 +57,18 @@ export function cardSvg(o: { title: string; subtitle: string; rows: { color: str
     .map((r, i) => `<rect x="60" y="${352 + i * 62}" width="22" height="22" rx="5" fill="${r.color}"/><text x="98" y="${371 + i * 62}" class="row">${esc(r.text)}</text>`)
     .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_W}" height="${CARD_H}" viewBox="0 0 ${CARD_W} ${CARD_H}">
-<style>text{font-family:${FONT};fill:#f5f5f4}.sub{fill:#a8a29e;font-size:30px}.row{font-size:30px;font-weight:600}.ax{fill:#a8a29e;font-size:20px}.brand{font-size:28px;font-weight:700}</style>
-<rect width="100%" height="100%" fill="#0c0a09"/>
+<style>text{font-family:${FONT};fill:#e8ebf2}.sub{fill:#8e96aa;font-size:30px}.row{font-size:30px;font-weight:600}.ax{fill:#8e96aa;font-size:20px}.brand{font-size:28px;font-weight:700}</style>
+<rect width="100%" height="100%" fill="#090a0f"/>
 <rect x="0" y="0" width="${CARD_W}" height="10" fill="#fb923c"/>
 <text x="60" y="${110 + (68 - tSize) / 3}" font-size="${tSize}" font-weight="800"${o.title.length > 34 ? ` textLength="1080" lengthAdjust="spacingAndGlyphs"` : ""}>${esc(o.title)}</text>
 <text x="60" y="${170}" class="sub">${esc(o.subtitle)}</text>
 <text x="60" y="300" class="sub">Suggested boxes</text>
 ${rows}
-<rect x="${cx - 20}" y="${cy - 30}" width="${cw + 40}" height="${ch + 80}" rx="18" fill="#1c1917"/>
-<g stroke="#292524" stroke-width="2">${grid}</g>
+<rect x="${cx - 20}" y="${cy - 30}" width="${cw + 40}" height="${ch + 80}" rx="18" fill="#12141c"/>
+<g stroke="#222634" stroke-width="2">${grid}</g>
 <g class="ax">${labels}</g>
 ${paths}
-<g transform="translate(60 568)"><rect width="40" height="40" rx="9" fill="#1c1917"/><circle cx="20" cy="24" r="10" fill="none" stroke="#fb923c" stroke-width="4"/><circle cx="20" cy="9" r="3" fill="#a8a29e"/><text x="56" y="30" class="brand">Speaker Box Genius</text></g>
+<g transform="translate(60 568)"><rect width="40" height="40" rx="9" fill="#12141c"/><circle cx="20" cy="24" r="10" fill="none" stroke="#fb923c" stroke-width="4"/><circle cx="20" cy="9" r="3" fill="#8e96aa"/><text x="56" y="30" class="brand">Speaker Box Genius</text></g>
 <text x="${CARD_W - 60}" y="598" text-anchor="end" class="sub" font-size="26">speakerboxgenius.com</text>
 </svg>`;
 }
@@ -104,6 +104,8 @@ export class Rasterizer {
     }
     await r.send("Page.enable");
     await r.send("Emulation.setDeviceMetricsOverride", { width: CARD_W, height: CARD_H, deviceScaleFactor: 1, mobile: false });
+    // Transparent page, so PNGs keep the rounded corners of the app icon.
+    await r.send("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
     return r;
   }
 
@@ -140,14 +142,27 @@ export class Rasterizer {
     return new Promise((ok, fail) => this.waiting.set(id, { ok, fail }));
   }
 
-  /** The SVG as a JPEG (a third the size of a PNG for these cards). */
-  async image(svg: string): Promise<Buffer> {
+  private size = { width: CARD_W, height: CARD_H };
+
+  /** The SVG as an image: a share card by default (1200 × 630 JPEG, a third the size of a PNG). */
+  async image(svg: string, o: { width?: number; height?: number; format?: "jpeg" | "png" } = {}): Promise<Buffer> {
+    const width = o.width ?? CARD_W;
+    const height = o.height ?? CARD_H;
+    if (width !== this.size.width || height !== this.size.height) {
+      await this.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: false });
+      this.size = { width, height };
+    }
     const file = join(this.dir, "card.svg");
     writeFileSync(file, svg);
     const loaded = new Promise<void>((ok) => (this.loaded = ok));
     await this.send("Page.navigate", { url: `file://${file}?${this.id}` });
     await loaded;
-    const { data } = await this.send("Page.captureScreenshot", { format: "jpeg", quality: 80, clip: { x: 0, y: 0, width: CARD_W, height: CARD_H, scale: 1 } });
+    const format = o.format ?? "jpeg";
+    const { data } = await this.send("Page.captureScreenshot", {
+      format,
+      ...(format === "jpeg" ? { quality: 80 } : {}),
+      clip: { x: 0, y: 0, width, height, scale: 1 },
+    });
     return Buffer.from(data, "base64");
   }
 
