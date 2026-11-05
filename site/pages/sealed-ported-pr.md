@@ -43,6 +43,7 @@ The **Dayton Audio RSS265HF-4**, a 10″ subwoofer that suits either box, at **1
 | F3 | 42.0 Hz | 21.3 Hz | 24.9 Hz |
 | Max SPL at 25 Hz | 97.4 dB | 109.0 dB | 105.4 dB |
 | Max SPL at 40 Hz | 105.4 dB | 108.6 dB | 107.4 dB |
+| Amplifier for max SPL at 25 Hz | 25 V, 3.8 A | 34 V, 6.5 A | 28 V, 4.5 A |
 | Also needs | | A 6 × 30 cm slot, 123 cm long | Two 10″ radiators |
 
 ![Response of the three boxes: the sealed box (blue) rolls off from about 40 Hz; the ported (orange) and PR (green) boxes keep going to the low 20s.](img/box-types-spl.png)
@@ -61,7 +62,7 @@ The ported box goes a full octave deeper (21 Hz against 42 Hz) and plays almost 
 1. Pick your driver from the database (or type its parameters in).
 2. On the Boxes tab, add a sealed, a ported and a passive radiator design.
 3. Press a preset in each (**Qtc 0.707**, and **QB3**, **B4** or **Keele**, whichever suits the driver) to size them.
-4. Compare the **response**, **Max SPL** and **excursion** charts at the power you'll use, with a high-pass filter.
+4. Compare the **response**, **Max SPL** and **excursion** charts at the power you'll use, with a high-pass filter. Switch Max SPL to **Volts** or **Amps** to see the amplifier each box needs.
 
 [[Open the worked example|box-types-example]]
 

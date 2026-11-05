@@ -185,6 +185,13 @@ export interface SimulationResult {
   maxPowerW: Float64Array;
   /** SPL at maxPowerW. */
   maxSpl: Float64Array;
+  /**
+   * What the amplifier must deliver at each frequency to reach maxSpl: RMS volts and amps at
+   * its output terminals, and the real power it sends into the speaker. Unlike maxPowerW (the
+   * drive setting, before filters and EQ), these include the high-pass filter, any EQ boost
+   * and the speaker's impedance at that frequency. NaN where no limit applies.
+   */
+  ampAtMax: { volts: Float64Array; amps: Float64Array; watts: Float64Array };
   /** Which limit sets maxPower at each frequency. */
   limitedBy: ("thermal" | "xmax" | "pr-xmax" | "port" | "none")[];
   summary: {
@@ -372,6 +379,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     zph: new Float64Array(N),
     pmax: new Float64Array(N),
     splmax: new Float64Array(N),
+    ampV: new Float64Array(N),
+    ampI: new Float64Array(N),
+    ampW: new Float64Array(N),
     zaR: line ? new Float64Array(N) : null,
     zaX: line ? new Float64Array(N) : null,
   };
@@ -578,6 +588,21 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     limitedBy.push(best[0]);
     out.pmax[i] = best[1];
     out.splmax[i] = Number.isFinite(best[1]) ? out.spl[i]! + 10 * Math.log10(best[1] / pNow) : NaN;
+    // The amplifier at that limit: the drive voltage scaled up to it, through the filter and EQ,
+    // into the bank's impedance plus the shared source resistance.
+    if (Number.isFinite(best[1])) {
+      const vAmp = volts * Math.sqrt(best[1] / pNow) * Math.sqrt(filterGain2);
+      const zAmp = add(zIn, cx(rgTotal));
+      const iAmp = vAmp / abs(zAmp);
+      out.ampV[i] = vAmp;
+      out.ampI[i] = iAmp;
+      // Real power into the speaker (and Rg): I² × Re(Z).
+      out.ampW[i] = iAmp * iAmp * zAmp.re;
+    } else {
+      out.ampV[i] = NaN;
+      out.ampI[i] = NaN;
+      out.ampW[i] = NaN;
+    }
   }
 
   // Phase unwrap and group delay
@@ -647,6 +672,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     parts: out.parts,
     maxPowerW: out.pmax,
     maxSpl: out.splmax,
+    ampAtMax: { volts: out.ampV, amps: out.ampI, watts: out.ampW },
     limitedBy,
     summary,
   };

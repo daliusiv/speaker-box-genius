@@ -28,7 +28,7 @@ A **Dayton Audio RSS265HF-4** 10″ subwoofer in a **20 L** sealed box: about ha
 | Output at 25 Hz (40 W) | 96.3 dB | 88.1 dB | 90.7 dB |
 | Peak cone excursion (40 W) | 11.7 mm | 4.3 mm | 5.7 mm |
 | **Maximum SPL at 25 Hz** | **97.3 dB** | **97.3 dB** | **97.4 dB** |
-| Amplifier power at 25 Hz to reach that maximum | about 335 W | 335 W | 187 W |
+| Amplifier needed at 25 Hz to reach that maximum | 33 V, 6.8 A | 33 V, 6.8 A | 25 V, 3.8 A |
 
 ![Response at 40 W: the 20 L box with the LT (blue) is flat to about 30 Hz; the same box without EQ (orange) and the 37 L box (green) roll off from the mid 40s.](img/lt-spl.png)
 
@@ -38,12 +38,14 @@ The LT box goes **15 Hz deeper** than the box twice its size. But look at the ma
 
 In a sealed box, the bottom-octave output is limited by how much air the cone can move: its area times its Xmax. That's set by the driver, not the box or the EQ. A bigger box, a smaller box, or an EQ all reach the same SPL at the frequency where the cone reaches Xmax. What changes is **how much amplifier power it takes to get there**, and **what the response looks like below that point** [5].
 
-So the LT trades amplifier power for box size. To drive the cone to its Xmax at 25 Hz:
+So the LT trades amplifier power for box size. To drive the cone to its Xmax at 25 Hz, the amplifier has to deliver:
 
-- the 37 L box needs **187 W** from the amplifier at 25 Hz;
-- the 20 L box needs about **335 W** at 25 Hz, close to the driver's 350 W rating, **with or without the LT**. The same box needs the same voltage to move the cone the same distance.
+- for the 37 L box, **25 V and 3.8 A** (about 73 W into the speaker);
+- for the 20 L box, **33 V and 6.8 A** (about 196 W), **with or without the LT**. The same box needs the same voltage to move the cone the same distance.
 
-What the LT changes is that the extra power arrives automatically: its boost is in the signal. In the example, at a 40 W setting the LT is already sending about 8 dB more (roughly six times the power) to the driver at 25 Hz, and the cone is at 11.7 mm. So the amplifier must be sized for the boosted bass, not for the passband.
+In the "watts" that amplifiers and simulators usually quote (V² ÷ Re), that's 335 W for the small box against 187 W for the big one: close to the driver's 350 W rating.
+
+What the LT changes is that the extra voltage arrives automatically: its boost is in the signal. In the example, a 40 W setting is 11.8 V, but after the LT (and the high-pass filter) the amplifier is putting out **29 V** at 25 Hz, about 8 dB more, and the cone is at 11.7 mm. So the amplifier must be sized for the boosted bass, not for the passband. The app shows exactly what it needs: switch the **Max SPL** chart to **Volts** or **Amps**.
 
 ## How much boost, and how much power
 

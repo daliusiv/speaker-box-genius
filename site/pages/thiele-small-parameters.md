@@ -53,7 +53,7 @@ Qts comes from **Qes** (the damping from the motor: the coil and magnet acting a
 
 **Sd, the cone area**, and **Xmax, the cone's travel**, multiplied together, give the volume of air the woofer can move: its **displacement**. That sets how loud it can play in the bottom octave, whatever the box. Xmax is one way, peak (some makers quote peak to peak, or a looser figure, so check).
 
-**Pe, the power handling**, is how much power the voice coil takes before it overheats. In the bass, Xmax usually runs out first; Pe matters in the midbass and with high-pass filters. The app's **Max SPL** chart shows which one limits each frequency.
+**Pe, the power handling**, is how much power the voice coil takes before it overheats. Using all of it takes an amplifier that can deliver √(Pe × Re) volts: 22 V for this driver (80 W, 5.9 Ω). The **Max SPL** chart's **Volts** and **Amps** views show what's needed at every frequency. In the bass, Xmax usually runs out first; Pe matters in the midbass and with high-pass filters. The app's **Max SPL** chart shows which one limits each frequency.
 
 ## The ones underneath
 
