@@ -46,25 +46,11 @@ export function usePwa(): { online: boolean; install: (() => Promise<void>) | nu
   };
 }
 
-/** Header extras: an Install button (wide screens; phones get it in the Projects menu) and an Offline badge. */
+/** Header extra: an Offline badge (installing is in the ☰ menu). */
 export function PwaStatus({ pwa }: { pwa: ReturnType<typeof usePwa> }) {
-  return (
-    <>
-      {!pwa.online && (
-        <span className="offline-badge" title="No connection. The app and driver database are running from the copy saved on this device.">
-          Offline
-        </span>
-      )}
-      {pwa.install && (
-        <button
-          type="button"
-          className="secondary install-button"
-          title="Install as an app: opens in its own window and works offline"
-          onClick={pwa.install}
-        >
-          Install app
-        </button>
-      )}
-    </>
+  return pwa.online ? null : (
+    <span className="offline-badge" title="No connection. The app and driver database are running from the copy saved on this device.">
+      Offline
+    </span>
   );
 }

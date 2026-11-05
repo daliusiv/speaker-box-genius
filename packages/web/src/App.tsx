@@ -71,7 +71,7 @@ import { reportUrl, ShareMenu } from "./Share.tsx";
 import { EqPanel } from "./Eq.tsx";
 import { MeasurePanel, type Measurement } from "./Measure.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
-import { ProjectsMenu } from "./Projects.tsx";
+import { AppMenu } from "./AppMenu.tsx";
 import { submitDriverUrl } from "./submit.ts";
 
 const LIMIT_RED = "#dc2626";
@@ -722,9 +722,7 @@ export function App(props: { initial: AppState | null }) {
       <header className="top">
         <div>
           <h1>Speaker Box Genius</h1>
-          <p className="muted">
-            Early preview · <a href={REPO}>GitHub</a> · <a href={`${REPO}/blob/main/docs/build-plan.md`}>Roadmap</a>
-          </p>
+          <p className="muted">Early preview</p>
         </div>
         <div className="top-actions">
           <div
@@ -781,15 +779,18 @@ export function App(props: { initial: AppState | null }) {
               ↷
             </button>
           </div>
-          <ProjectsMenu
-            install={pwa.install}
+          <ShareMenu state={state} designs={designs} shareUrl={shareUrl} />
+          <AppMenu
             state={state}
+            install={pwa.install}
             onOpen={(s) => {
               setStep(s);
               notify(`Opened “${s.driverName}”.`);
             }}
+            notify={(m) => notify(m)}
+            showTips={welcome.showTips}
+            reportUrl={() => reportUrl(shareUrl())}
           />
-          <ShareMenu state={state} designs={designs} shareUrl={shareUrl} />
           <PwaStatus pwa={pwa} />
         </div>
       </header>

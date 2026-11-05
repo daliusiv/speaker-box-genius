@@ -1349,7 +1349,7 @@ figure.chart[hidden] {
     display: grid;
     grid-template-columns: 1fr auto auto;
     grid-template-areas:
-      "title projects share"
+      "title share menu"
       "power power history";
     gap: 0.6rem 0.5rem;
     align-items: center;
@@ -1367,7 +1367,7 @@ figure.chart[hidden] {
     text-overflow: ellipsis;
   }
 
-  /* The GitHub and roadmap links are in the footer too; the header stays two rows. */
+  /* "Early preview": the header stays two rows. */
   .top > div:first-child > p {
     display: none;
   }
@@ -1408,16 +1408,11 @@ figure.chart[hidden] {
   }
 
   .top-actions > :nth-child(3) {
-    grid-area: projects;
-  }
-
-  .top-actions > :nth-child(4) {
     grid-area: share;
   }
 
-  /* No room in the two-row header: phones install from the Projects menu instead. */
-  .top-actions > .install-button {
-    display: none;
+  .top-actions > :nth-child(4) {
+    grid-area: menu;
   }
 
   .top-actions > .offline-badge {
@@ -3130,4 +3125,149 @@ button.strip-box.is-over {
   align-items: flex-end;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+/* ---- ☰ menu: a dropdown on wide screens, a panel from the right on phones ---- */
+
+.app-menu {
+  position: relative;
+}
+
+/* The same box as the Share button beside it, on every screen. */
+button.menu-button {
+  min-width: 2.6rem;
+  min-height: 2.4rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--fg);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+button.menu-button[aria-expanded="true"] {
+  border-color: var(--accent);
+}
+
+.app-menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  /* Above the phone status strip (30) and bottom bar (40); below toasts and help (50+). */
+  z-index: 46;
+  display: flex;
+  flex-direction: column;
+  width: 18rem;
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+  padding: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+.app-menu-backdrop {
+  display: none;
+}
+
+.app-menu-head {
+  display: none;
+}
+
+.app-menu-panel > button,
+.app-menu-panel .saved-row button[role="menuitem"],
+.app-menu-panel .menu-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  text-align: left;
+  background: none;
+  color: var(--fg);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.app-menu-panel > button:hover,
+.app-menu-panel .saved-row button[role="menuitem"]:hover,
+.app-menu-panel .menu-link:hover,
+.app-menu-panel [role="menuitem"]:focus-visible {
+  background: var(--bg);
+}
+
+.app-menu-panel .menu-more {
+  color: var(--accent);
+}
+
+.menu-note {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.app-menu-panel hr {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0.3rem 0;
+}
+
+.app-menu-panel .hint {
+  margin: 0.3rem 0.5rem 0.2rem;
+}
+
+@media (max-width: 860px) {
+  .app-menu-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: rgb(0 0 0 / 0.5);
+  }
+
+  .app-menu-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(20rem, 88vw);
+    max-height: none;
+    border-radius: 0;
+    border-width: 0 0 0 1px;
+    padding: calc(0.5rem + env(safe-area-inset-top)) 0.5rem calc(1rem + env(safe-area-inset-bottom));
+    animation: menu-in 0.18s ease-out;
+  }
+
+  .app-menu-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.3rem 0.5rem 0.5rem 0.9rem;
+  }
+
+  .app-menu-panel > button,
+  .app-menu-panel .saved-row button[role="menuitem"],
+  .app-menu-panel .menu-link {
+    min-height: 2.75rem;
+    align-items: center;
+  }
+}
+
+@keyframes menu-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-menu-panel {
+    animation: none;
+  }
 }
