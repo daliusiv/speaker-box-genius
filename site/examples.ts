@@ -4,8 +4,13 @@
  * share link (`#z=…`); a page refers to one as {{link:<name>}}.
  */
 import { readFileSync } from "node:fs";
-import { DEFAULT_STATE, encodeStateShort, type AppState, type DesignState } from "../packages/web/src/state.ts";
-import { portLengthForFb } from "../packages/engine/src/index.ts";
+import { DEFAULT_STATE, encodeStateShort, newDesign, type AppState, type DesignState } from "../packages/web/src/state.ts";
+
+/** A fresh line design, as "+ Transmission line" adds one. */
+const newLine = (s: AppState) => newDesign("line", s.designs);
+import { portLengthForFb, type PortInput } from "../packages/engine/src/index.ts";
+import { alignmentDriver, driverInputOf, simOptionsOf, solveDriver } from "../packages/web/src/sim.ts";
+import { compareLines } from "../packages/web/src/lineopt.ts";
 
 const ROOT = new URL("..", import.meta.url);
 const json = (path: string) => JSON.parse(readFileSync(new URL(path, ROOT), "utf8"));
@@ -72,9 +77,75 @@ function winisdExample(): AppState {
   return { ...s, designs: [{ ...sealed, name: "Sealed", vb_l: 12 }, ...s.designs] };
 }
 
+type Vented = Extract<DesignState, { kind: "vented" }>;
+
+/** A ported design with its port cut to length for the tuning (as the app's "Set length" does). */
+function ventedWith(base: Vented, name: string, vb_l: number, fb: number, port: { shape: "round"; diameter_cm: number; flare_cm?: number } | { shape: "slot"; width_cm: number; height_cm: number }): Vented {
+  const input: PortInput = port.shape === "round" ? { ...port, length_cm: 10 } : { ...port, length_cm: 10 };
+  const length = Math.round(portLengthForFb(vb_l, input, fb) * 10) / 10;
+  return {
+    ...base,
+    name,
+    vb_l,
+    shape: port.shape,
+    diameter_cm: port.shape === "round" ? port.diameter_cm : base.diameter_cm,
+    slotWidth_cm: port.shape === "slot" ? port.width_cm : base.slotWidth_cm,
+    slotHeight_cm: port.shape === "slot" ? port.height_cm : base.slotHeight_cm,
+    flare_cm: port.shape === "round" ? (port.flare_cm ?? 0) : 0,
+    length_cm: length,
+    count: 1,
+    targetFb: fb,
+  };
+}
+
+/**
+ * The port guide's example: a Dayton Audio RSS315HF-4 12″ sub in its flat alignment (Keele's:
+ * 83.5 L at 23.8 Hz), 300 W behind a 24 dB/oct high-pass at 20 Hz, with three ports: a
+ * 10 cm tube (chuffs), a 5 × 30 cm slot and the 10 cm tube with flared ends.
+ */
+function portExample(): AppState {
+  const s = withDriver(
+    { ...DEFAULT_STATE, power: 300, highPass: { ...DEFAULT_STATE.highPass, on: true, type: "butterworth", order: 4, freq: 20 } },
+    "dayton-audio/rss315hf-4",
+  );
+  const v = byKind(s, "vented") as Vented;
+  const vb = 83.5;
+  const fb = 23.8;
+  return {
+    ...s,
+    designs: [
+      ventedWith(v, "10 cm port", vb, fb, { shape: "round", diameter_cm: 10 }),
+      { ...ventedWith(v, "5 × 30 cm slot", vb, fb, { shape: "slot", width_cm: 5, height_cm: 30 }), id: "d2" },
+      { ...ventedWith(v, "10 cm flared", vb, fb, { shape: "round", diameter_cm: 10, flare_cm: 2.5 }), id: "d3" },
+    ],
+  };
+}
+
+/**
+ * The transmission line guide's example: the DSA215-8 (the driver of the Hornresp checks) as
+ * the app's Compare types makes them: a classic TL, an offset TL and an MLTL, each tuned, at 25 W behind a 28 Hz high-pass.
+ */
+function tlExample(): AppState {
+  const s = withDriver(
+    { ...DEFAULT_STATE, power: 25, highPass: { ...DEFAULT_STATE.highPass, on: true, type: "butterworth", order: 2, freq: 28 } },
+    "dayton-audio/dsa215-8",
+  );
+  const solved = solveDriver(s);
+  const line = newLine(s) as Extract<DesignState, { kind: "line" }>;
+  const rows = compareLines(driverInputOf(s, solved), line, simOptionsOf(s), alignmentDriver(solved, s), 1);
+  const pick = (id: string, name: string, n: number) => {
+    const d = rows.find((r) => r.id === id)?.design;
+    if (!d) throw new Error(`The ${id} line type couldn't be made for the example`);
+    return { ...d, id: `d${n}`, name };
+  };
+  return { ...s, designs: [pick("tl", "Classic TL", 1), pick("otl", "Offset TL", 2), pick("mltl", "MLTL", 3)] };
+}
+
 export const EXAMPLES: Record<string, () => AppState> = {
   "pr-example": prExample,
   "winisd-example": winisdExample,
+  "port-example": portExample,
+  "tl-example": tlExample,
 };
 
 /** Share links (`https://…/#z=…`) for every example. */

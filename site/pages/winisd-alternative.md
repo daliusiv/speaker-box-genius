@@ -8,7 +8,7 @@ order: 1
 
 # A free online WinISD alternative
 
-WinISD has been the go-to free tool for designing speaker boxes for twenty years. Speaker Box Genius does the same job in your browser, on any computer or phone, and gives the same answers.
+WinISD has been the go-to free tool for designing speaker boxes for many years. Speaker Box Genius does the same job in your browser, on any computer or phone, and gives the same answers.
 
 [[Open an example: one driver in three boxes|winisd-example]]
 
