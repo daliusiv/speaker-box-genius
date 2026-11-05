@@ -23,7 +23,7 @@ Phases 0–2 are done, most of Phase 3 is done, and much of the "later" list has
 | 3. Community | 🟡 | Design gallery with OG images, embeddable widget, PR deploy previews |
 | Later / stretch | 🟡 | Large-signal (nonlinear) model, 3D box preview, i18n |
 
-Beyond the plan: transmission lines and horns with Hornresp import/export, a published [validation page](https://speakerboxgenius.com/validation/), 15 SEO guides, compare-with-a-second-driver, PR finder, hot voice coil, ports modelled as pipes, amplifier volts and amps at max SPL.
+Beyond the plan: transmission lines and horns with Hornresp import/export, a published [validation page](https://speakerboxgenius.com/validation/), 15 SEO guides, a [page for every driver](https://speakerboxgenius.com/drivers/) with suggested boxes and its own share card, compare-with-a-second-driver, PR finder, hot voice coil, ports modelled as pipes, amplifier volts and amps at max SPL.
 
 ---
 
@@ -90,7 +90,7 @@ Beyond the plan: transmission lines and horns with Hornresp import/export, a pub
 
 **Main decision (held):** all simulation runs in the browser and GitHub is the backend. Running costs: the domain only.
 
-**Content pages:** `site/pages/*.md` are built by `site/build.ts` (no dependencies) into plain HTML pages next to the app: the guides, the WinISD and Hornresp comparison pages, and `/validation/` (from `docs/validation/results.json`). The build also writes `sitemap.xml` and `robots.txt`.
+**Content pages:** `site/pages/*.md` are built by `site/build.ts` (no dependencies) into plain HTML pages next to the app: the guides, the WinISD and Hornresp comparison pages, `/validation/` (from `docs/validation/results.json`), and `/drivers/`: a page per database driver with suggested boxes (`site/drivers.ts`) and its own share card, drawn by headless Chrome at deploy (`site/og.ts`). The build also writes `sitemap.xml` and `robots.txt`.
 
 ### Tech stack: plan vs built
 
@@ -103,7 +103,7 @@ Beyond the plan: transmission lines and horns with Hornresp import/export, a pub
 | Complex math | Hand-rolled `Complex`, typed arrays | ✅ Same | |
 | Worker comms | Web Worker + Comlink | Main thread | Solves are fast enough; the PR finder runs in slices with a progress bar instead |
 | URL compression | lz-string or fflate | Browser `CompressionStream` (deflate-raw) | No dependency |
-| Testing | Vitest + Playwright | `node:test` (278 tests); Playwright for manual checks | No dependency |
+| Testing | Vitest + Playwright | `node:test` (288 tests); Playwright for manual checks | No dependency |
 | Monorepo | pnpm workspaces | ✅ `engine`, `web`, `schema`, `db-tools` | |
 | Hosting/CI | GitHub Pages + Actions | ✅ Same, custom domain | |
 | Schema validation | Zod + JSON Schema | Hand-written types and checks in `db-tools` | No dependency |
@@ -187,7 +187,7 @@ Up to 8 designs recalculate as you type or drag, on the main thread. The only sl
 
 ## 7. Driver database ✅
 
-**About 1,360 drivers and 46 passive radiators from 15 brands.** Dayton Audio and SB Acoustics come direct with written permission (import workflows run by hand), driver-base (CC BY 4.0) covers the other brands. All records are `community` status so far; ⬜ the reviewed `verified` status isn't in use yet. Waiting on more manufacturer permissions.
+**About 1,360 drivers and 46 passive radiators from 15 brands.** Dayton Audio and SB Acoustics come direct with written permission (import workflows run by hand), driver-base (CC BY 4.0) covers the other brands. All records are `community` status so far; ⬜ the reviewed `verified` status isn't in use yet. Waiting on more manufacturer permissions. Every driver with enough parameters (about 1,230) also has a page on the site with suggested sealed, ported and PR boxes (§11, Phase 3).
 
 ### 7.1 Layout in the repo (as built)
 ```
@@ -253,7 +253,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - The whole design lives in the URL **hash**, versioned, with defaults stripped and deflated: **short links** (`#z=…`). Old links are migrated (e.g. the earlier A–D multi-driver links).
 - Drivers are referenced by ID **plus** their T/S values.
 - **Share** gives the link, a **forum image** with a QR code, and ready-to-paste **Reddit (Markdown)** and **diyAudio (BBCode)** posts.
-- A site-wide **share preview card** (og:image) for pasted links. Per-design preview images still need the gallery (below).
+- A site-wide **share preview card** (og:image) for pasted links, and one per driver page. Per-design preview images still need the gallery (below).
 - ⬜ **Design gallery in the repo** (`gallery/`, static pages with per-design OG images and short `/g/…` URLs): not started.
 
 ---
@@ -291,7 +291,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - ✅ **SEO content pages:** 15 guides with live examples, WinISD and Hornresp alternative pages, sitemap; Google Search Console set up.
 - ✅ **Validation page** built from the test results.
 - ✅ **Driver pages:** one page per driver (about 1,230) with suggested sealed, ported and PR boxes, charts, parameters, a live link and its own share card (`site/drivers.ts`, `site/og.ts`).
-- ⬜ Design gallery with pre-rendered pages and OG images.
+- ⬜ Design gallery with pre-rendered pages and OG images (deferred until after launch; the driver pages share its page and share-card code).
 - ⬜ Embeddable iframe widget for blogs and build logs.
 - ⬜ About page (licence in plain words, privacy, credits) and privacy-friendly analytics before launch.
 
@@ -326,7 +326,7 @@ speaker-box-genius/
 │  ├─ schema/              # shared types
 │  ├─ db-tools/            # validate, bundle, .wdr import, issue → driver, Dayton/SB/driver-base import
 │  └─ web/                 # React app
-├─ site/                   # content pages (guides, validation) and their builder
+├─ site/                   # content pages (guides, validation, driver pages, share cards) and their builder
 ├─ drivers/                # one JSON per driver, by brand
 ├─ passive-radiators/      # one JSON per PR, by brand
 └─ docs/                   # build plan, validation, transmission lines, data sources and permissions

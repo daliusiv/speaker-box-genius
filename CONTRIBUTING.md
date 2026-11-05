@@ -41,6 +41,7 @@ pnpm dev
 - `packages/schema`: data formats for drivers, passive radiators and URL state.
 - `packages/db-tools`: database validation and bundling scripts.
 - `packages/web`: the app.
+- `site/`: the content pages built next to the app: guides (`site/pages/*.md`), the validation page, and a page per driver (`site/drivers.ts`, share cards in `site/og.ts`). `pnpm build:site` builds them; set `SBG_CARDS=0` to skip the share cards, which need Chrome.
 
 Keep PRs small and focused. For anything large, open an issue first so we can agree on the approach.
 
