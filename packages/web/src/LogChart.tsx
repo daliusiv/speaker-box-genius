@@ -409,6 +409,19 @@ export function LogChart({
         <span className="chart-hint muted">{editing ? "Drag the handles" : "Hover or tap for values"}</span>
       </figcaption>
       {below}
+      {editing && (
+        // What the handle being dragged is set to, on its own line above the plot: over the
+        // plot it covered the very curve (and handle) being dragged.
+        <div className="handle-readout" role="status">
+          {handles
+            .filter((h) => h.id === (dragging ?? active))
+            .map((h) => (
+              <span key={h.id}>
+                <b>{h.label}</b> {h.text}
+              </span>
+            ))}
+        </div>
+      )}
       {/* The values float over the plot, on the side away from the cursor, so nothing
           around the chart moves while you hover or drag (the caption never changes size). */}
       <div className="chart-body">
@@ -436,23 +449,6 @@ export function LogChart({
           ))}
         </div>
       )}
-      {handles
-        .filter((h) => h.id === (dragging ?? active) && h.f >= fMin && h.f <= fMax)
-        .map((h) => (
-          <div
-            key={h.id}
-            className="handle-bubble"
-            role="status"
-            // In a top corner of the plot, on the side away from the handle (where the finger is).
-            style={
-              xOf(h.f) > W / 2
-                ? { left: `${((PAD.l + 6) / W) * 100}%`, top: `${((PAD.t + 4) / (H + ribbonH)) * 100}%` }
-                : { right: `${((PAD.r + 6) / W) * 100}%`, top: `${((PAD.t + 4) / (H + ribbonH)) * 100}%` }
-            }
-          >
-            <b>{h.label}</b> {h.text}
-          </div>
-        ))}
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H + ribbonH}`}
