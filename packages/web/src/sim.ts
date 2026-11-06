@@ -22,12 +22,23 @@ import {
   type SolveResult,
   type VolumeResult,
 } from "@sbg/engine";
-import type { AppState, DesignState, LineDesign, PortFields, PrDesign, PrGroupState, Settings } from "./state.ts";
+import type { AppState, DesignKind, DesignState, LineDesign, PortFields, PrDesign, PrGroupState, Settings } from "./state.ts";
 import { compareView } from "./state.ts";
 import { stuffFactor, stuffable, stuffingEffect } from "./stuffing.ts";
 
 /** One colour per design slot; distinguishable in light and dark mode. */
-export const PALETTE = ["#3b82f6", "#f97316", "#22c55e", "#a855f7", "#e11d48", "#0d9488", "#ca8a04", "#64748b"];
+/**
+ * Each box type has its own colour, whatever else is in the project: sealed blue, ported
+ * orange, passive radiators green, bandpass purple, transmission lines teal. A second (third…)
+ * design of the same type takes the next shade of its colour.
+ */
+export const KIND_COLORS: Record<DesignKind, readonly string[]> = {
+  sealed: ["#3b82f6", "#93c5fd", "#6366f1", "#bfdbfe"],
+  vented: ["#f97316", "#fdba74", "#c2410c", "#ffedd5"],
+  pr: ["#22c55e", "#86efac", "#84cc16", "#bbf7d0"],
+  bandpass: ["#a855f7", "#d8b4fe", "#d946ef", "#e9d5ff"],
+  line: ["#14b8a6", "#5eead4", "#06b6d4", "#99f6e4"],
+};
 
 export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators", bandpass: "Bandpass", line: "Transmission line" } as const;
 
@@ -46,7 +57,11 @@ export const compareShort = (name: string, brand: string) => {
 
 export function colorOf(s: AppState, id: string): string {
   const i = s.designs.findIndex((d) => d.id === id);
-  return PALETTE[(i < 0 ? 0 : i) % PALETTE.length]!;
+  if (i < 0) return KIND_COLORS.sealed[0]!;
+  const kind = s.designs[i]!.kind;
+  const shades = KIND_COLORS[kind];
+  const nth = s.designs.slice(0, i).filter((d) => d.kind === kind).length;
+  return shades[nth % shades.length]!;
 }
 
 export interface Design {
