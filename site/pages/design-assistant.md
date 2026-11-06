@@ -15,11 +15,17 @@ Not sure which driver to buy, or which box to put it in? The design assistant as
 ## Four steps
 
 1. **What for:** a car subwoofer, a home subwoofer, a hi-fi bookshelf woofer, a tower (floor-stander), or something else. Each sets sensible starting limits.
-2. **Limits:** the largest box (net inside volume), your amplifier's power and the lowest load it takes, how many drivers and what sizes, which box types, and which brands. With ported boxes, the chuffing line for port air speed too (below).
+2. **Limits:** the largest box (net inside volume) or **My space** (below), your amplifier's power and the lowest load it takes, how many drivers and what sizes, which box types, and which brands. With ported boxes, the chuffing line for port air speed too (below).
 3. **Priority:** balanced, deepest, loudest (at a frequency you choose) or smallest box (that still reaches a target F3).
 4. **Results:** a ranked list. **Open** starts your project with that driver and box.
 
 ![The first step: what you're building.](img/assistant-uses.png)
+
+## Fit my space
+
+Know where the box has to go (a car boot, a shelf, beside the sofa) but not its volume? Choose **My space** in the Limits step and give the box's outside width, height and depth and the wall thickness. Each driver then gets the net volume that space holds with its own displacement, and each ported or passive radiator box with its own port or PRs taken off too, worked out exactly as the volume calculator does. Drivers too big for a face of the box are left out, and transmission lines have to fold into it.
+
+Each card says whether the box fills your space or how much of it it uses (a sealed box at Qtc 0.707 often needs less). Opening a result sets the volume calculator to your space, and a box that fills it takes its volume from there, so the app shows the same net volume.
 
 ## What it tries
 

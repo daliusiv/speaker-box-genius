@@ -8,6 +8,8 @@ import {
   LINE_USES,
   evaluateDriver,
   goalFor,
+  spaceGross_l,
+  type SpaceGoal,
   bandpassShortlist,
   lineShortlist,
   prShortlist,
@@ -101,6 +103,14 @@ function bandpassText(b: NonNullable<AssistantResult["bandpass"]>, fmt: (v: numb
   const rear = b.order === "4" ? `A ${vol(b.rear_l)} sealed rear chamber, ${front}` : `A ${vol(b.rear_l)} rear chamber tuned to ${b.rearFb} Hz with ${b.rearPort ? portText(b.rearPort, fmt) : "a port"}, ${front}`;
   const gain = Math.abs(b.gain_db) >= 0.5 ? `, ${b.gain_db > 0 ? "+" : "−"}${Math.abs(b.gain_db).toFixed(1)} dB on a plain cone` : "";
   return `${rear}. Band up to ${b.f3High.toFixed(0)} Hz${gain}; the sound leaves through the port${b.order === "4" ? "" : "s"}.`;
+}
+
+/** A space in words: "45 × 40 × 40 cm". */
+function spaceText(sp: SpaceGoal, fmt: (v: number, q: "len") => string): string {
+  const [w, h, d] = [sp.width_cm, sp.height_cm, sp.depth_cm].map((x) => fmt(x, "len"));
+  const unit = w!.replace(/^[\d.,]+\s*/, "");
+  const n = (x: string) => x.replace(/\s*[^\d.,]+$/, "").replace(/[.,]0$/, "");
+  return `${n(w!)} × ${n(h!)} × ${n(d!)} ${unit}`;
 }
 
 /** A suggested port in words: "a 7.5 cm port 14 cm long", "a 6 cm flared port …", "a 27 × 3 cm slot …". */
@@ -372,7 +382,7 @@ export function DesignAssistant(props: {
   const vol = (l: number) => fmt(l, "vol", unit("vol").unit === "L" ? (l < 10 ? 1 : 0) : 2);
   const chips: { label: string; step: number }[] = [
     { label: USES[goal.use].label, step: 0 },
-    { label: `≤ ${vol(goal.maxVolume_l)}`, step: 1 },
+    { label: goal.space ? `Fits ${spaceText(goal.space, fmt)}` : `≤ ${vol(goal.maxVolume_l)}`, step: 1 },
     { label: `${goal.power_w} W${goal.minLoad_ohm ? ` · ≥ ${goal.minLoad_ohm} Ω` : ""}`, step: 1 },
     { label: `${goal.drivers} × ${goal.sizeMin_in}–${goal.sizeMax_in}″`, step: 1 },
     { label: goal.boxes.filter((b) => offered(b, goal.use)).map((b) => BOX_LABEL[b]).join(" + ") || "No box types", step: 1 },
@@ -430,7 +440,7 @@ export function DesignAssistant(props: {
                     aria-pressed={goal.use === u}
                     onClick={() => {
                       setGoalRaw(() => {
-                        const g = { ...goalFor(u, goal.priority), brands: goal.brands };
+                        const g = { ...goalFor(u, goal.priority), brands: goal.brands, ...(goal.space ? { space: goal.space } : {}) };
                         saveGoal(g);
                         return g;
                       });
@@ -453,9 +463,41 @@ export function DesignAssistant(props: {
 
           {step === 1 && (
             <>
-              <p className="hint">Your limits. The box size is the net inside volume for all the drivers together.</p>
+              <p className="hint">Your limits: the largest box (its net inside volume, all the drivers together), or the space it has to fit.</p>
+              <div className="unit-switch assist-only" role="group" aria-label="Box size">
+                <button aria-pressed={!goal.space} onClick={() => setGoal({ space: undefined })}>
+                  Volume
+                </button>
+                <button aria-pressed={!!goal.space} onClick={() => setGoal({ space: goal.space ?? { width_cm: 45, height_cm: 40, depth_cm: 40, wall_mm: props.base.volume.wall_mm } })}>
+                  My space
+                </button>
+              </div>
+              {goal.space && (
+                <>
+                  <div className="fields">
+                    {(["width_cm", "height_cm", "depth_cm"] as const).map((k) => (
+                      <Num
+                        key={k}
+                        label={k === "width_cm" ? "Width" : k === "height_cm" ? "Height" : "Depth"}
+                        q="len"
+                        value={goal.space![k]}
+                        min={5}
+                        help="The box's outside size: the space it has to fit (a car boot, a shelf, a corner)."
+                        onChange={(v) => setGoal({ space: { ...goal.space!, [k]: v } })}
+                      />
+                    ))}
+                    <Num label="Walls" unit="mm" value={goal.space.wall_mm} min={3} help="Panel thickness." onChange={(wall_mm) => setGoal({ space: { ...goal.space!, wall_mm } })} />
+                  </div>
+                  <p className="hint">
+                    About {vol(spaceGross_l(props.base, goal.space))} inside after the walls and bracing. Each result takes off its own driver, ports and passive radiators, as the
+                    volume calculator does, and opens with the calculator set to this space.
+                  </p>
+                </>
+              )}
               <div className="fields">
-                <Num label="Max box" q="vol" value={goal.maxVolume_l} min={1} help="The largest box that fits (net inside volume, all drivers)." onChange={(maxVolume_l) => setGoal({ maxVolume_l })} />
+                {!goal.space && (
+                  <Num label="Max box" q="vol" value={goal.maxVolume_l} min={1} help="The largest box that fits (net inside volume, all drivers)." onChange={(maxVolume_l) => setGoal({ maxVolume_l })} />
+                )}
                 <Num label="Amp power" unit="W" value={goal.power_w} min={1} help="What your amplifier gives into the load below." onChange={(power_w) => setGoal({ power_w })} />
                 <Select<number>
                   label="Amp min load"
@@ -694,6 +736,13 @@ export function DesignAssistant(props: {
                     ) : (
                       <p className="assist-safe">✓ Within its limits at {goal.power_w} W, with or without a subsonic filter.</p>
                     )}
+                    {r.space && (
+                      <p className="hint assist-note">
+                        {r.space.fills
+                          ? `Fills your space: ${vol(r.vb_l)} net, after the driver${r.port ? " and port" : r.pr ? " and passive radiators" : r.bandpass ? ", the divider and ports" : ""}.`
+                          : `Uses ${vol(r.vb_l)} of the ${vol(r.space.holds_l)} your space holds for it.`}
+                      </p>
+                    )}
                     {r.gd && (
                       <p className="assist-note">
                         Slow bass: group delay reaches {r.gd.ms} ms at {r.gd.hz} Hz, {r.gd.cycles.toFixed(1)} cycles of the note (above about one, the bass starts to sound late
@@ -743,7 +792,7 @@ export function DesignAssistant(props: {
               </div>
               <p className="hint finder-note">
                 Each driver in the database that fits your limits, in the box the app's presets would give it (sealed Qtc 0.707, ported QB3/B4 or Keele), no
-                bigger than your maximum, with ports judged against your {portLimitOf(props.base)} m/s chuffing line{goal.boxes.includes("line") && LINE_USES.includes(goal.use) ? "; transmission lines (MLTL and classic TL from the app's line presets, narrowed to fit) for the best few drivers" : ""}, simulated at {goal.power_w} W{goal.use === "car" ? " with the car's cabin gain (output includes it; F3 is the box's own, before cabin gain, as in the summary table)" : ""}. Opening a result starts the project
+                bigger than {goal.space ? "your space holds for it (after its driver, ports and passive radiators)" : "your maximum"}, with ports judged against your {portLimitOf(props.base)} m/s chuffing line{goal.boxes.includes("line") && LINE_USES.includes(goal.use) ? "; transmission lines (MLTL and classic TL from the app's line presets, narrowed to fit) for the best few drivers" : ""}, simulated at {goal.power_w} W{goal.use === "car" ? " with the car's cabin gain (output includes it; F3 is the box's own, before cabin gain, as in the summary table)" : ""}. Opening a result starts the project
                 with its driver and box. Database values are the manufacturers' published figures: check the datasheet before you buy.
               </p>
             </>

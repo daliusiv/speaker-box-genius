@@ -4,8 +4,8 @@ import { TS_PARAMS, type TsParam, type TsValues } from "@sbg/engine";
 import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
-import { PORT_LIMIT, lineFoldOf, limitsOf, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { GD_CYCLES, prShortlist, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { PORT_LIMIT, lineFoldOf, limitsOf, volumeFor, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
+import { GD_CYCLES, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -270,4 +270,32 @@ test("passive radiator boxes: the ported box's size and tuning with the database
   const goal = goalFor("home", "balanced");
   const row = prShortlist(runAll(goal).results, prefilter(rows, goal), 1)[0]!;
   assert.deepEqual(evaluateDriver(DEFAULT_STATE, row, loaded(row.id), goal, "pr", []), []);
+});
+
+test("fit my space: each result gets what the space holds with its own driver and ports, and opens with the calculator set to it", async () => {
+  const { prCandidate } = await import("../../../site/drivers.ts");
+  const prs = db.passiveRadiators.map(prCandidate);
+  const space = { width_cm: 45, height_cm: 40, depth_cm: 40, wall_mm: 18 };
+  const goal = { ...goalFor("home", "balanced"), space };
+  const gross = spaceGross_l(DEFAULT_STATE, space);
+  assert.ok(Math.abs(gross - 0.97 * 41.4 * 36.4 * 36.4 / 1000) < 1, `inside ${gross} L`);
+  const cands = prefilter(rows, goal);
+  // Only drivers whose frame fits a face of the space.
+  assert.ok(cands.every((r) => r.size_in! * 2.54 <= insideOf(space)[1]!) && cands.length < prefilter(rows, goalFor("home", "balanced")).length);
+  const boxes = runAll(goal).results;
+  const withPr = [...boxes, ...prShortlist(boxes, cands, 6).flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id), goal, "pr", prs))];
+  let linked = 0;
+  for (const r of withPr.filter((x) => x.box !== "line" && x.box !== "bandpass")) {
+    assert.ok(r.space && r.vb_l <= r.space.holds_l + 0.15 && r.space.holds_l < gross, `${r.name} ${r.box}: ${r.vb_l} L in ${JSON.stringify(r.space)}`);
+    const s = openResults(DEFAULT_STATE, loaded(r.driverId), [r], goal);
+    assert.equal(s.volume.shape, "box");
+    assert.deepEqual([s.volume.width_cm, s.volume.height_cm, s.volume.depth_cm, s.volume.wall_mm], [45, 40, 40, 18]);
+    if (r.space.fills) {
+      linked++;
+      assert.equal(s.volume.link, s.designs[0]!.id, `${r.name} ${r.box} linked`);
+      const net = volumeFor(s, s.designs[0]!).net_l;
+      assert.ok(Math.abs(net - r.vb_l) < 0.2, `${r.name} ${r.box}: calculator ${net} L vs ${r.vb_l} L`);
+    } else assert.equal(s.volume.link, "none");
+  }
+  assert.ok(linked >= 3, `${linked} boxes fill the space`);
 });
