@@ -150,8 +150,10 @@ export function lossesFor(s: AppState, d: DesignState): Settings["losses"] {
 export const HORNRESP_AIR: Air = { rho: 1.205, c: 344 };
 export const airOf = (s: AppState): Air => (s.settings.air === "winisd" ? WINISD_AIR : s.settings.air === "hornresp" ? HORNRESP_AIR : STANDARD_AIR);
 
-/** Chuffing guideline, in whichever convention (peak or RMS) the user chose to display. */
+/** Chuffing guideline, in whichever convention (peak or RMS) the user chose to display: the default of the setting. */
 export const PORT_LIMIT = 17;
+/** The chuffing line in use (Settings → Ports), in the displayed convention. */
+export const portLimitOf = (s: Pick<AppState, "settings">): number => (s.settings.portLimit_ms > 0 ? s.settings.portLimit_ms : PORT_LIMIT);
 
 /**
  * Dual voice coil: factors that turn the entered Re (and Le) and Qes into the values for
@@ -324,7 +326,7 @@ export function simOptionsOf(s: AppState) {
     highPass: s.highPass.on ? { type: s.highPass.type, order: s.highPass.order, freq: s.highPass.freq } : null,
     air: airOf(s),
     // The limit is in the displayed convention; the engine works in peak.
-    portVelocityLimit: s.settings.velocity === "rms" ? PORT_LIMIT * Math.SQRT2 : PORT_LIMIT,
+    portVelocityLimit: s.settings.velocity === "rms" ? portLimitOf(s) * Math.SQRT2 : portLimitOf(s),
     portCompression: s.settings.portCompression,
     splFrom: s.settings.lineSpl === "power" ? ("power" as const) : undefined,
     portModel: s.settings.portModel === "pipe" ? ("pipe" as const) : undefined,
@@ -498,7 +500,8 @@ export const DEEP_FLOOR_HZ = 20;
 
 /** Where a design's deep-bass zone starts (Hz), or null (sealed, a high-pass filter, a very low tuning). */
 export function deepSplitOf(r: SimulationResult, highPassOn: boolean): number | null {
-  const fb = r.summary.fb;
+  // A 6th-order bandpass box has two tunings: its band starts at the lower one.
+  const fb = r.summary.fb !== undefined && r.summary.fbRear !== undefined ? Math.min(r.summary.fb, r.summary.fbRear) : r.summary.fb;
   return !highPassOn && fb !== undefined && DEEP_SPLIT * fb > DEEP_FLOOR_HZ ? DEEP_SPLIT * fb : null;
 }
 
@@ -534,10 +537,10 @@ export function portRoom_cm(vb_l: number, clearance_cm: number, internalMax_cm: 
 
 /**
  * A design's peaks and which limits they cross: cone Xmax, the passive radiators' Xmax, the
- * port's chuffing line. With a high-pass filter, from 10 Hz. Without one, from 15 Hz, except
+ * port's chuffing line (`portLimit`, in the convention of the result's port speeds). With a high-pass filter, from 10 Hz. Without one, from 15 Hz, except
  * a tuned box's deep-bass zone (deepSplitOf), which is graded instead (see DEEP_SPLIT).
  */
-export function limitsOf(r: SimulationResult, xmax_mm: number, highPassOn: boolean): Limits {
+export function limitsOf(r: SimulationResult, xmax_mm: number, highPassOn: boolean, portLimit = PORT_LIMIT): Limits {
   const fMin = highPassOn ? 10 : 15;
   const split = deepSplitOf(r, highPassOn);
   const lo = split ?? fMin;
@@ -554,7 +557,7 @@ export function limitsOf(r: SimulationResult, xmax_mm: number, highPassOn: boole
     xDeep !== null ? xDeep / (DEEP_ALLOW * xmax_mm) : 0,
     xpr?.xmax ? xpr.mm / xpr.xmax : 0,
     prDeep?.xmax ? prDeep.mm / (DEEP_ALLOW * prDeep.xmax) : 0,
-    vp !== null ? vp / PORT_LIMIT : 0,
+    vp !== null ? vp / portLimit : 0,
   ];
   const over: LimitKind[] = [];
   if (ratios[0]! > 1 || ratios[1]! > 1) over.push("xmax");

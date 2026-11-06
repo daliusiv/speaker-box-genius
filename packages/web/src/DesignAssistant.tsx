@@ -4,8 +4,12 @@ import {
   CURVE_FREQS,
   PRIORITIES,
   USES,
+  BANDPASS_USES,
+  LINE_USES,
   evaluateDriver,
   goalFor,
+  bandpassShortlist,
+  lineShortlist,
   prefilter,
   rankResults,
   type AssistantBox,
@@ -14,15 +18,21 @@ import {
   type AssistantPriority,
   type AssistantResult,
   type AssistantUse,
+  type IndexRow,
 } from "./assistant.ts";
 import { loadDriver, type DbIndex, type LoadedDriver } from "./library.ts";
+import type { WorkerJob, WorkerReply } from "./assistantWorker.ts";
 import type { AppState } from "./state.ts";
 import { useUnits } from "./units.ts";
+import { portLimitOf } from "./sim.ts";
 import { Logo, UseIcon } from "./Logo.tsx";
 
 const KEY = "sbg.assistant";
 const STEPS = ["What for", "Limits", "Priority", "Results"] as const;
 const SIZES = [4, 5, 5.25, 6.5, 8, 10, 12, 15, 18, 21];
+const BOX_LABEL: Record<AssistantBox, string> = { sealed: "Sealed", vented: "Ported", line: "Line", bandpass: "Bandpass" };
+/** Whether a box type is offered for a use. */
+const offered = (b: AssistantBox, use: AssistantGoal["use"]) => (b === "line" ? LINE_USES.includes(use) : b === "bandpass" ? BANDPASS_USES.includes(use) : true);
 const PAGE = 20;
 
 function readGoal(): AssistantGoal | null {
@@ -82,6 +92,14 @@ function Sketch({ curve }: { curve: number[] }) {
  * priority can be switched there directly. Results come in as they're worked out, in short
  * slices between paints, with a Stop.
  */
+/** A bandpass box in words: its chambers, ports and band. */
+function bandpassText(b: NonNullable<AssistantResult["bandpass"]>, fmt: (v: number, q: "len") => string, vol: (l: number) => string): string {
+  const front = `a ${vol(b.front_l)} front chamber tuned to ${b.frontFb} Hz with ${portText(b.frontPort, fmt)}`;
+  const rear = b.order === "4" ? `A ${vol(b.rear_l)} sealed rear chamber, ${front}` : `A ${vol(b.rear_l)} rear chamber tuned to ${b.rearFb} Hz with ${b.rearPort ? portText(b.rearPort, fmt) : "a port"}, ${front}`;
+  const gain = Math.abs(b.gain_db) >= 0.5 ? `, ${b.gain_db > 0 ? "+" : "−"}${Math.abs(b.gain_db).toFixed(1)} dB on a plain cone` : "";
+  return `${rear}. Band up to ${b.f3High.toFixed(0)} Hz${gain}; the sound leaves through the port${b.order === "4" ? "" : "s"}.`;
+}
+
 /** A suggested port in words: "a 7.5 cm port 14 cm long", "a 6 cm flared port …", "a 27 × 3 cm slot …". */
 function portText(p: AssistantPort, fmt: (v: number, q: "len") => string): string {
   const long = `${fmt(p.length_cm, "len")} long`;
@@ -99,6 +117,8 @@ export function DesignAssistant(props: {
   base: AppState;
   /** Starting a project from one result, or the same driver's sealed and ported results. */
   onOpen: (d: LoadedDriver, rs: AssistantResult[], goal: AssistantGoal) => void;
+  /** The chuffing line is the app's own setting (Settings → Ports): changed here, it changes there. */
+  onPortLimit: (ms: number) => void;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [goal, setGoalRaw] = useState<AssistantGoal>(() => readGoal() ?? goalFor("car"));
@@ -128,8 +148,13 @@ export function DesignAssistant(props: {
   const [stopped, setStopped] = useState(false);
   const [error, setError] = useState("");
   const [shown, setShown] = useState(PAGE);
+  /** Show one kind of box (e.g. only the lines), or all. */
+  const [only, setOnly] = useState<AssistantBox | "all">("all");
   const loadedRef = useRef(new Map<string, LoadedDriver>());
   const stopRef = useRef<(() => void) | null>(null);
+  /** Second pass: show the designs found so far now (re-ranks the list). */
+  const mergeRef = useRef<(() => void) | null>(null);
+  const [pending, setPending] = useState(0);
   const settingsKey = JSON.stringify([props.base.settings]);
   const goalKey = JSON.stringify(goal);
 
@@ -141,12 +166,23 @@ export function DesignAssistant(props: {
     setError("");
     setStopped(false);
     setShown(PAGE);
+    setOnly("all");
+    setPending(0);
     const cands = prefilter(props.db.drivers, goal);
     const out: AssistantResult[] = [];
+    // Lines and bandpass boxes found in the second pass: held back (the list doesn't jump
+    // under your finger) until it ends, or until you ask to see them.
+    const extra: AssistantResult[] = [];
+    let worker: Worker | null = null;
     const finish = (wasStopped = false) => {
       live = false;
       clearTimeout(timer);
+      worker?.terminate();
+      worker = null;
       stopRef.current = null;
+      mergeRef.current = null;
+      out.push(...extra.splice(0));
+      setPending(0);
       setProgress(null);
       setStopped(wasStopped);
       setResults(rankResults(out, goal));
@@ -195,7 +231,7 @@ export function DesignAssistant(props: {
           setError((e as Error).message);
           return;
         }
-        if (i >= cands.length) return finish();
+        if (i >= cands.length) return wantLines || wantBandpass ? startLines() : finish();
         setProgress({ label: "Trying each driver", done: i, total: cands.length });
         // Show the best so far while the rest are worked out (about twice a second).
         if (performance.now() - rankedAt > 500) {
@@ -204,6 +240,80 @@ export function DesignAssistant(props: {
         }
         timer = setTimeout(slice, 0);
       };
+      // Transmission lines and bandpass boxes, after the boxes: the best few drivers (each a
+      // slower search), the list re-ranked as they come in.
+      const wantLines = goal.boxes.includes("line") && LINE_USES.includes(goal.use);
+      const wantBandpass = goal.boxes.includes("bandpass") && BANDPASS_USES.includes(goal.use);
+      const startLines = () => {
+        const ranked = rankResults(out, goal);
+        setResults(ranked);
+        const picked: { row: IndexRow; stage: "lines" | "bandpass" }[] = [
+          ...(wantBandpass ? bandpassShortlist(ranked, cands).map((row) => ({ row, stage: "bandpass" as const })) : []),
+          ...(wantLines ? lineShortlist(ranked, cands).map((row) => ({ row, stage: "lines" as const })) : []),
+        ];
+        const tasks = picked.flatMap((t) => {
+          const driver = loadedRef.current.get(t.row.id);
+          return driver ? [{ ...t, driver }] : [];
+        });
+        const label = wantLines && wantBandpass ? "Lines and bandpass boxes" : wantLines ? "Transmission lines" : "Bandpass boxes";
+        const report = (done: number) => {
+          if (!live) return;
+          setProgress({ label, done, total: tasks.length });
+          setPending(extra.length);
+        };
+        mergeRef.current = () => {
+          out.push(...extra.splice(0));
+          setPending(0);
+          setResults(rankResults(out, goal));
+        };
+        report(0);
+        // In a worker when the browser can (no jank); else here, in slices between paints.
+        const inSlices = () => {
+          let j = 0;
+          const slice = () => {
+            if (!live) return;
+            if (j >= tasks.length) return finish();
+            const t0 = performance.now();
+            while (j < tasks.length && performance.now() - t0 < 30) {
+              const { row, driver, stage } = tasks[j++]!;
+              try {
+                extra.push(...evaluateDriver(props.base, row, driver, goal, stage));
+              } catch {
+                // One that won't simulate is left out; the rest carry on.
+              }
+              if (stage === "lines") break;
+            }
+            report(j);
+            timer = setTimeout(slice, 0);
+          };
+          timer = setTimeout(slice, 30);
+        };
+        try {
+          worker = new Worker(new URL("./assistantWorker.ts", import.meta.url), { type: "module" });
+        } catch {
+          worker = null;
+        }
+        if (!worker) return inSlices();
+        let heard = false;
+        worker.onmessage = (e: MessageEvent<WorkerReply>) => {
+          heard = true;
+          if (!live) return;
+          if (e.data.type === "result") {
+            extra.push(...e.data.results);
+            report(e.data.done);
+          } else finish();
+        };
+        worker.onerror = (e) => {
+          e.preventDefault();
+          worker?.terminate();
+          worker = null;
+          if (!live) return;
+          // It never started (couldn't load): do the work here instead; else keep what came in.
+          if (!heard) inSlices();
+          else finish();
+        };
+        worker.postMessage({ base: props.base, goal, tasks } satisfies WorkerJob);
+      };
       stopRef.current = () => finish(true);
       setProgress({ label: "Trying each driver", done: 0, total: cands.length });
       timer = setTimeout(slice, 0);
@@ -211,7 +321,9 @@ export function DesignAssistant(props: {
     return () => {
       live = false;
       clearTimeout(timer);
+      worker?.terminate();
       stopRef.current = null;
+      mergeRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.open, step, props.db, goalKey, settingsKey]);
@@ -242,13 +354,15 @@ export function DesignAssistant(props: {
       </div>
     ) : null;
 
+  const kinds = (["sealed", "vented", "bandpass", "line"] as const).filter((k) => (results ?? []).some((r) => r.box === k));
+  const listed = (results ?? []).filter((r) => only === "all" || r.box === only);
   const vol = (l: number) => fmt(l, "vol", unit("vol").unit === "L" ? (l < 10 ? 1 : 0) : 2);
   const chips: { label: string; step: number }[] = [
     { label: USES[goal.use].label, step: 0 },
     { label: `≤ ${vol(goal.maxVolume_l)}`, step: 1 },
     { label: `${goal.power_w} W${goal.minLoad_ohm ? ` · ≥ ${goal.minLoad_ohm} Ω` : ""}`, step: 1 },
     { label: `${goal.drivers} × ${goal.sizeMin_in}–${goal.sizeMax_in}″`, step: 1 },
-    { label: goal.boxes.map((b) => (b === "sealed" ? "Sealed" : "Ported")).join(" + ") || "No box types", step: 1 },
+    { label: goal.boxes.filter((b) => offered(b, goal.use)).map((b) => BOX_LABEL[b]).join(" + ") || "No box types", step: 1 },
     ...(goal.brands.length ? [{ label: goal.brands.length === 1 ? goal.brands[0]! : `${goal.brands.length} brands`, step: 1 }] : []),
   ];
 
@@ -370,8 +484,30 @@ export function DesignAssistant(props: {
                 <label className="check">
                   <input type="checkbox" checked={goal.boxes.includes("vented")} onChange={() => toggleBox("vented")} /> Ported
                 </label>
+                {LINE_USES.includes(goal.use) && (
+                  <label className="check" title="Mass-loaded (MLTL) and classic transmission lines, folded into a tall cabinet. Worked out for the best few drivers after the boxes, so they take a few seconds more.">
+                    <input type="checkbox" checked={goal.boxes.includes("line")} onChange={() => toggleBox("line")} /> Transmission line
+                  </label>
+                )}
+                {BANDPASS_USES.includes(goal.use) && (
+                  <label className="check" title="4th order (sealed rear, ported front) and 6th order (both chambers ported): more output in a band, but all of it leaves through the ports. Worked out for the best few drivers after the boxes.">
+                    <input type="checkbox" checked={goal.boxes.includes("bandpass")} onChange={() => toggleBox("bandpass")} /> Bandpass (4th / 6th order)
+                  </label>
+                )}
               </div>
               {goal.boxes.length === 0 && <p className="warn">Choose at least one box type.</p>}
+              {goal.boxes.some((b) => b !== "sealed") && (
+                <div className="fields">
+                  <Num
+                    label="Chuffing line"
+                    unit="m/s"
+                    value={portLimitOf(props.base)}
+                    min={5}
+                    help="Port air speed above this counts as chuffing. 17 m/s keeps a hi-fi port quiet; car SPL builds often accept 25–30. The same setting as Settings → Ports."
+                    onChange={(v) => props.onPortLimit(v > 0 ? v : 17)}
+                  />
+                </div>
+              )}
               <details className="more assist-brands">
                 <summary>Brands: {goal.brands.length ? goal.brands.join(", ") : "all"}</summary>
                 <div className="assist-brand-list">
@@ -431,6 +567,22 @@ export function DesignAssistant(props: {
                   </button>
                 ))}
               </div>
+              {kinds.length > 1 && (
+                <div className="unit-switch assist-only" role="group" aria-label="Show">
+                  {(["all", ...kinds] as const).map((k) => (
+                    <button
+                      key={k}
+                      aria-pressed={only === k}
+                      onClick={() => {
+                        setOnly(k);
+                        setShown(PAGE);
+                      }}
+                    >
+                      {k === "all" ? "All" : k === "line" ? "Lines" : BOX_LABEL[k]}
+                    </button>
+                  ))}
+                </div>
+              )}
               {progress && (
                 <div className="finder-progress" role="status">
                   <div className="finder-progress-text">
@@ -440,6 +592,11 @@ export function DesignAssistant(props: {
                     </span>
                   </div>
                   <progress value={progress.done} max={Math.max(1, progress.total)} />
+                  {pending > 0 && (
+                    <button type="button" className="link assist-pending" onClick={() => mergeRef.current?.()}>
+                      {pending} new {pending === 1 ? "design" : "designs"}: show {pending === 1 ? "it" : "them"} now
+                    </button>
+                  )}
                   {stopRef.current && (
                     <button type="button" className="icon" onClick={() => stopRef.current?.()} aria-label="Stop" title="Stop (keeps the results so far)">
                       ✕
@@ -456,11 +613,13 @@ export function DesignAssistant(props: {
                 </p>
               )}
               <div className="finder-results assist-results">
-                {(results ?? []).slice(0, shown).map((r) => (
+                {listed.slice(0, shown).map((r) => (
                   <div key={r.key} className="assist-card">
                     <div className="assist-card-head">
                       <b>{r.name}</b>
-                      <span className="preset-tag">{r.box === "sealed" ? "Sealed" : "Ported"}</span>
+                      <span className="preset-tag">
+                        {r.box === "line" && r.line ? r.line.label : r.bandpass ? `Bandpass ${r.bandpass.order === "4" ? "4th" : "6th"} order` : BOX_LABEL[r.box]}
+                      </span>
                       {r.badges?.map((b) => (
                         <span key={b} className="finder-best">
                           {b}
@@ -482,12 +641,16 @@ export function DesignAssistant(props: {
                       <Sketch curve={r.curve} />
                     </div>
                     <p className="assist-facts">
+                      {r.bandpass ? `${bandpassText(r.bandpass, fmt, vol)} ` : ""}
+                      {r.box === "line" && r.line
+                        ? `A line ${fmt(r.line.length_cm, "len")} long (to fold into a tall cabinet), tuned to ${r.fb} Hz${r.line.design.end === "port" ? `, with a ${fmt(r.line.design.portDiameter_cm, "len")} port at the end` : ", open at the end"}. `
+                        : ""}
                       {r.box === "vented" && r.port
                         ? `Tuned to ${r.fb} Hz, ${portText(r.port, fmt)}. `
                         : ""}
                       {wiringText(r, goal.drivers)}
                       Output at {goal.loudAt_hz} Hz is set by {LIMIT_TEXT[r.limitedBy]}.
-                      {r.peak_db > 1.5 ? ` A ${r.peak_db.toFixed(1)} dB hump above F3.` : ""}
+                      {r.peak_db > 1.5 ? (r.bandpass ? ` ${r.peak_db.toFixed(1)} dB of ripple across the band.` : ` A ${r.peak_db.toFixed(1)} dB hump above F3.`) : ""}
                     </p>
                     {r.over.length > 0 ? (
                       <p className="warn assist-over">
@@ -509,7 +672,11 @@ export function DesignAssistant(props: {
                     ))}
                     <div className="assist-card-actions">
                       {(() => {
-                        const sibling = results!.find((x) => x.driverId === r.driverId && x.box !== r.box);
+                        // Sealed ↔ ported, or a line with the same driver's ported box.
+                        // Sealed ↔ ported; a line or a bandpass box with the same driver's ported box.
+                        const sibling = results!.find(
+                          (x) => x.driverId === r.driverId && x.box !== r.box && (r.box === "line" || r.box === "bandpass" ? x.box === "vented" : x.box === "sealed" || x.box === "vented"),
+                        );
                         const open = (rs: AssistantResult[]) => {
                           const d = loadedRef.current.get(r.driverId);
                           if (d) props.onOpen(d, rs, goal);
@@ -518,7 +685,7 @@ export function DesignAssistant(props: {
                           <>
                             {sibling && (
                               <button type="button" className="secondary" title="Start with this driver in both boxes, to compare them" onClick={() => open(r.box === "sealed" ? [r, sibling] : [sibling, r])}>
-                                Open with sealed + ported
+                                {r.box === "line" || r.box === "bandpass" ? "Open with ported too" : "Open with sealed + ported"}
                               </button>
                             )}
                             <button type="button" title="Start your project with this driver and box" onClick={() => open([r])}>
@@ -530,15 +697,15 @@ export function DesignAssistant(props: {
                     </div>
                   </div>
                 ))}
-                {results && results.length > shown && (
+                {listed.length > shown && (
                   <button type="button" className="link" onClick={() => setShown(shown + PAGE)}>
-                    Show {Math.min(PAGE, results.length - shown)} more (of {results.length})
+                    Show {Math.min(PAGE, listed.length - shown)} more (of {listed.length})
                   </button>
                 )}
               </div>
               <p className="hint finder-note">
                 Each driver in the database that fits your limits, in the box the app's presets would give it (sealed Qtc 0.707, ported QB3/B4 or Keele), no
-                bigger than your maximum, simulated at {goal.power_w} W{goal.use === "car" ? " with the car's cabin gain (output includes it; F3 is the box's own, before cabin gain, as in the summary table)" : ""}. Opening a result starts the project
+                bigger than your maximum, with ports judged against your {portLimitOf(props.base)} m/s chuffing line{goal.boxes.includes("line") && LINE_USES.includes(goal.use) ? "; transmission lines (MLTL and classic TL from the app's line presets, narrowed to fit) for the best few drivers" : ""}, simulated at {goal.power_w} W{goal.use === "car" ? " with the car's cabin gain (output includes it; F3 is the box's own, before cabin gain, as in the summary table)" : ""}. Opening a result starts the project
                 with its driver and box. Database values are the manufacturers' published figures: check the datasheet before you buy.
               </p>
             </>

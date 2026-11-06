@@ -11,7 +11,7 @@ export function Logo(props: { className?: string }) {
 }
 
 /** Line icons for the assistant's "What are you building?" tiles (24 × 24, drawn in currentColor). */
-export function UseIcon({ use }: { use: "car" | "home" | "hifi" | "other" }) {
+export function UseIcon({ use }: { use: "car" | "home" | "hifi" | "tower" | "other" }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   return (
     <svg className="use-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -41,6 +41,16 @@ export function UseIcon({ use }: { use: "car" | "home" | "hifi" | "other" }) {
           <circle cx="12" cy="7" r="1.6" />
           <circle cx="12" cy="14.5" r="4" />
           <circle cx="12" cy="14.5" r="1.3" />
+        </g>
+      )}
+      {use === "tower" && (
+        <g {...common}>
+          {/* A tall floor-standing speaker: tweeter over two woofers, on feet. */}
+          <rect x="7.5" y="1.5" width="9" height="19.5" rx="1.4" />
+          <circle cx="12" cy="4.6" r="1.1" />
+          <circle cx="12" cy="9.4" r="2.6" />
+          <circle cx="12" cy="15.6" r="2.6" />
+          <path d="M8.5 21v1.5M15.5 21v1.5" />
         </g>
       )}
       {use === "other" && (

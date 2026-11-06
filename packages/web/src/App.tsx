@@ -57,6 +57,7 @@ import {
   switchDrive,
   builtVbOf,
   limitsOf,
+  portLimitOf,
   driveAt,
   deepSplitOf,
   DEEP_ALLOW,
@@ -1400,6 +1401,14 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(velocity) => set("settings", { ...state.settings, velocity })}
                 />
+                <Num
+                  help="Port air speed above this counts as chuffing (the red line on the Port speed chart, the ⚠ in the summary, and the design assistant's checks). 17 m/s is the usual guide for a quiet hi-fi port; car SPL builds often accept 25–30."
+                  label="Chuffing line"
+                  unit="m/s"
+                  value={portLimitOf(state)}
+                  min={5}
+                  onChange={(v) => set("settings", { ...state.settings, portLimit_ms: v > 0 ? v : PORT_LIMIT })}
+                />
               </div>
               <details className="more">
                 <summary>About ports as pipes and port speed</summary>
@@ -1407,8 +1416,9 @@ export function App(props: { initial: AppState | null }) {
                   A port is also a pipe open at both ends, resonating at about c&nbsp;/&nbsp;2L (a 40&nbsp;cm port near 380&nbsp;Hz) and
                   letting midrange out as a narrow peak. &ldquo;Pipe&rdquo; draws those resonances (charts then run to 1&nbsp;kHz); in the
                   bass it matches the air-mass model within a few tenths of a dB. Vented boxes only; the box&rsquo;s own standing
-                  waves, which drive the port hardest when they coincide, aren&rsquo;t simulated. The {PORT_LIMIT}&nbsp;m/s chuffing line
-                  applies to whichever port-speed convention you pick.
+                  waves, which drive the port hardest when they coincide, aren&rsquo;t simulated. The chuffing line (17&nbsp;m/s by default) applies to whichever port-speed convention you pick.
+                  17&nbsp;m/s peak keeps a hi-fi port quiet; flared ports tolerate more, and car SPL builds often accept 25&ndash;30&nbsp;m/s
+                  for a little port noise at full power.
                 </p>
               </details>
 
@@ -1727,17 +1737,17 @@ export function App(props: { initial: AppState | null }) {
                     color: d.color,
                     dash: d.dash,
                     y: d.result.portVelocity,
-                    over: PORT_LIMIT,
+                    over: portLimitOf(state),
                   })),
                   ...designs.map((d) => ({
                     label: `${d.label} (rear port)`,
                     color: d.color,
                     dash: "5 3",
                     y: d.result.rearPortVelocity,
-                    over: PORT_LIMIT,
+                    over: portLimitOf(state),
                   })),
                 ].filter((s) => s.y)}
-                limits={[{ value: PORT_LIMIT, label: `Chuffing risk ${PORT_LIMIT} m/s`, color: LIMIT_RED }]}
+                limits={[{ value: portLimitOf(state), label: `Chuffing risk ${portLimitOf(state)} m/s`, color: LIMIT_RED }]}
                 yMin={0}
               />
             )}
@@ -1892,13 +1902,22 @@ export function App(props: { initial: AppState | null }) {
         onClose={() => setAssistant(false)}
         db={db}
         base={state}
+        onPortLimit={(portLimit_ms) => set("settings", { ...state.settings, portLimit_ms })}
         onOpen={(d, rs, goal) => {
           const next = openResults(state, d, rs, goal);
           setStep(() => next);
           setDriverSource(d.source ? { name: d.name, ...d.source } : null);
           setAssistant(false);
-          const boxes = rs.map((r) => `${r.vb_l} L ${r.box === "sealed" ? "sealed" : "ported"}`).join(" and ");
-          notify(`Started with the ${d.name} in a ${boxes} box, at ${goal.power_w} W${goal.use === "car" ? " with cabin gain" : ""}.`);
+          const boxes = rs
+            .map((r) =>
+              r.box === "line"
+                ? `${r.vb_l} L ${r.line?.label ?? "line"}`
+                : r.box === "bandpass"
+                  ? `${r.vb_l} L ${r.bandpass?.order === "4" ? "4th" : "6th"}-order bandpass box`
+                  : `${r.vb_l} L ${r.box === "sealed" ? "sealed" : "ported"} box`,
+            )
+            .join(" and ");
+          notify(`Started with the ${d.name} in a ${boxes}, at ${goal.power_w} W${goal.use === "car" ? " with cabin gain" : ""}.`);
           showChart("response", []);
         }}
       />
@@ -1978,6 +1997,8 @@ function portContext(state: AppState, designs: Design[], id: string) {
     internalMax_cm,
     portVelocityAt: r?.summary.portVelocityAt ?? "throat",
     portCompression: r?.summary.portCompression ?? null,
+    portLimit: portLimitOf(state),
+    rms: state.settings.velocity === "rms",
     drive: driveLabel(state),
   };
 }
@@ -1998,7 +2019,7 @@ function StatusStrip({ designs, state, onJump }: { designs: Design[]; state: App
   return (
     <div className="status-strip" role="group" aria-label="Boxes at a glance">
       {mains.map((d) => {
-        const l = limitsOf(d.result, state.xmax_mm, state.highPass.on);
+        const l = limitsOf(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state));
         const f3 = d.result.summary.f3;
         const first = l.over[0] ?? null;
         const jump = first ?? (l.deep ? "xmax" : null);
@@ -2059,7 +2080,7 @@ function Summary({
     // Phones: folded to one line by default, so the charts start near the top of the screen.
     // Open: name, volume, F3 and what (if anything) is over its limit; the rest one tap away.
     const mains = designs.filter((d) => !d.compare);
-    const lims = mains.map((d) => ({ id: d.design.id, l: limitsOf(d.result, state.xmax_mm, state.highPass.on) }));
+    const lims = mains.map((d) => ({ id: d.design.id, l: limitsOf(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state)) }));
     const overs = lims.map((x) => ({ id: x.id, over: x.l.over })).filter((x) => x.over.length > 0);
     const overCount = overs.length;
     const deeps = lims.filter((x) => x.l.over.length === 0 && x.l.deep);
@@ -2119,7 +2140,7 @@ function Summary({
           <tbody>
             {designs.map(({ design: d, label, compare, color, vb_l, acting_l, result: r }) => {
               const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
-              const lim = limitsOf(r, xmax, state.highPass.on);
+              const lim = limitsOf(r, xmax, state.highPass.on, portLimitOf(state));
               const { x, xpr, vp, deep } = lim;
               const over = lim.over.map((k) => LIMIT_NAME[k]);
               if (compare) {
@@ -2229,7 +2250,7 @@ function Summary({
         <tbody>
           {designs.map(({ design: d, label, compare, color, vb_l, acting_l, result: r }) => {
             const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
-            const lim = limitsOf(r, xmax, state.highPass.on);
+            const lim = limitsOf(r, xmax, state.highPass.on, portLimitOf(state));
             const { x, xpr, vp, deep } = lim;
             const xOver = lim.over.includes("xmax");
             return (
@@ -2268,8 +2289,8 @@ function Summary({
                 >
                   {xpr === null ? "–" : <OverValue over={xpr.over} text={`${fmt(xpr.mm)} mm`} onJump={() => onJump?.("pr", [d.id])} />}
                 </td>
-                <td className={vp !== null && vp > PORT_LIMIT ? "over" : ""}>
-                  {vp === null ? "–" : <OverValue over={vp > PORT_LIMIT} text={`${fmt(vp)} m/s`} onJump={() => onJump?.("port", [d.id])} />}
+                <td className={vp !== null && vp > portLimitOf(state) ? "over" : ""}>
+                  {vp === null ? "–" : <OverValue over={vp > portLimitOf(state)} text={`${fmt(vp)} m/s`} onJump={() => onJump?.("port", [d.id])} />}
                 </td>
               </tr>
             );

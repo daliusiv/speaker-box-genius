@@ -22,12 +22,41 @@ import {
 } from "@sbg/engine";
 import type { DbIndex, LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
-import { PORT_LIMIT, airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
-import { MAX_DESIGNS, ROOM_PRESETS, newDesign, type AppState, type DesignState, type VentedDesign } from "./state.ts";
+import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
+import { airOf, portLimitOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
+import {
+  MAX_DESIGNS,
+  ROOM_PRESETS,
+  newDesign,
+  type AppState,
+  type BandpassDesign,
+  type DesignState,
+  type LineDesign,
+  type PortFields,
+  type VentedDesign,
+} from "./state.ts";
 
-export type AssistantUse = "car" | "home" | "hifi" | "other";
+export type AssistantUse = "car" | "home" | "hifi" | "tower" | "other";
 export type AssistantPriority = "balanced" | "deep" | "loud" | "small";
-export type AssistantBox = "sealed" | "vented";
+export type AssistantBox = "sealed" | "vented" | "line" | "bandpass";
+
+/** Uses where a bandpass box is offered: subwoofers (a bandpass lets nothing out above its band). */
+export const BANDPASS_USES: readonly AssistantUse[] = ["car", "home", "other"];
+
+/** Uses where a transmission line is offered (a tall cabinet that can fold one). */
+export const LINE_USES: readonly AssistantUse[] = ["hifi", "tower", "other"];
+/** The line types the assistant tries: mass-loaded and classic lines (TQWTs and offset lines grow too long to fold into a tower). */
+export const LINE_TYPES = ["mltl", "tl"] as const satisfies readonly PresetId[];
+/** The passes over a driver: the boxes for every candidate, then lines and bandpass boxes for a shortlist. */
+export type AssistantStage = "boxes" | "lines" | "bandpass";
+/** How many of the best drivers from the boxes get bandpass boxes (a search of ~200 simulations each). */
+export const BANDPASS_SHORTLIST = 30;
+/** How many of the best drivers from the boxes get lines too (a line takes ~30 simulations). */
+export const LINE_SHORTLIST = 10;
+/** Longest line the assistant suggests (cm): about three runs of a metre-tall cabinet. */
+export const LINE_MAX_CM = 300;
+/** Narrowest a line may get on average, as a share of the cones' area. */
+export const LINE_MIN_AREA = 0.8;
 
 export interface AssistantGoal {
   use: AssistantUse;
@@ -66,6 +95,11 @@ export const USES: Record<AssistantUse, { label: string; hint: string; goal: Omi
     hint: "The bass driver of a two-way speaker",
     goal: { maxVolume_l: 20, power_w: 50, minLoad_ohm: 4, drivers: 1, sizeMin_in: 4, sizeMax_in: 8, boxes: ["sealed", "vented"], loudAt_hz: 50, targetF3_hz: 45 },
   },
+  tower: {
+    label: "Tower / floor-stander",
+    hint: "The bass of a tall speaker: ported, sealed or a transmission line",
+    goal: { maxVolume_l: 60, power_w: 100, minLoad_ohm: 4, drivers: 1, sizeMin_in: 5, sizeMax_in: 10, boxes: ["sealed", "vented", "line"], loudAt_hz: 40, targetF3_hz: 35 },
+  },
   other: {
     label: "Something else",
     hint: "Start from general settings",
@@ -101,6 +135,20 @@ export interface AssistantResult {
   vb_l: number;
   fb?: number;
   port?: AssistantPort;
+  /** Transmission line: its type, length along the line, and the design itself (to open). */
+  line?: { type: (typeof LINE_TYPES)[number]; label: string; length_cm: number; design: LineDesign };
+  /** Bandpass: the order, both chambers (L), their ports, and the band (−3 dB edges) with its gain over a plain cone. */
+  bandpass?: {
+    order: "4" | "6p";
+    rear_l: number;
+    front_l: number;
+    frontPort: AssistantPort;
+    frontFb: number;
+    rearPort?: AssistantPort;
+    rearFb?: number;
+    f3High: number;
+    gain_db: number;
+  };
   /** How the drivers (and a DVC driver's coils) are wired, and the load the amplifier sees. */
   wiring: "parallel" | "series";
   dvcWired?: "parallel" | "series";
@@ -205,6 +253,47 @@ export function choosePort(vb_l: number, fb: number, air: Air): { diameter_cm: n
   return null;
 }
 
+const LINE_LABEL: Record<(typeof LINE_TYPES)[number], string> = { mltl: "MLTL", tl: "Classic TL" };
+
+/**
+ * The drivers worth trying in a slower box type: half the best drivers from the boxes (as
+ * ranked, so the strongest drivers get a go), half the candidates that suit the type best by
+ * their parameters (`key`, lowest first), so a driver that's only middling in a plain box but
+ * made for this type isn't missed. Only drivers that pass `ok`.
+ */
+export function shortlist(
+  ranked: AssistantResult[],
+  cands: IndexRow[],
+  n: number,
+  ok: (row: IndexRow) => boolean = () => true,
+  key: (row: IndexRow) => number = () => 0,
+): IndexRow[] {
+  const byId = new Map(cands.map((r) => [r.id, r]));
+  const out: IndexRow[] = [];
+  const add = (row: IndexRow | undefined, limit: number) => {
+    if (row && out.length < limit && !out.includes(row) && ok(row)) out.push(row);
+  };
+  for (const r of ranked) add(byId.get(r.driverId), Math.ceil(n / 2));
+  for (const row of [...cands].filter(ok).sort((a, b) => key(a) - key(b))) add(row, n);
+  return out;
+}
+
+/**
+ * Lines: a Qts of about 0.25–0.55 (lower starves a line of bass, higher suits a TQWT), the
+ * lowest Fs first (a line is about bass extension).
+ */
+export function lineShortlist(ranked: AssistantResult[], cands: IndexRow[], n = LINE_SHORTLIST): IndexRow[] {
+  return shortlist(ranked, cands, n, (row) => row.qts! >= 0.25 && row.qts! <= 0.55, (row) => row.fs!);
+}
+
+/**
+ * Bandpass boxes: a Qts of about 0.2–0.55, closest to 0.38 first (a flat 4th-order band with
+ * some gain), then the lowest Fs.
+ */
+export function bandpassShortlist(ranked: AssistantResult[], cands: IndexRow[], n = BANDPASS_SHORTLIST): IndexRow[] {
+  return shortlist(ranked, cands, n, (row) => row.qts! >= 0.2 && row.qts! <= 0.55, (row) => Math.abs(row.qts! - 0.38) / 0.05 + row.fs! / 20);
+}
+
 const SLOT_HEIGHTS = [8, 6, 5, 4, 3, 2.5, 2, 1.5];
 /** How much faster than the chuffing line a flared port's throat may run (its mouths set the noise). */
 const FLARED_THROAT = 2;
@@ -278,8 +367,13 @@ export function trialState(base: AppState, d: LoadedDriver, goal: AssistantGoal,
   };
 }
 
-/** Every box type of the goal for one driver, simulated and scored; [] when it can't be tried. */
-export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, goal: AssistantGoal): AssistantResult[] {
+/**
+ * Every box type of the goal for one driver, simulated and scored; [] when it can't be tried.
+ * "boxes": sealed and ported (fast, for every candidate). "lines" and "bandpass": the
+ * transmission lines and bandpass boxes (slower searches, for a shortlist of the best drivers
+ * from the boxes).
+ */
+export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, goal: AssistantGoal, stage: AssistantStage = "boxes"): AssistantResult[] {
   const wiring = loadOptions({ ohms: d.nominal_ohms ?? row.ohms, coil_ohms: row.coil_ohms }, goal)[0];
   if (!wiring || !(d.xmax_mm! > 0)) return [];
   const s = trialState(base, d, goal, wiring);
@@ -287,6 +381,9 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
   if (solved.missing.length > 0) return [];
   const align = alignmentDriver(solved, s);
   if (!align) return [];
+  const al = align; // non-null, for the nested searches
+  // The chuffing line from Settings, in peak (the simulation's convention here).
+  const vLimit = portLimitOf(s) * (s.settings.velocity === "rms" ? Math.SQRT2 : 1);
   const drv = driverInputOf(s, solved);
   const air = airOf(s);
   const room = roomGainOf(s);
@@ -332,11 +429,11 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
     let best: { design: VentedDesign; port: AssistantPort; v: number } | null = null;
     for (const port of portCandidates(vb, fb, air)) {
       const design = withPort(vb, fb, port);
-      const l = limitsOf(run(design, vb), d.xmax_mm!, false);
+      const l = limitsOf(run(design, vb), d.xmax_mm!, false, vLimit);
       const vp = l.vp ?? Infinity;
       const throat = port.kind === "flared" ? (vp * ((port.diameter_cm + 2 * port.flare_cm) / port.diameter_cm) ** 2) / FLARED_THROAT : 0;
       const v = Math.max(vp, throat);
-      if (v <= PORT_LIMIT) return { design, port };
+      if (v <= vLimit) return { design, port };
       if (!best || v < best.v) best = { design, port, v };
     }
     return best;
@@ -357,12 +454,21 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
   };
 
   const out: AssistantResult[] = [];
-  const finish = (box: AssistantBox, design: DesignState, vb: number, notes: string[], fb?: number, port?: AssistantResult["port"]) => {
+  const finish = (
+    box: AssistantBox,
+    design: DesignState,
+    vb: number,
+    notes: string[],
+    fb?: number,
+    port?: AssistantResult["port"],
+    line?: AssistantResult["line"],
+    bandpass?: AssistantResult["bandpass"],
+  ) => {
     const r = run(design, vb);
     // No roll-off found in range (a tiny box for a high-Fs pro driver, say): nothing to rank on.
     const f3 = r.summary.f3;
     if (f3 === null) return;
-    const lim = limitsOf(r, d.xmax_mm!, false);
+    const lim = limitsOf(r, d.xmax_mm!, false, vLimit);
     const watts = (scale: number) => Number((goal.power_w * scale * scale).toPrecision(2));
     const spl = at(r.freq, r.spl, goal.loudAt_hz);
     const max = at(r.freq, r.maxSpl, goal.loudAt_hz);
@@ -370,14 +476,17 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
     const limit = r.limitedBy[Math.max(0, i)] ?? "none";
     const relRef = r.summary.referenceSpl;
     out.push({
-      key: `${row.id}:${box}`,
+      key: `${row.id}:${box}${bandpass ? bandpass.order : ""}`,
       driverId: row.id,
       name: d.name,
       brand: d.brand,
       box,
-      vb_l: r1(vb),
+      // A bandpass box's size is both chambers.
+      vb_l: r1(bandpass ? bandpass.rear_l + bandpass.front_l : vb),
       ...(fb ? { fb: r1(fb) } : {}),
       ...(port ? { port } : {}),
+      ...(line ? { line } : {}),
+      ...(bandpass ? { bandpass } : {}),
       wiring: wiring.wiring,
       ...(wiring.dvc ? { dvcWired: wiring.dvc } : {}),
       load_ohm: wiring.load,
@@ -387,11 +496,157 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
       over: lim.over,
       ...(lim.over.length ? { safe_w: watts(lim.safeScale) } : {}),
       ...(lim.deep ? { deep: { below_hz: Math.round(lim.deep.below_hz), safe_w: watts(lim.deep.scale) } } : {}),
-      peak_db: r1(peakOf(r)),
+      // A bandpass box's gain isn't a hump: its ripple across the band is.
+      peak_db: r1(bandpass ? bandRipple(r) : peakOf(r)),
       curve: CURVE_FREQS.map((f) => r1(at(r.freq, r.spl, f) - (room ? roomGainDb(f, room) : 0) - relRef)),
       notes,
     });
   };
+
+  /** Peak-to-peak ripple (dB) across a bandpass box's band, between its −3 dB edges, a little inside them. */
+  function bandRipple(r: SimulationResult): number {
+    const lo = (r.summary.f3 ?? 10) * 1.15;
+    const hi = (r.summary.f3High ?? 300) / 1.15;
+    let mn = Infinity;
+    let mx = -Infinity;
+    for (let i = 0; i < r.freq.length; i++) {
+      if (r.freq[i]! < lo || r.freq[i]! > hi) continue;
+      const v = r.spl[i]! - (room ? roomGainDb(r.freq[i]!, room) : 0);
+      mn = Math.min(mn, v);
+      mx = Math.max(mx, v);
+    }
+    return Number.isFinite(mx) ? mx - mn : 0;
+  }
+
+  /**
+   * Bandpass boxes, 4th order (sealed rear, ported front) and 6th order (both ported to the
+   * outside), sized by a small search within the largest box allowed: for 4th order the rear
+   * chamber from a sealed-box Qtc (0.5–1) and the front chamber and its tuning around the
+   * rear's resonance; for 6th order the split between the chambers and both tunings. Each
+   * port is a plain tube or a slot that fits its chamber. Kept: a band reaching down near the
+   * target F3 and up to at least 80 Hz (to cross to the main speakers), with under 3 dB of
+   * ripple; of those, the lowest F3 ("Loudest": the most output at the goal's frequency), the
+   * first within its limits among the best few, else the one that stays within them longest.
+   */
+  function evaluateBandpass() {
+    const qts = (al.qms * al.qes) / (al.qms + al.qes);
+    const base = newDesign("bandpass", []) as BandpassDesign;
+    // Plain tubes and slots (the app's bandpass ports have no flares).
+    const chamberPorts = (vol: number, fb: number) => portCandidates(vol, fb, air).filter((p) => p.kind !== "flared");
+    const fieldsOf = (p: AssistantPort, fb: number, was: PortFields): PortFields => {
+      const { flare_cm: _f, ...rest } = portFieldsOf(p) as Partial<VentedDesign>;
+      return { ...was, ...(rest as Partial<PortFields>), targetFb: r1(fb) };
+    };
+    type Try = {
+      design: BandpassDesign;
+      rear: number;
+      bp: NonNullable<AssistantResult["bandpass"]>;
+      f3: number;
+      loud: number;
+      args: ["4" | "6p", number, number, number, number | undefined];
+      over: LimitKind[];
+      /** Drive scale that keeps every limit (1 when within). */
+      safe: number;
+    };
+    const score = (t: Try) => (goal.priority === "loud" ? -t.loud : t.f3);
+    const tryOne = (order: "4" | "6p", rear: number, front: number, frontFb: number, rearFb?: number, pick = 0): Try | null => {
+      const fps = chamberPorts(front, frontFb);
+      const rps = order === "6p" && rearFb ? chamberPorts(rear, rearFb) : [];
+      const fp = fps[Math.min(pick, fps.length - 1)];
+      const rp = rps[Math.min(pick, rps.length - 1)] ?? null;
+      if (!fp || (order === "6p" && !rp)) return null;
+      const design: BandpassDesign = {
+        ...base,
+        order,
+        vb_l: r1(rear),
+        frontVb_l: r1(front),
+        front: fieldsOf(fp, frontFb, base.front),
+        rear: rp && rearFb ? fieldsOf(rp, rearFb, base.rear) : base.rear,
+      };
+      const r = run(design, rear);
+      const f3 = r.summary.f3;
+      const f3High = r.summary.f3High;
+      // A sub's band: reaching down near the target, up to at least 80 Hz (to cross to the main speakers).
+      if (f3 === null || f3High === null || f3High === undefined || f3High < 80 || f3High < 1.8 * f3 || f3 > 1.6 * goal.targetF3_hz) return null;
+      if (bandRipple(r) > 3) return null;
+      const gain = Math.max(...Array.from(r.spl, (v, i) => v - (room ? roomGainDb(r.freq[i]!, room) : 0))) - r.summary.referenceSpl;
+      const loud = Math.min(at(r.freq, r.spl, goal.loudAt_hz), at(r.freq, r.maxSpl, goal.loudAt_hz));
+      return {
+        design,
+        rear,
+        f3,
+        loud,
+        args: [order, rear, front, frontFb, rearFb],
+        ...(() => {
+          const l = limitsOf(r, d.xmax_mm!, false, vLimit);
+          return { over: l.over, safe: l.safeScale };
+        })(),
+        bp: {
+          order,
+          rear_l: r1(rear),
+          front_l: r1(front),
+          frontPort: fp,
+          frontFb: r1(frontFb),
+          ...(rp && rearFb ? { rearPort: rp, rearFb: r1(rearFb) } : {}),
+          f3High: r1(f3High),
+          gain_db: r1(gain),
+        },
+      };
+    };
+    /**
+     * The best of a search: the top few by score, each with its simplest port and then a slot
+     * (all the output leaves through the ports, so their air speed is usually the limit); the
+     * first within its limits, else the best by score.
+     */
+    const best = (tries: (Try | null)[]) => {
+      const top = tries.filter((t): t is Try => t !== null).sort((a, b) => score(a) - score(b)).slice(0, 8);
+      let safest: Try | null = null;
+      for (const t of top) {
+        for (const v of [t, t.over.length ? tryOne(...t.args, 1) : null]) {
+          if (!v) continue;
+          if (v.over.length === 0) return v;
+          if (!safest || v.safe > safest.safe) safest = v;
+        }
+      }
+      // None within its limits: the one that stays within them to the most power.
+      return safest;
+    };
+    const max = goal.maxVolume_l;
+    // 4th order: the rear chamber as a sealed box of Qtc 0.7–1.2 (resonance fc), the front tuned around fc.
+    const fourth: (Try | null)[] = [];
+    for (const qtc of [0.5, 0.6, 0.7, 0.85, 1]) {
+      if (qtc < qts * 1.1) continue;
+      const rear = sealedVolumeForAlignment(al, qtc, goal.drivers);
+      if (rear === null || !(rear > 0.3) || rear > 0.75 * max) continue;
+      const fc = (al.fs * qtc) / qts;
+      for (const k of [0.3, 0.5, 0.75, 1.1, 1.6]) {
+        const front = Math.min(k * rear, max - rear);
+        if (front < 0.3) continue;
+        for (const m of [0.6, 0.75, 0.9, 1.1, 1.35]) fourth.push(tryOne("4", rear, front, m * fc));
+      }
+    }
+    // 6th order (parallel): the rear chamber tuned low, the front high, the volume split between them.
+    const sixth: (Try | null)[] = [];
+    for (const total of [0.7 * max, max]) {
+      for (const share of [0.35, 0.5, 0.65]) {
+        const rear = share * total;
+        for (const rf of [0.65, 0.8, 1]) for (const ff of [1.2, 1.5, 1.9, 2.5]) sixth.push(tryOne("6p", rear, total - rear, ff * al.fs, rf * al.fs));
+      }
+    }
+    for (const t of [best(fourth), best(sixth)]) {
+      if (!t) continue;
+      finish("bandpass", t.design, t.rear, [], t.bp.frontFb, undefined, undefined, t.bp);
+    }
+  }
+
+  if (stage === "lines") {
+    if (goal.boxes.includes("line") && LINE_USES.includes(goal.use)) evaluateLines();
+    return out;
+  }
+  if (stage === "bandpass") {
+    if (goal.boxes.includes("bandpass") && BANDPASS_USES.includes(goal.use)) evaluateBandpass();
+    return out;
+  }
 
   // Sealed: Qtc 0.707, or the largest box allowed (a higher Qtc); "smallest" shrinks it to the target F3.
   if (goal.boxes.includes("sealed")) {
@@ -416,6 +671,60 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
         }
       }
       if (ok) finish("sealed", { ...sealed, vb_l: vb }, vb, notes);
+    }
+  }
+
+  /**
+   * Transmission lines: each type from the app's line presets (sized for the driver), narrowed
+   * (cross-sections scaled) to hold no more than the largest box allowed, then tuned once and
+   * an MLTL's port sized for the goal's power. Lines too long to fold into a tower, or that
+   * won't tune near the preset's target, are left out.
+   */
+  function evaluateLines() {
+    const wall = s.volume.wall_mm;
+    const blank = newDesign("line", []) as LineDesign;
+    const narrowTo = (d: LineDesign, f: number): LineDesign => ({
+      ...d,
+      closedArea_cm2: r1(d.closedArea_cm2 * f),
+      sections: d.sections.map((x) => ({ ...x, endArea_cm2: r1(x.endArea_cm2 * f) })),
+      portDiameter_cm: r1(d.portDiameter_cm * Math.sqrt(f)),
+    });
+    for (const type of LINE_TYPES) {
+      const preset = presetFor(type, blank, drv, align, goal.drivers);
+      // Tuning keeps roughly the preset's length: one far too long to fold isn't worth tuning.
+      if (typeof preset === "string" || lineLength(preset) > 1.15 * LINE_MAX_CM) continue;
+      const wants = lineVolume(preset);
+      const narrowed = wants > goal.maxVolume_l ? narrowTo(preset, (0.95 * goal.maxVolume_l) / wants) : preset;
+      const tuned = tuneLine(drv, narrowed, preset.targetFb, opts, wall);
+      if (typeof tuned === "string") continue;
+      let cur: LineDesign = { ...tuned, targetFb: preset.targetFb };
+      // Tuning changes the length (and so the volume): narrow once more if it grew past the
+      // limit. An MLTL retunes quickly (its port); an open line's tuning barely moves with its
+      // width, and the check on Fb below catches it if it does.
+      if (lineVolume(cur) > goal.maxVolume_l * 1.02) {
+        cur = narrowTo(cur, (0.97 * goal.maxVolume_l) / lineVolume(cur));
+        if (cur.end === "port") {
+          const again = tuneLine(drv, cur, preset.targetFb, opts, wall);
+          if (typeof again === "string") continue;
+          cur = { ...again, targetFb: preset.targetFb };
+        }
+      }
+      const sized = sizeMltlPort(drv, cur, opts, wall, (vLimit * 15) / 17);
+      if (typeof sized !== "string") cur = sized;
+      const vb = lineVolume(cur);
+      if (!(vb > 0) || vb > goal.maxVolume_l * 1.02 || lineLength(cur) > LINE_MAX_CM) continue;
+      // Narrowed too far: a line much thinner than the cones chokes them (and sounds boxy),
+      // which the simulation underplays. Judged on its average cross-section, since a tapered
+      // line is meant to be narrower at one end.
+      const areas = [cur.closedArea_cm2, ...cur.sections.map((x) => x.endArea_cm2)];
+      const mean = areas.reduce((a, b) => a + b, 0) / areas.length;
+      if (mean < LINE_MIN_AREA * drv.sd_cm2 * goal.drivers) continue;
+      const design: LineDesign = { ...cur, vb_l: r1(vb) };
+      const fb = run(design, vb).summary.fb;
+      if (fb === undefined || Math.abs(fb / preset.targetFb - 1) > 0.25) continue;
+      const label = LINE_LABEL[type];
+      const notes = wants > goal.maxVolume_l * 1.02 ? [`The ${label} preset wants ${r1(wants)} L; narrowed to fit your ${r1(goal.maxVolume_l)} L`] : [];
+      finish("line", design, vb, notes, fb, undefined, { type, label, length_cm: r1(lineLength(design)), design });
     }
   }
 
@@ -455,6 +764,8 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
       if (v && fb !== null) finish("vented", v.design, vb, notes, fb, v.port);
     }
   }
+
+
   return out;
 }
 
@@ -504,7 +815,32 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
   const designs: DesignState[] = [];
   for (const r of rs.slice(0, MAX_DESIGNS)) {
     const base = newDesign(r.box, designs);
-    const kind = r.box === "sealed" ? "Sealed" : "Ported";
+    const kind = r.box === "sealed" ? "Sealed" : r.box === "line" ? (r.line?.label ?? "Line") : "Ported";
+    if (r.box === "bandpass" && r.bandpass) {
+      const b = r.bandpass;
+      const bp = base as BandpassDesign;
+      const fields = (p: AssistantPort, fb: number, was: PortFields): PortFields => {
+        const { flare_cm: _f, ...rest } = portFieldsOf(p) as Partial<VentedDesign>;
+        return { ...was, ...(rest as Partial<PortFields>), targetFb: fb };
+      };
+      designs.push({
+        ...bp,
+        name: `Bandpass ${b.order === "4" ? "4th" : "6th"} ${model}`,
+        order: b.order,
+        vb_l: b.rear_l,
+        frontVb_l: b.front_l,
+        frontOpening: "port",
+        rearOpening: "port",
+        front: fields(b.frontPort, b.frontFb, bp.front),
+        rear: b.rearPort && b.rearFb ? fields(b.rearPort, b.rearFb, bp.rear) : bp.rear,
+        preset: "Assistant",
+      });
+      continue;
+    }
+    if (r.box === "line" && r.line) {
+      designs.push({ ...r.line.design, id: base.id, on: true, name: `${kind} ${model}`, preset: "Assistant" } as LineDesign);
+      continue;
+    }
     designs.push(
       r.box === "vented" && r.port
         ? { ...(base as VentedDesign), name: `${kind} ${model}`, vb_l: r.vb_l, ...portFieldsOf(r.port), targetFb: r.fb ?? 30, preset: "Assistant" }

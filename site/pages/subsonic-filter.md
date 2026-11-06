@@ -40,6 +40,18 @@ With no filter, the cone is fine down to about 20 Hz and then shoots past its Xm
 
 [[Open the example with the filter|subsonic-on]]
 
+## No filter? How the app grades deep bass
+
+Speakers on an ordinary stereo amplifier or AV receiver usually have no subsonic filter, and most ported speakers go past Xmax somewhere below their tuning at full power. Music has little energy down there, so without a high-pass filter the app grades a ported, passive radiator or line box's **deep bass** instead of failing it:
+
+- Above **0.7 × the tuning**, the cone must stay within Xmax at your power.
+- Below it, down to 20 Hz, it may reach **2 × Xmax** (the usual margin before damage). Past Xmax there shows in **amber**, with the power that keeps it within, not as a red ⚠.
+- Below 20 Hz there's no music to check.
+
+![A ported 8″ woofer at 50 W with no filter: Xmax is reached only in the shaded deep-bass zone, well under its 2 × Xmax line.](img/deep-bass-zone.png)
+
+That's fine for most listening. For bass-heavy music or films at full power, and for subwoofers, fit a filter: with one switched on, the app checks everything from 10 Hz. (The 12″ sub above is tuned so low that its deep-bass zone would start below 20 Hz, so it has none.)
+
 ## Choosing the frequency
 
 Start **a little below the box's tuning**, about 0.8 times Fb (19 Hz for this sub), then check the cone excursion chart at your real power and move it until the cone stays under Xmax everywhere. Too low, and it doesn't protect (24 dB/oct at 15 Hz still lets the cone reach 19 mm). Too high, and you lose the bass you built the box for.

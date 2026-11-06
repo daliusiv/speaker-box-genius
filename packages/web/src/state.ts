@@ -187,6 +187,11 @@ export interface Settings {
   portModel: "lumped" | "pipe";
   /** Voice-coil temperature (°C): 20 = the datasheet's cold values (like WinISD); hotter raises Re. */
   coilTemp_C: number;
+  /**
+   * Chuffing line for port (and line mouth) air speed, m/s in the displayed convention: 17 is
+   * the usual guide for quiet hi-fi ports; car SPL builds often accept 25–30.
+   */
+  portLimit_ms: number;
 }
 
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
@@ -434,6 +439,7 @@ export const DEFAULT_STATE: AppState = {
     lineSpl: "on-axis",
     portModel: "lumped",
     coilTemp_C: 20,
+    portLimit_ms: 17,
   },
   eq: [],
   measured: [],

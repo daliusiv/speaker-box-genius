@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { AlignmentDriver, DriverInput, SimulationOptions } from "@sbg/engine";
 import { Fixed, Num, Select } from "./components.tsx";
-import { lineFoldOf, lineLength, lineVolume, PORT_LIMIT } from "./sim.ts";
+import { lineFoldOf, lineLength, lineVolume } from "./sim.ts";
 import { bestLine, compareOne, frontHorn, makePreset, PRESETS, presetFor, rankLines, tuneLine, type LineBest, type LineCompare, type LineGoal, type PresetId } from "./lineopt.ts";
 import type { LineDesign, LineSection } from "./state.ts";
 import { foldShapes } from "./foldShapes.ts";
@@ -301,6 +301,9 @@ export function LineBody(p: {
   /** Simulated tuning and peak velocity at the mouth or port, from the charts' run. */
   fb: number | null;
   exitVelocity: number | null;
+  /** The chuffing line (displayed convention), and whether speeds are shown as RMS. */
+  portLimit: number;
+  rms: boolean;
   /** Port compression in an MLTL's port, when switched on. */
   compression?: { db: number; f: number } | null;
   /** Displacement of all the drivers (litres), from the volume calculator. */
@@ -377,7 +380,7 @@ export function LineBody(p: {
     const rows: LineCompare[] = [];
     setCmp({ rows: [], done: false });
     const next = (k: number) => {
-      if (k >= PRESETS.length) return setCmp({ rows: rankLines(rows, driver.xmax_mm), done: true });
+      if (k >= PRESETS.length) return setCmp({ rows: rankLines(rows, driver.xmax_mm, p.portLimit * (p.rms ? Math.SQRT2 : 1)), done: true });
       rows.push(compareOne(PRESETS[k]!.id, driver, d, p.sim, p.align, p.drivers, p.wall_mm));
       setCmp({ rows: [...rows], done: false });
       setTimeout(() => next(k + 1), 20);
@@ -439,8 +442,8 @@ export function LineBody(p: {
   if (d.end === "tapped" && !(d.tapAt_cm > d.driverAt_cm && d.tapAt_cm < L)) {
     notes.push({ warn: true, text: "The front tap must sit between the driver's rear and the mouth." });
   }
-  if (p.exitVelocity !== null && p.exitVelocity > PORT_LIMIT) {
-    notes.push({ warn: true, text: `Air speed at the ${d.end === "port" ? "port" : "mouth"} reaches ${p.exitVelocity.toFixed(1)} m/s (over ${PORT_LIMIT}): ${d.end === "port" ? "a wider or flared port" : "a wider mouth"}, or less power.` });
+  if (p.exitVelocity !== null && p.exitVelocity > p.portLimit) {
+    notes.push({ warn: true, text: `Air speed at the ${d.end === "port" ? "port" : "mouth"} reaches ${p.exitVelocity.toFixed(1)} m/s (over ${p.portLimit}): ${d.end === "port" ? "a wider or flared port" : "a wider mouth"}, or less power.` });
   }
   if (p.compression && p.compression.db >= 0.3) {
     notes.push({ warn: p.compression.db >= 1.5, text: `Port compression: about −${p.compression.db.toFixed(1)} dB around ${p.compression.f.toFixed(0)} Hz at this power (approximate).` });
@@ -621,7 +624,7 @@ export function LineBody(p: {
           {cmp.done && (
             <p className="hint">
               Starting points from the presets, each tuned by simulation; ripple is the peak-to-peak wobble above F3. "Best line" can then smooth the one you pick. Over Xmax: use
-              less power or a high-pass; noisy mouth: air over {PORT_LIMIT} m/s.
+              less power or a high-pass; noisy mouth: air over {p.portLimit} m/s.
             </p>
           )}
         </div>
@@ -698,7 +701,7 @@ export function LineBody(p: {
         </div>
       </details>
 
-      <LineProfileView d={d} driver={p.driver} sim={p.sim} fb={p.fb} />
+      <LineProfileView d={d} driver={p.driver} sim={p.sim} fb={p.fb} portLimit={p.portLimit} rms={p.rms} />
 
       <HornrespPanel d={d} driver={p.driver} sim={p.sim} drivers={p.drivers} onDesign={(patch) => set(patch)} onImportDriver={p.onImportDriver} />
 

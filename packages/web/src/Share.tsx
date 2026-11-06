@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { coilLabel, driveLabel, lineFoldOf, limitsOf, prGroupLabels, type Design } from "./sim.ts";
+import { coilLabel, driveLabel, lineFoldOf, limitsOf, portLimitOf, prGroupLabels, type Design } from "./sim.ts";
 import { foldShapes } from "./foldShapes.ts";
 import { REPO } from "./components.tsx";
 import { fmtQ } from "./units.ts";
@@ -23,7 +23,7 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
   const n = (v: number | null | undefined, unit: string, digits = 1) =>
     v === null || v === undefined || !Number.isFinite(v) ? "–" : `${v.toFixed(digits)} ${unit}`;
   return designs.map(({ design: d, label, color, vb_l, acting_l, result: r, compare }) => {
-    const lim = limitsOf(r, compare && state.compare ? state.compare.xmax_mm : state.xmax_mm, state.highPass.on);
+    const lim = limitsOf(r, compare && state.compare ? state.compare.xmax_mm : state.xmax_mm, state.highPass.on, portLimitOf(state));
     const { x, xpr, vp } = lim;
     const vol =
       d.kind === "bandpass"

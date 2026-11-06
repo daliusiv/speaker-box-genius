@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { lineProfile, simulate, type DriverInput, type LineProfile, type SimulationOptions } from "@sbg/engine";
-import { lineInputOf, PORT_LIMIT } from "./sim.ts";
+import { lineInputOf } from "./sim.ts";
 import type { LineDesign } from "./state.ts";
 
 const F_MIN = 10;
@@ -26,7 +26,7 @@ function resonances(driver: DriverInput, d: LineDesign, sim: SimulationOptions):
  * Pressure and air speed along the line at one frequency: where the standing waves put the
  * pressure (high at closed ends) and the moving air (where stuffing does most).
  */
-export function LineProfileView(p: { d: LineDesign; driver: DriverInput | null; sim: SimulationOptions; fb: number | null }) {
+export function LineProfileView(p: { d: LineDesign; driver: DriverInput | null; sim: SimulationOptions; fb: number | null; portLimit: number; rms: boolean }) {
   const { d, driver, sim } = p;
   const res = useMemo(() => (driver ? resonances(driver, d, sim) : []), [driver, d, sim]);
   const [pick, setPick] = useState<number | null>(null);
@@ -39,8 +39,7 @@ export function LineProfileView(p: { d: LineDesign; driver: DriverInput | null; 
       return (e as Error).message;
     }
   }, [driver, d, sim, f]);
-  // The port-speed setting: RMS when the chart limit has been scaled up by √2.
-  const rms = (sim.portVelocityLimit ?? PORT_LIMIT) > PORT_LIMIT * 1.2;
+  const { rms, portLimit: LIMIT } = p;
   const slider = Math.log(f / F_MIN) / Math.log(F_MAX / F_MIN);
 
   return (
@@ -72,7 +71,7 @@ export function LineProfileView(p: { d: LineDesign; driver: DriverInput | null; 
           </div>
         )}
       </div>
-      {typeof prof === "string" ? <p className="hint">{prof}</p> : <ProfileDrawing d={d} prof={prof} rms={rms} />}
+      {typeof prof === "string" ? <p className="hint">{prof}</p> : <ProfileDrawing d={d} prof={prof} rms={rms} limit={LIMIT} />}
       <p className="hint">
         At this frequency and the drive on the Signal tab, from the {d.end === "horn" ? "throat" : "closed end"} (left) to the{" "}
         {d.end === "port" ? "port" : "mouth"} (right). Pressure is highest where the air is squeezed (closed ends, nodes of the standing
@@ -83,7 +82,7 @@ export function LineProfileView(p: { d: LineDesign; driver: DriverInput | null; 
   );
 }
 
-function ProfileDrawing({ d, prof, rms }: { d: LineDesign; prof: LineProfile; rms: boolean }) {
+function ProfileDrawing({ d, prof, rms, limit: LIMIT }: { d: LineDesign; prof: LineProfile; rms: boolean; limit: number }) {
   const W = 400;
   const H = 96;
   const GAP = 26;
@@ -118,7 +117,7 @@ function ProfileDrawing({ d, prof, rms }: { d: LineDesign; prof: LineProfile; rm
     cm < 0.5 ? (d.end === "horn" ? "the throat" : "the closed end") : cm > xMax - 0.5 ? (d.end === "port" ? "the port" : "the mouth") : `${Math.round(cm)} cm along`;
   const ticks = xTicks(xMax);
   const bottom = L.t + 2 * H + GAP;
-  const limitShown = vTop >= PORT_LIMIT * 0.5;
+  const limitShown = vTop >= LIMIT * 0.5;
 
   return (
     <>
@@ -157,7 +156,7 @@ function ProfileDrawing({ d, prof, rms }: { d: LineDesign; prof: LineProfile; rm
         <text x={W - L.r} y={L.t + H + GAP - 4} textAnchor="end" className="line-label">
           Air speed (m/s {rms ? "RMS" : "peak"})
         </text>
-        {limitShown && PORT_LIMIT <= vTop && <line x1={L.l} x2={W - L.r} y1={y2(PORT_LIMIT)} y2={y2(PORT_LIMIT)} className="profile-limit" />}
+        {limitShown && LIMIT <= vTop && <line x1={L.l} x2={W - L.r} y1={y2(LIMIT)} y2={y2(LIMIT)} className="profile-limit" />}
         {marks.map((m) => (
           <g key={m.label}>
             <line x1={xOf(m.x)} x2={xOf(m.x)} y1={L.t} y2={bottom} className="profile-driver" />
@@ -175,7 +174,7 @@ function ProfileDrawing({ d, prof, rms }: { d: LineDesign; prof: LineProfile; rm
       <p className="hint">
         At {fmt(prof.f)} Hz: pressure highest at {where(pts[iS]!.x_cm)} ({Math.round(spl[iS]!)} dB), air fastest at {where(pts[iV]!.x_cm)} (
         {vel[iV]!.toFixed(vel[iV]! < 1 ? 2 : 1)} m/s). Cone excursion {prof.excursion_mm.toFixed(prof.excursion_mm < 1 ? 2 : 1)} mm.
-        {limitShown && vel[iV]! > PORT_LIMIT ? ` ⚠ Above ${PORT_LIMIT} m/s: audible chuffing likely at this drive.` : ""}
+        {limitShown && vel[iV]! > LIMIT ? ` ⚠ Above ${LIMIT} m/s: audible chuffing likely at this drive.` : ""}
       </p>
     </>
   );

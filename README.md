@@ -12,7 +12,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 ## Features
 
-- **Design assistant:** say what you're building (car sub, home sub, hi-fi woofer…), your limits (box size, amplifier power and minimum load, number and size of drivers, box types, brands) and what matters most (deepest, loudest, smallest, balanced). It tries every suitable driver in the database in a sealed and a ported box sized the way the presets would, simulates them at your power, and ranks them; one tap starts your project with a result (or with the same driver in both boxes). New projects, and your first visit, start here.
+- **Design assistant:** say what you're building (car sub, home sub, hi-fi woofer, tower…), your limits (box size, amplifier power and minimum load, number and size of drivers, box types, brands) and what matters most (deepest, loudest, smallest, balanced). It tries every suitable driver in the database in a sealed and a ported box sized the way the presets would (with a plain, flared or slot port that fits), and, for the best few drivers, mass-loaded and classic transmission lines (towers) or 4th- and 6th-order bandpass boxes (subwoofers); it simulates them at your power, grades them on any amp (deep bass below 0.7 × the tuning in amber, not failed), and ranks them; one tap starts your project with a result (or with the same driver in two boxes). New projects, and your first visit, start here.
 
 ### Box types
 
@@ -26,7 +26,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 - **SPL**, relative or absolute (dB SPL), with each design's **F3** marked
 - **Cone excursion** with an **Xmax redline**, and **passive radiator excursion** with each PR's own Xmax
-- **Port air velocity** with a **chuffing-risk line** (peak or RMS)
+- **Port air velocity** with a **chuffing-risk line** (peak or RMS; 17 m/s by default, your own in Settings → Ports, used by every check and the design assistant)
 - **Maximum SPL**: the loudest each box can play at every frequency, with a band showing what limits it there (Xmax, PR Xmax, port speed or thermal power), and the **amplifier voltage and current** needed to reach it, after the filter and EQ
 - **Impedance**, **group delay**, and **line load (Za)** for lines and horns
 - For lines: the **cone and mouth** contributions on their own, and **pressure and air speed along the line** at any frequency, showing where stuffing does the most

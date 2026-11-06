@@ -4,8 +4,8 @@ import { TS_PARAMS, type TsParam, type TsValues } from "@sbg/engine";
 import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
-import { PORT_LIMIT, limitsOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { evaluateDriver, goalFor, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { PORT_LIMIT, limitsOf, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
+import { LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -139,4 +139,89 @@ test("ports: flared and slot ports when a plain tube can't fit or would chuff, a
   const v = s.designs[0] as import("../src/state.ts").VentedDesign;
   assert.equal(v.shape, flaredOrSlot.port!.kind === "slot" ? "slot" : "round");
   assert.ok(Math.abs(runDesigns(s, solveDriver(s))[0]!.result.summary.fb! - flaredOrSlot.fb!) < 1, "opens at the tuning scored");
+});
+
+test("transmission lines: for towers, sized to the box limit, foldable, and they open as scored", () => {
+  const goal = goalFor("tower", "balanced");
+  assert.ok(goal.boxes.includes("line"));
+  const boxes = runAll(goal).results;
+  const cands = prefilter(rows, goal);
+  const short = lineShortlist(boxes, cands, 6);
+  assert.ok(short.length === 6 && short.every((r) => r.qts! >= 0.25 && r.qts! <= 0.55));
+  // Half from the boxes' ranking, half by suiting a line (the lowest Fs) even if they ranked low.
+  const lowFs = cands.filter((r) => r.qts! >= 0.25 && r.qts! <= 0.55).sort((a, b) => a.fs! - b.fs!)[0]!;
+  assert.ok(short.includes(lowFs), "the lowest-Fs line candidate is tried");
+  const lines = short.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id), goal, "lines"));
+  assert.ok(lines.length >= 3, `${lines.length} lines`);
+  for (const r of lines) {
+    assert.equal(r.box, "line");
+    assert.ok(r.vb_l <= goal.maxVolume_l * 1.02, `${r.name} ${r.line!.label} ${r.vb_l} L`);
+    assert.ok(r.line!.length_cm <= LINE_MAX_CM, `${r.name} ${r.line!.length_cm} cm`);
+    const des = r.line!.design;
+    const areas = [des.closedArea_cm2, ...des.sections.map((x) => x.endArea_cm2)];
+    const sd = rows.find((x) => x.id === r.driverId)!.sd_cm2!;
+    assert.ok(areas.reduce((a, b) => a + b, 0) / areas.length >= LINE_MIN_AREA * sd * 0.99, `${r.name} ${r.line!.label} too thin`);
+    const s = openResults(DEFAULT_STATE, loaded(r.driverId), [r], goal);
+    assert.equal(s.designs[0]!.kind, "line");
+    const d = runDesigns(s, solveDriver(s))[0]!;
+    assert.ok(Math.abs(d.result.summary.f3! - r.f3) < 0.05 * r.f3, `${r.name} F3 ${d.result.summary.f3} vs ${r.f3}`);
+    const app = limitsOf(d.result, s.xmax_mm!, false);
+    if (!r.over.includes("xmax")) assert.ok(app.x! <= s.xmax_mm! * 1.02, `${r.name} line ${app.x} mm`);
+  }
+  // Ranked with the boxes, by the same rules.
+  const all = rankResults([...boxes, ...lines], goal);
+  const firstOver = all.findIndex((r) => r.over.length > 0);
+  if (firstOver >= 0) assert.ok(all.slice(firstOver).every((r) => r.over.length > 0));
+  // Not offered for a car (no room to fold one), even if asked for.
+  const car = { ...goalFor("car", "balanced"), boxes: ["sealed", "vented", "line"] as AssistantGoal["boxes"] };
+  assert.deepEqual(evaluateDriver(DEFAULT_STATE, short[0]!, loaded(short[0]!.id), car, "lines"), []);
+});
+
+test("bandpass: 4th and 6th order for subwoofers, within the box limit, a band up to 80 Hz, and they open as scored", () => {
+  for (const use of ["home", "car"] as const) {
+    const goal = { ...goalFor(use, "balanced"), boxes: ["sealed", "vented", "bandpass"] as AssistantGoal["boxes"] };
+    const boxes = runAll(goal).results;
+    const short = bandpassShortlist(boxes, prefilter(rows, goal), 12);
+    const bps = short.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id), goal, "bandpass"));
+    assert.ok(bps.some((r) => r.bandpass!.order === "4") && bps.some((r) => r.bandpass!.order === "6p"), `${use}: both orders`);
+    for (const r of bps) {
+      const b = r.bandpass!;
+      assert.ok(b.rear_l + b.front_l <= goal.maxVolume_l * 1.02 && Math.abs(r.vb_l - (b.rear_l + b.front_l)) < 0.2, `${r.name} ${r.vb_l} L`);
+      assert.ok(b.f3High >= 80 && r.f3 <= 1.6 * goal.targetF3_hz, `${r.name} band ${r.f3}–${b.f3High}`);
+      assert.ok(r.peak_db <= 3.05, `${r.name} ripple ${r.peak_db}`);
+      const fits = (p: typeof b.frontPort, vol: number) => p.length_cm <= portRoom_cm(vol, p.kind === "slot" ? p.slotHeight_cm : p.diameter_cm);
+      assert.ok(fits(b.frontPort, b.front_l) && (!b.rearPort || fits(b.rearPort, b.rear_l)), `${r.name} ports fit`);
+      const s = openResults(DEFAULT_STATE, loaded(r.driverId), [r], goal);
+      const des = s.designs[0] as import("../src/state.ts").BandpassDesign;
+      assert.equal(des.kind, "bandpass");
+      assert.equal(des.order, b.order);
+      const res = runDesigns(s, solveDriver(s))[0]!.result;
+      assert.ok(Math.abs(res.summary.f3! - r.f3) < 0.05 * r.f3, `${r.name} F3 ${res.summary.f3} vs ${r.f3}`);
+      assert.ok(Math.abs(res.summary.fb! - b.frontFb) < 0.1 * b.frontFb, `${r.name} front Fb ${res.summary.fb} vs ${b.frontFb}`);
+      const app = limitsOf(res, s.xmax_mm!, false);
+      if (!r.over.includes("port") && app.vp !== null) assert.ok(app.vp <= PORT_LIMIT * 1.02, `${r.name} port ${app.vp}`);
+    }
+  }
+  // Not offered for a speaker: a bandpass box lets nothing out above its band.
+  const hifi = { ...goalFor("hifi", "balanced"), boxes: ["bandpass"] as AssistantGoal["boxes"] };
+  const row = rows.find((r) => r.size_in === 8 && r.qts! < 0.5)!;
+  assert.deepEqual(evaluateDriver(DEFAULT_STATE, row, loaded(row.id), hifi, "bandpass"), []);
+});
+
+test("the chuffing line is the app's setting: raised, more ports pass, and the app agrees", () => {
+  const goal = goalFor("car", "balanced");
+  const loose = { ...DEFAULT_STATE, settings: { ...DEFAULT_STATE.settings, portLimit_ms: 30 } };
+  const vented = (base: typeof DEFAULT_STATE) =>
+    prefilter(rows, goal)
+      .slice(0, 80)
+      .flatMap((r) => evaluateDriver(base, r, loaded(r.id), goal))
+      .filter((r) => r.box === "vented");
+  const strict = vented(DEFAULT_STATE).filter((r) => r.over.includes("port")).length;
+  const relaxed = vented(loose);
+  assert.ok(relaxed.filter((r) => r.over.includes("port")).length < strict, "fewer over the port line at 30 m/s");
+  for (const r of relaxed.filter((x) => !x.over.includes("port")).slice(0, 10)) {
+    const s = openResults(loose, loaded(r.driverId), [r], goal);
+    const app = limitsOf(runDesigns(s, solveDriver(s))[0]!.result, s.xmax_mm!, false, portLimitOf(s));
+    assert.ok(!app.over.includes("port") || app.vp! <= 30 * 1.02, `${r.name}: app ${app.vp} m/s`);
+  }
 });
