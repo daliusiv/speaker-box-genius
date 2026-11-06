@@ -3,6 +3,7 @@
   "model": "Pluvia 7.2 HD",
   "type": "full-range",
   "nominal_ohms": 6,
+  "size_in": 4,
   "ts": {
     "fs": 72.5494,
     "qms": 3.1446,

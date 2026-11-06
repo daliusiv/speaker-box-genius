@@ -3,6 +3,7 @@
   "model": "MA200-M Multi",
   "type": "full-range",
   "nominal_ohms": 8,
+  "size_in": 8,
   "ts": {
     "fs": 33.0003,
     "qms": 2.239,

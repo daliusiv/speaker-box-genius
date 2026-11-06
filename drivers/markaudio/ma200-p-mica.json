@@ -3,6 +3,7 @@
   "model": "MA200-P MICA",
   "type": "full-range",
   "nominal_ohms": 8,
+  "size_in": 8,
   "ts": {
     "fs": 39.0189,
     "qms": 2.2943,
@@ -25,5 +26,6 @@
       "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "notes": "Nominal size 8 in is Markaudio's figure for the MA200-M Multi, which has the same cone (Sd 206 cm²); Markaudio doesn't give a frame size for this model."
 }

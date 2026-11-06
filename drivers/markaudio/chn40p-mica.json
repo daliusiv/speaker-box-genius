@@ -3,6 +3,7 @@
   "model": "CHN40P MICA",
   "type": "full-range",
   "nominal_ohms": 8,
+  "size_in": 2.5,
   "ts": {
     "fs": 106.691,
     "qms": 2.8554,
