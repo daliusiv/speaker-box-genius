@@ -186,3 +186,22 @@ test("import: Hornresp's own default record", () => {
   assert.ok(r.warnings.some((w) => /Lrc/.test(w)));
   assert.ok(r.driver && Math.abs(r.driver.ts.sd_cm2! - 350) < 1e-9 && r.driver.le_mh === 1);
 });
+
+test("several drivers: written with their wiring (2P / 2S), which is how Hornresp counts them, and read back", () => {
+  const d: LineDesign = { ...base, driverAt_cm: 30 };
+  for (const wiring of ["parallel", "series"] as const) {
+    const out = toHornresp(d, driver, { eg: 2.83, drivers: 2, wiring, name: "x" });
+    assert.ok(typeof out !== "string");
+    assert.match(out.text, wiring === "parallel" ? /OD = 2P/ : /OD = 2S/);
+    const back = fromHornresp(out.text, base);
+    assert.ok(typeof back !== "string");
+    assert.deepEqual(back.drivers, { count: 2, wiring });
+  }
+  // A bare count is one driver to Hornresp: left alone, with a note.
+  const one = toHornresp(d, driver, { eg: 2.83, drivers: 1, name: "x" });
+  assert.ok(typeof one !== "string");
+  const bare = fromHornresp(one.text.replace("OD = 1", "OD = 2"), base);
+  assert.ok(typeof bare !== "string");
+  assert.equal(bare.drivers, undefined);
+  assert.ok(bare.warnings.some((w) => /without P or S/.test(w)));
+});

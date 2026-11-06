@@ -84,3 +84,21 @@ test("port as a pipe: same box as the lumped port in the bass, a resonance near 
   assert.ok(Math.abs(pipe.freq[iMax]! / f1 - 1) < 0.05, `air speed peaks at ${pipe.freq[iMax]} Hz, pipe resonance ${f1}`);
   assert.ok(pipe.portVelocity![iMax]! > 5 * lumped.portVelocity![iMax]!, "the lumped port has no such resonance");
 });
+
+test("bandpass ports as pipes: same box as air-mass ports in the bass, for parallel and series boxes", () => {
+  const p6 = { shape: "round" as const, diameter_cm: 6, length_cm: 20 };
+  const p7 = { shape: "round" as const, diameter_cm: 7, length_cm: 15 };
+  const o = { power: 1, fMin: 10, fMax: 1000, points: 300 };
+  for (const rearPortTo of ["outside", "front"] as const) {
+    const box = { kind: "bandpass" as const, rearPortTo, rear: { vb_l: 20, port: p6 }, front: { vb_l: 15, port: p7 } };
+    const lumped = simulate(DRV, box, o);
+    const pipe = simulate(DRV, box, { ...o, portModel: "pipe" });
+    for (let i = 0; i < lumped.freq.length && lumped.freq[i]! < 60; i++) {
+      // The pipes' air is slightly springy, which nudges the tunings: a few tenths of a dB on the slopes.
+      assert.ok(Math.abs(lumped.spl[i]! - pipe.spl[i]!) < 0.5, `${rearPortTo}: SPL at ${lumped.freq[i]} Hz`);
+    }
+    // Higher up the pipes show their own resonances: the outputs part.
+    const i300 = pipe.freq.findIndex((f) => f > 300);
+    assert.ok(Math.abs(lumped.spl[i300]! - pipe.spl[i300]!) > 0.5, `${rearPortTo}: pipes differ at 300 Hz`);
+  }
+});

@@ -1,0 +1,37 @@
+{
+  "id": "d4",
+  "kind": "line",
+  "name": "SBG 05-mltl",
+  "on": true,
+  "vb_l": 32,
+  "closedArea_cm2": 220,
+  "sections": [
+    {
+      "length_cm": 27.5,
+      "endArea_cm2": 220,
+      "taper": "linear",
+      "fill_kgm3": 0
+    },
+    {
+      "length_cm": 82.5,
+      "endArea_cm2": 220,
+      "taper": "linear",
+      "fill_kgm3": 0
+    }
+  ],
+  "driverAt_cm": 27.5,
+  "end": "port",
+  "tapAt_cm": 90,
+  "portDiameter_cm": 6,
+  "portLength_cm": 12,
+  "portFlare_cm": 0,
+  "mouth": "front",
+  "mouthDistance_cm": 0,
+  "fold": {
+    "width_cm": 20,
+    "folds": 2
+  },
+  "targetFb": 40,
+  "rearChamber_l": 20,
+  "throatChamber_l": 0
+}

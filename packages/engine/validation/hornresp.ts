@@ -13,8 +13,9 @@
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { simulate, type SimulationResult } from "../src/simulate.ts";
-import type { DriverInput } from "../src/model.ts";
+import { simulate, type SimulationOptions, type SimulationResult } from "../src/simulate.ts";
+import { driverModel, type DriverInput, type EnclosureInput } from "../src/model.ts";
+import { pistonPowerFactor } from "../src/line.ts";
 import type { LineInput } from "../src/line.ts";
 
 export const HORNRESP_DIR = join(import.meta.dirname, "..", "test", "fixtures", "hornresp");
@@ -31,7 +32,7 @@ export const HORNRESP_TOL = {
   splP95: 0.4,
   /** Electrical impedance: mean and worst |relative difference| (%), and mean phase difference (°). */
   zeMean: 0.5,
-  zeWorst: 5,
+  zeWorst: 3,
   zePhaseMean: 0.3,
   /** Cone excursion: mean and 95th percentile |relative difference| (%), where it's over 2 % of its largest value. */
   xdMean: 0.6,
@@ -60,6 +61,7 @@ export const HORNRESP_TITLES: Record<string, { title: string; text: string }> = 
   "12-sub-tapped-horn": { title: "Subwoofer in a tapped horn", text: "12″ subwoofer, 300 cm, 450 → 1800 cm², taps at 25 and 160 cm" },
   "13-fr-tqwt": { title: "Full-range TQWT", text: "4″ full-range, 130 cm conical, 15 → 90 cm², driver 42 cm from the closed end" },
   "14-fr-tapered-tl": { title: "Full-range tapered line", text: "4″ full-range, 150 cm, 80 → 40 cm², driver at the closed end" },
+  "15-mltl-2-drivers": { title: "Mass-loaded line, two drivers", text: "Case 05 with two drivers in parallel (Hornresp \"OD = 2P\")" },
 };
 
 export const HORNRESP_NOTES = `The line's resonances fall on the same frequencies as Hornresp's. The only large SPL differences are at the bottom of deep nulls: the same frequency, a different depth (a few hundredths of a hertz move the bottom of a 40 dB null by many dB), which is why SPL is held to its mean and 95th percentile rather than its worst point.
@@ -150,7 +152,10 @@ export function runHornresp(id: string): HornrespRun {
   const dir = join(HORNRESP_DIR, id);
   const input = JSON.parse(readFileSync(join(dir, "input.json"), "utf8")) as LineInput;
   const driver = (existsSync(join(dir, "driver.json")) ? JSON.parse(readFileSync(join(dir, "driver.json"), "utf8")) : HORNRESP_DRIVER) as DriverInput;
-  const r = simulate(driver, input, { power: 2.83, convention: "volts", fMin: 10, fMax: 2000, points: 2000, air: HORNRESP_AIR, splFrom: "power" });
+  // options.json: more than one driver (Hornresp's "Nd = 2P").
+  const extra = existsSync(join(dir, "options.json")) ? (JSON.parse(readFileSync(join(dir, "options.json"), "utf8")) as Pick<SimulationOptions, "drivers" | "wiring">) : {};
+  const r = simulate(driver, input, { power: 2.83, convention: "volts", fMin: 10, fMax: 2000, points: 16000, air: HORNRESP_AIR, splFrom: "power", ...extra });
+  // A fine grid, so a sharp resonance between two of our points isn't flattened by interpolation.
   const rows = readTable(join(dir, "hornresp.txt")).filter((x) => x.Freq! <= HORNRESP_F_MAX);
   const pair = (col: string, ours: Float64Array, keep: (x: Record<string, number>) => boolean = () => true): Pair[] =>
     rows.filter(keep).map((x) => ({ f: x.Freq!, ref: x[col]!, ours: interp(r.freq, ours, x.Freq!) }));
@@ -228,4 +233,180 @@ export function runHornresp(id: string): HornrespRun {
     pass.za = stats.zaMean < T.zaMean;
   }
   return { id, input, driver, result: r, spl, ze, xd, gd, za, mouth, stats, pass };
+}
+
+// ---------------------------------------------------------------------------
+// Ordinary boxes: sealed, ported, passive radiator, bandpass, and two drivers
+// ---------------------------------------------------------------------------
+
+/**
+ * Each folder under test/fixtures/hornresp-boxes holds case.json (the box, as our
+ * EnclosureInput, with null for "no loss") and Hornresp's results for the DSA215 at 2.83 V:
+ * hornresp.txt (File > Export from the chart window), or, for bandpass boxes, which Hornresp
+ * simulates in its Loudspeaker Wizard, hornresp-power.txt / -ze.txt / -xd.txt (the Wizard's
+ * three exports); and, where Hornresp's outputs were exported one by one (Tools > Output),
+ * hornresp-cone.txt for the cone's front ("Horn": Hornresp models it as a very short horn)
+ * and hornresp-vent.txt for the port or passive radiator. The records are in docs/hornresp-validation/records.
+ */
+export const HORNRESP_BOX_DIR = join(import.meta.dirname, "..", "test", "fixtures", "hornresp-boxes");
+export const hornrespBoxIds = () => (existsSync(HORNRESP_BOX_DIR) ? readdirSync(HORNRESP_BOX_DIR).sort() : []);
+/** Boxes are lumped models (no standing waves inside), so they're compared up to here. */
+export const HORNRESP_BOX_F_MAX = 300;
+
+export const HORNRESP_BOX_TOL = {
+  /** SPL (dB), and the port's or PR's output alone: mean and 95th percentile |difference|. */
+  splMean: 0.15,
+  splP95: 0.4,
+  /** Electrical impedance: mean and 95th percentile |relative difference| (%), mean phase difference (°). */
+  zeMean: 0.75,
+  zeP95: 2,
+  zePhaseMean: 0.5,
+  /** Cone excursion: mean and 95th percentile |relative difference| (%), where it's over 2 % of its largest value. */
+  xdMean: 1,
+  xdP95: 4,
+};
+type BoxTol = typeof HORNRESP_BOX_TOL;
+
+export const HORNRESP_BOX_NOTES = `Hornresp models an ordinary box as a very short horn on the cone's front (its "Horn" output) with the box behind, so these records are its "Nd" records with a 0.01 cm horn; bandpass boxes run in its Loudspeaker Wizard, which exports SPL, impedance and excursion but not group delay or port air speed.
+
+What the comparison settles, and the conventions it has to bridge:
+
+- **The cone's mass.** The app's T/S parameters carry Mms (with the air on both sides of the cone), as datasheets and WinISD do. Hornresp's records carry the bare Mmd, and it adds the front air back in a sealed, ported or PR box but none in a bandpass box, where the chambers' air carries it. Each case gives the cone what Hornresp gives it, from the same Mms.
+- **Ports are pipes.** Hornresp treats a port as a short pipe, not just a mass of air. With Settings → Ports → "Pipe, like Hornresp" the app does the same, and the ported box then matches within 0.3 % in impedance and 0.02 dB in the port's own output, with the standard end correction (0.732 × diameter). As an air mass (the default, like WinISD) the port's own output parts from Hornresp's by up to 1.3 dB at 260 Hz and the impedance by about 1 %. Bandpass ports can now be pipes too, including a series box's rear port between the two chambers.
+- **Leakage (QL) in bandpass boxes.** Hornresp's QL behaves as if referred to the box's lowest tuning (that's what fits all three records); the app, like WinISD, refers it to each chamber's own tuning. So Hornresp's QL 7 is entered as the same leak at the chamber's own tuning (10.4 and 13.7 in the front chambers of the 6th-order boxes). A series box's rear chamber, which opens only into the front one, has no leak in Hornresp.
+- **Passive radiators.** Hornresp adds the front air to the radiator's moving mass as well (3.83 g for the DSA270-PR); with that, its output alone is within 0.01 dB.
+- **Two drivers side by side** (Hornresp's "Nd = 2P") load each other's fronts: Hornresp treats them as one piston of twice the area, which gives each √2 × one cone's front air. In lines and horns the app now does the same (case 15: the mass-loaded line with two drivers is within 0.03 dB and 0.2 %); in boxes the app keeps each driver's datasheet Mms, as WinISD does, and the case gives the cones Hornresp's air.
+
+The fourth-order and parallel sixth-order bandpass boxes are held to looser SPL limits: above about 150 Hz, more than 12 dB below the passband, the app's output rises up to 1 dB above Hornresp's (the impedance and excursion still match within 0.4 %), and the parallel box's slope below 15 Hz, 50 dB down, sits up to 1.3 dB lower. The front port's air speed in the fourth-order box peaks at 3.39 m/s at 51 Hz in the app and about 3.38 m/s on Hornresp's chart.`;
+
+export interface HornrespBoxCase {
+  title: string;
+  text: string;
+  input: EnclosureInput;
+  /**
+   * The air Hornresp loads the cone's front with, in units of one cone's front air mass
+   * (8ρa³/3): 1 for sealed, ported and PR boxes, 0 for bandpass (Hornresp's chambers carry
+   * it), √2 for two drivers side by side (one piston of 2·Sd). See hornrespDriver.
+   */
+  frontAir: number;
+  /** "pipe": the port as a short pipe, as Hornresp has it (its output rises towards the pipe's resonance). */
+  portModel?: "lumped" | "pipe";
+  drivers?: number;
+  wiring?: "parallel" | "series";
+  /** Looser limits where Hornresp's loss model parts from ours (see the notes). */
+  tol?: Partial<BoxTol>;
+}
+
+/**
+ * The DSA215 as Hornresp has it in a box. Our T/S (like WinISD's) carry Mms, which includes
+ * the air on both sides of the cone; Hornresp's records carry the bare Mmd, and it adds back
+ * only the air it models: the front's in a sealed, ported or PR box (the box's air isn't a
+ * mass), none in a bandpass box. So the comparison takes Mms less what Hornresp leaves out.
+ */
+export function hornrespDriver(d: DriverInput, frontAir: number): DriverInput {
+  const m = driverModel(d, HORNRESP_AIR);
+  const oneSide = (8 * HORNRESP_AIR.rho * Math.pow(m.sd / Math.PI, 1.5)) / 3;
+  const mms = m.mms - 2 * oneSide + frontAir * oneSide;
+  const fs = 1 / (2 * Math.PI * Math.sqrt(mms * m.cms));
+  return { ...d, fs, qms: (2 * Math.PI * fs * mms) / m.rms, qes: (2 * Math.PI * fs * mms * m.re) / (m.bl * m.bl) };
+}
+
+/** JSON has no Infinity: a null loss means none. */
+const lossless = (o: unknown): unknown =>
+  Array.isArray(o) ? o.map(lossless) : o && typeof o === "object" ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v === null ? Infinity : lossless(v)])) : o;
+
+export function readBoxCase(id: string): HornrespBoxCase {
+  return lossless(JSON.parse(readFileSync(join(HORNRESP_BOX_DIR, id, "case.json"), "utf8"))) as HornrespBoxCase;
+}
+
+export interface HornrespBoxRun {
+  id: string;
+  c: HornrespBoxCase;
+  result: SimulationResult;
+  tol: BoxTol;
+  spl: Pair[];
+  ze: Pair[];
+  xd: Pair[];
+  /** The cone's front, and the port's (or PR's) output, each alone. */
+  cone?: Pair[];
+  vent?: Pair[];
+  stats: {
+    splMean?: number; splP95?: number; zeMean: number; zeP95: number; zePhaseMean: number; xdMean: number; xdP95: number;
+    coneMean?: number; coneP95?: number; ventMean?: number; ventP95?: number;
+  };
+  pass: { spl?: boolean; ze: boolean; xd: boolean; cone?: boolean; vent?: boolean };
+}
+
+export function runHornrespBox(id: string): HornrespBoxRun {
+  const dir = join(HORNRESP_BOX_DIR, id);
+  const c = readBoxCase(id);
+  const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
+  const r = simulate(hornrespDriver(HORNRESP_DRIVER, c.frontAir), c.input, {
+    power: 2.83, convention: "volts", fMin: 10, fMax: 1000, points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel,
+  });
+  const table = (name: string) => (existsSync(join(dir, name)) ? readTable(join(dir, name)).filter((x) => x.Freq! <= HORNRESP_BOX_F_MAX) : null);
+  const full = table("hornresp.txt");
+  const wizard = (k: string) => full ?? table(`hornresp-${k}.txt`);
+  const coneRows = table("hornresp-cone.txt");
+  const ventRows = table("hornresp-vent.txt");
+  // Excursion and impedance are the same in every output's export.
+  const zeRows = wizard("ze") ?? coneRows ?? ventRows!;
+  const xdRows = wizard("xd") ?? coneRows ?? ventRows!;
+  const splRows = wizard("power");
+  const pair = (rows: Record<string, number>[], col: string, ours: Float64Array): Pair[] => rows.map((x) => ({ f: x.Freq!, ref: x[col]!, ours: interp(r.freq, ours, x.Freq!) }));
+  const xdMax = Math.max(...xdRows.map((x) => x.Xd!));
+  const ze = pair(zeRows, "Ze", r.impedanceOhm);
+  const zePh = pair(zeRows, "ZePhase", r.impedancePhaseDeg);
+  const xd = pair(xdRows.filter((x) => x.Xd! > 0.02 * xdMax), "Xd", r.excursionMm);
+  const relErr = (ps: Pair[]) => ps.map((p) => Math.abs(p.ours / p.ref - 1) * 100);
+  const dbErr = (ps: Pair[]) => ps.map((p) => Math.abs(p.ours - p.ref));
+  const stats: HornrespBoxRun["stats"] = {
+    zeMean: mean(relErr(ze)),
+    zeP95: percentile(relErr(ze), 0.95),
+    zePhaseMean: mean(zePh.map((p) => Math.abs(((p.ours - p.ref + 540) % 360) - 180))),
+    xdMean: mean(relErr(xd)),
+    xdP95: percentile(relErr(xd), 0.95),
+  };
+  const pass: HornrespBoxRun["pass"] = {
+    ze: stats.zeMean < tol.zeMean && stats.zeP95 < tol.zeP95 && stats.zePhaseMean < tol.zePhaseMean,
+    xd: stats.xdMean < tol.xdMean && stats.xdP95 < tol.xdP95,
+  };
+  let spl: Pair[] = [];
+  if (splRows) {
+    spl = pair(splRows, "SPL", r.spl);
+    stats.splMean = mean(dbErr(spl));
+    stats.splP95 = percentile(dbErr(spl), 0.95);
+    pass.spl = stats.splMean < tol.splMean && stats.splP95 < tol.splP95;
+  }
+  // Each output alone, from its volume velocity, as power from a baffled piston of its area at
+  // 1 m in half space (how Hornresp works it out).
+  const db = (w: number, u: number, area: number) => 20 * Math.log10((HORNRESP_AIR.rho * w * u * pistonPowerFactor(area, w, HORNRESP_AIR)) / (2 * Math.PI) / 2e-5);
+  let cone: Pair[] | undefined;
+  if (coneRows) {
+    const sd = driverModel(HORNRESP_DRIVER, HORNRESP_AIR).sd * (c.drivers ?? 1);
+    cone = pair(coneRows, "SPL", Float64Array.from(r.freq, (f, i) => db(2 * Math.PI * f, (2 * Math.PI * f * (r.excursionMm[i]! / 1000) * sd) / Math.SQRT2, sd)));
+    stats.coneMean = mean(dbErr(cone));
+    stats.coneP95 = percentile(dbErr(cone), 0.95);
+    pass.cone = stats.coneMean < tol.splMean && stats.coneP95 < tol.splP95;
+  }
+  let vent: Pair[] | undefined;
+  if (ventRows) {
+    const ventDb = Float64Array.from(r.freq, (f, i) => {
+      const w = 2 * Math.PI * f;
+      let u: number, area: number;
+      if (c.input.kind === "passive-radiator") {
+        area = c.input.pr.sd_cm2 / 1e4;
+        u = (w * (r.prExcursionMm![i]! / 1000) * area * (c.input.prCount ?? 1)) / Math.SQRT2;
+      } else if (c.input.kind === "vented") {
+        area = (Math.PI * (c.input.port as { diameter_cm: number }).diameter_cm ** 2) / 4 / 1e4;
+        u = (r.portVelocity![i]! * area * (c.input.portCount ?? 1)) / Math.SQRT2;
+      } else throw new Error(`${id}: the vent's output is compared for ported and PR boxes only`);
+      return db(w, u, area);
+    });
+    vent = pair(ventRows, "SPL", ventDb);
+    stats.ventMean = mean(dbErr(vent));
+    stats.ventP95 = percentile(dbErr(vent), 0.95);
+    pass.vent = stats.ventMean < tol.splMean && stats.ventP95 < tol.splP95;
+  }
+  return { id, c, result: r, tol, spl, ze, xd, cone, vent, stats, pass };
 }

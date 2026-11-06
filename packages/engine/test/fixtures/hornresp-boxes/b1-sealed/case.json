@@ -1,0 +1,12 @@
+{
+  "title": "Sealed box",
+  "text": "10.4 L, no losses",
+  "frontAir": 1,
+  "input": {
+    "kind": "sealed",
+    "vb_l": 10.4,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

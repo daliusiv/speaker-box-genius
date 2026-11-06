@@ -2,7 +2,8 @@
 
 Speaker Box Genius is checked against **WinISD 0.7.0.950** (real WinISD project files) and
 **Hornresp 60.60** (Hornresp's own exported results: SPL, impedance, cone excursion, group
-delay and the line's acoustic impedance). Every comparison is an
+delay and the line's acoustic impedance for lines and horns; SPL, impedance, excursion and the
+port's or passive radiator's own output for sealed, ported, PR and bandpass boxes). Every comparison is an
 automated test, and the results are published at
 **[speakerboxgenius.com/validation](https://speakerboxgenius.com/validation/)**: each case,
 our value next to the reference, the difference and its tolerance, charts, and the known
@@ -13,7 +14,7 @@ differences.
 | Piece | What it is |
 |---|---|
 | `packages/engine/validation/winisd.ts` | The WinISD cases: project file, setup, the values read from WinISD, tolerances, notes on known differences |
-| `packages/engine/validation/hornresp.ts` | The Hornresp cases (one folder each under `packages/engine/test/fixtures/hornresp`), tolerances and notes |
+| `packages/engine/validation/hornresp.ts` | The Hornresp cases (one folder each under `packages/engine/test/fixtures/hornresp` for lines and horns, `hornresp-boxes` for boxes), tolerances and notes |
 | `packages/engine/test/winisd.test.ts`, `hornresp.test.ts` | Run every case on every push |
 | `packages/engine/validation/report.ts` | Writes [`docs/validation/results.json`](validation/results.json): every value, difference and curve |
 | `packages/engine/test/validation-report.test.ts` | Fails when `results.json` is out of date |
@@ -27,9 +28,14 @@ has to come with the updated `results.json`.
 1. **WinISD:** save the project into `packages/engine/test/fixtures/`, read values off WinISD's
    cursor (or its graphs, marked `graph: true`), and add an entry to `WINISD_CASES` with a
    tolerance for each value and notes for anything that differs.
-   **Hornresp:** run the record in Hornresp, export SPL (`spl.frd`) and impedance (`ze.zma`)
-   into a new folder under `packages/engine/test/fixtures/hornresp/` with the design as
-   `input.json`, and give it a title in `HORNRESP_TITLES`.
+   **Hornresp, lines and horns:** run the record in Hornresp, export the chart window's table
+   (File > Export) as `hornresp.txt` into a new folder under
+   `packages/engine/test/fixtures/hornresp/` with the design as `input.json`
+   (`options.json` for more than one driver), and give it a title in `HORNRESP_TITLES`.
+   **Hornresp, boxes:** the same into `packages/engine/test/fixtures/hornresp-boxes/`, with
+   `case.json` (the box, its title, and the cone air Hornresp gives it; see
+   `HornrespBoxCase`). Bandpass boxes come from Hornresp's Loudspeaker Wizard as
+   `hornresp-power.txt`, `-ze.txt` and `-xd.txt`.
 2. Run:
 
    ```bash
@@ -82,7 +88,7 @@ aren't kept in the repository.
 
 ### Ports as pipes (Settings → Ports → Pipe)
 
-Not in WinISD, so not part of the WinISD comparison (the default, "Air mass", is what's compared). A port is modelled as a uniform pipe of its throat's area and its effective length (end corrections included, so it tunes the box exactly as the air-mass port), radiating at its outer end: it adds the pipe's resonances at about c / 2L, 2c / 2L, … Checks (`portflare.test.ts`): within 0.35 dB of the air-mass port below 60 Hz (the pipe's air is slightly springy, which the air-mass model leaves out), and the port's air speed peaks within 5 % of c / 2L. Not modelled: the box's own standing waves, which drive the port hardest when they coincide (the port card warns when they do), and wall losses in the port. Bandpass ports stay as air masses.
+Not in WinISD, so not part of the WinISD comparison (the default, "Air mass", is what's compared). It is how Hornresp models ports, so the Hornresp box cases use it: the ported box matches within 0.3 % in impedance and 0.02 dB in the port's own output. A port is modelled as a uniform pipe of its throat's area and its effective length (end corrections included, so it tunes the box exactly as the air-mass port), radiating at its outer end: it adds the pipe's resonances at about c / 2L, 2c / 2L, … Checks (`portflare.test.ts`): within 0.35 dB of the air-mass port below 60 Hz (the pipe's air is slightly springy, which the air-mass model leaves out), and the port's air speed peaks within 5 % of c / 2L. Not modelled: the box's own standing waves, which drive the port hardest when they coincide (the port card warns when they do), and wall losses in the port. Bandpass ports are pipes too: those to the outside like a vented box's, and a series box's rear port as a pipe joining the two chambers (`portflare.test.ts`: within 0.5 dB of air-mass ports below 60 Hz).
 
 ### Hot voice coil (Settings → Voice coil °C)
 

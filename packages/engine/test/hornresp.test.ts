@@ -2,7 +2,7 @@
 // validation/hornresp.ts, shared with the validation report (docs/validation/results.json).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { HORNRESP_TOL as T, hornrespIds, runHornresp } from "../validation/hornresp.ts";
+import { HORNRESP_TOL as T, hornrespBoxIds, hornrespIds, runHornresp, runHornrespBox } from "../validation/hornresp.ts";
 
 for (const id of hornrespIds()) {
   const run = runHornresp(id);
@@ -49,4 +49,34 @@ for (const id of hornrespIds()) {
       assert.ok(s.zaMean! < T.zaMean, `mean |Za| difference ${s.zaMean!.toFixed(3)} dB`);
     });
   }
+}
+
+// Ordinary boxes: sealed, ported, PR, bandpass, two drivers (tolerances in HORNRESP_BOX_TOL,
+// widened per case where case.json says so).
+for (const id of hornrespBoxIds()) {
+  const run = runHornrespBox(id);
+  const s = run.stats;
+  const t = run.tol;
+
+  test(`Hornresp box ${id}: electrical impedance`, () => {
+    assert.ok(s.zeMean < t.zeMean, `mean |Ze| error ${s.zeMean.toFixed(2)} %`);
+    assert.ok(s.zeP95 < t.zeP95, `95th percentile ${s.zeP95.toFixed(2)} %`);
+    assert.ok(s.zePhaseMean < t.zePhaseMean, `mean Ze phase error ${s.zePhaseMean.toFixed(2)}°`);
+  });
+
+  test(`Hornresp box ${id}: cone excursion`, () => {
+    assert.ok(s.xdMean < t.xdMean, `mean excursion difference ${s.xdMean.toFixed(2)} %`);
+    assert.ok(s.xdP95 < t.xdP95, `95th percentile ${s.xdP95.toFixed(2)} %`);
+  });
+
+  const db = (what: string, m: number | undefined, p: number | undefined) => {
+    if (m === undefined) return;
+    test(`Hornresp box ${id}: ${what}`, () => {
+      assert.ok(m < t.splMean, `mean difference ${m.toFixed(2)} dB`);
+      assert.ok(p! < t.splP95, `95th percentile ${p!.toFixed(2)} dB`);
+    });
+  };
+  db("SPL", s.splMean, s.splP95);
+  db("the cone's output alone", s.coneMean, s.coneP95);
+  db("the port's or passive radiator's output alone", s.ventMean, s.ventP95);
 }

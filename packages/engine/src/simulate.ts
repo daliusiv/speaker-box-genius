@@ -10,6 +10,7 @@ import {
   passiveRadiatorModel,
   portAcousticMass,
   portArea,
+  portEffectiveLength,
   portFlare,
   portLossCoefficient,
   portPipe,
@@ -107,7 +108,7 @@ export interface SimulationOptions {
    */
   splFrom?: "on-axis" | "power";
   /**
-   * Vented boxes: "lumped" (default, like WinISD) treats each port as a mass of air; "pipe"
+   * Vented and bandpass boxes: "lumped" (default, like WinISD) treats each port as a mass of air; "pipe"
    * treats it as a short pipe with its own resonances (the first near c / 2L), which show as
    * peaks in the response higher up.
    */
@@ -275,7 +276,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
 
   // Box elements
   const summary: SimulationResult["summary"] = { volts, referenceSpl: 0, f3: null, f6: null };
-  const bp = box.kind === "bandpass" ? bandpassNetwork(box, d, n, air, summary) : null;
+  const bp = box.kind === "bandpass" ? bandpassNetwork(box, d, n, air, summary, opts.portModel === "pipe") : null;
   const line = box.kind === "line" ? lineNetwork(box, air) : null;
   // A line or horn models the air on the cone's sides explicitly, so the cone carries its bare
   // moving mass Mmd = Mms − 16ρa³/3 (both sides' free-air load, as Hornresp defines it). An open
@@ -431,12 +432,13 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       const flows = bp.flows(w, scale(unit.pF, 1), scale(unit.pR, 1));
       u0 = mul(ud, flows.radiated);
       if (bp.front && out.vport) {
-        const vF = abs(mul(ud, flows.frontPortEach)) * Math.SQRT2 / bp.front.area;
+        // A pipe's air moves fastest at whichever end its standing wave puts the motion.
+        const vF = Math.max(abs(mul(ud, flows.frontPortEach)), abs(mul(ud, flows.frontPortOutEach))) * Math.SQRT2 / bp.front.area;
         out.vport[i] = vF;
         vport = vF;
       }
       if (bp.rear && out.vport2) {
-        const vR = abs(mul(ud, flows.rearPortEach)) * Math.SQRT2 / bp.rear.area;
+        const vR = Math.max(abs(mul(ud, flows.rearPortEach)), abs(mul(ud, flows.rearPortOutEach))) * Math.SQRT2 / bp.rear.area;
         out.vport2[i] = vR;
         vport = Math.max(vport, vR);
       }
@@ -453,7 +455,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     } else if (line) {
       // Transmission line (or tapped horn): the line loads the cone; the mouth (or port) radiates.
       let zasLine = cx(d.rms / sd2, (w * lineMmd - 1 / (w * d.cms)) / sd2);
-      if (!line.mouthOnly) zasLine = add(zasLine, baffledPistonImpedance(d.sd, w, air));
+      // Several drivers side by side load each other's fronts: together they push one piston
+      // of n·Sd, so each sees n × that piston's impedance (√n × one cone's air mass), as Hornresp has it.
+      if (!line.mouthOnly) zasLine = add(zasLine, scale(baffledPistonImpedance(n * d.sd, w, air), n));
       const solveLine = () => {
         const zl = line.zLoad(w);
         const zm = add(zasLine, scale(zl, n));
@@ -491,7 +495,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       // Open line: the front of the cone radiates −ud as well. Tapped horn: only the mouth.
       const power = opts.splFrom === "power";
       const mouthOut = power ? scale(exitAtListener, pistonPowerFactor(line.exitArea, w, air)) : exitAtListener;
-      const coneOut = power ? scale(ud, pistonPowerFactor(d.sd, w, air)) : ud;
+      const coneOut = power ? scale(ud, pistonPowerFactor(n * d.sd, w, air)) : ud;
       u0 = line.mouthOnly ? mouthOut : sub(mouthOut, coneOut);
       if (out.parts) {
         const k = (w * air.rho) / (space * Math.PI * r) / 2e-5;
@@ -759,6 +763,28 @@ interface PortElements {
   rap: number; // loss resistance of one port
   count: number;
   area: number; // m², one port, where its air speed is judged (the mouths when flared at both ends)
+  /** The port as a short pipe (portModel "pipe"), for ports that open to the outside. */
+  pipe?: ReturnType<typeof portPipe>;
+  /** A pipe between the two chambers (a series box's rear port): its admittances, one port. */
+  between?: (w: number) => { y11: Complex; y12: Complex; y22: Complex };
+}
+
+/**
+ * A port as a pipe between two chambers, with its loss resistance at the near end: the
+ * admittances relating the flows into each end to the two pressures (y12 couples them).
+ */
+function pipeBetween(p: PortInput, ec: number, rap: number, air: Air) {
+  const L = portEffectiveLength(p, ec);
+  const zc = (air.rho * air.c) / portArea(p);
+  return (w: number) => {
+    const kl = (w / air.c) * L;
+    const c = Math.cos(kl);
+    const sn = Math.sin(kl);
+    // ABCD = [1 rap; 0 1] · [c, j·zc·s; j·s/zc, c]
+    const A = cx(c, (rap * sn) / zc);
+    const B = cx(rap * c, zc * sn);
+    return { y11: div(cx(c), B), y12: scale(inv(B), -1), y22: div(A, B) };
+  };
 }
 
 /**
@@ -778,14 +804,20 @@ function bandpassNetwork(
   n: number,
   air: Air,
   summary: SimulationResult["summary"],
+  pipes = false,
 ) {
   const ec = box.endCorrection ?? DEFAULT_END_CORRECTION;
   const series = box.rearPortTo === "front";
-  const portOf = (p: PortInput, count: number, fRef: number, qp: number): PortElements => {
+  // As pipes (like a vented box's with portModel "pipe"), when asked: ports that open to the
+  // outside end in their radiation load; a series box's rear port joins the two chambers.
+  const portOf = (p: PortInput, count: number, fRef: number, qp: number, outside: boolean): PortElements => {
     const map = portAcousticMass(p, ec, air);
     // Air speed is judged where it leaves: the mouths of a port flared at both ends (as for a vented box).
     const area = portFlare(p).ends === 2 ? portMouthArea(p) : portArea(p);
-    return { map, rap: Number.isFinite(qp) ? (2 * Math.PI * fRef * map) / qp : 0, count, area };
+    const rap = Number.isFinite(qp) ? (2 * Math.PI * fRef * map) / qp : 0;
+    const pipe = pipes && outside ? portPipe(p, ec, air) : undefined;
+    const between = pipes && !outside ? pipeBetween(p, ec, rap, air) : undefined;
+    return { map, rap, count, area, pipe, between };
   };
   const hasPrs = (c: BandpassChamber) => (c.prs?.length ?? 0) > 0;
   /** Tuning of a chamber's opening: Helmholtz for a port, PR mass against the air spring for PRs. */
@@ -795,10 +827,10 @@ function bandpassNetwork(
         ? prFb(c.vb_l, c.prs![0]!.pr, c.prs![0]!.count, c.prs![0]!.addedMass_g ?? 0, air)
         : prGroupsFb(c.vb_l, c.prs!, air)
       : ventedFb(c.vb_l, c.port!, c.portCount ?? 1, ec, air);
-  const ventOf = (c: BandpassChamber, fRef: number): Vent =>
+  const ventOf = (c: BandpassChamber, fRef: number, outside = true): Vent =>
     hasPrs(c)
       ? { kind: "pr", groups: c.prs!.map((g) => ({ m: passiveRadiatorModel(g.pr, g.addedMass_g ?? 0, air), count: g.count })) }
-      : { kind: "port", port: portOf(c.port!, c.portCount ?? 1, fRef, finiteOr(c.qp, DEFAULT_LOSSES.qp)) };
+      : { kind: "port", port: portOf(c.port!, c.portCount ?? 1, fRef, finiteOr(c.qp, DEFAULT_LOSSES.qp), outside) };
   const chamberOf = (c: BandpassChamber, fRef: number): ChamberElements => {
     const cab = boxCompliance(c.vb_l, air);
     const w = 2 * Math.PI * fRef;
@@ -832,7 +864,7 @@ function bandpassNetwork(
   const R = chamberOf(box.rear, fRear);
   const frontVent = ventOf(box.front, fFront);
   if (box.front.port) summary.portVelocityAt = portFlare(box.front.port).ends === 2 ? "ends" : "throat";
-  const rearVent = rearOpen ? ventOf(box.rear, fRear) : null;
+  const rearVent = rearOpen ? ventOf(box.rear, fRear, !series) : null;
 
   // Leakage between the chambers, referred to the driver like WinISD's Qiclfr:
   // R = Q / (ωs·Cas), with ωs the free-air resonance and Cas = Cms·Sd².
@@ -847,7 +879,7 @@ function bandpassNetwork(
   };
   const zVentTotal = (v: Vent, w: number): Complex =>
     v.kind === "port"
-      ? scale(cx(v.port.rap, w * v.port.map), 1 / v.port.count)
+      ? scale(v.port.pipe ? add(cx(v.port.rap), v.port.pipe(w).zIn) : cx(v.port.rap, w * v.port.map), 1 / v.port.count)
       : parallel(...v.groups.map((g) => scale(zPrEach(g.m, w), 1 / g.count)))!;
   const zAirOf = (c: ChamberElements, w: number) => cx(c.rab, -1 / (w * c.cab));
   const yChamber = (c: ChamberElements, w: number) => {
@@ -856,11 +888,15 @@ function bandpassNetwork(
     return y;
   };
 
-  /** Per-element flows through a vent for a pressure difference dp: per port, or per PR of each group. */
-  const ventFlows = (v: Vent, dp: Complex, w: number) =>
-    v.kind === "port"
-      ? { port: scale(div(dp, zVentTotal(v, w)), 1 / v.port.count), prs: [] as Complex[] }
-      : { port: cx(0), prs: v.groups.map((g) => div(dp, zPrEach(g.m, w))) };
+  /**
+   * Per-element flows through a vent for a pressure difference dp: per port (in from the
+   * chamber, and out of its far end, which differ for a pipe), or per PR of each group.
+   */
+  const ventFlows = (v: Vent, dp: Complex, w: number) => {
+    if (v.kind === "pr") return { port: cx(0), portOut: cx(0), prs: v.groups.map((g) => div(dp, zPrEach(g.m, w))) };
+    const port = scale(div(dp, zVentTotal(v, w)), 1 / v.port.count);
+    return { port, portOut: v.port.pipe ? mul(port, v.port.pipe(w).outPerIn) : port, prs: [] as Complex[] };
+  };
 
   return {
     /** The port of each chamber (null when that chamber has PRs or is closed). */
@@ -871,29 +907,55 @@ function bandpassNetwork(
     rearPrs: rearVent?.kind === "pr" ? rearVent.groups : [],
     /** Chamber pressures for a unit total cone volume velocity (rear → front). */
     solve(w: number) {
-      let yF = add(yChamber(F, w), inv(zVentTotal(frontVent, w)));
-      let yR = yChamber(R, w);
-      let yI = yIcl;
+      // Nodal equations, a symmetric 2 × 2: [aF m; m aR] [pF; pR] = [1; −1].
+      let aF = add(add(yChamber(F, w), inv(zVentTotal(frontVent, w))), yIcl);
+      let aR = add(yChamber(R, w), yIcl);
+      let m = scale(yIcl, -1);
       if (rearVent) {
-        if (series) yI = add(yI, inv(zVentTotal(rearVent, w)));
-        else yR = add(yR, inv(zVentTotal(rearVent, w)));
+        const between = rearVent.kind === "port" ? rearVent.port.between : undefined;
+        if (series && between) {
+          const y = between(w);
+          const k = rearVent.kind === "port" ? rearVent.port.count : 1;
+          aR = add(aR, scale(y.y11, k));
+          aF = add(aF, scale(y.y22, k));
+          m = add(m, scale(y.y12, k));
+        } else if (series) {
+          const yI = inv(zVentTotal(rearVent, w));
+          aR = add(aR, yI);
+          aF = add(aF, yI);
+          m = sub(m, yI);
+        } else aR = add(aR, inv(zVentTotal(rearVent, w)));
       }
-      yF = add(yF, yI);
-      yR = add(yR, yI);
-      // [yF  −yI] [pF]   [ 1]
-      // [−yI  yR] [pR] = [−1]
-      const det = sub(mul(yF, yR), mul(yI, yI));
-      const pF = div(sub(yR, yI), det);
-      const pR = div(sub(yI, yF), det);
+      const det = sub(mul(aF, aR), mul(m, m));
+      const pF = div(add(aR, m), det);
+      const pR = div(scale(add(aF, m), -1), det);
       return { pF, pR };
     },
     /** Flows (per unit cone volume velocity) given the unit chamber pressures. */
     flows(w: number, pF: Complex, pR: Complex) {
-      // Air leaving the system = −(rate of compression of both air springs).
-      const radiated = scale(add(div(pF, zAirOf(F, w)), div(pR, zAirOf(R, w))), -1);
+      // Air leaving the system = −(rate of compression of both air springs), plus, for ports
+      // as pipes, what the air in the pipe itself takes up or gives back.
+      let radiated = scale(add(div(pF, zAirOf(F, w)), div(pR, zAirOf(R, w))), -1);
       const f = ventFlows(frontVent, pF, w);
-      const r = rearVent ? ventFlows(rearVent, series ? sub(pR, pF) : pR, w) : { port: cx(0), prs: [] as Complex[] };
-      return { radiated, frontPortEach: f.port, rearPortEach: r.port, frontPrEach: f.prs, rearPrEach: r.prs };
+      const between = rearVent?.kind === "port" ? rearVent.port.between : undefined;
+      let r = rearVent ? ventFlows(rearVent, series ? sub(pR, pF) : pR, w) : { port: cx(0), portOut: cx(0), prs: [] as Complex[] };
+      if (between) {
+        // In from the rear chamber, and out into the front one.
+        const y = between(w);
+        r = { port: add(mul(y.y11, pR), mul(y.y12, pF)), portOut: scale(add(mul(y.y12, pR), mul(y.y22, pF)), -1), prs: [] };
+      }
+      // A pipe holds air of its own, so what leaves it differs from what enters (also between chambers).
+      if (frontVent.kind === "port") radiated = add(radiated, scale(sub(f.portOut, f.port), frontVent.port.count));
+      if (rearVent?.kind === "port") radiated = add(radiated, scale(sub(r.portOut, r.port), rearVent.port.count));
+      return {
+        radiated,
+        frontPortEach: f.port,
+        rearPortEach: r.port,
+        frontPortOutEach: f.portOut,
+        rearPortOutEach: r.portOut,
+        frontPrEach: f.prs,
+        rearPrEach: r.prs,
+      };
     },
   };
 }

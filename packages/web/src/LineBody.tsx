@@ -8,7 +8,7 @@ import { foldShapes } from "./foldShapes.ts";
 import { fromHornresp, toHornresp, type HornrespImport } from "./hornresp.ts";
 import { LineProfileView } from "./LineProfile.tsx";
 
-export type ImportedDriver = NonNullable<HornrespImport["driver"]>;
+export type ImportedDriver = NonNullable<HornrespImport["driver"]> & { drivers?: HornrespImport["drivers"] };
 
 /** Export the design as a Hornresp record, or read one in. */
 function HornrespPanel(p: {
@@ -25,7 +25,9 @@ function HornrespPanel(p: {
   const [result, setResult] = useState<{ ok: boolean; lines: string[] } | null>(null);
   const power = p.sim.power ?? 1;
   const eg = p.driver ? (p.sim.convention === "volts" ? power : Math.sqrt(power * p.driver.re)) : 2.83;
-  const out = p.driver ? toHornresp(p.d, p.driver, { eg, drivers: p.drivers, name: p.d.name, pmax: p.driver.pe_w, xmax_mm: p.driver.xmax_mm }) : "Enter the driver's parameters first.";
+  const out = p.driver
+    ? toHornresp(p.d, p.driver, { eg, drivers: p.drivers, wiring: p.sim.wiring, name: p.d.name, pmax: p.driver.pe_w, xmax_mm: p.driver.xmax_mm })
+    : "Enter the driver's parameters first.";
   const download = () => {
     if (typeof out === "string") return;
     const url = URL.createObjectURL(new Blob([out.text], { type: "text/plain" }));
@@ -40,11 +42,17 @@ function HornrespPanel(p: {
     if (typeof r === "string") return setResult({ ok: false, lines: [r] });
     p.onDesign(r.design);
     const used = !!(r.driver && useDriver && p.onImportDriver);
-    if (used) p.onImportDriver!(r.driver!);
+    if (used) p.onImportDriver!({ ...r.driver!, ...(r.drivers ? { drivers: r.drivers } : {}) });
+    const count = r.drivers
+      ? used
+        ? `Set to ${r.drivers.count} drivers in ${r.drivers.wiring}, as in the record.`
+        : `The record has ${r.drivers.count} drivers in ${r.drivers.wiring}: set the same count to compare.`
+      : null;
     setResult({
       ok: true,
       lines: [
         `Read ${r.design.sections?.length ?? 0} section${r.design.sections?.length === 1 ? "" : "s"} (${r.design.end === "horn" ? "front-loaded horn" : r.design.end === "tapped" ? "tapped horn" : r.design.end === "port" ? "line with a port" : "line"})${used ? " and the driver" : ""}.`,
+        ...(count ? [count] : []),
         ...r.warnings,
       ],
     });

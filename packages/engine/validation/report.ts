@@ -11,7 +11,22 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { simulate } from "../src/simulate.ts";
 import { WINISD_CASES, WINISD_VERSION, QUANTITY, runCase, type Quantity, type Setup } from "./winisd.ts";
-import { HORNRESP_F_MAX, HORNRESP_NOTES, HORNRESP_TITLES, HORNRESP_TOL, HORNRESP_VERSION, hornrespIds, runHornresp, type HornrespRun } from "./hornresp.ts";
+import {
+  HORNRESP_BOX_F_MAX,
+  HORNRESP_BOX_NOTES,
+  HORNRESP_BOX_TOL,
+  HORNRESP_F_MAX,
+  HORNRESP_NOTES,
+  HORNRESP_TITLES,
+  HORNRESP_TOL,
+  HORNRESP_VERSION,
+  hornrespBoxIds,
+  hornrespIds,
+  runHornresp,
+  runHornrespBox,
+  type HornrespBoxRun,
+  type HornrespRun,
+} from "./hornresp.ts";
 
 export const REPORT_FILE = join(import.meta.dirname, "..", "..", "..", "docs", "validation", "results.json");
 
@@ -79,11 +94,38 @@ export interface HornrespCaseReport {
   xd: [number, number, number][];
 }
 
+export interface HornrespBoxCaseReport {
+  id: string;
+  title: string;
+  setup: string;
+  pass: boolean;
+  stats: HornrespBoxRun["stats"];
+  parts: HornrespBoxRun["pass"];
+  /** This case's limits (the defaults unless case.json widens them). */
+  tol: typeof HORNRESP_BOX_TOL;
+  /** The port model and drivers it was run with. */
+  options: string;
+  /** [frequency, Hornresp, ours]; spl is empty where only the outputs were exported one by one. */
+  spl: [number, number, number][];
+  ze: [number, number, number][];
+  xd: [number, number, number][];
+  cone?: [number, number, number][];
+  vent?: [number, number, number][];
+}
+
 export interface Report {
   /** Label and unit of each quantity; for relative ones (rel) a check's diff and tol are fractions. */
   quantities: typeof QUANTITY;
   winisd: { version: string; driver: string; cases: WinIsdCaseReport[] };
-  hornresp: { version: string; driver: string; fMax: number; tol: typeof HORNRESP_TOL; notes: string; cases: HornrespCaseReport[] };
+  hornresp: {
+    version: string;
+    driver: string;
+    fMax: number;
+    tol: typeof HORNRESP_TOL;
+    notes: string;
+    cases: HornrespCaseReport[];
+    boxes: { fMax: number; tol: typeof HORNRESP_BOX_TOL; notes: string; cases: HornrespBoxCaseReport[] };
+  };
 }
 
 function winisdCase(k: (typeof WINISD_CASES)[number]): WinIsdCaseReport {
@@ -141,6 +183,30 @@ function hornrespCase(id: string): HornrespCaseReport {
   };
 }
 
+const thinPairs = (xs: { f: number; ref: number; ours: number }[], digits: number) =>
+  xs.filter((_, i) => i % 2 === 0 || i === xs.length - 1).map((p) => [r(p.f, 2)!, r(p.ref, digits)!, r(p.ours, digits)!] as [number, number, number]);
+
+function hornrespBoxCase(id: string): HornrespBoxCaseReport {
+  const run = runHornrespBox(id);
+  const c = run.c;
+  const options = [c.portModel === "pipe" ? "ports as pipes" : null, c.drivers && c.drivers > 1 ? `${c.drivers} drivers in ${c.wiring ?? "parallel"}` : null].filter(Boolean).join(", ");
+  return {
+    id,
+    title: c.title,
+    setup: c.text,
+    pass: Object.values(run.pass).every((p) => p !== false),
+    stats: Object.fromEntries(Object.entries(run.stats).map(([k, v]) => [k, r(v as number)!])) as HornrespBoxRun["stats"],
+    parts: run.pass,
+    tol: run.tol,
+    options,
+    spl: thinPairs(run.spl, 2),
+    ze: thinPairs(run.ze, 3),
+    xd: thinPairs(run.xd, 4),
+    ...(run.cone ? { cone: thinPairs(run.cone, 2) } : {}),
+    ...(run.vent ? { vent: thinPairs(run.vent, 2) } : {}),
+  };
+}
+
 export function buildReport(): Report {
   return {
     quantities: QUANTITY,
@@ -156,6 +222,7 @@ export function buildReport(): Report {
       tol: HORNRESP_TOL,
       notes: HORNRESP_NOTES,
       cases: hornrespIds().map(hornrespCase),
+      boxes: { fMax: HORNRESP_BOX_F_MAX, tol: HORNRESP_BOX_TOL, notes: HORNRESP_BOX_NOTES, cases: hornrespBoxIds().map(hornrespBoxCase) },
     },
   };
 }
@@ -170,7 +237,7 @@ if (process.argv[1] && import.meta.filename === process.argv[1]) {
   mkdirSync(dirname(REPORT_FILE), { recursive: true });
   const rep = buildReport();
   writeFileSync(REPORT_FILE, reportJson(rep));
-  const w = rep.winisd.cases, h = rep.hornresp.cases;
+  const w = rep.winisd.cases, h = [...rep.hornresp.cases, ...rep.hornresp.boxes.cases];
   const failing = [...w.filter((c) => !c.pass).map((c) => `WinISD ${c.id}`), ...h.filter((c) => !c.pass).map((c) => `Hornresp ${c.id}`)];
   console.log(`Wrote ${REPORT_FILE}: ${w.length} WinISD cases (${w.reduce((n, c) => n + c.checks.length, 0)} checks), ${h.length} Hornresp cases.`);
   if (failing.length) console.log(`Outside tolerance: ${failing.join(", ")}`);
