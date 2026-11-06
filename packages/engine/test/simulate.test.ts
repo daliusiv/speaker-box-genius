@@ -258,13 +258,13 @@ test("semi-inductance coil: Re + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)), repl
     const w = 2 * Math.PI * f;
     // Closed form with plain complex arithmetic.
     const sq = Math.sqrt(w / 2); // √(jω) = √(ω/2)·(1 + j)
-    const zk = [0.1 * sq, 0.1 * sq];
-    const y = [1 / 25 + zk[0] / (zk[0] ** 2 + zk[1] ** 2), -1 / (w * 0.002) - zk[1] / (zk[0] ** 2 + zk[1] ** 2)];
-    const d = y[0] ** 2 + y[1] ** 2;
-    const want = [DRIVER.re + y[0] / d, w * 0.0005 - y[1] / d];
+    const k = 0.1 * sq; // Ke·√(jω) = k + jk
+    const yRe = 1 / 25 + k / (2 * k * k);
+    const yIm = -1 / (w * 0.002) - k / (2 * k * k);
+    const d = yRe * yRe + yIm * yIm;
     const z = voiceCoilImpedance(m, w);
-    near(z.re, want[0]!, 1e-9, `R at ${f} Hz`);
-    near(z.im, want[1]!, 1e-9, `X at ${f} Hz`);
+    near(z.re, DRIVER.re + yRe / d, 1e-9, `R at ${f} Hz`);
+    near(z.im, w * 0.0005 - yIm / d, 1e-9, `X at ${f} Hz`);
     const pair = isobaricPair(m, "series");
     const z2 = voiceCoilImpedance(pair, w);
     near(z2.re, 2 * z.re, 1e-9);
