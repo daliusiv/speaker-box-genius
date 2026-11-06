@@ -29,7 +29,7 @@ import { stuffFactor, stuffable, stuffingEffect } from "./stuffing.ts";
 /** One colour per design slot; distinguishable in light and dark mode. */
 /**
  * Each box type has its own colour, whatever else is in the project: sealed blue, ported
- * orange, passive radiators green, bandpass purple, transmission lines teal. A second (third…)
+ * orange, passive radiators green, bandpass purple, transmission lines pink. A second (third…)
  * design of the same type takes the next shade of its colour.
  */
 export const KIND_COLORS: Record<DesignKind, readonly string[]> = {
@@ -37,7 +37,7 @@ export const KIND_COLORS: Record<DesignKind, readonly string[]> = {
   vented: ["#f97316", "#fdba74", "#c2410c", "#ffedd5"],
   pr: ["#22c55e", "#86efac", "#84cc16", "#bbf7d0"],
   bandpass: ["#a855f7", "#d8b4fe", "#d946ef", "#e9d5ff"],
-  line: ["#14b8a6", "#5eead4", "#06b6d4", "#99f6e4"],
+  line: ["#f472b6", "#f9a8d4", "#db2777", "#fbcfe8"],
 };
 
 export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators", bandpass: "Bandpass", line: "Transmission line" } as const;
