@@ -5,6 +5,7 @@ import {
   coilHeatFactor,
   driverModel,
   voiceCoilImpedance,
+  suspensionImpedance,
   portAcousticMass,
   portArea,
   portLengthForFb,
@@ -277,4 +278,27 @@ test("semi-inductance coil: Re + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)), repl
   // All zero: the plain Le model as before.
   const off = driverModel({ ...DRIVER, le_mh: 1, semi: { leb_mh: 0, le_mh: 0, ke: 0, rss_ohm: 0 } });
   assert.equal(off.semi, null);
+});
+
+test("frequency-dependent damping: suspension Rms + 1/(jω(Cms − j·Ams)) in place of the Rms from Qms", () => {
+  const m = driverModel({ ...DRIVER, fdd: { rms: 2, ams_mm_per_n: 0.3 } });
+  assert.ok(m.fdd);
+  for (const f of [10, 50, 300]) {
+    const w = 2 * Math.PI * f;
+    const z = suspensionImpedance(m, w);
+    // 1/(jω(C − jA)) = (A − jC)/(ω(C² + A²))
+    const c = m.cms, a = 0.3e-3, d = w * (c * c + a * a);
+    near(z.re, 2 + a / d, 1e-9, `R at ${f} Hz`);
+    near(z.im, -c / d, 1e-9, `X at ${f} Hz`);
+  }
+  // Without it: Rms and Cms as ever.
+  const plain = suspensionImpedance(driverModel(DRIVER), 2 * Math.PI * 50);
+  const m0 = driverModel(DRIVER);
+  near(plain.re, m0.rms, 1e-12);
+  near(plain.im, -1 / (2 * Math.PI * 50 * m0.cms), 1e-9);
+  assert.equal(driverModel({ ...DRIVER, fdd: { rms: 2, ams_mm_per_n: 0 } }).fdd, null);
+  // An isobaric pair: twice the resistance, half the compliances.
+  const pair = isobaricPair(m, "series");
+  near(pair.fdd!.rms, 4, 1e-12);
+  near(pair.fdd!.ams, 0.15e-3, 1e-15);
 });

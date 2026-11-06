@@ -232,6 +232,7 @@ export const DRIVER_KEYS = [
   "l2_mh",
   "r2_ohm",
   "semi",
+  "fdd",
   "xmax_mm",
   "pe_w",
   "drivers",
@@ -245,7 +246,7 @@ export type DriverSlot = Pick<AppState, (typeof DRIVER_KEYS)[number]>;
  * The fields a comparison driver has of its own; how many drivers there are and how they're
  * loaded and wired stay the main driver's, so the comparison is like for like.
  */
-export const COMPARE_KEYS = ["driverName", "driverBrand", "nominal_ohms", "ts", "le_mh", "l2_mh", "r2_ohm", "semi", "xmax_mm", "pe_w", "dvc"] as const;
+export const COMPARE_KEYS = ["driverName", "driverBrand", "nominal_ohms", "ts", "le_mh", "l2_mh", "r2_ohm", "semi", "fdd", "xmax_mm", "pe_w", "dvc"] as const;
 export type CompareDriver = Pick<AppState, (typeof COMPARE_KEYS)[number]>;
 
 export interface AppState {
@@ -265,6 +266,11 @@ export interface AppState {
    * of Leb, Le, Ke is above 0 it replaces Le and L2R2. Absent = not used.
    */
   semi?: SemiInductance;
+  /**
+   * Frequency-dependent damping (Hornresp's FDD): the suspension's own Rms (N·s/m) and Ams
+   * (mm/N), in place of the Rms from Qms. Absent = not used.
+   */
+  fdd?: { rms: number; ams_mm_per_n: number };
   xmax_mm: number;
   pe_w: number;
   power: number;
@@ -772,6 +778,7 @@ function driverSlotFrom(raw: Raw, d: DriverSlot): DriverSlot {
     le_mh: raw.le_mh ?? d.le_mh,
     l2_mh: nonNeg(raw.l2_mh),
     r2_ohm: nonNeg(raw.r2_ohm),
+    ...(raw.fdd && typeof raw.fdd === "object" ? { fdd: { rms: nonNeg(raw.fdd.rms), ams_mm_per_n: nonNeg(raw.fdd.ams_mm_per_n) } } : {}),
     ...(raw.semi && typeof raw.semi === "object"
       ? {
           semi: {

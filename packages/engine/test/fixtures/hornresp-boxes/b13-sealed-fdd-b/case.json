@@ -1,0 +1,16 @@
+{
+  "title": "Sealed box, frequency-dependent damping (heavy)",
+  "text": "B1 with Hornresp's FDD model: Rms 8.0 N·s/m, Ams 1.00E-03 m/N (1.0 mm/N; Cms 0.591 mm/N)",
+  "frontAir": 1,
+  "fdd": {
+    "rms": 8.0,
+    "ams_mm_per_n": 1.0
+  },
+  "input": {
+    "kind": "sealed",
+    "vb_l": 10.4,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

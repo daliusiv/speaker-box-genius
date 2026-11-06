@@ -425,6 +425,8 @@ What the comparison settles, and the conventions it has to bridge:
 
 **Stuffed lines (S1–S5).** Hornresp models fill with D. K. Wilson's relaxation model (1997), set by the flow resistivity alone (Fr, mks rayls/m). The app used Delany–Bazley's empirical fit, which was 0.2–1.2 dB and 1–1.5 % out at Fr 150–2000. It now uses Wilson's model too, with porosity and tortuosity 1 (fibre) and the thermal relaxation time 1.75 × the viscous one (the one value fitted, against all three densities): within 0.07 dB and 0.3 % at every density, as close as the unstuffed line run the same way (S1), and an offset line stuffed only behind the driver (S5) within 0.05 dB and 0.3 % (the old model: 0.29 dB, 0.7 %). The app's fill is set in kg/m³ of polyester and turned into flow resistivity with Garai & Pompoli's measurements (481.65 rayls/m = 8.0 kg/m³); Hornresp's "Total Polyfill" readout uses its own empirical figure for one product (481.65 rayls/m = 9.9 kg/m³), so densities from the two programs aren't interchangeable, flow resistivities are.
 
+**Frequency-dependent damping (B13).** Hornresp's FDD model (double-click the Cms label) takes two values, Rms (N·s/m) and Ams (m/N). Two exports of the sealed box (Rms 2 / Ams 3.0E-04 and Rms 8 / Ams 1.0E-03) pin it down exactly: the suspension becomes Rms + 1/(jω(Cms − j·Ams)), a complex compliance (a loss that's the same fraction Ams/Cms of the stiffness at every frequency, as rubber and foam behave) with its own Rms in place of the one from Qms. That fits Hornresp's motional impedance to 0.0003 % on average. The app has the same model (Driver → Suspension losses → Frequency-dependent): within 0.46 % in impedance and 0.04 dB, as close as the box without it.
+
 **Semi-inductance.** Hornresp's semi-inductance model (Thorborg and Futtrup) is the coil impedance Re' + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)); two sets on the sealed box (B8a: Leb 0.3 mH, Le 1 mH, Ke 0.05 sH, Rss 30 Ω; B8b: Leb 1.36 mH, Le 3.16 mH, Ke 0.21 sH, Rss 30.6 Ω) pin that down exactly. The app has the same model (Driver → Coil model → Semi-inductance): impedance within 0.3 % on average up to 20 kHz, and the SPL the coil takes away up there (compared as the change from the plain B1 box, so the box's own radiation doesn't enter) within 0.03 dB. A third record (B8c) sets Re' to 6.5 Ω against Re 5.9 Ω: Hornresp takes Re' as the coil's resistance everywhere in the circuit and keeps Bl as the T/S give it (from Re), and the app does the same (Re′ in the model's fields); within 0.22 % in impedance.
 
 **Power compression.** Hornresp's Tools → Power Compression sets the voice coil's temperature; at 120 °C its Re rises by 39.3 %, copper's 0.393 %/°C, as the app's Settings → Voice coil °C does. The sealed box (B9) and the mass-loaded line (case 16) at 120 °C match as closely as at 20 °C: 0.05 dB and 0.5 % in impedance for the box, 0.02 dB and 0.3 % for the line.
@@ -449,6 +451,8 @@ export interface HornrespBoxCase {
    * how the box radiates up there.
    */
   splDeltaFrom?: string;
+  /** Hornresp's frequency-dependent damping (FDD) model. */
+  fdd?: DriverInput["fdd"];
   /** Hornresp's semi-inductance model (its Re' is the driver's Re), in place of Le. */
   semi?: SemiInductance;
   /** A high-pass filter before the amplifier (Hornresp's Active Filter Wizard). */
@@ -521,7 +525,7 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const dir = join(HORNRESP_BOX_DIR, id);
   const c = readBoxCase(id);
   const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
-  const driver = { ...hornrespDriver(HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}) };
+  const driver = { ...hornrespDriver(HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}), ...(c.fdd ? { fdd: c.fdd } : {}) };
   const base: SimulationOptions = {
     power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom, highPass: c.highPass,
   };

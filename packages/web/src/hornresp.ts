@@ -208,8 +208,16 @@ export function toHornresp(
     warnings.push("The driver uses the semi-inductance model: in Hornresp, double-click Le and click On (Le turns green), or it uses the plain Le.");
   } else for (const k of ["Re'", "Leb", "Le", "Ke", "Rss"]) fixed(k, "0.00");
   head("ADVANCED DRIVER PARAMETER VALUES FOR FREQUENCY-DEPENDENT DAMPING MODEL");
-  fixed("Rms", "0.00");
-  fixed("Ams", "0.00");
+  // Frequency-dependent damping: its own Rms and Ams (m/N, written like Cms). Hornresp needs it
+  // switched on too: double-click the Cms label, then On.
+  if (driver.fdd && driver.fdd.ams_mm_per_n > 0) {
+    put("Rms", r2(driver.fdd.rms), "N·s/m (FDD)");
+    put("Ams", (driver.fdd.ams_mm_per_n / 1000).toExponential(2).toUpperCase().replace(/E([+-])(\d)$/, "E$10$2"), "m/N (FDD)");
+    warnings.push("The driver uses frequency-dependent damping: in Hornresp, double-click the Cms label and click On (Cms turns green), or it uses Rms alone.");
+  } else {
+    fixed("Rms", "0.00");
+    fixed("Ams", "0.00");
+  }
   head("PASSIVE RADIATOR PARAMETER VALUE");
   fixed("Added Mass", "0.00");
   head("CHAMBER PARAMETER VALUES");
@@ -306,7 +314,7 @@ const TAPER: Record<string, LineSection["taper"]> = { par: "linear", con: "conic
 export interface HornrespImport {
   design: Partial<LineDesign>;
   /** The record's driver, when it has one. */
-  driver?: { ts: TsValues; le_mh: number; xmax_mm?: number; name: string; semi?: SemiInductance };
+  driver?: { ts: TsValues; le_mh: number; xmax_mm?: number; name: string; semi?: SemiInductance; fdd?: { rms: number; ams_mm_per_n: number } };
   /** How many drivers the record has, and their wiring ("2P" / "2S"). */
   drivers?: { count: number; wiring: "parallel" | "series" };
   warnings: string[];
@@ -412,6 +420,15 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
   if (ang && !/^2(\.0+)?\s*x\s*Pi$/i.test(ang)) warnings.push(`The record radiates into ${ang}; here it's half space (2 × Pi).`);
 
   // The semi-inductance values: Leb, then the second "Le" (the first is the plain Le), Ke, Rss.
+  // Frequency-dependent damping: the Rms and Ams after Hornresp's FDD heading (the first Rms is the driver's own).
+  const fddOf = (): { fdd?: { rms: number; ams_mm_per_n: number } } => {
+    const at = pairs.findIndex(([k]) => k.toLowerCase() === "ams");
+    if (at < 0) return {};
+    const ams = num(pairs[at]![1]) || 0;
+    if (!(ams > 0)) return {};
+    const rms = [...pairs.slice(0, at)].reverse().find(([k]) => k.toLowerCase() === "rms")?.[1];
+    return { fdd: { rms: rms === undefined ? 0 : num(rms) || 0, ams_mm_per_n: Number((ams * 1000).toPrecision(6)) } };
+  };
   const semiOf = (): { semi?: SemiInductance } => {
     const at = pairs.findIndex(([k]) => k.toLowerCase() === "leb");
     if (at < 0) return {};
@@ -440,6 +457,7 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
       le_mh: get("Le") ?? 0,
       ...(get("Xmax") ? { xmax_mm: get("Xmax")! } : {}),
       ...semiOf(),
+      ...fddOf(),
       name: comment ? `Hornresp: ${comment.slice(0, 50)}` : "Driver from a Hornresp record",
     };
   }

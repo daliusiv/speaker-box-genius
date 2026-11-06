@@ -15,6 +15,7 @@ import {
   portLossCoefficient,
   portPipe,
   coilHeatFactor,
+  suspensionImpedance,
   portMouthArea,
   prFb,
   prGroupsFb,
@@ -161,6 +162,7 @@ export function isobaricPair(d: ReturnType<typeof driverModel>, coils: "series" 
     mms: d.mms * 2,
     cms: d.cms / 2,
     rms: d.rms * 2,
+    fdd: d.fdd && { rms: d.fdd.rms * 2, ams: d.fdd.ams / 2 },
     pe: d.pe === null ? null : d.pe * 2,
   };
 }
@@ -427,7 +429,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const filterGain2 = filter.re * filter.re + filter.im * filter.im;
     const pg = div(mul(filter, cx((vDriver * d.bl) / d.sd)), ze);
     const zae = div(cx((d.bl * d.bl) / sd2), ze);
-    const zas = cx(d.rms / sd2, (w * d.mms - 1 / (w * d.cms)) / sd2);
+    const susp = suspensionImpedance(d, w);
+    const zas = cx(susp.re / sd2, (w * d.mms + susp.im) / sd2);
 
     let zLoad: Complex;
     let ui: Complex;
@@ -467,7 +470,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       }
     } else if (line) {
       // Transmission line (or tapped horn): the line loads the cone; the mouth (or port) radiates.
-      let zasLine = cx(d.rms / sd2, (w * lineMmd - 1 / (w * d.cms)) / sd2);
+      let zasLine = cx(susp.re / sd2, (w * lineMmd + susp.im) / sd2);
       // Several drivers side by side load each other's fronts: together they push one piston
       // of n·Sd, so each sees n × that piston's impedance (√n × one cone's air mass), as Hornresp has it.
       if (!line.mouthOnly) zasLine = add(zasLine, scale(baffledPistonImpedance(n * d.sd, w, air), n));
