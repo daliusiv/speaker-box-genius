@@ -62,6 +62,12 @@ export interface Design {
   vb_l: number;
   /** The volume it acts as, when stuffing makes that differ from vb_l. */
   acting_l?: number;
+  /**
+   * With room or cabin gain on: the F3 of the box's response with that gain (the summary's
+   * F3 is the box's own, as WinISD gives it, and so are the chart's F3 dots). Null when the
+   * gain keeps it from falling 3 dB in range.
+   */
+  f3Room?: number | null;
   result: SimulationResult;
 }
 
@@ -380,13 +386,27 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
         if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + db[i]!), mouth: result.parts.mouth.map((v, i) => v + db[i]!) };
       }
       const room = roomGainOf(s);
+      let f3Room: number | null | undefined;
       if (room) {
         const lift = result.freq.map((f) => roomGainDb(f, room));
+        // The F3 in the room or car: the box's own response (no baffle step) plus the gain.
+        const ref = result.summary.bandPeakSpl ?? result.summary.referenceSpl;
+        const rel = result.spl.map((v, i) => v - (step ? baffleCache(result.freq, step)[i]! : 0) + lift[i]! - ref);
+        f3Room = (d.kind === "line" ? lowEdge(result.freq, rel) : minus3Points(result.freq, rel, d.kind === "bandpass"))[0] ?? null;
         result.spl = result.spl.map((v, i) => v + lift[i]!);
         result.maxSpl = result.maxSpl.map((v, i) => v + lift[i]!);
         if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + lift[i]!), mouth: result.parts.mouth.map((v, i) => v + lift[i]!) };
       }
-      out.push({ design: d, label: d.name, compare: isCompare || undefined, color: colorOf(s, d.id), vb_l: built, ...(vb !== built ? { acting_l: vb } : {}), result });
+      out.push({
+        design: d,
+        label: d.name,
+        compare: isCompare || undefined,
+        color: colorOf(s, d.id),
+        vb_l: built,
+        ...(vb !== built ? { acting_l: vb } : {}),
+        ...(f3Room !== undefined ? { f3Room } : {}),
+        result,
+      });
     } catch {
       // Invalid input mid-edit: skip this design until the numbers make sense again.
     }
@@ -656,4 +676,43 @@ export function dimensionsFor(
     topWidth_cm: r(out.topWidth_cm),
     topDepth_cm: r(out.topDepth_cm),
   };
+}
+
+/** Transmission lines ripple above their tuning: their −3 dB point is the first one coming up from the bottom. */
+export function lowEdge(freq: Float64Array, rel: ArrayLike<number>): number[] {
+  for (let i = 1; i < rel.length; i++) {
+    if (rel[i]! >= -3 && rel[i - 1]! < -3) {
+      const t = (-3 - rel[i - 1]!) / (rel[i]! - rel[i - 1]!);
+      return [freq[i - 1]! * (freq[i]! / freq[i - 1]!) ** t];
+    }
+  }
+  return [];
+}
+
+/**
+ * Where a relative response (0 dB = passband) crosses −3 dB, read off the curve as shown:
+ * below its peak, and for a bandpass above it too. Interpolated in log f.
+ */
+export function minus3Points(freq: Float64Array, rel: ArrayLike<number>, bandLimited: boolean): number[] {
+  let peak = 0;
+  for (let i = 1; i < rel.length; i++) if (rel[i]! > rel[peak]!) peak = i;
+  if (!(rel[peak]! >= -3)) return [];
+  const at = (i: number, j: number) => {
+    const t = (-3 - rel[i]!) / (rel[j]! - rel[i]!);
+    return freq[i]! * (freq[j]! / freq[i]!) ** t;
+  };
+  const out: number[] = [];
+  for (let i = peak; i > 0; i--) {
+    if (rel[i - 1]! < -3) {
+      out.push(at(i - 1, i));
+      break;
+    }
+  }
+  for (let i = peak; bandLimited && i + 1 < rel.length; i++) {
+    if (rel[i + 1]! < -3) {
+      out.push(at(i, i + 1));
+      break;
+    }
+  }
+  return out;
 }

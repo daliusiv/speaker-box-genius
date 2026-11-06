@@ -23,7 +23,7 @@ import {
 import type { DbIndex, LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
 import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
-import { airOf, portLimitOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
+import { airOf, lineFoldOf, portLimitOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
 import { portCandidates, portFieldsOf, portSpeedFor, chamberPortFields, type AssistantPort } from "./ports.ts";
 import { bandRipple, sizeBandpass } from "./bandpassSize.ts";
 export { choosePort, portCandidates, portFieldsOf, type AssistantPort } from "./ports.ts";
@@ -60,6 +60,8 @@ export const LINE_SHORTLIST = 10;
 export const LINE_MAX_CM = 300;
 /** Group delay (in cycles of the frequency, from 0.8 × F3 up) above which a result gets a "slow bass" note: a delay as long as the note's own period. */
 export const GD_CYCLES = 1;
+/** The tallest cabinet (outside, cm) a line may fold into, and the deepest and widest. */
+export const LINE_FOLD_MAX = { height_cm: 125, depth_cm: 50, width_cm: 45 };
 /** Narrowest a line may get on average, as a share of the cones' area. */
 export const LINE_MIN_AREA = 0.8;
 
@@ -136,7 +138,14 @@ export interface AssistantResult {
   fb?: number;
   port?: AssistantPort;
   /** Transmission line: its type, length along the line, and the design itself (to open). */
-  line?: { type: (typeof LINE_TYPES)[number]; label: string; length_cm: number; design: LineDesign };
+  line?: {
+    type: (typeof LINE_TYPES)[number];
+    label: string;
+    length_cm: number;
+    design: LineDesign;
+    /** How it folds into a cabinet: runs and outside size (cm). */
+    fold: { runs: number; height_cm: number; width_cm: number; depth_cm: number; bentPort: boolean };
+  };
   /** Group delay slow enough to call the bass "slow": its peak in the band (from 0.8 × F3 up) and where, when over GD_CYCLES cycles. */
   gd?: { ms: number; hz: number; cycles: number };
   /** Bandpass: the order, both chambers (L), their ports, and the band (−3 dB edges) with its gain over a plain cone. */
@@ -238,6 +247,38 @@ export function withDriver(s: AppState, d: LoadedDriver): AppState {
 }
 
 const LINE_LABEL: Record<(typeof LINE_TYPES)[number], string> = { mltl: "MLTL", tl: "Classic TL" };
+
+/**
+ * Folding a line into a cabinet with the app's fold tool (the same layout the Build tab
+ * draws and cuts): 0–4 folds, an inside width from the driver's cutout to 40 cm; kept when
+ * the fold has no warnings (the driver fits in the first run, nothing too shallow; a port
+ * longer than the cabinet is tall is fine, bent) and the
+ * cabinet is at most LINE_FOLD_MAX and taller than it is deep. Of those, the fewest folds,
+ * then the height nearest `target_cm` (about a metre for a tower).
+ */
+export function foldFor(d: LineDesign, wall_mm: number, cutout_mm: number, target_cm: number): { design: LineDesign; fold: NonNullable<AssistantResult["line"]>["fold"] } | null {
+  for (let folds = 0; folds <= 4; folds++) {
+    let best: { design: LineDesign; fold: NonNullable<AssistantResult["line"]>["fold"]; miss: number } | null = null;
+    for (let w = Math.max(12, Math.ceil(cutout_mm / 10) + 1); w <= 40; w += 2) {
+      const design: LineDesign = { ...d, fold: { width_cm: w, folds } };
+      let f: ReturnType<typeof lineFoldOf>;
+      try {
+        f = lineFoldOf(design, wall_mm, cutout_mm);
+      } catch {
+        continue;
+      }
+      // Advice about cleaner bends, or a port to bend (an MLTL's long port), is fine; anything
+      // else (the driver not in the first run, a run too shallow) means it won't build well.
+      if (f.warnings.some((x) => !/cleaner bends|port is longer/.test(x))) continue;
+      const o = { height_cm: r1(f.outside.height / 10), width_cm: r1(f.outside.width / 10), depth_cm: r1(f.outside.depth / 10) };
+      if (o.height_cm > LINE_FOLD_MAX.height_cm || o.depth_cm > LINE_FOLD_MAX.depth_cm || o.width_cm > LINE_FOLD_MAX.width_cm || o.height_cm < o.depth_cm) continue;
+      const miss = Math.abs(o.height_cm - target_cm);
+      if (!best || miss < best.miss) best = { design, fold: { runs: folds + 1, ...o, bentPort: f.warnings.some((x) => /port is longer/.test(x)) }, miss };
+    }
+    if (best) return { design: best.design, fold: best.fold };
+  }
+  return null;
+}
 
 /**
  * The drivers worth trying in a slower box type: half the best drivers from the boxes (as
@@ -572,12 +613,15 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
       const areas = [cur.closedArea_cm2, ...cur.sections.map((x) => x.endArea_cm2)];
       const mean = areas.reduce((a, b) => a + b, 0) / areas.length;
       if (mean < LINE_MIN_AREA * drv.sd_cm2 * goal.drivers) continue;
-      const design: LineDesign = { ...cur, vb_l: r1(vb) };
+      // It has to fold into a cabinet you'd build: else it's left out.
+      const folded = foldFor({ ...cur, vb_l: r1(vb) }, s.volume.wall_mm, (row.size_in ?? 8) * 25.4 * 0.92, goal.use === "tower" ? 100 : 70);
+      if (!folded) continue;
+      const design = folded.design;
       const fb = run(design, vb).summary.fb;
       if (fb === undefined || Math.abs(fb / preset.targetFb - 1) > 0.25) continue;
       const label = LINE_LABEL[type];
       const notes = wants > goal.maxVolume_l * 1.02 ? [`The ${label} preset wants ${r1(wants)} L; narrowed to fit your ${r1(goal.maxVolume_l)} L`] : [];
-      finish("line", design, vb, notes, fb, undefined, { type, label, length_cm: r1(lineLength(design)), design });
+      finish("line", design, vb, notes, fb, undefined, { type, label, length_cm: r1(lineLength(design)), design, fold: folded.fold });
     }
   }
 
