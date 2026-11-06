@@ -112,6 +112,12 @@ export interface Brand {
   name: string;
   website?: string;
   country?: string;
+  /**
+   * Terms that replace the database's CC BY-NC-SA 4.0 licence for this brand's
+   * entries, when the manufacturer allowed use in Speaker Box Genius but not
+   * under Creative Commons (listed in LICENSE-DATA). Absent = CC BY-NC-SA 4.0.
+   */
+  licence?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -288,10 +294,11 @@ export function validatePassiveRadiator(data: unknown): Errors {
 export function validateBrand(data: unknown): Errors {
   const errors: Errors = [];
   if (!isObj(data)) return ["file must contain a JSON object"];
-  checkKeys(data, ["name", "website", "country"], "", errors);
+  checkKeys(data, ["name", "website", "country", "licence"], "", errors);
   str(data, "name", "", errors, true);
   str(data, "website", "", errors, false);
   str(data, "country", "", errors, false);
+  str(data, "licence", "", errors, false);
   return errors.map((e) => e.replace(/^\./, ""));
 }
 

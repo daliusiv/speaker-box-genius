@@ -1,0 +1,30 @@
+{
+  "brand": "Markaudio",
+  "model": "CHN-40",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 97.4826,
+    "qms": 3.7689,
+    "qes": 0.7752,
+    "vas_l": 1.1523,
+    "re": 6.8,
+    "sd_cm2": 23,
+    "qts": 0.6429,
+    "le_mh": 1.0575,
+    "bl": 3.1071,
+    "mms_g": 1.6942,
+    "xmax_mm": 3.5,
+    "pe_w": 7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/ch/chn-40/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Nominal impedance 8 Ω estimated from Re 6.8 Ω (not on the page)."
+}

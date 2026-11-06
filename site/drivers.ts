@@ -273,6 +273,10 @@ export function driverContent(p: DriverPage, links: PageLinks, chart: typeof imp
   const credit = src?.url
     ? `Parameters from the <a href="${esc(src.url)}" rel="noopener nofollow">${viaDb ? "manufacturer's published specifications" : `${esc(p.brand)} datasheet`}</a>${viaDb ? `, via <a href="https://github.com/JonathanDCohen/driver-base" rel="noopener">driver-base</a> (<a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>)` : ""}.`
     : "Parameters as published by the manufacturer.";
+  // Brands that allowed use here but not under Creative Commons (LICENSE-DATA, "Exceptions").
+  const ownTerms = /not covered by CC BY-NC-SA/i.test(src?.note ?? "")
+    ? ` Used with ${esc(p.brand)}'s permission; not covered by the database's CC BY-NC-SA licence, so ask ${esc(p.brand)} before reusing them.`
+    : "";
   const report = `${REPO}/issues/new?template=data-correction.yml&title=${encodeURIComponent(`Correction: ${name}`)}`;
 
   const notes = p.notes.length ? `<p class="muted">Not shown: ${p.notes.map(esc).join("; ")}.</p>` : "";
@@ -295,7 +299,7 @@ ${key}
 
 <h2 id="parameters">Parameters</h2>
 <div class="table"><table class="cmp ts"><tbody>${tsRows}</tbody></table></div>
-<p class="muted">${credit} <a href="${esc(report)}" rel="nofollow">Report a mistake</a>.</p>
+<p class="muted">${credit}${ownTerms} <a href="${esc(report)}" rel="nofollow">Report a mistake</a>.</p>
 ${related}`;
 
   const desc = p.designs

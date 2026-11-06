@@ -1,0 +1,27 @@
+{
+  "brand": "Markaudio",
+  "model": "MAOP 11MS",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 43.7992,
+    "qms": 2.1613,
+    "qes": 0.3483,
+    "vas_l": 25.1186,
+    "re": 6.8,
+    "sd_cm2": 111,
+    "qts": 0.3,
+    "le_mh": 0.3021,
+    "bl": 6.9841,
+    "mms_g": 9.0799
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/11-cm/maop-11ms/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

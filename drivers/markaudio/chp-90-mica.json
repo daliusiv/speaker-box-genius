@@ -1,0 +1,30 @@
+{
+  "brand": "Markaudio",
+  "model": "CHP-90 MICA",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 48.53,
+    "qms": 2.2008,
+    "qes": 0.4354,
+    "vas_l": 20.05,
+    "re": 6.2,
+    "sd_cm2": 85,
+    "qts": 0.3635,
+    "le_mh": 0.2642,
+    "bl": 4.8444,
+    "mms_g": 5.5051,
+    "xmax_mm": 7,
+    "pe_w": 40
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/ch/chp-90-mica/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Nominal impedance 8 Ω estimated from Re 6.2 Ω (not on the page)."
+}

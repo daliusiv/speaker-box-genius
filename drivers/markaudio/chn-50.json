@@ -1,0 +1,29 @@
+{
+  "brand": "Markaudio",
+  "model": "CHN-50",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "ts": {
+    "fs": 113.1594,
+    "qms": 2.8318,
+    "qes": 0.6865,
+    "vas_l": 1.0965,
+    "re": 3.4,
+    "sd_cm2": 28,
+    "qts": 0.5526,
+    "le_mh": 0.06,
+    "bl": 2.6869,
+    "mms_g": 2.0871,
+    "xmax_mm": 3.5,
+    "pe_w": 7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/ch/chn-50/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

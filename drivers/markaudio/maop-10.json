@@ -1,0 +1,27 @@
+{
+  "brand": "Markaudio",
+  "model": "MAOP 10",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 39.8664,
+    "qms": 2.0048,
+    "qes": 0.4497,
+    "vas_l": 26.1871,
+    "re": 7.2,
+    "sd_cm2": 90,
+    "qts": 0.3673,
+    "le_mh": 0.0681,
+    "bl": 5.6521
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/maop/maop-10/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 5.4051 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}

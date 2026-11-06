@@ -1,0 +1,30 @@
+{
+  "brand": "Markaudio",
+  "model": "Alpair 11MS",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 43.748,
+    "qms": 2.215,
+    "qes": 0.407,
+    "vas_l": 17.709,
+    "re": 7.2,
+    "sd_cm2": 111.22,
+    "qts": 0.344,
+    "le_mh": 0.0631,
+    "bl": 7.812,
+    "mms_g": 12.005,
+    "xmax_mm": 8,
+    "pe_w": 35
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/alpair/alpair-11-ms/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Nominal impedance 8 Ω estimated from Re 7.2 Ω (not on the page)."
+}

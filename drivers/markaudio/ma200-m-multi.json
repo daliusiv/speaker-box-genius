@@ -1,0 +1,29 @@
+{
+  "brand": "Markaudio",
+  "model": "MA200-M Multi",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 33.0003,
+    "qms": 2.239,
+    "qes": 0.4086,
+    "vas_l": 65.1957,
+    "re": 6.8,
+    "sd_cm2": 206,
+    "qts": 0.3455,
+    "le_mh": 0.2283,
+    "bl": 8.546,
+    "mms_g": 21.1652,
+    "xmax_mm": 9,
+    "pe_w": 50
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/20-cm/ma200-m-multi-stealth-grey/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}
