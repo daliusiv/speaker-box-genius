@@ -22,11 +22,11 @@ const PORT_SIZES = [20, 15, 12.5, 10, 7.5, 6, 5, 4, 3];
  * as the app's "Port too long to fit" check (portRoom_cm: a cube of this volume, less a port
  * diameter). Two ports when one won't fit.
  */
-export function choosePort(vb_l: number, fb: number, air: Air): { diameter_cm: number; length_cm: number; count: number } | null {
+export function choosePort(vb_l: number, fb: number, air: Air, space: PortSpace | null = null): { diameter_cm: number; length_cm: number; count: number } | null {
   for (const count of [1, 2]) {
     for (const d of PORT_SIZES) {
       const len = portLengthForFb(vb_l, { shape: "round", diameter_cm: d, length_cm: 10 }, fb, count, undefined, air);
-      if (len > 1 && len <= portRoom_cm(vb_l, d)) return { diameter_cm: d, length_cm: r1(len), count };
+      if (len > 1 && len <= portRoom_cm(vb_l, d, space?.long_cm ?? null)) return { diameter_cm: d, length_cm: r1(len), count };
     }
   }
   return null;
@@ -42,29 +42,45 @@ const r05 = (v: number) => Math.round(v * 2) / 2;
  * straight (portRoom_cm): a plain tube; a tube with round-overs at both ends (a flared port,
  * radius ¼ of the throat as the app suggests, judged at its wider mouths); a slot as wide as
  * the box (a cube's side) along a wall, which only needs its height clear of the opposite wall.
+ * In a box built to a known space (`space`), its real inside: the longest inside dimension for
+ * the length, the next for a slot's width.
  */
-export function portCandidates(vb_l: number, fb: number, air: Air): AssistantPort[] {
+export function portCandidates(vb_l: number, fb: number, air: Air, space: PortSpace | null = null): AssistantPort[] {
   const out: AssistantPort[] = [];
-  const straight = choosePort(vb_l, fb, air);
+  const room = (clearance: number) => portRoom_cm(vb_l, clearance, space?.long_cm ?? null);
+  const straight = choosePort(vb_l, fb, air, space);
   if (straight) out.push({ kind: "straight", flare_cm: 0, ...straight });
   for (const d of PORT_SIZES) {
     const flare = Math.max(1, r05(d / 4));
     const len = portLengthForFb(vb_l, { shape: "round", diameter_cm: d, length_cm: 10, flare_cm: flare }, fb, 1, undefined, air);
-    if (len >= 2 * flare + 1 && len <= portRoom_cm(vb_l, d)) {
+    if (len >= 2 * flare + 1 && len <= room(d)) {
       out.push({ kind: "flared", diameter_cm: d, flare_cm: flare, length_cm: r1(len), count: 1 });
       break;
     }
   }
-  const width = Math.floor(Math.cbrt(vb_l * 1000) * 2) / 2;
+  const width = Math.floor((space?.wide_cm ?? Math.cbrt(vb_l * 1000)) * 2) / 2;
   for (const h of SLOT_HEIGHTS) {
     if (h * 3 > width) continue;
     const len = portLengthForFb(vb_l, { shape: "slot", width_cm: width, height_cm: h, length_cm: 10 }, fb, 1, undefined, air);
-    if (len > 1 && len <= portRoom_cm(vb_l, h)) {
+    if (len > 1 && len <= room(h)) {
       out.push({ kind: "slot", slotWidth_cm: width, slotHeight_cm: h, length_cm: r1(len), count: 1 });
       break;
     }
   }
   return out;
+}
+
+/** A box's real inside (cm), when it's built to a known space: its longest and next-longest dimensions. */
+export interface PortSpace {
+  long_cm: number;
+  wide_cm: number;
+}
+
+/** Whether a port only fits because of the box's real inside (longer than a cube of this volume allows). */
+export function needsSpace(p: AssistantPort, vb_l: number): boolean {
+  const cube = Math.cbrt(vb_l * 1000);
+  if (p.kind === "slot") return p.length_cm > portRoom_cm(vb_l, p.slotHeight_cm) + 0.05 || p.slotWidth_cm > cube + 0.5;
+  return p.length_cm > portRoom_cm(vb_l, p.diameter_cm) + 0.05;
 }
 
 /** A port's fields for a vented design. */

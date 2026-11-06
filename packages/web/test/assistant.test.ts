@@ -4,8 +4,9 @@ import { TS_PARAMS, type TsParam, type TsValues } from "@sbg/engine";
 import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
+import { needsSpace } from "../src/ports.ts";
 import { PORT_LIMIT, lineFoldOf, limitsOf, volumeFor, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { GD_CYCLES, decodeShared, encodeShared, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { GD_CYCLES, decodeShared, decodeSharedAny, driverFits, encodeShared, encodeSharedShort, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -41,6 +42,8 @@ function loaded(id: string): LoadedDriver {
     xmax_mm: rec.ts.xmax_mm,
     pe_w: rec.ts.pe_w,
     dvcWiring: rec.voice_coils === 2 ? (rec.ts_wiring ?? "parallel") : undefined,
+    cutout_mm: rec.physical?.cutout_mm,
+    depth_mm: rec.physical?.depth_mm,
   };
 }
 function runAll(goal: AssistantGoal): { results: AssistantResult[]; tried: number; ms: number } {
@@ -317,4 +320,90 @@ test("shared results: the goal, chuffing line and box type round-trip; anything 
   assert.equal(odd.only, undefined);
   assert.equal(decodeShared(raw({ g: { use: "spaceship" } })), null);
   assert.equal(decodeShared("not-base64!"), null);
+});
+
+test("fit my space: a driver fits by its real frame and depth; ports use the space's real inside", () => {
+  const sp = { width_cm: 30, height_cm: 30, depth_cm: 14, wall_mm: 18 }; // inside 26.4 × 26.4 × 10.4
+  // An 8" frame (cutout 185 mm → about 21 cm) fits the big face, but not 12 cm deep.
+  assert.ok(driverFits({ cutout_mm: 185, depth_mm: 90 }, { size_in: 8 }, sp));
+  assert.ok(!driverFits({ cutout_mm: 185, depth_mm: 120 }, { size_in: 8 }, sp));
+  // A frame wider than its nominal size: judged by the cutout.
+  assert.ok(!driverFits({ cutout_mm: 250 }, { size_in: 8 }, sp));
+  assert.ok(driverFits({}, { size_in: 8 }, sp));
+  // A long, thin box: the cube rule says the port is too long, the real inside has room.
+  const air = { c: 343, rho: 1.2 };
+  const cube = portCandidates(40, 25, air as never);
+  const long = portCandidates(40, 25, air as never, { long_cm: 90, wide_cm: 30 });
+  const slot = long.find((p) => p.kind === "slot");
+  assert.ok(slot && slot.kind === "slot" && slot.slotWidth_cm === 30, JSON.stringify(long));
+  const widest = (ps: typeof cube) => Math.max(...ps.filter((p) => p.kind !== "slot").map((p) => (p.kind === "slot" ? 0 : p.diameter_cm)));
+  assert.ok(widest(long) >= widest(cube), `${JSON.stringify(cube)} vs ${JSON.stringify(long)}`);
+  assert.ok(long.some((p) => needsSpace(p, 40)) && !cube.some((p) => needsSpace(p, 40)));
+});
+
+test("fit my space: a second sealed box that fills the space when Qtc 0.707 leaves room; links follow a port that needs the space", () => {
+  const space = { width_cm: 60, height_cm: 50, depth_cm: 50, wall_mm: 18 };
+  const goal = { ...goalFor("home", "balanced"), space, boxes: ["sealed", "vented"] as AssistantGoal["boxes"] };
+  const cands = prefilter(rows, goal).slice(0, 40);
+  let full = 0;
+  for (const r of cands) {
+    const d = loaded(r.id);
+    const rs = evaluateDriver(DEFAULT_STATE, r, d, goal);
+    const sealed = rs.filter((x) => x.box === "sealed");
+    if (sealed.length === 2) {
+      full++;
+      const [a, b] = sealed as [AssistantResult, AssistantResult];
+      assert.ok(b.key.endsWith(":full") && b.space?.fills && !a.space?.fills && b.vb_l > a.vb_l && b.f3 < a.f3, `${r.id}: ${JSON.stringify([a.key, a.vb_l, a.f3, a.space, b.key, b.vb_l, b.f3, b.space])}`);
+      assert.match(b.notes.join(), /Fills your space: Qtc 0\.\d+/);
+    }
+    for (const x of rs) if (x.space?.portUsesSpace) {
+      const s = openResults(DEFAULT_STATE, d, [rs.find((y) => y.box === "sealed") ?? x, x].filter((y, i, a) => a.indexOf(y) === i), goal);
+      assert.equal(s.volume.link, s.designs.find((y) => y.kind === "vented")!.id, `${r.id}: the vented box with the long port is linked`);
+    }
+  }
+  assert.ok(full > 0, "some driver's 0.707 box is well under the space");
+  // A long, low space (under a seat, along a boot): the ported boxes' ports can run its length.
+  const long = { ...goalFor("car", "balanced"), space: { width_cm: 100, height_cm: 30, depth_cm: 30, wall_mm: 18 }, boxes: ["vented"] as AssistantGoal["boxes"] };
+  let n = 0;
+  for (const r of prefilter(rows, long).slice(0, 40)) {
+    const d = loaded(r.id);
+    for (const x of evaluateDriver(DEFAULT_STATE, r, d, long)) {
+      if (!x.space?.portUsesSpace) continue;
+      n++;
+      assert.ok(x.space.fills && x.port!.length_cm > portRoom_cm(x.vb_l, x.port!.kind === "slot" ? x.port!.slotHeight_cm : x.port!.diameter_cm));
+      assert.ok(x.port!.length_cm <= insideOf(long.space)[0]!);
+      const s = openResults(DEFAULT_STATE, d, [x], long);
+      assert.equal(s.volume.link, s.designs[0]!.id);
+    }
+  }
+  assert.ok(n > 0, "a port that runs the long space's length");
+  // "Smallest box" never gets one.
+  const small = { ...goal, priority: "small" as const };
+  for (const r of cands.slice(0, 10)) assert.ok(evaluateDriver(DEFAULT_STATE, r, loaded(r.id), small).filter((x) => x.box === "sealed").length <= 1);
+});
+
+test("fit my space: passive radiators too wide for the space's faces are left out", async () => {
+  const { prCandidate } = await import("../../../site/drivers.ts");
+  const prs = db.passiveRadiators.map(prCandidate);
+  const space = { width_cm: 30, height_cm: 22, depth_cm: 30, wall_mm: 18 };
+  const goal = { ...goalFor("hifi", "balanced"), space, boxes: ["pr"] as AssistantGoal["boxes"] };
+  const face = insideOf(space)[1]!;
+  for (const r of prefilter(rows, goal).slice(0, 15)) {
+    for (const x of evaluateDriver(DEFAULT_STATE, r, loaded(r.id), goal, "pr", prs)) {
+      const c = prs.find((p) => p.name === x.pr!.name)!;
+      assert.ok((c.od_cm ?? 0) <= face, `${x.pr!.name}: ${c.od_cm} cm on a ${face} cm face`);
+    }
+  }
+});
+
+test("shared results: the short (deflated) link round-trips with the database stamp, and is shorter", async () => {
+  const goal = { ...goalFor("hifi", "deep"), brands: ["SB Acoustics", "Dayton Audio", "Scan-Speak"], space: { width_cm: 30, height_cm: 45, depth_cm: 32, wall_mm: 18 } };
+  const x = { goal, portLimit_ms: 20, only: "pr" as const, db: "2026-11-05T12:00:00Z" };
+  const long = encodeShared(x);
+  const short = await encodeSharedShort(x);
+  assert.match(short, /^z[\w-]+$/);
+  assert.ok(short.length < 0.75 * long.length, `${short.length} vs ${long.length}`);
+  assert.deepEqual(await decodeSharedAny(short), x);
+  assert.deepEqual(await decodeSharedAny(long), x);
+  assert.equal(await decodeSharedAny("zzzz"), null);
 });

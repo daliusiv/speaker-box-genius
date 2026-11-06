@@ -83,7 +83,8 @@ import { MeasurePanel, type Measurement } from "./Measure.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
 import { AppMenu } from "./AppMenu.tsx";
 import { openResults, withDriver } from "./assistant.ts";
-import { ASSISTANT_HASH, SHARED_RESULTS, START_IN_ASSISTANT, untouched } from "./start.ts";
+import type { SharedResults } from "./assistant.ts";
+import { ASSISTANT_HASH, SHARED_LINK, SHARED_RESULTS, START_IN_ASSISTANT, untouched } from "./start.ts";
 import { DesignAssistant } from "./DesignAssistant.tsx";
 import { Logo } from "./Logo.tsx";
 import { submitDriverUrl } from "./submit.ts";
@@ -181,6 +182,11 @@ export function App(props: { initial: AppState | null }) {
   const link = useRef<{ state: AppState; hash: string } | null>(null);
   const [db, setDb] = useState<DbIndex | null>(null);
   const [assistant, setAssistant] = useState(START_IN_ASSISTANT);
+  /** A shared list of assistant results: undefined while the link is still being read. */
+  const [shared, setShared] = useState<SharedResults | null | undefined>(SHARED_LINK ? undefined : null);
+  useEffect(() => {
+    if (SHARED_LINK) void SHARED_RESULTS.then(setShared);
+  }, []);
   /**
    * The assistant starts projects: in this tab while it's still the untouched example, else in
    * a new tab with a fresh project (so the one in use stays as it is).
@@ -1927,7 +1933,7 @@ export function App(props: { initial: AppState | null }) {
         db={db}
         base={state}
         onPortLimit={(portLimit_ms) => set("settings", { ...state.settings, portLimit_ms })}
-        shared={SHARED_RESULTS}
+        shared={shared}
         onOpen={(d, rs, goal) => {
           const next = openResults(state, d, rs, goal);
           setStep(() => next);
