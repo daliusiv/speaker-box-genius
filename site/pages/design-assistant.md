@@ -25,7 +25,7 @@ Not sure which driver to buy, or which box to put it in? The design assistant as
 
 - **Sealed:** sized for a Qtc of 0.707, or as big as your limit allows.
 - **Ported:** a flat alignment (QB3, or Keele for a higher Qts), capped at your limit. In a smaller box it picks the tuning with the lowest F3 that stays flat. Each port is the simplest one that fits straight inside the box and stays under the chuffing line at your power: a plain tube, then a tube with rounded (flared) ends, then a slot along a wall.
-- **Transmission lines** (bookshelf, tower and "something else"): a mass-loaded line (MLTL) and a classic tapered line from the app's line presets, narrowed to your volume and tuned. Lines longer than 3 m (too long to fold into a tower) or much narrower than the cone are left out.
+- **Transmission lines** (bookshelf, tower and "something else"): a mass-loaded line (MLTL) and a classic tapered line from the app's line presets, narrowed to your volume and tuned, then folded with the app's fold tool into a cabinet no more than 125 cm tall, 50 cm deep and 45 cm wide (as few folds as it takes, the driver in the first run). Lines that won't fold into that, are longer than 3 m or are much narrower than the cone are left out.
 - **Bandpass boxes** (car, home and "something else" subwoofers): 4th order (sealed rear, ported front) and 6th order (both chambers ported), found by a search within your volume, with a plain, flared or slotted port in each chamber. A bandpass box only plays a band, so it's never offered for a speaker; its band (−3 dB from its own peak) has to reach up to at least 80 Hz to cross over to your main speakers. The same search is the **Size for a flat band** button on any bandpass design in the app.
 
 Lines and bandpass boxes take longer to work out, so they're tried after the plain boxes, for the best drivers from those plus the drivers whose parameters suit them best. They appear when that search finishes, or earlier with **Show them now**. The **Show** switch filters the list by box type.
@@ -49,9 +49,9 @@ A subsonic filter (on the **Signal** tab) removes the deep-bass zone altogether;
 
 ## Towers and transmission lines
 
-Choose **Tower / floor-stander** and lines are switched on: 60 L, 100 W and 5–10″ drivers to start with. Each line card gives its length (to fold into a tall cabinet), its tuning and whether it ends in a port or opens to the room. **Open with ported too** puts the same driver's ported box next to it, to compare.
+Choose **Tower / floor-stander** and lines are switched on: 60 L, 100 W and 5–10″ drivers to start with. Each line card gives its length, its tuning, whether it ends in a port or opens to the room, and how it folds: the runs and the cabinet's outside height, width and depth (and when an MLTL's port is longer than the cabinet is tall, so it needs a bend). Opened, the line keeps that fold, ready for the **Build** tab's drawing and cut list. **Open with ported too** puts the same driver's ported box next to it, to compare.
 
-![Tower results showing only the lines: MLTLs about 1.1–1.2 m long reaching the mid 20s Hz in 57 L.](img/assistant-lines.png)
+![Tower results showing only the lines: MLTLs in 57 L reaching the low to mid 20s Hz, each with the cabinet it folds into.](img/assistant-lines.png)
 
 Opened, a line is a full line design: the [transmission line guide](/guides/transmission-line/) shows how to fold it, change its stuffing and look inside it.
 

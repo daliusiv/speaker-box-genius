@@ -58,7 +58,7 @@ Not sure which sub to buy? The [design assistant](/guides/design-assistant/) tri
 
 1. Pick your sub from the database and set your amplifier power.
 2. On the **Signal** tab, under **Room / cabin gain**, set **Space** to **Car cabin**, and adjust **Longest inside** for your car.
-3. Add a sealed and a ported design and compare them with the cabin gain in the charts.
+3. Add a sealed and a ported design and compare them with the cabin gain in the charts. The summary gives each box's own F3 (as WinISD does, and as the chart's "Box F3" dots show) and, next to it, the F3 in the car with the cabin gain.
 4. Check the cone excursion and port speed at full power, with a high-pass filter.
 
 [[Open the worked example|car-example]]

@@ -5,6 +5,7 @@ import {
   parseWdr,
   parseWpr,
   resampleMagnitude,
+  roomGainDb,
   writeWdr,
   type HighPassType,
   type SimulationResult,
@@ -51,6 +52,8 @@ import {
   driverInputOf,
   simOptionsOf,
   roomGainOf,
+  lowEdge,
+  minus3Points,
   runDesigns,
   compareShort,
   solveDriver,
@@ -1640,18 +1643,22 @@ export function App(props: { initial: AppState | null }) {
                     points: mainDesigns.flatMap((d) => {
                       const ref = relRefOf(d.result);
                       const rel = d.result.spl.map((v) => v - ref);
-                      // F3 is the box's own: without the baffle step (which isn't a box property), drawn on the curve as shown.
+                      // F3 is the box's own, as in the summary: without the baffle step or room/cabin
+                      // gain (not box properties), drawn on the curve as shown.
                       const step = baffleDbFor(state, d.result.freq, finderCtx.driver?.sd_cm2);
-                      const own = step ? rel.map((v, i) => v - step[i]!) : rel;
+                      const room = roomGainOf(state);
+                      const lift = room ? Array.from(d.result.freq, (f: number) => roomGainDb(f, room)) : null;
+                      const own = step || lift ? rel.map((v, i) => v - (step ? step[i]! : 0) - (lift ? lift[i]! : 0)) : rel;
                       const pts =
                         d.design.kind === "line"
                           ? lowEdge(d.result.freq, own)
                           : minus3Points(d.result.freq, own, d.design.kind === "bandpass");
                       return pts.map((f) => ({
                         f,
-                        y: step ? valueAt(d.result.freq, rel, f) : -3,
+                        y: step || lift ? valueAt(d.result.freq, rel, f) : -3,
                         color: d.color,
-                        label: `F3 ${f < 100 ? f.toFixed(1) : f.toFixed(0)}`,
+                        // With room gain the dot sits on the curve above −3 dB: say whose F3 it is.
+                        label: `${lift ? "Box F3" : "F3"} ${f < 100 ? f.toFixed(1) : f.toFixed(0)}`,
                         of: d.label,
                       }));
                     }),
@@ -2155,7 +2162,7 @@ function Summary({
             </tr>
           </thead>
           <tbody>
-            {designs.map(({ design: d, label, compare, color, vb_l, acting_l, result: r }) => {
+            {designs.map(({ design: d, label, compare, color, vb_l, acting_l, f3Room, result: r }) => {
               const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
               const lim = limitsOf(r, xmax, state.highPass.on, portLimitOf(state));
               const { x, xpr, vp, deep } = lim;
@@ -2188,6 +2195,7 @@ function Summary({
                   <td>
                     {fmt(r.summary.f3)}
                     {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
+                    {f3Room !== undefined && <RoomF3 f3={f3Room} car={state.roomGain.mode === "car"} />}
                   </td>
                   <td className={over.length ? "over" : deep ? "deep" : "muted"}>
                     {over.length ? (
@@ -2265,7 +2273,7 @@ function Summary({
           </tr>
         </thead>
         <tbody>
-          {designs.map(({ design: d, label, compare, color, vb_l, acting_l, result: r }) => {
+          {designs.map(({ design: d, label, compare, color, vb_l, acting_l, f3Room, result: r }) => {
             const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
             const lim = limitsOf(r, xmax, state.highPass.on, portLimitOf(state));
             const { x, xpr, vp, deep } = lim;
@@ -2283,6 +2291,7 @@ function Summary({
                 <td>
                   {fmt(r.summary.f3)}
                   {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
+                  {f3Room !== undefined && <RoomF3 f3={f3Room} car={state.roomGain.mode === "car"} />}
                 </td>
                 <td>
                   {d.kind === "bandpass"
@@ -2338,19 +2347,14 @@ function bandpassOwnLosses(b: { front: WprChamberLosses; rear: WprChamberLosses;
   return b.front.ql !== b.rear.ql || b.front.qa !== b.rear.qa || b.front.qp !== b.rear.qp || b.qicl !== 100;
 }
 
-/**
- * Where a relative response (0 dB = passband) crosses −3 dB, read off the curve as shown:
- * below its peak, and for a bandpass above it too. Interpolated in log f.
- */
-/** Transmission lines ripple above their tuning: their −3 dB point is the first one coming up from the bottom. */
-function lowEdge(freq: Float64Array, rel: ArrayLike<number>): number[] {
-  for (let i = 1; i < rel.length; i++) {
-    if (rel[i]! >= -3 && rel[i - 1]! < -3) {
-      const t = (-3 - rel[i - 1]!) / (rel[i]! - rel[i - 1]!);
-      return [freq[i - 1]! * (freq[i]! / freq[i - 1]!) ** t];
-    }
-  }
-  return [];
+/** The F3 with room or cabin gain, under the box's own F3 in the summary. */
+function RoomF3({ f3, car }: { f3: number | null; car: boolean }) {
+  const where = car ? "in the car" : "in the room";
+  return (
+    <span className="room-f3" title={`F3 with the ${car ? "cabin" : "room"} gain (Signal tab). The F3 before it is the box's own, as WinISD gives it, and so are the chart's F3 dots.`}>
+      {f3 === null ? ` · flat to 10 Hz ${where}` : ` · ${f3 < 100 ? f3.toFixed(1) : f3.toFixed(0)} Hz ${where}`}
+    </span>
+  );
 }
 
 /** Value of a curve at frequency f (log-frequency interpolation). */
@@ -2361,29 +2365,6 @@ function valueAt(freq: Float64Array, ys: ArrayLike<number>, f: number): number {
   return ys[i - 1]! + t * (ys[i]! - ys[i - 1]!);
 }
 
-function minus3Points(freq: Float64Array, rel: ArrayLike<number>, bandLimited: boolean): number[] {
-  let peak = 0;
-  for (let i = 1; i < rel.length; i++) if (rel[i]! > rel[peak]!) peak = i;
-  if (!(rel[peak]! >= -3)) return [];
-  const at = (i: number, j: number) => {
-    const t = (-3 - rel[i]!) / (rel[j]! - rel[i]!);
-    return freq[i]! * (freq[j]! / freq[i]!) ** t;
-  };
-  const out: number[] = [];
-  for (let i = peak; i > 0; i--) {
-    if (rel[i - 1]! < -3) {
-      out.push(at(i - 1, i));
-      break;
-    }
-  }
-  for (let i = peak; bandLimited && i + 1 < rel.length; i++) {
-    if (rel[i + 1]! < -3) {
-      out.push(at(i, i + 1));
-      break;
-    }
-  }
-  return out;
-}
 
 /** A design's volume for the summary tables: "40.0 L", or "40.0 → 48.0 L" when stuffing makes it act bigger. */
 function volCell(built: number, acting: number | undefined, units: "metric" | "imperial") {

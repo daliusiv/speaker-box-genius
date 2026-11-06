@@ -4,8 +4,8 @@ import { TS_PARAMS, type TsParam, type TsValues } from "@sbg/engine";
 import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
-import { PORT_LIMIT, limitsOf, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { GD_CYCLES, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { PORT_LIMIT, lineFoldOf, limitsOf, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
+import { GD_CYCLES, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -157,6 +157,12 @@ test("transmission lines: for towers, sized to the box limit, foldable, and they
     assert.equal(r.box, "line");
     assert.ok(r.vb_l <= goal.maxVolume_l * 1.02, `${r.name} ${r.line!.label} ${r.vb_l} L`);
     assert.ok(r.line!.length_cm <= LINE_MAX_CM, `${r.name} ${r.line!.length_cm} cm`);
+    // Folds into a cabinet you'd build, and opens folded that way.
+    const fo = r.line!.fold;
+    assert.ok(fo.height_cm <= LINE_FOLD_MAX.height_cm && fo.depth_cm <= LINE_FOLD_MAX.depth_cm && fo.width_cm <= LINE_FOLD_MAX.width_cm && fo.height_cm >= fo.depth_cm, JSON.stringify(fo));
+    const folded = lineFoldOf(r.line!.design, DEFAULT_STATE.volume.wall_mm, (rows.find((x) => x.id === r.driverId)!.size_in ?? 8) * 25.4 * 0.92);
+    assert.ok(folded.warnings.every((x) => /cleaner bends|port is longer/.test(x)), folded.warnings.join("; "));
+    assert.equal(Math.round(folded.outside.height / 10), Math.round(fo.height_cm));
     const des = r.line!.design;
     const areas = [des.closedArea_cm2, ...des.sections.map((x) => x.endArea_cm2)];
     const sd = rows.find((x) => x.id === r.driverId)!.sd_cm2!;

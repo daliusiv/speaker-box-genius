@@ -643,7 +643,11 @@ export function DesignAssistant(props: {
                     <p className="assist-facts">
                       {r.bandpass ? `${bandpassText(r.bandpass, fmt, vol)} ` : ""}
                       {r.box === "line" && r.line
-                        ? `A line ${fmt(r.line.length_cm, "len")} long (to fold into a tall cabinet), tuned to ${r.fb} Hz${r.line.design.end === "port" ? `, with a ${fmt(r.line.design.portDiameter_cm, "len")} port at the end` : ", open at the end"}. `
+                        ? `A line ${fmt(r.line.length_cm, "len")} long, tuned to ${r.fb} Hz${r.line.design.end === "port" ? `, with a ${fmt(r.line.design.portDiameter_cm, "len")} port at the end` : ", open at the end"}, ${
+                            r.line.fold.runs === 1 ? "standing straight up (no folds) in a cabinet" : `folded in ${r.line.fold.runs} runs into a cabinet`
+                          } ${fmt(r.line.fold.height_cm, "len")} tall, ${fmt(r.line.fold.width_cm, "len")} wide and ${fmt(r.line.fold.depth_cm, "len")} deep (outside)${
+                            r.line.fold.bentPort ? "; the port is longer than the cabinet is tall, so bend it" : ""
+                          }. `
                         : ""}
                       {r.box === "vented" && r.port
                         ? `Tuned to ${r.fb} Hz, ${portText(r.port, fmt)}. `
