@@ -21,6 +21,7 @@ import {
   HORNRESP_TOL,
   HORNRESP_VERSION,
   MAXSPL_TOL,
+  IMPULSE_TOL,
   hornrespBoxIds,
   hornrespIds,
   runHornresp,
@@ -28,7 +29,11 @@ import {
   type HornrespBoxRun,
   type HornrespRun,
   type MaxSplRun,
+  type ImpulseRun,
 } from "./hornresp.ts";
+
+/** Hornresp's impulse response against ours (and the step response from each). */
+export type ImpulseReport = ImpulseRun;
 
 /** Hornresp's Maximum SPL against ours, where it was exported. */
 export interface MaxSplReport {
@@ -104,6 +109,7 @@ export interface HornrespCaseReport {
   ze: [number, number, number][];
   xd: [number, number, number][];
   maxSpl?: MaxSplReport[];
+  impulse?: ImpulseReport;
 }
 
 export interface HornrespBoxCaseReport {
@@ -126,6 +132,7 @@ export interface HornrespBoxCaseReport {
   cone?: [number, number, number][];
   vent?: [number, number, number][];
   maxSpl?: MaxSplReport[];
+  impulse?: ImpulseReport;
 }
 
 export interface Report {
@@ -138,6 +145,7 @@ export interface Report {
     fMax: number;
     tol: typeof HORNRESP_TOL;
     maxSplTol: typeof MAXSPL_TOL;
+    impulseTol: typeof IMPULSE_TOL;
     notes: string;
     cases: HornrespCaseReport[];
     boxes: { fMax: number; tol: typeof HORNRESP_BOX_TOL; notes: string; cases: HornrespBoxCaseReport[] };
@@ -190,13 +198,14 @@ function hornrespCase(id: string): HornrespCaseReport {
     id,
     title: t.title,
     setup: t.text,
-    pass: Object.values(run.pass).every((p) => p !== false) && run.maxSpl.every((m) => m.pass),
+    pass: Object.values(run.pass).every((p) => p !== false) && run.maxSpl.every((m) => m.pass) && run.impulse?.pass !== false,
     stats: Object.fromEntries(Object.entries(s).map(([k, v]) => [k, r(v as number)!])) as HornrespRun["stats"],
     parts: run.pass,
     spl: thin(run.spl, 2),
     ze: thin(run.ze, 3),
     xd: thin(run.xd, 4),
     ...(run.maxSpl.length ? { maxSpl: maxSplReports(run.maxSpl) } : {}),
+    ...(run.impulse ? { impulse: { ...run.impulse, stats: Object.fromEntries(Object.entries(run.impulse.stats).map(([k, v]) => [k, r(v, 5)!])) as ImpulseRun["stats"] } } : {}),
   };
 }
 
@@ -221,7 +230,7 @@ function hornrespBoxCase(id: string): HornrespBoxCaseReport {
     id,
     title: c.title,
     setup: c.text,
-    pass: Object.values(run.pass).every((p) => p !== false) && run.maxSpl.every((m) => m.pass),
+    pass: Object.values(run.pass).every((p) => p !== false) && run.maxSpl.every((m) => m.pass) && run.impulse?.pass !== false,
     stats: Object.fromEntries(Object.entries(run.stats).map(([k, v]) => [k, r(v as number)!])) as HornrespBoxRun["stats"],
     parts: run.pass,
     tol: run.tol,
@@ -233,6 +242,7 @@ function hornrespBoxCase(id: string): HornrespBoxCaseReport {
     ...(run.cone ? { cone: thinPairs(run.cone, 2) } : {}),
     ...(run.vent ? { vent: thinPairs(run.vent, 2) } : {}),
     ...(run.maxSpl.length ? { maxSpl: maxSplReports(run.maxSpl) } : {}),
+    ...(run.impulse ? { impulse: { ...run.impulse, stats: Object.fromEntries(Object.entries(run.impulse.stats).map(([k, v]) => [k, r(v, 5)!])) as ImpulseRun["stats"] } } : {}),
   };
 }
 
@@ -250,6 +260,7 @@ export function buildReport(): Report {
       fMax: HORNRESP_F_MAX,
       tol: HORNRESP_TOL,
       maxSplTol: MAXSPL_TOL,
+      impulseTol: IMPULSE_TOL,
       notes: HORNRESP_NOTES,
       cases: hornrespIds().map(hornrespCase),
       boxes: { fMax: HORNRESP_BOX_F_MAX, tol: HORNRESP_BOX_TOL, notes: HORNRESP_BOX_NOTES, cases: hornrespBoxIds().map(hornrespBoxCase) },

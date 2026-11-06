@@ -14,6 +14,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { simulate, type SimulationOptions, type SimulationResult } from "../src/simulate.ts";
+import { transientResponse, type TransientOptions, type TransientResult } from "../src/transient.ts";
 import { driverModel, type DriverInput, type EnclosureInput, type SemiInductance } from "../src/model.ts";
 import { pistonPowerFactor } from "../src/line.ts";
 import type { LineInput } from "../src/line.ts";
@@ -83,6 +84,8 @@ The mouth's output on its own (Hornresp's "Horn" output) is compared where it wa
 
 **Maximum SPL** (Hornresp's Tools > Maximum SPL, 80 W and 5.5 mm) is compared for the mass-loaded line (05) and the tapped horn (06), and for the sealed and ported boxes: within 0.03 dB on average, and the voltage it takes within 0.2 %. Hornresp holds the driver's power rating against the real power it takes (V·I·cos φ), not V²/Re as WinISD does; that allows several dB more where the impedance is well above Re (around resonance and higher up). Settings → "Power rating vs" → "Real power (like Hornresp)" gives Hornresp's; the default stays WinISD's. The app's own port-speed limit is left out, as Hornresp has none. With the amplifier limited to 25 V (Settings → Amp max volts) the ported box's maximum matches too, including the 51 frequencies where the amplifier sets it.
 
+**Impulse and step response.** Hornresp exports its impulse response (the chart window's Impulse Response) as a WAV: 48 kHz, t = 0 in the middle, scaled to a peak of ±1, the response cut off above 20 kHz. The app's (the chart "Impulse / step") is worked out the same way and matches for the mass-loaded line (05) and the sealed and ported boxes: within 0.02 of the peak RMS over −5 to 200 ms, and the step response (the running sum) within 0.02. Hornresp has no step response; it is taken from each impulse alike. Two things had to agree first. **Polarity:** the app now gives a positive pressure for a positive voltage with the cone facing the room (it had a box's output turned round, which the frequency charts don't show). Hornresp's boxes agree; its offset-driver lines put the line on the cone's front, so the room hears the cone's rear and its output is inverted against the app's: those are compared turned round (phase + 180°, impulse × −1). **High frequencies:** Hornresp's box SPL comes from radiated power (the cone as a piston, like the lines' "From radiated power" setting), which falls up top where a point source doesn't; the engine now does that for boxes too when asked, and the impulse always uses it.
+
 The first seven cases were checked against Hornresp 55.30 first, then against 60.60 with the same results; the five with other drivers (a 12″ subwoofer, a 4″ full-range) came with 60.60.
 
 Stuffed lines (08 and 09 in the records) aren't automated: Hornresp uses segment filling only in its Loudspeaker Wizard, so they were read off its charts. Acoustic power agreed within about 1 dB from 20 Hz to 1 kHz, and every impedance peak fell at the same frequency (straight TL: 63 Hz / 13.8 Ω against ~63 Hz / ~14.0 Ω). The two fibre models differ, so stuffed lines are judged on the trend.`;
@@ -128,6 +131,8 @@ export interface HornrespRun {
   mouth?: Pair[];
   /** Hornresp's Maximum SPL, where it was exported. */
   maxSpl: MaxSplRun[];
+  /** Hornresp's impulse response, where it was exported. */
+  impulse?: ImpulseRun;
   stats: {
     splMean: number;
     splP95: number;
@@ -167,6 +172,79 @@ export interface MaxSplRun {
   pass: boolean;
 }
 
+/**
+ * Hornresp's impulse response (the chart window's Impulse Response, exported as a WAV:
+ * 16-bit, 48 kHz, 20001 samples, t = 0 at sample 10000, scaled to a peak of ±1, the response
+ * cut off above 20 kHz). Compared from −5 to 200 ms with the app's (SPL from radiated power, as
+ * Hornresp works it out), and the step response as the running sum of each.
+ */
+export interface ImpulseRun {
+  /** [ms, Hornresp, ours], thinned for the report. */
+  impulse: [number, number, number][];
+  step: [number, number, number][];
+  stats: { impulseRms: number; impulseMax: number; stepRms: number };
+  pass: boolean;
+}
+
+export const IMPULSE_TOL = { impulseRms: 0.025, impulseMax: 0.1, stepRms: 0.025 };
+
+/** Samples of a 16-bit mono WAV, as −1…1. */
+export function readWav16(file: string): { rate: number; x: Float64Array } {
+  const b = readFileSync(file);
+  if (b.toString("ascii", 0, 4) !== "RIFF" || b.toString("ascii", 8, 12) !== "WAVE") throw new Error(`${file}: not a WAV`);
+  let rate = 0;
+  for (let at = 12; at + 8 <= b.length; ) {
+    const id = b.toString("ascii", at, at + 4);
+    const size = b.readUInt32LE(at + 4);
+    if (id === "fmt ") {
+      if (b.readUInt16LE(at + 8) !== 1 || b.readUInt16LE(at + 10) !== 1 || b.readUInt16LE(at + 22) !== 16) throw new Error(`${file}: expected 16-bit mono PCM`);
+      rate = b.readUInt32LE(at + 12);
+    }
+    if (id === "data") {
+      const n = Math.floor(size / 2);
+      return { rate, x: Float64Array.from({ length: n }, (_, i) => b.readInt16LE(at + 8 + 2 * i) / 32768) };
+    }
+    at += 8 + size + (size & 1);
+  }
+  throw new Error(`${file}: no data`);
+}
+
+function impulseRun(dir: string, flip: boolean, ours: (t: TransientOptions) => TransientResult): ImpulseRun | undefined {
+  const file = join(dir, "hornresp-impulse.wav");
+  if (!existsSync(file)) return undefined;
+  const { rate, x } = readWav16(file);
+  const zero = (x.length - 1) / 2; // Hornresp centres t = 0
+  const h = flip ? x.map((v) => -v) : x;
+  // Hornresp's step: the running sum, scaled to a peak of ±1.
+  const hs = new Float64Array(h.length);
+  let sum = 0;
+  let peak = 0;
+  for (let i = 0; i < h.length; i++) peak = Math.max(peak, Math.abs((hs[i] = sum += h[i]!)));
+  for (let i = 0; i < hs.length; i++) hs[i]! /= peak;
+  const r = ours({ sampleRate: rate, length: 32768, pre_ms: (zero / rate) * 1000 });
+  const from = zero - Math.round(0.005 * rate);
+  const to = Math.min(h.length, zero + Math.round(0.2 * rate));
+  let e = 0, es = 0, mx = 0;
+  const impulse: ImpulseRun["impulse"] = [];
+  const step: ImpulseRun["step"] = [];
+  for (let i = from; i < to; i++) {
+    const d = r.impulse[i]! - h[i]!;
+    e += d * d;
+    es += (r.step[i]! - hs[i]!) ** 2;
+    mx = Math.max(mx, Math.abs(d));
+    // Every sample for the first 5 ms, then thinner.
+    const t = ((i - zero) / rate) * 1000;
+    if (t < 5 || (i - zero) % 24 === 0) {
+      impulse.push([Number(t.toFixed(3)), Number(h[i]!.toFixed(4)), Number(r.impulse[i]!.toFixed(4))]);
+      step.push([Number(t.toFixed(3)), Number(hs[i]!.toFixed(4)), Number(r.step[i]!.toFixed(4))]);
+    }
+  }
+  const n = to - from;
+  const stats = { impulseRms: Math.sqrt(e / n), impulseMax: mx, stepRms: Math.sqrt(es / n) };
+  const T = IMPULSE_TOL;
+  return { impulse, step, stats, pass: stats.impulseRms < T.impulseRms && stats.impulseMax < T.impulseMax && stats.stepRms < T.stepRms };
+}
+
 export const MAXSPL_TOL = { splMean: 0.15, splP95: 0.4, einMean: 0.5, pinMean: 1 };
 
 function maxSplRuns(dir: string, fMax: number, run: (o: SimulationOptions) => SimulationResult): MaxSplRun[] {
@@ -192,6 +270,9 @@ function maxSplRuns(dir: string, fMax: number, run: (o: SimulationOptions) => Si
       return { file, ...(ampVolts ? { ampVolts } : {}), spl, stats, pass };
     });
 }
+
+/** Hornresp's polarity is inverted against the app's for lines with the cone facing out (not horns radiating only from the mouth). */
+export const isFlipped = (input: LineInput) => input.tap_cm === undefined && !input.frontLoaded;
 
 export function runHornresp(id: string): HornrespRun {
   const dir = join(HORNRESP_DIR, id);
@@ -228,7 +309,10 @@ export function runHornresp(id: string): HornrespRun {
   const iinErr = rows.map((x) => rel(V / zeAt(x.Freq!).mag, x.Iin!));
   const pinErr = rows.map((x) => rel(pinAt(x.Freq!), x.Pin!));
   const effErr = rows.map((x) => rel((100 * acousticW(x.Freq!)) / pinAt(x.Freq!), x.Efficiency!));
-  const phErr = rows.map((x) => Math.abs(((interp(r.freq, r.phaseDeg, x.Freq!) - x.WPhase! + 540) % 360) - 180));
+  // Hornresp's offset-driver records put the line on the cone's front, so the room hears the
+  // cone's rear and its output is inverted against a driver facing out, as the app has it.
+  const flip = isFlipped(input) ? 180 : 0;
+  const phErr = rows.map((x) => Math.abs(((interp(r.freq, r.phaseDeg, x.Freq!) - x.WPhase! - flip + 540 + 720) % 360) - 180));
   const splErr = spl.map((p) => Math.abs(p.ours - p.ref));
   const zeErr = ze.map((p) => Math.abs(p.ours / p.ref - 1) * 100);
   const xdErr = xd.map((p) => Math.abs(p.ours / p.ref - 1) * 100);
@@ -279,7 +363,8 @@ export function runHornresp(id: string): HornrespRun {
     pass.za = stats.zaMean < T.zaMean;
   }
   const maxSpl = maxSplRuns(dir, HORNRESP_F_MAX, (o) => simulate(driver, input, { ...base, points: 4000, ...o }));
-  return { id, input, driver, result: r, spl, ze, xd, gd, za, mouth, maxSpl, stats, pass };
+  const impulse = impulseRun(dir, isFlipped(input), (t) => transientResponse(driver, input, { ...base, points: undefined }, t));
+  return { id, input, driver, result: r, spl, ze, xd, gd, za, mouth, maxSpl, ...(impulse ? { impulse } : {}), stats, pass };
 }
 
 // ---------------------------------------------------------------------------
@@ -391,6 +476,8 @@ export interface HornrespBoxRun {
   vent?: Pair[];
   /** Hornresp's Maximum SPL, where it was exported. */
   maxSpl: MaxSplRun[];
+  /** Hornresp's impulse response, where it was exported. */
+  impulse?: ImpulseRun;
   stats: {
     splMean?: number; splP95?: number; zeMean: number; zeP95: number; zePhaseMean: number; xdMean: number; xdP95: number;
     coneMean?: number; coneP95?: number; ventMean?: number; ventP95?: number;
@@ -493,5 +580,6 @@ export function runHornrespBox(id: string): HornrespBoxRun {
     pass.coil = stats.coilMean < tol.splMean && stats.coilP95 < tol.splP95;
   }
   const maxSpl = maxSplRuns(dir, HORNRESP_BOX_F_MAX, (o) => simulate(driver, c.input, { ...base, ...o }));
-  return { id, c, result: r, tol, spl, ze, xd, cone, vent, maxSpl, stats, pass };
+  const impulse = impulseRun(dir, false, (t) => transientResponse(driver, c.input, { ...base, splFrom: "power" }, t));
+  return { id, c, result: r, tol, spl, ze, xd, cone, vent, maxSpl, ...(impulse ? { impulse } : {}), stats, pass };
 }

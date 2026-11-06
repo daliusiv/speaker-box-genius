@@ -12,6 +12,7 @@ import {
   type TsValues,
 } from "@sbg/engine";
 import { ChartEmphasis, CrosshairProvider, LogChart, shortName, type ChartHandle, type Series } from "./LogChart.tsx";
+import { TimeChart } from "./TimeChart.tsx";
 import { draggableEq, eqQ, moveEq, retune, tunable } from "./chartEdit.ts";
 import { useUndoable } from "./useUndoable.ts";
 import { sizeAllForDriver, sizeBandpassDesign } from "./presets.ts";
@@ -56,6 +57,7 @@ import {
   lowEdge,
   minus3Points,
   runDesigns,
+  transientsOf,
   compareShort,
   solveDriver,
   vbOf,
@@ -101,7 +103,7 @@ const LIMIT_KINDS: Record<string, { label: string; short: string; color: string 
   amp: { label: "Amplifier", short: "amplifier limit", color: "#0891b2" },
 };
 
-type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay";
+type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay" | "transient";
 
 /**
  * The level a design's relative response is drawn against: a plain cone's level, or for a
@@ -276,6 +278,7 @@ export function App(props: { initial: AppState | null }) {
   };
   // Phones show one chart under the response at a time (excursion is one of them).
   const narrow = useNarrow();
+  const [transientView, setTransientView] = useState<"impulse" | "step">("impulse");
   const [chartPick, setChartPick] = useState<ChartId>(() => {
     const first: ChartId = window.matchMedia?.("(max-width: 860px)").matches ? "excursion" : "maxspl";
     try {
@@ -673,8 +676,14 @@ export function App(props: { initial: AppState | null }) {
     { id: "impedance", label: "Impedance" },
     ...(zaDesigns.length > 0 ? [{ id: "za" as const, label: "Line load (Za)" }] : []),
     { id: "delay", label: "Group delay" },
+    { id: "transient", label: "Impulse / step" },
   ];
   const chartTab: ChartId = chartTabs.some((t) => t.id === chartPick) ? chartPick : chartTabs[0]!.id;
+  // Impulse and step: worked out only while that chart is showing (a few thousand frequencies per box).
+  const transients = useMemo(
+    () => (chartTab === "transient" ? transientsOf(state, solved, mainDesigns) : []),
+    [chartTab, state, solved, mainDesigns],
+  );
 
   // Edit mode's handles: each ported or PR box's tuning (on its curve), and each EQ point.
   const units = state.settings.units;
@@ -1963,6 +1972,35 @@ export function App(props: { initial: AppState | null }) {
                 line&rsquo;s resonances; resistance near 1 over a wide band means the horn is loading the cone well, and
                 stuffing shows as the ripples shrinking towards 1.
               </p>
+            )}
+            {chartTab === "transient" && (
+              <>
+                <TimeChart
+                  title={transientView === "impulse" ? "Impulse response" : "Step response"}
+                  curves={transients}
+                  view={transientView}
+                  from_ms={-5}
+                  to_ms={transientView === "impulse" ? 60 : 120}
+                  actions={
+                    <TabRow<"impulse" | "step">
+                      tabs={[
+                        { id: "impulse", label: "Impulse" },
+                        { id: "step", label: "Step" },
+                      ]}
+                      selected={transientView}
+                      onSelect={setTransientView}
+                      ariaLabel="Impulse or step response"
+                      className="chart-tabs"
+                    />
+                  }
+                />
+                <p className="hint">
+                  What each box puts out for a click (impulse) and for the voltage switched on and held (step), at 1 m, with
+                  EQ and the high-pass filter, as Hornresp shows it (the response up to 20&nbsp;kHz, from radiated power).
+                  The box alone: no baffle step or room gain. A positive start means the cone moves out. A sealed box&rsquo;s
+                  step falls back quickly; a ported box&rsquo;s or a line&rsquo;s rings on as the port or line keeps sounding.
+                </p>
+              </>
             )}
             <LogChart
               chartId="delay"

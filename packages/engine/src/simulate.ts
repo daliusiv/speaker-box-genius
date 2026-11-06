@@ -92,6 +92,8 @@ export interface SimulationOptions {
   fMin?: number;
   fMax?: number;
   points?: number;
+  /** Exact frequencies (Hz, ascending, above 0) in place of the log sweep (fMin, fMax, points). */
+  frequencies?: ArrayLike<number>;
   distance_m?: number;
   /** "half" = 2π (infinite baffle / on the floor), "full" = 4π. Default half, like WinISD. */
   space?: "half" | "full";
@@ -382,7 +384,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const ral = Number.isFinite(ql) ? ql / (wRef * cab) : Infinity;
   const rab = Number.isFinite(qa) ? 1 / (qa * wRef * cab) : 0;
 
-  const freq = logFrequencies(opts.fMin ?? 10, opts.fMax ?? 500, opts.points ?? 400);
+  // Whether the cone's front faces the room (everything but horns that radiate only from the mouth).
+  const frontOut = !(line && line.mouthOnly);
+  const freq = opts.frequencies ? Float64Array.from(opts.frequencies) : logFrequencies(opts.fMin ?? 10, opts.fMax ?? 500, opts.points ?? 400);
   const N = freq.length;
   const out = {
     spl: new Float64Array(N),
@@ -561,6 +565,14 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         u0 = add(u0, mul(uIn, sub(ratio, cx(1))));
         pipeOutEach = scale(mul(uIn, ratio), 1 / ventCount);
       }
+      // From radiated power (like Hornresp): the cone and the vent each as a baffled piston of
+      // its own area, which radiates less than a point source once it's large next to the wavelength.
+      if (opts.splFrom === "power") {
+        const cone = scale(sol.u, -n);
+        const vent = sub(u0, cone);
+        const ventTotal = prModels ? prModels.reduce((a, g) => a + g.m.sd * g.count, 0) : ventArea * ventCount;
+        u0 = add(scale(cone, pistonPowerFactor(n * d.sd, w, air)), ventTotal > 0 ? scale(vent, pistonPowerFactor(ventTotal, w, air)) : vent);
+      }
 
       if (prModels && out.xprGroups) {
         // Each group sees the box pressure; flow per PR = p / (group impedance × count).
@@ -589,7 +601,11 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     // Far-field pressure (RMS): p = jωρ·U0 / (k·π·r)
     const p = mul(cx(0, (w * air.rho) / (space * Math.PI * r)), u0);
     out.spl[i] = 20 * Math.log10(abs(p) / 2e-5);
-    unwrapped[i] = arg(p);
+    // The cone's flow (ud) is counted into the box or line behind it, so a cone that faces the
+    // room pushes out −ud: turn the phase round so a positive voltage gives a positive pressure
+    // in front (the cone moving out), as a real driver wired + to + does. A front horn's or
+    // tapped horn's flow is counted into the horn, which is already the way out.
+    unwrapped[i] = arg(p) + (frontOut ? Math.PI : 0);
 
     // Excursion (peak, one way) = √2·|U|/(Sd·ω)
     const x = (Math.SQRT2 * abs(ui)) / (d.sd * w);

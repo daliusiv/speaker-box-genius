@@ -2,7 +2,7 @@
 // validation/hornresp.ts, shared with the validation report (docs/validation/results.json).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { HORNRESP_TOL as T, MAXSPL_TOL as M, hornrespBoxIds, hornrespIds, runHornresp, runHornrespBox, type MaxSplRun } from "../validation/hornresp.ts";
+import { HORNRESP_TOL as T, IMPULSE_TOL as I, MAXSPL_TOL as M, hornrespBoxIds, hornrespIds, runHornresp, runHornrespBox, type ImpulseRun, type MaxSplRun } from "../validation/hornresp.ts";
 
 for (const id of hornrespIds()) {
   const run = runHornresp(id);
@@ -93,5 +93,22 @@ function maxSplTests(id: string, runs: MaxSplRun[]) {
     });
   }
 }
-for (const id of hornrespIds()) maxSplTests(id, runHornresp(id).maxSpl);
-for (const id of hornrespBoxIds()) maxSplTests(`box ${id}`, runHornrespBox(id).maxSpl);
+// Impulse response (Hornresp's WAV export) and the step response from it.
+function impulseTests(id: string, ir: ImpulseRun | undefined) {
+  if (!ir) return;
+  test(`Hornresp ${id}: impulse and step response`, () => {
+    assert.ok(ir.stats.impulseRms < I.impulseRms, `impulse RMS difference ${ir.stats.impulseRms.toFixed(4)}`);
+    assert.ok(ir.stats.impulseMax < I.impulseMax, `impulse largest difference ${ir.stats.impulseMax.toFixed(3)}`);
+    assert.ok(ir.stats.stepRms < I.stepRms, `step RMS difference ${ir.stats.stepRms.toFixed(4)}`);
+  });
+}
+for (const id of hornrespIds()) {
+  const r = runHornresp(id);
+  maxSplTests(id, r.maxSpl);
+  impulseTests(id, r.impulse);
+}
+for (const id of hornrespBoxIds()) {
+  const r = runHornrespBox(id);
+  maxSplTests(`box ${id}`, r.maxSpl);
+  impulseTests(`box ${id}`, r.impulse);
+}
