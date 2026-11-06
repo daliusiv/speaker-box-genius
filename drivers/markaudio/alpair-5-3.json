@@ -3,7 +3,7 @@
   "model": "Alpair 5.3",
   "type": "full-range",
   "nominal_ohms": 4,
-  "size_in": 3.0,
+  "size_in": 3,
   "ts": {
     "fs": 94.5428,
     "qms": 2.301,

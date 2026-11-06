@@ -3,7 +3,7 @@
   "model": "CHR-120",
   "type": "full-range",
   "nominal_ohms": 8,
-  "size_in": 7.0,
+  "size_in": 7,
   "ts": {
     "fs": 34.2417,
     "qms": 2.3823,

@@ -3,7 +3,7 @@
   "model": "Alpair 7MS",
   "type": "full-range",
   "nominal_ohms": 8,
-  "size_in": 4.0,
+  "size_in": 4,
   "ts": {
     "fs": 74.724,
     "qms": 2.35,

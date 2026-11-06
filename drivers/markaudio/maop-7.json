@@ -3,7 +3,7 @@
   "model": "MAOP 7",
   "type": "full-range",
   "nominal_ohms": 6,
-  "size_in": 4.0,
+  "size_in": 4,
   "ts": {
     "fs": 76.533,
     "qms": 2.556,
