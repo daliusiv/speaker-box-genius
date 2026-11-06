@@ -79,6 +79,7 @@ for (const id of hornrespBoxIds()) {
   db("SPL", s.splMean, s.splP95);
   db("the cone's output alone", s.coneMean, s.coneP95);
   db("the port's or passive radiator's output alone", s.ventMean, s.ventP95);
+  db("the coil model's effect on SPL, up to 20 kHz", s.coilMean, s.coilP95);
 }
 
 // Maximum SPL (Hornresp's Tools > Maximum SPL), where it was exported.

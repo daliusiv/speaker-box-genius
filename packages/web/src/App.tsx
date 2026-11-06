@@ -412,6 +412,7 @@ export function App(props: { initial: AppState | null }) {
         le_mh: d.le_mh ?? 0,
         l2_mh: 0,
         r2_ohm: 0,
+        semi: undefined,
         xmax_mm: d.xmax_mm ?? s.xmax_mm,
         pe_w: d.pe_w ?? s.pe_w,
         dvc:
@@ -513,6 +514,7 @@ export function App(props: { initial: AppState | null }) {
           le_mh: d.le_mh ?? 0,
           l2_mh: 0,
           r2_ohm: 0,
+          semi: undefined,
           xmax_mm: d.xmax_mm ?? s.xmax_mm,
           pe_w: d.pe_w ?? s.pe_w,
           // WinISD drives isobaric pairs at V = √(P·Re/N), which is only half of P in the coils.
@@ -888,6 +890,7 @@ export function App(props: { initial: AppState | null }) {
                               le_mh: d.le_mh ?? 0,
                               l2_mh: d.l2_mh ?? 0,
                               r2_ohm: d.r2_ohm ?? 0,
+                              semi: undefined,
                               xmax_mm: d.xmax_mm ?? s.xmax_mm,
                               pe_w: d.pe_w ?? s.pe_w,
                               dvc: d.dvcWiring ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring } : { ...s.dvc, on: false },
@@ -940,6 +943,7 @@ export function App(props: { initial: AppState | null }) {
                     le_mh: x.le_mh ?? s.le_mh,
                     l2_mh: 0,
                     r2_ohm: 0,
+                    semi: undefined,
                     xmax_mm: x.xmax_mm ?? s.xmax_mm,
                     pe_w: x.pe_w ?? s.pe_w,
                   }));
@@ -978,22 +982,70 @@ export function App(props: { initial: AppState | null }) {
               <div className="fields">
                 <Num help="Nominal impedance printed on the driver (4, 8 Ω…). Only used when the drive is set as watts into the nominal impedance; the simulation itself uses Re." label="Znom" unit="Ω" value={state.nominal_ohms} onChange={(v) => set("nominal_ohms", v)} />
                 <Num help="Voice-coil inductance from the datasheet. It makes the impedance rise with frequency and rolls off the top end; Settings can leave it out, like WinISD." label="Le" unit="mH" value={state.le_mh} min={0} onChange={(v) => set("le_mh", v)} />
-                <Num
-                  label="L2"
-                  unit="mH"
-                  value={state.l2_mh}
-                  min={0}
-                  title="Optional: second, lossy inductance (L2R2 coil model). 0 = plain Le. Fill in from a measured sweep."
-                  onChange={(v) => set("l2_mh", v)}
+                <Select<"le" | "semi"> help="How the voice coil's inductance is modelled. Le (with the optional L2 and R2) is the usual datasheet way. Semi-inductance is Hornresp's model (Thorborg and Futtrup): Re + Leb + (Le ∥ Rss ∥ Ke·√jω), which follows a real coil's impedance from a measured sweep more closely; its values come from fitting tools or forum posts."
+                  label="Coil model"
+                  value={state.semi ? "semi" : "le"}
+                  options={[
+                    { value: "le", text: "Le (+ L2/R2)" },
+                    { value: "semi", text: "Semi-inductance (like Hornresp)" },
+                  ]}
+                  onChange={(m) => set("semi", m === "semi" ? (state.semi ?? { leb_mh: 0, le_mh: state.le_mh, ke: 0, rss_ohm: 0 }) : undefined)}
                 />
-                <Num
-                  label="R2"
-                  unit="Ω"
-                  value={state.r2_ohm}
-                  min={0}
-                  title="Optional: resistance across L2 (eddy-current losses). Used only when L2 is also set."
-                  onChange={(v) => set("r2_ohm", v)}
-                />
+                {state.semi ? (
+                  <>
+                    <Num
+                      label="Leb"
+                      unit="mH"
+                      value={state.semi.leb_mh}
+                      min={0}
+                      title="Semi-inductance model: the coil's inductance outside the pole piece, in series with the rest."
+                      onChange={(v) => set("semi", { ...state.semi!, leb_mh: Math.max(0, v) })}
+                    />
+                    <Num
+                      label="Le (semi)"
+                      unit="mH"
+                      value={state.semi.le_mh}
+                      min={0}
+                      title="Semi-inductance model: the inductance in parallel with Rss and Ke. Not the datasheet Le, which this model replaces."
+                      onChange={(v) => set("semi", { ...state.semi!, le_mh: Math.max(0, v) })}
+                    />
+                    <Num
+                      label="Ke"
+                      unit="sH"
+                      value={state.semi.ke}
+                      min={0}
+                      title="Semi-inductance model: the semi-inductance (eddy currents in the pole piece), in semi-henries. 0 = none."
+                      onChange={(v) => set("semi", { ...state.semi!, ke: Math.max(0, v) })}
+                    />
+                    <Num
+                      label="Rss"
+                      unit="Ω"
+                      value={state.semi.rss_ohm}
+                      min={0}
+                      title="Semi-inductance model: losses from a shorting ring, in parallel with Le and Ke. 0 = none."
+                      onChange={(v) => set("semi", { ...state.semi!, rss_ohm: Math.max(0, v) })}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Num
+                      label="L2"
+                      unit="mH"
+                      value={state.l2_mh}
+                      min={0}
+                      title="Optional: second, lossy inductance (L2R2 coil model). 0 = plain Le. Fill in from a measured sweep."
+                      onChange={(v) => set("l2_mh", v)}
+                    />
+                    <Num
+                      label="R2"
+                      unit="Ω"
+                      value={state.r2_ohm}
+                      min={0}
+                      title="Optional: resistance across L2 (eddy-current losses). Used only when L2 is also set."
+                      onChange={(v) => set("r2_ohm", v)}
+                    />
+                  </>
+                )}
                 <Num help="Maximum one-way excursion the cone can make while staying linear (from the datasheet). The excursion chart turns red above it." label="Xmax" unit="mm" value={state.xmax_mm} onChange={(v) => set("xmax_mm", v)} />
                 <Num help="Thermal power rating: how much power the voice coil can take continuously. Sets the thermal limit in the Max SPL chart." label="Pe" unit="W" value={state.pe_w} onChange={(v) => set("pe_w", v)} />
                 <Num help="How many drivers (or isobaric pairs) share the box. More drivers move more air; the box volume is shared between them."
@@ -1102,6 +1154,7 @@ export function App(props: { initial: AppState | null }) {
                       driverName: s.driverName.endsWith("(measured)") ? s.driverName : `${s.driverName} (measured)`,
                       ts: { ...keep, ...ts },
                       ...coil,
+                      semi: undefined,
                     };
                   })
                 }
@@ -1201,6 +1254,7 @@ export function App(props: { initial: AppState | null }) {
                     le_mh: x.le_mh,
                     l2_mh: 0,
                     r2_ohm: 0,
+                    semi: x.semi,
                     ...(x.xmax_mm !== undefined ? { xmax_mm: x.xmax_mm } : {}),
                     ...(x.drivers ? { drivers: x.drivers.count, wiring: x.drivers.wiring } : {}),
                     dvc: { ...s.dvc, on: false },
@@ -1358,7 +1412,7 @@ export function App(props: { initial: AppState | null }) {
                   options={[
                     {
                       value: "yes",
-                      text: state.l2_mh > 0 && state.r2_ohm > 0 ? "Le + L2/R2 (most realistic)" : "Le (more realistic above ~100 Hz)",
+                      text: state.semi ? "Semi-inductance (most realistic)" : state.l2_mh > 0 && state.r2_ohm > 0 ? "Le + L2/R2 (most realistic)" : "Le (more realistic above ~100 Hz)",
                     },
                     { value: "no", text: "Off (WinISD's default)" },
                   ]}

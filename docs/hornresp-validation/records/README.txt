@@ -32,6 +32,13 @@ B5-bandpass-6th-parallel  20 L rear (6 cm port), 15 L front (7 cm port),
 B6-bandpass-6th-series  the same, rear port into the front chamber     (Wizard)
 B7-ported-2-drivers     B2 with two drivers in parallel (Nd = 2P, S1 = S2 = 2 Sd)
 
+B8a / B8b               B1 with the semi-inductance model on (double-click Le, enter
+                        the values, On): Re' 5.9 Ω; Leb 0.30 / 1.36 mH, Le 1.00 /
+                        3.16 mH, Ke 0.05 / 0.21 sH, Rss 30 / 30.6 Ω
+
+Maximum SPL: B1, B2, 05 and 06, Tools > Maximum SPL with 80 W and 5.5 mm (the
+amplifier limits off), then File > Export; B2 again with the amplifier at 25 V.
+
 More than one driver is written with its wiring: "2P" (parallel) or "2S"
 (series). Hornresp reads a bare "2" as one driver.
 

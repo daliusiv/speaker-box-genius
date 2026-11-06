@@ -1,4 +1,4 @@
-import type { EqStage, HighPassType, PassiveRadiatorInput, TsValues } from "@sbg/engine";
+import type { EqStage, HighPassType, PassiveRadiatorInput, SemiInductance, TsValues } from "@sbg/engine";
 import { stuffable, stuffingFrom, type Stuffing } from "./stuffing.ts";
 
 export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line";
@@ -231,6 +231,7 @@ export const DRIVER_KEYS = [
   "le_mh",
   "l2_mh",
   "r2_ohm",
+  "semi",
   "xmax_mm",
   "pe_w",
   "drivers",
@@ -244,7 +245,7 @@ export type DriverSlot = Pick<AppState, (typeof DRIVER_KEYS)[number]>;
  * The fields a comparison driver has of its own; how many drivers there are and how they're
  * loaded and wired stay the main driver's, so the comparison is like for like.
  */
-export const COMPARE_KEYS = ["driverName", "driverBrand", "nominal_ohms", "ts", "le_mh", "l2_mh", "r2_ohm", "xmax_mm", "pe_w", "dvc"] as const;
+export const COMPARE_KEYS = ["driverName", "driverBrand", "nominal_ohms", "ts", "le_mh", "l2_mh", "r2_ohm", "semi", "xmax_mm", "pe_w", "dvc"] as const;
 export type CompareDriver = Pick<AppState, (typeof COMPARE_KEYS)[number]>;
 
 export interface AppState {
@@ -259,6 +260,11 @@ export interface AppState {
   /** L2R2 voice-coil model: Le + (L2 ∥ R2). 0 = plain Le. */
   l2_mh: number;
   r2_ohm: number;
+  /**
+   * Semi-inductance coil model (Hornresp's: Re + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω))). When any
+   * of Leb, Le, Ke is above 0 it replaces Le and L2R2. Absent = not used.
+   */
+  semi?: SemiInductance;
   xmax_mm: number;
   pe_w: number;
   power: number;
@@ -766,6 +772,9 @@ function driverSlotFrom(raw: Raw, d: DriverSlot): DriverSlot {
     le_mh: raw.le_mh ?? d.le_mh,
     l2_mh: nonNeg(raw.l2_mh),
     r2_ohm: nonNeg(raw.r2_ohm),
+    ...(raw.semi && typeof raw.semi === "object"
+      ? { semi: { leb_mh: nonNeg(raw.semi.leb_mh), le_mh: nonNeg(raw.semi.le_mh), ke: nonNeg(raw.semi.ke), rss_ohm: nonNeg(raw.semi.rss_ohm) } }
+      : {}),
     xmax_mm: raw.xmax_mm ?? d.xmax_mm,
     pe_w: raw.pe_w ?? d.pe_w,
     drivers: raw.drivers ?? d.drivers,

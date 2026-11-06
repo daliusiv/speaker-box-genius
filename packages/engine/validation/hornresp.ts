@@ -14,7 +14,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { simulate, type SimulationOptions, type SimulationResult } from "../src/simulate.ts";
-import { driverModel, type DriverInput, type EnclosureInput } from "../src/model.ts";
+import { driverModel, type DriverInput, type EnclosureInput, type SemiInductance } from "../src/model.ts";
 import { pistonPowerFactor } from "../src/line.ts";
 import type { LineInput } from "../src/line.ts";
 
@@ -324,6 +324,8 @@ What the comparison settles, and the conventions it has to bridge:
 - **Passive radiators.** Hornresp adds the front air to the radiator's moving mass as well (3.83 g for the DSA270-PR); with that, its output alone is within 0.01 dB.
 - **Two drivers side by side** (Hornresp's "Nd = 2P") load each other's fronts: Hornresp treats them as one piston of twice the area, which gives each √2 × one cone's front air. In lines and horns the app now does the same (case 15: the mass-loaded line with two drivers is within 0.03 dB and 0.2 %); in boxes the app keeps each driver's datasheet Mms, as WinISD does, and the case gives the cones Hornresp's air.
 
+**Semi-inductance.** Hornresp's semi-inductance model (Thorborg and Futtrup) is the coil impedance Re' + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)); two sets on the sealed box (B8a: Leb 0.3 mH, Le 1 mH, Ke 0.05 sH, Rss 30 Ω; B8b: Leb 1.36 mH, Le 3.16 mH, Ke 0.21 sH, Rss 30.6 Ω) pin that down exactly. The app has the same model (Driver → Coil model → Semi-inductance): impedance within 0.3 % on average up to 20 kHz, and the SPL the coil takes away up there (compared as the change from the plain B1 box, so the box's own radiation doesn't enter) within 0.03 dB. Re' was set equal to Re; the app uses Re for both.
+
 The fourth-order and parallel sixth-order bandpass boxes are held to looser SPL limits: above about 150 Hz, more than 12 dB below the passband, the app's output rises up to 1 dB above Hornresp's (the impedance and excursion still match within 0.4 %), and the parallel box's slope below 15 Hz, 50 dB down, sits up to 1.3 dB lower. The front port's air speed in the fourth-order box peaks at 3.39 m/s at 51 Hz in the app and about 3.38 m/s on Hornresp's chart.`;
 
 export interface HornrespBoxCase {
@@ -336,6 +338,16 @@ export interface HornrespBoxCase {
    * it), √2 for two drivers side by side (one piston of 2·Sd). See hornrespDriver.
    */
   frontAir: number;
+  /** Compare the impedance up to here (Hz) rather than HORNRESP_BOX_F_MAX: for coil models. */
+  zeFMax?: number;
+  /**
+   * For a coil-model case: the case it differs from only in the coil. The SPL each shows up to
+   * zeFMax is compared as a difference from that case's, which isolates the coil's effect from
+   * how the box radiates up there.
+   */
+  splDeltaFrom?: string;
+  /** Hornresp's semi-inductance model (its Re' is the driver's Re), in place of Le. */
+  semi?: SemiInductance;
   /** "pipe": the port as a short pipe, as Hornresp has it (its output rises towards the pipe's resonance). */
   portModel?: "lumped" | "pipe";
   drivers?: number;
@@ -382,17 +394,19 @@ export interface HornrespBoxRun {
   stats: {
     splMean?: number; splP95?: number; zeMean: number; zeP95: number; zePhaseMean: number; xdMean: number; xdP95: number;
     coneMean?: number; coneP95?: number; ventMean?: number; ventP95?: number;
+    /** The coil's effect on SPL (difference from splDeltaFrom's), up to zeFMax. */
+    coilMean?: number; coilP95?: number;
   };
-  pass: { spl?: boolean; ze: boolean; xd: boolean; cone?: boolean; vent?: boolean };
+  pass: { spl?: boolean; ze: boolean; xd: boolean; cone?: boolean; vent?: boolean; coil?: boolean };
 }
 
 export function runHornrespBox(id: string): HornrespBoxRun {
   const dir = join(HORNRESP_BOX_DIR, id);
   const c = readBoxCase(id);
   const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
-  const driver = hornrespDriver(HORNRESP_DRIVER, c.frontAir);
+  const driver = { ...hornrespDriver(HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}) };
   const base: SimulationOptions = {
-    power: 2.83, convention: "volts", fMin: 10, fMax: 1000, points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel,
+    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel,
   };
   const r = simulate(driver, c.input, base);
   const table = (name: string) => (existsSync(join(dir, name)) ? readTable(join(dir, name)).filter((x) => x.Freq! <= HORNRESP_BOX_F_MAX) : null);
@@ -401,7 +415,9 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const coneRows = table("hornresp-cone.txt");
   const ventRows = table("hornresp-vent.txt");
   // Excursion and impedance are the same in every output's export.
-  const zeRows = wizard("ze") ?? coneRows ?? ventRows!;
+  const zeRows = c.zeFMax
+    ? readTable(join(dir, "hornresp.txt")).filter((x) => x.Freq! <= c.zeFMax!)
+    : (wizard("ze") ?? coneRows ?? ventRows!);
   const xdRows = wizard("xd") ?? coneRows ?? ventRows!;
   const splRows = wizard("power");
   const pair = (rows: Record<string, number>[], col: string, ours: Float64Array): Pair[] => rows.map((x) => ({ f: x.Freq!, ref: x[col]!, ours: interp(r.freq, ours, x.Freq!) }));
@@ -458,6 +474,23 @@ export function runHornrespBox(id: string): HornrespBoxRun {
     stats.ventMean = mean(dbErr(vent));
     stats.ventP95 = percentile(dbErr(vent), 0.95);
     pass.vent = stats.ventMean < tol.splMean && stats.ventP95 < tol.splP95;
+  }
+  // The coil's effect on SPL, up high: this case's SPL less the plain case's, in both.
+  if (c.splDeltaFrom) {
+    const fTop = c.zeFMax ?? HORNRESP_BOX_F_MAX;
+    const refCase = readBoxCase(c.splDeltaFrom);
+    const wide = { ...base, fMax: fTop, points: 4000 };
+    const ours = simulate(driver, c.input, wide);
+    const plain = simulate(hornrespDriver(HORNRESP_DRIVER, refCase.frontAir), refCase.input, wide);
+    const mine = readTable(join(dir, "hornresp.txt")).filter((x) => x.Freq! <= fTop);
+    const theirs = readTable(join(HORNRESP_BOX_DIR, c.splDeltaFrom, "hornresp.txt"));
+    const e = mine.map((x) => {
+      const t = theirs.find((y) => Math.abs(y.Freq! / x.Freq! - 1) < 1e-6)!;
+      return Math.abs(x.SPL! - t.SPL! - (interp(ours.freq, ours.spl, x.Freq!) - interp(plain.freq, plain.spl, x.Freq!)));
+    });
+    stats.coilMean = mean(e);
+    stats.coilP95 = percentile(e, 0.95);
+    pass.coil = stats.coilMean < tol.splMean && stats.coilP95 < tol.splP95;
   }
   const maxSpl = maxSplRuns(dir, HORNRESP_BOX_F_MAX, (o) => simulate(driver, c.input, { ...base, ...o }));
   return { id, c, result: r, tol, spl, ze, xd, cone, vent, maxSpl, stats, pass };

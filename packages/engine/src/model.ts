@@ -28,9 +28,25 @@ export interface DriverInput {
    */
   l2_mh?: number;
   r2_ohm?: number;
+  /**
+   * Optional semi-inductance model (Thorborg & Futtrup; Hornresp's): Re + jωLeb + (jωLe ∥
+   * Rss ∥ Ke·√(jω)). Ke is in "semi-henries" (Ω/√(rad/s)). When given it replaces le_mh and
+   * L2R2; Rss 0 means no Rss branch.
+   */
+  semi?: SemiInductance;
   xmax_mm?: number; // one-way, peak
   pe_w?: number; // thermal limit, per driver
 }
+
+export interface SemiInductance {
+  leb_mh: number;
+  le_mh: number;
+  ke: number;
+  rss_ohm: number;
+}
+
+/** Whether a semi-inductance set does anything (any inductive part above zero). */
+export const semiActive = (s: SemiInductance | undefined | null): s is SemiInductance => !!s && (s.leb_mh > 0 || s.le_mh > 0 || s.ke > 0);
 
 export interface DriverModel {
   re: number; // Ω
@@ -38,6 +54,8 @@ export interface DriverModel {
   /** L2R2 branch (H and Ω); l2 = 0 means none. */
   l2: number;
   r2: number;
+  /** Semi-inductance model (H, H, Ω/√(rad/s), Ω); null = Le (+ L2R2). rss = 0 means none. */
+  semi: { leb: number; le: number; ke: number; rss: number } | null;
   bl: number; // T·m
   mms: number; // kg
   cms: number; // m/N
@@ -59,6 +77,7 @@ export function driverModel(d: DriverInput, air: Air = STANDARD_AIR): DriverMode
     le: (d.le_mh ?? 0) / 1000,
     l2: d.l2_mh !== undefined && d.r2_ohm !== undefined && d.l2_mh > 0 && d.r2_ohm > 0 ? d.l2_mh / 1000 : 0,
     r2: d.l2_mh !== undefined && d.r2_ohm !== undefined && d.l2_mh > 0 && d.r2_ohm > 0 ? d.r2_ohm : 0,
+    semi: semiActive(d.semi) ? { leb: d.semi.leb_mh / 1000, le: d.semi.le_mh / 1000, ke: d.semi.ke, rss: Math.max(0, d.semi.rss_ohm) } : null,
     bl: blFromQes(d.fs, mms, d.re, d.qes),
     mms,
     cms,
@@ -81,9 +100,23 @@ export const coilHeatFactor = (temp_C: number | undefined) =>
 
 /**
  * Blocked voice-coil impedance: Re + jωLe, plus (jωL2 ∥ R2) when the L2R2 model is
- * used. This is everything electrical in front of the motor.
+ * used; or, with the semi-inductance model, Re + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)) (as
+ * Hornresp has it). This is everything electrical in front of the motor.
  */
-export function voiceCoilImpedance(m: Pick<DriverModel, "re" | "le" | "l2" | "r2">, w: number): Complex {
+export function voiceCoilImpedance(m: Pick<DriverModel, "re" | "le" | "l2" | "r2"> & { semi?: DriverModel["semi"] }, w: number): Complex {
+  if (m.semi) {
+    const s = m.semi;
+    // Admittances of the parallel branches: 1/(jωLe), 1/Rss, 1/(Ke·√ω·e^{jπ/4}).
+    let y = cx(0);
+    if (s.le > 0) y = add(y, cx(0, -1 / (w * s.le)));
+    if (s.rss > 0) y = add(y, cx(1 / s.rss));
+    if (s.ke > 0) {
+      const k = s.ke * Math.sqrt(w);
+      y = add(y, cx(1 / (k * Math.SQRT2), -1 / (k * Math.SQRT2)));
+    }
+    const par = y.re === 0 && y.im === 0 ? cx(0) : div(cx(1), y);
+    return add(cx(m.re, w * s.leb), par);
+  }
   const z = cx(m.re, w * m.le);
   if (!(m.l2 > 0 && m.r2 > 0)) return z;
   const zl2 = cx(0, w * m.l2);

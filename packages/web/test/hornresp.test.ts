@@ -205,3 +205,21 @@ test("several drivers: written with their wiring (2P / 2S), which is how Hornres
   assert.equal(bare.drivers, undefined);
   assert.ok(bare.warnings.some((w) => /without P or S/.test(w)));
 });
+
+test("semi-inductance coil: written into Hornresp's semi-inductance fields and read back", () => {
+  const semi = { leb_mh: 0.3, le_mh: 1, ke: 0.05, rss_ohm: 30 };
+  const out = toHornresp(base, { ...driver, semi }, { eg: 2.83, drivers: 1, name: "x" });
+  assert.ok(typeof out !== "string");
+  assert.match(out.text, /Leb = 0\.30/);
+  assert.match(out.text, /Rss = 30\.00/);
+  assert.ok(out.warnings.some((w) => /double-click Le/.test(w)));
+  const back = fromHornresp(out.text, base);
+  assert.ok(typeof back !== "string");
+  assert.deepEqual(back.driver?.semi, semi);
+  // Without it, the fields stay zero and nothing is read back.
+  const plain = toHornresp(base, driver, { eg: 2.83, drivers: 1, name: "x" });
+  assert.ok(typeof plain !== "string");
+  const none = fromHornresp(plain.text, base);
+  assert.ok(typeof none !== "string");
+  assert.equal(none.driver?.semi, undefined);
+});
