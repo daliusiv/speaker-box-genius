@@ -26,7 +26,7 @@ Not sure which driver to buy, or which box to put it in? The design assistant as
 - **Sealed:** sized for a Qtc of 0.707, or as big as your limit allows.
 - **Ported:** a flat alignment (QB3, or Keele for a higher Qts), capped at your limit. In a smaller box it picks the tuning with the lowest F3 that stays flat. Each port is the simplest one that fits straight inside the box and stays under the chuffing line at your power: a plain tube, then a tube with rounded (flared) ends, then a slot along a wall.
 - **Transmission lines** (bookshelf, tower and "something else"): a mass-loaded line (MLTL) and a classic tapered line from the app's line presets, narrowed to your volume and tuned. Lines longer than 3 m (too long to fold into a tower) or much narrower than the cone are left out.
-- **Bandpass boxes** (car, home and "something else" subwoofers): 4th order (sealed rear, ported front) and 6th order (both chambers ported), found by a search within your volume. A bandpass box only plays a band, so it's never offered for a speaker; the band has to reach up to at least 80 Hz to cross over to your main speakers.
+- **Bandpass boxes** (car, home and "something else" subwoofers): 4th order (sealed rear, ported front) and 6th order (both chambers ported), found by a search within your volume, with a plain, flared or slotted port in each chamber. A bandpass box only plays a band, so it's never offered for a speaker; its band (−3 dB from its own peak) has to reach up to at least 80 Hz to cross over to your main speakers. The same search is the **Size for a flat band** button on any bandpass design in the app.
 
 Lines and bandpass boxes take longer to work out, so they're tried after the plain boxes, for the best drivers from those plus the drivers whose parameters suit them best. They appear when that search finishes, or earlier with **Show them now**. The **Show** switch filters the list by box type.
 
@@ -39,6 +39,7 @@ Every design is simulated at your power and graded the same way the app grades y
 - **✓ Within its limits:** the cone stays inside its Xmax and the port air speed stays under the chuffing line, all the way down.
 - **Deep bass (amber):** a ported, passive radiator or line box only goes past Xmax **below 0.7 × its tuning**, and never past 2 × Xmax down to 20 Hz. Music has little energy that low, so this is fine for most listening, even on an ordinary stereo amplifier with no subsonic filter. The card says the power at which it would stay within Xmax there too.
 - **⚠ Over a limit:** past Xmax in the bass it plays, or the port chuffs. These come after every result that's within its limits, with the power that would keep them within.
+- **Slow bass:** a note when the group delay in the band (from just below F3) is longer than one cycle of the note, where bass starts to sound late or boomy. The flat alignments the assistant uses rarely get there.
 
 On the excursion chart, the deep-bass zone is shaded, with its own 2 × Xmax line:
 

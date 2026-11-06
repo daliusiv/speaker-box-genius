@@ -500,6 +500,9 @@ export const DEEP_FLOOR_HZ = 20;
 
 /** Where a design's deep-bass zone starts (Hz), or null (sealed, a high-pass filter, a very low tuning). */
 export function deepSplitOf(r: SimulationResult, highPassOn: boolean): number | null {
+  // A 4th-order bandpass box's sealed rear chamber holds the cone below its band, as a sealed
+  // box's does: no runaway to grade (its band also starts well below the front tuning).
+  if (r.summary.fc !== undefined && r.summary.fb !== undefined && r.summary.fbRear === undefined) return null;
   // A 6th-order bandpass box has two tunings: its band starts at the lower one.
   const fb = r.summary.fb !== undefined && r.summary.fbRear !== undefined ? Math.min(r.summary.fb, r.summary.fbRear) : r.summary.fb;
   return !highPassOn && fb !== undefined && DEEP_SPLIT * fb > DEEP_FLOOR_HZ ? DEEP_SPLIT * fb : null;

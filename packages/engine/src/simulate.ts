@@ -200,10 +200,12 @@ export interface SimulationResult {
     referenceSpl: number;
     f3: number | null;
     f6: number | null;
-    /** Bandpass: upper −3 dB point. */
+    /** Bandpass: upper −3 dB point. A bandpass box's f3, f6 and f3High are taken from its band's peak (bandPeakSpl), not referenceSpl. */
     f3High?: number | null;
+    /** Bandpass: the band's peak SPL (its gain over a plain cone is bandPeakSpl − referenceSpl). */
+    bandPeakSpl?: number;
     fb?: number;
-    /** Vented: where portVelocity is taken: the throat, or the mouths of a port flared at both ends. */
+    /** Vented (and a bandpass box's front port): where portVelocity is taken: the throat, or the mouths of a port flared at both ends. */
     portVelocityAt?: "throat" | "ends";
     /** Vented with portCompression: largest output loss from port compression (dB) and where (Hz). */
     portCompression?: { db: number; f: number };
@@ -658,7 +660,17 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     summary.f3 = crossingUp(freq, out.spl, summary.referenceSpl - 3);
     summary.f6 = crossingUp(freq, out.spl, summary.referenceSpl - 6);
   }
-  if (bp) summary.f3High = crossingHigh(freq, out.spl, summary.referenceSpl - 3);
+  if (bp) {
+    // A bandpass box's band is judged against its own peak, not a plain cone's level: its gain
+    // over a cone (bandPeakSpl − referenceSpl) is part of the design, and a band that sits
+    // below a cone's level would otherwise get edges that say little about it.
+    let peak = -Infinity;
+    for (const v of out.spl) if (Number.isFinite(v)) peak = Math.max(peak, v);
+    summary.bandPeakSpl = peak;
+    summary.f3 = crossingUp(freq, out.spl, peak - 3);
+    summary.f6 = crossingUp(freq, out.spl, peak - 6);
+    summary.f3High = crossingHigh(freq, out.spl, peak - 3);
+  }
 
   return {
     freq,
@@ -745,7 +757,7 @@ interface PortElements {
   map: number; // acoustic mass of one port
   rap: number; // loss resistance of one port
   count: number;
-  area: number; // m², one port
+  area: number; // m², one port, where its air speed is judged (the mouths when flared at both ends)
 }
 
 /**
@@ -770,7 +782,9 @@ function bandpassNetwork(
   const series = box.rearPortTo === "front";
   const portOf = (p: PortInput, count: number, fRef: number, qp: number): PortElements => {
     const map = portAcousticMass(p, ec, air);
-    return { map, rap: Number.isFinite(qp) ? (2 * Math.PI * fRef * map) / qp : 0, count, area: portArea(p) };
+    // Air speed is judged where it leaves: the mouths of a port flared at both ends (as for a vented box).
+    const area = portFlare(p).ends === 2 ? portMouthArea(p) : portArea(p);
+    return { map, rap: Number.isFinite(qp) ? (2 * Math.PI * fRef * map) / qp : 0, count, area };
   };
   const hasPrs = (c: BandpassChamber) => (c.prs?.length ?? 0) > 0;
   /** Tuning of a chamber's opening: Helmholtz for a port, PR mass against the air spring for PRs. */
@@ -816,6 +830,7 @@ function bandpassNetwork(
   const F = chamberOf(box.front, fFront);
   const R = chamberOf(box.rear, fRear);
   const frontVent = ventOf(box.front, fFront);
+  if (box.front.port) summary.portVelocityAt = portFlare(box.front.port).ends === 2 ? "ends" : "throat";
   const rearVent = rearOpen ? ventOf(box.rear, fRear) : null;
 
   // Leakage between the chambers, referred to the driver like WinISD's Qiclfr:

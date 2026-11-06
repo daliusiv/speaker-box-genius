@@ -67,6 +67,8 @@ export interface PortFields {
   count: number;
   /** Last tuning frequency asked for with "Set port length". */
   targetFb: number;
+  /** Round port: round-over radius at both ends (0 = a straight tube). */
+  flare_cm?: number;
 }
 
 export type BandpassOrder = "4" | "6p" | "6s";
@@ -374,8 +376,8 @@ export function newDesign(kind: DesignKind, existing: DesignState[]): DesignStat
         order: "4",
         vb_l: 20,
         frontVb_l: 25,
-        front: { shape: "round", diameter_cm: 10, slotWidth_cm: 20, slotHeight_cm: 5, length_cm: 25, count: 1, targetFb: 50 },
-        rear: { shape: "round", diameter_cm: 7.5, slotWidth_cm: 15, slotHeight_cm: 4, length_cm: 30, count: 1, targetFb: 35 },
+        front: { shape: "round", diameter_cm: 10, slotWidth_cm: 20, slotHeight_cm: 5, length_cm: 25, count: 1, targetFb: 50, flare_cm: 0 },
+        rear: { shape: "round", diameter_cm: 7.5, slotWidth_cm: 15, slotHeight_cm: 4, length_cm: 30, count: 1, targetFb: 35, flare_cm: 0 },
         frontOpening: "port",
         rearOpening: "port",
         frontPrs: [{ prName: "Example Audio EX10-PR (fictional)", count: 1, addedMass_g: 0, params: { ...EXAMPLE_PR } }],

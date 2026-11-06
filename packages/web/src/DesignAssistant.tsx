@@ -665,6 +665,12 @@ export function DesignAssistant(props: {
                     ) : (
                       <p className="assist-safe">✓ Within its limits at {goal.power_w} W, with or without a subsonic filter.</p>
                     )}
+                    {r.gd && (
+                      <p className="assist-note">
+                        Slow bass: group delay reaches {r.gd.ms} ms at {r.gd.hz} Hz, {r.gd.cycles.toFixed(1)} cycles of the note (above about one, the bass starts to sound late
+                        or boomy).
+                      </p>
+                    )}
                     {r.notes.map((n) => (
                       <p key={n} className="hint assist-note">
                         {n}

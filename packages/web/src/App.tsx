@@ -12,7 +12,7 @@ import {
 import { ChartEmphasis, CrosshairProvider, LogChart, shortName, type ChartHandle, type Series } from "./LogChart.tsx";
 import { draggableEq, eqQ, moveEq, retune, tunable } from "./chartEdit.ts";
 import { useUndoable } from "./useUndoable.ts";
-import { sizeAllForDriver } from "./presets.ts";
+import { sizeAllForDriver, sizeBandpassDesign } from "./presets.ts";
 import type { FinderContext } from "./PrFinder.tsx";
 import { initialPanel, PanelTabs, rememberPanel, TabRow, type PanelId } from "./PanelTabs.tsx";
 import {
@@ -25,6 +25,7 @@ import {
   newId,
   swapCompare,
   type AppState,
+  type BandpassDesign,
   type DesignState,
 } from "./state.ts";
 import { loadDriver, loadIndex, type DbIndex } from "./library.ts";
@@ -96,6 +97,14 @@ const LIMIT_KINDS: Record<string, { label: string; short: string; color: string 
 
 type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay";
 
+/**
+ * The level a design's relative response is drawn against: a plain cone's level, or for a
+ * bandpass box its band's own peak (so its −3 dB points are its band edges, as in the summary).
+ */
+function relRefOf(r: SimulationResult): number {
+  return r.summary.bandPeakSpl ?? r.summary.referenceSpl;
+}
+
 export function App(props: { initial: AppState | null }) {
   const { state, setState, undo, redo, canUndo, canRedo } = useUndoable<AppState>(() => props.initial ?? DEFAULT_STATE);
   /** A discrete action (load, import, delete…): its own undo step, never merged with typing around it. */
@@ -108,6 +117,13 @@ export function App(props: { initial: AppState | null }) {
   latest.current = state;
   // Resize every box for the current driver with its card's preset (sealed Qtc 0.707, ported/PR QB3).
   const [sizeReport, setSizeReport] = useState<{ changed: string[]; skipped: string[] } | null>(null);
+  /** One bandpass design re-sized for the driver within its present volume (undoable). */
+  const sizeOneBandpass = (d: BandpassDesign) => {
+    const r = sizeBandpassDesign(latest.current, d);
+    if (typeof r === "string") return notify(`Couldn't size “${d.name}”: ${r}.`);
+    setStep((s) => ({ ...s, designs: s.designs.map((x) => (x.id === d.id ? r.design : x)) }));
+    notify(`Sized “${d.name}”: ${r.text}.`);
+  };
   const sizeBoxes = () => {
     const r = sizeAllForDriver(latest.current);
     if (r.changed.length > 0) setStep(r.state);
@@ -660,7 +676,7 @@ export function App(props: { initial: AppState | null }) {
             return {
               id: `fb-${x.id}`,
               f: fb,
-              y: valueAt(d.result.freq, d.result.spl, fb) - d.result.summary.referenceSpl,
+              y: valueAt(d.result.freq, d.result.spl, fb) - relRefOf(d.result),
               color: d.color,
               shape: "diamond",
               axes: "x",
@@ -1088,7 +1104,7 @@ export function App(props: { initial: AppState | null }) {
               <button className="secondary" onClick={sizeBoxes} disabled={solved.missing.length > 0}>
                 Size all boxes for this driver
               </button>
-              <span className="hint">Sealed Qtc 0.707; ported and PR a flat alignment (QB3, or Keele for higher Qts). Undo takes it back.</span>
+              <span className="hint">Sealed Qtc 0.707; ported and PR a flat alignment (QB3, or Keele for higher Qts); bandpass the lowest flat band in its volume. Undo takes it back.</span>
             </div>
             {sizeReport && (
               <div className="size-report">
@@ -1119,6 +1135,7 @@ export function App(props: { initial: AppState | null }) {
                 vb_l={vbOf(state, d)}
                 built_l={builtVbOf(state, d)}
                 linked={state.volume.link === d.id}
+                onSizeBandpass={d.kind === "bandpass" ? () => sizeOneBandpass(d) : undefined}
                 lineFb={d.kind === "line" ? (designs.find((x) => x.design.id === d.id)?.result.summary.fb ?? null) : undefined}
                 driverDisp_l={state.volume.driverDisp_l * state.drivers * (state.isobaric ? 2 : 1)}
                 wall_mm={state.volume.wall_mm}
@@ -1600,7 +1617,7 @@ export function App(props: { initial: AppState | null }) {
               {...(splMode === "relative"
                 ? {
                     series: designs.flatMap((d) => {
-                      const ref = d.result.summary.referenceSpl;
+                      const ref = relRefOf(d.result);
                       return [
                         {
                           label: d.label,
@@ -1621,7 +1638,7 @@ export function App(props: { initial: AppState | null }) {
                     yMin: -30,
                     // F3 dots for the main driver only; the comparison's F3 is in the summary.
                     points: mainDesigns.flatMap((d) => {
-                      const ref = d.result.summary.referenceSpl;
+                      const ref = relRefOf(d.result);
                       const rel = d.result.spl.map((v) => v - ref);
                       // F3 is the box's own: without the baffle step (which isn't a box property), drawn on the curve as shown.
                       const step = baffleDbFor(state, d.result.freq, finderCtx.driver?.sd_cm2);

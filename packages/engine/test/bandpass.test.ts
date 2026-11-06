@@ -98,3 +98,31 @@ test("front chamber losses change a 4th-order bandpass only through the front ch
   assert.ok(leakyRear.spl[0]! < ref.spl[0]!);
   assert.ok(maxDiff(stuffedFront.spl, leakyRear.spl) > 0.3);
 });
+
+test("bandpass band edges are −3 dB from the band's own peak, and its gain over a cone is reported", () => {
+  const fp = port(7.5, 20);
+  const r = simulate(drv, { kind: "bandpass", rear: { vb_l: 15 }, front: { vb_l: 20, port: fp } }, { ...opts, points: 400 });
+  const peak = Math.max(...r.spl);
+  assert.equal(r.summary.bandPeakSpl, peak);
+  const at = (f: number) => {
+    const i = r.freq.findIndex((x) => x >= f);
+    return r.spl[i - 1]! + ((r.spl[i]! - r.spl[i - 1]!) * Math.log(f / r.freq[i - 1]!)) / Math.log(r.freq[i]! / r.freq[i - 1]!);
+  };
+  assert.ok(Math.abs(at(r.summary.f3!) - (peak - 3)) < 0.05, `low edge at ${at(r.summary.f3!)} vs ${peak - 3}`);
+  assert.ok(Math.abs(at(r.summary.f3High!) - (peak - 3)) < 0.05, `high edge at ${at(r.summary.f3High!)} vs ${peak - 3}`);
+  // Between the edges the response stays within 3 dB of the peak.
+  for (let i = 0; i < r.freq.length; i++) if (r.freq[i]! > r.summary.f3! * 1.01 && r.freq[i]! < r.summary.f3High! / 1.01) assert.ok(r.spl[i]! > peak - 3.01);
+});
+
+test("a bandpass front port flared at both ends: its air speed is judged at the mouths", () => {
+  const straight = port(7.5, 20);
+  const flared = { ...straight, flare_cm: 2 };
+  const box = (p: typeof straight) => ({ kind: "bandpass" as const, rear: { vb_l: 15 }, front: { vb_l: 20, port: p } });
+  const a = simulate(drv, box(straight), opts);
+  const b = simulate(drv, box(flared), opts);
+  assert.equal(a.summary.portVelocityAt, "throat");
+  assert.equal(b.summary.portVelocityAt, "ends");
+  // The mouths are (7.5 + 4)² / 7.5² ≈ 2.4 × the throat's area: much slower air there (the tuning shifts a little).
+  const peak = (x: Float64Array) => Math.max(...x);
+  assert.ok(peak(b.portVelocity!) < 0.55 * peak(a.portVelocity!), `${peak(b.portVelocity!)} vs ${peak(a.portVelocity!)}`);
+});
