@@ -762,7 +762,17 @@ function PortEditor(props: {
           onChange={(shape) => set({ shape })}
         />
         {v.shape === "round" ? (
-          <Num help="Inside diameter of this chamber's port tube." label="Port Ø" q="len" value={v.diameter_cm} onChange={(x) => set({ diameter_cm: x })} />
+          <>
+            <Num help="Inside diameter of this chamber's port tube." label="Port Ø" q="len" value={v.diameter_cm} onChange={(x) => set({ diameter_cm: x })} />
+            <Num
+              label="Flare r"
+              q="len"
+              value={v.flare_cm ?? 0}
+              min={0}
+              title="Round-over radius at both ends (0 = a straight tube). About a quarter of the diameter is a good start: the air speed is then judged at the wider mouths."
+              onChange={(x) => set({ flare_cm: x })}
+            />
+          </>
         ) : (
           <>
             <Num help="Inside width of the slot port." label="Width" q="len" value={v.slotWidth_cm} onChange={(x) => set({ slotWidth_cm: x })} />
@@ -850,7 +860,7 @@ function BandpassLossesEditor(p: {
   );
 }
 
-function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; db: DbIndex | null; losses: ChamberLosses }) {
+function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; db: DbIndex | null; losses: ChamberLosses; onSize?: () => void }) {
   const b = p.design;
   const set = (patch: Partial<BandpassDesign>) => p.onChange({ ...b, ...patch });
   const rearOpen = b.order !== "4";
@@ -862,6 +872,18 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
         <VbField label="Rear Vb" vb_l={p.built_l} value={b.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
         <Num help="Air volume of the front chamber (the one the cone fires into)." label="Front Vb" q="vol" value={b.frontVb_l} onChange={(frontVb_l) => set({ frontVb_l })} />
       </div>
+      {p.onSize && b.order !== "6s" && (
+        <div className="size-all">
+          <button type="button" className="secondary" onClick={p.onSize} disabled={p.linked}>
+            Size for a flat band
+          </button>
+          <span className="hint">
+            {p.linked
+              ? "The volume calculator sets the rear chamber: unlink it to size both chambers."
+              : "Both chambers, their ports and tunings for the lowest flat band (up to at least 80 Hz) in the same total volume. Undo takes it back."}
+          </span>
+        </div>
+      )}
       <h3>Front chamber (to the outside)</h3>
       <div className="fields">
         <Select help="How this chamber opens: through a port, or through passive radiators." label="Opening" value={b.frontOpening} options={OPENINGS} onChange={(frontOpening) => set({ frontOpening })} />
@@ -869,7 +891,12 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
       {b.frontOpening === "port" ? (
         <>
           <PortEditor port={b.front} vb_l={b.frontVb_l} air={p.air} onChange={(front) => set({ front })} />
-          <PortChecks v={b.front} vb_l={b.frontVb_l} air={p.air} ctx={{ portVelocity: p.portCtx.portVelocity, internalMax_cm: null, portLimit: p.portCtx.portLimit }} />
+          <PortChecks
+            v={b.front}
+            vb_l={b.frontVb_l}
+            air={p.air}
+            ctx={{ portVelocity: p.portCtx.portVelocity, internalMax_cm: null, portLimit: p.portCtx.portLimit, portVelocityAt: p.portCtx.portVelocityAt }}
+          />
         </>
       ) : (
         <ChamberPrs
@@ -961,6 +988,8 @@ export function DesignCard(props: {
   fit?: StuffingFitContext;
   /** Transmission lines: simulated tuning. */
   lineFb?: number | null;
+  /** Bandpass: re-size for the driver within its present volume. */
+  onSizeBandpass?: () => void;
   /** Transmission lines: replace the driver with one read from a Hornresp record. */
   onImportDriver?: (x: ImportedDriver) => void;
   /** Transmission lines: all the drivers' displacement (L) and the wall thickness (mm). */
@@ -991,7 +1020,7 @@ export function DesignCard(props: {
       {d.kind === "sealed" && <SealedBody {...common} design={d} onChange={props.onChange} />}
       {d.kind === "vented" && <VentedBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} />}
       {d.kind === "bandpass" && (
-        <BandpassBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} db={props.db} losses={props.losses} />
+        <BandpassBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} db={props.db} losses={props.losses} onSize={props.onSizeBandpass} />
       )}
       {d.kind === "line" && (
         <LineBody

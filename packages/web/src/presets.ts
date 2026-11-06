@@ -7,12 +7,14 @@ import {
   prGroupsFb,
   qb3Alignment,
   sealedVolumeForAlignment,
+  simulate,
   type Air,
   type AlignmentDriver,
   type VentedAlignment,
 } from "@sbg/engine";
-import { airOf, alignmentDriver, portOf, prGroupsOf, solveDriver } from "./sim.ts";
-import type { AppState, DesignState, PrDesign } from "./state.ts";
+import { airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, portOf, prGroupsOf, simOptionsOf, solveDriver } from "./sim.ts";
+import type { AppState, BandpassDesign, DesignState, PrDesign } from "./state.ts";
+import { sizeBandpass } from "./bandpassSize.ts";
 import { stuffFactor } from "./stuffing.ts";
 
 /** "31.1 L" or, for a stuffed box, "31.1 L (stuffed, acting as 37.3 L)". */
@@ -51,9 +53,11 @@ export const ventedAlignmentFor = (a: AlignmentDriver, drivers: number): VentedA
 
 /**
  * Every design resized for the current driver with the presets on its card: sealed →
- * Qtc 0.707, ported and passive radiator → QB3/B4 (Keele's alignment for higher Qts). Designs that can't take the preset
- * (driver Qts too high, port or PRs that can't reach the tuning), bandpass designs and the
- * design whose volume comes from the volume calculator are left as they are, with a reason.
+ * Qtc 0.707, ported and passive radiator → QB3/B4 (Keele's alignment for higher Qts),
+ * bandpass → the lowest flat band within its present volume (sizeBandpassDesign). Designs
+ * that can't take the preset (driver Qts too high, port or PRs that can't reach the tuning),
+ * lines and the design whose volume comes from the volume calculator are left as they are,
+ * with a reason.
  */
 export function sizeAllForDriver(s: AppState): { state: AppState; changed: string[]; skipped: string[] } {
   const align = alignmentDriver(solveDriver(s), s);
@@ -110,13 +114,64 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
           ...withPreset(d.name, qb3.name),
         };
       }
-      case "bandpass":
-        skipped.push(`${d.name}: bandpass boxes have no one-click alignment yet`);
-        return d;
+      case "bandpass": {
+        const sized = sizeBandpassDesign(s, d);
+        if (typeof sized === "string") {
+          skipped.push(`${d.name}: ${sized}`);
+          return d;
+        }
+        changed.push(`${d.name} → ${sized.text}`);
+        return sized.design;
+      }
       case "line":
         skipped.push(`${d.name}: use the line's own presets (they size the line for the driver)`);
         return d;
     }
   });
   return { state: changed.length > 0 ? { ...s, designs } : s, changed, skipped };
+}
+
+/**
+ * A bandpass design re-sized for the current driver within its present total volume (both
+ * chambers): the lowest band (−3 dB from its own peak) that reaches up to 80 Hz with under
+ * 3 dB of ripple, with ports that fit and, where they can, stay under the chuffing line at
+ * the current drive (see sizeBandpass). 4th order and 6th order (parallel) with ports; a
+ * reason instead for series 6th order and chambers opened by passive radiators.
+ */
+export function sizeBandpassDesign(s: AppState, d: BandpassDesign): { design: BandpassDesign; text: string } | string {
+  if (d.order === "6s") return "series-tuned 6th order isn't sized automatically (choose 4th or parallel 6th order)";
+  if (d.frontOpening !== "port" || (d.order === "6p" && d.rearOpening !== "port")) return "a chamber opens through passive radiators: size it with ports, then swap them in";
+  const solved = solveDriver(s);
+  const align = alignmentDriver(solved, s);
+  const drv = driverInputOf(s, solved);
+  if (!align || !drv) return "enter the driver's parameters first";
+  const total = d.vb_l + d.frontVb_l;
+  const opts = simOptionsOf(s);
+  // The simulation's port speeds are peak; the chuffing line is in the displayed convention.
+  const vLimit = portLimitOf(s) * (s.settings.velocity === "rms" ? Math.SQRT2 : 1);
+  const losses = lossesFor(s, d);
+  const found = sizeBandpass(
+    d,
+    align,
+    airOf(s),
+    {
+      orders: [d.order],
+      maxVolume_l: total,
+      drivers: s.drivers,
+      priority: "low",
+      portLimit: vLimit,
+    },
+    // The engine's response, without room or cabin gain (the band is judged as the box makes it).
+    (x) => simulate(drv, enclosureOf(x, x.vb_l, losses, s.volume.wall_mm), opts),
+    (r) => limitsOf(r, s.xmax_mm, s.highPass.on, vLimit),
+  )[d.order];
+  if (!found) return `no flat band up to 80 Hz fits in ${r1(total)} L with this driver: try a bigger box`;
+  const x = found.design;
+  const tune = x.order === "4" ? `front ${r1(x.front.targetFb)} Hz` : `${r1(x.rear.targetFb)} / ${r1(x.front.targetFb)} Hz`;
+  const band = `band ${Math.round(found.f3)}–${Math.round(found.f3High)} Hz`;
+  const limits = found.within ? "" : `; over a limit at this drive (within it at ${Math.round(found.safe * found.safe * 100)} % of the power)`;
+  return {
+    design: { ...x, ...withPreset(d.name, "Flat band") },
+    text: `${r1(x.vb_l)} + ${r1(x.frontVb_l)} L, ${tune}, ${band}${limits}`,
+  };
 }

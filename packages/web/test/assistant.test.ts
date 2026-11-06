@@ -5,7 +5,7 @@ import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { PORT_LIMIT, limitsOf, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { GD_CYCLES, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -223,5 +223,14 @@ test("the chuffing line is the app's setting: raised, more ports pass, and the a
     const s = openResults(loose, loaded(r.driverId), [r], goal);
     const app = limitsOf(runDesigns(s, solveDriver(s))[0]!.result, s.xmax_mm!, false, portLimitOf(s));
     assert.ok(!app.over.includes("port") || app.vp! <= 30 * 1.02, `${r.name}: app ${app.vp} m/s`);
+  }
+});
+
+test("slow bass is noted: group delay over a cycle of the note, in the band", () => {
+  const goal = goalFor("tower", "balanced");
+  const results = runAll(goal).results;
+  for (const r of results.filter((x) => x.gd)) {
+    assert.ok(r.gd!.cycles > GD_CYCLES && r.gd!.hz >= 0.8 * r.f3, `${r.name} ${JSON.stringify(r.gd)}`);
+    assert.ok(Math.abs((r.gd!.ms / 1000) * r.gd!.hz - r.gd!.cycles) < 0.05);
   }
 });
