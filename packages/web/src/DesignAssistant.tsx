@@ -32,7 +32,7 @@ import type { WorkerJob, WorkerReply } from "./assistantWorker.ts";
 import { loadCandidates as loadPrCandidates } from "./PrFinder.tsx";
 import type { AppState } from "./state.ts";
 import { useUnits } from "./units.ts";
-import { portLimitOf } from "./sim.ts";
+import { KIND_COLORS, portLimitOf } from "./sim.ts";
 import { Logo, UseIcon } from "./Logo.tsx";
 
 const KEY = "sbg.assistant";
@@ -77,7 +77,7 @@ function wiringText(r: AssistantResult, drivers: number): string {
 }
 
 /** A small sketch of the relative response, 10–300 Hz, with the −3 dB line. */
-function Sketch({ curve }: { curve: number[] }) {
+function Sketch({ curve, color }: { curve: number[]; color: string }) {
   const W = 120;
   const H = 40;
   const lo = -24;
@@ -88,7 +88,7 @@ function Sketch({ curve }: { curve: number[] }) {
   return (
     <svg className="assist-sketch" viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
       <line x1="0" x2={W} y1={y(-3)} y2={y(-3)} className="assist-sketch-ref" />
-      <path d={d} />
+      <path d={d} style={{ stroke: color }} />
     </svg>
   );
 }
@@ -731,6 +731,7 @@ export function DesignAssistant(props: {
                     <div className="assist-card-head">
                       <b>{r.name}</b>
                       <span className="preset-tag">
+                        <i className="kind-dot" style={{ background: KIND_COLORS[r.box][0] }} aria-hidden="true" />
                         {r.box === "line" && r.line
                           ? r.line.label
                           : r.bandpass
@@ -757,7 +758,7 @@ export function DesignAssistant(props: {
                           <b>{vol(r.vb_l)}</b> box
                         </span>
                       </div>
-                      <Sketch curve={r.curve} />
+                      <Sketch curve={r.curve} color={KIND_COLORS[r.box][0]!} />
                     </div>
                     <p className="assist-facts">
                       {r.bandpass ? `${bandpassText(r.bandpass, fmt, vol)} ` : ""}

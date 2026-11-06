@@ -3539,6 +3539,15 @@ button.assist-tile.on {
   stroke-width: 1.6;
 }
 
+.kind-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.3rem;
+  border-radius: 50%;
+  vertical-align: 0.05rem;
+}
+
 .assist-sketch-ref {
   stroke: var(--faint);
   stroke-dasharray: 2 3;
