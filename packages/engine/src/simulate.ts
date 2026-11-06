@@ -95,6 +95,14 @@ export interface SimulationOptions {
   distance_m?: number;
   /** "half" = 2π (infinite baffle / on the floor), "full" = 4π. Default half, like WinISD. */
   space?: "half" | "full";
+  /**
+   * What the driver's power rating (Pe) is held against for the max-SPL curve: "nominal"
+   * (default, like WinISD) V²/Re; "real" the real power the driver takes, V·I·cos φ (like
+   * Hornresp), which is less than V²/Re wherever the impedance rises above Re.
+   */
+  thermalLimit?: "nominal" | "real";
+  /** Amplifier limits for the max-SPL curve: RMS volts and amps at its output. */
+  amp?: { volts?: number; amps?: number } | null;
   /** Port air velocity limit (m/s, peak) used for the max-SPL curve. Default 17. */
   portVelocityLimit?: number;
   /** Electrical high-pass filter ahead of the amplifier (e.g. a subsonic filter). */
@@ -194,7 +202,7 @@ export interface SimulationResult {
    */
   ampAtMax: { volts: Float64Array; amps: Float64Array; watts: Float64Array };
   /** Which limit sets maxPower at each frequency. */
-  limitedBy: ("thermal" | "xmax" | "pr-xmax" | "port" | "none")[];
+  limitedBy: ("thermal" | "xmax" | "pr-xmax" | "port" | "amp" | "none")[];
   summary: {
     volts: number;
     /** Passband SPL of the mass-controlled region (ignores Le). */
@@ -594,8 +602,22 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
 
     // Power limits: SPL ∝ V², excursion and velocity ∝ V.
     const limits: [SimulationResult["limitedBy"][number], number][] = [];
-    // Thermal: the filter reduces the voltage reaching the coil at this frequency.
-    if (d.pe !== null) limits.push(["thermal", (d.pe * n) / Math.max(filterGain2, 1e-12)]);
+    // The amplifier's output now, through the filter and EQ, into the bank plus the source resistance.
+    const zAmpNow = add(zIn, cx(rgTotal));
+    const vAmpNow = volts * Math.sqrt(filterGain2);
+    if (d.pe !== null) {
+      if (opts.thermalLimit === "real") {
+        // Real power into the bank: |V_bank|² · Re(Z) / |Z|².
+        const vBank = (vAmpNow * abs(zIn)) / abs(zAmpNow);
+        const pReal = (vBank * vBank * zIn.re) / (abs(zIn) * abs(zIn));
+        limits.push(["thermal", pReal > 0 ? (pNow * d.pe * n) / pReal : Infinity]);
+      } else {
+        // Thermal: the filter reduces the voltage reaching the coil at this frequency.
+        limits.push(["thermal", (d.pe * n) / Math.max(filterGain2, 1e-12)]);
+      }
+    }
+    if (opts.amp?.volts && vAmpNow > 0) limits.push(["amp", pNow * (opts.amp.volts / vAmpNow) ** 2]);
+    if (opts.amp?.amps && vAmpNow > 0) limits.push(["amp", pNow * (opts.amp.amps / (vAmpNow / abs(zAmpNow))) ** 2]);
     if (d.xmax !== null) limits.push(["xmax", pNow * (d.xmax / x) ** 2]);
     if (prModels || out.xprGroups) {
       if (Number.isFinite(prLimitPower)) limits.push(["pr-xmax", prLimitPower]);

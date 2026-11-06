@@ -66,6 +66,7 @@ const LIMIT_TEXT: Record<AssistantResult["limitedBy"], string> = {
   xmax: "cone travel (Xmax)",
   port: "port air speed",
   "pr-xmax": "PR travel",
+  amp: "your amplifier's voltage or current",
   none: "—",
 };
 

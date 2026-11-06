@@ -284,7 +284,7 @@ export interface AssistantResult {
   /** Output at the goal's frequency (dB SPL), at the power given or the first limit, whichever is lower. */
   loud_db: number;
   /** What sets the output there: "power" (the amplifier), or the first limit. */
-  limitedBy: "power" | "thermal" | "xmax" | "port" | "pr-xmax" | "none";
+  limitedBy: "power" | "thermal" | "xmax" | "port" | "pr-xmax" | "amp" | "none";
   /** Limits crossed at the goal's power, as the app grades them (cone Xmax, port speed). */
   over: LimitKind[];
   /** Over a limit: the power that keeps every limit (W). */

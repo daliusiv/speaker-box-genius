@@ -174,6 +174,14 @@ export interface Settings {
   velocity: "peak" | "rms";
   /** Amplifier output + cable resistance (Ω). */
   rg: number;
+  /**
+   * What the driver's power rating is held against on the Max SPL chart: V²/Re ("nominal",
+   * like WinISD) or the real power it takes ("real", like Hornresp).
+   */
+  thermalLimit: "nominal" | "real";
+  /** The amplifier's own limits on the Max SPL chart: RMS volts and amps at its output (0 = none). */
+  ampVolts: number;
+  ampAmps: number;
   /** Include voice-coil inductance (Le, and L2/R2 when entered) in the simulation. WinISD leaves it out by default. */
   inductance: boolean;
   /** Box losses as Q values at the tuning frequency: leakage, absorption, port. WinISD's defaults are 10 / 100 / 100. */
@@ -435,6 +443,9 @@ export const DEFAULT_STATE: AppState = {
     air: "standard",
     velocity: "peak",
     rg: 0,
+    thermalLimit: "nominal",
+    ampVolts: 0,
+    ampAmps: 0,
     inductance: true,
     losses: { ql: 10, qa: 100, qp: 100 },
     portCompression: false,

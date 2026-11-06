@@ -81,6 +81,8 @@ The amplifier's side matches as closely: current, real input power and efficienc
 
 The mouth's output on its own (Hornresp's "Horn" output) is compared where it was exported, for the two mass-loaded lines' ports: within 0.05 dB on average. It's the air leaving through the port, so the port's air speed follows from it: Hornresp's Particle Velocity chart and the app's both peak at 5.0 m/s at 40 Hz in case 05 (1.8 m/s at 10 Hz) and 4.5 m/s at 32 Hz in case 11 (1.4 m/s at 10 Hz).
 
+**Maximum SPL** (Hornresp's Tools > Maximum SPL, 80 W and 5.5 mm) is compared for the mass-loaded line (05) and the tapped horn (06), and for the sealed and ported boxes: within 0.03 dB on average, and the voltage it takes within 0.2 %. Hornresp holds the driver's power rating against the real power it takes (V·I·cos φ), not V²/Re as WinISD does; that allows several dB more where the impedance is well above Re (around resonance and higher up). Settings → "Power rating vs" → "Real power (like Hornresp)" gives Hornresp's; the default stays WinISD's. The app's own port-speed limit is left out, as Hornresp has none. With the amplifier limited to 25 V (Settings → Amp max volts) the ported box's maximum matches too, including the 51 frequencies where the amplifier sets it.
+
 The first seven cases were checked against Hornresp 55.30 first, then against 60.60 with the same results; the five with other drivers (a 12″ subwoofer, a 4″ full-range) came with 60.60.
 
 Stuffed lines (08 and 09 in the records) aren't automated: Hornresp uses segment filling only in its Loudspeaker Wizard, so they were read off its charts. Acoustic power agreed within about 1 dB from 20 Hz to 1 kHz, and every impedance peak fell at the same frequency (straight TL: 63 Hz / 13.8 Ω against ~63 Hz / ~14.0 Ω). The two fibre models differ, so stuffed lines are judged on the trend.`;
@@ -124,6 +126,8 @@ export interface HornrespRun {
   za?: Pair[];
   /** The mouth's (port's) output alone, when Hornresp's was exported. */
   mouth?: Pair[];
+  /** Hornresp's Maximum SPL, where it was exported. */
+  maxSpl: MaxSplRun[];
   stats: {
     splMean: number;
     splP95: number;
@@ -148,13 +152,55 @@ export interface HornrespRun {
   pass: { spl: boolean; ze: boolean; xd: boolean; gd: boolean; amp: boolean; za?: boolean; mouth?: boolean };
 }
 
+/**
+ * Hornresp's Maximum SPL (Tools > Maximum SPL, exported as hornresp-maxspl.txt): the drive
+ * raised at each frequency until the driver takes its rated power (80 W of real power, V·I·cos φ)
+ * or the cone reaches Xmax, and, in hornresp-maxspl-25v.txt, the amplifier its 25 V. Compared
+ * with the app's Max SPL with Settings → "Power rating vs" set to real power and no port limit
+ * (Hornresp has none): the SPL, and the voltage and real power it takes.
+ */
+export interface MaxSplRun {
+  file: string;
+  ampVolts?: number;
+  spl: Pair[];
+  stats: { splMean: number; splP95: number; einMean: number; pinMean: number };
+  pass: boolean;
+}
+
+export const MAXSPL_TOL = { splMean: 0.15, splP95: 0.4, einMean: 0.5, pinMean: 1 };
+
+function maxSplRuns(dir: string, fMax: number, run: (o: SimulationOptions) => SimulationResult): MaxSplRun[] {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => /^hornresp-maxspl(-\d+v)?\.txt$/.test(f))
+    .sort()
+    .map((file) => {
+      const v = /-(\d+)v\.txt$/.exec(file);
+      const ampVolts = v ? Number(v[1]) : undefined;
+      const r = run({ thermalLimit: "real", portVelocityLimit: Infinity, ...(ampVolts ? { amp: { volts: ampVolts } } : {}) });
+      const rows = readTable(join(dir, file)).filter((x) => x.Freq! <= fMax);
+      const spl = rows.map((x) => ({ f: x.Freq!, ref: x.SPL!, ours: interp(r.freq, r.maxSpl, x.Freq!) }));
+      const e = spl.map((p) => Math.abs(p.ours - p.ref));
+      const stats = {
+        splMean: mean(e),
+        splP95: percentile(e, 0.95),
+        einMean: mean(rows.map((x) => Math.abs(interp(r.freq, r.ampAtMax.volts, x.Freq!) / x.Ein! - 1) * 100)),
+        pinMean: mean(rows.map((x) => Math.abs(interp(r.freq, r.ampAtMax.watts, x.Freq!) / x.Pin! - 1) * 100)),
+      };
+      const T = MAXSPL_TOL;
+      const pass = stats.splMean < T.splMean && stats.splP95 < T.splP95 && stats.einMean < T.einMean && stats.pinMean < T.pinMean;
+      return { file, ...(ampVolts ? { ampVolts } : {}), spl, stats, pass };
+    });
+}
+
 export function runHornresp(id: string): HornrespRun {
   const dir = join(HORNRESP_DIR, id);
   const input = JSON.parse(readFileSync(join(dir, "input.json"), "utf8")) as LineInput;
   const driver = (existsSync(join(dir, "driver.json")) ? JSON.parse(readFileSync(join(dir, "driver.json"), "utf8")) : HORNRESP_DRIVER) as DriverInput;
   // options.json: more than one driver (Hornresp's "Nd = 2P").
   const extra = existsSync(join(dir, "options.json")) ? (JSON.parse(readFileSync(join(dir, "options.json"), "utf8")) as Pick<SimulationOptions, "drivers" | "wiring">) : {};
-  const r = simulate(driver, input, { power: 2.83, convention: "volts", fMin: 10, fMax: 2000, points: 16000, air: HORNRESP_AIR, splFrom: "power", ...extra });
+  const base: SimulationOptions = { power: 2.83, convention: "volts", fMin: 10, fMax: 2000, points: 16000, air: HORNRESP_AIR, splFrom: "power", ...extra };
+  const r = simulate(driver, input, base);
   // A fine grid, so a sharp resonance between two of our points isn't flattened by interpolation.
   const rows = readTable(join(dir, "hornresp.txt")).filter((x) => x.Freq! <= HORNRESP_F_MAX);
   const pair = (col: string, ours: Float64Array, keep: (x: Record<string, number>) => boolean = () => true): Pair[] =>
@@ -232,7 +278,8 @@ export function runHornresp(id: string): HornrespRun {
     stats.zaMean = mean(errs);
     pass.za = stats.zaMean < T.zaMean;
   }
-  return { id, input, driver, result: r, spl, ze, xd, gd, za, mouth, stats, pass };
+  const maxSpl = maxSplRuns(dir, HORNRESP_F_MAX, (o) => simulate(driver, input, { ...base, points: 4000, ...o }));
+  return { id, input, driver, result: r, spl, ze, xd, gd, za, mouth, maxSpl, stats, pass };
 }
 
 // ---------------------------------------------------------------------------
@@ -330,6 +377,8 @@ export interface HornrespBoxRun {
   /** The cone's front, and the port's (or PR's) output, each alone. */
   cone?: Pair[];
   vent?: Pair[];
+  /** Hornresp's Maximum SPL, where it was exported. */
+  maxSpl: MaxSplRun[];
   stats: {
     splMean?: number; splP95?: number; zeMean: number; zeP95: number; zePhaseMean: number; xdMean: number; xdP95: number;
     coneMean?: number; coneP95?: number; ventMean?: number; ventP95?: number;
@@ -341,9 +390,11 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const dir = join(HORNRESP_BOX_DIR, id);
   const c = readBoxCase(id);
   const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
-  const r = simulate(hornrespDriver(HORNRESP_DRIVER, c.frontAir), c.input, {
+  const driver = hornrespDriver(HORNRESP_DRIVER, c.frontAir);
+  const base: SimulationOptions = {
     power: 2.83, convention: "volts", fMin: 10, fMax: 1000, points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel,
-  });
+  };
+  const r = simulate(driver, c.input, base);
   const table = (name: string) => (existsSync(join(dir, name)) ? readTable(join(dir, name)).filter((x) => x.Freq! <= HORNRESP_BOX_F_MAX) : null);
   const full = table("hornresp.txt");
   const wizard = (k: string) => full ?? table(`hornresp-${k}.txt`);
@@ -408,5 +459,6 @@ export function runHornrespBox(id: string): HornrespBoxRun {
     stats.ventP95 = percentile(dbErr(vent), 0.95);
     pass.vent = stats.ventMean < tol.splMean && stats.ventP95 < tol.splP95;
   }
-  return { id, c, result: r, tol, spl, ze, xd, cone, vent, stats, pass };
+  const maxSpl = maxSplRuns(dir, HORNRESP_BOX_F_MAX, (o) => simulate(driver, c.input, { ...base, ...o }));
+  return { id, c, result: r, tol, spl, ze, xd, cone, vent, maxSpl, stats, pass };
 }

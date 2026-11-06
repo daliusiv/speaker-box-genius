@@ -20,13 +20,24 @@ import {
   HORNRESP_TITLES,
   HORNRESP_TOL,
   HORNRESP_VERSION,
+  MAXSPL_TOL,
   hornrespBoxIds,
   hornrespIds,
   runHornresp,
   runHornrespBox,
   type HornrespBoxRun,
   type HornrespRun,
+  type MaxSplRun,
 } from "./hornresp.ts";
+
+/** Hornresp's Maximum SPL against ours, where it was exported. */
+export interface MaxSplReport {
+  ampVolts?: number;
+  stats: MaxSplRun["stats"];
+  pass: boolean;
+  /** [frequency, Hornresp, ours] */
+  spl: [number, number, number][];
+}
 
 export const REPORT_FILE = join(import.meta.dirname, "..", "..", "..", "docs", "validation", "results.json");
 
@@ -92,6 +103,7 @@ export interface HornrespCaseReport {
   spl: [number, number, number][];
   ze: [number, number, number][];
   xd: [number, number, number][];
+  maxSpl?: MaxSplReport[];
 }
 
 export interface HornrespBoxCaseReport {
@@ -111,6 +123,7 @@ export interface HornrespBoxCaseReport {
   xd: [number, number, number][];
   cone?: [number, number, number][];
   vent?: [number, number, number][];
+  maxSpl?: MaxSplReport[];
 }
 
 export interface Report {
@@ -122,6 +135,7 @@ export interface Report {
     driver: string;
     fMax: number;
     tol: typeof HORNRESP_TOL;
+    maxSplTol: typeof MAXSPL_TOL;
     notes: string;
     cases: HornrespCaseReport[];
     boxes: { fMax: number; tol: typeof HORNRESP_BOX_TOL; notes: string; cases: HornrespBoxCaseReport[] };
@@ -174,14 +188,25 @@ function hornrespCase(id: string): HornrespCaseReport {
     id,
     title: t.title,
     setup: t.text,
-    pass: Object.values(run.pass).every((p) => p !== false),
+    pass: Object.values(run.pass).every((p) => p !== false) && run.maxSpl.every((m) => m.pass),
     stats: Object.fromEntries(Object.entries(s).map(([k, v]) => [k, r(v as number)!])) as HornrespRun["stats"],
     parts: run.pass,
     spl: thin(run.spl, 2),
     ze: thin(run.ze, 3),
     xd: thin(run.xd, 4),
+    ...(run.maxSpl.length ? { maxSpl: maxSplReports(run.maxSpl) } : {}),
   };
 }
+
+const maxSplReports = (runs: MaxSplRun[]): MaxSplReport[] | undefined =>
+  runs.length === 0
+    ? undefined
+    : runs.map((m) => ({
+        ...(m.ampVolts ? { ampVolts: m.ampVolts } : {}),
+        stats: Object.fromEntries(Object.entries(m.stats).map(([k, v]) => [k, r(v)!])) as MaxSplRun["stats"],
+        pass: m.pass,
+        spl: thinPairs(m.spl, 2),
+      }));
 
 const thinPairs = (xs: { f: number; ref: number; ours: number }[], digits: number) =>
   xs.filter((_, i) => i % 2 === 0 || i === xs.length - 1).map((p) => [r(p.f, 2)!, r(p.ref, digits)!, r(p.ours, digits)!] as [number, number, number]);
@@ -194,7 +219,7 @@ function hornrespBoxCase(id: string): HornrespBoxCaseReport {
     id,
     title: c.title,
     setup: c.text,
-    pass: Object.values(run.pass).every((p) => p !== false),
+    pass: Object.values(run.pass).every((p) => p !== false) && run.maxSpl.every((m) => m.pass),
     stats: Object.fromEntries(Object.entries(run.stats).map(([k, v]) => [k, r(v as number)!])) as HornrespBoxRun["stats"],
     parts: run.pass,
     tol: run.tol,
@@ -204,6 +229,7 @@ function hornrespBoxCase(id: string): HornrespBoxCaseReport {
     xd: thinPairs(run.xd, 4),
     ...(run.cone ? { cone: thinPairs(run.cone, 2) } : {}),
     ...(run.vent ? { vent: thinPairs(run.vent, 2) } : {}),
+    ...(run.maxSpl.length ? { maxSpl: maxSplReports(run.maxSpl) } : {}),
   };
 }
 
@@ -220,6 +246,7 @@ export function buildReport(): Report {
       driver: "Dayton Audio DSA215-8 (Le 1 mH) unless a case names another driver, at 2.83 V in half space, Hornresp's air (c 344 m/s, ρ 1.205 kg/m³), SPL from radiated power",
       fMax: HORNRESP_F_MAX,
       tol: HORNRESP_TOL,
+      maxSplTol: MAXSPL_TOL,
       notes: HORNRESP_NOTES,
       cases: hornrespIds().map(hornrespCase),
       boxes: { fMax: HORNRESP_BOX_F_MAX, tol: HORNRESP_BOX_TOL, notes: HORNRESP_BOX_NOTES, cases: hornrespBoxIds().map(hornrespBoxCase) },

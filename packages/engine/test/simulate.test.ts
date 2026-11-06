@@ -155,6 +155,40 @@ test("max power: at the xmax-limited power, excursion equals Xmax", () => {
   near(again.spl[0]!, r.maxSpl[0]!, 1e-9, "max SPL");
 });
 
+test("max SPL against real power: the driver takes exactly Pe there; never less than V²/Re allows", () => {
+  const drv = { ...DRIVER, pe_w: 100 };
+  const box = { kind: "sealed" as const, vb_l: 40 };
+  const o = { fMin: 20, fMax: 2000, points: 60, portVelocityLimit: Infinity, rg: 0.3 };
+  const nominal = simulate(drv, box, o);
+  const real = simulate(drv, box, { ...o, thermalLimit: "real" });
+  let checked = 0;
+  for (let i = 0; i < real.freq.length; i++) {
+    assert.ok(real.maxSpl[i]! >= nominal.maxSpl[i]! - 1e-9, `${real.freq[i]} Hz`);
+    if (real.limitedBy[i] === "thermal") {
+      // The amplifier's real power less what the source resistance takes: what the driver gets.
+      const a = real.ampAtMax.amps[i]!;
+      near(real.ampAtMax.watts[i]! - a * a * 0.3, 100, 1e-6, `real power at ${real.freq[i]} Hz`);
+      checked++;
+    }
+  }
+  assert.ok(checked > 10);
+});
+
+test("amplifier limits on max SPL: volts and amps at the amplifier's output", () => {
+  const box = { kind: "sealed" as const, vb_l: 40 };
+  const o = { fMin: 20, fMax: 2000, points: 60, portVelocityLimit: Infinity };
+  const r = simulate(DRIVER, box, { ...o, amp: { volts: 10, amps: 2 } });
+  let volts = 0, amps = 0;
+  for (let i = 0; i < r.freq.length; i++) {
+    assert.ok(r.ampAtMax.volts[i]! <= 10 + 1e-9 && r.ampAtMax.amps[i]! <= 2 + 1e-9, `${r.freq[i]} Hz`);
+    if (r.limitedBy[i] === "amp") {
+      if (Math.abs(r.ampAtMax.volts[i]! - 10) < 1e-9) volts++;
+      if (Math.abs(r.ampAtMax.amps[i]! - 2) < 1e-9) amps++;
+    }
+  }
+  assert.ok(volts > 0 && amps > 0, `voltage-limited at ${volts} points, current-limited at ${amps}`);
+});
+
 test("two drivers in twice the box at the same voltage: same shape, +6 dB", () => {
   const one = simulate(DRIVER, { kind: "sealed", vb_l: 40 }, { convention: "volts", power: 2.83 });
   const two = simulate(DRIVER, { kind: "sealed", vb_l: 80 }, { convention: "volts", power: 2.83, drivers: 2 });

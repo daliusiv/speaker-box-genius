@@ -2,7 +2,7 @@
 // validation/hornresp.ts, shared with the validation report (docs/validation/results.json).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { HORNRESP_TOL as T, hornrespBoxIds, hornrespIds, runHornresp, runHornrespBox } from "../validation/hornresp.ts";
+import { HORNRESP_TOL as T, MAXSPL_TOL as M, hornrespBoxIds, hornrespIds, runHornresp, runHornrespBox, type MaxSplRun } from "../validation/hornresp.ts";
 
 for (const id of hornrespIds()) {
   const run = runHornresp(id);
@@ -80,3 +80,17 @@ for (const id of hornrespBoxIds()) {
   db("the cone's output alone", s.coneMean, s.coneP95);
   db("the port's or passive radiator's output alone", s.ventMean, s.ventP95);
 }
+
+// Maximum SPL (Hornresp's Tools > Maximum SPL), where it was exported.
+function maxSplTests(id: string, runs: MaxSplRun[]) {
+  for (const m of runs) {
+    test(`Hornresp ${id}: maximum SPL${m.ampVolts ? ` with the amplifier at ${m.ampVolts} V` : ""}`, () => {
+      assert.ok(m.stats.splMean < M.splMean, `mean difference ${m.stats.splMean.toFixed(3)} dB`);
+      assert.ok(m.stats.splP95 < M.splP95, `95th percentile ${m.stats.splP95.toFixed(3)} dB`);
+      assert.ok(m.stats.einMean < M.einMean, `mean voltage difference ${m.stats.einMean.toFixed(2)} %`);
+      assert.ok(m.stats.pinMean < M.pinMean, `mean input power difference ${m.stats.pinMean.toFixed(2)} %`);
+    });
+  }
+}
+for (const id of hornrespIds()) maxSplTests(id, runHornresp(id).maxSpl);
+for (const id of hornrespBoxIds()) maxSplTests(`box ${id}`, runHornrespBox(id).maxSpl);
