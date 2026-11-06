@@ -1,0 +1,29 @@
+{
+  "brand": "Markaudio",
+  "model": "CHP-70 Gen 2",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 72.3,
+    "qms": 2.3,
+    "qes": 0.67,
+    "vas_l": 4.7,
+    "re": 7.2,
+    "sd_cm2": 50.2,
+    "qts": 0.52,
+    "le_mh": 0.0306,
+    "bl": 4.24,
+    "mms_g": 3.7,
+    "xmax_mm": 4.2,
+    "pe_w": 20
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/ch/chp-70-generation-2/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

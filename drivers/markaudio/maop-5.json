@@ -1,0 +1,27 @@
+{
+  "brand": "Markaudio",
+  "model": "MAOP 5",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "ts": {
+    "fs": 114.3982,
+    "qms": 1.7096,
+    "qes": 0.6916,
+    "vas_l": 1.5008,
+    "re": 3.4,
+    "sd_cm2": 28,
+    "qts": 0.4924,
+    "le_mh": 0.0681,
+    "bl": 2.2555,
+    "mms_g": 1.4396
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/5-cm/maop-5-2/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

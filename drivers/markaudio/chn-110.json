@@ -1,0 +1,29 @@
+{
+  "brand": "Markaudio",
+  "model": "CHN-110",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 44.1601,
+    "qms": 2.86,
+    "qes": 0.4884,
+    "vas_l": 24.7335,
+    "re": 6.8,
+    "sd_cm2": 109,
+    "qts": 0.4172,
+    "le_mh": 0.2771,
+    "bl": 5.8206,
+    "mms_g": 8.77,
+    "xmax_mm": 8,
+    "pe_w": 45
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/ch/chn-110-2/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

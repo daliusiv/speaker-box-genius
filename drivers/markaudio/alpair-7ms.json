@@ -1,0 +1,29 @@
+{
+  "brand": "Markaudio",
+  "model": "Alpair 7MS",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 74.724,
+    "qms": 2.35,
+    "qes": 0.744,
+    "vas_l": 4.968,
+    "re": 7.2,
+    "sd_cm2": 50.27,
+    "qts": 0.565,
+    "le_mh": 0.1247,
+    "bl": 3.859,
+    "mms_g": 3.277,
+    "xmax_mm": 4.5,
+    "pe_w": 15
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/alpair/alpair-7-ms/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

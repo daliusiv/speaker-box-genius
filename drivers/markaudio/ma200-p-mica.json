@@ -1,0 +1,29 @@
+{
+  "brand": "Markaudio",
+  "model": "MA200-P MICA",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 39.0189,
+    "qms": 2.2943,
+    "qes": 0.4458,
+    "vas_l": 66.5052,
+    "re": 6.2,
+    "sd_cm2": 206,
+    "qts": 0.3733,
+    "le_mh": 0.1648,
+    "bl": 7.0242,
+    "mms_g": 14.1089,
+    "xmax_mm": 7,
+    "pe_w": 50
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/20-cm/ma200-p-mica/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

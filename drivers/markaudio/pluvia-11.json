@@ -1,0 +1,29 @@
+{
+  "brand": "Markaudio",
+  "model": "Pluvia 11",
+  "type": "full-range",
+  "nominal_ohms": 6,
+  "ts": {
+    "fs": 39.118,
+    "qms": 1.797,
+    "qes": 0.351,
+    "vas_l": 24.751,
+    "re": 5.4,
+    "sd_cm2": 109.359,
+    "qts": 0.293,
+    "le_mh": 0.0686,
+    "bl": 6.556,
+    "mms_g": 11.358,
+    "xmax_mm": 7,
+    "pe_w": 45
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/pluvia/pluvia-11-soft-chrome-vintage-gold-single-driver/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

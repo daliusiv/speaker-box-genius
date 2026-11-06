@@ -1,0 +1,29 @@
+{
+  "brand": "Markaudio",
+  "model": "CHR-90",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 44.3,
+    "qms": 2.4647,
+    "qes": 0.4212,
+    "vas_l": 26.1403,
+    "re": 6.8,
+    "sd_cm2": 85,
+    "qts": 0.3598,
+    "le_mh": 0.2891,
+    "bl": 4.726,
+    "mms_g": 4.9661,
+    "xmax_mm": 7,
+    "pe_w": 40
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/ch/chr-90/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

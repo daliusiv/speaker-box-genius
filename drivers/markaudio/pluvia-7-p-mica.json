@@ -1,0 +1,29 @@
+{
+  "brand": "Markaudio",
+  "model": "Pluvia 7 P MICA",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "ts": {
+    "fs": 72.2524,
+    "qms": 3.3897,
+    "qes": 0.5483,
+    "vas_l": 4.4592,
+    "re": 3.3,
+    "sd_cm2": 50,
+    "qts": 0.472,
+    "le_mh": 0.0388,
+    "bl": 3.2386,
+    "mms_g": 3.839,
+    "xmax_mm": 4,
+    "pe_w": 20
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/pluvia/pluvia-7-p-mica/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

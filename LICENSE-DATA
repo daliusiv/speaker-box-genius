@@ -10,6 +10,8 @@ Attribution-NonCommercial-ShareAlike 4.0 International License
   gallery/
   docs/
 
+except the entries listed under "Exceptions" at the end of this file.
+
 You may copy, adapt and share this material for noncommercial purposes,
 as long as you give appropriate credit ("Speaker Box Genius contributors",
 with a link to https://github.com/daliusiv/speaker-box-genius) and
@@ -30,3 +32,17 @@ Third-party data: many entries in drivers/ come from driver-base
 (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0
 (https://creativecommons.org/licenses/by/4.0/), with changes. Those
 entries say so in their sources. See docs/data-sources.md.
+
+Exceptions: entries under their manufacturer's own terms
+---------------------------------------------------------
+Some manufacturers allow their published values to be used in Speaker
+Box Genius but not under a Creative Commons licence. Their entries are
+NOT covered by CC BY-NC-SA 4.0 and may not be copied or reused outside
+Speaker Box Genius without that manufacturer's permission:
+
+  drivers/markaudio/   Markaudio (permission 6 Nov 2026; see
+                       docs/data-permissions.md)
+
+Each such brand's _brand.json has a "licence" field, and each entry's
+source note says "Not covered by CC BY-NC-SA". Leave these entries out
+when you reuse the database.

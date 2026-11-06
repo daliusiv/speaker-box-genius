@@ -189,3 +189,9 @@ test("types: hyphenated and prefixed type names are recognised", () => {
   assert.deepEqual(kindOf("LF Midrange", "driver"), { kind: "lf_woofer", type: "midrange" });
   assert.equal(kindOf("HF Compression Driver", "driver").kind, "skip");
 });
+
+test("a brand can carry its own terms instead of CC BY-NC-SA", async () => {
+  const { validateBrand } = await import("../../schema/src/index.ts");
+  assert.deepEqual(validateBrand({ name: "Markaudio", licence: "Not covered by CC BY-NC-SA 4.0." }), []);
+  assert.ok(validateBrand({ name: "X", licence: 3 }).length > 0);
+});

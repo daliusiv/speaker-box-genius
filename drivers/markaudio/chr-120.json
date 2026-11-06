@@ -1,0 +1,30 @@
+{
+  "brand": "Markaudio",
+  "model": "CHR-120",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 34.2417,
+    "qms": 2.3823,
+    "qes": 0.4411,
+    "vas_l": 58.8923,
+    "re": 7.2,
+    "sd_cm2": 147,
+    "qts": 0.3722,
+    "le_mh": 0.1272,
+    "bl": 6.2522,
+    "mms_g": 11.131,
+    "xmax_mm": 9,
+    "pe_w": 50
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/ch/chr-120/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Nominal impedance 8 Ω estimated from Re 7.2 Ω (not on the page)."
+}

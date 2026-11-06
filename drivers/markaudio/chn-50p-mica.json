@@ -1,0 +1,29 @@
+{
+  "brand": "Markaudio",
+  "model": "CHN-50P MICA",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "ts": {
+    "fs": 126.2361,
+    "qms": 2.723,
+    "qes": 0.7084,
+    "vas_l": 1.2475,
+    "re": 3.3,
+    "sd_cm2": 28,
+    "qts": 0.5621,
+    "le_mh": 0.0599,
+    "bl": 2.2925,
+    "mms_g": 1.4224,
+    "xmax_mm": 3.5,
+    "pe_w": 7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/ch/chn-50p-mica/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

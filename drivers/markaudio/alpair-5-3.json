@@ -1,0 +1,28 @@
+{
+  "brand": "Markaudio",
+  "model": "Alpair 5.3",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "ts": {
+    "fs": 94.5428,
+    "qms": 2.301,
+    "qes": 0.6366,
+    "vas_l": 1.7845,
+    "re": 3.4,
+    "sd_cm2": 28,
+    "qts": 0.4986,
+    "le_mh": 0.0399,
+    "mms_g": 1.9328,
+    "xmax_mm": 3,
+    "pe_w": 5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/alpair/alpair-5-3/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,28 @@
+{
+  "brand": "Markaudio",
+  "model": "Alpair 5G",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "ts": {
+    "fs": 104.5246,
+    "qms": 2.7967,
+    "qes": 0.6805,
+    "vas_l": 1.168,
+    "re": 3.4,
+    "sd_cm2": 28,
+    "qts": 0.5473,
+    "le_mh": 0.0452,
+    "mms_g": 2.2159,
+    "xmax_mm": 3,
+    "pe_w": 7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/alpair/alpair-5g/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

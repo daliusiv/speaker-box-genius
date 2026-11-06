@@ -1,0 +1,30 @@
+{
+  "brand": "Markaudio",
+  "model": "CHR-70",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 65.4,
+    "qms": 2.66,
+    "qes": 0.69,
+    "vas_l": 5.17,
+    "re": 7.2,
+    "sd_cm2": 50.2,
+    "qts": 0.55,
+    "le_mh": 0.0324,
+    "bl": 4.2,
+    "mms_g": 4.1,
+    "xmax_mm": 4.3,
+    "pe_w": 20
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.markaudio.com/online_shop/ch/chr-70/",
+      "retrieved": "2026-11-06",
+      "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Nominal impedance 8 Ω estimated from Re 7.2 Ω (not on the page)."
+}
