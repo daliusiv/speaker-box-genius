@@ -216,6 +216,13 @@ test("semi-inductance coil: written into Hornresp's semi-inductance fields and r
   const back = fromHornresp(out.text, base);
   assert.ok(typeof back !== "string");
   assert.deepEqual(back.driver?.semi, semi);
+  // Its own Re' (Hornresp's), when it differs from Re, goes out and comes back.
+  const own = toHornresp(base, { ...driver, semi: { ...semi, re_ohm: 6.5 } }, { eg: 2.83, drivers: 1, name: "x" });
+  assert.ok(typeof own !== "string");
+  assert.match(own.text, /Re' = 6\.50/);
+  const ownBack = fromHornresp(own.text, base);
+  assert.ok(typeof ownBack !== "string");
+  assert.equal(ownBack.driver?.semi?.re_ohm, 6.5);
   // Without it, the fields stay zero and nothing is read back.
   const plain = toHornresp(base, driver, { eg: 2.83, drivers: 1, name: "x" });
   assert.ok(typeof plain !== "string");

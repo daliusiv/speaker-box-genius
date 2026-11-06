@@ -1,0 +1,21 @@
+{
+  "title": "Sealed box, semi-inductance with its own Re'",
+  "text": "As B8a with Re' 6.5 Ω against the driver's Re 5.9 Ω: Hornresp takes Re' as the coil's resistance and keeps Bl",
+  "frontAir": 1,
+  "semi": {
+    "leb_mh": 0.3,
+    "le_mh": 1.0,
+    "ke": 0.05,
+    "rss_ohm": 30,
+    "re_ohm": 6.5
+  },
+  "input": {
+    "kind": "sealed",
+    "vb_l": 10.4,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  },
+  "zeFMax": 20000,
+  "splDeltaFrom": "b1-sealed"
+}

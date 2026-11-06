@@ -1003,6 +1003,14 @@ export function App(props: { initial: AppState | null }) {
                 {state.semi ? (
                   <>
                     <Num
+                      label="Re′"
+                      unit="Ω"
+                      value={state.semi.re_ohm ?? 0}
+                      min={0}
+                      title="Semi-inductance model: the coil's resistance in this model (Hornresp's Re′), when fitted apart from Re. 0 = Re. Bl stays as the T/S give it."
+                      onChange={(v) => set("semi", { ...state.semi!, re_ohm: Math.max(0, v) })}
+                    />
+                    <Num
                       label="Leb"
                       unit="mH"
                       value={state.semi.leb_mh}

@@ -330,7 +330,15 @@ export function driverInputOf(s: AppState, solved: SolveResult): DriverInput {
     ...(s.settings.inductance && s.l2_mh > 0 && s.r2_ohm > 0 ? { l2_mh: s.l2_mh * k.re, r2_ohm: s.r2_ohm * k.re } : {}),
     // The semi-inductance model's parts are coil impedances too.
     ...(s.settings.inductance && semiActive(s.semi)
-      ? { semi: { leb_mh: s.semi.leb_mh * k.re, le_mh: s.semi.le_mh * k.re, ke: s.semi.ke * k.re, rss_ohm: s.semi.rss_ohm * k.re } }
+      ? {
+          semi: {
+            leb_mh: s.semi.leb_mh * k.re,
+            le_mh: s.semi.le_mh * k.re,
+            ke: s.semi.ke * k.re,
+            rss_ohm: s.semi.rss_ohm * k.re,
+            ...(s.semi.re_ohm && s.semi.re_ohm > 0 ? { re_ohm: s.semi.re_ohm * k.re } : {}),
+          },
+        }
       : {}),
     xmax_mm: s.xmax_mm,
     pe_w: s.pe_w,
