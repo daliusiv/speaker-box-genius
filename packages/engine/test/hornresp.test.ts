@@ -1,4 +1,4 @@
-// Regression against Hornresp 55.30: the cases, the driver and the tolerances are in
+// Regression against Hornresp: the cases, the drivers and the tolerances are in
 // validation/hornresp.ts, shared with the validation report (docs/validation/results.json).
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -11,6 +11,7 @@ for (const id of hornrespIds()) {
   test(`Hornresp ${id}: electrical impedance`, () => {
     assert.ok(s.zeMean < T.zeMean, `mean |Ze| error ${s.zeMean.toFixed(2)} %`);
     assert.ok(s.zeWorst < T.zeWorst, `worst |Ze| error ${s.zeWorst.toFixed(1)} %`);
+    assert.ok(s.zePhaseMean < T.zePhaseMean, `mean Ze phase error ${s.zePhaseMean.toFixed(2)}°`);
   });
 
   test(`Hornresp ${id}: SPL`, () => {
@@ -18,6 +19,15 @@ for (const id of hornrespIds()) {
     // hundredths of a hertz move the bottom of a 40 dB null by many dB.
     assert.ok(s.splMean < T.splMean, `mean SPL difference ${s.splMean.toFixed(2)} dB`);
     assert.ok(s.splP95 < T.splP95, `95th percentile ${s.splP95.toFixed(2)} dB`);
+  });
+
+  test(`Hornresp ${id}: cone excursion`, () => {
+    assert.ok(s.xdMean < T.xdMean, `mean excursion difference ${s.xdMean.toFixed(2)} %`);
+    assert.ok(s.xdP95 < T.xdP95, `95th percentile ${s.xdP95.toFixed(2)} %`);
+  });
+
+  test(`Hornresp ${id}: group delay`, () => {
+    assert.ok(s.gdP95 < T.gdP95, `95th percentile ${s.gdP95.toFixed(2)} ms`);
   });
 
   if (s.zaMean !== undefined) {

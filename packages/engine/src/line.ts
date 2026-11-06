@@ -195,6 +195,18 @@ function areaAt(seg: LineSegment, t: number): number {
   }
 }
 
+/** The line's area (cm²) at x (m) from the closed end: the exact taper, not a slice's average. */
+function areaAtX(line: LineInput, x: number): number {
+  let pos = 0;
+  for (const seg of line.segments) {
+    const L = seg.length_cm / 100;
+    if (!(L > 0)) continue;
+    if (x <= pos + L + 1e-9) return areaAt(seg, Math.min(1, Math.max(0, (x - pos) / L)));
+    pos += L;
+  }
+  return line.segments.at(-1)?.endArea_cm2 ?? 0;
+}
+
 /**
  * Slices from the closed end to the mouth, with the given points (m) falling on slice
  * boundaries; returns the slice index at each point.
@@ -234,8 +246,10 @@ export interface LineNetwork {
   zLoad(w: number): Complex;
   /**
    * The line's own acoustic impedance as Hornresp's Za chart shows it: at the driver for lines
-   * and tapped horns (the same as zLoad), at the horn's throat (without the chambers) for a
-   * front-loaded horn. Divide by `zaRef` for the normalised value.
+   * with the driver at the closed end and tapped horns (the same as zLoad); for an offset
+   * driver, the line ahead of it only (Hornresp's "Offset Throat S2", without the closed stub
+   * behind); at the horn's throat (without the chambers) for a front-loaded horn. Divide by
+   * `zaRef` for the normalised value.
    */
   za(w: number): Complex;
   /** ρc / area where Za is taken (at the driver, or the horn's throat), Pa·s/m³. */
@@ -382,11 +396,13 @@ export function lineNetwork(line: LineInput, air: Air = STANDARD_AIR): LineNetwo
       return div(mul(zA, zB), add(zA, zB));
     },
     za(w) {
-      if (!flh) return this.zLoad(w);
+      if (!flh && (tapped || behind.length === 0)) return this.zLoad(w);
       chains(w);
       return zAheadIn();
     },
-    zaRef: (air.rho * air.c) / (slices[iR]?.area ?? mouthArea),
+    // Normalised by the area where Za is taken, as Hornresp does (exactly, not a slice's average:
+    // a horn's first slice is already a few per cent wider than its throat).
+    zaRef: (air.rho * air.c) / (areaAtX(line, xr) / 1e4),
     profile(w) {
       chains(w);
       const pts: ProfilePoint[] = [];

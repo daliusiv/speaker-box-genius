@@ -114,6 +114,10 @@ function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"]): st
     row("SPL, worst point", `${s.splWorst.toFixed(2)} dB`, "not held (deep nulls)", true),
     row("Impedance, mean difference", `${s.zeMean.toFixed(2)} %`, `under ${tol.zeMean} %`, s.zeMean < tol.zeMean),
     row("Impedance, worst point", `${s.zeWorst.toFixed(2)} %`, `under ${tol.zeWorst} %`, s.zeWorst < tol.zeWorst),
+    row("Impedance phase, mean difference", `${s.zePhaseMean.toFixed(2)}°`, `under ${tol.zePhaseMean}°`, s.zePhaseMean < tol.zePhaseMean),
+    row("Cone excursion, mean difference", `${s.xdMean.toFixed(2)} %`, `under ${tol.xdMean} %`, s.xdMean < tol.xdMean),
+    row("Cone excursion, 95th percentile", `${s.xdP95.toFixed(2)} %`, `under ${tol.xdP95} %`, s.xdP95 < tol.xdP95),
+    row("Group delay, 95th percentile", `${s.gdP95.toFixed(2)} ms`, `under ${tol.gdP95} ms (away from deep nulls)`, s.gdP95 < tol.gdP95),
     ...(s.zaMean !== undefined ? [row("Line load (Za), mean difference", `${s.zaMean.toFixed(3)} dB`, `under ${tol.zaMean} dB`, s.zaMean < tol.zaMean)] : []),
   ].join("");
   const fig = (label: string, unit: string, pts: [number, number, number][]) =>
@@ -130,7 +134,7 @@ function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"]): st
 <h3>${esc(k.title)} ${ok(k.pass)}</h3>
 <p class="setup">${esc(k.setup)} · <a href="${REPO}/tree/main/packages/engine/test/fixtures/hornresp/${k.id}">${esc(k.id)}</a></p>
 <div class="table"><table class="cmp"><thead><tr><th>Measure (10 Hz–1 kHz)</th><th>Result</th><th>Tolerance</th></tr></thead><tbody>${rows}</tbody></table></div>
-<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Impedance", "Ω", k.ze)}</div>
+<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}</div>
 </section>`;
 }
 
@@ -177,7 +181,7 @@ export function validationContent(rep: Report, info: BuildInfo): string {
   const hornrespSummary = h
     .map(
       (k) =>
-        `<tr><td><a href="#hornresp-${k.id}">${esc(k.title)}</a></td><td>${k.stats.splMean.toFixed(2)} / ${k.stats.splP95.toFixed(2)} dB</td><td>${k.stats.zeMean.toFixed(2)} / ${k.stats.zeWorst.toFixed(2)} %</td><td>${ok(k.pass)}</td></tr>`,
+        `<tr><td><a href="#hornresp-${k.id}">${esc(k.title)}</a></td><td>${k.stats.splMean.toFixed(2)} / ${k.stats.splP95.toFixed(2)} dB</td><td>${k.stats.zeMean.toFixed(2)} / ${k.stats.zeWorst.toFixed(2)} %</td><td>${k.stats.xdMean.toFixed(2)} %</td><td>${ok(k.pass)}</td></tr>`,
     )
     .join("");
 
@@ -189,7 +193,7 @@ export function validationContent(rep: Report, info: BuildInfo): string {
 <h3>WinISD ${esc(rep.winisd.version.replace(/^WinISD /, ""))}</h3>
 <div class="table"><table><thead><tr><th>Case</th><th>Values</th><th>Largest difference</th><th>OK</th></tr></thead><tbody>${winisdSummary}</tbody></table></div>
 <h3>Hornresp ${esc(rep.hornresp.version.replace(/^Hornresp /, ""))}</h3>
-<div class="table"><table><thead><tr><th>Case</th><th>SPL, mean / 95 %</th><th>Impedance, mean / worst</th><th>OK</th></tr></thead><tbody>${hornrespSummary}</tbody></table></div>
+<div class="table"><table><thead><tr><th>Case</th><th>SPL, mean / 95 %</th><th>Impedance, mean / worst</th><th>Excursion, mean</th><th>OK</th></tr></thead><tbody>${hornrespSummary}</tbody></table></div>
 
 <h2 id="known-differences">Known differences</h2>
 <ul>
@@ -205,7 +209,7 @@ export function validationContent(rep: Report, info: BuildInfo): string {
 ${w.map((k) => winisdCase(k, q)).join("\n")}
 
 <h2 id="hornresp">Hornresp</h2>
-<p>Each case is a Hornresp record with Hornresp's own SPL and impedance exports, compared at every exported frequency from 10 Hz to ${rep.hornresp.fMax >= 1000 ? `${rep.hornresp.fMax / 1000} kHz` : `${rep.hornresp.fMax} Hz`}. ${esc(rep.hornresp.driver)}. The records are in <a href="${REPO}/tree/main/docs/hornresp-validation/records">docs/hornresp-validation</a>; open them in Hornresp to repeat any case.</p>
+<p>Each case is a Hornresp record with Hornresp's own results (SPL, impedance and its phase, cone excursion, group delay and the line's acoustic impedance), compared at every exported frequency from 10 Hz to ${rep.hornresp.fMax >= 1000 ? `${rep.hornresp.fMax / 1000} kHz` : `${rep.hornresp.fMax} Hz`}. ${esc(rep.hornresp.driver)}. The records are in <a href="${REPO}/tree/main/docs/hornresp-validation/records">docs/hornresp-validation</a>; open them in Hornresp to repeat any case.</p>
 <p class="key"><span class="k-ref">Hornresp</span><span>Speaker Box Genius</span></p>
 ${h.map((k) => hornrespCase(k, rep.hornresp.tol)).join("\n")}
 <div class="known"><h4>Notes</h4>${notes(rep.hornresp.notes)}</div>

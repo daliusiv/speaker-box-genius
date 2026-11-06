@@ -11,7 +11,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { simulate } from "../src/simulate.ts";
 import { WINISD_CASES, WINISD_VERSION, QUANTITY, runCase, type Quantity, type Setup } from "./winisd.ts";
-import { HORNRESP_F_MAX, HORNRESP_NOTES, HORNRESP_TITLES, HORNRESP_TOL, HORNRESP_VERSION, hornrespIds, runHornresp } from "./hornresp.ts";
+import { HORNRESP_F_MAX, HORNRESP_NOTES, HORNRESP_TITLES, HORNRESP_TOL, HORNRESP_VERSION, hornrespIds, runHornresp, type HornrespRun } from "./hornresp.ts";
 
 export const REPORT_FILE = join(import.meta.dirname, "..", "..", "..", "docs", "validation", "results.json");
 
@@ -70,12 +70,13 @@ export interface HornrespCaseReport {
   title: string;
   setup: string;
   pass: boolean;
-  stats: { splMean: number; splP95: number; splWorst: number; zeMean: number; zeWorst: number; zaMean?: number };
+  stats: HornrespRun["stats"];
   /** Which parts are within tolerance. */
-  parts: { spl: boolean; ze: boolean; za?: boolean };
+  parts: HornrespRun["pass"];
   /** [frequency, Hornresp, ours] */
   spl: [number, number, number][];
   ze: [number, number, number][];
+  xd: [number, number, number][];
 }
 
 export interface Report {
@@ -131,18 +132,12 @@ function hornrespCase(id: string): HornrespCaseReport {
     id,
     title: t.title,
     setup: t.text,
-    pass: run.pass.spl && run.pass.ze && run.pass.za !== false,
-    stats: {
-      splMean: r(s.splMean)!,
-      splP95: r(s.splP95)!,
-      splWorst: r(s.splWorst)!,
-      zeMean: r(s.zeMean)!,
-      zeWorst: r(s.zeWorst)!,
-      ...(s.zaMean !== undefined ? { zaMean: r(s.zaMean)! } : {}),
-    },
+    pass: Object.values(run.pass).every((p) => p !== false),
+    stats: Object.fromEntries(Object.entries(s).map(([k, v]) => [k, r(v as number)!])) as HornrespRun["stats"],
     parts: run.pass,
     spl: thin(run.spl, 2),
     ze: thin(run.ze, 3),
+    xd: thin(run.xd, 4),
   };
 }
 
@@ -156,7 +151,7 @@ export function buildReport(): Report {
     },
     hornresp: {
       version: HORNRESP_VERSION,
-      driver: "Dayton Audio DSA215-8 (Le 1 mH) at 2.83 V in half space, Hornresp's air (c 344 m/s, ρ 1.205 kg/m³), SPL from radiated power",
+      driver: "Dayton Audio DSA215-8 (Le 1 mH) unless a case names another driver, at 2.83 V in half space, Hornresp's air (c 344 m/s, ρ 1.205 kg/m³), SPL from radiated power",
       fMax: HORNRESP_F_MAX,
       tol: HORNRESP_TOL,
       notes: HORNRESP_NOTES,
