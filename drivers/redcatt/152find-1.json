@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "152FIND-1",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 37,
+    "qms": 10.2,
+    "qes": 0.46,
+    "vas_l": 119,
+    "re": 4.6,
+    "sd_cm2": 804,
+    "qts": 0.44,
+    "le_mh": 0.55,
+    "bl": 18.4,
+    "mms_g": 140,
+    "xmax_mm": 4.5,
+    "pe_w": 800
+  },
+  "physical": {
+    "cutout_mm": 360,
+    "depth_mm": 143
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-15-007-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

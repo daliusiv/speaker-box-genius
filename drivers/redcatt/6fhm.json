@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "6FHM",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6,
+  "ts": {
+    "fs": 36,
+    "qms": 12.7,
+    "qes": 0.29,
+    "vas_l": 26.1,
+    "re": 6.9,
+    "sd_cm2": 132.7,
+    "qts": 0.29,
+    "le_mh": 0.26,
+    "bl": 9.89,
+    "mms_g": 18.1,
+    "xmax_mm": 4.25,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 151,
+    "depth_mm": 81.7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-6-007-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

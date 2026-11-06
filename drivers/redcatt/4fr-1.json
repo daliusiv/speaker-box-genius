@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "4FR-1",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 79,
+    "qms": 3.47,
+    "qes": 0.61,
+    "vas_l": 1.8,
+    "re": 3.5,
+    "sd_cm2": 50.3,
+    "qts": 0.52,
+    "le_mh": 0.09,
+    "bl": 4.8,
+    "mms_g": 7.9,
+    "xmax_mm": 2.8,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 93.6,
+    "depth_mm": 56
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-4-013-4r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

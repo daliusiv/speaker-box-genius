@@ -1,0 +1,35 @@
+{
+  "brand": "REDCATT",
+  "model": "CX12F140F",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 56.1,
+    "qms": 6.53,
+    "qes": 0.54,
+    "vas_l": 63.9,
+    "re": 5.47,
+    "sd_cm2": 530.93,
+    "qts": 0.5,
+    "le_mh": 0.7,
+    "bl": 13.4,
+    "mms_g": 50.3,
+    "xmax_mm": 3.9,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 281,
+    "depth_mm": 142.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-12-045-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community",
+  "notes": "Fs 56.1 Hz calculated from the published Mms and Cms (not listed by the maker). Re 5.47 Ω calculated from the published Qes, Bl and Mms (not listed by the maker). Coaxial driver; values are for the woofer section."
+}

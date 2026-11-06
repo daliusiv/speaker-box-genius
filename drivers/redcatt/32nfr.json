@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "32NFR",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 3,
+  "ts": {
+    "fs": 118,
+    "qms": 3.85,
+    "qes": 0.35,
+    "vas_l": 1.14,
+    "re": 5.5,
+    "sd_cm2": 33.18,
+    "qts": 0.32,
+    "le_mh": 0.2,
+    "bl": 5.35,
+    "mms_g": 2.4,
+    "xmax_mm": 1.2,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 70.5,
+    "depth_mm": 45
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-3-001-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

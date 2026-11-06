@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "15NPM",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 48,
+    "qms": 16.5,
+    "qes": 0.47,
+    "vas_l": 89.9,
+    "re": 4.7,
+    "sd_cm2": 855.3,
+    "qts": 0.46,
+    "le_mh": 0.68,
+    "bl": 19.3,
+    "mms_g": 123,
+    "xmax_mm": 5.25,
+    "pe_w": 800
+  },
+  "physical": {
+    "cutout_mm": 360,
+    "depth_mm": 149.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-15-025-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

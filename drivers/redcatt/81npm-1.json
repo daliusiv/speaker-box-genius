@@ -1,0 +1,35 @@
+{
+  "brand": "REDCATT",
+  "model": "81NPM-1",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 72,
+    "qms": 7.97,
+    "qes": 0.34,
+    "vas_l": 8.2,
+    "re": 5.2,
+    "sd_cm2": 219,
+    "qts": 0.33,
+    "le_mh": 0.5,
+    "bl": 16.7,
+    "mms_g": 40.5,
+    "xmax_mm": 6,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 186.88,
+    "depth_mm": 101.3
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-8-009-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 10.3 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 8.2 L from Cms."
+}

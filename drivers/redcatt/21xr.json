@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "21XR",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 21,
+  "ts": {
+    "fs": 32.3,
+    "qms": 16.79,
+    "qes": 0.51,
+    "vas_l": 194.45,
+    "re": 4.5,
+    "sd_cm2": 1662,
+    "qts": 0.5,
+    "le_mh": 0.65,
+    "bl": 29.37,
+    "mms_g": 488.58,
+    "xmax_mm": 22.83,
+    "pe_w": 1800
+  },
+  "physical": {
+    "cutout_mm": 503,
+    "depth_mm": 287
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-21-003-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "5FHW",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 5,
+  "ts": {
+    "fs": 50,
+    "qms": 4.94,
+    "qes": 0.38,
+    "vas_l": 6.55,
+    "re": 3.2,
+    "sd_cm2": 86.6,
+    "qts": 0.35,
+    "le_mh": 0.66,
+    "bl": 6.55,
+    "mms_g": 15.8,
+    "xmax_mm": 3.2,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 112,
+    "depth_mm": 60
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-5-005-4r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

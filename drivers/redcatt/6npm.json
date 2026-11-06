@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "6NPM",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 150,
+    "qms": 4.58,
+    "qes": 0.38,
+    "vas_l": 2.9,
+    "re": 6.9,
+    "sd_cm2": 143.1,
+    "qts": 0.35,
+    "le_mh": 0.16,
+    "bl": 13.7,
+    "mms_g": 11.1,
+    "xmax_mm": 0.4,
+    "pe_w": 180
+  },
+  "physical": {
+    "cutout_mm": 145,
+    "depth_mm": 52.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-65-006-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

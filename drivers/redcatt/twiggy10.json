@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "Twiggy10",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 40.7,
+    "qms": 16.61,
+    "qes": 0.33,
+    "vas_l": 14.57,
+    "re": 3.5,
+    "sd_cm2": 305.42,
+    "qts": 0.33,
+    "le_mh": 0.9,
+    "bl": 19.24,
+    "mms_g": 138.3,
+    "xmax_mm": 10.06,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 224,
+    "depth_mm": 80
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-10-025-4r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

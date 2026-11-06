@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "Twiggy35",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 3.5,
+  "ts": {
+    "fs": 145,
+    "qms": 4.38,
+    "qes": 1.75,
+    "vas_l": 0.6,
+    "re": 7.3,
+    "sd_cm2": 36.32,
+    "qts": 1.25,
+    "le_mh": 0.19,
+    "bl": 3.7,
+    "mms_g": 3.7,
+    "xmax_mm": 0.25,
+    "pe_w": 10
+  },
+  "physical": {
+    "cutout_mm": 77,
+    "depth_mm": 10.15
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-4-007-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

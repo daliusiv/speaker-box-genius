@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "8FHM",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 38,
+    "qms": 12.9,
+    "qes": 0.41,
+    "vas_l": 32.1,
+    "re": 3.6,
+    "sd_cm2": 206.1,
+    "qts": 0.39,
+    "le_mh": 0.46,
+    "bl": 8.19,
+    "mms_g": 31.5,
+    "xmax_mm": 5,
+    "pe_w": 50
+  },
+  "physical": {
+    "cutout_mm": 189,
+    "depth_mm": 94.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-8-017-4r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}
