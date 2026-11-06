@@ -1,0 +1,30 @@
+{
+  "title": "4th-order bandpass",
+  "text": "12 L sealed rear, 15 L front with a 7 cm × 15 cm port; Hornresp's QL 7 in the front chamber",
+  "frontAir": 0,
+  "input": {
+    "kind": "bandpass",
+    "qicl": null,
+    "rear": {
+      "vb_l": 12,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 15,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 7,
+        "length_cm": 15
+      },
+      "ql": 7,
+      "qa": null,
+      "qp": null
+    }
+  },
+  "portModel": "pipe",
+  "tol": {
+    "splMean": 0.3,
+    "splP95": 1.1
+  }
+}

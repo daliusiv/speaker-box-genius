@@ -1201,6 +1201,7 @@ export function App(props: { initial: AppState | null }) {
                     l2_mh: 0,
                     r2_ohm: 0,
                     ...(x.xmax_mm !== undefined ? { xmax_mm: x.xmax_mm } : {}),
+                    ...(x.drivers ? { drivers: x.drivers.count, wiring: x.drivers.wiring } : {}),
                     dvc: { ...s.dvc, on: false },
                   }))
                 }
@@ -1402,12 +1403,12 @@ export function App(props: { initial: AppState | null }) {
 
               <h3 className="set-head">Ports</h3>
               <div className="fields">
-                <Select<"lumped" | "pipe"> help="Air mass (like WinISD) treats a port as a slug of air. Pipe also shows the port's own pipe resonances higher up (vented boxes)."
+                <Select<"lumped" | "pipe"> help="Air mass (like WinISD) treats a port as a slug of air. Pipe (like Hornresp) also shows the port's own pipe resonances higher up (vented and bandpass boxes)."
                   label="Ports"
                   value={state.settings.portModel}
                   options={[
                     { value: "lumped", text: "Air mass (like WinISD)" },
-                    { value: "pipe", text: "Pipe, with its resonances" },
+                    { value: "pipe", text: "Pipe, like Hornresp" },
                   ]}
                   onChange={(portModel) => set("settings", { ...state.settings, portModel })}
                 />

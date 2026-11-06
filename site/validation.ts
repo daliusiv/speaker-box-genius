@@ -4,7 +4,7 @@
  * hand: adding a case to packages/engine/validation adds it to the page.
  */
 import { readFileSync } from "node:fs";
-import type { Report, WinIsdCaseReport, HornrespCaseReport, Curve } from "../packages/engine/validation/report.ts";
+import type { Report, WinIsdCaseReport, HornrespCaseReport, HornrespBoxCaseReport, Curve } from "../packages/engine/validation/report.ts";
 import { REPORT_FILE } from "../packages/engine/validation/report.ts";
 import { chart } from "./chart.ts";
 
@@ -142,6 +142,47 @@ function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"]): st
 </section>`;
 }
 
+function hornrespBoxCase(k: HornrespBoxCaseReport): string {
+  const s = k.stats;
+  const t = k.tol;
+  const row = (what: string, val: string, lim: string, pass: boolean) => `<tr${pass ? "" : ' class="fail"'}><td>${what}</td><td class="n">${val}</td><td>${lim}</td></tr>`;
+  const db = (what: string, m?: number, p?: number) =>
+    m === undefined
+      ? []
+      : [
+          row(`${what}, mean difference`, `${m.toFixed(3)} dB`, `under ${t.splMean} dB`, m < t.splMean),
+          row(`${what}, 95th percentile`, `${p!.toFixed(3)} dB`, `under ${t.splP95} dB`, p! < t.splP95),
+        ];
+  const rows = [
+    ...db("SPL", s.splMean, s.splP95),
+    ...db("Cone's output alone", s.coneMean, s.coneP95),
+    ...db("Port's or radiator's output alone", s.ventMean, s.ventP95),
+    row("Impedance, mean difference", `${s.zeMean.toFixed(2)} %`, `under ${t.zeMean} %`, s.zeMean < t.zeMean),
+    row("Impedance, 95th percentile", `${s.zeP95.toFixed(2)} %`, `under ${t.zeP95} %`, s.zeP95 < t.zeP95),
+    row("Impedance phase, mean difference", `${s.zePhaseMean.toFixed(2)}°`, `under ${t.zePhaseMean}°`, s.zePhaseMean < t.zePhaseMean),
+    row("Cone excursion, mean difference", `${s.xdMean.toFixed(2)} %`, `under ${t.xdMean} %`, s.xdMean < t.xdMean),
+    row("Cone excursion, 95th percentile", `${s.xdP95.toFixed(2)} %`, `under ${t.xdP95} %`, s.xdP95 < t.xdP95),
+  ].join("");
+  const fig = (label: string, unit: string, pts?: [number, number, number][]) =>
+    pts && pts.length
+      ? `<figure>${chart({
+          label,
+          unit,
+          aria: `${label}: Hornresp as a wide grey line, Speaker Box Genius as a thin orange line on top`,
+          series: [
+            { points: pts.map((p) => [p[0], p[1]]), style: "ref" },
+            { points: pts.map((p) => [p[0], p[2]]), style: "line" },
+          ],
+        })}<figcaption>${label}</figcaption></figure>`
+      : "";
+  return `<section class="case" id="hornresp-${k.id}">
+<h3>${esc(k.title)} ${ok(k.pass)}</h3>
+<p class="setup">${esc(k.setup)}${k.options ? ` · ${esc(k.options)}` : ""} · <a href="${REPO}/tree/main/packages/engine/test/fixtures/hornresp-boxes/${k.id}">${esc(k.id)}</a></p>
+<div class="table"><table class="cmp"><thead><tr><th>Measure (10–300 Hz)</th><th>Result</th><th>Tolerance</th></tr></thead><tbody>${rows}</tbody></table></div>
+<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Cone's output alone", "dB", k.cone)}${fig("Port's or radiator's output alone", "dB", k.vent)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}</div>
+</section>`;
+}
+
 // ---------------------------------------------------------------------------
 // The page
 // ---------------------------------------------------------------------------
@@ -174,8 +215,9 @@ export function validationContent(rep: Report, info: BuildInfo): string {
   const q = rep.quantities;
   const w = rep.winisd.cases;
   const h = rep.hornresp.cases;
+  const b = rep.hornresp.boxes.cases;
   const checks = w.reduce((n, c) => n + c.checks.length, 0);
-  const failing = w.filter((c) => !c.pass).length + h.filter((c) => !c.pass).length;
+  const failing = w.filter((c) => !c.pass).length + h.filter((c) => !c.pass).length + b.filter((c) => !c.pass).length;
   const date = info.date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
   const commit = info.commit ? ` from commit <a href="${REPO}/commit/${info.commit}"><code>${info.commit.slice(0, 7)}</code></a>` : "";
 
@@ -188,16 +230,24 @@ export function validationContent(rep: Report, info: BuildInfo): string {
         `<tr><td><a href="#hornresp-${k.id}">${esc(k.title)}</a></td><td>${k.stats.splMean.toFixed(2)} / ${k.stats.splP95.toFixed(2)} dB</td><td>${k.stats.zeMean.toFixed(2)} / ${k.stats.zeWorst.toFixed(2)} %</td><td>${k.stats.xdMean.toFixed(2)} %</td><td>${ok(k.pass)}</td></tr>`,
     )
     .join("");
+  const boxSummary = b
+    .map((k) => {
+      const spl = k.stats.splMean !== undefined ? k.stats.splMean : (k.stats.coneMean ?? k.stats.ventMean)!;
+      const p95 = k.stats.splP95 !== undefined ? k.stats.splP95 : Math.max(k.stats.coneP95 ?? 0, k.stats.ventP95 ?? 0);
+      return `<tr><td><a href="#hornresp-${k.id}">${esc(k.title)}</a></td><td>${spl.toFixed(2)} / ${p95.toFixed(2)} dB</td><td>${k.stats.zeMean.toFixed(2)} / ${k.stats.zeP95.toFixed(2)} %</td><td>${k.stats.xdMean.toFixed(2)} %</td><td>${ok(k.pass)}</td></tr>`;
+    })
+    .join("");
 
   return `<h1>Validation</h1>
 <p class="lede">Speaker Box Genius is checked against WinISD and Hornresp, the two free simulators most DIY builders know. Every comparison on this page is an automated test that runs on every change to the code, and the page is rebuilt from those results.</p>
-<p class="status"><strong>${w.length} WinISD cases (${checks} values) and ${h.length} Hornresp cases, ${failing ? `${failing} outside tolerance` : "all within tolerance"}.</strong> Built${commit} on ${date}.</p>
+<p class="status"><strong>${w.length} WinISD cases (${checks} values) and ${h.length + b.length} Hornresp cases, ${failing ? `${failing} outside tolerance` : "all within tolerance"}.</strong> Built${commit} on ${date}.</p>
 
 <h2 id="summary">Summary</h2>
 <h3>WinISD ${esc(rep.winisd.version.replace(/^WinISD /, ""))}</h3>
 <div class="table"><table><thead><tr><th>Case</th><th>Values</th><th>Largest difference</th><th>OK</th></tr></thead><tbody>${winisdSummary}</tbody></table></div>
 <h3>Hornresp ${esc(rep.hornresp.version.replace(/^Hornresp /, ""))}</h3>
-<div class="table"><table><thead><tr><th>Case</th><th>SPL, mean / 95 %</th><th>Impedance, mean / worst</th><th>Excursion, mean</th><th>OK</th></tr></thead><tbody>${hornrespSummary}</tbody></table></div>
+<div class="table"><table><thead><tr><th>Line or horn</th><th>SPL, mean / 95 %</th><th>Impedance, mean / worst</th><th>Excursion, mean</th><th>OK</th></tr></thead><tbody>${hornrespSummary}</tbody></table></div>
+<div class="table"><table><thead><tr><th>Box</th><th>SPL, mean / 95 %</th><th>Impedance, mean / 95 %</th><th>Excursion, mean</th><th>OK</th></tr></thead><tbody>${boxSummary}</tbody></table></div>
 
 <h2 id="known-differences">Known differences</h2>
 <ul>
@@ -215,11 +265,16 @@ ${w.map((k) => winisdCase(k, q)).join("\n")}
 <h2 id="hornresp">Hornresp</h2>
 <p>Each case is a Hornresp record with Hornresp's own results (SPL, impedance and its phase, cone excursion, group delay and the line's acoustic impedance), compared at every exported frequency from 10 Hz to ${rep.hornresp.fMax >= 1000 ? `${rep.hornresp.fMax / 1000} kHz` : `${rep.hornresp.fMax} Hz`}. ${esc(rep.hornresp.driver)}. The records are in <a href="${REPO}/tree/main/docs/hornresp-validation/records">docs/hornresp-validation</a>; open them in Hornresp to repeat any case.</p>
 <p class="key"><span class="k-ref">Hornresp</span><span>Speaker Box Genius</span></p>
+<h3 id="hornresp-lines">Lines and horns</h3>
 ${h.map((k) => hornrespCase(k, rep.hornresp.tol)).join("\n")}
 <div class="known"><h4>Notes</h4>${notes(rep.hornresp.notes)}</div>
+<h3 id="hornresp-boxes">Boxes</h3>
+<p>Sealed, ported, passive-radiator and bandpass boxes and two drivers, compared from 10 to ${rep.hornresp.boxes.fMax} Hz (the boxes are modelled without standing waves inside, as Hornresp's lumped chambers are). Where Hornresp's outputs were exported one by one, the cone's and the port's (or radiator's) are compared each on its own.</p>
+${b.map(hornrespBoxCase).join("\n")}
+<div class="known"><h4>Notes</h4>${notes(rep.hornresp.boxes.notes)}</div>
 
 <h2 id="not-compared">Not compared</h2>
-<p>Some features have no equivalent in WinISD or Hornresp and are checked by their own tests instead: the L2R2 voice-coil model (fitted against Dayton Audio's published impedance measurements), ports modelled as pipes, and a hot voice coil. They're described in <a href="${REPO}/blob/main/docs/validation.md#not-compared-with-winisd-or-hornresp">docs/validation.md</a>. With those settings at their defaults, the app gives the results above.</p>
+<p>Some features have no equivalent in WinISD or Hornresp and are checked by their own tests instead: the L2R2 voice-coil model (fitted against Dayton Audio's published impedance measurements), a port's own pipe resonances, and a hot voice coil. They're described in <a href="${REPO}/blob/main/docs/validation.md#not-compared-with-winisd-or-hornresp">docs/validation.md</a>. With those settings at their defaults, the app gives the results above.</p>
 
 <h2 id="reproduce">Check it yourself</h2>
 <p>Every number here comes from <a href="${REPO}/blob/main/docs/validation/results.json">docs/validation/results.json</a>, written by the same code the tests run. To repeat the comparisons, clone the repository and run:</p>

@@ -19,6 +19,27 @@ All at 2.83 V, half space (2 x Pi), 1 m.
 12-sub-tapped-horn      12" subwoofer, tapped horn
 13-fr-tqwt              4" full-range, TQWT
 14-fr-tapered-tl        4" full-range, tapered TL
+15-mltl-2-drivers       05 with two drivers in parallel (OD = 2P)
+
+Boxes (DSA215-8; Hornresp 60.60):
+
+B1-sealed               10.4 L sealed
+B2-ported               30 L, 7 cm port 15 cm long
+B3-passive-radiator     50 L with a Dayton DSA270-PR
+B4-bandpass-4th         12 L sealed rear, 15 L front with a 7 cm port   (Wizard)
+B5-bandpass-6th-parallel  20 L rear (6 cm port), 15 L front (7 cm port),
+                        both to the outside                            (Wizard)
+B6-bandpass-6th-series  the same, rear port into the front chamber     (Wizard)
+B7-ported-2-drivers     B2 with two drivers in parallel (Nd = 2P, S1 = S2 = 2 Sd)
+
+More than one driver is written with its wiring: "2P" (parallel) or "2S"
+(series). Hornresp reads a bare "2" as one driver.
+
+The boxes' chambers are 5 cm deep (Lc), so Hornresp treats them as plain volumes.
+B1-B3 and B7: Calculate, then File > Export in the chart window; for B2 and B3
+also Tools > Output > Horn (the cone's front) and the port's or radiator's
+output, each exported on its own. B4-B6: Wizard, then export Power, Impedance and
+Displacement one by one.
 
 For each record:
   1. Input Parameters window: File > Import, choose the .txt

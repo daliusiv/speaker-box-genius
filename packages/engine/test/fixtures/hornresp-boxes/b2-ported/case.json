@@ -1,0 +1,18 @@
+{
+  "title": "Ported box",
+  "text": "30 L, 7 cm port 15 cm long, no losses; the port's output alone too",
+  "frontAir": 1,
+  "input": {
+    "kind": "vented",
+    "vb_l": 30,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7,
+      "length_cm": 15
+    },
+    "ql": null,
+    "qa": null,
+    "qp": null
+  },
+  "portModel": "pipe"
+}

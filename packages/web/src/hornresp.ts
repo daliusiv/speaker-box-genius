@@ -98,7 +98,11 @@ export interface HornrespExport {
  * A Hornresp record for this line design. `eg` is the drive in volts; `drivers` the number
  * of identical drivers.
  */
-export function toHornresp(d: LineDesign, driver: DriverInput, o: { eg: number; drivers: number; name: string; pmax?: number; xmax_mm?: number }): HornrespExport | string {
+export function toHornresp(
+  d: LineDesign,
+  driver: DriverInput,
+  o: { eg: number; drivers: number; wiring?: "parallel" | "series"; name: string; pmax?: number; xmax_mm?: number },
+): HornrespExport | string {
   const warnings: string[] = [];
   const L = lineLength(d);
   const tiny = 0.01; // Hornresp's way of saying "the driver is at the closed end"
@@ -186,10 +190,11 @@ export function toHornresp(d: LineDesign, driver: DriverInput, o: { eg: number; 
   put("Mmd", r2(m.mmd_g), "g, without air load");
   put("Le", r2(m.le_mh), "mH");
   put("Re", r2(m.re), "Ω");
-  put(topo, String(Math.max(1, o.drivers)), topo === "OD" ? "offset driver (driver at S2)" : topo === "TH" ? "tapped horn (driver between S2 and S3)" : "front-loaded");
-  // Checked with Hornresp 60.60: an offset-driver record with OD = 2 gives exactly the same
-  // results as OD = 1 (the count is greyed out there).
-  if (topo === "OD" && o.drivers > 1) warnings.push(`Hornresp simulates an offset-driver line with one driver, whatever the count: compare it with this design for one driver.`);
+  // More than one driver is written with its wiring, "2P" or "2S": Hornresp 60.60 ignores a
+  // bare "2" (checked: OD = 2 gives the same results as OD = 1).
+  const count = Math.max(1, Math.round(o.drivers));
+  const kind = topo === "OD" ? "offset driver (driver at S2)" : topo === "TH" ? "tapped horn (driver between S2 and S3)" : "front-loaded";
+  put(topo, count > 1 ? `${count}${o.wiring === "series" ? "S" : "P"}` : "1", count > 1 ? `${kind}, ${count} drivers in ${o.wiring === "series" ? "series" : "parallel"}` : kind);
   head("ADVANCED DRIVER PARAMETER VALUES FOR SEMI-INDUCTANCE MODEL");
   for (const k of ["Re'", "Leb", "Le", "Ke", "Rss"]) fixed(k, "0.00");
   head("ADVANCED DRIVER PARAMETER VALUES FOR FREQUENCY-DEPENDENT DAMPING MODEL");
@@ -292,6 +297,8 @@ export interface HornrespImport {
   design: Partial<LineDesign>;
   /** The record's driver, when it has one. */
   driver?: { ts: TsValues; le_mh: number; xmax_mm?: number; name: string };
+  /** How many drivers the record has, and their wiring ("2P" / "2S"). */
+  drivers?: { count: number; wiring: "parallel" | "series" };
   warnings: string[];
 }
 
@@ -410,5 +417,12 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
       name: comment ? `Hornresp: ${comment.slice(0, 50)}` : "Driver from a Hornresp record",
     };
   }
-  return { design, ...(driver ? { driver } : {}), warnings };
+  // The driver count: "OD = 2P" (parallel) or "2S" (series). Hornresp ignores a bare "2".
+  let drivers: HornrespImport["drivers"];
+  const nd = /(?:^|[\s|])(?:OD|TH|Nd)\s*=\s*(\d+)\s*([PS])?\b/i.exec(text);
+  if (nd && Number(nd[1]) > 1) {
+    if (nd[2]) drivers = { count: Number(nd[1]), wiring: nd[2].toUpperCase() === "S" ? "series" : "parallel" };
+    else warnings.push(`The record says ${nd[1]} drivers without P or S; Hornresp reads that as one driver, so it was left as it is.`);
+  }
+  return { design, ...(driver ? { driver } : {}), ...(drivers ? { drivers } : {}), warnings };
 }

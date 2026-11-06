@@ -26,7 +26,7 @@ All of them sit on the same charts as any sealed, ported, passive radiator or ba
 
 ## Checked against Hornresp
 
-The line model is a one-dimensional duct, the same approach as Hornresp and Akabak. It's checked against **Hornresp 60.60** (and earlier 55.30) with twelve records at 2.83 V in half space: seven line and horn types with a Dayton Audio DSA215-8, and five more with a 12″ subwoofer and a 4″ full-range driver. Every frequency Hornresp exports from 10 Hz to 1 kHz is compared:
+The line model is a one-dimensional duct, the same approach as Hornresp and Akabak. It's checked against **Hornresp 60.60** (and earlier 55.30) with thirteen line and horn records at 2.83 V in half space: seven line and horn types with a Dayton Audio DSA215-8, one of them again with two drivers, and five more with a 12″ subwoofer and a 4″ full-range driver. Every frequency Hornresp exports from 10 Hz to 1 kHz is compared:
 
 | Design | SPL, mean | Impedance, mean | Cone excursion, mean | Group delay, 95 % | Line load (Za), mean |
 |---|---|---|---|---|---|
@@ -42,10 +42,11 @@ The line model is a one-dimensional duct, the same approach as Hornresp and Akab
 | 12 Subwoofer in a tapped horn | 0.03 dB | 0.06 % | 0.26 % | 0.12 ms | 0.01 dB |
 | 13 Full-range TQWT | 0.03 dB | 0.20 % | 0.35 % | 0.16 ms | 0.02 dB |
 | 14 Full-range tapered line | 0.04 dB | 0.17 % | 0.35 % | 0.31 ms | 0.01 dB |
+| 15 Mass-loaded line, two drivers | 0.03 dB | 0.21 % | 0.25 % | 0.05 ms | 0.01 dB |
 
-The line's resonances fall on the same frequencies as Hornresp's, and the only bigger SPL differences are at the bottom of deep nulls (the same frequency, a different depth); group delay is compared away from them. The port's output on its own matches too (within 0.05 dB in both mass-loaded lines), and with it the port's air speed: 5.0 m/s at 40 Hz for the DSA215, 4.5 m/s at 32 Hz for the subwoofer, in both programs. Each case runs as an automated test whenever the code changes. Stuffed lines were checked against Hornresp's Loudspeaker Wizard charts: acoustic power within about 1 dB, and every impedance peak at the same frequency. Every case, with both curves on one chart, is on the [validation page](/validation/#hornresp); the model is described in [the transmission line notes](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/transmission-lines.md).
+The line's resonances fall on the same frequencies as Hornresp's, and the only bigger SPL differences are at the bottom of deep nulls (the same frequency, a different depth); group delay is compared away from them. The port's output on its own matches too (within 0.05 dB in both mass-loaded lines), and with it the port's air speed: 5.0 m/s at 40 Hz for the DSA215, 4.5 m/s at 32 Hz for the subwoofer, in both programs. Each case runs as an automated test whenever the code changes. Stuffed lines were checked against Hornresp's Loudspeaker Wizard charts: acoustic power within about 1 dB, and every impedance peak at the same frequency. Ordinary boxes are checked too (sealed, ported, passive radiator, 4th- and 6th-order bandpass, two drivers): impedance and excursion within 0.6 % on average, SPL and the port's or radiator's own output within 0.25 dB. Every case, with both curves on one chart, is on the [validation page](/validation/#hornresp); the model is described in [the transmission line notes](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/transmission-lines.md).
 
-For like-for-like comparisons, set these in **Settings**: **Air** to **Hornresp defaults**, and **Line/horn SPL** to **From radiated power (like Hornresp)**. Then drive at **2.83 V** (the **V** switch on the Power bar above the charts).
+For like-for-like comparisons, set these in **Settings**: **Air** to **Hornresp defaults**, **Line/horn SPL** to **From radiated power (like Hornresp)**, and, for ported and bandpass boxes, **Ports** to **Pipe, like Hornresp**. Then drive at **2.83 V** (the **V** switch on the Power bar above the charts).
 
 ## Your Hornresp records, both ways
 
