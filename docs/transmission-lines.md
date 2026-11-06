@@ -72,7 +72,7 @@ Results (Hornresp 60.60; records 01–07 were first run in 55.30 with the same r
 | 13 Full-range TQWT | 0.03 dB | 0.20 % | 0.35 % | 0.16 ms | 0.02 dB |
 | 14 Full-range tapered line | 0.04 dB | 0.17 % | 0.35 % | 0.31 ms | 0.01 dB |
 
-Group delay is compared away from deep nulls (within 10 dB of the response's highest point a third of an octave either side), where it swings by tens of milliseconds in both. The MLTL's port output alone (Hornresp's "Horn" output) is compared too: 0.05 dB, so the port's air speed matches (5.0 m/s peak at 40 Hz in both). An offset-driver record with two drivers (OD = 2) gives exactly the same results as one in Hornresp 60.60, so multiple drivers in a line can't be checked this way.
+Group delay is compared away from deep nulls (within 10 dB of the response's highest point a third of an octave either side), where it swings by tens of milliseconds in both. The MLTLs' port output alone (Hornresp's "Horn" output) is compared too: within 0.05 dB, so the port's air speed matches (peaks of 5.0 m/s at 40 Hz in case 05 and 4.5 m/s at 32 Hz in case 11, in both). An offset-driver record with two drivers (OD = 2) gives exactly the same results as one in Hornresp 60.60, so multiple drivers in a line can't be checked this way.
 
 What the comparison found and fixed:
 - The cone's mass in lines and horns (see Model): impedance peaks had been up to 10 % low.
