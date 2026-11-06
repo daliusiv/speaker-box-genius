@@ -3713,3 +3713,17 @@ dialog.assistant .lib-inner:focus {
 .assist-share .hint {
   font-size: 0.8rem;
 }
+
+/* Small, expected disagreement in a database driver's published values. */
+.datasheet-note {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.datasheet-note summary {
+  cursor: pointer;
+}
+.datasheet-note ul {
+  margin: 0.3rem 0 0;
+  padding-left: 1.1rem;
+}

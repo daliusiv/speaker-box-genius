@@ -9,6 +9,7 @@ import {
   writeWdr,
   type HighPassType,
   type SimulationResult,
+  type TsValues,
 } from "@sbg/engine";
 import { ChartEmphasis, CrosshairProvider, LogChart, shortName, type ChartHandle, type Series } from "./LogChart.tsx";
 import { draggableEq, eqQ, moveEq, retune, tunable } from "./chartEdit.ts";
@@ -196,7 +197,7 @@ export function App(props: { initial: AppState | null }) {
     else window.open(`${location.pathname}${ASSISTANT_HASH}`, "_blank", "noopener");
   };
   /** Credit line for the driver loaded from the database; shown while its name is unchanged. */
-  const [driverSource, setDriverSource] = useState<{ name: string; url?: string; via?: "driver-base" } | null>(null);
+  const [driverSource, setDriverSource] = useState<{ name: string; url?: string; via?: "driver-base"; ts?: TsValues } | null>(null);
   const [wdrMsg, setWdrMsg] = useState("");
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const wdrInput = useRef<HTMLInputElement>(null);
@@ -833,7 +834,7 @@ export function App(props: { initial: AppState | null }) {
                       loadDriver(id).then(
                         (d) => {
                           offerSizing(d.name);
-                          setDriverSource(d.source ? { name: d.name, ...d.source } : null);
+                          setDriverSource({ name: d.name, ...d.source, ts: d.ts });
                           setStep((s) => withDriver(s, d));
                         },
                         () => alert("Couldn't load that driver."),
@@ -923,6 +924,7 @@ export function App(props: { initial: AppState | null }) {
               <TsEditor
                 entered={state.ts}
                 solved={solved}
+                published={driverSource && driverSource.name === state.driverName ? driverSource.ts : undefined}
                 onChange={(ts) => set("ts", ts)}
                 pasting={pasting}
                 onPastingChange={setPasting}
@@ -1937,7 +1939,7 @@ export function App(props: { initial: AppState | null }) {
         onOpen={(d, rs, goal) => {
           const next = openResults(state, d, rs, goal);
           setStep(() => next);
-          setDriverSource(d.source ? { name: d.name, ...d.source } : null);
+          setDriverSource({ name: d.name, ...d.source, ts: d.ts });
           setAssistant(false);
           const boxes = rs
             .map((r) =>
