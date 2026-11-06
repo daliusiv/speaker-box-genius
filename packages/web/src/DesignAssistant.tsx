@@ -10,6 +10,8 @@ import {
   goalFor,
   bandpassShortlist,
   lineShortlist,
+  prShortlist,
+  type PrCandidateWithParams,
   prefilter,
   rankResults,
   type AssistantBox,
@@ -22,6 +24,7 @@ import {
 } from "./assistant.ts";
 import { loadDriver, type DbIndex, type LoadedDriver } from "./library.ts";
 import type { WorkerJob, WorkerReply } from "./assistantWorker.ts";
+import { loadCandidates as loadPrCandidates } from "./PrFinder.tsx";
 import type { AppState } from "./state.ts";
 import { useUnits } from "./units.ts";
 import { portLimitOf } from "./sim.ts";
@@ -30,7 +33,7 @@ import { Logo, UseIcon } from "./Logo.tsx";
 const KEY = "sbg.assistant";
 const STEPS = ["What for", "Limits", "Priority", "Results"] as const;
 const SIZES = [4, 5, 5.25, 6.5, 8, 10, 12, 15, 18, 21];
-const BOX_LABEL: Record<AssistantBox, string> = { sealed: "Sealed", vented: "Ported", line: "Line", bandpass: "Bandpass" };
+const BOX_LABEL: Record<AssistantBox, string> = { sealed: "Sealed", vented: "Ported", pr: "PR", line: "Line", bandpass: "Bandpass" };
 /** Whether a box type is offered for a use. */
 const offered = (b: AssistantBox, use: AssistantGoal["use"]) => (b === "line" ? LINE_USES.includes(use) : b === "bandpass" ? BANDPASS_USES.includes(use) : true);
 const PAGE = 20;
@@ -231,7 +234,7 @@ export function DesignAssistant(props: {
           setError((e as Error).message);
           return;
         }
-        if (i >= cands.length) return wantLines || wantBandpass ? startLines() : finish();
+        if (i >= cands.length) return wantLines || wantBandpass || wantPr ? void startLines() : finish();
         setProgress({ label: "Trying each driver", done: i, total: cands.length });
         // Show the best so far while the rest are worked out (about twice a second).
         if (performance.now() - rankedAt > 500) {
@@ -244,10 +247,19 @@ export function DesignAssistant(props: {
       // slower search), the list re-ranked as they come in.
       const wantLines = goal.boxes.includes("line") && LINE_USES.includes(goal.use);
       const wantBandpass = goal.boxes.includes("bandpass") && BANDPASS_USES.includes(goal.use);
-      const startLines = () => {
+      const wantPr = goal.boxes.includes("pr") && !!props.db && props.db.passiveRadiators.length > 0;
+      const startLines = async () => {
         const ranked = rankResults(out, goal);
         setResults(ranked);
-        const picked: { row: IndexRow; stage: "lines" | "bandpass" }[] = [
+        // The database's passive radiators (one brand file each, cached), for the PR boxes.
+        let prs: PrCandidateWithParams[] = [];
+        if (wantPr) {
+          setProgress({ label: "Loading the passive radiators", done: 0, total: 1 });
+          prs = await loadPrCandidates(props.db!).catch(() => []);
+          if (!live) return;
+        }
+        const picked: { row: IndexRow; stage: "lines" | "bandpass" | "pr" }[] = [
+          ...(prs.length ? prShortlist(ranked, cands).map((row) => ({ row, stage: "pr" as const })) : []),
           ...(wantBandpass ? bandpassShortlist(ranked, cands).map((row) => ({ row, stage: "bandpass" as const })) : []),
           ...(wantLines ? lineShortlist(ranked, cands).map((row) => ({ row, stage: "lines" as const })) : []),
         ];
@@ -255,7 +267,8 @@ export function DesignAssistant(props: {
           const driver = loadedRef.current.get(t.row.id);
           return driver ? [{ ...t, driver }] : [];
         });
-        const label = wantLines && wantBandpass ? "Lines and bandpass boxes" : wantLines ? "Transmission lines" : "Bandpass boxes";
+        const kinds = [prs.length ? "passive radiators" : "", wantBandpass ? "bandpass boxes" : "", wantLines ? "transmission lines" : ""].filter(Boolean);
+        const label = kinds.length === 1 ? kinds[0]![0]!.toUpperCase() + kinds[0]!.slice(1) : "More box types";
         const report = (done: number) => {
           if (!live) return;
           setProgress({ label, done, total: tasks.length });
@@ -277,7 +290,7 @@ export function DesignAssistant(props: {
             while (j < tasks.length && performance.now() - t0 < 30) {
               const { row, driver, stage } = tasks[j++]!;
               try {
-                extra.push(...evaluateDriver(props.base, row, driver, goal, stage));
+                extra.push(...evaluateDriver(props.base, row, driver, goal, stage, prs));
               } catch {
                 // One that won't simulate is left out; the rest carry on.
               }
@@ -312,7 +325,7 @@ export function DesignAssistant(props: {
           if (!heard) inSlices();
           else finish();
         };
-        worker.postMessage({ base: props.base, goal, tasks } satisfies WorkerJob);
+        worker.postMessage({ base: props.base, goal, tasks, prs } satisfies WorkerJob);
       };
       stopRef.current = () => finish(true);
       setProgress({ label: "Trying each driver", done: 0, total: cands.length });
@@ -354,7 +367,7 @@ export function DesignAssistant(props: {
       </div>
     ) : null;
 
-  const kinds = (["sealed", "vented", "bandpass", "line"] as const).filter((k) => (results ?? []).some((r) => r.box === k));
+  const kinds = (["sealed", "vented", "pr", "bandpass", "line"] as const).filter((k) => (results ?? []).some((r) => r.box === k));
   const listed = (results ?? []).filter((r) => only === "all" || r.box === only);
   const vol = (l: number) => fmt(l, "vol", unit("vol").unit === "L" ? (l < 10 ? 1 : 0) : 2);
   const chips: { label: string; step: number }[] = [
@@ -483,6 +496,9 @@ export function DesignAssistant(props: {
                 </label>
                 <label className="check">
                   <input type="checkbox" checked={goal.boxes.includes("vented")} onChange={() => toggleBox("vented")} /> Ported
+                </label>
+                <label className="check" title="The ported box's size and tuning with the database's passive radiators instead of a port: no port noise, and a small box can tune low. The app's PR finder picks them for the best few drivers after the boxes.">
+                  <input type="checkbox" checked={goal.boxes.includes("pr")} onChange={() => toggleBox("pr")} /> Passive radiator
                 </label>
                 {LINE_USES.includes(goal.use) && (
                   <label className="check" title="Mass-loaded (MLTL) and classic transmission lines, folded into a tall cabinet. Worked out for the best few drivers after the boxes, so they take a few seconds more.">
@@ -618,7 +634,13 @@ export function DesignAssistant(props: {
                     <div className="assist-card-head">
                       <b>{r.name}</b>
                       <span className="preset-tag">
-                        {r.box === "line" && r.line ? r.line.label : r.bandpass ? `Bandpass ${r.bandpass.order === "4" ? "4th" : "6th"} order` : BOX_LABEL[r.box]}
+                        {r.box === "line" && r.line
+                          ? r.line.label
+                          : r.bandpass
+                            ? `Bandpass ${r.bandpass.order === "4" ? "4th" : "6th"} order`
+                            : r.pr
+                              ? `Passive radiator${r.pr.count > 1 ? ` ×${r.pr.count}` : ""}`
+                              : BOX_LABEL[r.box]}
                       </span>
                       {r.badges?.map((b) => (
                         <span key={b} className="finder-best">
@@ -642,6 +664,9 @@ export function DesignAssistant(props: {
                     </div>
                     <p className="assist-facts">
                       {r.bandpass ? `${bandpassText(r.bandpass, fmt, vol)} ` : ""}
+                      {r.pr
+                        ? `Tuned to ${r.fb} Hz with ${r.pr.count > 1 ? `${r.pr.count} × ` : "a "}${r.pr.name}, ${r.pr.addedMass_g} g added to ${r.pr.count > 1 ? "each" : "it"}; ${r.pr.count > 1 ? "they use" : "it uses"} ${Math.round(r.pr.prUse * 100)} % of ${r.pr.count > 1 ? "their" : "its"} travel when the driver reaches its Xmax. `
+                        : ""}
                       {r.box === "line" && r.line
                         ? `A line ${fmt(r.line.length_cm, "len")} long, tuned to ${r.fb} Hz${r.line.design.end === "port" ? `, with a ${fmt(r.line.design.portDiameter_cm, "len")} port at the end` : ", open at the end"}, ${
                             r.line.fold.runs === 1 ? "standing straight up (no folds) in a cabinet" : `folded in ${r.line.fold.runs} runs into a cabinet`
@@ -685,7 +710,10 @@ export function DesignAssistant(props: {
                         // Sealed ↔ ported, or a line with the same driver's ported box.
                         // Sealed ↔ ported; a line or a bandpass box with the same driver's ported box.
                         const sibling = results!.find(
-                          (x) => x.driverId === r.driverId && x.box !== r.box && (r.box === "line" || r.box === "bandpass" ? x.box === "vented" : x.box === "sealed" || x.box === "vented"),
+                          (x) =>
+                            x.driverId === r.driverId &&
+                            x.box !== r.box &&
+                            (r.box === "line" || r.box === "bandpass" || r.box === "pr" ? x.box === "vented" : x.box === "sealed" || x.box === "vented"),
                         );
                         const open = (rs: AssistantResult[]) => {
                           const d = loadedRef.current.get(r.driverId);
@@ -695,7 +723,7 @@ export function DesignAssistant(props: {
                           <>
                             {sibling && (
                               <button type="button" className="secondary" title="Start with this driver in both boxes, to compare them" onClick={() => open(r.box === "sealed" ? [r, sibling] : [sibling, r])}>
-                                {r.box === "line" || r.box === "bandpass" ? "Open with ported too" : "Open with sealed + ported"}
+                                {r.box === "line" || r.box === "bandpass" || r.box === "pr" ? "Open with ported too" : "Open with sealed + ported"}
                               </button>
                             )}
                             <button type="button" title="Start your project with this driver and box" onClick={() => open([r])}>

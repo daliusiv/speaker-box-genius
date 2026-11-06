@@ -13,11 +13,14 @@
  * that matters and box size. Pure functions, so they run in tests and in the dialog's slices.
  */
 import {
+  evaluatePrCandidates,
   portLengthForFb,
+  rankPrResults,
   roomGainDb,
   sealedVolumeForAlignment,
   simulate,
   type Air,
+  type PrCandidate,
   type SimulationResult,
 } from "@sbg/engine";
 import type { DbIndex, LoadedDriver } from "./library.ts";
@@ -36,12 +39,14 @@ import {
   type DesignState,
   type LineDesign,
   type PortFields,
+  type PrDesign,
+  type PrParams,
   type VentedDesign,
 } from "./state.ts";
 
 export type AssistantUse = "car" | "home" | "hifi" | "tower" | "other";
 export type AssistantPriority = "balanced" | "deep" | "loud" | "small";
-export type AssistantBox = "sealed" | "vented" | "line" | "bandpass";
+export type AssistantBox = "sealed" | "vented" | "pr" | "line" | "bandpass";
 
 /** Uses where a bandpass box is offered: subwoofers (a bandpass lets nothing out above its band). */
 export const BANDPASS_USES: readonly AssistantUse[] = ["car", "home", "other"];
@@ -51,7 +56,11 @@ export const LINE_USES: readonly AssistantUse[] = ["hifi", "tower", "other"];
 /** The line types the assistant tries: mass-loaded and classic lines (TQWTs and offset lines grow too long to fold into a tower). */
 export const LINE_TYPES = ["mltl", "tl"] as const satisfies readonly PresetId[];
 /** The passes over a driver: the boxes for every candidate, then lines and bandpass boxes for a shortlist. */
-export type AssistantStage = "boxes" | "lines" | "bandpass";
+export type AssistantStage = "boxes" | "lines" | "bandpass" | "pr";
+/** A database PR as the PR finder takes it, with its parameters for a design. */
+export type PrCandidateWithParams = PrCandidate & { params: PrParams };
+/** How many of the best drivers from the boxes get passive radiator boxes (the PR finder: ~150 simulations each). */
+export const PR_SHORTLIST = 20;
 /** How many of the best drivers from the boxes get bandpass boxes (a search of ~200 simulations each). */
 export const BANDPASS_SHORTLIST = 30;
 /** How many of the best drivers from the boxes get lines too (a line takes ~30 simulations). */
@@ -95,17 +104,17 @@ export const USES: Record<AssistantUse, { label: string; hint: string; goal: Omi
   home: {
     label: "Home subwoofer",
     hint: "Living-room sub for music and films",
-    goal: { maxVolume_l: 80, power_w: 300, minLoad_ohm: 4, drivers: 1, sizeMin_in: 8, sizeMax_in: 18, boxes: ["sealed", "vented"], loudAt_hz: 30, targetF3_hz: 25 },
+    goal: { maxVolume_l: 80, power_w: 300, minLoad_ohm: 4, drivers: 1, sizeMin_in: 8, sizeMax_in: 18, boxes: ["sealed", "vented", "pr"], loudAt_hz: 30, targetF3_hz: 25 },
   },
   hifi: {
     label: "Hi-fi / bookshelf woofer",
     hint: "The bass driver of a two-way speaker",
-    goal: { maxVolume_l: 20, power_w: 50, minLoad_ohm: 4, drivers: 1, sizeMin_in: 4, sizeMax_in: 8, boxes: ["sealed", "vented"], loudAt_hz: 50, targetF3_hz: 45 },
+    goal: { maxVolume_l: 20, power_w: 50, minLoad_ohm: 4, drivers: 1, sizeMin_in: 4, sizeMax_in: 8, boxes: ["sealed", "vented", "pr"], loudAt_hz: 50, targetF3_hz: 45 },
   },
   tower: {
     label: "Tower / floor-stander",
     hint: "The bass of a tall speaker: ported, sealed or a transmission line",
-    goal: { maxVolume_l: 60, power_w: 100, minLoad_ohm: 4, drivers: 1, sizeMin_in: 5, sizeMax_in: 10, boxes: ["sealed", "vented", "line"], loudAt_hz: 40, targetF3_hz: 35 },
+    goal: { maxVolume_l: 60, power_w: 100, minLoad_ohm: 4, drivers: 1, sizeMin_in: 5, sizeMax_in: 10, boxes: ["sealed", "vented", "pr", "line"], loudAt_hz: 40, targetF3_hz: 35 },
   },
   other: {
     label: "Something else",
@@ -146,6 +155,8 @@ export interface AssistantResult {
     /** How it folds into a cabinet: runs and outside size (cm). */
     fold: { runs: number; height_cm: number; width_cm: number; depth_cm: number; bentPort: boolean };
   };
+  /** Passive radiator box: the PRs (each with added mass), how much of their travel they use when the driver reaches its Xmax, and the design (to open). */
+  pr?: { name: string; count: number; addedMass_g: number; prUse: number; design: PrDesign };
   /** Group delay slow enough to call the bass "slow": its peak in the band (from 0.8 × F3 up) and where, when over GD_CYCLES cycles. */
   gd?: { ms: number; hz: number; cycles: number };
   /** Bandpass: the order, both chambers (L), their ports, and the band (−3 dB edges) with its gain over a plain cone. */
@@ -312,6 +323,16 @@ export function lineShortlist(ranked: AssistantResult[], cands: IndexRow[], n = 
 }
 
 /**
+ * Passive radiator boxes: drivers that got a ported box (a PR box shares its size and
+ * tuning), half the best overall, half those whose ported box goes deepest.
+ */
+export function prShortlist(ranked: AssistantResult[], cands: IndexRow[], n = PR_SHORTLIST): IndexRow[] {
+  const vented = new Map<string, number>();
+  for (const r of ranked) if (r.box === "vented" && !vented.has(r.driverId)) vented.set(r.driverId, r.f3);
+  return shortlist(ranked, cands, n, (row) => vented.has(row.id) && row.xmax_mm !== undefined, (row) => vented.get(row.id) ?? Infinity);
+}
+
+/**
  * Bandpass boxes: a Qts of about 0.2–0.55, closest to 0.38 first (a flat 4th-order band with
  * some gain), then the lowest Fs.
  */
@@ -357,7 +378,14 @@ export function trialState(base: AppState, d: LoadedDriver, goal: AssistantGoal,
  * transmission lines and bandpass boxes (slower searches, for a shortlist of the best drivers
  * from the boxes).
  */
-export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, goal: AssistantGoal, stage: AssistantStage = "boxes"): AssistantResult[] {
+export function evaluateDriver(
+  base: AppState,
+  row: IndexRow,
+  d: LoadedDriver,
+  goal: AssistantGoal,
+  stage: AssistantStage = "boxes",
+  prs?: PrCandidateWithParams[],
+): AssistantResult[] {
   const wiring = loadOptions({ ohms: d.nominal_ohms ?? row.ohms, coil_ohms: row.coil_ohms }, goal)[0];
   if (!wiring || !(d.xmax_mm! > 0)) return [];
   const s = trialState(base, d, goal, wiring);
@@ -445,6 +473,7 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
     port?: AssistantResult["port"],
     line?: AssistantResult["line"],
     bandpass?: AssistantResult["bandpass"],
+    pr?: AssistantResult["pr"],
   ) => {
     const r = run(design, vb);
     // No roll-off found in range (a tiny box for a high-Fs pro driver, say): nothing to rank on.
@@ -478,6 +507,7 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
       ...(port ? { port } : {}),
       ...(line ? { line } : {}),
       ...(bandpass ? { bandpass } : {}),
+      ...(pr ? { pr } : {}),
       ...(gd ? { gd } : {}),
       wiring: wiring.wiring,
       ...(wiring.dvc ? { dvcWired: wiring.dvc } : {}),
@@ -533,6 +563,82 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
     }
   }
 
+  /**
+   * The ported box's size and tuning (also a PR box's): QB3/B4 or Keele, capped at the largest
+   * box allowed; in a smaller box the flattest low tuning; for "smallest", the smallest box
+   * that still reaches the target F3. Null when the driver doesn't suit one.
+   */
+  function ventedBox(): { vb: number; fb: number; notes: string[] } | null {
+    const a = ventedAlignmentFor(al, goal.drivers);
+    if (!a || !(a.vb_l > 0.3)) return null;
+    let vb = Math.min(a.vb_l, goal.maxVolume_l);
+    let fb: number | null = a.vb_l <= goal.maxVolume_l ? a.fb : bestFb(vb);
+    const notes = a.vb_l > goal.maxVolume_l ? [`${a.name} wants ${r1(a.vb_l)} L; sized to your ${r1(goal.maxVolume_l)} L`] : [];
+    if (goal.priority === "small" && fb !== null) {
+      const v0 = ventedAt(vb, fb);
+      const f3At = (v: number) => {
+        const f = bestFb(v);
+        const w = f !== null ? ventedAt(v, f) : null;
+        return w && f !== null ? { f3: f3Of(run(w.design, v)), fb: f } : null;
+      };
+      const full = v0 ? f3Of(run(v0.design, vb)) : Infinity;
+      if (full > goal.targetF3_hz) return null;
+      let lo = Math.max(0.3, vb / 20);
+      let hi = vb;
+      let hiFb: number = fb;
+      for (let k = 0; k < 8 && hi - lo > 0.05; k++) {
+        const mid = Math.sqrt(lo * hi);
+        const t = f3At(mid);
+        if (t && t.f3 <= goal.targetF3_hz) {
+          hi = mid;
+          hiFb = t.fb;
+        } else lo = mid;
+      }
+      vb = hi;
+      fb = hiFb;
+    }
+    return fb === null ? null : { vb, fb, notes };
+  }
+
+  /**
+   * Passive radiator boxes: the ported box's size and tuning, with the database's passive
+   * radiators tried by the app's PR finder (groups of 1, 2 or 4, tuned with added mass; a PR
+   * that runs out of travel before the driver, needs over 3 × its own mass added, or won't fit
+   * a face of the box is out). The best that passes, as the finder ranks them.
+   */
+  function evaluatePr(prs: PrCandidateWithParams[]) {
+    if (!al || d.xmax_mm === undefined) return;
+    const box = ventedBox();
+    if (!box) return;
+    const found = rankPrResults(
+      [...evaluatePrCandidates(drv, prs, { vb_l: box.vb, targetFb: box.fb, sim: opts, losses, counts: [1, 2, 4], fMin: 15 })].flat(),
+    ).find((x) => x.ok);
+    if (!found) return;
+    const c = prs.find((x) => x.id === found.id)!;
+    const base = newDesign("pr", []) as PrDesign;
+    const design: PrDesign = {
+      ...base,
+      vb_l: r1(box.vb),
+      prName: found.name,
+      params: c.params,
+      count: found.count,
+      addedMass_g: Math.round(found.addedMass_g),
+      targetFb: r1(box.fb),
+      extra: [],
+    };
+    finish("pr", design, box.vb, box.notes, box.fb, undefined, undefined, undefined, {
+      name: found.name,
+      count: found.count,
+      addedMass_g: Math.round(found.addedMass_g),
+      prUse: Math.round(found.prUse * 100) / 100,
+      design,
+    });
+  }
+
+  if (stage === "pr") {
+    if (goal.boxes.includes("pr") && prs?.length) evaluatePr(prs);
+    return out;
+  }
   if (stage === "lines") {
     if (goal.boxes.includes("line") && LINE_USES.includes(goal.use)) evaluateLines();
     return out;
@@ -627,41 +733,10 @@ export function evaluateDriver(base: AppState, row: IndexRow, d: LoadedDriver, g
 
   // Ported: QB3/B4 or Keele; in a smaller box, the flattest low tuning; ports that fit.
   if (goal.boxes.includes("vented")) {
-    const a = ventedAlignmentFor(align, goal.drivers);
-    if (a && a.vb_l > 0.3) {
-      let vb = Math.min(a.vb_l, goal.maxVolume_l);
-      let fb: number | null = a.vb_l <= goal.maxVolume_l ? a.fb : bestFb(vb);
-      const notes = a.vb_l > goal.maxVolume_l ? [`${a.name} wants ${r1(a.vb_l)} L; sized to your ${r1(goal.maxVolume_l)} L`] : [];
-      if (goal.priority === "small" && fb !== null) {
-        const v0 = ventedAt(vb, fb);
-        const f3At = (v: number) => {
-          const f = bestFb(v);
-          const w = f !== null ? ventedAt(v, f) : null;
-          return w && f !== null ? { f3: f3Of(run(w.design, v)), fb: f } : null;
-        };
-        const full = v0 ? f3Of(run(v0.design, vb)) : Infinity;
-        if (full > goal.targetF3_hz) fb = null;
-        else {
-          let lo = Math.max(0.3, vb / 20);
-          let hi = vb;
-          let hiFb: number = fb;
-          for (let k = 0; k < 8 && hi - lo > 0.05; k++) {
-            const mid = Math.sqrt(lo * hi);
-            const t = f3At(mid);
-            if (t && t.f3 <= goal.targetF3_hz) {
-              hi = mid;
-              hiFb = t.fb;
-            } else lo = mid;
-          }
-          vb = hi;
-          fb = hiFb;
-        }
-      }
-      const v = fb !== null ? bestPort(vb, fb) : null;
-      if (v && fb !== null) finish("vented", v.design, vb, notes, fb, v.port);
-    }
+    const box = ventedBox();
+    const v = box ? bestPort(box.vb, box.fb) : null;
+    if (box && v) finish("vented", v.design, box.vb, box.notes, box.fb, v.port);
   }
-
 
   return out;
 }
@@ -713,6 +788,10 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
   for (const r of rs.slice(0, MAX_DESIGNS)) {
     const base = newDesign(r.box, designs);
     const kind = r.box === "sealed" ? "Sealed" : r.box === "line" ? (r.line?.label ?? "Line") : "Ported";
+    if (r.box === "pr" && r.pr) {
+      designs.push({ ...r.pr.design, id: base.id, on: true, name: `PR ${model}`, preset: "Assistant" });
+      continue;
+    }
     if (r.box === "bandpass" && r.bandpass) {
       const b = r.bandpass;
       const bp = base as BandpassDesign;

@@ -29,7 +29,8 @@ type Loaded = PrCandidate & { params: PrParams; displacement_l?: number; cutout_
 
 // Every PR in the database, loaded once (the brand files are cached anyway).
 let candidatesPromise: Promise<Loaded[]> | null = null;
-function loadCandidates(db: DbIndex): Promise<Loaded[]> {
+/** Every passive radiator in the database, as the PR finder takes them (loaded once). */
+export function loadCandidates(db: DbIndex): Promise<Loaded[]> {
   candidatesPromise ??= Promise.all(
     db.passiveRadiators.map((r) =>
       loadPassiveRadiator(r.id).then((x) => ({
