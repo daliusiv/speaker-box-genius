@@ -245,11 +245,12 @@ export interface LineNetwork {
   /** Acoustic impedance the cone(s) see, per unit volume velocity into the line from the rear. */
   zLoad(w: number): Complex;
   /**
-   * The line's own acoustic impedance as Hornresp's Za chart shows it: at the driver for lines
-   * with the driver at the closed end and tapped horns (the same as zLoad); for an offset
-   * driver, the line ahead of it only (Hornresp's "Offset Throat S2", without the closed stub
-   * behind); at the horn's throat (without the chambers) for a front-loaded horn. Divide by
-   * `zaRef` for the normalised value.
+   * The line's own acoustic impedance as Hornresp's Za chart shows it, at the driver's rear:
+   * for a driver at the closed end, the same as zLoad; for an offset driver, the line ahead of
+   * it only (Hornresp's "Offset Throat S2", without the closed stub behind); for a tapped horn,
+   * the rear tap's pressure over the air going on into the horn ("Tapped Throat S2"); at the
+   * horn's throat (without the chambers) for a front-loaded horn. Divide by `zaRef` for the
+   * normalised value.
    */
   za(w: number): Complex;
   /** ρc / area where Za is taken (at the driver, or the horn's throat), Pa·s/m³. */
@@ -396,8 +397,14 @@ export function lineNetwork(line: LineInput, air: Air = STANDARD_AIR): LineNetwo
       return div(mul(zA, zB), add(zA, zB));
     },
     za(w) {
-      if (!flh && (tapped || behind.length === 0)) return this.zLoad(w);
+      if (!flh && !tapped && behind.length === 0) return this.zLoad(w);
       chains(w);
+      if (tapped) {
+        // Hornresp's "Tapped Throat S2": the rear tap's pressure over the air going on into the
+        // horn there (the cone's flow less what the closed stub behind it takes).
+        const { pr } = tappedPressures();
+        return div(pr, sub(cx(1), mul(pr, yBehind())));
+      }
       return zAheadIn();
     },
     // Normalised by the area where Za is taken, as Hornresp does (exactly, not a slice's average:

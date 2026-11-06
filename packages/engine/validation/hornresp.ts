@@ -64,11 +64,11 @@ What the comparison found and fixed:
 - **The cone's mass in lines and horns.** The air on both sides of the cone is modelled explicitly, so the cone carries its bare mass (Mms less the air load), as Hornresp does. Using Mms had counted the rear air mass twice and made impedance peaks up to 10 % low.
 - **SPL from radiated power.** Hornresp works SPL out from the power each opening radiates, not from on-axis pressure. The two agree at low frequency and part once the mouth is large next to the wavelength (about 1.7 dB at 500 Hz for an 850 cm² mouth). The app shows on-axis SPL by default; Settings → Line/horn SPL → “From radiated power (like Hornresp)” gives Hornresp's.
 
-- **The line's acoustic impedance with an offset driver.** Hornresp charts the line ahead of the driver only ("Offset Throat S2"), not the closed part behind it in parallel; the app's Za chart now does the same.
+- **What Za means with an offset driver or a tapped horn.** Hornresp charts the line ahead of an offset driver only ("Offset Throat S2"), not the closed part behind it in parallel; for a tapped horn, the rear tap's pressure over the air going on into the horn ("Tapped Throat S2"). The app's Za chart now does the same.
 
 - **Za normalised at the exact area.** Za is divided by ρc over the area where it's taken; the app had used the first slice's average area, a few per cent wider than an expanding horn's throat (3 % for case 07).
 
-Cone excursion and group delay are compared too: excursion within about 0.3 % on average. Group delay swings by tens of milliseconds through a deep null, so it's compared away from them (where the response is within 10 dB of its highest point within a third of an octave). Tapped horns' acoustic impedance isn't compared yet: Hornresp takes it at a different point, still being matched.
+Cone excursion and group delay are compared too: excursion within about 0.3 % on average. Group delay swings by tens of milliseconds through a deep null, so it's compared away from them (where the response is within 10 dB of its highest point within a third of an octave).
 
 The first seven cases were checked against Hornresp 55.30 first, then against 60.60 with the same results; the five with other drivers (a 12″ subwoofer, a 4″ full-range) came with 60.60.
 
@@ -166,9 +166,8 @@ export function runHornresp(id: string): HornrespRun {
     gd: stats.gdP95 < T.gdP95,
   };
 
-  // Tapped horns: Hornresp takes Za at a point not matched yet.
   let za: HornrespRun["za"];
-  if (r.acousticImpedance && input.tap_cm === undefined) {
+  if (r.acousticImpedance) {
     const a = r.acousticImpedance;
     za = pair("Za", Float64Array.from(a.resistance, (re, i) => Math.hypot(re, a.reactance[i]!)));
     // Away from the sharp peaks and nulls, where a hair's shift in frequency moves the value a lot.

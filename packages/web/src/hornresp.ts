@@ -187,6 +187,9 @@ export function toHornresp(d: LineDesign, driver: DriverInput, o: { eg: number; 
   put("Le", r2(m.le_mh), "mH");
   put("Re", r2(m.re), "Ω");
   put(topo, String(Math.max(1, o.drivers)), topo === "OD" ? "offset driver (driver at S2)" : topo === "TH" ? "tapped horn (driver between S2 and S3)" : "front-loaded");
+  // Checked with Hornresp 60.60: an offset-driver record with OD = 2 gives exactly the same
+  // results as OD = 1 (the count is greyed out there).
+  if (topo === "OD" && o.drivers > 1) warnings.push(`Hornresp simulates an offset-driver line with one driver, whatever the count: compare it with this design for one driver.`);
   head("ADVANCED DRIVER PARAMETER VALUES FOR SEMI-INDUCTANCE MODEL");
   for (const k of ["Re'", "Leb", "Le", "Ke", "Rss"]) fixed(k, "0.00");
   head("ADVANCED DRIVER PARAMETER VALUES FOR FREQUENCY-DEPENDENT DAMPING MODEL");

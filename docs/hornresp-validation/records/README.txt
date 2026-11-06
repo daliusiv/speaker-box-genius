@@ -1,7 +1,7 @@
 Speaker Box Genius - Hornresp validation records
 ================================================
 
-Driver in records 01-09 and 15: Dayton DSA215-8 (fs 35 Hz, Qms 1.87, Qes 0.40,
+Driver in records 01-09: Dayton DSA215-8 (fs 35 Hz, Qms 1.87, Qes 0.40,
 Vas 37.4 L, Re 5.9 ohm, Sd 211.2 cm2, Le 1.0 mH); 10-14 have their own drivers.
 All at 2.83 V, half space (2 x Pi), 1 m.
 
@@ -19,7 +19,6 @@ All at 2.83 V, half space (2 x Pi), 1 m.
 12-sub-tapped-horn      12" subwoofer, tapped horn
 13-fr-tqwt              4" full-range, TQWT
 14-fr-tapered-tl        4" full-range, tapered TL
-15-mltl-2-drivers       05 with two DSA215s
 
 For each record:
   1. Input Parameters window: File > Import, choose the .txt
