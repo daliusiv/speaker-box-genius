@@ -34,6 +34,10 @@ function variants(): [string, AppState][] {
     ],
     ["a value cleared from the T/S editor stays cleared", { ...d, ts: noFs }],
     ["T/S equal to defaults except one", { ...d, ts: { ...d.ts, qes: 0.41 } }],
+    ["semi-inductance coil and Hornresp-style limits", {
+      ...d, semi: { leb_mh: 0.3, le_mh: 1, ke: 0.05, rss_ohm: 30 },
+      settings: { ...d.settings, thermalLimit: "real", ampVolts: 25, ampAmps: 8 },
+    }],
     ["driver, settings and volume changed", {
       ...d, driverName: "Dayton Audio UM12-22", driverBrand: "Dayton Audio", le_mh: 2.1, l2_mh: 1.2, r2_ohm: 6,
       power: 350, drivers: 2, wiring: "series", isobaric: true, isoCoils: "series",

@@ -117,6 +117,8 @@ export interface HornrespBoxCaseReport {
   tol: typeof HORNRESP_BOX_TOL;
   /** The port model and drivers it was run with. */
   options: string;
+  /** Impedance compared up to here (Hz), for coil-model cases. */
+  zeFMax?: number;
   /** [frequency, Hornresp, ours]; spl is empty where only the outputs were exported one by one. */
   spl: [number, number, number][];
   ze: [number, number, number][];
@@ -224,6 +226,7 @@ function hornrespBoxCase(id: string): HornrespBoxCaseReport {
     parts: run.pass,
     tol: run.tol,
     options,
+    ...(c.zeFMax ? { zeFMax: c.zeFMax } : {}),
     spl: thinPairs(run.spl, 2),
     ze: thinPairs(run.ze, 3),
     xd: thinPairs(run.xd, 4),

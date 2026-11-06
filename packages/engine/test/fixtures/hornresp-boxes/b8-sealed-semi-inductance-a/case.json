@@ -1,0 +1,20 @@
+{
+  "title": "Sealed box, semi-inductance (moderate)",
+  "text": "B1 with Hornresp's semi-inductance model: Re' 5.9 Ω, Leb 0.3 mH, Le 1.0 mH, Ke 0.05 sH, Rss 30 Ω",
+  "frontAir": 1,
+  "semi": {
+    "leb_mh": 0.3,
+    "le_mh": 1.0,
+    "ke": 0.05,
+    "rss_ohm": 30
+  },
+  "input": {
+    "kind": "sealed",
+    "vb_l": 10.4,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  },
+  "zeFMax": 20000,
+  "splDeltaFrom": "b1-sealed"
+}

@@ -192,6 +192,7 @@ function hornrespBoxCase(k: HornrespBoxCaseReport, mtol: Report["hornresp"]["max
     ...db("SPL", s.splMean, s.splP95),
     ...db("Cone's output alone", s.coneMean, s.coneP95),
     ...db("Port's or radiator's output alone", s.ventMean, s.ventP95),
+    ...db("SPL change from the coil model (to 20 kHz)", s.coilMean, s.coilP95),
     row("Impedance, mean difference", `${s.zeMean.toFixed(2)} %`, `under ${t.zeMean} %`, s.zeMean < t.zeMean),
     row("Impedance, 95th percentile", `${s.zeP95.toFixed(2)} %`, `under ${t.zeP95} %`, s.zeP95 < t.zeP95),
     row("Impedance phase, mean difference", `${s.zePhaseMean.toFixed(2)}°`, `under ${t.zePhaseMean}°`, s.zePhaseMean < t.zePhaseMean),
@@ -213,7 +214,7 @@ function hornrespBoxCase(k: HornrespBoxCaseReport, mtol: Report["hornresp"]["max
   return `<section class="case" id="hornresp-${k.id}">
 <h3>${esc(k.title)} ${ok(k.pass)}</h3>
 <p class="setup">${esc(k.setup)}${k.options ? ` · ${esc(k.options)}` : ""} · <a href="${REPO}/tree/main/packages/engine/test/fixtures/hornresp-boxes/${k.id}">${esc(k.id)}</a></p>
-<div class="table"><table class="cmp"><thead><tr><th>Measure (10–300 Hz)</th><th>Result</th><th>Tolerance</th></tr></thead><tbody>${rows}</tbody></table></div>
+<div class="table"><table class="cmp"><thead><tr><th>Measure (10–300 Hz${k.zeFMax ? `; impedance to ${k.zeFMax / 1000} kHz` : ""})</th><th>Result</th><th>Tolerance</th></tr></thead><tbody>${rows}</tbody></table></div>
 <div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Cone's output alone", "dB", k.cone)}${fig("Port's or radiator's output alone", "dB", k.vent)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}${ms.figs}</div>
 </section>`;
 }

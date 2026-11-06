@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { C, RHO } from "../src/constants.ts";
 import {
   coilHeatFactor,
+  driverModel,
+  voiceCoilImpedance,
   portAcousticMass,
   portArea,
   portLengthForFb,
@@ -12,7 +14,7 @@ import {
   type DriverInput,
   type PortInput,
 } from "../src/model.ts";
-import { simulate } from "../src/simulate.ts";
+import { isobaricPair, simulate } from "../src/simulate.ts";
 import { qts } from "../src/ts.ts";
 
 /** Fictional 10" driver (same as docs/examples). Le = 0 so the textbook formulas apply exactly. */
@@ -247,4 +249,28 @@ test("hot voice coil: Re up 0.393 %/°C, output down towards the Re ratio above 
   // Same watts on the dial, less taken by the hot coil: the thermal limit allows more drive.
   const mi = at(c, 300);
   assert.ok(h.maxSpl[mi]! >= c.maxSpl[mi]! - 20 * Math.log10(k) - 0.01);
+});
+
+test("semi-inductance coil: Re + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)), replacing Le; scales with isobaric coils", () => {
+  const semi = { leb_mh: 0.5, le_mh: 2, ke: 0.1, rss_ohm: 25 };
+  const m = driverModel({ ...DRIVER, le_mh: 1, l2_mh: 1, r2_ohm: 3, semi });
+  for (const f of [100, 1000, 10000]) {
+    const w = 2 * Math.PI * f;
+    // Closed form with plain complex arithmetic.
+    const sq = Math.sqrt(w / 2); // √(jω) = √(ω/2)·(1 + j)
+    const k = 0.1 * sq; // Ke·√(jω) = k + jk
+    const yRe = 1 / 25 + k / (2 * k * k);
+    const yIm = -1 / (w * 0.002) - k / (2 * k * k);
+    const d = yRe * yRe + yIm * yIm;
+    const z = voiceCoilImpedance(m, w);
+    near(z.re, DRIVER.re + yRe / d, 1e-9, `R at ${f} Hz`);
+    near(z.im, w * 0.0005 - yIm / d, 1e-9, `X at ${f} Hz`);
+    const pair = isobaricPair(m, "series");
+    const z2 = voiceCoilImpedance(pair, w);
+    near(z2.re, 2 * z.re, 1e-9);
+    near(z2.im, 2 * z.im, 1e-9);
+  }
+  // All zero: the plain Le model as before.
+  const off = driverModel({ ...DRIVER, le_mh: 1, semi: { leb_mh: 0, le_mh: 0, ke: 0, rss_ohm: 0 } });
+  assert.equal(off.semi, null);
 });

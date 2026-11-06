@@ -154,6 +154,7 @@ export function isobaricPair(d: ReturnType<typeof driverModel>, coils: "series" 
     le: d.le * k,
     l2: d.l2 * k,
     r2: d.r2 * k,
+    semi: d.semi && { leb: d.semi.leb * k, le: d.semi.le * k, ke: d.semi.ke * k, rss: d.semi.rss * k },
     bl: coils === "series" ? d.bl * 2 : d.bl,
     mms: d.mms * 2,
     cms: d.cms / 2,

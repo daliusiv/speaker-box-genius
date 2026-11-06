@@ -1,4 +1,4 @@
-import { flowResistivity, portEffectiveLength, STANDARD_AIR, type DriverInput, type TsValues } from "@sbg/engine";
+import { flowResistivity, portEffectiveLength, semiActive, STANDARD_AIR, type DriverInput, type SemiInductance, type TsValues } from "@sbg/engine";
 import { lineLength } from "./sim.ts";
 import type { LineDesign, LineSection } from "./state.ts";
 
@@ -196,7 +196,17 @@ export function toHornresp(
   const kind = topo === "OD" ? "offset driver (driver at S2)" : topo === "TH" ? "tapped horn (driver between S2 and S3)" : "front-loaded";
   put(topo, count > 1 ? `${count}${o.wiring === "series" ? "S" : "P"}` : "1", count > 1 ? `${kind}, ${count} drivers in ${o.wiring === "series" ? "series" : "parallel"}` : kind);
   head("ADVANCED DRIVER PARAMETER VALUES FOR SEMI-INDUCTANCE MODEL");
-  for (const k of ["Re'", "Leb", "Le", "Ke", "Rss"]) fixed(k, "0.00");
+  // Hornresp's semi-inductance model is the app's (its Re' is the coil's Re). Hornresp also
+  // needs it switched on: double-click Le, then On.
+  const semi = semiActive(driver.semi) ? driver.semi : null;
+  if (semi) {
+    put("Re'", r2(m.re), "Ω");
+    put("Leb", r2(semi.leb_mh), "mH");
+    put("Le", r2(semi.le_mh), "mH");
+    put("Ke", r2(semi.ke), "sH");
+    put("Rss", r2(semi.rss_ohm), "Ω");
+    warnings.push("The driver uses the semi-inductance model: in Hornresp, double-click Le and click On (Le turns green), or it uses the plain Le.");
+  } else for (const k of ["Re'", "Leb", "Le", "Ke", "Rss"]) fixed(k, "0.00");
   head("ADVANCED DRIVER PARAMETER VALUES FOR FREQUENCY-DEPENDENT DAMPING MODEL");
   fixed("Rms", "0.00");
   fixed("Ams", "0.00");
@@ -296,7 +306,7 @@ const TAPER: Record<string, LineSection["taper"]> = { par: "linear", con: "conic
 export interface HornrespImport {
   design: Partial<LineDesign>;
   /** The record's driver, when it has one. */
-  driver?: { ts: TsValues; le_mh: number; xmax_mm?: number; name: string };
+  driver?: { ts: TsValues; le_mh: number; xmax_mm?: number; name: string; semi?: SemiInductance };
   /** How many drivers the record has, and their wiring ("2P" / "2S"). */
   drivers?: { count: number; wiring: "parallel" | "series" };
   warnings: string[];
@@ -401,6 +411,21 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
   const ang = pairs.find(([k]) => k.toLowerCase() === "ang")?.[1];
   if (ang && !/^2(\.0+)?\s*x\s*Pi$/i.test(ang)) warnings.push(`The record radiates into ${ang}; here it's half space (2 × Pi).`);
 
+  // The semi-inductance values: Leb, then the second "Le" (the first is the plain Le), Ke, Rss.
+  const semiOf = (): { semi?: SemiInductance } => {
+    const at = pairs.findIndex(([k]) => k.toLowerCase() === "leb");
+    if (at < 0) return {};
+    const after = (key: string) => {
+      const v = pairs.slice(at).find(([k]) => k.toLowerCase() === key)?.[1];
+      return v === undefined ? 0 : num(v) || 0;
+    };
+    const s = { leb_mh: after("leb"), le_mh: after("le"), ke: after("ke"), rss_ohm: after("rss") };
+    if (!semiActive(s)) return {};
+    const reP = /Re'\s*=\s*([-+\d.eE]+)/.exec(text)?.[1];
+    if (reP && Number(reP) > 0 && Math.abs(Number(reP) / (get("Re") ?? Number(reP)) - 1) > 0.005)
+      warnings.push(`The record's semi-inductance Re' (${reP} Ω) differs from Re; the app uses Re for both.`);
+    return { semi: s };
+  };
   const sd = get("Sd");
   const bl = get("Bl");
   const cms = get("Cms");
@@ -414,6 +439,7 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
       ts: tsFromMechanical({ sd_cm2: sd, bl, cms, rms, mmd_g: mmd, re: reV }),
       le_mh: get("Le") ?? 0,
       ...(get("Xmax") ? { xmax_mm: get("Xmax")! } : {}),
+      ...semiOf(),
       name: comment ? `Hornresp: ${comment.slice(0, 50)}` : "Driver from a Hornresp record",
     };
   }
