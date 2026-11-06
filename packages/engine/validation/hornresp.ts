@@ -410,6 +410,10 @@ What the comparison settles, and the conventions it has to bridge:
 - **Passive radiators.** Hornresp adds the front air to the radiator's moving mass as well (3.83 g for the DSA270-PR); with that, its output alone is within 0.01 dB.
 - **Two drivers side by side** (Hornresp's "Nd = 2P") load each other's fronts: Hornresp treats them as one piston of twice the area, which gives each √2 × one cone's front air. In lines and horns the app now does the same (case 15: the mass-loaded line with two drivers is within 0.03 dB and 0.2 %); in boxes the app keeps each driver's datasheet Mms, as WinISD does, and the case gives the cones Hornresp's air.
 
+**Amplifier resistance and wiring.** Hornresp's Rg (0.5 Ω, B10) matches the app's Settings → Amp + cable as closely as B1 without it. Two drivers in one sealed box (B11), in parallel and in series, match within 0.07 dB and 0.6 %, with the same √2 front air as B7; series is exactly 6.02 dB below parallel in both. Records must say "2P" or "2S" as imported (the app's Hornresp export writes them so): the same counts typed into Hornresp's editor gave one cone's output with two drivers' impedance.
+
+**Full space (Ang = 4 × Pi) is not matched.** Hornresp gives the cone about 0.6 of its half-space front air in full space, and with that the impedance agrees (0.2 %), but its SPL stays 0.45 dB and its excursion 5–7 % apart, even at 20 Hz where the air load hardly counts. The app's full space is the same box radiating into twice the space (6 dB less); this one is left as a known difference.
+
 **Semi-inductance.** Hornresp's semi-inductance model (Thorborg and Futtrup) is the coil impedance Re' + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)); two sets on the sealed box (B8a: Leb 0.3 mH, Le 1 mH, Ke 0.05 sH, Rss 30 Ω; B8b: Leb 1.36 mH, Le 3.16 mH, Ke 0.21 sH, Rss 30.6 Ω) pin that down exactly. The app has the same model (Driver → Coil model → Semi-inductance): impedance within 0.3 % on average up to 20 kHz, and the SPL the coil takes away up there (compared as the change from the plain B1 box, so the box's own radiation doesn't enter) within 0.03 dB. A third record (B8c) sets Re' to 6.5 Ω against Re 5.9 Ω: Hornresp takes Re' as the coil's resistance everywhere in the circuit and keeps Bl as the T/S give it (from Re), and the app does the same (Re′ in the model's fields); within 0.22 % in impedance.
 
 **Power compression.** Hornresp's Tools → Power Compression sets the voice coil's temperature; at 120 °C its Re rises by 39.3 %, copper's 0.393 %/°C, as the app's Settings → Voice coil °C does. The sealed box (B9) and the mass-loaded line (case 16) at 120 °C match as closely as at 20 °C: 0.05 dB and 0.5 % in impedance for the box, 0.02 dB and 0.3 % for the line.
@@ -436,6 +440,8 @@ export interface HornrespBoxCase {
   splDeltaFrom?: string;
   /** Hornresp's semi-inductance model (its Re' is the driver's Re), in place of Le. */
   semi?: SemiInductance;
+  /** Amplifier and cable resistance (Ω): Hornresp's Rg. */
+  rg?: number;
   /** Voice-coil temperature (°C): Hornresp's Power Compression. */
   coilTemp_C?: number;
   /** "pipe": the port as a short pipe, as Hornresp has it (its output rises towards the pipe's resonance). */
@@ -498,7 +504,7 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
   const driver = { ...hornrespDriver(HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}) };
   const base: SimulationOptions = {
-    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, coilTemp_C: c.coilTemp_C,
+    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, coilTemp_C: c.coilTemp_C, rg: c.rg,
   };
   const r = simulate(driver, c.input, base);
   const table = (name: string) => (existsSync(join(dir, name)) ? readTable(join(dir, name)).filter((x) => x.Freq! <= HORNRESP_BOX_F_MAX) : null);
