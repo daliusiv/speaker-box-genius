@@ -1,0 +1,20 @@
+{
+  "title": "Straight TL, light stuffing",
+  "text": "Record 01 stuffed through its length with Fr = 150 mks rayls/m (Hornresp's Loudspeaker Wizard); in the app 3.49 kg/m³ of polyester, which has that flow resistivity",
+  "frontAir": 2,
+  "splFrom": "power",
+  "fMax": 1000,
+  "input": {
+    "kind": "line",
+    "segments": [
+      {
+        "length_cm": 150,
+        "startArea_cm2": 200,
+        "endArea_cm2": 200,
+        "taper": "linear",
+        "fill_kgm3": 3.4853
+      }
+    ],
+    "driverAt_cm": 0
+  }
+}

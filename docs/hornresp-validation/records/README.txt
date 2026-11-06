@@ -14,6 +14,10 @@ All at 2.83 V, half space (2 x Pi), 1 m.
 07-front-horn           Front-loaded exponential horn with rear and throat chambers
 08-straight-tl-stuffed  01 with stuffing (Fr) through the whole line
 09-offset-tl-stuffed    03 with stuffing behind the driver
+08L / 08D               08 with light (Fr 150) and dense (Fr 2000) stuffing
+                        (stuffing only in Tools > Loudspeaker Wizard: export
+                        Power, Impedance and Displacement; tests S1-S4;
+                        09 is S5)
 10-sub-straight-tl      12" subwoofer (Le 2.4 mH), straight TL
 11-sub-mltl             12" subwoofer, MLTL with a port
 12-sub-tapped-horn      12" subwoofer, tapped horn

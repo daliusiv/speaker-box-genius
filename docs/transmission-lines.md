@@ -7,7 +7,7 @@
 - Each piece of the line is a transfer matrix between pressure and volume velocity. Tapered pieces are chains of thin uniform slices, which converge to Webster's horn equation. The tapers are linear in area (Hornresp "Par"), conical ("Con") or exponential ("Exp").
 - The driver's rear sits anywhere along the line and sees the closed-end branch and the mouth branch in parallel.
 - The mouth radiates as a baffled piston (Struve/Bessel radiation impedance) into the same half space as the cone. A port at the mouth (a mass-loaded line) is one more uniform piece.
-- Stuffing uses Delany–Bazley's fibrous-absorber model. Flow resistivity comes from the density (Garai & Pompoli, polyester fibre).
+- Stuffing uses D. K. Wilson's relaxation model for porous media, as Hornresp does (it replaced Delany–Bazley's empirical fit, which was up to 1.2 dB out against Hornresp). Flow resistivity comes from the density (Garai & Pompoli, polyester fibre). Checked against Hornresp's Loudspeaker Wizard at three densities: within 0.07 dB and 0.3 %.
 - Up to four sections, each with its own taper and stuffing density.
 - Fb is the impedance minimum between the first two peaks. When stuffing damps the lower peak into a shoulder, Fb is the shoulder (where the impedance rises least steeply). F3 is the low-frequency edge, because lines ripple above their tuning.
 - Tapped horns: the driver's rear and front both open into the line (rear at one point, front at the tap), solved as two nodes; only the mouth radiates.

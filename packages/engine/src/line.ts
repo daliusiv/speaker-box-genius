@@ -17,10 +17,10 @@ import { portArea, portEffectiveLength, portMouthArea, type PortInput } from "./
  * two branches in parallel: the closed end behind it and the open end in front. The open
  * end radiates as a baffled piston, optionally through a port (a mass-loaded line).
  *
- * Stuffing: fibre fill in a piece makes the air lossy. Delany–Bazley's empirical model for
- * fibrous absorbers gives the wave number and characteristic impedance from the flow
- * resistivity, which comes from the fill density (Garai & Pompoli, polyester fibre). Less
- * certain than the rest, as in every TL simulator.
+ * Stuffing: fibre fill in a piece makes the air lossy. Wilson's relaxation model (as in
+ * Hornresp) gives the wave number and characteristic impedance from the flow resistivity,
+ * which comes from the fill density (Garai & Pompoli, polyester fibre). Matched to Hornresp
+ * within 0.1 dB at three densities; how real fill behaves still varies with the fibre.
  */
 
 export type Taper = "linear" | "conical" | "exponential";
@@ -91,22 +91,41 @@ const mm = (x: M2, y: M2): M2 => [
 ];
 
 // ---------------------------------------------------------------------------
-// Fill (Delany–Bazley) and radiation (baffled piston)
+// Fill (Wilson's relaxation model) and radiation (baffled piston)
 // ---------------------------------------------------------------------------
 
 /** Flow resistivity (Pa·s/m²) of polyester fibre fill at this density (Garai & Pompoli 2005). */
 export const flowResistivity = (fill_kgm3: number) => 25.989 * fill_kgm3 ** 1.404;
 
-/** Wave number (1/m) and characteristic acoustic impedance (Pa·s/m³) of a slice. */
+const csqrt = (z: Complex): Complex => {
+  const m = Math.sqrt(Math.hypot(z.re, z.im));
+  const a = Math.atan2(z.im, z.re) / 2;
+  return cx(m * Math.cos(a), m * Math.sin(a));
+};
+
+/** Ratio of the thermal to the viscous relaxation time in the fill (fitted to Hornresp, see validation notes). */
+export const FILL_THERMAL_RATIO = 1.75;
+/** Ratio of specific heats of air. */
+const GAMMA = 1.4;
+
+/**
+ * Wave number (1/m) and characteristic acoustic impedance (Pa·s/m³) of a slice. Fill is an
+ * equivalent fluid after D. K. Wilson's relaxation model ("Simple, relaxational models for the
+ * acoustical properties of porous media", 1997), as Hornresp uses: a complex density that goes
+ * from flow resistance in the bass to plain air up high, and a stiffness that goes from
+ * isothermal to adiabatic. Fibre fill: porosity and tortuosity 1, so only the flow resistivity σ
+ * sets it. Physical at every frequency, unlike the Delany–Bazley fit it replaces.
+ */
 function propagation(s: Slice, w: number, air: Air): { k: Complex; zc: Complex } {
-  const k0 = w / air.c;
-  const z0 = (air.rho * air.c) / s.area;
-  if (!(s.fill > 0)) return { k: cx(k0), zc: cx(z0) };
-  const f = w / (2 * Math.PI);
-  // Delany–Bazley holds for 0.01 < ρf/σ < 1; keep it inside that range.
-  const X = Math.min(1, Math.max(0.01, (air.rho * f) / flowResistivity(s.fill)));
-  const k = scale(cx(1 + 0.0978 * X ** -0.7, -0.189 * X ** -0.595), k0);
-  const zc = scale(cx(1 + 0.0571 * X ** -0.754, -0.087 * X ** -0.732), z0);
+  if (!(s.fill > 0)) return { k: cx(w / air.c), zc: cx((air.rho * air.c) / s.area) };
+  const sigma = flowResistivity(s.fill);
+  const tv = (2 * air.rho) / sigma; // viscous relaxation time: ρ → σ/(jω) in the bass
+  const te = FILL_THERMAL_RATIO * tv;
+  const one = cx(1);
+  const rho = scale(div(one, sub(one, div(one, csqrt(cx(1, w * tv))))), air.rho);
+  const bulk = scale(div(one, add(one, scale(div(one, csqrt(cx(1, w * te))), GAMMA - 1))), air.rho * air.c * air.c);
+  const k = scale(csqrt(div(rho, bulk)), w);
+  const zc = scale(csqrt(mul(rho, bulk)), 1 / s.area);
   return { k, zc };
 }
 
