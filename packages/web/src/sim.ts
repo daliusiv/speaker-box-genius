@@ -352,6 +352,11 @@ export function simOptionsOf(s: AppState) {
     splFrom: s.settings.lineSpl === "power" ? ("power" as const) : undefined,
     portModel: s.settings.portModel === "pipe" ? ("pipe" as const) : undefined,
     coilTemp_C: s.settings.coilTemp_C > 20 ? s.settings.coilTemp_C : undefined,
+    thermalLimit: s.settings.thermalLimit === "real" ? ("real" as const) : undefined,
+    amp:
+      s.settings.ampVolts > 0 || s.settings.ampAmps > 0
+        ? { ...(s.settings.ampVolts > 0 ? { volts: s.settings.ampVolts } : {}), ...(s.settings.ampAmps > 0 ? { amps: s.settings.ampAmps } : {}) }
+        : null,
   };
 }
 

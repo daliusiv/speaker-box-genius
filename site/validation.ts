@@ -4,7 +4,7 @@
  * hand: adding a case to packages/engine/validation adds it to the page.
  */
 import { readFileSync } from "node:fs";
-import type { Report, WinIsdCaseReport, HornrespCaseReport, HornrespBoxCaseReport, Curve } from "../packages/engine/validation/report.ts";
+import type { Report, WinIsdCaseReport, HornrespCaseReport, HornrespBoxCaseReport, MaxSplReport, Curve } from "../packages/engine/validation/report.ts";
 import { REPORT_FILE } from "../packages/engine/validation/report.ts";
 import { chart } from "./chart.ts";
 
@@ -105,7 +105,41 @@ ${k.notes ? `<div class="known"><h4>Known differences</h4>${notes(k.notes)}</div
 // Hornresp
 // ---------------------------------------------------------------------------
 
-function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"]): string {
+/** Rows and a chart for Hornresp's Maximum SPL, where it was exported. */
+function maxSplParts(ms: MaxSplReport[] | undefined, tol: Report["hornresp"]["maxSplTol"]) {
+  if (!ms) return { rows: "", figs: "" };
+  const row = (what: string, val: string, lim: string, pass: boolean) => `<tr${pass ? "" : ' class="fail"'}><td>${what}</td><td class="n">${val}</td><td>${lim}</td></tr>`;
+  const rows = ms
+    .map((m) => {
+      const at = m.ampVolts ? ` (amplifier at ${m.ampVolts} V)` : "";
+      const s = m.stats;
+      return [
+        row(`Maximum SPL${at}, mean difference`, `${s.splMean.toFixed(3)} dB`, `under ${tol.splMean} dB`, s.splMean < tol.splMean),
+        row(`Maximum SPL${at}, 95th percentile`, `${s.splP95.toFixed(3)} dB`, `under ${tol.splP95} dB`, s.splP95 < tol.splP95),
+        row(`Voltage at maximum${at}, mean difference`, `${s.einMean.toFixed(2)} %`, `under ${tol.einMean} %`, s.einMean < tol.einMean),
+        row(`Input power at maximum${at}, mean difference`, `${s.pinMean.toFixed(2)} %`, `under ${tol.pinMean} %`, s.pinMean < tol.pinMean),
+      ].join("");
+    })
+    .join("");
+  const figs = ms
+    .map((m) => {
+      const label = `Maximum SPL${m.ampVolts ? `, amplifier at ${m.ampVolts} V` : ""}`;
+      return `<figure>${chart({
+        label,
+        unit: "dB",
+        aria: `${label}: Hornresp as a wide grey line, Speaker Box Genius as a thin orange line on top`,
+        series: [
+          { points: m.spl.map((p) => [p[0], p[1]]), style: "ref" },
+          { points: m.spl.map((p) => [p[0], p[2]]), style: "line" },
+        ],
+      })}<figcaption>${label}</figcaption></figure>`;
+    })
+    .join("");
+  return { rows, figs };
+}
+
+function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"], mtol: Report["hornresp"]["maxSplTol"]): string {
+  const ms = maxSplParts(k.maxSpl, mtol);
   const s = k.stats;
   const row = (what: string, val: string, lim: string, pass: boolean) => `<tr${pass ? "" : ' class="fail"'}><td>${what}</td><td class="n">${val}</td><td>${lim}</td></tr>`;
   const rows = [
@@ -123,7 +157,7 @@ function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"]): st
     row("Group delay, 95th percentile", `${s.gdP95.toFixed(2)} ms`, `under ${tol.gdP95} ms (away from deep nulls)`, s.gdP95 < tol.gdP95),
     ...(s.mouthMean !== undefined ? [row("Mouth or port output alone, mean difference", `${s.mouthMean.toFixed(3)} dB`, `under ${tol.splMean} dB`, s.mouthMean < tol.splMean)] : []),
     ...(s.zaMean !== undefined ? [row("Line load (Za), mean difference", `${s.zaMean.toFixed(3)} dB`, `under ${tol.zaMean} dB`, s.zaMean < tol.zaMean)] : []),
-  ].join("");
+  ].join("") + ms.rows;
   const fig = (label: string, unit: string, pts: [number, number, number][]) =>
     `<figure>${chart({
       label,
@@ -138,11 +172,12 @@ function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"]): st
 <h3>${esc(k.title)} ${ok(k.pass)}</h3>
 <p class="setup">${esc(k.setup)} · <a href="${REPO}/tree/main/packages/engine/test/fixtures/hornresp/${k.id}">${esc(k.id)}</a></p>
 <div class="table"><table class="cmp"><thead><tr><th>Measure (10 Hz–1 kHz)</th><th>Result</th><th>Tolerance</th></tr></thead><tbody>${rows}</tbody></table></div>
-<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}</div>
+<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}${ms.figs}</div>
 </section>`;
 }
 
-function hornrespBoxCase(k: HornrespBoxCaseReport): string {
+function hornrespBoxCase(k: HornrespBoxCaseReport, mtol: Report["hornresp"]["maxSplTol"]): string {
+  const ms = maxSplParts(k.maxSpl, mtol);
   const s = k.stats;
   const t = k.tol;
   const row = (what: string, val: string, lim: string, pass: boolean) => `<tr${pass ? "" : ' class="fail"'}><td>${what}</td><td class="n">${val}</td><td>${lim}</td></tr>`;
@@ -162,7 +197,7 @@ function hornrespBoxCase(k: HornrespBoxCaseReport): string {
     row("Impedance phase, mean difference", `${s.zePhaseMean.toFixed(2)}°`, `under ${t.zePhaseMean}°`, s.zePhaseMean < t.zePhaseMean),
     row("Cone excursion, mean difference", `${s.xdMean.toFixed(2)} %`, `under ${t.xdMean} %`, s.xdMean < t.xdMean),
     row("Cone excursion, 95th percentile", `${s.xdP95.toFixed(2)} %`, `under ${t.xdP95} %`, s.xdP95 < t.xdP95),
-  ].join("");
+  ].join("") + ms.rows;
   const fig = (label: string, unit: string, pts?: [number, number, number][]) =>
     pts && pts.length
       ? `<figure>${chart({
@@ -179,7 +214,7 @@ function hornrespBoxCase(k: HornrespBoxCaseReport): string {
 <h3>${esc(k.title)} ${ok(k.pass)}</h3>
 <p class="setup">${esc(k.setup)}${k.options ? ` · ${esc(k.options)}` : ""} · <a href="${REPO}/tree/main/packages/engine/test/fixtures/hornresp-boxes/${k.id}">${esc(k.id)}</a></p>
 <div class="table"><table class="cmp"><thead><tr><th>Measure (10–300 Hz)</th><th>Result</th><th>Tolerance</th></tr></thead><tbody>${rows}</tbody></table></div>
-<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Cone's output alone", "dB", k.cone)}${fig("Port's or radiator's output alone", "dB", k.vent)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}</div>
+<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Cone's output alone", "dB", k.cone)}${fig("Port's or radiator's output alone", "dB", k.vent)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}${ms.figs}</div>
 </section>`;
 }
 
@@ -266,11 +301,11 @@ ${w.map((k) => winisdCase(k, q)).join("\n")}
 <p>Each case is a Hornresp record with Hornresp's own results (SPL, impedance and its phase, cone excursion, group delay and the line's acoustic impedance), compared at every exported frequency from 10 Hz to ${rep.hornresp.fMax >= 1000 ? `${rep.hornresp.fMax / 1000} kHz` : `${rep.hornresp.fMax} Hz`}. ${esc(rep.hornresp.driver)}. The records are in <a href="${REPO}/tree/main/docs/hornresp-validation/records">docs/hornresp-validation</a>; open them in Hornresp to repeat any case.</p>
 <p class="key"><span class="k-ref">Hornresp</span><span>Speaker Box Genius</span></p>
 <h3 id="hornresp-lines">Lines and horns</h3>
-${h.map((k) => hornrespCase(k, rep.hornresp.tol)).join("\n")}
+${h.map((k) => hornrespCase(k, rep.hornresp.tol, rep.hornresp.maxSplTol)).join("\n")}
 <div class="known"><h4>Notes</h4>${notes(rep.hornresp.notes)}</div>
 <h3 id="hornresp-boxes">Boxes</h3>
 <p>Sealed, ported, passive-radiator and bandpass boxes and two drivers, compared from 10 to ${rep.hornresp.boxes.fMax} Hz (the boxes are modelled without standing waves inside, as Hornresp's lumped chambers are). Where Hornresp's outputs were exported one by one, the cone's and the port's (or radiator's) are compared each on its own.</p>
-${b.map(hornrespBoxCase).join("\n")}
+${b.map((k) => hornrespBoxCase(k, rep.hornresp.maxSplTol)).join("\n")}
 <div class="known"><h4>Notes</h4>${notes(rep.hornresp.boxes.notes)}</div>
 
 <h2 id="not-compared">Not compared</h2>

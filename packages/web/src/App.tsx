@@ -98,6 +98,7 @@ const LIMIT_KINDS: Record<string, { label: string; short: string; color: string 
   "pr-xmax": { label: "PR Xmax", short: "PR Xmax", color: "#9333ea" },
   port: { label: "Port speed", short: "port speed", color: "#d97706" },
   thermal: { label: "Power (Pe)", short: "power handling", color: "#6b7389" },
+  amp: { label: "Amplifier", short: "amplifier limit", color: "#0891b2" },
 };
 
 type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay";
@@ -1327,6 +1328,29 @@ export function App(props: { initial: AppState | null }) {
                   value={state.settings.rg}
                   min={0}
                   onChange={(rg) => set("settings", { ...state.settings, rg })}
+                />
+                <Select<"nominal" | "real"> help="What the driver's power rating (Pe) is held against on the Max SPL chart. V²/Re is WinISD's way. Real power counts what the driver actually takes, which is less wherever its impedance rises above Re (around resonance and up high), so it allows more voltage there, as Hornresp does."
+                  label="Power rating vs"
+                  value={state.settings.thermalLimit}
+                  options={[
+                    { value: "nominal", text: "V²/Re (like WinISD)" },
+                    { value: "real", text: "Real power (like Hornresp)" },
+                  ]}
+                  onChange={(thermalLimit) => set("settings", { ...state.settings, thermalLimit })}
+                />
+                <Num help="The amplifier's maximum output voltage (RMS), as a limit on the Max SPL chart. 0 = no limit."
+                  label="Amp max volts"
+                  unit="V"
+                  value={state.settings.ampVolts}
+                  min={0}
+                  onChange={(ampVolts) => set("settings", { ...state.settings, ampVolts: Math.max(0, ampVolts) })}
+                />
+                <Num help="The amplifier's maximum output current (RMS), as a limit on the Max SPL chart. 0 = no limit."
+                  label="Amp max current"
+                  unit="A"
+                  value={state.settings.ampAmps}
+                  min={0}
+                  onChange={(ampAmps) => set("settings", { ...state.settings, ampAmps: Math.max(0, ampAmps) })}
                 />
                 <Select<"yes" | "no"> help="Whether the simulation includes the voice-coil inductance (Le, and L2/R2 when given). WinISD leaves it out by default."
                   label="Coil inductance"
