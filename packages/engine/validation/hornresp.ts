@@ -397,6 +397,8 @@ export const HORNRESP_BOX_TOL = {
   /** Cone excursion: mean and 95th percentile |relative difference| (%), where it's over 2 % of its largest value. */
   xdMean: 1,
   xdP95: 4,
+  /** Group delay, 95th percentile |difference| (ms), away from nulls. */
+  gdP95: 0.5,
 };
 type BoxTol = typeof HORNRESP_BOX_TOL;
 
@@ -415,6 +417,8 @@ What the comparison settles, and the conventions it has to bridge:
 **Full space (Ang = 4 × Pi) is not matched.** Hornresp gives the cone about 0.6 of its half-space front air in full space, and with that the impedance agrees (0.2 %), but its SPL stays 0.45 dB and its excursion 5–7 % apart, even at 20 Hz where the air load hardly counts. The app's full space is the same box radiating into twice the space (6 dB less); this one is left as a known difference.
 
 **Lossy Le is not modelled.** Hornresp's Lossy Le (double-click the Le label) first asks whether the driver has high Le and Xmax. Answered No, the results are identical to plain Le for this driver. Answered Yes, the impedance is unchanged but the response and excursion are those of the same driver with Bl about 14 % lower (10.65 → about 9.2 T·m: within 0.02 dB and 0.1 % that way): an empirical correction for long-throw, high-inductance drivers, not a coil model. The app's L2R2 and semi-inductance models change the coil's impedance and the response together, so it has no equivalent; a driver measured with its real Bl needs none.
+
+**High-pass filter (B12).** Hornresp's Active Filter Wizard and the app's Settings → High-pass filter are the same filters: with a 25 Hz high-pass on the ported box (2nd- and 3rd-order Butterworth, 4th-order Linkwitz-Riley), the voltage reaching the speaker agrees within 0.0005 %, and SPL, excursion, impedance and group delay as closely as without the filter (0.03 dB, 0.15 %, 0.3 %, 0.08 ms). The boxes exported as a full table are also held to their group delay now.
 
 **Stuffed lines (S1–S5).** Hornresp models fill with D. K. Wilson's relaxation model (1997), set by the flow resistivity alone (Fr, mks rayls/m). The app used Delany–Bazley's empirical fit, which was 0.2–1.2 dB and 1–1.5 % out at Fr 150–2000. It now uses Wilson's model too, with porosity and tortuosity 1 (fibre) and the thermal relaxation time 1.75 × the viscous one (the one value fitted, against all three densities): within 0.07 dB and 0.3 % at every density, as close as the unstuffed line run the same way (S1), and an offset line stuffed only behind the driver (S5) within 0.05 dB and 0.3 % (the old model: 0.29 dB, 0.7 %). The app's fill is set in kg/m³ of polyester and turned into flow resistivity with Garai & Pompoli's measurements (481.65 rayls/m = 8.0 kg/m³); Hornresp's "Total Polyfill" readout uses its own empirical figure for one product (481.65 rayls/m = 9.9 kg/m³), so densities from the two programs aren't interchangeable, flow resistivities are.
 
@@ -444,6 +448,8 @@ export interface HornrespBoxCase {
   splDeltaFrom?: string;
   /** Hornresp's semi-inductance model (its Re' is the driver's Re), in place of Le. */
   semi?: SemiInductance;
+  /** A high-pass filter before the amplifier (Hornresp's Active Filter Wizard). */
+  highPass?: SimulationOptions["highPass"];
   /** SPL from radiated power (lines, as Hornresp works them out). */
   splFrom?: "power";
   /** Compare up to here (Hz) instead of HORNRESP_BOX_F_MAX (stuffed lines run to 1 kHz). */
@@ -502,8 +508,10 @@ export interface HornrespBoxRun {
     coneMean?: number; coneP95?: number; ventMean?: number; ventP95?: number;
     /** The coil's effect on SPL (difference from splDeltaFrom's), up to zeFMax. */
     coilMean?: number; coilP95?: number;
+    /** Group delay (ms), where the full table was exported: 95th percentile |difference|. */
+    gdP95?: number;
   };
-  pass: { spl?: boolean; ze: boolean; xd: boolean; cone?: boolean; vent?: boolean; coil?: boolean };
+  pass: { spl?: boolean; ze: boolean; xd: boolean; cone?: boolean; vent?: boolean; coil?: boolean; gd?: boolean };
 }
 
 export function runHornrespBox(id: string): HornrespBoxRun {
@@ -512,7 +520,7 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
   const driver = { ...hornrespDriver(HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}) };
   const base: SimulationOptions = {
-    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom,
+    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom, highPass: c.highPass,
   };
   const r = simulate(driver, c.input, base);
   const fTop = c.fMax ?? HORNRESP_BOX_F_MAX;
@@ -545,6 +553,14 @@ export function runHornrespBox(id: string): HornrespBoxRun {
     ze: stats.zeMean < tol.zeMean && stats.zeP95 < tol.zeP95 && stats.zePhaseMean < tol.zePhaseMean,
     xd: stats.xdMean < tol.xdMean && stats.xdP95 < tol.xdP95,
   };
+  // Group delay, from the full table (it carries Delay), away from nulls as for the lines.
+  if (full && full[0]?.Delay !== undefined) {
+    const gdr = readTable(join(dir, "hornresp.txt")).filter((x) => x.Freq! <= fTop);
+    const notInNull = (x: Record<string, number>) => x.SPL! > Math.max(...gdr.filter((y) => Math.abs(Math.log2(y.Freq! / x.Freq!)) < 1 / 3).map((y) => y.SPL!)) - 10;
+    const gd = gdr.filter(notInNull).map((x) => Math.abs(interp(r.freq, r.groupDelayMs, x.Freq!) - x.Delay!));
+    stats.gdP95 = percentile(gd, 0.95);
+    pass.gd = stats.gdP95 < tol.gdP95;
+  }
   let spl: Pair[] = [];
   if (splRows) {
     spl = pair(splRows, "SPL", r.spl);
