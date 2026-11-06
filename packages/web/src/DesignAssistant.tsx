@@ -8,6 +8,7 @@ import {
   LINE_USES,
   evaluateDriver,
   encodeShared,
+  encodeSharedShort,
   goalFor,
   spaceGross_l,
   type SharedResults,
@@ -134,7 +135,7 @@ export function DesignAssistant(props: {
   onOpen: (d: LoadedDriver, rs: AssistantResult[], goal: AssistantGoal) => void;
   /** The chuffing line is the app's own setting (Settings → Ports): changed here, it changes there. */
   onPortLimit: (ms: number) => void;
-  /** A shared list of results to show (from a "#assistant=…" link), the first time the dialog opens. */
+  /** A shared list of results to show (from a "#assistant=…" link), the first time the dialog opens; undefined while the link is still being read. */
   shared?: SharedResults | null;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
@@ -144,8 +145,13 @@ export function DesignAssistant(props: {
   /** The box type a shared link showed, applied once its results are in. */
   const sharedOnly = useRef<AssistantBox | "all">("all");
   const [shareMsg, setShareMsg] = useState("");
+  /** What the shared link changed or can't promise, shown over its results. */
+  const [sharedNote, setSharedNote] = useState<{ pl?: number; db?: string } | null>(null);
+  // The database loads after the link is read: compared as it renders.
+  const dbChanged = !!(sharedNote?.db && props.db?.generated && sharedNote.db !== props.db.generated);
   const shareResults = async () => {
-    const url = `${location.origin}${location.pathname}#assistant=${encodeShared({ goal, portLimit_ms: portLimitOf(props.base), only })}`;
+    const x = { goal, portLimit_ms: portLimitOf(props.base), only, ...(props.db?.generated ? { db: props.db.generated } : {}) };
+    const url = `${location.origin}${location.pathname}#assistant=${await encodeSharedShort(x).catch(() => encodeShared(x))}`;
     try {
       if (navigator.share && matchMedia("(pointer: coarse)").matches) {
         await navigator.share({ title: "Speaker Box Genius: design assistant results", url });
@@ -172,21 +178,24 @@ export function DesignAssistant(props: {
     if (!d) return;
     if (props.open && !d.open) {
       d.showModal();
-      const sh = props.shared;
-      if (sh && !sharedUsed.current) {
-        // A shared link: its goal (and chuffing line), straight to its results.
-        sharedUsed.current = true;
-        setGoalRaw(sh.goal);
-        saveGoal(sh.goal);
-        sharedOnly.current = sh.only ?? "all";
-        if (sh.portLimit_ms && sh.portLimit_ms !== portLimitOf(props.base)) props.onPortLimit(sh.portLimit_ms);
-        setStep(3);
-      }
-      // A new project starts at "What for", with the last limits remembered.
-      else setStep(0);
+      // A new project starts at "What for", with the last limits remembered (a shared link: below).
+      setStep(0);
     }
     if (!props.open && d.open) d.close();
   }, [props.open]);
+  useEffect(() => {
+    const sh = props.shared;
+    if (!props.open || !sh || sharedUsed.current) return;
+    // A shared link: its goal (and chuffing line), straight to its results.
+    sharedUsed.current = true;
+    setGoalRaw(sh.goal);
+    saveGoal(sh.goal);
+    sharedOnly.current = sh.only ?? "all";
+    const pl = sh.portLimit_ms && sh.portLimit_ms !== portLimitOf(props.base) ? sh.portLimit_ms : undefined;
+    if (pl) props.onPortLimit(pl);
+    setSharedNote({ ...(pl ? { pl } : {}), ...(sh.db ? { db: sh.db } : {}) });
+    setStep(3);
+  }, [props.open, props.shared]);
 
   // ---- results: load the candidates' records, then evaluate them in slices ----
   const [results, setResults] = useState<AssistantResult[] | null>(null);
@@ -659,6 +668,12 @@ export function DesignAssistant(props: {
                   </button>
                 ))}
               </div>
+              {sharedNote && (sharedNote.pl || dbChanged) && (
+                <p className="hint assist-shared-note" role="note">
+                  {sharedNote.pl ? `This list uses the link's ${sharedNote.pl} m/s chuffing line (now yours too: Settings → Ports). ` : ""}
+                  {dbChanged ? "The driver database has been updated since this was shared, so the list may differ a little." : ""}
+                </p>
+              )}
               <div className="assist-share">
                 <button type="button" className="secondary" onClick={() => void shareResults()} disabled={!results?.length}>
                   Share these results
@@ -781,6 +796,7 @@ export function DesignAssistant(props: {
                         {r.space.fills
                           ? `Fills your space: ${vol(r.vb_l)} net, after the driver${r.port ? " and port" : r.pr ? " and passive radiators" : r.bandpass ? ", the divider and ports" : ""}.`
                           : `Uses ${vol(r.vb_l)} of the ${vol(r.space.holds_l)} your space holds for it.`}
+                        {r.space.portUsesSpace ? " Its port is longer than a cube-shaped box would take: it runs along your space's longest side." : ""}
                       </p>
                     )}
                     {r.gd && (

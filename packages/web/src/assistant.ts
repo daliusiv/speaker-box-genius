@@ -27,7 +27,7 @@ import type { DbIndex, LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
 import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
 import { airOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
-import { portCandidates, portFieldsOf, portSpeedFor, chamberPortFields, type AssistantPort } from "./ports.ts";
+import { portCandidates, portFieldsOf, portSpeedFor, chamberPortFields, needsSpace, type AssistantPort, type PortSpace } from "./ports.ts";
 import { bandRipple, sizeBandpass } from "./bandpassSize.ts";
 export { choosePort, portCandidates, portFieldsOf, type AssistantPort } from "./ports.ts";
 import {
@@ -42,6 +42,9 @@ import {
   type PrDesign,
   type PrParams,
   type VentedDesign,
+  canCompress,
+  deflateToB64Url,
+  inflateFromB64Url,
 } from "./state.ts";
 
 export type AssistantUse = "car" | "home" | "hifi" | "tower" | "other";
@@ -111,6 +114,48 @@ export interface SpaceGoal {
 /** A space's inside dimensions (cm), largest first. */
 export const insideOf = (sp: SpaceGoal): number[] =>
   [sp.width_cm, sp.height_cm, sp.depth_cm].map((x) => Math.max(0, x - (2 * sp.wall_mm) / 10)).sort((a, b) => b - a);
+
+/** A round part on a panel: its frame's outside diameter and how deep it reaches in (cm). */
+export interface Mount {
+  d_cm: number;
+  depth_cm: number;
+}
+
+/** A driver's frame (from the database's cutout, else its nominal size) and depth (when known). */
+export const driverMount = (d: Pick<LoadedDriver, "cutout_mm" | "depth_mm">, row: Pick<IndexRow, "size_in">): Mount => ({
+  d_cm: d.cutout_mm ? d.cutout_mm / 10 + 2.5 : (row.size_in ?? 0) * 2.54,
+  depth_cm: d.depth_mm ? d.depth_mm / 10 : 0,
+});
+
+/**
+ * Whether round parts (drivers, passive radiators) all go on the inside faces of a space: each
+ * face of the six takes a row of them along its length, no wider than its width, each clear of
+ * the opposite wall. Largest first, onto the first face with room (a sketch of a real layout:
+ * one row per panel, so a little cautious).
+ */
+export function mountsFit(parts: Mount[], sp: SpaceGoal): boolean {
+  const [a, b, c] = insideOf(sp) as [number, number, number];
+  // Each face as (length, width, room behind it), two of each.
+  const faces = [
+    [a, b, c],
+    [a, b, c],
+    [a, c, b],
+    [a, c, b],
+    [b, c, a],
+    [b, c, a],
+  ].map(([len, wide, behind]) => ({ len: len!, wide: wide!, behind: behind!, used: 0 }));
+  for (const p of [...parts].sort((x, y) => y.d_cm - x.d_cm)) {
+    const f = faces.find((f) => p.d_cm <= f.wide && p.depth_cm <= f.behind && f.used + p.d_cm <= f.len);
+    if (!f) return false;
+    f.used += p.d_cm;
+  }
+  return true;
+}
+
+/** Whether a driver (or the goal's drivers) goes into a space. */
+export function driverFits(d: Pick<LoadedDriver, "cutout_mm" | "depth_mm">, row: Pick<IndexRow, "size_in">, sp: SpaceGoal, drivers = 1): boolean {
+  return mountsFit(Array.from({ length: drivers }, () => driverMount(d, row)), sp);
+}
 
 /** The app state with the volume calculator set to a space (a plain box, not linked to a design). */
 export function withSpace(s: AppState, sp: SpaceGoal): AppState {
@@ -186,7 +231,7 @@ export interface AssistantResult {
   /** Passive radiator box: the PRs (each with added mass), how much of their travel they use when the driver reaches its Xmax, and the design (to open). */
   pr?: { name: string; count: number; addedMass_g: number; prUse: number; design: PrDesign; displacement_l?: number };
   /** "Fit my space": the net volume the space holds for this result (L), and whether the box fills it. */
-  space?: { holds_l: number; fills: boolean };
+  space?: { holds_l: number; fills: boolean; portUsesSpace?: boolean };
   /** Group delay slow enough to call the bass "slow": its peak in the band (from 0.8 × F3 up) and where, when over GD_CYCLES cycles. */
   gd?: { ms: number; hz: number; cycles: number };
   /** Bandpass: the order, both chambers (L), their ports, and the band (−3 dB edges) with its gain over a plain cone. */
@@ -436,6 +481,7 @@ export function evaluateDriver(
   let prDispUsed = s.volume.prDisp_l;
   const goal: AssistantGoal = sp ? { ...goalIn, maxVolume_l: Math.max(0, netIn(newDesign("sealed", []))) } : goalIn;
   if (sp && !(goal.maxVolume_l > 0.5)) return [];
+  if (sp && !driverFits(d, row, sp, goalIn.drivers)) return [];
   const solved = solveDriver(s);
   if (solved.missing.length > 0) return [];
   const align = alignmentDriver(solved, s);
@@ -475,8 +521,14 @@ export function evaluateDriver(
   const vented = newDesign("vented", []) as VentedDesign;
   const withPort = (vb: number, fb: number, port: AssistantPort): VentedDesign => ({ ...vented, vb_l: vb, targetFb: r1(fb), ...portFieldsOf(port) });
   /** For finding the tuning: the simplest port that fits (the port barely changes the response). */
+  /** In a space, a box that (nearly) fills it is built to it: its ports may use its real inside. */
+  const portSpace = (vb: number): PortSpace | null => {
+    if (!sp || vb < 0.85 * goal.maxVolume_l) return null;
+    const [a, b] = insideOf(sp);
+    return { long_cm: a!, wide_cm: b! };
+  };
   const ventedAt = (vb: number, fb: number) => {
-    const port = portCandidates(vb, fb, air)[0];
+    const port = portCandidates(vb, fb, air, portSpace(vb))[0];
     return port ? { design: withPort(vb, fb, port), port } : null;
   };
   /**
@@ -484,9 +536,9 @@ export function evaluateDriver(
    * the quietest. A flared port is judged at its mouths (as the app does), but a narrow throat
    * still roars and compresses: its throat may not run too fast either (portSpeedFor).
    */
-  const bestPort = (vb: number, fb: number) => {
+  const bestPort = (vb: number, fb: number, useSpace = true) => {
     let best: { design: VentedDesign; port: AssistantPort; v: number } | null = null;
-    for (const port of portCandidates(vb, fb, air)) {
+    for (const port of portCandidates(vb, fb, air, useSpace ? portSpace(vb) : null)) {
       const design = withPort(vb, fb, port);
       const l = limitsOf(run(design, vb), d.xmax_mm!, false, vLimit);
       const v = portSpeedFor(port, l.vp ?? Infinity);
@@ -558,7 +610,8 @@ export function evaluateDriver(
       ...(sp && box !== "line"
         ? (() => {
             const holds = r1(box === "bandpass" ? 0.93 * goal.maxVolume_l : netIn(design, prDispUsed));
-            return { space: { holds_l: holds, fills: r1(bandpass ? bandpass.rear_l + bandpass.front_l : vb) >= holds - 0.15 } };
+            const fills = r1(bandpass ? bandpass.rear_l + bandpass.front_l : vb) >= holds - 0.15;
+            return { space: { holds_l: holds, fills, ...(fills && port && needsSpace(port, vb) ? { portUsesSpace: true } : {}) } };
           })()
         : {}),
       ...(gd ? { gd } : {}),
@@ -662,10 +715,26 @@ export function evaluateDriver(
    */
   function evaluatePr(prs: PrCandidateWithParams[]) {
     if (!al || d.xmax_mm === undefined) return;
+    // In a space, a PR's frame has to fit a face of it (estimated from its cone when the database has no cutout).
+    if (sp) {
+      const face = insideOf(sp)[1]!;
+      prs = prs.filter((c) => (c.od_cm ?? 1.3 * 2 * Math.sqrt(c.pr.sd_cm2 / Math.PI)) <= face);
+      if (!prs.length) return;
+    }
     const box = ventedBox();
     if (!box) return;
+    // In a space, the drivers and every PR have to go on its faces together.
+    const drivers = Array.from({ length: goal.drivers }, () => driverMount(d, row));
+    const fitsWith = (id: string, count: number) => {
+      if (!sp) return true;
+      const c = prs.find((x) => x.id === id)!;
+      const pr = { d_cm: c.od_cm ?? 1.3 * 2 * Math.sqrt(c.pr.sd_cm2 / Math.PI), depth_cm: 0 };
+      return mountsFit([...drivers, ...Array.from({ length: count }, () => pr)], sp);
+    };
     const find = (vb: number) =>
-      rankPrResults([...evaluatePrCandidates(drv, prs, { vb_l: vb, targetFb: box.fb, sim: opts, losses, counts: [1, 2, 4], fMin: 15 })].flat()).find((x) => x.ok);
+      rankPrResults([...evaluatePrCandidates(drv, prs, { vb_l: vb, targetFb: box.fb, sim: opts, losses, counts: [1, 2, 4], fMin: 15 })].flat()).find(
+        (x) => x.ok && fitsWith(x.id, x.count),
+      );
     let found = find(box.vb);
     if (!found) return;
     // In a space, the PRs take room too: if the box filled it, try again a little smaller.
@@ -736,7 +805,21 @@ export function evaluateDriver(
           vb = hi;
         }
       }
+      const n0 = out.length;
       if (ok) finish("sealed", { ...sealed, vb_l: vb }, vb, notes);
+      // In a space, the Qtc 0.707 box may leave room: a second sealed box that fills it, kept
+      // when it reaches lower (a lower Q; a driver with a low Qts gains little, or even loses).
+      const cap = goal.maxVolume_l;
+      if (sp && out.length > n0 && goal.priority !== "small" && vb < cap - 1 && vb < 0.9 * cap) {
+        const n = out.length;
+        const qts = (al.qms * al.qes) / (al.qms + al.qes);
+        const qtc = qts * Math.sqrt(1 + (goal.drivers * al.vas_l) / cap);
+        finish("sealed", { ...sealed, vb_l: cap }, cap, [`Qtc 0.707 needs only ${r1(vb)} L; this one fills your space (Qtc ${qtc.toFixed(2)}) and goes deeper`]);
+        if (out.length > n) {
+          if (out[n]!.f3 < 0.97 * out[n0]!.f3) out[n]!.key += ":full";
+          else out.pop();
+        }
+      }
     }
   }
 
@@ -805,16 +888,55 @@ export function evaluateDriver(
 
   // Ported: QB3/B4 or Keele; in a smaller box, the flattest low tuning; ports that fit.
   if (goal.boxes.includes("vented")) {
-    let box = ventedBox();
-    let v = box ? bestPort(box.vb, box.fb) : null;
-    // In a space, the port takes room too: if the box filled it, it shrinks by the port's share.
-    for (let k = 0; sp && box && v && k < 2; k++) {
-      const cap = netIn(v.design);
-      if (box.vb <= cap + 0.05) break;
-      box = { ...box, vb: cap };
-      v = bestPort(cap, box.fb);
+    const box0 = ventedBox();
+    /** The box and its port; in a space, shrunk by the port's share if it filled it. */
+    const fit = (vb0: number, fb: number, useSpace: boolean) => {
+      let vb = vb0;
+      let v = bestPort(vb, fb, useSpace);
+      if (!sp || !v) return v ? { vb, ...v } : null;
+      // Meant to fill it: follow what's left after the port (a smaller box may take a smaller
+      // port, leaving room again), keeping the last box that fits.
+      const filling = vb0 >= netIn(v.design) - 0.15;
+      let fits: { vb: number; design: VentedDesign; port: AssistantPort } | null = null;
+      for (let k = 0; v && k < 6; k++) {
+        const cap = netIn(v.design);
+        if (vb <= cap + 0.05) {
+          fits = { vb, ...v };
+          if (!filling || vb >= cap - 0.15) break;
+        }
+        vb = cap;
+        v = bestPort(vb, fb, useSpace);
+      }
+      return fits;
+    };
+    /**
+     * A port that only fits the space's real inside needs the box built to it (it opens linked
+     * to the calculator): a box a little short of filling it grows to fill it, else it gets a
+     * port that fits any box of its volume.
+     */
+    const settle = (got: ReturnType<typeof fit>, fb: number) => {
+      if (!sp || !got || !needsSpace(got.port, got.vb) || got.vb >= netIn(got.design) - 0.15) return got;
+      const grown = fit(netIn(got.design), fb, true);
+      return grown && grown.vb >= netIn(grown.design) - 0.15 ? grown : fit(got.vb, fb, false);
+    };
+    const got = box0 ? settle(fit(box0.vb, box0.fb, true), box0.fb) : null;
+    const n0 = out.length;
+    if (box0 && got) finish("vented", { ...got.design, vb_l: r1(got.vb) }, got.vb, box0.notes, box0.fb, got.port);
+    // In a space, the alignment's box may leave room: a second ported box that fills it, tuned
+    // for the lowest flat F3 there, kept when it reaches noticeably lower.
+    const cap = goal.maxVolume_l;
+    if (sp && box0 && out.length > n0 && goal.priority !== "small" && got!.vb < 0.9 * cap - 1) {
+      const fb = bestFb(cap);
+      const full = fb !== null ? settle(fit(cap, fb, true), fb) : null;
+      if (full && fb !== null && full.vb > got!.vb + 1 && full.vb >= netIn(full.design) - 0.15) {
+        const n = out.length;
+        finish("vented", { ...full.design, vb_l: r1(full.vb) }, full.vb, [`The flat alignment needs only ${r1(got!.vb)} L; this one fills your space, tuned for it, and goes deeper`], fb, full.port);
+        if (out.length > n) {
+          if (out[n]!.f3 < 0.97 * out[n0]!.f3) out[n]!.key += ":full";
+          else out.pop();
+        }
+      }
     }
-    if (box && v) finish("vented", { ...v.design, vb_l: r1(box.vb) }, box.vb, box.notes, box.fb, v.port);
   }
 
   return out;
@@ -892,10 +1014,12 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
       designs.push({ ...r.line.design, id: base.id, on: true, name: `${kind} ${model}`, preset: "Assistant" } as LineDesign);
       continue;
     }
+    // The second box of a kind that fills the space: told apart by its name.
+    const name = `${kind} ${model}${r.key.endsWith(":full") ? " (fills space)" : ""}`;
     designs.push(
       r.box === "vented" && r.port
-        ? { ...(base as VentedDesign), name: `${kind} ${model}`, vb_l: r.vb_l, ...portFieldsOf(r.port), targetFb: r.fb ?? 30, preset: "Assistant" }
-        : { ...base, name: `${kind} ${model}`, vb_l: r.vb_l, preset: "Assistant" },
+        ? { ...(base as VentedDesign), name, vb_l: r.vb_l, ...portFieldsOf(r.port), targetFb: r.fb ?? 30, preset: "Assistant" }
+        : { ...base, name, vb_l: r.vb_l, preset: "Assistant" },
     );
   }
   return {
@@ -914,7 +1038,11 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
     volume: (() => {
       if (!goal.space) return { ...t.volume, link: "none" };
       const v = withSpace(t, goal.space).volume;
-      const i = rs.slice(0, MAX_DESIGNS).findIndex((r) => r.space?.fills && (r.box === "sealed" || r.box === "vented" || r.box === "pr"));
+      const shown = rs.slice(0, MAX_DESIGNS);
+      // A port that only fits the space's real inside needs the link (the app checks it against
+      // the calculator's longest inside dimension then); else the first box that fills it.
+      const byPort = shown.findIndex((r) => r.space?.portUsesSpace);
+      const i = byPort >= 0 ? byPort : shown.findIndex((r) => r.space?.fills && (r.box === "sealed" || r.box === "vented" || r.box === "pr"));
       if (i < 0) return v;
       const r = rs[i]!;
       return { ...v, link: designs[i]!.id, ...(r.pr?.displacement_l !== undefined ? { prDisp_l: r.pr.displacement_l } : {}) };
@@ -942,14 +1070,42 @@ export interface SharedResults {
   goal: AssistantGoal;
   portLimit_ms?: number;
   only?: AssistantBox | "all";
+  /** The database build it was shared from (DbIndex.generated): the list can differ after an update. */
+  db?: string;
 }
 
 const B64 = (b: Uint8Array) => btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const UNB64 = (t: string) => Uint8Array.from(atob(t.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
 
 /** The part of a link after "#assistant=". */
+const sharedJson = (x: SharedResults) =>
+  JSON.stringify({
+    v: 1,
+    g: x.goal,
+    ...(x.portLimit_ms ? { pl: x.portLimit_ms } : {}),
+    ...(x.only && x.only !== "all" ? { o: x.only } : {}),
+    ...(x.db ? { d: x.db } : {}),
+  });
+
+/** The part of a link after "#assistant=" (plain base64url JSON, which always starts "eyJ"). */
 export function encodeShared(x: SharedResults): string {
-  return B64(new TextEncoder().encode(JSON.stringify({ v: 1, g: x.goal, ...(x.portLimit_ms ? { pl: x.portLimit_ms } : {}), ...(x.only && x.only !== "all" ? { o: x.only } : {}) })));
+  return B64(new TextEncoder().encode(sharedJson(x)));
+}
+
+/** The short form: "z" + the JSON deflated (about half as long); the plain form where the browser can't compress. */
+export async function encodeSharedShort(x: SharedResults): Promise<string> {
+  return canCompress() ? "z" + (await deflateToB64Url(sharedJson(x))) : encodeShared(x);
+}
+
+/** Either form; null if it isn't one. */
+export async function decodeSharedAny(text: string): Promise<SharedResults | null> {
+  if (!text.startsWith("z")) return decodeShared(text);
+  if (!canCompress()) return null;
+  try {
+    return sharedOf(JSON.parse(await inflateFromB64Url(text.slice(1))));
+  } catch {
+    return null;
+  }
 }
 
 const BOXES: AssistantBox[] = ["sealed", "vented", "pr", "line", "bandpass"];
@@ -958,12 +1114,14 @@ const num = (v: unknown, lo: number, hi: number) => (typeof v === "number" && Nu
 
 /** A shared link's results, checked field by field (anything odd falls back to the use's defaults); null if it isn't one. */
 export function decodeShared(text: string): SharedResults | null {
-  let raw: Record<string, unknown>;
   try {
-    raw = JSON.parse(new TextDecoder().decode(UNB64(text)));
+    return sharedOf(JSON.parse(new TextDecoder().decode(UNB64(text))));
   } catch {
     return null;
   }
+}
+
+function sharedOf(raw: Record<string, unknown>): SharedResults | null {
   const g = raw?.g as Record<string, unknown> | undefined;
   if (!g || typeof g.use !== "string" || !(g.use in USES)) return null;
   const priority = PRIORITY_IDS.includes(g.priority as AssistantPriority) ? (g.priority as AssistantPriority) : "balanced";
@@ -990,5 +1148,6 @@ export function decodeShared(text: string): SharedResults | null {
   };
   const pl = num(raw.pl, 5, 60);
   const o = raw.o === "all" || BOXES.includes(raw.o as AssistantBox) ? (raw.o as AssistantBox | "all") : undefined;
-  return { goal, ...(pl ? { portLimit_ms: pl } : {}), ...(o ? { only: o } : {}) };
+  const db = typeof raw.d === "string" && raw.d.length <= 40 ? raw.d : undefined;
+  return { goal, ...(pl ? { portLimit_ms: pl } : {}), ...(o ? { only: o } : {}), ...(db ? { db } : {}) };
 }

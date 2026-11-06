@@ -117,6 +117,8 @@ export interface LoadedDriver {
   dvcWiring?: "series" | "parallel";
   /** Baffle cutout (mm), if the database has it. */
   cutout_mm?: number;
+  /** Mounting depth (mm), if the database has it. */
+  depth_mm?: number;
   /** Where the values came from, for the credit line under the driver name. */
   source?: { url?: string; via?: "driver-base" };
 }
@@ -149,6 +151,7 @@ export async function loadDriver(id: string): Promise<LoadedDriver> {
     displacement_l: displacementOf(rec.physical),
     dvcWiring: rec.voice_coils === 2 ? (rec.ts_wiring ?? "parallel") : undefined,
     cutout_mm: rec.physical?.cutout_mm,
+    depth_mm: rec.physical?.depth_mm,
     source: sourceOf(rec.sources),
   };
 }

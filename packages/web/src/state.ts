@@ -581,7 +581,16 @@ const b64UrlToBytes = (s: string) => {
   return Uint8Array.from(atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4)), (c) => c.charCodeAt(0));
 };
 
-const canCompress = () => typeof CompressionStream === "function" && typeof DecompressionStream === "function";
+export const canCompress = () => typeof CompressionStream === "function" && typeof DecompressionStream === "function";
+
+/** Text deflated to base64url (for links). */
+export async function deflateToB64Url(text: string): Promise<string> {
+  return bytesToB64Url(await deflate(text));
+}
+/** Back from deflateToB64Url; throws on bad input. */
+export async function inflateFromB64Url(s: string): Promise<string> {
+  return inflate(b64UrlToBytes(s) as Uint8Array<ArrayBuffer>);
+}
 
 /** Short form for links: "z=" + deflated JSON without defaults. Falls back to the long form without compression support. */
 export async function encodeStateShort(s: AppState): Promise<string> {
