@@ -8,6 +8,7 @@ import {
   type TsParam,
   type TsValues,
 } from "@sbg/engine";
+import { DATASHEET_TOLERANCE, splitConflicts } from "./datasheetCheck.ts";
 
 const QUANTITY: Record<TsParam, Quantity> = {
   fs: "plain",
@@ -65,11 +66,15 @@ export function TsEditor(props: {
   /** The datasheet paste box is opened from the driver card's menu. */
   pasting: boolean;
   onPastingChange: (open: boolean) => void;
+  /** The values as published in the database, while they're untouched (milder checks). */
+  published?: TsValues;
 }) {
   const { pasting, onPastingChange: setPasting } = props;
   const [pasteText, setPasteText] = useState("");
   const [pasteMsg, setPasteMsg] = useState("");
   const { solved } = props;
+  const { warn, rounding, worst } = splitConflicts(props.entered, props.published, solved.conflicts);
+  const fromDatasheet = rounding.length > 0 || warn.length !== solved.conflicts.length;
 
   const setParam = (p: TsParam, v: number | undefined) => {
     const next = { ...props.entered };
@@ -102,7 +107,7 @@ export function TsEditor(props: {
             param={p}
             entered={props.entered[p]}
             derived={solved.source[p] === "derived" ? solved.values[p] : undefined}
-            conflict={solved.conflicts.some((c) => c.param === p)}
+            conflict={warn.some((c) => c.param === p)}
             onChange={(v) => setParam(p, v)}
           />
         ))}
@@ -119,16 +124,25 @@ export function TsEditor(props: {
           parameters to work them out).
         </p>
       )}
-      {solved.conflicts.length > 0 && (
+      {warn.length > 0 && (
         <div className="conflicts">
           <p>
-            <b>These values disagree.</b> Datasheets often differ by a few percent. The simulation uses Fs, Qms, Qes,
-            Vas, Re and Sd.
+            {fromDatasheet ? (
+              <>
+                <b>The manufacturer's values disagree by more than {Math.round(DATASHEET_TOLERANCE * 100)}%.</b> Check
+                them against the datasheet. The simulation uses Fs, Qms, Qes, Vas, Re and Sd.
+              </>
+            ) : (
+              <>
+                <b>These values disagree.</b> Datasheets often differ by a few percent. The simulation uses Fs, Qms,
+                Qes, Vas, Re and Sd.
+              </>
+            )}
           </p>
           <ul>
-            {solved.conflicts.map((c) => (
+            {warn.map((c) => (
               <li key={c.relation + c.param}>
-                {c.message}{" "}
+                {fromDatasheet ? c.message.replace("you entered", "published") : c.message}{" "}
                 <button className="link" onClick={() => setParam(c.param, undefined)}>
                   Use calculated
                 </button>
@@ -136,6 +150,19 @@ export function TsEditor(props: {
             ))}
           </ul>
         </div>
+      )}
+      {rounding.length > 0 && warn.length === 0 && (
+        <details className="datasheet-note">
+          <summary>
+            The manufacturer's published values differ by up to {(worst * 100).toFixed(1)}%, which is normal for
+            datasheets (they round their figures). The simulation uses Fs, Qms, Qes, Vas, Re and Sd.
+          </summary>
+          <ul>
+            {rounding.map((c) => (
+              <li key={c.relation + c.param}>{c.message.replace("you entered", "published")}</li>
+            ))}
+          </ul>
+        </details>
       )}
 
       {pasting && (
