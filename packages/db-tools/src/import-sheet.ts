@@ -254,10 +254,10 @@ const KIND_MAP: [RegExp, { kind: DbRecord["driver_kind"] | "passive-radiator" | 
   [/full|wide|extended/, { kind: "fullrange" }],
   [/guitar|instrument|bass guitar/, { kind: "guitar_bass" }],
   [/sub/, { kind: "lf_woofer", type: "subwoofer" }],
-  [/mid ?bass|mid ?woofer/, { kind: "lf_woofer", type: "midbass" }],
+  [/mid[ -]?(bass|woofer)/, { kind: "lf_woofer", type: "midbass" }],
   [/mid/, { kind: "lf_woofer", type: "midrange" }],
   [/car|auto|vehicle/, { kind: "lf_woofer", type: "car-audio" }],
-  [/^woofers?$/, { kind: "lf_woofer", type: "woofer" }],
+  [/(^|\s)woofers?$/, { kind: "lf_woofer", type: "woofer" }],
   [/woofer|\blf\b|low|bass|cone/, { kind: "lf_woofer" }],
 ];
 
@@ -350,6 +350,22 @@ export function convertRows(rows: Rows, layout: Layout, opts: Options): Result[]
     const dual = coilsText ? /2|dual|dvc/.test(coilsText) : undefined;
     const wiringText = text(row, "wiring")?.toLowerCase();
     const wiring = wiringText?.includes("ser") ? "series" : wiringText?.includes("par") ? "parallel" : opts.dvcWiring;
+    // Fill a missing Fs or Re from the values that define them, and say so.
+    const derived: string[] = [];
+    let fs = num(row, "fs");
+    let re = num(row, "re");
+    const mmsIn = num(row, "mms");
+    const cmsIn = num(row, "cms");
+    if (fs === undefined && mmsIn && cmsIn) {
+      fs = round(1 / (2 * Math.PI * Math.sqrt((mmsIn / 1000) * (cmsIn / 1000))), 1);
+      derived.push(`Fs ${fs} Hz calculated from the published Mms and Cms (not listed by the maker).`);
+    }
+    const qesIn = num(row, "qes");
+    const blIn = num(row, "bl");
+    if (re === undefined && fs && mmsIn && qesIn && blIn) {
+      re = round((qesIn * blIn * blIn) / (2 * Math.PI * fs * (mmsIn / 1000)), 2);
+      derived.push(`Re ${re} Ω calculated from the published Qes, Bl and Mms (not listed by the maker).`);
+    }
     const rec: DbRecord = {
       manufacturer: opts.brand.name,
       canonical_id: slugOf(model),
@@ -357,13 +373,13 @@ export function convertRows(rows: Rows, layout: Layout, opts: Options): Result[]
       model,
       source_urls: [url],
       fetched_at: opts.date,
-      fs_hz: num(row, "fs"),
+      fs_hz: fs,
       qts: num(row, "qts"),
       qes: num(row, "qes"),
       qms: num(row, "qms"),
       vas_liters: num(row, "vas"),
       cms_mm_per_n: num(row, "cms"),
-      re_ohm: num(row, "re"),
+      re_ohm: re,
       le_mh: num(row, "le"),
       bl_tm: num(row, "bl"),
       mms_g: num(row, "mms"),
@@ -397,6 +413,7 @@ export function convertRows(rows: Rows, layout: Layout, opts: Options): Result[]
         c.notes.push(`Published displacement ${disp} L is Sd × Xmax (the air the cone moves), not the driver's size, so it's left out.`);
       } else if (disp > 0.0001 && disp < 100) d.physical = { ...d.physical, displacement_l: round(disp, 3) };
     }
+    c.notes.unshift(...derived);
     if (c.notes.length) d.notes = c.notes.join(" ");
     else delete d.notes;
     results.push({ kind: "driver", model: d.model, slug: c.slug!, driver: d, notes: c.notes });

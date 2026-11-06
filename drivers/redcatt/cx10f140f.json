@@ -1,0 +1,35 @@
+{
+  "brand": "REDCATT",
+  "model": "CX10F140F",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 76.2,
+    "qms": 5.03,
+    "qes": 0.75,
+    "vas_l": 24.2,
+    "re": 5.39,
+    "sd_cm2": 346.4,
+    "qts": 0.65,
+    "le_mh": 0.49,
+    "bl": 10.36,
+    "mms_g": 31.2,
+    "xmax_mm": 2,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 231.5,
+    "depth_mm": 120.7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-10-020-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community",
+  "notes": "Fs 76.2 Hz calculated from the published Mms and Cms (not listed by the maker). Re 5.39 Ω calculated from the published Qes, Bl and Mms (not listed by the maker). Coaxial driver; values are for the woofer section."
+}

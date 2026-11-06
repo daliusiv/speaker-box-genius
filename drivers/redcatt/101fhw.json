@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "101FHW",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 25,
+    "qms": 1.76,
+    "qes": 0.43,
+    "vas_l": 73.3,
+    "re": 5.8,
+    "sd_cm2": 363,
+    "qts": 0.34,
+    "le_mh": 0.63,
+    "bl": 14.6,
+    "mms_g": 100.2,
+    "xmax_mm": 12.15,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 238,
+    "depth_mm": 123
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-10-006-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

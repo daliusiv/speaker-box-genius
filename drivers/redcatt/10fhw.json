@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "10FHW",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 24,
+    "qms": 2.37,
+    "qes": 0.45,
+    "vas_l": 65.9,
+    "re": 5.7,
+    "sd_cm2": 346,
+    "qts": 0.37,
+    "le_mh": 0.58,
+    "bl": 14.7,
+    "mms_g": 113.4,
+    "xmax_mm": 12.15,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 238,
+    "depth_mm": 123
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-10-009-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

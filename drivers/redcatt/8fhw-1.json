@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "8FHW-1",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 41,
+    "qms": 4.2,
+    "qes": 0.75,
+    "vas_l": 19.6,
+    "re": 4,
+    "sd_cm2": 202.3,
+    "qts": 0.6,
+    "le_mh": 0.72,
+    "bl": 7.88,
+    "mms_g": 45.9,
+    "xmax_mm": 8.7,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 181,
+    "depth_mm": 105
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-8-020-4r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

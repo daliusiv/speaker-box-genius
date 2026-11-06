@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "8FIND",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 70,
+    "qms": 6.4,
+    "qes": 0.25,
+    "vas_l": 18.2,
+    "re": 5.7,
+    "sd_cm2": 227,
+    "qts": 0.25,
+    "le_mh": 0.48,
+    "bl": 14.3,
+    "mms_g": 20.7,
+    "xmax_mm": 2.2,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 185,
+    "depth_mm": 91.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-8-023-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

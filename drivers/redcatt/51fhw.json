@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "51FHW",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 57,
+    "qms": 3.9,
+    "qes": 0.34,
+    "vas_l": 3.28,
+    "re": 6.9,
+    "sd_cm2": 52.8,
+    "qts": 0.31,
+    "le_mh": 0.64,
+    "bl": 8.1,
+    "mms_g": 8.6,
+    "xmax_mm": 4.25,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 94,
+    "depth_mm": 50.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-5-003-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

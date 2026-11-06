@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "25NFR",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 2.5,
+  "ts": {
+    "fs": 123,
+    "qms": 5.97,
+    "qes": 0.81,
+    "vas_l": 0.46,
+    "re": 7.3,
+    "sd_cm2": 21.2,
+    "qts": 0.71,
+    "le_mh": 0.09,
+    "bl": 4,
+    "mms_g": 2.2,
+    "xmax_mm": 2.65,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 56,
+    "depth_mm": 37
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-25-003-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "41FR",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 4,
+  "ts": {
+    "fs": 134,
+    "qms": 10.6,
+    "qes": 0.81,
+    "vas_l": 1.3,
+    "re": 5.6,
+    "sd_cm2": 50.3,
+    "qts": 0.75,
+    "le_mh": 0.09,
+    "bl": 4.78,
+    "mms_g": 3.8,
+    "xmax_mm": 1.1,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 93.6,
+    "depth_mm": 55.9
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-4-003-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "REDCATT",
+  "model": "61NPM",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6,
+  "ts": {
+    "fs": 92,
+    "qms": 5.6,
+    "qes": 0.38,
+    "vas_l": 7,
+    "re": 5.2,
+    "sd_cm2": 143.1,
+    "qts": 0.36,
+    "le_mh": 0.37,
+    "bl": 9.8,
+    "mms_g": 12.3,
+    "xmax_mm": 2.3,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 145.9,
+    "depth_mm": 61.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-6-005-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,35 @@
+{
+  "brand": "REDCATT",
+  "model": "CX6F140F",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6,
+  "ts": {
+    "fs": 120.5,
+    "qms": 4.73,
+    "qes": 0.52,
+    "vas_l": 4.4,
+    "re": 5.41,
+    "sd_cm2": 141,
+    "qts": 0.47,
+    "le_mh": 0.45,
+    "bl": 9.27,
+    "mms_g": 10.9,
+    "xmax_mm": 2,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 144,
+    "depth_mm": 85.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-6-010-8r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community",
+  "notes": "Fs 120.5 Hz calculated from the published Mms and Cms (not listed by the maker). Re 5.41 Ω calculated from the published Qes, Bl and Mms (not listed by the maker). Coaxial driver; values are for the woofer section."
+}

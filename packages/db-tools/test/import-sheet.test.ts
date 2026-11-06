@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { cellValue, convertRows, fieldOf, findLayout, unitOf, type Options } from "../src/import-sheet.ts";
+import { cellValue, convertRows, fieldOf, findLayout, kindOf, unitOf, type Options } from "../src/import-sheet.ts";
 import { parseCsv, readSheet } from "../src/sheet.ts";
 import { validateDriver } from "../../schema/src/index.ts";
 
@@ -166,4 +166,26 @@ test("xlsx: formula strings with xml:space=\"preserve\" are read (B&C's comparis
     ["name", "Fs (Hz)"],
     ["10BG76", "48"],
   ]);
+});
+
+test("a missing Fs or Re is calculated from the other values, with a note", () => {
+  const rows = [
+    ["Model", "URL", "Type", "Size (in)", "Nominal impedance", "Qts", "Qes", "Qms", "Vas (L)", "Cms (mm/N)", "Le (mH)", "BL", "Mms (g)", "Sd (cm2)", "Xmax (mm)"],
+    ["CX12", "https://example.com/cx12", "Coax Coaxial", "12", "8", "0.5", "0.54", "6.53", "63.9", "0.16", "0.7", "13.4", "50.3", "530.93", "3.9"],
+  ];
+  const r = convertRows(rows, findLayout(rows, new Map()), opts());
+  assert.equal(r[0]!.kind, "driver");
+  if (r[0]!.kind !== "driver") return;
+  assert.equal(r[0]!.driver.ts.fs, 56.1);
+  assert.equal(r[0]!.driver.ts.re, 5.47);
+  assert.match(r[0]!.driver.notes!, /Fs 56.1 Hz calculated/);
+  assert.match(r[0]!.driver.notes!, /Re 5.47 Ω calculated/);
+});
+
+test("types: hyphenated and prefixed type names are recognised", () => {
+  assert.deepEqual(kindOf("LF Mid-Woofer", "driver"), { kind: "lf_woofer", type: "midbass" });
+  assert.deepEqual(kindOf("LF Sub-woofer", "driver"), { kind: "lf_woofer", type: "subwoofer" });
+  assert.deepEqual(kindOf("LF Woofer", "driver"), { kind: "lf_woofer", type: "woofer" });
+  assert.deepEqual(kindOf("LF Midrange", "driver"), { kind: "lf_woofer", type: "midrange" });
+  assert.equal(kindOf("HF Compression Driver", "driver").kind, "skip");
 });

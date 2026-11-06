@@ -1,0 +1,35 @@
+{
+  "brand": "REDCATT",
+  "model": "8FR",
+  "type": "full-range",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 53,
+    "qms": 8.47,
+    "qes": 0.396,
+    "vas_l": 31.8,
+    "re": 3.8,
+    "sd_cm2": 213.8,
+    "qts": 0.378,
+    "le_mh": 0.08,
+    "bl": 7.86,
+    "mms_g": 18.38,
+    "xmax_mm": 5.8,
+    "pe_w": 30
+  },
+  "physical": {
+    "cutout_mm": 186.88,
+    "depth_mm": 91.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.redcatt.net/products/dr-8-027-4r-b2-c0001",
+      "retrieved": "2026-11-06",
+      "note": "REDCATT T/S data supplied by REDCATT (2026-11-06), used with REDCATT's permission. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 36.8 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 31.8 L from Cms."
+}
