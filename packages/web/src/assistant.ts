@@ -15,6 +15,8 @@
 import {
   evaluatePrCandidates,
   portLengthForFb,
+  portTubeDisplacement,
+  slotPortDisplacement,
   rankPrResults,
   roomGainDb,
   sealedVolumeForAlignment,
@@ -28,7 +30,7 @@ import { ventedAlignmentFor } from "./presets.ts";
 import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
 import { airOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
 import { portCandidates, portFieldsOf, portSpeedFor, chamberPortFields, needsSpace, type AssistantPort, type PortSpace } from "./ports.ts";
-import { bandRipple, sizeBandpass } from "./bandpassSize.ts";
+import { bandRipple, sizeBandpass, type BandpassFound, type BandpassOrder } from "./bandpassSize.ts";
 export { choosePort, portCandidates, portFieldsOf, type AssistantPort } from "./ports.ts";
 import {
   MAX_DESIGNS,
@@ -150,6 +152,33 @@ export function mountsFit(parts: Mount[], sp: SpaceGoal): boolean {
     f.used += p.d_cm;
   }
   return true;
+}
+
+/**
+ * Where a bandpass box's divider goes in a space: a panel across it, holding the drivers in a
+ * row, the smallest that does (the least wood). Null when no cross panel takes them.
+ */
+export function dividerFor(sp: SpaceGoal, m: Mount, drivers: number): { area_cm2: number; divider_l: number } | null {
+  const [a, b, c] = insideOf(sp) as [number, number, number];
+  const panels = [
+    [b, c],
+    [a, c],
+    [a, b],
+  ].sort((x, y) => x[0]! * x[1]! - y[0]! * y[1]!);
+  for (const [len, wide] of panels) {
+    if (m.d_cm <= wide! && drivers * m.d_cm <= len!) {
+      const area_cm2 = len! * wide!;
+      return { area_cm2, divider_l: (area_cm2 * sp.wall_mm) / 10 / 1000 };
+    }
+  }
+  return null;
+}
+
+/** The room a port takes inside its chamber (L), as the volume calculator counts it. */
+export function portDisplacement_l(p: AssistantPort, wall_mm: number): number {
+  return p.kind === "slot"
+    ? slotPortDisplacement(p.slotWidth_cm, p.slotHeight_cm, p.length_cm, wall_mm, p.count)
+    : portTubeDisplacement(p.diameter_cm, p.length_cm, wall_mm, p.count);
 }
 
 /** Whether a driver (or the goal's drivers) goes into a space. */
@@ -479,6 +508,8 @@ export function evaluateDriver(
   /** What the space holds for a design (L): its driver, ports and PRs (`prDisp_l` each) taken off. */
   const netIn = (design: DesignState, prDisp_l = s.volume.prDisp_l) => volumeFor({ ...s, volume: { ...s.volume, prDisp_l } }, design).net_l;
   let prDispUsed = s.volume.prDisp_l;
+  /** In a space: what a bandpass box's two chambers can hold, after its divider and ports. */
+  let bpHolds = 0;
   const goal: AssistantGoal = sp ? { ...goalIn, maxVolume_l: Math.max(0, netIn(newDesign("sealed", []))) } : goalIn;
   if (sp && !(goal.maxVolume_l > 0.5)) return [];
   if (sp && !driverFits(d, row, sp, goalIn.drivers)) return [];
@@ -609,8 +640,9 @@ export function evaluateDriver(
       ...(pr ? { pr } : {}),
       ...(sp && box !== "line"
         ? (() => {
-            const holds = r1(box === "bandpass" ? 0.93 * goal.maxVolume_l : netIn(design, prDispUsed));
-            const fills = r1(bandpass ? bandpass.rear_l + bandpass.front_l : vb) >= holds - 0.15;
+            const holds = r1(box === "bandpass" ? bpHolds : netIn(design, prDispUsed));
+            // A bandpass search steps its chamber sizes: within half a litre fills it.
+            const fills = r1(bandpass ? bandpass.rear_l + bandpass.front_l : vb) >= holds - (bandpass ? 0.5 : 0.15);
             return { space: { holds_l: holds, fills, ...(fills && port && needsSpace(port, vb) ? { portUsesSpace: true } : {}) } };
           })()
         : {}),
@@ -636,27 +668,48 @@ export function evaluateDriver(
    * app's own bandpass sizing (sizeBandpass), with the band reaching down near the target F3.
    */
   function evaluateBandpass() {
-    const found = sizeBandpass(
-      newDesign("bandpass", []) as BandpassDesign,
-      al,
-      air,
-      {
-        orders: ["4", "6p"],
-        // In a space, the divider between the chambers and the ports take some room (~7 %).
-        maxVolume_l: sp ? 0.93 * goal.maxVolume_l : goal.maxVolume_l,
-        drivers: goal.drivers,
-        priority: goal.priority === "loud" ? "loud" : "low",
-        loudAt_hz: goal.loudAt_hz,
-        maxF3_hz: 1.6 * goal.targetF3_hz,
-        portLimit: vLimit,
-        ...(room ? { roomDb: (f: number) => roomGainDb(f, room) } : {}),
-      },
-      (design) => run(design, design.vb_l),
-      (r) => limitsOf(r, d.xmax_mm!, false, vLimit),
-    );
-    for (const t of [found["4"], found["6p"]]) {
+    const search = (order: BandpassOrder, maxVolume_l: number) =>
+      sizeBandpass(
+        newDesign("bandpass", []) as BandpassDesign,
+        al,
+        air,
+        {
+          orders: [order],
+          maxVolume_l,
+          drivers: goal.drivers,
+          priority: goal.priority === "loud" ? "loud" : "low",
+          loudAt_hz: goal.loudAt_hz,
+          maxF3_hz: 1.6 * goal.targetF3_hz,
+          portLimit: vLimit,
+          ...(room ? { roomDb: (f: number) => roomGainDb(f, room) } : {}),
+        },
+        (design) => run(design, design.vb_l),
+        (r) => limitsOf(r, d.xmax_mm!, false, vLimit),
+      )[order];
+    // In a space: the driver sits in a divider across it (its panel takes room, as do the
+    // ports in their chambers); what's left is shared by the two chambers.
+    const mount = driverMount(d, row);
+    const div = sp ? dividerFor(sp, mount, goal.drivers) : null;
+    if (sp && !div) return;
+    const budget = sp ? goal.maxVolume_l - div!.divider_l : goal.maxVolume_l;
+    const portsOf = (t: BandpassFound) =>
+      portDisplacement_l(t.frontPort, s.volume.portWall_mm) + (t.rearPort ? portDisplacement_l(t.rearPort, s.volume.portWall_mm) : 0);
+    for (const order of ["4", "6p"] as BandpassOrder[]) {
+      let t = search(order, budget);
+      // The ports come out of the same space: sized again with less room until they fit.
+      for (let k = 0; sp && t && k < 4; k++) {
+        const over = t.design.vb_l + t.design.frontVb_l + portsOf(t) - budget;
+        if (over <= 0.05) break;
+        t = search(order, t.design.vb_l + t.design.frontVb_l - over - 0.1);
+      }
       if (!t) continue;
       const b = t.design;
+      if (sp) {
+        if (b.vb_l + b.frontVb_l + portsOf(t) > budget + 0.05) continue;
+        // The driver's magnet is in the rear chamber: it needs the depth behind the divider.
+        if ((b.vb_l * 1000) / div!.area_cm2 < mount.depth_cm) continue;
+        bpHolds = budget - portsOf(t);
+      }
       finish("bandpass", b, b.vb_l, [], b.front.targetFb, undefined, undefined, {
         order: t.order,
         rear_l: b.vb_l,

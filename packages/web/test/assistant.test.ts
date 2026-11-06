@@ -6,7 +6,7 @@ import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { needsSpace } from "../src/ports.ts";
 import { PORT_LIMIT, lineFoldOf, limitsOf, volumeFor, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { GD_CYCLES, mountsFit, decodeShared, decodeSharedAny, driverFits, encodeShared, encodeSharedShort, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { GD_CYCLES, mountsFit, dividerFor, portDisplacement_l, decodeShared, decodeSharedAny, driverFits, encodeShared, encodeSharedShort, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -443,4 +443,36 @@ test("fit my space: a second ported box that fills the space when the alignment 
     assert.equal(s.volume.link, s.designs[1]!.id);
   }
   assert.ok(full > 0, "some driver's ported box is well under the space");
+});
+
+test("fit my space: a bandpass box's chambers share the space with its divider, driver and ports", () => {
+  // The divider: the smallest cross panel that takes the drivers.
+  const sp = { width_cm: 90, height_cm: 40, depth_cm: 45, wall_mm: 18 }; // inside 86.4 × 41.4 × 36.4
+  const d1 = dividerFor(sp, { d_cm: 30, depth_cm: 15 }, 1)!;
+  assert.ok(Math.abs(d1.area_cm2 - 41.4 * 36.4) < 0.1 && Math.abs(d1.divider_l - (41.4 * 36.4 * 1.8) / 1000) < 0.01);
+  // Two 12" drivers don't fit across it side by side: a bigger panel.
+  assert.ok(dividerFor(sp, { d_cm: 30, depth_cm: 15 }, 2)!.area_cm2 > d1.area_cm2);
+  assert.equal(dividerFor(sp, { d_cm: 45, depth_cm: 15 }, 1), null);
+
+  const goal = { ...goalFor("car", "balanced"), boxes: ["sealed", "vented", "bandpass"] as AssistantGoal["boxes"], space: sp };
+  const boxes = runAll(goal).results;
+  const cands = bandpassShortlist(boxes, prefilter(rows, goal), 8);
+  let n = 0;
+  for (const r of cands) {
+    const d = loaded(r.id);
+    for (const x of evaluateDriver(DEFAULT_STATE, r, d, goal, "bandpass")) {
+      n++;
+      const b = x.bandpass!;
+      const ports = portDisplacement_l(b.frontPort, DEFAULT_STATE.volume.portWall_mm) + (b.rearPort ? portDisplacement_l(b.rearPort, DEFAULT_STATE.volume.portWall_mm) : 0);
+      const frame = d.cutout_mm ? d.cutout_mm / 10 + 2.5 : r.size_in! * 2.54;
+      const div = dividerFor(sp, { d_cm: frame, depth_cm: (d.depth_mm ?? 0) / 10 }, 1)!;
+      // What the space holds for both chambers: its net with this driver, less the divider and ports.
+      const s = evaluateDriver(DEFAULT_STATE, r, d, { ...goal, boxes: ["sealed"] })[0];
+      const msg = `${r.id} ${b.order}: ${b.rear_l} + ${b.front_l} + ports ${ports.toFixed(1)} + divider ${div.divider_l.toFixed(1)} in ${JSON.stringify(x.space)}`;
+      assert.ok(x.space && x.vb_l <= x.space.holds_l + 0.06, msg);
+      assert.ok(s?.space && Math.abs(x.space.holds_l + ports + div.divider_l - s.space.holds_l) < 0.2, msg);
+      assert.ok((b.rear_l * 1000) / div.area_cm2 >= (d.depth_mm ?? 0) / 10, msg);
+    }
+  }
+  assert.ok(n > 0, "some bandpass boxes in the space");
 });
