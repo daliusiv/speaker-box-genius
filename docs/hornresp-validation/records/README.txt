@@ -36,6 +36,9 @@ B8a / B8b               B1 with the semi-inductance model on (double-click Le, e
                         the values, On): Re' 5.9 Ω; Leb 0.30 / 1.36 mH, Le 1.00 /
                         3.16 mH, Ke 0.05 / 0.21 sH, Rss 30 / 30.6 Ω
 
+Impulse response: B1, B2 and 05, the chart window's Impulse Response, Export
+(a 16-bit 48 kHz WAV, t = 0 at sample 10000; masking as Hornresp has it).
+
 Maximum SPL: B1, B2, 05 and 06, Tools > Maximum SPL with 80 W and 5.5 mm (the
 amplifier limits off), then File > Export; B2 again with the amplifier at 25 V.
 

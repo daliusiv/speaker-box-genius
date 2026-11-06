@@ -22,6 +22,7 @@ import {
   type SolveResult,
   type VolumeResult,
   semiActive,
+  transientResponse,
 } from "@sbg/engine";
 import type { AppState, DesignKind, DesignState, LineDesign, PortFields, PrDesign, PrGroupState, Settings } from "./state.ts";
 import { compareView } from "./state.ts";
@@ -384,6 +385,43 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
   ];
 }
 
+/** One design's impulse and step response (peak scaled to ±1), for the time chart. */
+export interface Transient {
+  label: string;
+  color: string;
+  dash?: string;
+  t_ms: Float64Array;
+  impulse: Float64Array;
+  step: Float64Array;
+}
+
+/**
+ * Impulse and step response of each box that's on (the box alone: no baffle step or room gain),
+ * with EQ and the high-pass filter. SPL from radiated power, like Hornresp, so the top end falls
+ * as a real cone's does instead of a point source's. 48 kHz, up to 20 kHz.
+ */
+export function transientsOf(s: AppState, solved: SolveResult, designs: Design[]): Transient[] {
+  if (solved.missing.length > 0) return [];
+  const driver = driverInputOf(s, solved);
+  const opts = simOptionsOf(s);
+  const out: Transient[] = [];
+  for (const x of designs) {
+    if (x.compare) continue;
+    const d = x.design;
+    const vb = builtVbOf(s, d) * stuffFactor(d);
+    const eq = s.eq
+      .filter((e) => e.on && (e.target === "all" || e.target === d.id))
+      .map(({ id: _id, on: _on, target: _t, ...stage }) => stage as EqStage);
+    try {
+      const r = transientResponse(driver, enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm), { ...opts, eq, splFrom: "power" }, { length: 16384 });
+      out.push({ label: x.label, color: x.color, ...(x.dash ? { dash: x.dash } : {}), ...r });
+    } catch {
+      // Mid-edit: leave it out.
+    }
+  }
+  return out;
+}
+
 function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] {
   if (solved.missing.length > 0) return [];
   const driver = driverInputOf(s, solved);
@@ -398,7 +436,8 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
       .filter((e) => e.on && (e.target === "all" || e.target === d.id))
       .map(({ id: _id, on: _on, target: _t, ...stage }) => stage as EqStage);
     try {
-      const result = simulate(driver, enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm), { ...opts, eq });
+      // "Line/horn SPL" is a line setting: boxes keep their in-front SPL, as before.
+      const result = simulate(driver, enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm), { ...opts, eq, ...(d.kind === "line" ? {} : { splFrom: undefined }) });
       if (s.settings.velocity === "rms") {
         if (result.portVelocity) result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
         if (result.rearPortVelocity) result.rearPortVelocity = result.rearPortVelocity.map((v) => v / Math.SQRT2);
