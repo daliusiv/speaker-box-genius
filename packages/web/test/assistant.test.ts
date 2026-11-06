@@ -5,7 +5,7 @@ import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { PORT_LIMIT, lineFoldOf, limitsOf, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { GD_CYCLES, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { GD_CYCLES, prShortlist, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -239,4 +239,35 @@ test("slow bass is noted: group delay over a cycle of the note, in the band", ()
     assert.ok(r.gd!.cycles > GD_CYCLES && r.gd!.hz >= 0.8 * r.f3, `${r.name} ${JSON.stringify(r.gd)}`);
     assert.ok(Math.abs((r.gd!.ms / 1000) * r.gd!.hz - r.gd!.cycles) < 0.05);
   }
+});
+
+test("passive radiator boxes: the ported box's size and tuning with the database's PRs, and they open as scored", async () => {
+  const { prCandidate } = await import("../../../site/drivers.ts");
+  const prs = db.passiveRadiators.map(prCandidate);
+  for (const use of ["home", "hifi"] as const) {
+    const goal = goalFor(use, "balanced");
+    assert.ok(goal.boxes.includes("pr"), `${use} tries PRs by default`);
+    const boxes = runAll(goal).results;
+    const short = prShortlist(boxes, prefilter(rows, goal), 10);
+    assert.ok(short.every((r) => boxes.some((b) => b.driverId === r.id && b.box === "vented")), "only drivers with a ported box");
+    const res = short.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id), goal, "pr", prs));
+    assert.ok(res.length >= 5, `${use}: ${res.length} PR boxes`);
+    for (const r of res) {
+      const vented = boxes.find((b) => b.driverId === r.driverId && b.box === "vented")!;
+      assert.ok(Math.abs(r.vb_l - vented.vb_l) < 0.2 && Math.abs(r.fb! - vented.fb!) < 0.2, `${r.name}: same box as the ported one`);
+      assert.ok(r.pr!.prUse <= 1 && r.pr!.count >= 1, `${r.name}: ${JSON.stringify(r.pr)}`);
+      const s = openResults(DEFAULT_STATE, loaded(r.driverId), [r], goal);
+      const des = s.designs[0]!;
+      assert.equal(des.kind, "pr");
+      const res2 = runDesigns(s, solveDriver(s))[0]!.result;
+      assert.ok(Math.abs(res2.summary.f3! - r.f3) < 0.05 * r.f3, `${r.name} F3 ${res2.summary.f3} vs ${r.f3}`);
+      assert.ok(Math.abs(res2.summary.fb! - r.fb!) < 0.05 * r.fb!, `${r.name} Fb ${res2.summary.fb} vs ${r.fb}`);
+      const app = limitsOf(res2, s.xmax_mm!, false);
+      if (!r.over.includes("xmax")) assert.ok(app.x! <= s.xmax_mm! * 1.02);
+    }
+  }
+  // Without PRs to try, nothing.
+  const goal = goalFor("home", "balanced");
+  const row = prShortlist(runAll(goal).results, prefilter(rows, goal), 1)[0]!;
+  assert.deepEqual(evaluateDriver(DEFAULT_STATE, row, loaded(row.id), goal, "pr", []), []);
 });

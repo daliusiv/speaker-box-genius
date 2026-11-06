@@ -4,7 +4,7 @@
  * out with its results, then "done". The dialog falls back to running them itself in slices
  * when a worker can't start (an old browser, or offline before this file was ever fetched).
  */
-import { evaluateDriver, type AssistantGoal, type AssistantResult, type AssistantStage, type IndexRow } from "./assistant.ts";
+import { evaluateDriver, type AssistantGoal, type AssistantResult, type AssistantStage, type IndexRow, type PrCandidateWithParams } from "./assistant.ts";
 import type { LoadedDriver } from "./library.ts";
 import type { AppState } from "./state.ts";
 
@@ -17,18 +17,20 @@ export interface WorkerJob {
   base: AppState;
   goal: AssistantGoal;
   tasks: WorkerTask[];
+  /** The database's passive radiators, for "pr" tasks. */
+  prs?: PrCandidateWithParams[];
 }
 export type WorkerReply = { type: "result"; done: number; results: AssistantResult[] } | { type: "done" };
 
 const post = (m: WorkerReply) => (self as unknown as { postMessage: (m: WorkerReply) => void }).postMessage(m);
 
 self.onmessage = (e: MessageEvent<WorkerJob>) => {
-  const { base, goal, tasks } = e.data;
+  const { base, goal, tasks, prs } = e.data;
   let done = 0;
   for (const t of tasks) {
     let results: AssistantResult[] = [];
     try {
-      results = evaluateDriver(base, t.row, t.driver, goal, t.stage);
+      results = evaluateDriver(base, t.row, t.driver, goal, t.stage, prs);
     } catch {
       // One that won't simulate is left out; the rest carry on.
     }

@@ -40,6 +40,8 @@ In the app, the passive radiator design has a **QB3** button among its presets: 
 
 ## Step 2: pick a passive radiator that can keep up
 
+> **No driver yet?** The [design assistant](/guides/design-assistant/) tries the database's drivers in passive radiator boxes, with the same finder, and ranks them against sealed and ported boxes.
+
 The PR has to move more air than the woofer, because near Fb most of the sound comes from the PR. Compare displacements, Sd × Xmax:
 
 | | Sd | Xmax | Displacement |

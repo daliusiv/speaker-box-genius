@@ -25,10 +25,11 @@ Not sure which driver to buy, or which box to put it in? The design assistant as
 
 - **Sealed:** sized for a Qtc of 0.707, or as big as your limit allows.
 - **Ported:** a flat alignment (QB3, or Keele for a higher Qts), capped at your limit. In a smaller box it picks the tuning with the lowest F3 that stays flat. Each port is the simplest one that fits straight inside the box and stays under the chuffing line at your power: a plain tube, then a tube with rounded (flared) ends, then a slot along a wall.
+- **Passive radiator boxes** (on by default for home subs, bookshelf woofers and towers; tick **Passive radiator** for the others): the ported box's size and tuning with the database's passive radiators instead of a port, picked by the app's PR finder in groups of 1, 2 or 4 and tuned with added mass. A PR that runs out of travel before the driver, needs more than three times its own mass added, or won't fit a face of the box is ruled out. With no port, there's no chuffing, so a PR box often stays within its limits where the ported one can't.
 - **Transmission lines** (bookshelf, tower and "something else"): a mass-loaded line (MLTL) and a classic tapered line from the app's line presets, narrowed to your volume and tuned, then folded with the app's fold tool into a cabinet no more than 125 cm tall, 50 cm deep and 45 cm wide (as few folds as it takes, the driver in the first run). Lines that won't fold into that, are longer than 3 m or are much narrower than the cone are left out.
 - **Bandpass boxes** (car, home and "something else" subwoofers): 4th order (sealed rear, ported front) and 6th order (both chambers ported), found by a search within your volume, with a plain, flared or slotted port in each chamber. A bandpass box only plays a band, so it's never offered for a speaker; its band (−3 dB from its own peak) has to reach up to at least 80 Hz to cross over to your main speakers. The same search is the **Size for a flat band** button on any bandpass design in the app.
 
-Lines and bandpass boxes take longer to work out, so they're tried after the plain boxes, for the best drivers from those plus the drivers whose parameters suit them best. They appear when that search finishes, or earlier with **Show them now**. The **Show** switch filters the list by box type.
+Passive radiator boxes, lines and bandpass boxes take longer to work out, so they're tried after the plain boxes, for the best drivers from those plus the drivers whose parameters suit them best (for PRs: the drivers whose ported box goes deepest). They appear when that search finishes, or earlier with **Show them now**. The **Show** switch filters the list by box type.
 
 ![Hi-fi results, best first: each card gives the F3, the output at your frequency, the box size and how it's graded.](img/assistant-results.png)
 
@@ -46,6 +47,14 @@ On the excursion chart, the deep-bass zone is shaded, with its own 2 × Xmax lin
 ![A ported 8″ woofer at 50 W: it reaches Xmax just below 40 Hz, inside the shaded deep-bass zone, and stays well under 2 × Xmax.](img/deep-bass-zone.png)
 
 A subsonic filter (on the **Signal** tab) removes the deep-bass zone altogether; see the [subsonic filter guide](/guides/subsonic-filter/).
+
+## Passive radiators
+
+Each PR card gives the radiator, how many, the mass to add to each, and how much of its travel it uses when the driver reaches its own Xmax (under 100 %, or the PR would become the limit). **Open with ported too** puts the same driver's ported box next to it.
+
+![Home subwoofer results showing only the passive radiator boxes.](img/assistant-pr.png)
+
+Opened, it's a full PR design: the [passive radiator guide](/guides/passive-radiator-box/) shows how to check it and compare it with a port.
 
 ## Towers and transmission lines
 

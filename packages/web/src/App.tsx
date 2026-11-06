@@ -1938,6 +1938,8 @@ export function App(props: { initial: AppState | null }) {
                 ? `${r.vb_l} L ${r.line?.label ?? "line"}`
                 : r.box === "bandpass"
                   ? `${r.vb_l} L ${r.bandpass?.order === "4" ? "4th" : "6th"}-order bandpass box`
+                  : r.box === "pr"
+                  ? `${r.vb_l} L box with ${r.pr && r.pr.count > 1 ? `${r.pr.count} × ` : "a "}${r.pr?.name ?? "passive radiator"}`
                   : `${r.vb_l} L ${r.box === "sealed" ? "sealed" : "ported"} box`,
             )
             .join(" and ");
