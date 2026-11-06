@@ -27,6 +27,8 @@ Know where the box has to go (a car boot, a shelf, beside the sofa) but not its 
 
 Each card says whether the box fills your space or how much of it it uses. A sealed box at Qtc 0.707, or a ported box at its flat alignment, often needs less: when filling the space reaches noticeably deeper (at least 3 % lower F3), a second result of that type fills it, at a lower Qtc or tuned for the bigger box. In the app it's named "(fills space)".
 
+A bandpass box in a space has its driver on a divider panel across the space: the smallest one that takes the drivers, with room behind it for the magnet in the rear chamber. The two chambers share what's left after the driver, the divider and both ports.
+
 ![My space in the Limits step: the box's outside size and wall thickness.](img/assistant-space.png)
 
 ![Results that fill a 45 × 40 × 40 cm space, each port running along its longest side.](img/assistant-space-results.png) Opening a result sets the volume calculator to your space, and a box that fills it takes its volume from there, so the app shows the same net volume.
