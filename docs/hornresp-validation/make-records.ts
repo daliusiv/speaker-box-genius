@@ -26,6 +26,11 @@ const more: [string, string, typeof driver, number, Partial<LineDesign>][] = [
   ["12-sub-tapped-horn", "12-inch sub, tapped horn (Par) 450 -> 1800 cm2, 300 cm, taps at 25 and 160 cm", SUB, 1, { end: "tapped", closedArea_cm2: 450, driverAt_cm: 25, tapAt_cm: 160, sections: [sec(300, 1800)] }],
   ["13-fr-tqwt", "4-inch full-range, TQWT (Con) 15 -> 90 cm2, 130 cm, driver at 42 cm", FR, 1, { end: "open", closedArea_cm2: 15, driverAt_cm: 42, sections: [sec(130, 90, "conical")] }],
   ["14-fr-tapered-tl", "4-inch full-range, tapered TL (Par) 80 -> 40 cm2, 150 cm, driver at the closed end", FR, 1, { end: "open", closedArea_cm2: 80, driverAt_cm: 0, sections: [sec(150, 40)] }],
+  // Front-loaded horns: chambers that shape the response (small rear, large throat), none in
+  // front of the cone, and a two-segment horn on the subwoofer.
+  ["17-front-horn-small-chambers", "07 with an 8 L rear chamber and a 3 L throat chamber", driver, 1, { end: "horn", closedArea_cm2: 110, driverAt_cm: 0, sections: [sec(230, 4000, "exponential")], rearChamber_l: 8, throatChamber_l: 3 }],
+  ["18-front-horn-no-throat", "07 with no throat chamber (cone straight into the throat), 20 L rear", driver, 1, { end: "horn", closedArea_cm2: 110, driverAt_cm: 0, sections: [sec(230, 4000, "exponential")], rearChamber_l: 20, throatChamber_l: 0 }],
+  ["19-sub-front-horn", "12-inch sub, front horn Con 300 -> 900 cm2 60 cm + Exp -> 6000 cm2 200 cm, Vrc 40 L, Vtc 2 L", SUB, 1, { end: "horn", closedArea_cm2: 300, driverAt_cm: 0, sections: [sec(60, 900, "conical"), sec(200, 6000, "exponential")], rearChamber_l: 40, throatChamber_l: 2 }],
 ];
 mkdirSync(new URL("./records", import.meta.url), { recursive: true });
 const index: string[] = [];

@@ -62,6 +62,9 @@ export const HORNRESP_TITLES: Record<string, { title: string; text: string }> = 
   "12-sub-tapped-horn": { title: "Subwoofer in a tapped horn", text: "12″ subwoofer, 300 cm, 450 → 1800 cm², taps at 25 and 160 cm" },
   "13-fr-tqwt": { title: "Full-range TQWT", text: "4″ full-range, 130 cm conical, 15 → 90 cm², driver 42 cm from the closed end" },
   "14-fr-tapered-tl": { title: "Full-range tapered line", text: "4″ full-range, 150 cm, 80 → 40 cm², driver at the closed end" },
+  "17-front-horn-small-chambers": { title: "Front horn, small chambers", text: "Case 07 with an 8 L rear chamber and a 3 L throat chamber" },
+  "18-front-horn-no-throat": { title: "Front horn, no throat chamber", text: "Case 07 with the cone straight into the 110 cm² throat, 20 L rear chamber" },
+  "19-sub-front-horn": { title: "Subwoofer front horn, two segments", text: "12″ subwoofer, Con 300 → 900 cm² 60 cm + Exp → 6000 cm² 200 cm, 40 L rear, 2 L throat chamber" },
   "16-mltl-hot-coil": { title: "Mass-loaded line, voice coil at 120 °C", text: "Case 05 with Hornresp's Power Compression at 120 °C" },
   "15-mltl-2-drivers": { title: "Mass-loaded line, two drivers", text: "Case 05 with two drivers in parallel (Hornresp \"OD = 2P\")" },
 };
