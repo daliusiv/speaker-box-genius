@@ -6,7 +6,7 @@ import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { needsSpace } from "../src/ports.ts";
 import { PORT_LIMIT, lineFoldOf, limitsOf, volumeFor, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { GD_CYCLES, decodeShared, decodeSharedAny, driverFits, encodeShared, encodeSharedShort, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { GD_CYCLES, mountsFit, decodeShared, decodeSharedAny, driverFits, encodeShared, encodeSharedShort, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -354,7 +354,7 @@ test("fit my space: a second sealed box that fills the space when Qtc 0.707 leav
       full++;
       const [a, b] = sealed as [AssistantResult, AssistantResult];
       assert.ok(b.key.endsWith(":full") && b.space?.fills && !a.space?.fills && b.vb_l > a.vb_l && b.f3 < a.f3, `${r.id}: ${JSON.stringify([a.key, a.vb_l, a.f3, a.space, b.key, b.vb_l, b.f3, b.space])}`);
-      assert.match(b.notes.join(), /Fills your space: Qtc 0\.\d+/);
+      assert.match(b.notes.join(), /fills your space \(Qtc 0\.\d+\)/);
     }
     for (const x of rs) if (x.space?.portUsesSpace) {
       const s = openResults(DEFAULT_STATE, d, [rs.find((y) => y.box === "sealed") ?? x, x].filter((y, i, a) => a.indexOf(y) === i), goal);
@@ -389,9 +389,14 @@ test("fit my space: passive radiators too wide for the space's faces are left ou
   const goal = { ...goalFor("hifi", "balanced"), space, boxes: ["pr"] as AssistantGoal["boxes"] };
   const face = insideOf(space)[1]!;
   for (const r of prefilter(rows, goal).slice(0, 15)) {
-    for (const x of evaluateDriver(DEFAULT_STATE, r, loaded(r.id), goal, "pr", prs)) {
+    const d = loaded(r.id);
+    for (const x of evaluateDriver(DEFAULT_STATE, r, d, goal, "pr", prs)) {
       const c = prs.find((p) => p.name === x.pr!.name)!;
       assert.ok((c.od_cm ?? 0) <= face, `${x.pr!.name}: ${c.od_cm} cm on a ${face} cm face`);
+      // The driver and all the PRs together.
+      const pr = { d_cm: c.od_cm ?? 1.3 * 2 * Math.sqrt(c.pr.sd_cm2 / Math.PI), depth_cm: 0 };
+      const drv = { d_cm: d.cutout_mm ? d.cutout_mm / 10 + 2.5 : r.size_in! * 2.54, depth_cm: (d.depth_mm ?? 0) / 10 };
+      assert.ok(mountsFit([drv, ...Array.from({ length: x.pr!.count }, () => pr)], space), `${r.id} + ${x.pr!.count} × ${x.pr!.name}`);
     }
   }
 });
@@ -406,4 +411,36 @@ test("shared results: the short (deflated) link round-trips with the database st
   assert.deepEqual(await decodeSharedAny(short), x);
   assert.deepEqual(await decodeSharedAny(long), x);
   assert.equal(await decodeSharedAny("zzzz"), null);
+});
+
+test("fit my space: drivers and passive radiators have to go on the faces together", () => {
+  const sp = { width_cm: 30, height_cm: 30, depth_cm: 30, wall_mm: 18 }; // inside 26.4 cm each way
+  const m = (d_cm: number, depth_cm = 0) => ({ d_cm, depth_cm });
+  assert.ok(mountsFit([m(21, 10)], sp));
+  // Six faces, one row each: twelve 12 cm parts, not thirteen.
+  assert.ok(mountsFit(Array.from({ length: 12 }, () => m(12)), sp));
+  assert.ok(!mountsFit(Array.from({ length: 13 }, () => m(12)), sp));
+  // A deep driver needs room behind its face.
+  assert.ok(!mountsFit([m(21, 27)], sp));
+  // Two 8" drivers in a long, low space: side by side along its length.
+  const low = { width_cm: 60, height_cm: 26, depth_cm: 30, wall_mm: 18 };
+  assert.ok(mountsFit([m(21, 9), m(21, 9)], low));
+});
+
+test("fit my space: a second ported box that fills the space when the alignment leaves room", () => {
+  const space = { width_cm: 70, height_cm: 55, depth_cm: 55, wall_mm: 18 };
+  const goal = { ...goalFor("home", "balanced"), space, boxes: ["vented"] as AssistantGoal["boxes"] };
+  let full = 0;
+  for (const r of prefilter(rows, goal).slice(0, 60)) {
+    const d = loaded(r.id);
+    const rs = evaluateDriver(DEFAULT_STATE, r, d, goal);
+    if (rs.length < 2) continue;
+    full++;
+    const [a, b] = rs as [AssistantResult, AssistantResult];
+    assert.ok(b.key.endsWith(":full") && b.space?.fills && b.vb_l > a.vb_l && b.f3 < 0.97 * a.f3 && b.vb_l <= b.space.holds_l + 0.15, `${r.id}: ${JSON.stringify([a.vb_l, a.f3, b.vb_l, b.f3, b.space])}`);
+    const s = openResults(DEFAULT_STATE, d, [a, b], goal);
+    assert.deepEqual(s.designs.map((x) => x.name.endsWith("(fills space)")), [false, true]);
+    assert.equal(s.volume.link, s.designs[1]!.id);
+  }
+  assert.ok(full > 0, "some driver's ported box is well under the space");
 });

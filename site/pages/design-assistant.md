@@ -23,9 +23,13 @@ Not sure which driver to buy, or which box to put it in? The design assistant as
 
 ## Fit my space
 
-Know where the box has to go (a car boot, a shelf, beside the sofa) but not its volume? Choose **My space** in the Limits step and give the box's outside width, height and depth and the wall thickness. Each driver then gets the net volume that space holds with its own displacement, and each ported or passive radiator box with its own port or PRs taken off too, worked out exactly as the volume calculator does. Drivers whose frame (from the database's cutout size where it has one) won't fit a face of the box, or that are too deep for it, are left out, as are passive radiators too wide for a face; transmission lines have to fold into it. A ported box that fills your space can have a port as long as the space's longest inside side, and a slot as wide as the next, rather than the cube-shaped box the app assumes otherwise.
+Know where the box has to go (a car boot, a shelf, beside the sofa) but not its volume? Choose **My space** in the Limits step and give the box's outside width, height and depth and the wall thickness. Each driver then gets the net volume that space holds with its own displacement, and each ported or passive radiator box with its own port or PRs taken off too, worked out exactly as the volume calculator does. Drivers whose frame (from the database's cutout size where it has one) won't fit a face of the box, or that are too deep for it, are left out. The drivers and passive radiators have to go on the box's panels together (a row on each of the six), so a small space never gets four PRs that couldn't be mounted; transmission lines have to fold into it. A ported box that fills your space can have a port as long as the space's longest inside side, and a slot as wide as the next, rather than the cube-shaped box the app assumes otherwise.
 
-Each card says whether the box fills your space or how much of it it uses. A sealed box at Qtc 0.707 often needs less: when filling the space reaches noticeably deeper, a second sealed result fills it (at a lower Qtc). Opening a result sets the volume calculator to your space, and a box that fills it takes its volume from there, so the app shows the same net volume.
+Each card says whether the box fills your space or how much of it it uses. A sealed box at Qtc 0.707, or a ported box at its flat alignment, often needs less: when filling the space reaches noticeably deeper (at least 3 % lower F3), a second result of that type fills it, at a lower Qtc or tuned for the bigger box. In the app it's named "(fills space)".
+
+![My space in the Limits step: the box's outside size and wall thickness.](img/assistant-space.png)
+
+![Results that fill a 45 × 40 × 40 cm space, each port running along its longest side.](img/assistant-space-results.png) Opening a result sets the volume calculator to your space, and a box that fills it takes its volume from there, so the app shows the same net volume.
 
 ## What it tries
 
