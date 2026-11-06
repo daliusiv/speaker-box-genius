@@ -3693,3 +3693,14 @@ dialog.assistant .lib-inner:focus {
   font-size: 0.85em;
   white-space: nowrap;
 }
+
+.assist-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.assist-share .hint {
+  font-size: 0.8rem;
+}

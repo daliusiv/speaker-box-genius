@@ -1,4 +1,5 @@
 import { DEFAULT_STATE, type AppState } from "./state.ts";
+import { decodeShared, type SharedResults } from "./assistant.ts";
 
 /** The marker a new tab is opened with to start a fresh project in the design assistant. */
 export const ASSISTANT_HASH = "#assistant";
@@ -9,9 +10,16 @@ export const ASSISTANT_HASH = "#assistant";
  * link. Never for a shared link, nor for someone who has used the app before. Read once, as
  * the page loads, before the app writes its own design into the address.
  */
+/** A shared list of assistant results ("#assistant=…"), read once as the page loads. */
+export const SHARED_RESULTS: SharedResults | null = (() => {
+  if (typeof location === "undefined") return null;
+  const m = /^#assistant=([\w-]+)$/.exec(location.hash);
+  return m ? decodeShared(m[1]!) : null;
+})();
+
 export const START_IN_ASSISTANT = (() => {
   if (typeof location === "undefined") return false;
-  if (location.hash === ASSISTANT_HASH) return true;
+  if (location.hash === ASSISTANT_HASH || SHARED_RESULTS) return true;
   if (/(?:^#|&)[sz]=/.test(location.hash)) return false;
   try {
     const before =

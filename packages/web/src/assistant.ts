@@ -932,3 +932,63 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
     designs,
   };
 }
+
+/**
+ * A shared list of results: the goal, the chuffing line it was graded against, and the box
+ * type shown. The list itself isn't in the link: the assistant works it out again from the
+ * same goal (with the database as it is when the link is opened).
+ */
+export interface SharedResults {
+  goal: AssistantGoal;
+  portLimit_ms?: number;
+  only?: AssistantBox | "all";
+}
+
+const B64 = (b: Uint8Array) => btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const UNB64 = (t: string) => Uint8Array.from(atob(t.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+
+/** The part of a link after "#assistant=". */
+export function encodeShared(x: SharedResults): string {
+  return B64(new TextEncoder().encode(JSON.stringify({ v: 1, g: x.goal, ...(x.portLimit_ms ? { pl: x.portLimit_ms } : {}), ...(x.only && x.only !== "all" ? { o: x.only } : {}) })));
+}
+
+const BOXES: AssistantBox[] = ["sealed", "vented", "pr", "line", "bandpass"];
+const PRIORITY_IDS: AssistantPriority[] = ["balanced", "deep", "loud", "small"];
+const num = (v: unknown, lo: number, hi: number) => (typeof v === "number" && Number.isFinite(v) && v >= lo && v <= hi ? v : undefined);
+
+/** A shared link's results, checked field by field (anything odd falls back to the use's defaults); null if it isn't one. */
+export function decodeShared(text: string): SharedResults | null {
+  let raw: Record<string, unknown>;
+  try {
+    raw = JSON.parse(new TextDecoder().decode(UNB64(text)));
+  } catch {
+    return null;
+  }
+  const g = raw?.g as Record<string, unknown> | undefined;
+  if (!g || typeof g.use !== "string" || !(g.use in USES)) return null;
+  const priority = PRIORITY_IDS.includes(g.priority as AssistantPriority) ? (g.priority as AssistantPriority) : "balanced";
+  const base = goalFor(g.use as AssistantUse, priority);
+  const sp = g.space as Record<string, unknown> | undefined;
+  const space =
+    sp && num(sp.width_cm, 5, 500) && num(sp.height_cm, 5, 500) && num(sp.depth_cm, 5, 500)
+      ? { width_cm: sp.width_cm as number, height_cm: sp.height_cm as number, depth_cm: sp.depth_cm as number, wall_mm: num(sp.wall_mm, 1, 60) ?? 18 }
+      : undefined;
+  const boxes = Array.isArray(g.boxes) ? (g.boxes as unknown[]).filter((b): b is AssistantBox => BOXES.includes(b as AssistantBox)) : base.boxes;
+  const goal: AssistantGoal = {
+    ...base,
+    maxVolume_l: num(g.maxVolume_l, 0.5, 5000) ?? base.maxVolume_l,
+    power_w: num(g.power_w, 1, 50000) ?? base.power_w,
+    minLoad_ohm: num(g.minLoad_ohm, 0.5, 32) ?? base.minLoad_ohm,
+    drivers: g.drivers === 2 ? 2 : 1,
+    sizeMin_in: num(g.sizeMin_in, 1, 30) ?? base.sizeMin_in,
+    sizeMax_in: num(g.sizeMax_in, 1, 30) ?? base.sizeMax_in,
+    boxes: boxes.length ? boxes : base.boxes,
+    brands: Array.isArray(g.brands) ? (g.brands as unknown[]).filter((b): b is string => typeof b === "string").slice(0, 100) : [],
+    loudAt_hz: num(g.loudAt_hz, 10, 500) ?? base.loudAt_hz,
+    targetF3_hz: num(g.targetF3_hz, 10, 500) ?? base.targetF3_hz,
+    ...(space ? { space } : {}),
+  };
+  const pl = num(raw.pl, 5, 60);
+  const o = raw.o === "all" || BOXES.includes(raw.o as AssistantBox) ? (raw.o as AssistantBox | "all") : undefined;
+  return { goal, ...(pl ? { portLimit_ms: pl } : {}), ...(o ? { only: o } : {}) };
+}
