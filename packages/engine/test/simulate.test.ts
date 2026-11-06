@@ -270,6 +270,10 @@ test("semi-inductance coil: Re + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)), repl
     near(z2.re, 2 * z.re, 1e-9);
     near(z2.im, 2 * z.im, 1e-9);
   }
+  // Its own Re' replaces Re in the coil; Bl stays as the T/S give it.
+  const own = driverModel({ ...DRIVER, semi: { ...semi, re_ohm: 4 } });
+  near(own.re, 4, 1e-12);
+  near(own.bl, m.bl, 1e-12);
   // All zero: the plain Le model as before.
   const off = driverModel({ ...DRIVER, le_mh: 1, semi: { leb_mh: 0, le_mh: 0, ke: 0, rss_ohm: 0 } });
   assert.equal(off.semi, null);

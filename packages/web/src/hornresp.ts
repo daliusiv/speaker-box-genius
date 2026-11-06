@@ -196,11 +196,11 @@ export function toHornresp(
   const kind = topo === "OD" ? "offset driver (driver at S2)" : topo === "TH" ? "tapped horn (driver between S2 and S3)" : "front-loaded";
   put(topo, count > 1 ? `${count}${o.wiring === "series" ? "S" : "P"}` : "1", count > 1 ? `${kind}, ${count} drivers in ${o.wiring === "series" ? "series" : "parallel"}` : kind);
   head("ADVANCED DRIVER PARAMETER VALUES FOR SEMI-INDUCTANCE MODEL");
-  // Hornresp's semi-inductance model is the app's (its Re' is the coil's Re). Hornresp also
+  // Hornresp's semi-inductance model is the app's (Re' is the model's own Re, if set). Hornresp also
   // needs it switched on: double-click Le, then On.
   const semi = semiActive(driver.semi) ? driver.semi : null;
   if (semi) {
-    put("Re'", r2(m.re), "Ω");
+    put("Re'", r2(semi.re_ohm && semi.re_ohm > 0 ? semi.re_ohm : m.re), "Ω");
     put("Leb", r2(semi.leb_mh), "mH");
     put("Le", r2(semi.le_mh), "mH");
     put("Ke", r2(semi.ke), "sH");
@@ -419,11 +419,11 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
       const v = pairs.slice(at).find(([k]) => k.toLowerCase() === key)?.[1];
       return v === undefined ? 0 : num(v) || 0;
     };
-    const s = { leb_mh: after("leb"), le_mh: after("le"), ke: after("ke"), rss_ohm: after("rss") };
+    const s: SemiInductance = { leb_mh: after("leb"), le_mh: after("le"), ke: after("ke"), rss_ohm: after("rss") };
     if (!semiActive(s)) return {};
-    const reP = /Re'\s*=\s*([-+\d.eE]+)/.exec(text)?.[1];
-    if (reP && Number(reP) > 0 && Math.abs(Number(reP) / (get("Re") ?? Number(reP)) - 1) > 0.005)
-      warnings.push(`The record's semi-inductance Re' (${reP} Ω) differs from Re; the app uses Re for both.`);
+    // Re' only when it differs from Re (Hornresp takes it as the coil's resistance, Bl kept).
+    const reP = Number(/Re'\s*=\s*([-+\d.eE]+)/.exec(text)?.[1] ?? 0);
+    if (reP > 0 && Math.abs(reP / (get("Re") ?? reP) - 1) > 0.001) s.re_ohm = reP;
     return { semi: s };
   };
   const sd = get("Sd");

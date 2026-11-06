@@ -1,0 +1,13 @@
+{
+  "title": "Sealed box, voice coil at 120 °C",
+  "text": "B1 with Hornresp's Power Compression at 120 °C (Settings → Voice coil °C)",
+  "frontAir": 1,
+  "coilTemp_C": 120,
+  "input": {
+    "kind": "sealed",
+    "vb_l": 10.4,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

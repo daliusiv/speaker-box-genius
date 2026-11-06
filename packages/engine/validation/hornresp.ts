@@ -62,6 +62,7 @@ export const HORNRESP_TITLES: Record<string, { title: string; text: string }> = 
   "12-sub-tapped-horn": { title: "Subwoofer in a tapped horn", text: "12″ subwoofer, 300 cm, 450 → 1800 cm², taps at 25 and 160 cm" },
   "13-fr-tqwt": { title: "Full-range TQWT", text: "4″ full-range, 130 cm conical, 15 → 90 cm², driver 42 cm from the closed end" },
   "14-fr-tapered-tl": { title: "Full-range tapered line", text: "4″ full-range, 150 cm, 80 → 40 cm², driver at the closed end" },
+  "16-mltl-hot-coil": { title: "Mass-loaded line, voice coil at 120 °C", text: "Case 05 with Hornresp's Power Compression at 120 °C" },
   "15-mltl-2-drivers": { title: "Mass-loaded line, two drivers", text: "Case 05 with two drivers in parallel (Hornresp \"OD = 2P\")" },
 };
 
@@ -278,8 +279,8 @@ export function runHornresp(id: string): HornrespRun {
   const dir = join(HORNRESP_DIR, id);
   const input = JSON.parse(readFileSync(join(dir, "input.json"), "utf8")) as LineInput;
   const driver = (existsSync(join(dir, "driver.json")) ? JSON.parse(readFileSync(join(dir, "driver.json"), "utf8")) : HORNRESP_DRIVER) as DriverInput;
-  // options.json: more than one driver (Hornresp's "Nd = 2P").
-  const extra = existsSync(join(dir, "options.json")) ? (JSON.parse(readFileSync(join(dir, "options.json"), "utf8")) as Pick<SimulationOptions, "drivers" | "wiring">) : {};
+  // options.json: more than one driver (Hornresp's "Nd = 2P"), or a hot voice coil.
+  const extra = existsSync(join(dir, "options.json")) ? (JSON.parse(readFileSync(join(dir, "options.json"), "utf8")) as Pick<SimulationOptions, "drivers" | "wiring" | "coilTemp_C">) : {};
   const base: SimulationOptions = { power: 2.83, convention: "volts", fMin: 10, fMax: 2000, points: 16000, air: HORNRESP_AIR, splFrom: "power", ...extra };
   const r = simulate(driver, input, base);
   // A fine grid, so a sharp resonance between two of our points isn't flattened by interpolation.
@@ -409,7 +410,9 @@ What the comparison settles, and the conventions it has to bridge:
 - **Passive radiators.** Hornresp adds the front air to the radiator's moving mass as well (3.83 g for the DSA270-PR); with that, its output alone is within 0.01 dB.
 - **Two drivers side by side** (Hornresp's "Nd = 2P") load each other's fronts: Hornresp treats them as one piston of twice the area, which gives each √2 × one cone's front air. In lines and horns the app now does the same (case 15: the mass-loaded line with two drivers is within 0.03 dB and 0.2 %); in boxes the app keeps each driver's datasheet Mms, as WinISD does, and the case gives the cones Hornresp's air.
 
-**Semi-inductance.** Hornresp's semi-inductance model (Thorborg and Futtrup) is the coil impedance Re' + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)); two sets on the sealed box (B8a: Leb 0.3 mH, Le 1 mH, Ke 0.05 sH, Rss 30 Ω; B8b: Leb 1.36 mH, Le 3.16 mH, Ke 0.21 sH, Rss 30.6 Ω) pin that down exactly. The app has the same model (Driver → Coil model → Semi-inductance): impedance within 0.3 % on average up to 20 kHz, and the SPL the coil takes away up there (compared as the change from the plain B1 box, so the box's own radiation doesn't enter) within 0.03 dB. Re' was set equal to Re; the app uses Re for both.
+**Semi-inductance.** Hornresp's semi-inductance model (Thorborg and Futtrup) is the coil impedance Re' + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)); two sets on the sealed box (B8a: Leb 0.3 mH, Le 1 mH, Ke 0.05 sH, Rss 30 Ω; B8b: Leb 1.36 mH, Le 3.16 mH, Ke 0.21 sH, Rss 30.6 Ω) pin that down exactly. The app has the same model (Driver → Coil model → Semi-inductance): impedance within 0.3 % on average up to 20 kHz, and the SPL the coil takes away up there (compared as the change from the plain B1 box, so the box's own radiation doesn't enter) within 0.03 dB. A third record (B8c) sets Re' to 6.5 Ω against Re 5.9 Ω: Hornresp takes Re' as the coil's resistance everywhere in the circuit and keeps Bl as the T/S give it (from Re), and the app does the same (Re′ in the model's fields); within 0.22 % in impedance.
+
+**Power compression.** Hornresp's Tools → Power Compression sets the voice coil's temperature; at 120 °C its Re rises by 39.3 %, copper's 0.393 %/°C, as the app's Settings → Voice coil °C does. The sealed box (B9) and the mass-loaded line (case 16) at 120 °C match as closely as at 20 °C: 0.05 dB and 0.5 % in impedance for the box, 0.02 dB and 0.3 % for the line.
 
 The fourth-order and parallel sixth-order bandpass boxes are held to looser SPL limits: above about 150 Hz, more than 12 dB below the passband, the app's output rises up to 1 dB above Hornresp's (the impedance and excursion still match within 0.4 %), and the parallel box's slope below 15 Hz, 50 dB down, sits up to 1.3 dB lower. The front port's air speed in the fourth-order box peaks at 3.39 m/s at 51 Hz in the app and about 3.38 m/s on Hornresp's chart.`;
 
@@ -433,6 +436,8 @@ export interface HornrespBoxCase {
   splDeltaFrom?: string;
   /** Hornresp's semi-inductance model (its Re' is the driver's Re), in place of Le. */
   semi?: SemiInductance;
+  /** Voice-coil temperature (°C): Hornresp's Power Compression. */
+  coilTemp_C?: number;
   /** "pipe": the port as a short pipe, as Hornresp has it (its output rises towards the pipe's resonance). */
   portModel?: "lumped" | "pipe";
   drivers?: number;
@@ -493,7 +498,7 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
   const driver = { ...hornrespDriver(HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}) };
   const base: SimulationOptions = {
-    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel,
+    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, coilTemp_C: c.coilTemp_C,
   };
   const r = simulate(driver, c.input, base);
   const table = (name: string) => (existsSync(join(dir, name)) ? readTable(join(dir, name)).filter((x) => x.Freq! <= HORNRESP_BOX_F_MAX) : null);

@@ -96,7 +96,7 @@ The response at 48 kHz up to 20 kHz (from radiated power), inverse-FFT'd, peak s
 
 ### Semi-inductance coil model (Driver → Coil model)
 
-Hornresp's semi-inductance model (Thorborg and Futtrup): Re + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)), in place of Le and L2R2. Compared with Hornresp on a sealed box with two parameter sets (see its notes): impedance within 0.3 % up to 20 kHz, the coil's effect on SPL within 0.03 dB. Checks (`simulate.test.ts`): the closed form at three frequencies, and series isobaric coils doubling it.
+Hornresp's semi-inductance model (Thorborg and Futtrup): Re + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)), in place of Le and L2R2. Compared with Hornresp on a sealed box with three parameter sets, one with its own Re′ (see its notes): impedance within 0.3 % up to 20 kHz, the coil's effect on SPL within 0.03 dB. Re′, when set, is the coil's resistance; Bl stays from Re and Qes, as in Hornresp. Checks (`simulate.test.ts`): the closed form at three frequencies, and series isobaric coils doubling it.
 
 ### Max SPL: power rating against real power, amplifier limits
 
@@ -104,4 +104,4 @@ The default holds Pe against V²/Re, as WinISD does (that's what the WinISD case
 
 ### Hot voice coil (Settings → Voice coil °C)
 
-Not in WinISD (20 °C, the default, is what's compared). Re(T) = Re · (1 + 0.00393 (T − 20)), Bl, suspension and Le unchanged; watts are turned into volts with the cold Re (as an amplifier rating would be), and the thermal limit counts the smaller power the hot coil takes. Checks (`simulate.test.ts`): factor 1.3144 at 100 °C; above the bass the output falls towards 20·log of the Re ratio (2.37 dB at 100 °C; 0.13 dB short of it at 10 × fs with Qes 0.4, where the motor's damping still counts); less loss near resonance (higher Q); impedance minimum up by the Re ratio. Relative view: referred to the hot driver (shape and F3); dB SPL view: the lost output.
+Not in WinISD (20 °C, the default, is what's compared); it is Hornresp's Power Compression, compared at 120 °C for a sealed box and an MLTL (see its notes: within 0.05 dB and 0.5 %). Re(T) = Re · (1 + 0.00393 (T − 20)), Bl, suspension and Le unchanged; watts are turned into volts with the cold Re (as an amplifier rating would be), and the thermal limit counts the smaller power the hot coil takes. Checks (`simulate.test.ts`): factor 1.3144 at 100 °C; above the bass the output falls towards 20·log of the Re ratio (2.37 dB at 100 °C; 0.13 dB short of it at 10 × fs with Qes 0.4, where the motor's damping still counts); less loss near resonance (higher Q); impedance minimum up by the Re ratio. Relative view: referred to the hot driver (shape and F3); dB SPL view: the lost output.

@@ -43,6 +43,11 @@ export interface SemiInductance {
   le_mh: number;
   ke: number;
   rss_ohm: number;
+  /**
+   * The model's own coil resistance (Hornresp's Re'), in place of Re in the electrical circuit;
+   * Bl stays what the T/S give (from Re and Qes). Absent or 0: Re.
+   */
+  re_ohm?: number;
 }
 
 /** Whether a semi-inductance set does anything (any inductive part above zero). */
@@ -73,7 +78,8 @@ export function driverModel(d: DriverInput, air: Air = STANDARD_AIR): DriverMode
   const cms = cmsFromVas(d.vas_l, d.sd_cm2, air);
   const mms = mmsFromFsCms(d.fs, cms);
   return {
-    re: d.re,
+    // With the semi-inductance model's own Re' (as Hornresp has it), the coil is Re'; Bl below keeps Re.
+    re: semiActive(d.semi) && d.semi.re_ohm && d.semi.re_ohm > 0 ? d.semi.re_ohm : d.re,
     le: (d.le_mh ?? 0) / 1000,
     l2: d.l2_mh !== undefined && d.r2_ohm !== undefined && d.l2_mh > 0 && d.r2_ohm > 0 ? d.l2_mh / 1000 : 0,
     r2: d.l2_mh !== undefined && d.r2_ohm !== undefined && d.l2_mh > 0 && d.r2_ohm > 0 ? d.r2_ohm : 0,

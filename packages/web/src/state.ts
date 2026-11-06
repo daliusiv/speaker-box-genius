@@ -773,7 +773,15 @@ function driverSlotFrom(raw: Raw, d: DriverSlot): DriverSlot {
     l2_mh: nonNeg(raw.l2_mh),
     r2_ohm: nonNeg(raw.r2_ohm),
     ...(raw.semi && typeof raw.semi === "object"
-      ? { semi: { leb_mh: nonNeg(raw.semi.leb_mh), le_mh: nonNeg(raw.semi.le_mh), ke: nonNeg(raw.semi.ke), rss_ohm: nonNeg(raw.semi.rss_ohm) } }
+      ? {
+          semi: {
+            leb_mh: nonNeg(raw.semi.leb_mh),
+            le_mh: nonNeg(raw.semi.le_mh),
+            ke: nonNeg(raw.semi.ke),
+            rss_ohm: nonNeg(raw.semi.rss_ohm),
+            ...(nonNeg(raw.semi.re_ohm) > 0 ? { re_ohm: nonNeg(raw.semi.re_ohm) } : {}),
+          },
+        }
       : {}),
     xmax_mm: raw.xmax_mm ?? d.xmax_mm,
     pe_w: raw.pe_w ?? d.pe_w,
