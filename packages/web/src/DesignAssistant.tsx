@@ -7,8 +7,10 @@ import {
   BANDPASS_USES,
   LINE_USES,
   evaluateDriver,
+  encodeShared,
   goalFor,
   spaceGross_l,
+  type SharedResults,
   type SpaceGoal,
   bandpassShortlist,
   lineShortlist,
@@ -132,10 +134,31 @@ export function DesignAssistant(props: {
   onOpen: (d: LoadedDriver, rs: AssistantResult[], goal: AssistantGoal) => void;
   /** The chuffing line is the app's own setting (Settings → Ports): changed here, it changes there. */
   onPortLimit: (ms: number) => void;
+  /** A shared list of results to show (from a "#assistant=…" link), the first time the dialog opens. */
+  shared?: SharedResults | null;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [goal, setGoalRaw] = useState<AssistantGoal>(() => readGoal() ?? goalFor("car"));
   const [step, setStep] = useState(0);
+  const sharedUsed = useRef(false);
+  /** The box type a shared link showed, applied once its results are in. */
+  const sharedOnly = useRef<AssistantBox | "all">("all");
+  const [shareMsg, setShareMsg] = useState("");
+  const shareResults = async () => {
+    const url = `${location.origin}${location.pathname}#assistant=${encodeShared({ goal, portLimit_ms: portLimitOf(props.base), only })}`;
+    try {
+      if (navigator.share && matchMedia("(pointer: coarse)").matches) {
+        await navigator.share({ title: "Speaker Box Genius: design assistant results", url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShareMsg("Link copied ✓");
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      prompt("Copy the link:", url);
+    }
+    setTimeout(() => setShareMsg(""), 2500);
+  };
   const setGoal = (patch: Partial<AssistantGoal>) =>
     setGoalRaw((g) => {
       const next = { ...g, ...patch };
@@ -149,8 +172,18 @@ export function DesignAssistant(props: {
     if (!d) return;
     if (props.open && !d.open) {
       d.showModal();
+      const sh = props.shared;
+      if (sh && !sharedUsed.current) {
+        // A shared link: its goal (and chuffing line), straight to its results.
+        sharedUsed.current = true;
+        setGoalRaw(sh.goal);
+        saveGoal(sh.goal);
+        sharedOnly.current = sh.only ?? "all";
+        if (sh.portLimit_ms && sh.portLimit_ms !== portLimitOf(props.base)) props.onPortLimit(sh.portLimit_ms);
+        setStep(3);
+      }
       // A new project starts at "What for", with the last limits remembered.
-      setStep(0);
+      else setStep(0);
     }
     if (!props.open && d.open) d.close();
   }, [props.open]);
@@ -179,7 +212,8 @@ export function DesignAssistant(props: {
     setError("");
     setStopped(false);
     setShown(PAGE);
-    setOnly("all");
+    setOnly(sharedOnly.current);
+    sharedOnly.current = "all";
     setPending(0);
     const cands = prefilter(props.db.drivers, goal);
     const out: AssistantResult[] = [];
@@ -624,6 +658,12 @@ export function DesignAssistant(props: {
                     {PRIORITIES[p].label}
                   </button>
                 ))}
+              </div>
+              <div className="assist-share">
+                <button type="button" className="secondary" onClick={() => void shareResults()} disabled={!results?.length}>
+                  Share these results
+                </button>
+                <span className="hint">{shareMsg || "A link that opens this list (worked out again from the same limits)"}</span>
               </div>
               {kinds.length > 1 && (
                 <div className="unit-switch assist-only" role="group" aria-label="Show">

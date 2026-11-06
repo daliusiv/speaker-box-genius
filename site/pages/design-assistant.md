@@ -17,7 +17,7 @@ Not sure which driver to buy, or which box to put it in? The design assistant as
 1. **What for:** a car subwoofer, a home subwoofer, a hi-fi bookshelf woofer, a tower (floor-stander), or something else. Each sets sensible starting limits.
 2. **Limits:** the largest box (net inside volume) or **My space** (below), your amplifier's power and the lowest load it takes, how many drivers and what sizes, which box types, and which brands. With ported boxes, the chuffing line for port air speed too (below).
 3. **Priority:** balanced, deepest, loudest (at a frequency you choose) or smallest box (that still reaches a target F3).
-4. **Results:** a ranked list. **Open** starts your project with that driver and box.
+4. **Results:** a ranked list. **Open** starts your project with that driver and box. **Share these results** copies a link that opens the same list (for a forum thread or a friend): it carries your limits, priority, chuffing line and the box type shown, and the list is worked out again when it's opened, so it reflects the database as it is then.
 
 ![The first step: what you're building.](img/assistant-uses.png)
 

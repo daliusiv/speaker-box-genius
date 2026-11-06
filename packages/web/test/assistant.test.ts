@@ -5,7 +5,7 @@ import { loadDatabase } from "../../db-tools/src/load.ts";
 import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { PORT_LIMIT, lineFoldOf, limitsOf, volumeFor, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { GD_CYCLES, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { GD_CYCLES, decodeShared, encodeShared, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -298,4 +298,23 @@ test("fit my space: each result gets what the space holds with its own driver an
     } else assert.equal(s.volume.link, "none");
   }
   assert.ok(linked >= 3, `${linked} boxes fill the space`);
+});
+
+test("shared results: the goal, chuffing line and box type round-trip; anything odd falls back", () => {
+  const goal = { ...goalFor("car", "loud"), boxes: ["sealed", "bandpass"] as AssistantGoal["boxes"], brands: ["Dayton Audio"], power_w: 800, space: { width_cm: 90, height_cm: 40, depth_cm: 45, wall_mm: 18 } };
+  const text = encodeShared({ goal, portLimit_ms: 25, only: "bandpass" });
+  assert.match(text, /^[\w-]+$/, "URL-safe");
+  assert.deepEqual(decodeShared(text), { goal, portLimit_ms: 25, only: "bandpass" });
+  // A hand-edited link: bad values fall back to the use's defaults; unknown box types are dropped.
+  const raw = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url");
+  const odd = decodeShared(raw({ v: 1, g: { use: "home", priority: "nope", power_w: -5, boxes: ["sealed", "horn"], brands: [1, "SB Acoustics"], space: { width_cm: "x" } }, pl: 1000, o: "x" }))!;
+  assert.equal(odd.goal.priority, "balanced");
+  assert.equal(odd.goal.power_w, goalFor("home").power_w);
+  assert.deepEqual(odd.goal.boxes, ["sealed"]);
+  assert.deepEqual(odd.goal.brands, ["SB Acoustics"]);
+  assert.equal(odd.goal.space, undefined);
+  assert.equal(odd.portLimit_ms, undefined);
+  assert.equal(odd.only, undefined);
+  assert.equal(decodeShared(raw({ g: { use: "spaceship" } })), null);
+  assert.equal(decodeShared("not-base64!"), null);
 });

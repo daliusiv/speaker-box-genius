@@ -83,7 +83,7 @@ import { MeasurePanel, type Measurement } from "./Measure.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
 import { AppMenu } from "./AppMenu.tsx";
 import { openResults, withDriver } from "./assistant.ts";
-import { ASSISTANT_HASH, START_IN_ASSISTANT, untouched } from "./start.ts";
+import { ASSISTANT_HASH, SHARED_RESULTS, START_IN_ASSISTANT, untouched } from "./start.ts";
 import { DesignAssistant } from "./DesignAssistant.tsx";
 import { Logo } from "./Logo.tsx";
 import { submitDriverUrl } from "./submit.ts";
@@ -1927,6 +1927,7 @@ export function App(props: { initial: AppState | null }) {
         db={db}
         base={state}
         onPortLimit={(portLimit_ms) => set("settings", { ...state.settings, portLimit_ms })}
+        shared={SHARED_RESULTS}
         onOpen={(d, rs, goal) => {
           const next = openResults(state, d, rs, goal);
           setStep(() => next);
