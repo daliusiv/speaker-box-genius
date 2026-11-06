@@ -3,6 +3,7 @@
   "model": "CHN-110",
   "type": "full-range",
   "nominal_ohms": 8,
+  "size_in": 6.0,
   "ts": {
     "fs": 44.1601,
     "qms": 2.86,

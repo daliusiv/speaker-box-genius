@@ -3,6 +3,7 @@
   "model": "Alpair 12P",
   "type": "full-range",
   "nominal_ohms": 8,
+  "size_in": 7.0,
   "ts": {
     "fs": 42.149,
     "qms": 1.981,

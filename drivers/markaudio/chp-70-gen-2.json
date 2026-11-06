@@ -3,6 +3,7 @@
   "model": "CHP-70 Gen 2",
   "type": "full-range",
   "nominal_ohms": 8,
+  "size_in": 4.0,
   "ts": {
     "fs": 72.3,
     "qms": 2.3,
