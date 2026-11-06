@@ -70,6 +70,8 @@ What the comparison found and fixed:
 
 Cone excursion and group delay are compared too: excursion within about 0.3 % on average. Group delay swings by tens of milliseconds through a deep null, so it's compared away from them (where the response is within 10 dB of its highest point within a third of an octave).
 
+The mouth's output on its own (Hornresp's "Horn" output) is compared where it was exported, for the mass-loaded line's port: within 0.05 dB on average. It's the air leaving through the port, so the port's air speed follows from it: Hornresp's Particle Velocity chart and the app's both peak at 5.0 m/s (peak) at 40 Hz, from 1.8 m/s at 10 Hz.
+
 The first seven cases were checked against Hornresp 55.30 first, then against 60.60 with the same results; the five with other drivers (a 12″ subwoofer, a 4″ full-range) came with 60.60.
 
 Stuffed lines (08 and 09 in the records) aren't automated: Hornresp uses segment filling only in its Loudspeaker Wizard, so they were read off its charts. Acoustic power agreed within about 1 dB from 20 Hz to 1 kHz, and every impedance peak fell at the same frequency (straight TL: 63 Hz / 13.8 Ω against ~63 Hz / ~14.0 Ω). The two fibre models differ, so stuffed lines are judged on the trend.`;
@@ -111,6 +113,8 @@ export interface HornrespRun {
   xd: Pair[];
   gd: Pair[];
   za?: Pair[];
+  /** The mouth's (port's) output alone, when Hornresp's was exported. */
+  mouth?: Pair[];
   stats: {
     splMean: number;
     splP95: number;
@@ -122,8 +126,10 @@ export interface HornrespRun {
     xdP95: number;
     gdP95: number;
     zaMean?: number;
+    mouthMean?: number;
+    mouthP95?: number;
   };
-  pass: { spl: boolean; ze: boolean; xd: boolean; gd: boolean; za?: boolean };
+  pass: { spl: boolean; ze: boolean; xd: boolean; gd: boolean; za?: boolean; mouth?: boolean };
 }
 
 export function runHornresp(id: string): HornrespRun {
@@ -166,6 +172,18 @@ export function runHornresp(id: string): HornrespRun {
     gd: stats.gdP95 < T.gdP95,
   };
 
+  // The mouth's (or port's) output alone, where Hornresp's "Horn" output was exported too: the
+  // air leaving the line, which sets its air speed.
+  let mouth: HornrespRun["mouth"];
+  if (existsSync(join(dir, "hornresp-mouth.txt")) && r.parts) {
+    const m = readTable(join(dir, "hornresp-mouth.txt")).filter((x) => x.Freq! <= HORNRESP_F_MAX);
+    mouth = m.map((x) => ({ f: x.Freq!, ref: x.SPL!, ours: interp(r.freq, r.parts!.mouth, x.Freq!) }));
+    const e = mouth.map((p) => Math.abs(p.ours - p.ref));
+    stats.mouthMean = mean(e);
+    stats.mouthP95 = percentile(e, 0.95);
+    pass.mouth = stats.mouthMean < T.splMean && stats.mouthP95 < T.splP95;
+  }
+
   let za: HornrespRun["za"];
   if (r.acousticImpedance) {
     const a = r.acousticImpedance;
@@ -175,5 +193,5 @@ export function runHornresp(id: string): HornrespRun {
     stats.zaMean = mean(errs);
     pass.za = stats.zaMean < T.zaMean;
   }
-  return { id, input, driver, result: r, spl, ze, xd, gd, za, stats, pass };
+  return { id, input, driver, result: r, spl, ze, xd, gd, za, mouth, stats, pass };
 }

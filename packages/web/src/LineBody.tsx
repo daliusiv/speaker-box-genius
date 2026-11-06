@@ -707,7 +707,7 @@ export function LineBody(p: {
 
       <p className="hint">
         Simulated as a one-dimensional duct, like Hornresp: lengths along the centre of the {horn ? "horn" : "line"}; bends are not modelled. Stuffing is the least certain part of any line
-        simulation; treat its effect as a guide. Beta: being checked against Hornresp. {!horn && `A plain quarter wave of this length would be ${(C / ((4 * Math.max(L, 1)) / 100)).toFixed(0)} Hz.`}
+        simulation; treat its effect as a guide. Checked against Hornresp (SPL, impedance, excursion, air speed). {!horn && `A plain quarter wave of this length would be ${(C / ((4 * Math.max(L, 1)) / 100)).toFixed(0)} Hz.`}
       </p>
     </>
   );

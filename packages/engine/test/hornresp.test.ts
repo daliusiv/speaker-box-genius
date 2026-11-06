@@ -30,6 +30,13 @@ for (const id of hornrespIds()) {
     assert.ok(s.gdP95 < T.gdP95, `95th percentile ${s.gdP95.toFixed(2)} ms`);
   });
 
+  if (s.mouthMean !== undefined) {
+    test(`Hornresp ${id}: the mouth's (port's) output alone`, () => {
+      assert.ok(s.mouthMean! < T.splMean, `mean difference ${s.mouthMean!.toFixed(2)} dB`);
+      assert.ok(s.mouthP95! < T.splP95, `95th percentile ${s.mouthP95!.toFixed(2)} dB`);
+    });
+  }
+
   if (s.zaMean !== undefined) {
     test(`Hornresp ${id}: acoustic impedance (Za, normalised)`, () => {
       assert.ok(s.zaMean! < T.zaMean, `mean |Za| difference ${s.zaMean!.toFixed(3)} dB`);

@@ -118,6 +118,7 @@ function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"]): st
     row("Cone excursion, mean difference", `${s.xdMean.toFixed(2)} %`, `under ${tol.xdMean} %`, s.xdMean < tol.xdMean),
     row("Cone excursion, 95th percentile", `${s.xdP95.toFixed(2)} %`, `under ${tol.xdP95} %`, s.xdP95 < tol.xdP95),
     row("Group delay, 95th percentile", `${s.gdP95.toFixed(2)} ms`, `under ${tol.gdP95} ms (away from deep nulls)`, s.gdP95 < tol.gdP95),
+    ...(s.mouthMean !== undefined ? [row("Mouth or port output alone, mean difference", `${s.mouthMean.toFixed(3)} dB`, `under ${tol.splMean} dB`, s.mouthMean < tol.splMean)] : []),
     ...(s.zaMean !== undefined ? [row("Line load (Za), mean difference", `${s.zaMean.toFixed(3)} dB`, `under ${tol.zaMean} dB`, s.zaMean < tol.zaMean)] : []),
   ].join("");
   const fig = (label: string, unit: string, pts: [number, number, number][]) =>

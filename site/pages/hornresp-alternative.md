@@ -26,19 +26,24 @@ All of them sit on the same charts as any sealed, ported, passive radiator or ba
 
 ## Checked against Hornresp
 
-The line model is a one-dimensional duct, the same approach as Hornresp and Akabak. It was checked against **Hornresp 55.30** with seven records, all for the same Dayton Audio DSA215-8 driver at 2.83 V, in half space:
+The line model is a one-dimensional duct, the same approach as Hornresp and Akabak. It's checked against **Hornresp 60.60** (and earlier 55.30) with twelve records at 2.83 V in half space: seven line and horn types with a Dayton Audio DSA215-8, and five more with a 12″ subwoofer and a 4″ full-range driver. Every frequency Hornresp exports from 10 Hz to 1 kHz is compared:
 
-| Design | SPL, mean difference (10 Hz–1 kHz) | Impedance, mean difference |
-|---|---|---|
-| Straight TL | 0.08 dB | 0.16 % |
-| Tapered TL | 0.04 dB | 0.16 % |
-| Offset-driver TL | 0.04 dB | 0.15 % |
-| TQWT | 0.03 dB | 0.15 % |
-| MLTL | 0.06 dB | 0.18 % |
-| Tapped horn | 0.04 dB | 0.09 % |
-| Front-loaded horn | 0.03 dB | 0.19 % |
+| Design | SPL, mean | Impedance, mean | Cone excursion, mean | Group delay, 95 % | Line load (Za), mean |
+|---|---|---|---|---|---|
+| 01 Straight transmission line | 0.08 dB | 0.14 % | 0.25 % | 0.07 ms | 0.00 dB |
+| 02 Tapered transmission line | 0.04 dB | 0.15 % | 0.28 % | 0.29 ms | 0.02 dB |
+| 03 Offset-driver transmission line | 0.04 dB | 0.13 % | 0.26 % | 0.17 ms | 0.00 dB |
+| 04 TQWT | 0.03 dB | 0.14 % | 0.27 % | 0.26 ms | 0.02 dB |
+| 05 Mass-loaded line | 0.06 dB | 0.16 % | 0.27 % | 0.07 ms | 0.01 dB |
+| 06 Tapped horn | 0.04 dB | 0.08 % | 0.28 % | 0.10 ms | 0.01 dB |
+| 07 Front-loaded horn | 0.03 dB | 0.18 % | 0.32 % | 0.13 ms | 0.07 dB |
+| 10 Subwoofer in a straight line | 0.05 dB | 0.17 % | 0.24 % | 0.24 ms | 0.01 dB |
+| 11 Subwoofer in a mass-loaded line | 0.04 dB | 0.18 % | 0.26 % | 0.41 ms | 0.01 dB |
+| 12 Subwoofer in a tapped horn | 0.03 dB | 0.06 % | 0.26 % | 0.12 ms | 0.01 dB |
+| 13 Full-range TQWT | 0.03 dB | 0.20 % | 0.35 % | 0.16 ms | 0.02 dB |
+| 14 Full-range tapered line | 0.04 dB | 0.17 % | 0.35 % | 0.31 ms | 0.01 dB |
 
-The line's resonances fall on the same frequencies as Hornresp's, and the only bigger SPL differences are at the bottom of deep nulls (the same frequency, a different depth). Each case runs as an automated test whenever the code changes. Stuffed lines were checked against Hornresp's Loudspeaker Wizard charts: acoustic power within about 1 dB, and every impedance peak at the same frequency. Every case, with both curves on one chart, is on the [validation page](/validation/#hornresp); the model is described in [the transmission line notes](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/transmission-lines.md).
+The line's resonances fall on the same frequencies as Hornresp's, and the only bigger SPL differences are at the bottom of deep nulls (the same frequency, a different depth); group delay is compared away from them. The port's output on its own matches too (0.05 dB), and with it the port's air speed: both peak at 5.0 m/s at 40 Hz in the mass-loaded line. Each case runs as an automated test whenever the code changes. Stuffed lines were checked against Hornresp's Loudspeaker Wizard charts: acoustic power within about 1 dB, and every impedance peak at the same frequency. Every case, with both curves on one chart, is on the [validation page](/validation/#hornresp); the model is described in [the transmission line notes](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/transmission-lines.md).
 
 For like-for-like comparisons, set these in **Settings**: **Air** to **Hornresp defaults**, and **Line/horn SPL** to **From radiated power (like Hornresp)**. Then drive at **2.83 V** (the **V** switch on the Power bar above the charts).
 
@@ -64,4 +69,4 @@ Hornresp is a specialist's tool, developed over many years: more horn shapes and
 
 [[Open the example|tl-example]]
 
-> Speaker Box Genius isn't affiliated with Hornresp or its author, David McBean. Transmission lines and horns are marked beta in the app.
+> Speaker Box Genius isn't affiliated with Hornresp or its author, David McBean.
