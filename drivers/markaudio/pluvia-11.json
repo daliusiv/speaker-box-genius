@@ -3,6 +3,7 @@
   "model": "Pluvia 11",
   "type": "full-range",
   "nominal_ohms": 6,
+  "size_in": 5.75,
   "ts": {
     "fs": 39.118,
     "qms": 1.797,

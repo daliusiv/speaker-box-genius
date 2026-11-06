@@ -3,6 +3,7 @@
   "model": "CHP-90 MICA",
   "type": "full-range",
   "nominal_ohms": 8,
+  "size_in": 5.25,
   "ts": {
     "fs": 48.53,
     "qms": 2.2008,
@@ -26,5 +27,5 @@
     }
   ],
   "status": "community",
-  "notes": "Nominal impedance 8 Ω estimated from Re 6.2 Ω (not on the page)."
+  "notes": "Nominal impedance 8 Ω estimated from Re 6.2 Ω (not on the page). Nominal size 5.25 in estimated from the cone area (Sd 85 cm²); Markaudio doesn't give a frame size for this model."
 }

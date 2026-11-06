@@ -3,6 +3,7 @@
   "model": "Alpair 5.3",
   "type": "full-range",
   "nominal_ohms": 4,
+  "size_in": 3.0,
   "ts": {
     "fs": 94.5428,
     "qms": 2.301,
@@ -24,5 +25,6 @@
       "note": "Markaudio's published specifications (markaudio.com), used with Markaudio's permission (6 Nov 2026). Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Markaudio's permission. See LICENSE-DATA."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "notes": "Nominal size 3 in is Markaudio's figure for the CHN-50, which has the same cone (Sd 28 cm²); Markaudio doesn't give a frame size for this model."
 }

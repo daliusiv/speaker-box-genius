@@ -3,6 +3,7 @@
   "model": "CHR-120",
   "type": "full-range",
   "nominal_ohms": 8,
+  "size_in": 7.0,
   "ts": {
     "fs": 34.2417,
     "qms": 2.3823,
@@ -26,5 +27,5 @@
     }
   ],
   "status": "community",
-  "notes": "Nominal impedance 8 Ω estimated from Re 7.2 Ω (not on the page)."
+  "notes": "Nominal impedance 8 Ω estimated from Re 7.2 Ω (not on the page). Nominal size 7 in is Markaudio's figure for the Alpair 12P, which has the same cone (Sd 147 cm²); Markaudio doesn't give a frame size for this model."
 }

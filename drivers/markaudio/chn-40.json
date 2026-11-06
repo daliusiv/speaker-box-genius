@@ -3,6 +3,7 @@
   "model": "CHN-40",
   "type": "full-range",
   "nominal_ohms": 8,
+  "size_in": 2.5,
   "ts": {
     "fs": 97.4826,
     "qms": 3.7689,

@@ -3,6 +3,7 @@
   "model": "Pluvia 7 P MICA",
   "type": "full-range",
   "nominal_ohms": 4,
+  "size_in": 4.0,
   "ts": {
     "fs": 72.2524,
     "qms": 3.3897,
