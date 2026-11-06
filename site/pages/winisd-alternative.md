@@ -26,7 +26,7 @@ Speaker Box Genius is built around those four problems.
 ## What it does
 
 - **Sealed, ported, passive radiator and 4th- and 6th-order bandpass boxes**, up to eight side by side on the same charts.
-- **Transmission lines, tapped horns and front-loaded horns** (in beta), which WinISD doesn't model.
+- **Transmission lines, tapped horns and front-loaded horns**, which WinISD doesn't model (checked against Hornresp).
 - **Charts for everything you check before you build:** response, cone excursion with an Xmax line, PR excursion, port air speed with a chuffing line, maximum SPL (and what limits it) with the amplifier voltage and current it takes, impedance and group delay.
 - **A T/S editor that never overwrites what you typed**, and that reads parameters pasted straight from a datasheet.
 - **A database of about 1,360 drivers and 46 passive radiators**, searchable, with links to each datasheet, and a [page for every driver](/drivers/) with suggested boxes to start from.
@@ -44,7 +44,7 @@ Speaker Box Genius is built around those four problems.
 | Runs on | Windows | Any browser: Windows, Mac, Linux, phones, tablets |
 | Install | Download and install | None (and it works offline once opened) |
 | Price | Free | Free (non-commercial licence) |
-| Box types | Sealed, vented, bandpass, passive radiator | The same, plus transmission lines and horns (beta) |
+| Box types | Sealed, vented, bandpass, passive radiator | The same, plus transmission lines and horns |
 | Driver data | Typed in, or files you find | Database of ~1,360 drivers, plus your own |
 | Sharing a design | Screenshots or project files | A live link, a forum image and forum posts |
 | Your WinISD files | | Opens `.wdr` drivers and `.wpr` projects |

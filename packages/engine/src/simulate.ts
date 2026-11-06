@@ -495,8 +495,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       u0 = line.mouthOnly ? mouthOut : sub(mouthOut, coneOut);
       if (out.parts) {
         const k = (w * air.rho) / (space * Math.PI * r) / 2e-5;
-        out.parts.cone[i] = 20 * Math.log10(Math.max(abs(ud) * k, 1e-12));
-        out.parts.mouth[i] = 20 * Math.log10(Math.max(abs(exitAtListener) * k, 1e-12));
+        // On the same footing as the total (from radiated power when that's asked for).
+        out.parts.cone[i] = 20 * Math.log10(Math.max(abs(coneOut) * k, 1e-12));
+        out.parts.mouth[i] = 20 * Math.log10(Math.max(abs(mouthOut) * k, 1e-12));
       }
       if (out.vport) {
         vport = (Math.SQRT2 * abs(sol.exit)) / line.exitArea;

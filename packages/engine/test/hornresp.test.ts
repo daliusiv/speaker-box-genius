@@ -1,4 +1,4 @@
-// Regression against Hornresp 55.30: the cases, the driver and the tolerances are in
+// Regression against Hornresp: the cases, the drivers and the tolerances are in
 // validation/hornresp.ts, shared with the validation report (docs/validation/results.json).
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -11,6 +11,7 @@ for (const id of hornrespIds()) {
   test(`Hornresp ${id}: electrical impedance`, () => {
     assert.ok(s.zeMean < T.zeMean, `mean |Ze| error ${s.zeMean.toFixed(2)} %`);
     assert.ok(s.zeWorst < T.zeWorst, `worst |Ze| error ${s.zeWorst.toFixed(1)} %`);
+    assert.ok(s.zePhaseMean < T.zePhaseMean, `mean Ze phase error ${s.zePhaseMean.toFixed(2)}°`);
   });
 
   test(`Hornresp ${id}: SPL`, () => {
@@ -19,6 +20,29 @@ for (const id of hornrespIds()) {
     assert.ok(s.splMean < T.splMean, `mean SPL difference ${s.splMean.toFixed(2)} dB`);
     assert.ok(s.splP95 < T.splP95, `95th percentile ${s.splP95.toFixed(2)} dB`);
   });
+
+  test(`Hornresp ${id}: cone excursion`, () => {
+    assert.ok(s.xdMean < T.xdMean, `mean excursion difference ${s.xdMean.toFixed(2)} %`);
+    assert.ok(s.xdP95 < T.xdP95, `95th percentile ${s.xdP95.toFixed(2)} %`);
+  });
+
+  test(`Hornresp ${id}: group delay`, () => {
+    assert.ok(s.gdP95 < T.gdP95, `95th percentile ${s.gdP95.toFixed(2)} ms`);
+  });
+
+  test(`Hornresp ${id}: amplifier current, input power, efficiency and SPL phase`, () => {
+    assert.ok(s.iinMean < T.zeMean, `mean current difference ${s.iinMean.toFixed(2)} %`);
+    assert.ok(s.pinMean < T.pinMean, `mean input power difference ${s.pinMean.toFixed(2)} %`);
+    assert.ok(s.effMean < T.effMean, `mean efficiency difference ${s.effMean.toFixed(2)} %`);
+    assert.ok(s.phaseMedian < T.phaseMedian, `median phase difference ${s.phaseMedian.toFixed(2)}°`);
+  });
+
+  if (s.mouthMean !== undefined) {
+    test(`Hornresp ${id}: the mouth's (port's) output alone`, () => {
+      assert.ok(s.mouthMean! < T.splMean, `mean difference ${s.mouthMean!.toFixed(2)} dB`);
+      assert.ok(s.mouthP95! < T.splP95, `95th percentile ${s.mouthP95!.toFixed(2)} dB`);
+    });
+  }
 
   if (s.zaMean !== undefined) {
     test(`Hornresp ${id}: acoustic impedance (Za, normalised)`, () => {

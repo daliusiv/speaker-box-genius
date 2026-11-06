@@ -1,7 +1,8 @@
 # Validation
 
 Speaker Box Genius is checked against **WinISD 0.7.0.950** (real WinISD project files) and
-**Hornresp 55.30** (Hornresp's own SPL and impedance exports). Every comparison is an
+**Hornresp 60.60** (Hornresp's own exported results: SPL, impedance, cone excursion, group
+delay and the line's acoustic impedance). Every comparison is an
 automated test, and the results are published at
 **[speakerboxgenius.com/validation](https://speakerboxgenius.com/validation/)**: each case,
 our value next to the reference, the difference and its tolerance, charts, and the known
