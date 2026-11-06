@@ -3,7 +3,7 @@
   "model": "CHN-50P MICA",
   "type": "full-range",
   "nominal_ohms": 4,
-  "size_in": 3.0,
+  "size_in": 3,
   "ts": {
     "fs": 126.2361,
     "qms": 2.723,

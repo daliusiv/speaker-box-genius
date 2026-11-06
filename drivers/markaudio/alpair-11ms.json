@@ -3,7 +3,7 @@
   "model": "Alpair 11MS",
   "type": "full-range",
   "nominal_ohms": 8,
-  "size_in": 6.0,
+  "size_in": 6,
   "ts": {
     "fs": 43.748,
     "qms": 2.215,

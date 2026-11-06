@@ -3,7 +3,7 @@
   "model": "MA200-P MICA",
   "type": "full-range",
   "nominal_ohms": 8,
-  "size_in": 8.0,
+  "size_in": 8,
   "ts": {
     "fs": 39.0189,
     "qms": 2.2943,

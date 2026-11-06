@@ -3,7 +3,7 @@
   "model": "Alpair 5G",
   "type": "full-range",
   "nominal_ohms": 4,
-  "size_in": 3.0,
+  "size_in": 3,
   "ts": {
     "fs": 104.5246,
     "qms": 2.7967,
