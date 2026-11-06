@@ -38,6 +38,11 @@ export const HORNRESP_TOL = {
   xdP95: 1,
   /** Group delay: 95th percentile |difference| (ms), away from deep nulls. */
   gdP95: 0.5,
+  /** SPL phase: median |difference| (°). */
+  phaseMedian: 0.5,
+  /** Real input power and efficiency: mean |relative difference| (%) (current is held to zeMean). */
+  pinMean: 1,
+  effMean: 3,
   /** Acoustic impedance: mean |difference| (dB), away from sharp peaks and nulls (0.3 < |Za| < 5). */
   zaMean: 0.1,
 };
@@ -69,6 +74,8 @@ What the comparison found and fixed:
 - **Za normalised at the exact area.** Za is divided by ρc over the area where it's taken; the app had used the first slice's average area, a few per cent wider than an expanding horn's throat (3 % for case 07).
 
 Cone excursion and group delay are compared too: excursion within about 0.3 % on average. Group delay swings by tens of milliseconds through a deep null, so it's compared away from them (where the response is within 10 dB of its highest point within a third of an octave).
+
+The amplifier's side matches as closely: current, real input power and efficiency, and the SPL's phase (a median of 0.1° or less). Hornresp's efficiency adds the power the cone and the mouth each radiate on their own, while its SPL combines them as waves (they cancel below the tuning), so the efficiency is compared on that footing.
 
 The mouth's output on its own (Hornresp's "Horn" output) is compared where it was exported, for the two mass-loaded lines' ports: within 0.05 dB on average. It's the air leaving through the port, so the port's air speed follows from it: Hornresp's Particle Velocity chart and the app's both peak at 5.0 m/s at 40 Hz in case 05 (1.8 m/s at 10 Hz) and 4.5 m/s at 32 Hz in case 11 (1.4 m/s at 10 Hz).
 
@@ -125,11 +132,18 @@ export interface HornrespRun {
     xdMean: number;
     xdP95: number;
     gdP95: number;
+    /** SPL phase: median |difference| (°). */
+    phaseMedian: number;
+    /** Amplifier current, real input power and efficiency: mean |relative difference| (%). */
+    iinMean: number;
+    pinMean: number;
+    effMean: number;
+    effP95: number;
     zaMean?: number;
     mouthMean?: number;
     mouthP95?: number;
   };
-  pass: { spl: boolean; ze: boolean; xd: boolean; gd: boolean; za?: boolean; mouth?: boolean };
+  pass: { spl: boolean; ze: boolean; xd: boolean; gd: boolean; amp: boolean; za?: boolean; mouth?: boolean };
 }
 
 export function runHornresp(id: string): HornrespRun {
@@ -150,6 +164,20 @@ export function runHornresp(id: string): HornrespRun {
   // response is within 10 dB of its highest point in the third of an octave either side.
   const notInNull = (x: Record<string, number>) => x.SPL! > Math.max(...rows.filter((y) => Math.abs(Math.log2(y.Freq! / x.Freq!)) < 1 / 3).map((y) => y.SPL!)) - 10;
   const gd = pair("Delay", r.groupDelayMs, notInNull);
+  // The amplifier's side: current, real power in, and efficiency (acoustic power out over
+  // power in), from our impedance and SPL as the app works them out; and the SPL's phase.
+  const V = 2.83;
+  const zeAt = (f: number) => ({ mag: interp(r.freq, r.impedanceOhm, f), ph: (interp(r.freq, r.impedancePhaseDeg, f) * Math.PI) / 180 });
+  const pinAt = (f: number) => { const z = zeAt(f); return ((V * V) / z.mag) * Math.cos(z.ph); };
+  // Half space at 1 m: P = p² · 2πr² / ρc. Hornresp's efficiency adds the power the cone and
+  // the mouth each radiate on their own (its SPL combines them as waves, which can cancel).
+  const watts = (db: number) => (10 ** (db / 10) * (2e-5) ** 2 * 2 * Math.PI) / (HORNRESP_AIR.rho * HORNRESP_AIR.c);
+  const acousticW = (f: number) => (r.parts ? watts(interp(r.freq, r.parts.cone, f)) + watts(interp(r.freq, r.parts.mouth, f)) : watts(interp(r.freq, r.spl, f)));
+  const rel = (ours: number, ref: number) => Math.abs(ours / ref - 1) * 100;
+  const iinErr = rows.map((x) => rel(V / zeAt(x.Freq!).mag, x.Iin!));
+  const pinErr = rows.map((x) => rel(pinAt(x.Freq!), x.Pin!));
+  const effErr = rows.map((x) => rel((100 * acousticW(x.Freq!)) / pinAt(x.Freq!), x.Efficiency!));
+  const phErr = rows.map((x) => Math.abs(((interp(r.freq, r.phaseDeg, x.Freq!) - x.WPhase! + 540) % 360) - 180));
   const splErr = spl.map((p) => Math.abs(p.ours - p.ref));
   const zeErr = ze.map((p) => Math.abs(p.ours / p.ref - 1) * 100);
   const xdErr = xd.map((p) => Math.abs(p.ours / p.ref - 1) * 100);
@@ -163,6 +191,11 @@ export function runHornresp(id: string): HornrespRun {
     xdMean: mean(xdErr),
     xdP95: percentile(xdErr, 0.95),
     gdP95: percentile(gd.map((p) => Math.abs(p.ours - p.ref)), 0.95),
+    phaseMedian: percentile(phErr, 0.5),
+    iinMean: mean(iinErr),
+    pinMean: mean(pinErr),
+    effMean: mean(effErr),
+    effP95: percentile(effErr, 0.95),
   };
   const T = HORNRESP_TOL;
   const pass: HornrespRun["pass"] = {
@@ -170,6 +203,7 @@ export function runHornresp(id: string): HornrespRun {
     ze: stats.zeMean < T.zeMean && stats.zeWorst < T.zeWorst && stats.zePhaseMean < T.zePhaseMean,
     xd: stats.xdMean < T.xdMean && stats.xdP95 < T.xdP95,
     gd: stats.gdP95 < T.gdP95,
+    amp: stats.phaseMedian < T.phaseMedian && stats.iinMean < T.zeMean && stats.pinMean < T.pinMean && stats.effMean < T.effMean,
   };
 
   // The mouth's (or port's) output alone, where Hornresp's "Horn" output was exported too: the

@@ -30,6 +30,13 @@ for (const id of hornrespIds()) {
     assert.ok(s.gdP95 < T.gdP95, `95th percentile ${s.gdP95.toFixed(2)} ms`);
   });
 
+  test(`Hornresp ${id}: amplifier current, input power, efficiency and SPL phase`, () => {
+    assert.ok(s.iinMean < T.zeMean, `mean current difference ${s.iinMean.toFixed(2)} %`);
+    assert.ok(s.pinMean < T.pinMean, `mean input power difference ${s.pinMean.toFixed(2)} %`);
+    assert.ok(s.effMean < T.effMean, `mean efficiency difference ${s.effMean.toFixed(2)} %`);
+    assert.ok(s.phaseMedian < T.phaseMedian, `median phase difference ${s.phaseMedian.toFixed(2)}°`);
+  });
+
   if (s.mouthMean !== undefined) {
     test(`Hornresp ${id}: the mouth's (port's) output alone`, () => {
       assert.ok(s.mouthMean! < T.splMean, `mean difference ${s.mouthMean!.toFixed(2)} dB`);
