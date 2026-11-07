@@ -251,3 +251,11 @@ test("profile: MLTL port and tapped horn", () => {
   assert.ok(t.points.every((p) => Number.isFinite(p.spl_db) && Number.isFinite(p.velocity_ms)));
   assert.ok(Math.abs(t.points.at(-1)!.x_cm - 220) < 1e-6);
 });
+
+test("a heavily stuffed line with one impedance peak has no tuning (not the coil's minimum hundreds of Hz up)", () => {
+  const drv = { fs: 35, qms: 1.87, qes: 0.4, vas_l: 37.4, re: 5.9, sd_cm2: 211.2, le_mh: 1 };
+  const tl = (fill: number) => ({ kind: "line" as const, segments: [{ length_cm: 200, startArea_cm2: 220, endArea_cm2: 220, taper: "linear" as const, fill_kgm3: fill }], driverAt_cm: 0 });
+  const light = simulate(drv, tl(2), { fMin: 10, fMax: 500, points: 400 }).summary.fb!;
+  assert.ok(light > 30 && light < 40, `lightly stuffed: ${light} Hz`);
+  for (const fill of [8, 16]) assert.equal(simulate(drv, tl(fill), { fMin: 10, fMax: 500, points: 400 }).summary.fb, undefined, `${fill} kg/m³`);
+});
