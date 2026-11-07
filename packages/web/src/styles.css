@@ -1368,9 +1368,34 @@ button.icon:disabled {
   flex-wrap: wrap;
 }
 
+/* Each chart a pill of its own, so the ones not showing still read as buttons. */
+.panel-tabs.chart-tabs {
+  gap: 0.35rem;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
 .chart-tabs [role="tab"] {
   flex: 0 1 auto;
   padding-inline: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+}
+
+.chart-tabs [role="tab"].on {
+  border-color: var(--accent);
+}
+
+.tab-alert {
+  color: var(--over);
+  font-size: 0.7em;
+  line-height: 1;
+}
+
+.chart-tabs [role="tab"].on .tab-alert {
+  color: inherit;
 }
 
 figure.chart[hidden] {

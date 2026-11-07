@@ -679,10 +679,14 @@ export function App(props: { initial: AppState | null }) {
   const hasPr = prDesigns.length > 0;
   const hasPort = designs.some((d) => d.result.portVelocity || d.result.rearPortVelocity);
   const hasBoxPressure = designs.some((d) => d.result.boxPressurePa);
-  const chartTabs: { id: ChartId; label: string }[] = [
-    ...(narrow ? [{ id: "excursion" as const, label: "Excursion" }] : []),
-    ...(hasPr ? [{ id: "pr" as const, label: "PR excursion" }] : []),
-    ...(hasPort ? [{ id: "port" as const, label: "Port speed" }] : []),
+  // A dot on the charts where a box is over its limit at this drive (as in the summary).
+  const overCharts = new Set(
+    designs.filter((d) => !d.compare).flatMap((d) => limitsOf(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state)).over.map((k) => LIMIT_CHART[k])),
+  );
+  const chartTabs: { id: ChartId; label: string; alert?: string }[] = [
+    ...(narrow ? [{ id: "excursion" as const, label: "Excursion", alert: overCharts.has("excursion") ? "A box is past Xmax" : undefined }] : []),
+    ...(hasPr ? [{ id: "pr" as const, label: "PR excursion", alert: overCharts.has("pr") ? "A passive radiator is past its Xmax" : undefined }] : []),
+    ...(hasPort ? [{ id: "port" as const, label: "Port speed", alert: overCharts.has("port") ? "A port is over the chuffing line" : undefined }] : []),
     { id: "maxspl", label: "Max SPL" },
     { id: "impedance", label: "Impedance" },
     ...(hasBoxPressure ? [{ id: "pressure" as const, label: "Box pressure" }] : []),
