@@ -58,7 +58,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 ### Signal and room
 
 - **Drive by power or voltage** (W or V, e.g. 2.83 V for datasheet comparisons)
-- **High-pass filter** (Butterworth or Linkwitz–Riley, any order), **Linkwitz Transform**, peaking and shelving **EQ**
+- **High-pass filter** (Butterworth or Linkwitz–Riley, any order), **Linkwitz Transform**, peaking, low-shelf and high-shelf **EQ** (matched with Hornresp)
 - **Car cabin or room gain**, and **baffle step** for free-standing speakers
 
 ### Volume and build

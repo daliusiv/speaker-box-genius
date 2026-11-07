@@ -24,6 +24,13 @@ test("low shelf: full gain at DC, flat at high frequency, half gain at the corne
   near(db(eqStageResponse(st, 50)), 3, 1e-9, "corner");
 });
 
+test("high shelf: flat at DC, full gain at high frequency, half gain at the corner", () => {
+  const st = { type: "highshelf" as const, freq: 150, gain_db: -6, q: Math.SQRT1_2 };
+  near(db(eqStageResponse(st, 1)), 0, 0.01, "DC");
+  near(db(eqStageResponse(st, 50000)), -6, 0.01, "HF");
+  near(db(eqStageResponse(st, 150)), -3, 1e-9, "corner");
+});
+
 test("Linkwitz Transform turns a sealed box into the target 2nd-order response", () => {
   const driver = { fs: 30, qms: 5.2, qes: 0.4, vas_l: 50, re: 3.4, sd_cm2: 330 };
   const box = { kind: "sealed" as const, vb_l: 40, ql: Infinity, qa: Infinity };

@@ -7,6 +7,7 @@ const TYPE_LABEL: Record<EqStage["type"], string> = {
   linkwitz: "Linkwitz Transform",
   peak: "Peaking EQ",
   lowshelf: "Low shelf",
+  highshelf: "High shelf",
 };
 
 export function EqPanel(props: { state: AppState; designs: Design[]; onChange: (eq: EqItem[]) => void; onClear?: () => void }) {
@@ -38,8 +39,10 @@ export function EqPanel(props: { state: AppState; designs: Design[]; onChange: (
       ]);
     } else if (type === "peak") {
       props.onChange([...eq, { id, on: true, target: "all", type, freq: 40, gain_db: -3, q: 2 }]);
+    } else if (type === "highshelf") {
+      props.onChange([...eq, { id, on: true, target: "all", type, freq: 100, gain_db: -6, q: 0.707 }]);
     } else {
-      props.onChange([...eq, { id, on: true, target: "all", type, freq: 30, gain_db: 6, q: 0.707 }]);
+      props.onChange([...eq, { id, on: true, target: "all", type: "lowshelf", freq: 30, gain_db: 6, q: 0.707 }]);
     }
   };
 
@@ -74,7 +77,7 @@ export function EqPanel(props: { state: AppState; designs: Design[]; onChange: (
                   <Num help="Linkwitz Transform: the Q you want. 0.707 is flat (Butterworth); 0.5 is tighter, more gradual." label="Qp" value={e.qp} onChange={(qp) => set({ ...e, qp })} />
                 </>
               )}
-              {(e.type === "peak" || e.type === "lowshelf") && (
+              {e.type !== "linkwitz" && (
                 <>
                   <Num help="Centre (or corner) frequency of this EQ band." label="Freq" unit="Hz" value={e.freq} onChange={(freq) => set({ ...e, freq })} />
                   <Num help="Boost (+) or cut (−) in dB. Every +6 dB needs four times the power and doubles the excursion." label="Gain" unit="dB" value={e.gain_db} min={-30} onChange={(gain_db) => set({ ...e, gain_db: Math.min(24, gain_db) })} />
@@ -109,6 +112,9 @@ export function EqPanel(props: { state: AppState; designs: Design[]; onChange: (
         </button>
         <button className="secondary" onClick={() => add("lowshelf")}>
           + Low shelf
+        </button>
+        <button className="secondary" onClick={() => add("highshelf")}>
+          + High shelf
         </button>
         {eq.length > 1 && props.onClear && (
           <button className="secondary" onClick={props.onClear} title="Remove every EQ stage (Undo brings them back)">

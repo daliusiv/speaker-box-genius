@@ -1,0 +1,26 @@
+{
+  "title": "Ported box with a peaking EQ cut",
+  "text": "B2 with Hornresp's Equaliser Filter Wizard: Peak EQ at 40 Hz, Q 2, −6 dB",
+  "frontAir": 1,
+  "portModel": "pipe",
+  "eq": [
+    {
+      "type": "peak",
+      "freq": 40,
+      "gain_db": -6,
+      "q": 2
+    }
+  ],
+  "input": {
+    "kind": "vented",
+    "vb_l": 30,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7,
+      "length_cm": 15
+    },
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

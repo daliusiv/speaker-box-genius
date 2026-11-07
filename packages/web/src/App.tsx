@@ -720,7 +720,7 @@ export function App(props: { initial: AppState | null }) {
             color: "#e8ebf2",
             shape: "dot",
             axes: "xy",
-            label: `EQ ${i + 1} (${e.type === "peak" ? "peaking" : "low shelf"})`,
+            label: `EQ ${i + 1} (${e.type === "peak" ? "peaking" : e.type === "highshelf" ? "high shelf" : "low shelf"})`,
             text: `${e.freq} Hz · ${e.gain_db > 0 ? "+" : ""}${e.gain_db} dB · Q ${e.q}`,
             onDrag: (f, g, start) => setState((s) => moveEq(s, e.id, f, g), start ? { start: true } : { hold: true }),
             onWheel: (up) => setState((s) => eqQ(s, e.id, up)),

@@ -59,6 +59,11 @@ B12 (bw2 / bw3 / lr4)   B2 with Tools > Filter Wizard (Active): high pass 25 Hz,
                         order 2, 3 (Butterworth) and 4 (Linkwitz-Riley), On,
                         then File > Export in the chart window
 
+B15 (peak / lowshelf /   B2 with Tools > Filter Wizard, Equaliser (click the band's
+  highshelf)            type label to change it): Peak EQ 40 Hz Q 2.00 -6 dB; Low Shelf
+                        30 Hz Q 0.71 +6 dB; High Shelf 150 Hz Q 0.71 -6 dB. On, then
+                        File > Export in the chart window
+
 Impulse response: B1, B2 and 05, the chart window's Impulse Response, Export
 (a 16-bit 48 kHz WAV, t = 0 at sample 10000; masking as Hornresp has it).
 

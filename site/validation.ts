@@ -227,6 +227,7 @@ function hornrespBoxCase(k: HornrespBoxCaseReport, mtol: Report["hornresp"]["max
     row("Cone excursion, mean difference", `${s.xdMean.toFixed(2)} %`, `under ${t.xdMean} %`, s.xdMean < t.xdMean),
     row("Cone excursion, 95th percentile", `${s.xdP95.toFixed(2)} %`, `under ${t.xdP95} %`, s.xdP95 < t.xdP95),
     ...(s.gdP95 !== undefined ? [row("Group delay, 95th percentile (away from nulls)", `${s.gdP95.toFixed(2)} ms`, `under ${t.gdP95} ms`, s.gdP95 < t.gdP95)] : []),
+    ...(s.einMax !== undefined ? [row("Voltage after the EQ, worst difference (10 Hz–20 kHz)", `${s.einMax.toFixed(4)} %`, "under 0.01 %", s.einMax < 0.01)] : []),
   ].join("") + ms.rows + ir.rows;
   const fig = (label: string, unit: string, pts?: [number, number, number][]) =>
     pts && pts.length
