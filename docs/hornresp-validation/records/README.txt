@@ -38,6 +38,9 @@ B8a / B8b               B1 with the semi-inductance model on (double-click Le, e
 
 B8c                     B8a with Re' = 6.50 (Re stays 5.90)
 B9 / 16                 B1 and 05 with Tools > Power Compression at 120 °C
+B10                     B1 with Rg = 0.50 (edit and Calculate)
+B11-sealed-2P / -2S     B1 with two drivers, parallel and series (import these:
+                        counts typed into the editor didn't simulate both cones)
 
 Impulse response: B1, B2 and 05, the chart window's Impulse Response, Export
 (a 16-bit 48 kHz WAV, t = 0 at sample 10000; masking as Hornresp has it).

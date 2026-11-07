@@ -1,0 +1,13 @@
+{
+  "title": "Sealed box, 0.5 Ω amplifier and cable",
+  "text": "B1 with Hornresp's Rg = 0.5 Ω (Settings → Amp + cable)",
+  "frontAir": 1,
+  "rg": 0.5,
+  "input": {
+    "kind": "sealed",
+    "vb_l": 10.4,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

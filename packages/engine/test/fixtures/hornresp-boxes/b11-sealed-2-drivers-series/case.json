@@ -1,0 +1,17 @@
+{
+  "title": "Sealed box, two drivers in series",
+  "text": "B1 with two drivers in series (Hornresp \"Nd = 2S\", S1 = S2 = 2 Sd)",
+  "frontAir": 1.4142135623730951,
+  "drivers": 2,
+  "wiring": "series",
+  "tol": {
+    "zeP95": 2.5
+  },
+  "input": {
+    "kind": "sealed",
+    "vb_l": 10.4,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}
