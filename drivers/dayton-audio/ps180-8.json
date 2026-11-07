@@ -3,7 +3,7 @@
   "model": "PS180-8",
   "type": "full-range",
   "nominal_ohms": 8,
-  "size_in": 6,
+  "size_in": 6.5,
   "ts": {
     "fs": 58.5,
     "qms": 3.64,

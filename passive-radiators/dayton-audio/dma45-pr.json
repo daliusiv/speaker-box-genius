@@ -2,7 +2,7 @@
   "brand": "Dayton Audio",
   "model": "DMA45-PR",
   "type": "passive-radiator",
-  "size_in": 1,
+  "size_in": 1.5,
   "params": {
     "mms_g": 2.8,
     "sd_cm2": 8.6,

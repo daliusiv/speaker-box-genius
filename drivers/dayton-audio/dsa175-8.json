@@ -3,7 +3,7 @@
   "model": "DSA175-8",
   "type": "woofer",
   "nominal_ohms": 8,
-  "size_in": 6,
+  "size_in": 6.5,
   "ts": {
     "fs": 38.36,
     "qms": 1.66,

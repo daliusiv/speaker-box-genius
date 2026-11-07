@@ -3,6 +3,7 @@
   "model": "E180HE-44",
   "type": "subwoofer",
   "nominal_ohms": 8,
+  "size_in": 7,
   "ts": {
     "fs": 35,
     "qms": 2.93,

@@ -3,7 +3,7 @@
   "model": "DMA45-4",
   "type": "full-range",
   "nominal_ohms": 4,
-  "size_in": 1,
+  "size_in": 1.5,
   "ts": {
     "fs": 151.4,
     "qms": 5.23,

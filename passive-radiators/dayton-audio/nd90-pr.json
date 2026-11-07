@@ -2,7 +2,7 @@
   "brand": "Dayton Audio",
   "model": "ND90-PR",
   "type": "passive-radiator",
-  "size_in": 3,
+  "size_in": 3.5,
   "params": {
     "mms_g": 8.1,
     "sd_cm2": 31.2,

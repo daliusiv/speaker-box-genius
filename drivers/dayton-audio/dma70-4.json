@@ -3,7 +3,7 @@
   "model": "DMA70-4",
   "type": "full-range",
   "nominal_ohms": 4,
-  "size_in": 2,
+  "size_in": 2.5,
   "ts": {
     "fs": 113,
     "qms": 2.04,

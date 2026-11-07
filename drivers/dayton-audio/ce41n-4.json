@@ -3,7 +3,7 @@
   "model": "CE41N-4",
   "type": "full-range",
   "nominal_ohms": 4,
-  "size_in": 1,
+  "size_in": 1.5,
   "ts": {
     "fs": 170,
     "qms": 5.6,
