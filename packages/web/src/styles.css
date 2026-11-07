@@ -673,6 +673,9 @@ h3 {
   color: var(--warn);
   font-size: 0.85rem;
 }
+.driver-flag {
+  margin: 8px 0 0;
+}
 
 .conflicts {
   margin-top: 0.6rem;
@@ -1956,6 +1959,18 @@ dialog.finder .lib-inner {
   font-size: 11px;
   color: var(--muted);
   vertical-align: 1px;
+}
+.lib-tag-ok {
+  border-color: color-mix(in srgb, var(--fg) 40%, transparent);
+  color: var(--fg);
+}
+.lib-tag-warn {
+  border-color: color-mix(in srgb, var(--warn) 60%, transparent);
+  color: var(--warn);
+}
+.lib-doubt {
+  color: var(--warn);
+  text-decoration: underline dotted;
 }
 .lib-note {
   margin: 4px 0 0;

@@ -40,7 +40,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 - **A T/S parameter editor that never overwrites what you typed.** Type any set of parameters in any order; the rest are calculated (shown in grey), and contradictions are flagged
 - **Paste straight from a datasheet**: the parameters are picked out of the text, with units like "1.9 ft³" or "35630 mm²" converted
-- **A driver database of about 1,360 drivers from 15 brands**, plus 46 passive radiators, searchable and filterable, with links to each manufacturer's datasheet
+- **A driver database of about 1,530 drivers from 18 brands**, plus 55 passive radiators, searchable and filterable, with links to each manufacturer's datasheet. Values that look wrong for a driver (an Xmax too large for its cone, say) are marked "check" until someone confirms them against the datasheet, and the design assistant leaves those drivers out
 - **A page for every driver** on the site ([speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/)), with suggested sealed, ported and passive radiator boxes, their charts, and a link that opens them in the app
 - **Compare with another driver**: a second driver drawn dashed in every box, with **Swap** to make it the main one
 - **Multiple drivers**: any number, wired in series or parallel, **isobaric** pairs and **dual voice coil** drivers
@@ -91,11 +91,11 @@ Results are checked against the established tools, and every comparison runs as 
 - **WinISD**: within 0.01 dB for sealed and ported boxes, with matching tuning for passive radiator boxes, and checks for bandpass, isobaric, dual voice coil, parallel drivers, high-pass filters and leakage. See the [validation page](https://speakerboxgenius.com/validation/).
 - **Hornresp**: transmission lines, tapped horns and front horns, including impedance and the line load (Za); and sealed, ported, passive-radiator and bandpass boxes, with one or two drivers. See the [validation page](https://speakerboxgenius.com/validation/#hornresp) and [`docs/transmission-lines.md`](docs/transmission-lines.md).
 
-The model is small-signal and lumped (one-dimensional for lines): it doesn't include port compression or Bl and Cms non-linearity.
+The model is small-signal and lumped (one-dimensional for lines). Port compression and a hot voice coil are optional estimates in Settings; Bl and Cms non-linearity aren't modelled.
 
 ## The driver database
 
-The database lives in this repo, in [`drivers/`](drivers) and [`passive-radiators/`](passive-radiators): about 1,360 drivers and 46 passive radiators. Sources and credits are in [`docs/data-sources.md`](docs/data-sources.md). Every driver with enough parameters also gets a page on the site with suggested sealed, ported and passive radiator boxes: [speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/). It isn't affiliated with or endorsed by any manufacturer. Spotted a mistake? [Ask for a correction or removal](../../issues/new?template=data-correction.yml).
+The database lives in this repo, in [`drivers/`](drivers) and [`passive-radiators/`](passive-radiators): about 1,530 drivers and 55 passive radiators. Sources and credits are in [`docs/data-sources.md`](docs/data-sources.md). Every driver with enough parameters also gets a page on the site with suggested sealed, ported and passive radiator boxes: [speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/). It isn't affiliated with or endorsed by any manufacturer. Spotted a mistake? [Ask for a correction or removal](../../issues/new?template=data-correction.yml).
 
 ## Contributing
 
@@ -111,6 +111,7 @@ Requires Node.js 22.6+ and pnpm 10. The repo has two packages: `packages/engine`
 ```bash
 pnpm install
 pnpm validate:db   # check every driver / PR file
+pnpm db:review     # list values that look implausible, with datasheet links
 pnpm test          # engine, database and app tests
 pnpm dev           # run the web app locally
 pnpm build         # production build (what GitHub Pages serves)

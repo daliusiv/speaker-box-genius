@@ -25,7 +25,7 @@ import {
   type PrCandidate,
   type SimulationResult,
 } from "@sbg/engine";
-import type { DbIndex, LoadedDriver } from "./library.ts";
+import { doubtsXmax, type DbIndex, type LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
 import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
 import { airOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
@@ -304,13 +304,15 @@ export const CURVE_FREQS = Array.from({ length: 25 }, (_, i) => 10 * 30 ** (i / 
 
 const r1 = (v: number) => Math.round(v * 10) / 10;
 
-/** The quick filters: size, kind, brand, and enough data to simulate (Xmax included). */
+/** The quick filters: size, kind, brand, and enough data to simulate (Xmax included, and plausible). */
 export function prefilter(rows: IndexRow[], goal: AssistantGoal): IndexRow[] {
   const brands = new Set(goal.brands);
   const sub = goal.use === "car" || goal.use === "home";
   return rows.filter((d) => {
     if (!(d.size_in! >= goal.sizeMin_in - 0.01 && d.size_in! <= goal.sizeMax_in + 0.01)) return false;
     if (!(d.xmax_mm! > 0) || !(d.fs! > 0) || !(d.sd_cm2! > 0) || !(d.vas_l! > 0) || !(d.qts! > 0)) return false;
+    // An Xmax that looks wrong for the cone would rank the driver on made-up headroom.
+    if (doubtsXmax(d)) return false;
     if (brands.size > 0 && !brands.has(d.brand)) return false;
     // A sub needs some excursion and a low resonance; midranges and tweeters are no use for bass.
     if (/tweeter|compression|midrange|full/i.test(d.type)) return false;

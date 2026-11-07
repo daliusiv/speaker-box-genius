@@ -83,6 +83,12 @@ export interface Driver {
    * Maintainers should check these entries when reviewing.
    */
   inconsistency_reason?: string;
+  /**
+   * Set after checking a value the plausibility checks flagged (an unusually large or
+   * small Xmax for the cone, or a size that doesn't match Sd) and finding it correct.
+   * Says what was checked; clears the flag.
+   */
+  plausibility_note?: string;
 }
 
 export interface PassiveRadiatorParams {
@@ -106,6 +112,8 @@ export interface PassiveRadiator {
   sources: Source[];
   status: Status;
   notes?: string;
+  /** As for drivers: a checked, correct value the plausibility checks would flag. */
+  plausibility_note?: string;
 }
 
 export interface Brand {
@@ -240,7 +248,7 @@ function validateCommon(d: Record<string, unknown>, errors: Errors) {
 export function validateDriver(data: unknown): Errors {
   const errors: Errors = [];
   if (!isObj(data)) return ["file must contain a JSON object"];
-  checkKeys(data, ["brand", "model", "type", "nominal_ohms", "size_in", "ts", "physical", "sources", "status", "notes", "inconsistency_reason", "voice_coils", "ts_wiring"], "", errors);
+  checkKeys(data, ["brand", "model", "type", "nominal_ohms", "size_in", "ts", "physical", "sources", "status", "notes", "inconsistency_reason", "plausibility_note", "voice_coils", "ts_wiring"], "", errors);
   if (data.voice_coils !== undefined && data.voice_coils !== 1 && data.voice_coils !== 2) {
     errors.push("voice_coils: must be 1 or 2");
   }
@@ -251,6 +259,7 @@ export function validateDriver(data: unknown): Errors {
   }
   validateCommon(data, errors);
   str(data, "inconsistency_reason", "", errors, false);
+  str(data, "plausibility_note", "", errors, false);
   oneOf(data, "type", DRIVER_TYPES, "", errors);
   num(data, "nominal_ohms", "", errors, true);
 
@@ -271,8 +280,9 @@ export function validateDriver(data: unknown): Errors {
 export function validatePassiveRadiator(data: unknown): Errors {
   const errors: Errors = [];
   if (!isObj(data)) return ["file must contain a JSON object"];
-  checkKeys(data, ["brand", "model", "type", "size_in", "params", "physical", "sources", "status", "notes"], "", errors);
+  checkKeys(data, ["brand", "model", "type", "size_in", "params", "physical", "sources", "status", "notes", "plausibility_note"], "", errors);
   validateCommon(data, errors);
+  str(data, "plausibility_note", "", errors, false);
   if (data.type !== "passive-radiator") errors.push('type: must be "passive-radiator"');
 
   const p = data.params;

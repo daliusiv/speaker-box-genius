@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { REPO } from "./components.tsx";
-import { DRIVER_AS_PR, type DbIndex } from "./library.ts";
+import { DRIVER_AS_PR, doubtsXmax, flagText, type DataQuality, type DbIndex } from "./library.ts";
 import { useUnits } from "./units.ts";
 
 /**
@@ -307,11 +307,37 @@ const ohmsText = (r: DriverRow) => (r.coil_ohms ? `${r.coil_ohms}+${r.coil_ohms}
 const uniq = <T,>(xs: T[]) => [...new Set(xs)];
 const bySize = (a: number, b: number) => a - b;
 
-function nameCell(r: { brand: string; model: string }) {
+function nameCell(r: { brand: string; model: string } & DataQuality) {
+  const flag = flagText(r);
   return (
     <>
       <span className="lib-brand">{r.brand}</span> <b>{r.model}</b>
+      {r.status === "verified" && (
+        <span className="lib-tag lib-tag-ok" title="Values checked against the datasheet by a reviewer">
+          verified
+        </span>
+      )}
+      {r.source === "measured" && (
+        <span className="lib-tag" title="Includes values measured by a contributor">
+          measured
+        </span>
+      )}
+      {flag && (
+        <span className="lib-tag lib-tag-warn" title={flag}>
+          check
+        </span>
+      )}
     </>
+  );
+}
+
+/** Xmax, marked when it looks wrong for the cone. */
+function xmaxCell(r: { xmax_mm?: number } & DataQuality) {
+  if (!doubtsXmax(r)) return fmt(r.xmax_mm);
+  return (
+    <span className="lib-doubt" title={flagText(r)}>
+      {fmt(r.xmax_mm)}?
+    </span>
   );
 }
 
@@ -412,7 +438,7 @@ export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onP
         num: true,
         wide: true,
       },
-      { key: "xmax", label: "Xmax", sort: (r) => r.xmax_mm, cell: (r) => fmt(r.xmax_mm), num: true, title: "One-way linear excursion, mm" },
+      { key: "xmax", label: "Xmax", sort: (r) => r.xmax_mm, cell: xmaxCell, num: true, title: "One-way linear excursion, mm" },
       { key: "pe", label: "Pe W", sort: (r) => r.pe_w, cell: (r) => fmt(r.pe_w, 0), num: true, wide: true, title: "Thermal power handling" },
     ],
     [vol.unit, vol.k, vol.digits],
@@ -448,7 +474,7 @@ export function PassiveRadiatorBrowser(props: {
     const prs: PrChoiceRow[] = (props.rows ?? []).map((r) => ({ ...r, kind: "pr" }));
     const drivers: PrChoiceRow[] = (props.drivers ?? [])
       .filter((d) => d.sd_cm2 !== undefined && d.xmax_mm !== undefined && d.xmax_mm > 0)
-      .map((d) => ({ id: DRIVER_AS_PR + d.id, brand: d.brand, model: d.model, size_in: d.size_in, sd_cm2: d.sd_cm2, xmax_mm: d.xmax_mm, kind: "driver" }));
+      .map((d) => ({ id: DRIVER_AS_PR + d.id, brand: d.brand, model: d.model, size_in: d.size_in, sd_cm2: d.sd_cm2, xmax_mm: d.xmax_mm, status: d.status, source: d.source, flags: d.flags, kind: "driver" }));
     return [...prs, ...drivers];
   }, [props.rows, props.drivers]);
   const prCount = props.rows?.length ?? 0;
@@ -484,7 +510,7 @@ export function PassiveRadiatorBrowser(props: {
       },
       { key: "size", label: "Size", sort: (r) => r.size_in, cell: (r) => (r.size_in ? `${r.size_in}"` : "–"), num: true },
       { key: "sd", label: "Sd cm²", sort: (r) => r.sd_cm2, cell: (r) => fmt(r.sd_cm2, 0), num: true },
-      { key: "xmax", label: "Xmax", sort: (r) => r.xmax_mm, cell: (r) => fmt(r.xmax_mm), num: true },
+      { key: "xmax", label: "Xmax", sort: (r) => r.xmax_mm, cell: xmaxCell, num: true },
     ],
     [],
   );
