@@ -335,6 +335,11 @@ export function App(props: { initial: AppState | null }) {
       el.classList.add("flash");
     }, 60);
   };
+  /** Bring the .zma panel (at the top of the Driver tab) into view after it opens, clear of the sticky box strip. */
+  const showMeasurePanel = () =>
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => document.getElementById("measure-panel")?.scrollIntoView({ behavior: "smooth", block: "start" })),
+    );
   const welcome = useWelcome();
   const folds = useFolded();
   const pwa = usePwa();
@@ -844,6 +849,37 @@ export function App(props: { initial: AppState | null }) {
         {narrow && solved.missing.length === 0 && <StatusStrip designs={designs} state={state} onJump={jumpTo} onPower={() => showOnPhone("charts")} />}
         {panel === "driver" && (
           <div className="tab-panel" role="tabpanel" id="panel-driver" aria-labelledby="tab-driver">
+            {/* Measuring from a .zma: at the top of the tab, so opening it always lands in the same place
+                (at the end of the tab, the page often couldn't scroll far enough to reach it). */}
+            {(measureOpen || measurement) && (
+              <div id="measure-panel">
+              <MeasurePanel
+                measurement={measurement}
+                onMeasurement={setMeasurement}
+                onClose={() => {
+                  setMeasureOpen(false);
+                  setMeasurement(null);
+                }}
+                sd_cm2={solved.values.sd_cm2}
+                onUse={(ts, coil) =>
+                  setStep((s) => {
+                    // Keep Vas / Sd the user had, unless the measurement provides them; drop values it supersedes.
+                    const keep: typeof s.ts = {};
+                    if (s.ts.vas_l !== undefined && ts.mms_g === undefined) keep.vas_l = s.ts.vas_l;
+                    if (s.ts.mms_g !== undefined && s.ts.vas_l === undefined && ts.mms_g === undefined) keep.mms_g = s.ts.mms_g;
+                    return {
+                      ...s,
+                      driverName: s.driverName.endsWith("(measured)") ? s.driverName : `${s.driverName} (measured)`,
+                      ts: { ...keep, ...ts },
+                      ...coil,
+                      semi: undefined,
+                      fdd: undefined,
+                    };
+                  })
+                }
+              />
+              </div>
+            )}
             <Card title="Driver">
               {/* Two dropdown-like pickers: the main driver, and an optional one to compare with. */}
               <div className="driver-pickers">
@@ -976,7 +1012,7 @@ export function App(props: { initial: AppState | null }) {
                   className="chip"
                   onClick={() => {
                     setMeasureOpen(true);
-                    setTimeout(() => document.getElementById("measure-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+                    showMeasurePanel();
                   }}
                 >
                   Measure from a .zma
@@ -1017,7 +1053,7 @@ export function App(props: { initial: AppState | null }) {
                 <DriverMenu
                   onMeasure={() => {
                     setMeasureOpen(true);
-                    setTimeout(() => document.getElementById("measure-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+                    showMeasurePanel();
                   }}
                   pasting={pasting}
                   onPaste={() => setPasting(!pasting)}
@@ -1246,35 +1282,6 @@ export function App(props: { initial: AppState | null }) {
               </details>
             </Card>
 
-            {(measureOpen || measurement) && (
-              <div id="measure-panel">
-              <MeasurePanel
-                measurement={measurement}
-                onMeasurement={setMeasurement}
-                onClose={() => {
-                  setMeasureOpen(false);
-                  setMeasurement(null);
-                }}
-                sd_cm2={solved.values.sd_cm2}
-                onUse={(ts, coil) =>
-                  setStep((s) => {
-                    // Keep Vas / Sd the user had, unless the measurement provides them; drop values it supersedes.
-                    const keep: typeof s.ts = {};
-                    if (s.ts.vas_l !== undefined && ts.mms_g === undefined) keep.vas_l = s.ts.vas_l;
-                    if (s.ts.mms_g !== undefined && s.ts.vas_l === undefined && ts.mms_g === undefined) keep.mms_g = s.ts.mms_g;
-                    return {
-                      ...s,
-                      driverName: s.driverName.endsWith("(measured)") ? s.driverName : `${s.driverName} (measured)`,
-                      ts: { ...keep, ...ts },
-                      ...coil,
-                      semi: undefined,
-                      fdd: undefined,
-                    };
-                  })
-                }
-              />
-              </div>
-            )}
           </div>
         )}
         {panel === "boxes" && (
