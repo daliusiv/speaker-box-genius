@@ -636,20 +636,59 @@ label.lib-filter {
   }
 }
 
-.pr-group {
-  margin-top: 0.8rem;
-  padding-top: 0.6rem;
-  border-top: 1px dashed var(--border);
+/* One kind of passive radiator in a box: its own card under the box's fields. */
+.pr-card {
+  margin-top: 0.9rem;
+  padding: 0.6rem 0.75rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
 }
 
-.pr-group-head {
+.pr-card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 0.5rem;
 }
 
-.pr-group-head h3 {
-  margin: 0 0 0.4rem;
+.pr-card-head h3 {
+  margin: 0;
+}
+
+.pr-card .finder-row-button {
+  margin: 0.5rem 0 0.6rem;
+}
+
+.pr-card .fields + .pr-specs {
+  margin-top: 0.5rem;
+}
+
+.pr-specs summary {
+  cursor: pointer;
+  padding: 0.35rem 0;
+  color: var(--accent);
+  font-size: 0.88rem;
+}
+
+.pr-specs-sum {
+  margin-left: 0.5rem;
+  color: var(--muted);
+}
+
+.pr-specs[open] .pr-specs-sum {
+  display: none;
+}
+
+.pr-specs > .fields {
+  margin-top: 0.3rem;
+}
+
+.pr-specs .hint {
+  margin: 0.5rem 0 0;
+}
+
+.pr-add {
+  margin-top: 0.75rem;
 }
 
 .pr-name {
@@ -2866,7 +2905,8 @@ button.as-text {
 /* ---- Long labels (components.tsx stackClass): above the input, never wrapped or cut off ---- */
 label.stack,
 .fields:has(> label.stack) > label:not(.full) {
-  grid-template-columns: 1fr auto;
+  /* A fixed unit slot, so "L", "cm²" and no unit at all give the same input width. */
+  grid-template-columns: 1fr 2.3rem;
   row-gap: 0.2rem;
 }
 
