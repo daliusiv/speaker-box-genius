@@ -416,6 +416,7 @@ export function App(props: { initial: AppState | null }) {
         l2_mh: 0,
         r2_ohm: 0,
         semi: undefined,
+        fdd: undefined,
         xmax_mm: d.xmax_mm ?? s.xmax_mm,
         pe_w: d.pe_w ?? s.pe_w,
         dvc:
@@ -518,6 +519,7 @@ export function App(props: { initial: AppState | null }) {
           l2_mh: 0,
           r2_ohm: 0,
           semi: undefined,
+          fdd: undefined,
           xmax_mm: d.xmax_mm ?? s.xmax_mm,
           pe_w: d.pe_w ?? s.pe_w,
           // WinISD drives isobaric pairs at V = √(P·Re/N), which is only half of P in the coils.
@@ -900,6 +902,7 @@ export function App(props: { initial: AppState | null }) {
                               l2_mh: d.l2_mh ?? 0,
                               r2_ohm: d.r2_ohm ?? 0,
                               semi: undefined,
+                              fdd: undefined,
                               xmax_mm: d.xmax_mm ?? s.xmax_mm,
                               pe_w: d.pe_w ?? s.pe_w,
                               dvc: d.dvcWiring ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring } : { ...s.dvc, on: false },
@@ -953,6 +956,7 @@ export function App(props: { initial: AppState | null }) {
                     l2_mh: 0,
                     r2_ohm: 0,
                     semi: undefined,
+                    fdd: undefined,
                     xmax_mm: x.xmax_mm ?? s.xmax_mm,
                     pe_w: x.pe_w ?? s.pe_w,
                   }));
@@ -1060,6 +1064,35 @@ export function App(props: { initial: AppState | null }) {
                       min={0}
                       title="Optional: resistance across L2 (eddy-current losses). Used only when L2 is also set."
                       onChange={(v) => set("r2_ohm", v)}
+                    />
+                  </>
+                )}
+                <Select<"qms" | "fdd"> help="How the suspension's losses are modelled. From Qms: one resistance (Rms), the usual T/S way. Frequency-dependent damping is Hornresp's FDD model: the suspension's compliance becomes complex (Cms − j·Ams), a loss that stays the same fraction of its stiffness at every frequency, as rubber and foam surrounds behave, plus its own Rms. It mostly changes the impedance peak and the response near Fs."
+                  label="Suspension losses"
+                  value={state.fdd ? "fdd" : "qms"}
+                  options={[
+                    { value: "qms", text: "From Qms" },
+                    { value: "fdd", text: "Frequency-dependent (like Hornresp)" },
+                  ]}
+                  onChange={(m) => set("fdd", m === "fdd" ? (state.fdd ?? { rms: 0, ams_mm_per_n: 0 }) : undefined)}
+                />
+                {state.fdd && (
+                  <>
+                    <Num
+                      label="Rms (FDD)"
+                      unit="N·s/m"
+                      value={state.fdd.rms}
+                      min={0}
+                      title="FDD model: the suspension's viscous resistance, in place of the Rms from Qms."
+                      onChange={(v) => set("fdd", { ...state.fdd!, rms: Math.max(0, v) })}
+                    />
+                    <Num
+                      label="Ams"
+                      unit="mm/N"
+                      value={state.fdd.ams_mm_per_n}
+                      min={0}
+                      title="FDD model: the lossy part of the compliance (Hornresp shows it in m/N: 3.00E-04 m/N is 0.3 mm/N). Ams ÷ Cms is the loss factor. 0 = off."
+                      onChange={(v) => set("fdd", { ...state.fdd!, ams_mm_per_n: Math.max(0, v) })}
                     />
                   </>
                 )}
@@ -1172,6 +1205,7 @@ export function App(props: { initial: AppState | null }) {
                       ts: { ...keep, ...ts },
                       ...coil,
                       semi: undefined,
+                      fdd: undefined,
                     };
                   })
                 }
@@ -1272,6 +1306,7 @@ export function App(props: { initial: AppState | null }) {
                     l2_mh: 0,
                     r2_ohm: 0,
                     semi: x.semi,
+                    fdd: x.fdd,
                     ...(x.xmax_mm !== undefined ? { xmax_mm: x.xmax_mm } : {}),
                     ...(x.drivers ? { drivers: x.drivers.count, wiring: x.drivers.wiring } : {}),
                     dvc: { ...s.dvc, on: false },

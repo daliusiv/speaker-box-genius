@@ -49,6 +49,9 @@ B10                     B1 with Rg = 0.50 (edit and Calculate)
 B11-sealed-2P / -2S     B1 with two drivers, parallel and series (import these:
                         counts typed into the editor didn't simulate both cones)
 
+B13a / B13b             B1 with the FDD model (double-click the Cms label, On):
+                        Rms 2.00 / Ams 3.00E-04, and Rms 8.00 / Ams 1.00E-03
+
 B12 (bw2 / bw3 / lr4)   B2 with Tools > Filter Wizard (Active): high pass 25 Hz,
                         order 2, 3 (Butterworth) and 4 (Linkwitz-Riley), On,
                         then File > Export in the chart window

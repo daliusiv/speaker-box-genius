@@ -352,6 +352,7 @@ export function withDriver(s: AppState, d: LoadedDriver): AppState {
     l2_mh: d.l2_mh ?? 0,
     r2_ohm: d.r2_ohm ?? 0,
     semi: undefined,
+    fdd: undefined,
     xmax_mm: d.xmax_mm ?? s.xmax_mm,
     pe_w: d.pe_w ?? s.pe_w,
     volume: {
@@ -1086,6 +1087,7 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
     l2_mh: t.l2_mh,
     r2_ohm: t.r2_ohm,
     semi: t.semi,
+    fdd: t.fdd,
     xmax_mm: t.xmax_mm,
     pe_w: t.pe_w,
     // "Fit my space": the calculator set to the space; the first box that fills it takes its

@@ -98,6 +98,10 @@ Butterworth (orders 1–4) and Linkwitz-Riley, applied to the voltage before the
 
 The response at 48 kHz up to 20 kHz (from radiated power), inverse-FFT'd, peak scaled to 1, as Hornresp's impulse response; the step response is its running sum. Compared with Hornresp's WAV exports for a sealed and a ported box and an MLTL (see its notes): within 0.02 RMS of the peak. Checks (`transient.test.ts`): the FFT round trip; a sealed box's impulse starts positive at t = 0 with nothing before it and its step settles to zero; the impulse's spectrum is the simulated response.
 
+### Frequency-dependent damping (Driver → Suspension losses)
+
+Hornresp's FDD model: the suspension is Rms + 1/(jω(Cms − j·Ams)), with its own Rms in place of the one from Qms (Ams in mm/N in the app, m/N in Hornresp). Compared with Hornresp on a sealed box with two parameter sets (case B13, see its notes): within 0.46 % in impedance and 0.04 dB. Checks (`simulate.test.ts`): the closed form at three frequencies, off when Ams is 0, an isobaric pair doubling Rms and halving Ams.
+
 ### Semi-inductance coil model (Driver → Coil model)
 
 Hornresp's semi-inductance model (Thorborg and Futtrup): Re + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)), in place of Le and L2R2. Compared with Hornresp on a sealed box with three parameter sets, one with its own Re′ (see its notes): impedance within 0.3 % up to 20 kHz, the coil's effect on SPL within 0.03 dB. Re′, when set, is the coil's resistance; Bl stays from Re and Qes, as in Hornresp. Checks (`simulate.test.ts`): the closed form at three frequencies, and series isobaric coils doubling it.

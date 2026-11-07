@@ -230,3 +230,20 @@ test("semi-inductance coil: written into Hornresp's semi-inductance fields and r
   assert.ok(typeof none !== "string");
   assert.equal(none.driver?.semi, undefined);
 });
+
+test("frequency-dependent damping: written into Hornresp's FDD fields (Ams in m/N) and read back", () => {
+  const fdd = { rms: 2, ams_mm_per_n: 0.3 };
+  const out = toHornresp(base, { ...driver, fdd }, { eg: 2.83, drivers: 1, name: "x" });
+  assert.ok(typeof out !== "string");
+  assert.match(out.text, /Ams = 3\.00E-04/);
+  assert.ok(out.warnings.some((w) => /Cms label/.test(w)));
+  const back = fromHornresp(out.text, base);
+  assert.ok(typeof back !== "string");
+  assert.deepEqual(back.driver?.fdd, fdd);
+  // Without it the FDD fields stay zero and nothing is read back.
+  const plain = toHornresp(base, driver, { eg: 2.83, drivers: 1, name: "x" });
+  assert.ok(typeof plain !== "string");
+  const none = fromHornresp(plain.text, base);
+  assert.ok(typeof none !== "string");
+  assert.equal(none.driver?.fdd, undefined);
+});

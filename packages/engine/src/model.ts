@@ -34,6 +34,13 @@ export interface DriverInput {
    * L2R2; Rss 0 means no Rss branch.
    */
   semi?: SemiInductance;
+  /**
+   * Optional frequency-dependent damping (Hornresp's FDD model): the suspension's compliance
+   * becomes complex, Cms − j·Ams (a loss that's the same fraction of the stiffness at every
+   * frequency, as in rubber and foam surrounds), with its own viscous Rms in place of the one
+   * from Qms. Ams in mm/N (Hornresp shows m/N); Ams/Cms is the loss factor.
+   */
+  fdd?: { rms: number; ams_mm_per_n: number };
   xmax_mm?: number; // one-way, peak
   pe_w?: number; // thermal limit, per driver
 }
@@ -61,6 +68,8 @@ export interface DriverModel {
   r2: number;
   /** Semi-inductance model (H, H, Ω/√(rad/s), Ω); null = Le (+ L2R2). rss = 0 means none. */
   semi: { leb: number; le: number; ke: number; rss: number } | null;
+  /** Frequency-dependent damping (N·s/m, m/N); null = Rms from Qms. */
+  fdd: { rms: number; ams: number } | null;
   bl: number; // T·m
   mms: number; // kg
   cms: number; // m/N
@@ -84,6 +93,7 @@ export function driverModel(d: DriverInput, air: Air = STANDARD_AIR): DriverMode
     l2: d.l2_mh !== undefined && d.r2_ohm !== undefined && d.l2_mh > 0 && d.r2_ohm > 0 ? d.l2_mh / 1000 : 0,
     r2: d.l2_mh !== undefined && d.r2_ohm !== undefined && d.l2_mh > 0 && d.r2_ohm > 0 ? d.r2_ohm : 0,
     semi: semiActive(d.semi) ? { leb: d.semi.leb_mh / 1000, le: d.semi.le_mh / 1000, ke: d.semi.ke, rss: Math.max(0, d.semi.rss_ohm) } : null,
+    fdd: d.fdd && d.fdd.ams_mm_per_n > 0 ? { rms: Math.max(0, d.fdd.rms), ams: d.fdd.ams_mm_per_n / 1000 } : null,
     bl: blFromQes(d.fs, mms, d.re, d.qes),
     mms,
     cms,
@@ -103,6 +113,19 @@ export const COIL_ALPHA = 0.00393;
  */
 export const coilHeatFactor = (temp_C: number | undefined) =>
   temp_C === undefined || !Number.isFinite(temp_C) || temp_C <= 20 ? 1 : 1 + COIL_ALPHA * (temp_C - 20);
+
+/**
+ * The suspension's mechanical impedance (N·s/m): Rms + 1/(jωCms), or with frequency-dependent
+ * damping (Hornresp's FDD) its own Rms + 1/(jω(Cms − j·Ams)).
+ */
+export function suspensionImpedance(m: Pick<DriverModel, "rms" | "cms" | "fdd">, w: number): Complex {
+  if (!m.fdd) return cx(m.rms, -1 / (w * m.cms));
+  // 1/(jω(C − jA)) = (A − jC) / (ω(C² + A²))
+  const c = m.cms;
+  const a = m.fdd.ams;
+  const d = w * (c * c + a * a);
+  return cx(m.fdd.rms + a / d, -c / d);
+}
 
 /**
  * Blocked voice-coil impedance: Re + jωLe, plus (jωL2 ∥ R2) when the L2R2 model is
