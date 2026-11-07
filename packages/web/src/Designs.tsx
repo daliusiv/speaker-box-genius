@@ -141,13 +141,20 @@ function DesignShell(props: {
             {d.preset}
           </span>
         )}
-        <input
-          type="checkbox"
-          checked={d.on}
-          onChange={(e) => props.onChange({ on: e.currentTarget.checked })}
-          aria-label={`Show ${d.name}`}
-          title="Show on the charts"
-        />
+        <button
+          type="button"
+          className={`icon eye${d.on ? " on" : ""}`}
+          aria-pressed={d.on}
+          aria-label={`Show ${d.name} on the charts`}
+          title={d.on ? "Showing on the charts: tap to hide" : "Hidden from the charts: tap to show"}
+          onClick={() => props.onChange({ on: !d.on })}
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+            <circle cx="12" cy="12" r="3" fill={d.on ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" />
+            {!d.on && <path d="M4 20 20 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />}
+          </svg>
+        </button>
         <button className="icon" title="Duplicate this design" aria-label={`Duplicate ${d.name}`} onClick={props.onDuplicate}>
           ⧉
         </button>
