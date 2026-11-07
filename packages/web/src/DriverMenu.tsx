@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Sparkle } from "./Logo.tsx";
 
 /**
  * One drop-down for the driver card's less frequent actions: paste from a datasheet,
@@ -51,6 +52,7 @@ export function DriverMenu(props: {
             {props.pasting ? "Cancel paste" : "Paste from datasheet…"}
           </button>
           <button role="menuitem" onClick={pick(props.onMeasure)}>
+            <Sparkle />
             Measure from an impedance sweep…
           </button>
           <button role="menuitem" onClick={pick(props.onClear)}>

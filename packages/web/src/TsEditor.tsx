@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Sparkle } from "./Logo.tsx";
 import {
   parseDatasheet,
   parseQuantity,
@@ -144,6 +145,7 @@ export function TsEditor(props: {
               <li key={c.relation + c.param}>
                 {fromDatasheet ? c.message.replace("you entered", "published") : c.message}{" "}
                 <button className="link" onClick={() => setParam(c.param, undefined)}>
+<Sparkle />
                   Use calculated
                 </button>
               </li>

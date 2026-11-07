@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Sparkle } from "./Logo.tsx";
 import type { PassiveBranch } from "@sbg/engine";
 import { Card, Num, Select } from "./components.tsx";
 import type { AppState } from "./state.ts";
@@ -51,6 +52,8 @@ export function PassivePanel(props: { value: Passive; re: number; le_mh: number;
           <div className="row">
             {STARTS.map((s) => (
               <button key={s.id} className="secondary" title={s.title} onClick={() => props.onChange({ on: true, branches: s.branches(props.re, props.le_mh || 1) })}>
+                {/* The Zobel is worked out from the driver's Re and Le; the others are fixed starting values. */}
+                {s.id === "zobel" && <Sparkle />}
                 {s.label}
               </button>
             ))}

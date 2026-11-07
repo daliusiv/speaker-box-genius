@@ -94,3 +94,17 @@ export function UseIcon({ use }: { use: "car" | "home" | "hifi" | "tower" | "oth
     </svg>
   );
 }
+
+/**
+ * The assistant's mark: on every button that works something out for you (sizes, tunes, finds,
+ * fits). Drawn in the button's own text colour.
+ */
+export function Sparkle() {
+  return (
+    <svg className="sparkle" viewBox="0 0 16 16" aria-hidden="true">
+      {/* A large four-point star with curved sides, and a small one above right. */}
+      <path d="M6.5 2.5Q7.2 7.3 11 8.5 7.2 9.7 6.5 14.5 5.8 9.7 2 8.5 5.8 7.3 6.5 2.5Z" fill="currentColor" />
+      <path d="M12.5 0.8Q12.8 2.7 14.6 3.2 12.8 3.7 12.5 5.6 12.2 3.7 10.4 3.2 12.2 2.7 12.5 0.8Z" fill="currentColor" />
+    </svg>
+  );
+}

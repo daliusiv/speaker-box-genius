@@ -1,4 +1,5 @@
 import { baffleStepFrequency } from "@sbg/engine";
+import { Sparkle } from "./Logo.tsx";
 import { Card, Fixed, Num, Select } from "./components.tsx";
 import { baffleOf } from "./sim.ts";
 import { newId, type AppState, type EqItem } from "./state.ts";
@@ -92,9 +93,11 @@ export function BafflePanel(props: { state: AppState; sd_cm2?: number; onChange:
           </p>
           <div className="row">
             <button type="button" className="secondary" onClick={() => addShelf(3)} title="Low shelf +3 dB below the step, for a speaker near a wall">
+<Sparkle />
               Compensate +3 dB (near a wall)
             </button>
             <button type="button" className="secondary" onClick={() => addShelf(6)} title="Low shelf +6 dB below the step, for a speaker well out in the room">
+<Sparkle />
               +6 dB (free-standing)
             </button>
           </div>

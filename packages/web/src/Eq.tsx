@@ -1,4 +1,5 @@
 import type { EqStage } from "@sbg/engine";
+import { Sparkle } from "./Logo.tsx";
 import { Card, Num, Select } from "./components.tsx";
 import type { Design } from "./sim.ts";
 import { newId, type AppState, type EqItem } from "./state.ts";
@@ -93,6 +94,7 @@ export function EqPanel(props: { state: AppState; designs: Design[]; onChange: (
                   title={r ? "Use the sealed design's fc and Qtc as f0 and Q0" : "Pick a sealed design under “Applies to”"}
                   onClick={() => r && set({ ...e, f0: round(r.summary.fc!), q0: round(r.summary.qtc!, 3) })}
                 >
+                  <Sparkle />
                   Match sealed design
                 </button>
                 <span className="hint">
