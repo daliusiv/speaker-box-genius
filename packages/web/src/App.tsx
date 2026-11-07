@@ -79,6 +79,7 @@ import {
 import { RoomGainPanel } from "./RoomGain.tsx";
 import { BafflePanel } from "./BafflePanel.tsx";
 import { AddDesign, DesignCard } from "./Designs.tsx";
+import { useFolded } from "./fold.ts";
 import { MeasuredCard, measuredSeries } from "./Measured.tsx";
 import { HelpDock } from "./HelpDock.tsx";
 import { reportUrl, ShareMenu } from "./Share.tsx";
@@ -334,6 +335,7 @@ export function App(props: { initial: AppState | null }) {
     }, 60);
   };
   const welcome = useWelcome();
+  const folds = useFolded();
   const pwa = usePwa();
 
   useEffect(() => {
@@ -1303,9 +1305,40 @@ export function App(props: { initial: AppState | null }) {
                 </button>
               </div>
             )}
+            {(() => {
+              // Fold or open every box at once; the add buttons are at the bottom of the list.
+              const shown = state.designs.filter((d) => d.on).map((d) => d.id);
+              const allFolded = shown.length > 0 && shown.every((id) => folds.isFolded(id));
+              return state.designs.length > 1 ? (
+                <div className="designs-bar">
+                  <button type="button" className="secondary" onClick={() => folds.foldAll(shown, !allFolded)}>
+                    {allFolded ? "Open all" : "Fold all"}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => document.querySelector(".add-design")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                  >
+                    + Add a box
+                  </button>
+                </div>
+              ) : null;
+            })()}
             {state.designs.map((d) => (
               <DesignCard
                 key={d.id}
+                folded={folds.isFolded(d.id)}
+                onFold={(on) => folds.fold(d.id, on)}
+                glance={(() => {
+                  const r = designs.find((x) => x.design.id === d.id)?.result;
+                  if (!r) return undefined;
+                  return {
+                    vb_l: builtVbOf(state, d),
+                    fb: r.summary.fb,
+                    f3: r.summary.f3,
+                    over: limitsOf(r, state.xmax_mm, state.highPass.on, portLimitOf(state)).over.length,
+                  };
+                })()}
                 design={d}
                 color={colorOf(state, d.id)}
                 vb_l={vbOf(state, d)}

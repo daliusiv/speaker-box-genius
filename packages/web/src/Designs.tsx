@@ -85,20 +85,46 @@ function Presets(props: { children: ReactNode; note?: string }) {
   );
 }
 
-/** Card shell shared by all design types: colour, editable name, on/off, duplicate, delete. */
+/** A folded card's one-line summary: its size and tuning, F3 and how many limits it's over. */
+export interface DesignGlance {
+  vb_l: number;
+  fb?: number;
+  f3: number | null;
+  over: number;
+}
+
+/** Card shell shared by all design types: colour, editable name, on/off, duplicate, delete, fold. */
 function DesignShell(props: {
   design: DesignState;
   color: string;
   canDelete: boolean;
+  folded: boolean;
+  onFold: (folded: boolean) => void;
+  glance?: DesignGlance;
   onChange: (patch: Partial<DesignState>) => void;
   onDuplicate: () => void;
   onDelete: () => void;
   children: ReactNode;
 }) {
   const d = props.design;
+  const { fmt } = useUnits();
+  const g = props.glance;
+  const open = d.on && !props.folded;
   return (
-    <section className={`card design${d.on ? "" : " off"}`}>
+    <section className={`card design${d.on ? "" : " off"}${props.folded ? " folded" : ""}`} data-design={d.id}>
       <div className="design-head">
+        {d.on && (
+          <button
+            type="button"
+            className="icon fold"
+            aria-expanded={!props.folded}
+            aria-label={props.folded ? `Open ${d.name}` : `Fold ${d.name}`}
+            title={props.folded ? "Open this design" : "Fold to one line"}
+            onClick={() => props.onFold(!props.folded)}
+          >
+            {props.folded ? "▸" : "▾"}
+          </button>
+        )}
         <span className="swatch" style={{ background: props.color }} />
         <input
           className="design-name"
@@ -131,7 +157,17 @@ function DesignShell(props: {
           </button>
         )}
       </div>
-      {d.on && props.children}
+      {d.on && props.folded && g && (
+        <button type="button" className="design-glance" onClick={() => props.onFold(false)} title="Open this design">
+          <span>
+            {fmt(g.vb_l, "vol", 1)}
+            {g.fb ? ` · Fb ${g.fb.toFixed(1)} Hz` : ""}
+          </span>
+          <span className="muted">{g.f3 === null ? "F3 –" : `F3 ${g.f3.toFixed(0)} Hz`}</span>
+          {g.over > 0 ? <span className="over">⚠ {g.over} over</span> : <span className="ok">OK</span>}
+        </button>
+      )}
+      {open && props.children}
     </section>
   );
 }
@@ -1041,6 +1077,10 @@ export function DesignCard(props: {
   /** Transmission lines: all the drivers' displacement (L) and the wall thickness (mm). */
   driverDisp_l?: number;
   wall_mm?: number;
+  /** Folded to its header and a one-line summary (phones and desktop alike). */
+  folded?: boolean;
+  onFold?: (folded: boolean) => void;
+  glance?: DesignGlance;
 }) {
   const d = props.design;
   const fill = stuffFactor(d);
@@ -1059,6 +1099,9 @@ export function DesignCard(props: {
       design={d}
       color={props.color}
       canDelete={props.canDelete}
+      folded={props.folded ?? false}
+      onFold={props.onFold ?? (() => undefined)}
+      glance={props.glance}
       onChange={(patch) => props.onChange({ ...d, ...patch } as DesignState)}
       onDuplicate={props.onDuplicate}
       onDelete={props.onDelete}
