@@ -73,7 +73,12 @@ function lineTuning(freq: Float64Array, z: Float64Array): number | null {
   }
   let j = i + 1;
   while (j < z.length - 1 && !(z[j]! <= z[j - 1]! && z[j]! < z[j + 1]!)) j++;
-  return j < z.length - 1 ? freq[j]! : null;
+  if (j >= z.length - 1) return null;
+  // A tuning is a minimum between two peaks. Heavy stuffing can leave one peak only: the next
+  // minimum is then just where the coil's inductance takes over (hundreds of Hz), not a tuning.
+  let k = j + 1;
+  while (k < z.length - 1 && !(z[k]! >= z[k - 1]! && z[k]! > z[k + 1]!)) k++;
+  return k < z.length - 1 ? freq[j]! : null;
 }
 
 /** Dynamic viscosity of air at about 20 °C (Pa·s). */
