@@ -80,6 +80,7 @@ import { RoomGainPanel } from "./RoomGain.tsx";
 import { BafflePanel } from "./BafflePanel.tsx";
 import { AddDesign, DesignCard } from "./Designs.tsx";
 import { useFolded } from "./fold.ts";
+import { COMPAT, COMPAT_NAMES, compatOf, nearestCompat, withCompat, type CompatPreset } from "./compat.ts";
 import { MeasuredCard, measuredSeries } from "./Measured.tsx";
 import { HelpDock } from "./HelpDock.tsx";
 import { reportUrl, ShareMenu } from "./Share.tsx";
@@ -1503,6 +1504,28 @@ export function App(props: { initial: AppState | null }) {
         {panel === "settings" && (
           <div className="tab-panel" role="tabpanel" id="panel-settings" aria-labelledby="tab-settings">
             <Card title="Settings">
+              {(() => {
+                // Match WinISD or Hornresp in one tap: the conventions that differ between them.
+                const now = compatOf(state.settings);
+                const near = now ? null : nearestCompat(state.settings);
+                return (
+                  <div className="compat" data-help="Set the conventions that differ between programs in one go (air, coil inductance, power rating, leaked air, cone air load, ports, line SPL), to compare like for like. Your units, amplifier, box losses and coil temperature are kept. Each setting stays editable below.">
+                    <span className="compat-label">Match</span>
+                    <div className="unit-switch" role="group" aria-label="Match a program's conventions">
+                      {(Object.keys(COMPAT) as CompatPreset[]).map((id) => (
+                        <button key={id} type="button" aria-pressed={now === id} onClick={() => set("settings", withCompat(state.settings, id))}>
+                          {COMPAT[id].label}
+                        </button>
+                      ))}
+                    </div>
+                    {near && (
+                      <span className="hint compat-custom">
+                        Custom: {COMPAT[near.id].label} except {near.differ.map((k) => COMPAT_NAMES[k]).join(", ")}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
               <div className="fields">
                 <Select<"metric" | "imperial"> help="Show lengths and volumes in metric (cm, L) or imperial (inches, ft³). Values are kept the same, only the display changes."
                   label="Units"
