@@ -1,12 +1,11 @@
 {
   "title": "Sealed box, two drivers in parallel",
   "text": "B1 with two drivers in parallel (Hornresp \"Nd = 2P\", S1 = S2 = 2 Sd)",
-  "frontAir": 1.4142135623730951,
+  "frontAir": 1,
+  "coneLoad": "piston",
+  "splFrom": "power",
   "drivers": 2,
   "wiring": "parallel",
-  "tol": {
-    "zeP95": 2.5
-  },
   "input": {
     "kind": "sealed",
     "vb_l": 10.4,

@@ -131,6 +131,14 @@ export interface SimulationOptions {
    */
   leakage?: "radiates" | "absorbed";
   /**
+   * Sealed, ported and PR boxes: the air the cone's front moves. "mass" (default, like WinISD)
+   * keeps it in Mms, a fixed mass. "piston" (like Hornresp) takes the front's share out of Mms
+   * and loads the cone with a baffled piston's full radiation impedance instead: the same at low
+   * frequencies, less mass and more resistance higher up. Several drivers then push one piston of
+   * n·Sd together (side by side), so each sees n × its impedance, as do identical boxes side by side.
+   */
+  coneLoad?: "mass" | "piston";
+  /**
    * Voice-coil temperature (°C). Above 20 °C the coil's resistance rises (copper, about
    * 0.39 %/°C) while Bl stays: less output for the same voltage and a higher Qes, i.e. the
    * driver's power compression. Default 20 (the datasheet's cold values, like WinISD).
@@ -300,6 +308,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   // A line or horn models the air on the cone's sides explicitly, so the cone carries its bare
   // moving mass Mmd = Mms − 16ρa³/3 (both sides' free-air load, as Hornresp defines it). An open
   // line adds the front's radiation load (a piston in a baffle); the rear's is in the line's load.
+  // Cone loaded by a piston's radiation impedance: Mms less one side's air (8ρa³/3), as for lines.
+  const pistonLoad = opts.coneLoad === "piston" && !bp && !line;
+  const boxMms = pistonLoad ? Math.max(d.mms - (8 * air.rho * Math.pow(d.sd / Math.PI, 1.5)) / 3, d.mms * 0.05) : d.mms;
   const lineMmd = line ? Math.max(d.mms - (16 * air.rho * Math.pow(d.sd / Math.PI, 1.5)) / 3, d.mms * 0.05) : 0;
   // Port compression in a mass-loaded line's port (same model as vented boxes).
   let lineNl = 0;
@@ -436,7 +447,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const pg = div(mul(filter, cx((vDriver * d.bl) / d.sd)), ze);
     const zae = div(cx((d.bl * d.bl) / sd2), ze);
     const susp = suspensionImpedance(d, w);
-    const zas = cx(susp.re / sd2, (w * d.mms + susp.im) / sd2);
+    let zas = cx(susp.re / sd2, (w * boxMms + susp.im) / sd2);
+    if (pistonLoad) zas = add(zas, scale(baffledPistonImpedance(n * d.sd, w, air), n));
 
     let zLoad: Complex;
     let ui: Complex;

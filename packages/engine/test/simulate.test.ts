@@ -302,3 +302,23 @@ test("frequency-dependent damping: suspension Rms + 1/(jω(Cms − j·Ams)) in p
   near(pair.fdd!.rms, 4, 1e-12);
   near(pair.fdd!.ams, 0.15e-3, 1e-15);
 });
+
+test("piston cone load (like Hornresp): the same deep bass as a fixed mass, side-by-side drivers share one piston", () => {
+  const drv = { fs: 35, qms: 1.87, qes: 0.4, vas_l: 37.4, re: 5.9, sd_cm2: 211.2, le_mh: 0 };
+  const box = { kind: "sealed" as const, vb_l: 10.4, ql: Infinity, qa: Infinity };
+  const o = { power: 2.83, convention: "volts" as const, fMin: 10, fMax: 1000, points: 300 };
+  const mass = simulate(drv, box, o);
+  const piston = simulate(drv, box, { ...o, coneLoad: "piston" });
+  const at = (r: typeof mass, a: Float64Array, f: number) => a[r.freq.findIndex((x) => x >= f)]!;
+  assert.ok(Math.abs(at(piston, piston.impedanceOhm, 20) / at(mass, mass.impedanceOhm, 20) - 1) < 0.002, "deep bass unchanged");
+  const peakF = (r: typeof mass) => r.freq[r.impedanceOhm.indexOf(Math.max(...r.impedanceOhm))]!;
+  assert.ok(Math.abs(peakF(piston) / peakF(mass) - 1) < 0.01, "resonance hardly moves");
+  // Up high the piston's air mass falls away: the cone is lighter, so it moves more.
+  assert.ok(at(piston, piston.excursionMm, 800) > at(mass, mass.excursionMm, 800) * 1.01, "lighter cone up high");
+  // Two drivers side by side push one piston of 2·Sd: each carries √2 × one cone's air, lowering the resonance.
+  const two = simulate(drv, { ...box, vb_l: 20.8 }, { ...o, coneLoad: "piston", drivers: 2 });
+  assert.ok(peakF(two) < peakF(piston) * 0.995, `${peakF(two)} vs ${peakF(piston)} Hz`);
+  // Bandpass boxes and lines keep their own models.
+  const bp = { kind: "bandpass" as const, rear: { vb_l: 12 }, front: { vb_l: 15, port: { shape: "round" as const, diameter_cm: 7, length_cm: 15 } }, qicl: Infinity };
+  assert.deepEqual(simulate(drv, bp, { ...o, coneLoad: "piston" }).spl, simulate(drv, bp, o).spl);
+});

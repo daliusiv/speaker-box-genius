@@ -414,9 +414,11 @@ What the comparison settles, and the conventions it has to bridge:
 - **Ports are pipes.** Hornresp treats a port as a short pipe, not just a mass of air. With Settings → Ports → "Pipe, like Hornresp" the app does the same, and the ported box then matches within 0.3 % in impedance and 0.02 dB in the port's own output, with the standard end correction (0.732 × diameter). As an air mass (the default, like WinISD) the port's own output parts from Hornresp's by up to 1.3 dB at 260 Hz and the impedance by about 1 %. Bandpass ports can now be pipes too, including a series box's rear port between the two chambers.
 - **Leakage (QL) in bandpass boxes.** Hornresp's QL behaves as if referred to the box's lowest tuning (that's what fits all three records); the app, like WinISD, refers it to each chamber's own tuning. So Hornresp's QL 7 is entered as the same leak at the chamber's own tuning (10.4 and 13.7 in the front chambers of the 6th-order boxes). A series box's rear chamber, which opens only into the front one, has no leak in Hornresp.
 - **Passive radiators.** Hornresp adds the front air to the radiator's moving mass as well (3.83 g for the DSA270-PR); with that, its output alone is within 0.01 dB.
-- **Two drivers side by side** (Hornresp's "Nd = 2P") load each other's fronts: Hornresp treats them as one piston of twice the area, which gives each √2 × one cone's front air. In lines and horns the app now does the same (case 15: the mass-loaded line with two drivers is within 0.03 dB and 0.2 %); in boxes the app keeps each driver's datasheet Mms, as WinISD does, and the case gives the cones Hornresp's air.
+- **Two drivers side by side** (Hornresp's "Nd = 2P") load each other's fronts: Hornresp treats them as one piston of twice the area, which gives each √2 × one cone's front air. In lines and horns the app does the same (case 15: the mass-loaded line with two drivers is within 0.03 dB and 0.2 %). In boxes it does with Settings → Box losses → Cone air load → "Piston, like Hornresp", which loads each cone with n × the radiation impedance of a piston of n·Sd in place of a fixed front-air mass; the default keeps each driver's datasheet Mms, as WinISD does. The two-driver cases (B7, B11) and the two-box cases (B17) use it, with SPL from radiated power.
 
-**Amplifier resistance and wiring.** Hornresp's Rg (0.5 Ω, B10) matches the app's Settings → Amp + cable as closely as B1 without it. Two drivers in one sealed box (B11), in parallel and in series, match within 0.07 dB and 0.6 %, with the same √2 front air as B7; series is exactly 6.02 dB below parallel in both. Records must say "2P" or "2S" as imported (the app's Hornresp export writes them so): the same counts typed into Hornresp's editor gave one cone's output with two drivers' impedance.
+**Amplifier resistance and wiring.** Hornresp's Rg (0.5 Ω, B10) matches the app's Settings → Amp + cable as closely as B1 without it. Two drivers in one sealed box (B11), in parallel and in series, match within 0.04 dB (95th percentile) and 0.25 % in impedance (95th percentile 1.0 %; with a fixed front-air mass of √2 × one cone's it was 2.1 %); series is exactly 6.02 dB below parallel in both. Records must say "2P" or "2S" as imported (the app's Hornresp export writes them so): the same counts typed into Hornresp's editor gave one cone's output with two drivers' impedance.
+
+**Several identical boxes (B17).** Hornresp's Tools → Multiple Speakers wires copies of the whole speaker in series and parallel (the amplifier load is the impedance × series ÷ parallel) and puts them side by side: two sealed boxes give +6 dB in the deep bass falling to +3 dB up high, as one bigger source. In the app that is one box of twice the volume with twice the drivers, wired the same, with the piston cone load: within 0.03 dB, 0.22 % in impedance and 0.21 % in excursion, in parallel and in series.
 
 **Full space (Ang = 4 × Pi) is not matched.** Hornresp gives the cone about 0.6 of its half-space front air in full space, and with that the impedance agrees (0.2 %), but its SPL stays 0.45 dB and its excursion 5–7 % apart, even at 20 Hz where the air load hardly counts. The app's full space is the same box radiating into twice the space (6 dB less); this one is left as a known difference.
 
@@ -474,6 +476,8 @@ export interface HornrespBoxCase {
   portModel?: "lumped" | "pipe";
   /** Leakage as Hornresp has it ("absorbed"): bandpass boxes, whose QL matters. */
   leakage?: "radiates" | "absorbed";
+  /** The cone's air load as Hornresp has it ("piston"): sealed, ported and PR boxes. */
+  coneLoad?: "mass" | "piston";
   drivers?: number;
   wiring?: "parallel" | "series";
   /** Looser limits where Hornresp's loss model parts from ours (see the notes). */
@@ -536,7 +540,7 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
   const driver = { ...hornrespDriver(HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}), ...(c.fdd ? { fdd: c.fdd } : {}) };
   const base: SimulationOptions = {
-    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, leakage: c.leakage, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom, highPass: c.highPass, eq: c.eq,
+    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, leakage: c.leakage, coneLoad: c.coneLoad, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom, highPass: c.highPass, eq: c.eq,
   };
   const r = simulate(driver, c.input, base);
   const fTop = c.fMax ?? HORNRESP_BOX_F_MAX;

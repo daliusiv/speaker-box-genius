@@ -1,7 +1,9 @@
 {
   "title": "Ported box, two drivers",
   "text": "B2's box with two drivers in parallel (Hornresp \"Nd = 2P\")",
-  "frontAir": 1.4142135623730951,
+  "frontAir": 1,
+  "coneLoad": "piston",
+  "splFrom": "power",
   "drivers": 2,
   "wiring": "parallel",
   "input": {

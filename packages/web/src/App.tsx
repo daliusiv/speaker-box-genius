@@ -1489,6 +1489,15 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(leakage) => set("settings", { ...state.settings, leakage })}
                 />
+                <Select<"mass" | "piston"> help="The air in front of the cone. Fixed mass (like WinISD): part of Mms at every frequency. Piston (like Hornresp): a baffled piston's radiation load, the same in the deep bass but lighter and lossier higher up, and with two or more drivers side by side (or identical boxes side by side: double the volume and the drivers) they push one bigger piston together, which adds a little air to each. Sealed, ported and passive radiator boxes."
+                  label="Cone air load"
+                  value={state.settings.coneLoad}
+                  options={[
+                    { value: "mass", text: "Fixed mass (like WinISD)" },
+                    { value: "piston", text: "Piston, like Hornresp" },
+                  ]}
+                  onChange={(coneLoad) => set("settings", { ...state.settings, coneLoad })}
+                />
                 <Num help="Absorption loss (stuffing, wall flex) as a Q: lower means more loss. 100 is WinISD's default (little stuffing). A design with its own Stuffing setting uses that setting's Qa instead."
                   label="Absorb Qa"
                   value={state.settings.losses.qa}

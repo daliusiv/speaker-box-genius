@@ -1,0 +1,16 @@
+{
+  "title": "Two sealed boxes side by side, in parallel",
+  "text": "B1 with Hornresp's Tools > Multiple Speakers: 2 speakers in parallel; in the app, one box of twice the volume with two drivers in parallel",
+  "frontAir": 1,
+  "coneLoad": "piston",
+  "splFrom": "power",
+  "drivers": 2,
+  "wiring": "parallel",
+  "input": {
+    "kind": "sealed",
+    "vb_l": 20.8,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

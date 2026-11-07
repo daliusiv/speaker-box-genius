@@ -197,6 +197,8 @@ export interface Settings {
   portModel: "lumped" | "pipe";
   /** Box leakage: the air that leaks out is heard ("radiates", like WinISD) or lost ("absorbed", like Hornresp). */
   leakage: "radiates" | "absorbed";
+  /** Sealed, ported and PR boxes: the cone's front air as a fixed mass (like WinISD) or a piston's radiation impedance (like Hornresp). */
+  coneLoad: "mass" | "piston";
   /** Voice-coil temperature (°C): 20 = the datasheet's cold values (like WinISD); hotter raises Re. */
   coilTemp_C: number;
   /**
@@ -466,6 +468,7 @@ export const DEFAULT_STATE: AppState = {
     lineSpl: "on-axis",
     portModel: "lumped",
     leakage: "radiates",
+    coneLoad: "mass",
     coilTemp_C: 20,
     portLimit_ms: 17,
   },
