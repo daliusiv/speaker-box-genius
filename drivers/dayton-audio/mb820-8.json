@@ -3,6 +3,7 @@
   "model": "MB820-8",
   "type": "midbass",
   "nominal_ohms": 8,
+  "size_in": 8,
   "ts": {
     "fs": 69,
     "qms": 3.83,

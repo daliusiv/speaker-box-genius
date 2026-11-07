@@ -3,7 +3,7 @@
   "model": "ND64-16",
   "type": "full-range",
   "nominal_ohms": 16,
-  "size_in": 2,
+  "size_in": 2.5,
   "ts": {
     "fs": 100.9,
     "qms": 4.1,

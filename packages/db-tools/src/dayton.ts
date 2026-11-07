@@ -84,11 +84,25 @@ export function firstNumber(s: string | undefined): number | undefined {
 /** '12"' → 12, '6-1/2"' → 6.5, '5-1/4"' → 5.25, '3/4"' → 0.75. */
 export function parseInches(s: string | undefined): number | undefined {
   if (!s) return undefined;
+  const dec = s.match(/^\s*(\d+\.\d+)/); // "6.5\"", "3.50\""
+  if (dec) return Number(dec[1]);
   const m = s.match(/(\d+)(?:[-\s](\d+)\/(\d+))?/);
   if (!m) return undefined;
   const frac = s.match(/^\s*(\d+)\/(\d+)/);
   if (frac) return Number(frac[1]) / Number(frac[2]);
   return Number(m[1]) + (m[2] ? Number(m[2]) / Number(m[3]) : 0);
+}
+
+/**
+ * The size in a product title, right after the model: 5" in "DS135-8 5\" Designer Series…",
+ * 6.5 in "DC160-8 6-1/2\" Classic…". None for racetrack drivers ("1\" x 5\"").
+ */
+export function titleInches(title: string, model: string): number | undefined {
+  const i = title.toLowerCase().indexOf(model.toLowerCase());
+  if (i < 0) return undefined;
+  const m = title.slice(i + model.length).match(/^\s+((?:\d+[-\s])?\d+(?:\/\d+|\.\d+)?)\s*(?:"|”|''|in\b|inch)(\s*x\b)?/i);
+  if (!m || m[2]) return undefined;
+  return parseInches(m[1]);
 }
 
 /** A length in mm from "282 mm", "11.1\"", "11.1 in" or "28.2 cm". */
@@ -180,7 +194,14 @@ export function parseProduct(html: string, url: string, retrieved: string): Pars
   const sources: Driver["sources"] = [{ kind: "datasheet", url, retrieved, note: PERMISSION_NOTE }];
   if (pdf) sources.push({ kind: "datasheet", url: encodeURI(SITE + pdf), retrieved, note: "Dayton Audio specification sheet (PDF)." });
 
-  const size_in = parseInches(get(rows, "Nominal Diameter"));
+  // The product title's size ("DS135-8 5\" Designer…") is the one Dayton markets the driver by;
+  // the Nominal Diameter field is sometimes wrong (3.50" for the 5" DS135-8).
+  const rowSize = parseInches(get(rows, "Nominal Diameter"));
+  const titleSize = titleInches(title, model);
+  const size_in = titleSize ?? rowSize;
+  if (titleSize !== undefined && rowSize !== undefined && Math.abs(titleSize - rowSize) > 0.3) {
+    notes.push(`The page's Nominal Diameter says ${rowSize}"; the product title says ${titleSize}", which is used.`);
+  }
   const physical: NonNullable<Driver["physical"]> = {};
   const cutout = parseMm(get(rows, "Baffle Cutout", "Cutout Diameter"));
   const depth = parseMm(get(rows, "Mounting Depth", "Overall Depth"));
@@ -412,13 +433,15 @@ export function reconcile(ts: Driver["ts"], cmsMmPerN: number | undefined, notes
  */
 export function keepExisting(
   fresh: Driver | PassiveRadiator,
-  old: { physical?: Driver["physical"]; sources?: Driver["sources"]; status?: string },
+  old: { physical?: Driver["physical"]; sources?: Driver["sources"]; status?: string; plausibility_note?: string },
 ) {
   const disp = old.physical?.displacement_l;
   if (disp !== undefined && fresh.physical?.displacement_l === undefined) fresh.physical = { ...fresh.physical, displacement_l: disp };
   const extra = (old.sources ?? []).filter((x) => x.kind !== "datasheet" || /issue #\d+/i.test(x.note ?? ""));
   if (extra.length) fresh.sources = [...fresh.sources, ...extra];
   if (old.status === "verified") fresh.status = "verified";
+  // A reviewer's note that a flagged value is right (plausibility.ts) survives re-imports.
+  if (old.plausibility_note && !fresh.plausibility_note) fresh.plausibility_note = old.plausibility_note;
 }
 
 const UA = "SpeakerBoxGenius-importer/1.0 (+https://github.com/daliusiv/speaker-box-genius; with Dayton Audio's permission)";

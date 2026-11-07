@@ -3,7 +3,7 @@
   "model": "DC130B-4",
   "type": "woofer",
   "nominal_ohms": 4,
-  "size_in": 5,
+  "size_in": 5.25,
   "ts": {
     "fs": 51.8,
     "qms": 2.52,

@@ -3,7 +3,7 @@
   "model": "CF120-4",
   "type": "woofer",
   "nominal_ohms": 4,
-  "size_in": 4,
+  "size_in": 4.5,
   "ts": {
     "fs": 53.2,
     "qms": 1.89,

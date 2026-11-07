@@ -3,7 +3,7 @@
   "model": "ND140-8",
   "type": "midrange",
   "nominal_ohms": 8,
-  "size_in": 5,
+  "size_in": 5.25,
   "ts": {
     "fs": 56.5,
     "qms": 5.01,

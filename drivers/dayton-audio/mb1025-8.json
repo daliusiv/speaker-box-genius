@@ -3,6 +3,7 @@
   "model": "MB1025-8",
   "type": "midbass",
   "nominal_ohms": 8,
+  "size_in": 10,
   "ts": {
     "fs": 45,
     "qms": 6.47,

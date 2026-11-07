@@ -3,7 +3,7 @@
   "model": "ND65-4",
   "type": "full-range",
   "nominal_ohms": 4,
-  "size_in": 2,
+  "size_in": 2.5,
   "ts": {
     "fs": 89.5,
     "qms": 5.56,

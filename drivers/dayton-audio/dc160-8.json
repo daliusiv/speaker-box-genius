@@ -3,7 +3,7 @@
   "model": "DC160-8",
   "type": "woofer",
   "nominal_ohms": 8,
-  "size_in": 6,
+  "size_in": 6.5,
   "ts": {
     "fs": 35.7,
     "qms": 3.46,

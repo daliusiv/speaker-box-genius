@@ -3,7 +3,7 @@
   "model": "PC68-4",
   "type": "full-range",
   "nominal_ohms": 4,
-  "size_in": 2,
+  "size_in": 2.5,
   "ts": {
     "fs": 117.1,
     "qms": 2.49,

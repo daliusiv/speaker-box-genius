@@ -2,7 +2,7 @@
   "brand": "Dayton Audio",
   "model": "ND65-PR",
   "type": "passive-radiator",
-  "size_in": 2,
+  "size_in": 2.5,
   "params": {
     "mms_g": 3.2,
     "sd_cm2": 15.6,

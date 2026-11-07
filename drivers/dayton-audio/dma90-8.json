@@ -3,7 +3,7 @@
   "model": "DMA90-8",
   "type": "full-range",
   "nominal_ohms": 8,
-  "size_in": 3,
+  "size_in": 3.5,
   "ts": {
     "fs": 94.2,
     "qms": 2.65,

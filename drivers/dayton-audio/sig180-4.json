@@ -3,6 +3,7 @@
   "model": "SIG180-4",
   "type": "woofer",
   "nominal_ohms": 4,
+  "size_in": 6.5,
   "ts": {
     "fs": 40.5,
     "qms": 5.19,

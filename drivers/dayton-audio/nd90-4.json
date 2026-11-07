@@ -3,7 +3,7 @@
   "model": "ND90-4",
   "type": "full-range",
   "nominal_ohms": 4,
-  "size_in": 3,
+  "size_in": 3.5,
   "ts": {
     "fs": 90.2,
     "qms": 5.1,
