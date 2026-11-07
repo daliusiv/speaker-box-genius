@@ -819,6 +819,11 @@ export function App(props: { initial: AppState | null }) {
             reportUrl={() => reportUrl(shareUrl())}
           />
           <PwaStatus pwa={pwa} />
+          {/* Always one tap away: start a new project (the launcher; a new tab once this one is in use). */}
+          <button type="button" className="secondary new-btn" onClick={launchAssistant} title="Start a new project" aria-label="New project">
+            <span aria-hidden="true">+</span>
+            <span className="new-label">New</span>
+          </button>
         </div>
       </header>
 
@@ -2178,6 +2183,9 @@ export function App(props: { initial: AppState | null }) {
         onOpen={(d, rs, goal) => {
           const next = openResults(state, d, rs, goal);
           setStep(() => next);
+          // The new boxes: their volumes and tuning first (the charts on phones).
+          choosePanel("boxes");
+          setPhoneView("charts");
           setDriverSource({ name: d.name, ...d.source, ts: d.ts, id: rs[0]?.driverId });
           setAssistant(false);
           const boxes = rs
@@ -2363,6 +2371,8 @@ function Summary({
     const f3s = mains.map((d) => d.result.summary.f3).filter((v): v is number => typeof v === "number" && Number.isFinite(v));
     return (
       <div className={`summary${folded ? " folded" : ""}`}>
+        {/* Which driver, so the charts never lose their context: its own line, cut short only if very long. */}
+        {state.driverName.trim() && <div className="summary-driver">{state.driverName.trim()}</div>}
         <div className="summary-line">
           <button type="button" className="summary-fold" aria-expanded={!folded} onClick={() => setFolded(!folded)}>
             <span className="summary-dots" aria-hidden="true">
@@ -2370,7 +2380,7 @@ function Summary({
                 <span key={d.design.id} className="dot" style={{ background: d.color }} />
               ))}
             </span>
-            <span>
+            <span className="summary-count">
               {mains.length} {mains.length === 1 ? "box" : "boxes"}
               {f3s.length > 0 && ` · F3 ${fmt(Math.min(...f3s), 0)}${f3s.length > 1 ? `–${fmt(Math.max(...f3s), 0)}` : ""} Hz`}
             </span>

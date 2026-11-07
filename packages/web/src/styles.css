@@ -422,6 +422,12 @@ dialog.library::backdrop {
   background: rgb(0 0 0 / 0.45);
 }
 
+/* The assistant over the live app: dimmed and blurred behind, so its text stands out. */
+dialog.library.assistant::backdrop {
+  background: rgb(0 0 0 / 0.68);
+  backdrop-filter: blur(4px);
+}
+
 .lib-inner {
   display: flex;
   flex-direction: column;
@@ -2318,6 +2324,13 @@ label.check {
   margin: 0.3rem 0;
   font-size: 0.9rem;
 }
+
+/* A checkbox keeps its own size: inputs are full width by default, which spread a narrow
+   label's box and name apart (the assistant's brand list). */
+label.check > input[type="checkbox"] {
+  flex: none;
+  width: auto;
+}
 .measured-row {
   border-top: 1px solid var(--border);
   padding: 0.4rem 0 0.2rem;
@@ -3698,13 +3711,16 @@ dialog.assistant .lib-inner:focus {
 /* Wide screens: as tall as what's in it (step 1 is short), up to the window; phones keep the full screen. */
 @media (min-width: 641px) {
   /* fit-content: a modal dialog is fixed with inset 0, so "auto" would fill the window. */
+  /* Anchored near the top, not centred: its header stays put as the steps change height. */
   dialog.library.assistant {
     height: fit-content;
+    max-height: 86vh;
+    margin: 7vh auto auto;
   }
 
   dialog.assistant .lib-inner {
     height: auto;
-    max-height: min(820px, calc(100dvh - 2rem));
+    max-height: 86vh;
   }
 }
 
@@ -3889,4 +3905,78 @@ button.assist-share-btn {
 
 .assist-sort-field > label > span:first-child {
   grid-column: auto;
+}
+
+/* Header: New project, one tap away. Phones show just the +. */
+.top-actions > * {
+  order: 2;
+}
+
+.top-actions > .undo-redo,
+.top-actions > .new-btn {
+  order: 1;
+}
+
+button.new-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+button.new-btn > span:first-child {
+  font-size: 1.15em;
+  line-height: 1;
+}
+
+@media (max-width: 860px) {
+  .top {
+    grid-template-columns: 1fr auto auto auto auto;
+    grid-template-areas: "title history new share menu";
+  }
+
+  .top-actions > .new-btn {
+    grid-area: new;
+  }
+
+  .new-label {
+    display: none;
+  }
+}
+
+/* Settings: set apart from the Driver → Boxes → Signal → Build workflow. */
+.desktop-tabs .tab-settings {
+  margin-left: auto;
+}
+
+.tab-gear {
+  margin-right: 0.25rem;
+}
+
+.phone-tabs .tab-gear {
+  display: none;
+}
+
+/* The phone summary line: the driver's name gives way (ellipsis) before the boxes and F3. */
+.summary-driver {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.summary-count {
+  white-space: nowrap;
+}
+
+.desktop-tabs .tab-settings {
+  border-left: 1px solid var(--border);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+@media (max-width: 400px) {
+  .top {
+    gap: 0.35rem;
+  }
 }

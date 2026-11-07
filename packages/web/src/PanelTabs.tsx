@@ -12,7 +12,7 @@ export const PANELS: { id: PanelId; label: string }[] = [
 
 const KEY = "sbg.panel";
 
-/** The panel to open with: the last one used in this browser, else Driver (step 1 of getting started). */
+/** The panel to open with: the last one used in this browser, else Boxes (the example's boxes, or the assistant's). */
 export function initialPanel(): PanelId {
   try {
     const v = localStorage.getItem(KEY);
@@ -20,7 +20,7 @@ export function initialPanel(): PanelId {
   } catch {
     // storage unavailable (private mode, embedded): fall through
   }
-  return "driver";
+  return "boxes";
 }
 
 export function rememberPanel(p: PanelId) {
@@ -83,9 +83,14 @@ export function PanelTabs(props: {
             aria-selected={on}
             aria-controls={`panel-${p.id}`}
             tabIndex={on ? 0 : -1}
-            className={on ? "on" : ""}
+            className={`${on ? "on" : ""}${p.id === "settings" ? " tab-settings" : ""}`}
             onClick={() => props.onChange(p.id)}
           >
+            {p.id === "settings" && (
+              <span className="tab-gear" aria-hidden="true">
+                ⚙
+              </span>
+            )}
             {p.label}
             {props.badges?.[p.id] !== undefined && <span className="tab-badge">{props.badges[p.id]}</span>}
           </button>
