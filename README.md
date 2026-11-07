@@ -61,7 +61,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **Drive by power or voltage** (W or V, e.g. 2.83 V for datasheet comparisons)
 - **High-pass filter** (Butterworth or Linkwitz–Riley, any order), **Linkwitz Transform**, peaking, low-shelf and high-shelf **EQ** (matched with Hornresp)
 - **Passive parts** between the amplifier and the drivers: series coils (with their resistance), capacitors across, Zobels and L-pads, in up to four branches (Hornresp's layout); the impedance chart shows what the amplifier sees
-- **Car cabin or room gain**, and **baffle step** for free-standing speakers
+- **Car cabin or room gain**, or **your own room-gain curve** (.txt or .frd, as Hornresp imports it), and **baffle step** for free-standing speakers
 
 ### Volume and build
 

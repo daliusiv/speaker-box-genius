@@ -54,7 +54,8 @@ function subtitle(state: AppState): string {
   else if (state.drivers > 1) parts.push(`${state.drivers} drivers (${state.wiring})`);
   if (state.highPass.on) parts.push(`${state.highPass.order * 6} dB/oct high-pass at ${state.highPass.freq} Hz`);
   if (state.passive.on && state.passive.branches.some((b) => (b.r ?? 0) > 0 || (b.l_mH ?? 0) > 0 || (b.c_uF ?? 0) > 0)) parts.push("passive parts");
-  if (state.roomGain.mode !== "off") parts.push(`${state.roomGain.mode === "car" ? "cabin" : "room"} gain from ${(34320 / (2 * state.roomGain.length_cm)).toFixed(0)} Hz`);
+  if (state.roomGain.mode === "curve") parts.push(`room curve "${state.roomGain.curve?.name ?? ""}" added`);
+  else if (state.roomGain.mode !== "off") parts.push(`${state.roomGain.mode === "car" ? "cabin" : "room"} gain from ${(34320 / (2 * state.roomGain.length_cm)).toFixed(0)} Hz`);
   parts.push(`Xmax ${state.xmax_mm} mm`);
   if (state.compare) parts.push(`compared with ${state.compare.driverName} (dashed)`);
   return parts.join(" · ");

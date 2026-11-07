@@ -21,7 +21,7 @@ export interface Curve {
  * a number (headers, "*" comments) are skipped. Impedance values must be positive; SPL
  * values may be anything (relative measurements are often negative).
  */
-export function parseCurve(text: string, kind: CurveKind): Curve {
+export function parseCurve(text: string, kind: CurveKind, minRows = 10): Curve {
   const rows: [number, number][] = [];
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
@@ -35,7 +35,7 @@ export function parseCurve(text: string, kind: CurveKind): Curve {
     if (kind === "impedance" && !(nums[1]! > 0)) continue;
     rows.push([nums[0]!, nums[1]!]);
   }
-  if (rows.length < 10) throw new Error(`Couldn't find a ${kind === "spl" ? "frequency response" : "impedance sweep"}: need at least 10 lines of frequency and ${kind === "spl" ? "dB" : "ohms"}`);
+  if (rows.length < minRows) throw new Error(`Couldn't find a ${kind === "spl" ? "frequency response" : "impedance sweep"}: need at least ${minRows} lines of frequency and ${kind === "spl" ? "dB" : "ohms"}`);
   rows.sort((a, b) => a[0] - b[0]);
   return { f: rows.map((r) => r[0]), v: rows.map((r) => r[1]) };
 }

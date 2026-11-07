@@ -193,6 +193,7 @@ export function dvcFactors(s: AppState): { re: number; qes: number } {
 /** Room / cabin gain settings in engine form, or null when off. */
 export function roomGainOf(s: AppState) {
   const g = s.roomGain;
+  if (g.mode === "curve") return g.curve && g.curve.f.length >= 2 ? { curve: { f: g.curve.f, v: g.curve.v } } : null;
   if (g.mode === "off" || !(g.length_cm > 0)) return null;
   return { f0: transitionFrequency(g.length_cm / 100, airOf(s).c), slopeDbPerOct: g.slope, maxDb: g.max_db };
 }
