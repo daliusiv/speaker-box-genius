@@ -935,10 +935,21 @@ input.design-name:focus {
   white-space: nowrap;
 }
 
-.design-head input[type="checkbox"] {
-  width: 1.1rem;
-  height: 1.1rem;
-  flex: none;
+.design-head button.icon.eye {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.design-head button.icon.eye.on {
+  color: var(--accent);
+}
+
+/* The name is an input: a faint dashed underline says so without a box around it. */
+input.design-name {
+  border-bottom-style: dashed;
+  border-bottom-color: color-mix(in srgb, var(--muted) 45%, transparent);
+  border-radius: 6px 6px 0 0;
 }
 
 button.icon {
@@ -3102,11 +3113,6 @@ details.more .hint {
     min-height: 2.75rem;
   }
 
-  .design-head input[type="checkbox"] {
-    width: 1.5rem;
-    height: 1.5rem;
-    margin: 0 0.25rem;
-  }
 
   .presets {
     gap: 0.5rem;
