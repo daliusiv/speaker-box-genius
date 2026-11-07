@@ -44,6 +44,8 @@ const STEPS = [
 ] as const;
 const SIZES = [4, 5, 5.25, 6.5, 8, 10, 12, 15, 18, 21];
 const BOX_LABEL: Record<AssistantBox, string> = { sealed: "Sealed", vented: "Ported", pr: "PR", line: "Line", bandpass: "Bandpass" };
+/** Uses in a word or two, for the results' summary line. */
+const SHORT_USE: Record<AssistantUse, string> = { car: "Car sub", home: "Home sub", hifi: "Bookshelf", tower: "Tower", other: "Custom" };
 /** Whether a box type is offered for a use. */
 const offered = (b: AssistantBox, use: AssistantGoal["use"]) => (b === "line" ? LINE_USES.includes(use) : b === "bandpass" ? BANDPASS_USES.includes(use) : true);
 const PAGE = 20;
@@ -436,9 +438,9 @@ export function DesignAssistant(props: {
   const listed = (results ?? []).filter((r) => only === "all" || r.box === only);
   const vol = (l: number) => fmt(l, "vol", unit("vol").unit === "L" ? (l < 10 ? 1 : 0) : 2);
   const chips: { label: string; step: number }[] = [
-    { label: USES[goal.use].label, step: 0 },
+    { label: SHORT_USE[goal.use], step: 0 },
     { label: goal.space ? `Fits ${spaceText(goal.space, fmt)}` : `≤ ${vol(goal.maxVolume_l)}`, step: 1 },
-    { label: `${goal.power_w} W${goal.minLoad_ohm ? ` · ≥ ${goal.minLoad_ohm} Ω` : ""}`, step: 1 },
+    { label: `${goal.power_w} W${goal.minLoad_ohm ? ` (≥ ${goal.minLoad_ohm} Ω)` : ""}`, step: 1 },
     { label: `${goal.drivers} × ${goal.sizeMin_in}–${goal.sizeMax_in}″`, step: 1 },
     { label: goal.boxes.filter((b) => offered(b, goal.use)).map((b) => BOX_LABEL[b]).join(" + ") || "No box types", step: 1 },
     ...(goal.brands.length ? [{ label: goal.brands.length === 1 ? goal.brands[0]! : `${goal.brands.length} brands`, step: 1 }] : []),
@@ -579,7 +581,7 @@ export function DesignAssistant(props: {
                   </p>
                 </>
               )}
-              <div className="fields">
+              <div className="assist-limits">
                 {!goal.space && (
                   <Num label="Max box" q="vol" value={goal.maxVolume_l} min={1} help="The largest box that fits (net inside volume, all drivers)." onChange={(maxVolume_l) => setGoal({ maxVolume_l })} />
                 )}
@@ -639,20 +641,28 @@ export function DesignAssistant(props: {
                 )}
               </div>
               {goal.boxes.length === 0 && <p className="warn">Choose at least one box type.</p>}
-              {goal.boxes.some((b) => b !== "sealed") && (
-                <div className="fields">
-                  <Num
-                    label="Chuffing line"
-                    unit="m/s"
-                    value={portLimitOf(props.base)}
-                    min={5}
-                    help="Port air speed above this counts as chuffing. 17 m/s keeps a hi-fi port quiet; car SPL builds often accept 25–30. The same setting as Settings → Ports."
-                    onChange={(v) => props.onPortLimit(v > 0 ? v : 17)}
-                  />
-                </div>
-              )}
-              <details className="more assist-brands">
-                <summary>Brands: {goal.brands.length ? goal.brands.join(", ") : "all"}</summary>
+              {/* Rarely changed: folded away, with what's set shown on the summary line. */}
+              <details className="more assist-advanced">
+                <summary>
+                  Advanced & brand filters{" "}
+                  <span className="assist-pill">
+                    {goal.boxes.some((b) => b !== "sealed") ? `${portLimitOf(props.base)} m/s · ` : ""}
+                    {goal.brands.length ? (goal.brands.length === 1 ? goal.brands[0] : `${goal.brands.length} brands`) : "All brands"}
+                  </span>
+                </summary>
+                {goal.boxes.some((b) => b !== "sealed") && (
+                  <div className="fields">
+                    <Num
+                      label="Chuffing line"
+                      unit="m/s"
+                      value={portLimitOf(props.base)}
+                      min={5}
+                      help="Port air speed above this counts as chuffing. 17 m/s keeps a hi-fi port quiet; car SPL builds often accept 25–30. The same setting as Settings → Ports."
+                      onChange={(v) => props.onPortLimit(v > 0 ? v : 17)}
+                    />
+                  </div>
+                )}
+                <p className="assist-sub">Brands</p>
                 <div className="assist-brand-list">
                   {brands.map((b) => (
                     <label key={b} className="check">
@@ -676,12 +686,12 @@ export function DesignAssistant(props: {
 
           {!launch && step === 3 && (
             <>
-              <div className="assist-chips">
-                {chips.map((c) => (
-                  <button type="button" key={c.label} className="chip" onClick={() => setStep(c.step)} title="Change">
-                    {c.label}
-                  </button>
-                ))}
+              {/* What these results are for, on one line, and a way back to change it. */}
+              <div className="assist-summary">
+                <span>{chips.map((c) => c.label).join(" · ")}</span>
+                <button type="button" className="link" onClick={() => setStep(1)}>
+                  Edit limits
+                </button>
               </div>
               <div className="unit-switch assist-priority" role="group" aria-label="Sort by">
                 {(Object.keys(PRIORITIES) as AssistantPriority[]).map((p) => (
@@ -692,12 +702,12 @@ export function DesignAssistant(props: {
               </div>
               {/* Sorting by output or by size needs its frequency: asked for here, where it's used. */}
               {goal.priority === "loud" && (
-                <div className="fields assist-sort-field">
+                <div className="assist-sort-field">
                   <Num label="Loudest at" unit="Hz" value={goal.loudAt_hz} min={10} help="The frequency output is compared at: what “Loudest” ranks on, and the dB each result shows." onChange={(loudAt_hz) => setGoal({ loudAt_hz })} />
                 </div>
               )}
               {goal.priority === "small" && (
-                <div className="fields assist-sort-field">
+                <div className="assist-sort-field">
                   <Num label="Target F3" unit="Hz" value={goal.targetF3_hz} min={10} help="“Smallest box”: each box is shrunk until its F3 just reaches this." onChange={(targetF3_hz) => setGoal({ targetF3_hz })} />
                 </div>
               )}
@@ -707,12 +717,8 @@ export function DesignAssistant(props: {
                   {dbChanged ? "The driver database has been updated since this was shared, so the list may differ a little." : ""}
                 </p>
               )}
-              <div className="assist-share">
-                <button type="button" className="secondary" onClick={() => void shareResults()} disabled={!results?.length}>
-                  Share these results
-                </button>
-                <span className="hint">{shareMsg || "A link that opens this list (worked out again from the same limits)"}</span>
-              </div>
+              {/* The box-type filter, and the list's share link on the same row. */}
+              <div className="assist-filter-row">
               {kinds.length > 1 && (
                 <div className="unit-switch assist-only" role="group" aria-label="Show">
                   {(["all", ...kinds] as const).map((k) => (
@@ -729,6 +735,19 @@ export function DesignAssistant(props: {
                   ))}
                 </div>
               )}
+                <button
+                  type="button"
+                  className="secondary assist-share-btn"
+                  onClick={() => void shareResults()}
+                  disabled={!results?.length}
+                  title="A link that opens this list (worked out again from the same limits)"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="share-icon">
+                    <path d="M10 14a4.5 4.5 0 0 0 6.4 0l3.2-3.2a4.5 4.5 0 0 0-6.4-6.4L12 5.6M14 10a4.5 4.5 0 0 0-6.4 0l-3.2 3.2a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                  {shareMsg || "Share list"}
+                </button>
+              </div>
               {progress && (
                 <div className="finder-progress" role="status">
                   <div className="finder-progress-text">
@@ -794,10 +813,20 @@ export function DesignAssistant(props: {
                       <Sketch curve={r.curve} color={KIND_COLORS[r.box][0]!} />
                     </div>
                     <p className="assist-facts">
-                      {r.bandpass ? `${bandpassText(r.bandpass, fmt, vol)} ` : ""}
-                      {r.pr
-                        ? `Tuned to ${r.fb} Hz with ${r.pr.count > 1 ? `${r.pr.count} × ` : "a "}${r.pr.name}, ${r.pr.addedMass_g} g added to ${r.pr.count > 1 ? "each" : "it"}; ${r.pr.count > 1 ? "they use" : "it uses"} ${Math.round(r.pr.prUse * 100)} % of ${r.pr.count > 1 ? "their" : "its"} travel when the driver reaches its Xmax. `
-                        : ""}
+                      {r.bandpass && (
+                        <>
+                          <span className="assist-spec">{bandpassText(r.bandpass, fmt, vol)}</span>{" "}
+                        </>
+                      )}
+                      {r.pr && (
+                        <>
+                          <span className="assist-spec">
+                            Tuned to {r.fb} Hz with {r.pr.count > 1 ? `${r.pr.count} × ` : "a "}
+                            {r.pr.name}, {r.pr.addedMass_g} g added to {r.pr.count > 1 ? "each" : "it"}
+                          </span>
+                          {`; ${r.pr.count > 1 ? "they use" : "it uses"} ${Math.round(r.pr.prUse * 100)} % of ${r.pr.count > 1 ? "their" : "its"} travel when the driver reaches its Xmax. `}
+                        </>
+                      )}
                       {r.box === "line" && r.line
                         ? `A line ${fmt(r.line.length_cm, "len")} long, tuned to ${r.fb} Hz${r.line.design.end === "port" ? `, with a ${fmt(r.line.design.portDiameter_cm, "len")} port at the end` : ", open at the end"}, ${
                             r.line.fold.runs === 1 ? "standing straight up (no folds) in a cabinet" : `folded in ${r.line.fold.runs} runs into a cabinet`
@@ -805,9 +834,14 @@ export function DesignAssistant(props: {
                             r.line.fold.bentPort ? "; the port is longer than the cabinet is tall, so bend it" : ""
                           }. `
                         : ""}
-                      {r.box === "vented" && r.port
-                        ? `Tuned to ${r.fb} Hz, ${portText(r.port, fmt)}. `
-                        : ""}
+                      {r.box === "vented" && r.port && (
+                        <>
+                          <span className="assist-spec">
+                            Tuned to {r.fb} Hz, {portText(r.port, fmt)}
+                          </span>
+                          {". "}
+                        </>
+                      )}
                       {wiringText(r, goal.drivers)}
                       Output at {goal.loudAt_hz} Hz is set by {LIMIT_TEXT[r.limitedBy]}.
                       {r.peak_db > 1.5 ? (r.bandpass ? ` ${r.peak_db.toFixed(1)} dB of ripple across the band.` : ` A ${r.peak_db.toFixed(1)} dB hump above F3.`) : ""}
