@@ -53,13 +53,20 @@ export function Num(props: {
   /** Older name for help. */
   title?: string;
   onChange: (v: number) => void;
+  /** Where 0 means "none": the box is left blank with this as its placeholder (e.g. "No limit"), and clearing it sets 0. */
+  zeroText?: string;
 }) {
   const units = useUnits();
   const u = props.q ? units.unit(props.q) : { unit: props.unit ?? "", k: 1 };
   const shown = props.value * u.k;
   const converted = u.k !== 1;
-  const [text, setText] = useState(tidy(shown, converted));
+  const blank = (v: number) => props.zeroText !== undefined && v === 0;
+  const [text, setText] = useState(blank(shown) ? "" : tidy(shown, converted));
   useEffect(() => {
+    if (blank(shown)) {
+      if (text.trim() !== "" && Number(text.replace(",", ".")) !== 0) setText("");
+      return;
+    }
     // Only rewrite the box when the stored value really moved (not when it's our own rounding).
     const typed = Number(text.replace(",", "."));
     const tol = converted ? 5e-4 * Math.max(1, Math.abs(shown)) : 1e-9 * Math.max(1, Math.abs(shown));
@@ -73,11 +80,13 @@ export function Num(props: {
       <input
         inputMode="decimal"
         value={text}
+        placeholder={props.zeroText}
         onChange={(e) => {
           const t = e.currentTarget.value;
           setText(t);
           const v = Number(t.replace(",", "."));
-          if (t.trim() !== "" && Number.isFinite(v) && v >= min) props.onChange(v / u.k);
+          if (t.trim() === "" && props.zeroText !== undefined) props.onChange(0);
+          else if (t.trim() !== "" && Number.isFinite(v) && v >= min) props.onChange(v / u.k);
         }}
       />
       <span className="unit">{u.unit}</span>
