@@ -102,6 +102,10 @@ A box's leak (Ql) takes energy out; "Heard (like WinISD)", the default, also cou
 
 Sealed, ported and PR boxes. "Fixed mass (like WinISD)", the default, keeps the air in front of the cone in Mms. "Piston, like Hornresp" takes that air (8ρa³/3) out of Mms and loads the cone with a baffled piston's radiation impedance instead, n × that of a piston of n·Sd for n drivers side by side. Compared with Hornresp (see the notes): two drivers in one box (B7, B11) and two identical boxes side by side (Tools → Multiple Speakers, B17: one box of twice the volume with twice the drivers) within 0.04 dB and 0.25 % in impedance. Checks (`simulate.test.ts`): the same in the deep bass, a lighter cone up high, two drivers' resonance lower, bandpass boxes unchanged.
 
+### Box pressure (chart "Box pressure")
+
+The peak sound pressure inside the box: the chamber pressure the network solves for, per frequency (both chambers of a bandpass box). Compared with Hornresp's Tools → Diaphragm Pressure → Rear Chamber Side (screenshots, as it can't be exported; `boxpressure-hornresp.test.ts`): the sealed box (B1) within 2 Pa of its 267 Pa in the bass, the ported box (B2) peaking at 342 Pa at 44 Hz against Hornresp's 340 Pa at about 44 Hz. Checks: in the bass a sealed box's pressure is its air spring's, ρc²·Sd·x / V.
+
 ### EQ (EQ card: Peaking, Low shelf, High shelf)
 
 Peaking and shelving bands are the standard analog (RBJ) shapes, applied to the voltage before the amplifier. Compared with Hornresp's Equaliser Filter Wizard on the ported box (case B15: a 40 Hz Q 2 −6 dB peak, a 30 Hz Q 0.71 +6 dB low shelf, a 150 Hz Q 0.71 −6 dB high shelf): the voltage reaching the speaker agrees within 0.00005 % from 10 Hz to 20 kHz (Hornresp's Ein), and SPL, excursion, impedance and group delay as closely as without EQ. Checks (`eq.test.ts`): each shape's gain at DC, at its corner and far above it.
