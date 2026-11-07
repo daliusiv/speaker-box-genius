@@ -480,6 +480,7 @@ export function trialState(base: AppState, d: LoadedDriver, goal: AssistantGoal,
     roomGain: goal.use === "car" ? { ...s.roomGain, mode: "car", ...ROOM_PRESETS.car } : { ...s.roomGain, mode: "off" },
     baffle: { ...s.baffle, on: false },
     highPass: { ...s.highPass, on: false },
+    passive: { ...s.passive, on: false },
     eq: [],
     compare: null,
     designs: [],
@@ -525,7 +526,7 @@ export function evaluateDriver(
   const drv = driverInputOf(s, solved);
   const air = airOf(s);
   const room = roomGainOf(s);
-  const opts = { ...simOptionsOf(s), fMin: 10, fMax: 300, points: 90, highPass: null, eq: [] };
+  const opts = { ...simOptionsOf(s), fMin: 10, fMax: 300, points: 90, highPass: null, passive: null, eq: [] };
   const losses = s.settings.losses;
 
   const run = (design: DesignState, vb: number) => {
@@ -1113,6 +1114,7 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
     compare: null,
     // Scored on any amp, with no filter.
     highPass: { ...s.highPass, on: false },
+    passive: { ...s.passive, on: false },
     roomGain: goal.use === "car" ? t.roomGain : s.roomGain.mode === "car" ? { ...s.roomGain, mode: "off" } : s.roomGain,
     designs,
   };

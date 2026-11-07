@@ -82,6 +82,7 @@ import { MeasuredCard, measuredSeries } from "./Measured.tsx";
 import { HelpDock } from "./HelpDock.tsx";
 import { reportUrl, ShareMenu } from "./Share.tsx";
 import { EqPanel } from "./Eq.tsx";
+import { PassivePanel } from "./Passive.tsx";
 import { MeasurePanel, type Measurement } from "./Measure.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
 import { AppMenu } from "./AppMenu.tsx";
@@ -775,7 +776,7 @@ export function App(props: { initial: AppState | null }) {
     [state, solved],
   );
 
-  const signalOn = (state.highPass.on ? 1 : 0) + state.eq.filter((e) => e.on).length + (state.roomGain.mode !== "off" ? 1 : 0);
+  const signalOn = (state.highPass.on ? 1 : 0) + (state.passive.on ? 1 : 0) + state.eq.filter((e) => e.on).length + (state.roomGain.mode !== "off" ? 1 : 0);
   const tabBadges: Partial<Record<PanelId, string>> = {
     boxes: String(state.designs.filter((d) => d.on).length),
     ...(signalOn > 0 ? { signal: String(signalOn) } : {}),
@@ -1371,6 +1372,8 @@ export function App(props: { initial: AppState | null }) {
                   : "A subsonic filter protects ported and PR boxes from over-excursion below tuning."}
               </p>
             </Card>
+
+            <PassivePanel value={state.passive} re={state.ts.re ?? 6} le_mh={state.le_mh} onChange={(p) => set("passive", p)} />
 
             <EqPanel
               state={state}

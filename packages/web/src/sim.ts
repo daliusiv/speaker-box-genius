@@ -361,6 +361,7 @@ export function simOptionsOf(s: AppState) {
     fMax: s.baffle.on || s.settings.portModel === "pipe" ? 1000 : 500,
     points: s.baffle.on || s.settings.portModel === "pipe" ? 400 : 300,
     highPass: s.highPass.on ? { type: s.highPass.type, order: s.highPass.order, freq: s.highPass.freq } : null,
+    passive: s.passive.on ? { branches: s.passive.branches } : null,
     air: airOf(s),
     // The limit is in the displayed convention; the engine works in peak.
     portVelocityLimit: s.settings.velocity === "rms" ? portLimitOf(s) * Math.SQRT2 : portLimitOf(s),

@@ -42,11 +42,12 @@ function variants(): [string, AppState][] {
       ...d, driverName: "Dayton Audio UM12-22", driverBrand: "Dayton Audio", le_mh: 2.1, l2_mh: 1.2, r2_ohm: 6,
       power: 350, drivers: 2, wiring: "series", isobaric: true, isoCoils: "series",
       dvc: { on: true, entered: "one", wired: "series" },
-      settings: { ...d.settings, units: "imperial", rg: 0.3, losses: { ...d.settings.losses, qa: 20 } },
+      settings: { ...d.settings, units: "imperial", rg: 0.3, losses: { ...d.settings.losses, qa: 20 }, leakage: "absorbed", coneLoad: "piston" },
       volume: { ...d.volume, link: ported.id, wall_mm: 25 },
       roomGain: { ...d.roomGain, mode: "car" },
       highPass: { ...d.highPass, on: true, freq: 20 },
-      eq: [{ id: "e1", on: true, target: "all", type: "peak", freq: 30, gain_db: 3, q: 1 } as AppState["eq"][0]],
+      passive: { on: true, branches: [{ l_mH: 2, r: 0.3 }, { c_uF: 200 }, {}, { r: 6, l_mH: 1, join: "parallel" }] },
+      eq: [{ id: "e1", on: true, target: "all", type: "peak", freq: 30, gain_db: 3, q: 1 } as AppState["eq"][0], { id: "e2", on: true, target: "all", type: "highshelf", freq: 120, gain_db: -4, q: 0.7 } as AppState["eq"][0]],
     }],
     ["designs edited, reordered, hidden, plus bandpass and mixed PRs", {
       ...d,
@@ -156,4 +157,18 @@ test("measured curves travel with the link, and the link stays postable", async 
   // Garbage is dropped, not trusted.
   const bad = decodeState(encodeState({ ...s, measured: [{ ...s.measured[0]!, f: [1, 2], v: [1] }] as AppState["measured"] }));
   assert.deepEqual(bad!.measured, []);
+});
+
+test("passive parts, new settings and a high shelf survive a link exactly", async () => {
+  const s = variants().find(([name]) => name === "driver, settings and volume changed")![1];
+  const back = (await decodeStateAny(await encodeStateShort(s)))!;
+  assert.deepEqual(back.passive, s.passive);
+  assert.equal(back.settings.leakage, "absorbed");
+  assert.equal(back.settings.coneLoad, "piston");
+  assert.deepEqual(back.eq, s.eq);
+  // Bad values in a link are dropped, not passed to the engine.
+  const raw = JSON.parse(JSON.stringify(s));
+  raw.passive = { on: true, branches: [{ r: -1, l_mH: "x", c_uF: 10, join: "sideways" }] };
+  const fixed = decodeState(encodeState(raw))!;
+  assert.deepEqual(fixed.passive, { on: true, branches: [{ c_uF: 10 }, {}, {}, {}] });
 });

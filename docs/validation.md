@@ -106,6 +106,10 @@ Sealed, ported and PR boxes. "Fixed mass (like WinISD)", the default, keeps the 
 
 The peak sound pressure inside the box: the chamber pressure the network solves for, per frequency (both chambers of a bandpass box). Compared with Hornresp's Tools → Diaphragm Pressure → Rear Chamber Side (screenshots, as it can't be exported; `boxpressure-hornresp.test.ts`): the sealed box (B1) within 2 Pa of its 267 Pa in the bass, the ported box (B2) peaking at 342 Pa at 44 Hz against Hornresp's 340 Pa at about 44 Hz. Checks: in the bass a sealed box's pressure is its air spring's, ρc²·Sd·x / V.
 
+### Passive parts (Signal tab → Passive parts)
+
+Up to four branches between the amplifier and the drivers, in line, across, in line, across (the layout of Hornresp's passive Filter Wizard), each a resistor, coil and capacitor joined in series or in parallel. The bank sees the network as a Thévenin source per frequency (with the amplifier's resistance), and the impedance chart shows what the amplifier sees. Not yet compared with Hornresp. Checks (`passive.test.ts`): no parts changes nothing; a series resistor acts exactly like the amplifier's resistance; a series coil exactly like adding its inductance to the driver's Le; a capacitor across after it makes 12 dB/octave of 6; a Zobel (R = Re, C = Le / Re²) flattens the impedance up high and leaves the response alone; R ∥ L in line keeps the bass and cuts 6 dB up high; two parallel drivers share the network. The passband reference level (for F3) takes the network's resistance with coils as wires and capacitors left out.
+
 ### EQ (EQ card: Peaking, Low shelf, High shelf)
 
 Peaking and shelving bands are the standard analog (RBJ) shapes, applied to the voltage before the amplifier. Compared with Hornresp's Equaliser Filter Wizard on the ported box (case B15: a 40 Hz Q 2 −6 dB peak, a 30 Hz Q 0.71 +6 dB low shelf, a 150 Hz Q 0.71 −6 dB high shelf): the voltage reaching the speaker agrees within 0.00005 % from 10 Hz to 20 kHz (Hornresp's Ein), and SPL, excursion, impedance and group delay as closely as without EQ. Checks (`eq.test.ts`): each shape's gain at DC, at its corner and far above it.
