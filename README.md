@@ -1,10 +1,12 @@
 # Speaker Box Genius
 
-**A free, browser-based loudspeaker enclosure simulator: a modern WinISD.**
+**A free, browser-based loudspeaker enclosure simulator: a modern replacement for WinISD and Hornresp.**
 
 Design sealed, ported, passive radiator, bandpass and transmission line boxes for any driver, see straight away whether the cone, the passive radiators or the port run out of headroom, then share the live design with a link instead of a pile of screenshots.
 
 **Try it: https://speakerboxgenius.com**
+
+![Dragging a ported box's tuning on the response chart: the port air speed passes the chuffing line and glows red, then Share offers a link, Reddit and diyAudio text, and a forum image](docs/img/hero.gif)
 
 Everything runs in your browser. There's nothing to install, no account and no server, and it keeps working offline. It works on phones as well as computers.
 
@@ -88,7 +90,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 Results are checked against the established tools, and every comparison runs as an automated test:
 
-- **WinISD**: within 0.01 dB for sealed and ported boxes, with matching tuning for passive radiator boxes, and checks for bandpass, isobaric, dual voice coil, parallel drivers, high-pass filters and leakage. See the [validation page](https://speakerboxgenius.com/validation/).
+- **WinISD**: within 0.01 dB for sealed and ported boxes. Passive radiator boxes match WinISD's tuning; at the tuning peak the response can differ by up to about 0.5 dB, because WinISD damps the radiator differently (explained on the validation page). Also checks for bandpass, isobaric, dual voice coil, parallel drivers, high-pass filters and leakage. See the [validation page](https://speakerboxgenius.com/validation/).
 - **Hornresp**: transmission lines, tapped horns and front horns, including impedance and the line load (Za); and sealed, ported, passive-radiator and bandpass boxes, with one or two drivers. See the [validation page](https://speakerboxgenius.com/validation/#hornresp) and [`docs/transmission-lines.md`](docs/transmission-lines.md).
 
 The model is small-signal and lumped (one-dimensional for lines). Port compression and a hot voice coil are optional estimates in Settings; Bl and Cms non-linearity aren't modelled.
