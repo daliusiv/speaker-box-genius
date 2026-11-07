@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { PassiveBranch } from "@sbg/engine";
 import { Card, Num, Select } from "./components.tsx";
 import type { AppState } from "./state.ts";
@@ -22,6 +23,10 @@ const STARTS: { id: string; label: string; title: string; branches: (re: number,
 /** Coils, capacitors and resistors between the amplifier and the drivers. */
 export function PassivePanel(props: { value: Passive; re: number; le_mh: number; onChange: (p: Passive) => void }) {
   const p = props.value;
+  const fitted = (b: PassiveBranch | undefined) => !!b && ((b.r ?? 0) > 0 || (b.l_mH ?? 0) > 0 || (b.c_uF ?? 0) > 0);
+  // Most networks need two branches: show 3 and 4 when they're used or asked for.
+  const [more, setMore] = useState(false);
+  const shown = more || fitted(p.branches[2]) || fitted(p.branches[3]) ? 4 : 2;
   const setBranch = (k: number, b: PassiveBranch) => props.onChange({ ...p, branches: p.branches.map((x, i) => (i === k ? b : x)) });
   const clean = (b: PassiveBranch, patch: Partial<PassiveBranch>): PassiveBranch => {
     const out: PassiveBranch = { ...b, ...patch };
@@ -32,7 +37,7 @@ export function PassivePanel(props: { value: Passive; re: number; le_mh: number;
     <Card title="Passive parts">
       <div className="fields">
         <Select<"off" | "on"> help="Coils, capacitors and resistors between the amplifier and the drivers: a passive low-pass for a subwoofer or a full-range driver, a Zobel, or an L-pad. The impedance chart then shows what the amplifier sees."
-          label="Passive parts"
+          label="Use"
           value={p.on ? "on" : "off"}
           options={[
             { value: "off", text: "Off" },
@@ -50,7 +55,7 @@ export function PassivePanel(props: { value: Passive; re: number; le_mh: number;
               </button>
             ))}
           </div>
-          {p.branches.map((b, k) => (
+          {p.branches.slice(0, shown).map((b, k) => (
             <div key={k}>
               <h3 className="set-head">Branch {PLACE[k]}</h3>
               <div className="fields">
@@ -69,6 +74,13 @@ export function PassivePanel(props: { value: Passive; re: number; le_mh: number;
               </div>
             </div>
           ))}
+          {shown < 4 && (
+            <div className="row">
+              <button className="secondary" onClick={() => setMore(true)}>
+                + Branches 3 and 4
+              </button>
+            </div>
+          )}
           <p className="hint">
             Branches 1 and 3 sit in line with the drivers, 2 and 4 across them, in that order from the amplifier (the layout of Hornresp&rsquo;s
             passive Filter Wizard). A part at 0 isn&rsquo;t fitted. Enter a coil&rsquo;s resistance (DCR) as R in its branch.
