@@ -1001,6 +1001,23 @@ button:disabled {
   margin: 0;
 }
 
+.calc-offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  margin-bottom: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.calc-offer button.chip {
+  min-height: 2rem;
+}
+
 .quick-actions {
   display: flex;
   flex-wrap: wrap;
