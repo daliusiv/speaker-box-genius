@@ -191,6 +191,7 @@ pre{overflow-x:auto;padding:.8rem;border-radius:.6rem;background:var(--card)}
 pre code{padding:0;background:none}
 figure{margin:1.5rem 0}
 figure img{display:block;width:100%;height:auto;border:1px solid var(--border);border-radius:.7rem}
+main img{max-width:100%;height:auto}
 figcaption{margin-top:.4rem;color:var(--muted);font-size:.9rem}
 .note{margin:1.4rem 0;padding:.2rem 1rem;border-left:3px solid var(--accent);border-radius:.4rem;background:var(--card)}
 .table{overflow-x:auto;margin:1.2rem 0}

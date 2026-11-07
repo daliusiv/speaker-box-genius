@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, existsSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build, markdown, parsePage, resolveExamples } from "./build.ts";
@@ -138,4 +138,15 @@ test("driver designs follow the app's presets, with a port that fits and a PR th
   const svg = cardSvg(cardData(p));
   assert.match(svg, /^<svg[^>]+width="1200" height="630"/);
   assert.match(svg, />Dayton Audio DSA215-8</);
+});
+
+test("every guide image is a figure of its own (an image inside a paragraph shows at full size)", () => {
+  const dir = join(import.meta.dirname, "pages");
+  for (const f of readdirSync(dir).filter((x) => x.endsWith(".md"))) {
+    readFileSync(join(dir, f), "utf8")
+      .split(/\n\s*\n/)
+      .forEach((para) => {
+        if (/!\[/.test(para)) assert.match(para.trim(), /^!\[[^\]]*\]\([^)]*\)$/, `${f}: an image shares its paragraph: ${para.slice(0, 80)}`);
+      });
+  }
 });
