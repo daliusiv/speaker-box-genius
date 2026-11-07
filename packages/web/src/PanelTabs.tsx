@@ -102,7 +102,8 @@ export function PanelTabs(props: {
 
 /** A plain row of tabs (used above the charts). Arrow keys move between tabs. */
 export function TabRow<T extends string>(props: {
-  tabs: { id: T; label: string }[];
+  /** `alert`: a warning dot on the tab, with this as its spoken text. */
+  tabs: { id: T; label: string; alert?: string }[];
   selected: T;
   onSelect: (id: T) => void;
   ariaLabel: string;
@@ -135,8 +136,14 @@ export function TabRow<T extends string>(props: {
             tabIndex={on ? 0 : -1}
             className={on ? "on" : ""}
             onClick={() => props.onSelect(t.id)}
+            title={t.alert}
           >
             {t.label}
+            {t.alert && (
+              <span className="tab-alert" role="img" aria-label={t.alert}>
+                ●
+              </span>
+            )}
           </button>
         );
       })}
