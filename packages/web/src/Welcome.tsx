@@ -3,7 +3,8 @@ import { useState } from "react";
 /**
  * First-visit help. New visitors get a short "Getting started" card; people who open
  * a shared link get a one-line note that the design is theirs to change. Both can be
- * dismissed; the card can be brought back from the footer.
+ * dismissed; the card can be brought back from the footer or the menu. Phones don't open it by
+ * themselves (see PHONE).
  */
 
 const KEY = "sbg.tips-dismissed";
@@ -46,8 +47,16 @@ try {
   /* unavailable */
 }
 
+/**
+ * Phones (the one-column layout): the card would fill the first screen, and the launcher has
+ * just offered the ways in. There it waits in the menu (Getting started tips) until asked for.
+ */
+const PHONE = typeof window !== "undefined" && !!window.matchMedia?.("(max-width: 860px)").matches;
+/** A keyboard and mouse (not a touch screen): shortcuts like Ctrl+Z are worth mentioning. */
+const KEYBOARD = typeof window !== "undefined" && !!window.matchMedia?.("(pointer: fine)").matches;
+
 export function useWelcome() {
-  const [tips, setTips] = useState(() => !OPENED_FROM_LINK && !read());
+  const [tips, setTips] = useState(() => !OPENED_FROM_LINK && !PHONE && !read());
   const [linkNote, setLinkNote] = useState(OPENED_FROM_LINK);
   return {
     tips,
@@ -92,7 +101,7 @@ export function GettingStarted(props: { onDismiss: () => void; onAssistant?: () 
         <li>
           <b>Shape the boxes.</b> In <i>Boxes</i>, a sealed, a ported and a passive radiator design are already set up for
           comparison. Change the volume and tuning, try a preset like <i>QB3</i>, or add a bandpass. Up to 8 designs.
-          Made a mistake? <i>Undo</i> (Ctrl+Z) takes it back.
+          Made a mistake? <i>Undo</i> (↶ at the top{KEYBOARD ? ", or Ctrl+Z" : ""}) takes it back.
         </li>
         <li>
           <b>Read the charts.</b> Dashed red lines are limits: cone and PR Xmax, port chuffing. Raise <i>Power</i> above the
