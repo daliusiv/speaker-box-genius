@@ -24,6 +24,9 @@ All at 2.83 V, half space (2 x Pi), 1 m.
 13-fr-tqwt              4" full-range, TQWT
 14-fr-tapered-tl        4" full-range, tapered TL
 15-mltl-2-drivers       05 with two drivers in parallel (OD = 2P)
+17-front-horn-small-chambers  07 with an 8 L rear and a 3 L throat chamber
+18-front-horn-no-throat 07 with no throat chamber
+19-sub-front-horn       12" subwoofer, Con + Exp front horn, 40 L rear, 2 L throat
 
 Boxes (DSA215-8; Hornresp 60.60):
 

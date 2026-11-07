@@ -1,0 +1,31 @@
+{
+  "id": "d4",
+  "kind": "line",
+  "name": "SBG 18-front-horn-no-throat",
+  "on": true,
+  "vb_l": 32,
+  "closedArea_cm2": 110,
+  "sections": [
+    {
+      "length_cm": 230,
+      "endArea_cm2": 4000,
+      "taper": "exponential",
+      "fill_kgm3": 0
+    }
+  ],
+  "driverAt_cm": 0,
+  "end": "horn",
+  "tapAt_cm": 90,
+  "portDiameter_cm": 5,
+  "portLength_cm": 10,
+  "portFlare_cm": 0,
+  "mouth": "front",
+  "mouthDistance_cm": 0,
+  "fold": {
+    "width_cm": 20,
+    "folds": 2
+  },
+  "targetFb": 40,
+  "rearChamber_l": 20,
+  "throatChamber_l": 0
+}
