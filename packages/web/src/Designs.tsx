@@ -426,6 +426,35 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
 
   return (
     <>
+      {/* Presets first: you usually pick one, then fine-tune the numbers below. */}
+      <Presets note={p.linked ? LINKED_NOTE : undefined}>
+        <button
+          className="chip"
+          disabled={!p.align || p.linked}
+          title="Flat vented alignment: QB3 (B4 at Qts ≈ 0.38) for low-Qts drivers, Keele's alignment for Qts 0.38–0.6"
+          onClick={() => {
+            const a = p.align && ventedAlignmentFor(p.align, p.drivers);
+            if (!a) {
+              setMsg("This driver's Qts is above 0.6: it suits a sealed box better than a vented one.");
+              return;
+            }
+            const len = portLengthForFb(a.vb_l, portOf(v, 0), a.fb, v.count, undefined, p.air);
+            if (!(len > 0)) {
+              setMsg(`${a.name}: ${a.vb_l.toFixed(1)} L tuned to ${a.fb.toFixed(1)} Hz, but this port is too small for that tuning. Increase the port size and try again.`);
+              return;
+            }
+            setMsg("");
+            set({
+              vb_l: toBuilt(a.vb_l, p.fill),
+              targetFb: Math.round(a.fb * 10) / 10,
+              length_cm: Math.round(len * 10) / 10,
+              ...withPreset(v.name, a.name),
+            });
+          }}
+        >
+          {alignLabel(p.align, p.drivers)}
+        </button>
+      </Presets>
       <div className="fields">
         <Select help="Round tube, or a slot (rectangular, often along a wall). Slots are easy to build and less prone to chuffing at the same area."
           label="Port"
@@ -460,34 +489,6 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
         <Fixed label="Fb" unit="Hz" value={f1(fb)} title="Box tuning frequency" />
       </div>
       <TuneRow target={v.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set port length" onApply={tune} />
-      <Presets note={p.linked ? LINKED_NOTE : undefined}>
-        <button
-          className="chip"
-          disabled={!p.align || p.linked}
-          title="Flat vented alignment: QB3 (B4 at Qts ≈ 0.38) for low-Qts drivers, Keele's alignment for Qts 0.38–0.6"
-          onClick={() => {
-            const a = p.align && ventedAlignmentFor(p.align, p.drivers);
-            if (!a) {
-              setMsg("This driver's Qts is above 0.6: it suits a sealed box better than a vented one.");
-              return;
-            }
-            const len = portLengthForFb(a.vb_l, portOf(v, 0), a.fb, v.count, undefined, p.air);
-            if (!(len > 0)) {
-              setMsg(`${a.name}: ${a.vb_l.toFixed(1)} L tuned to ${a.fb.toFixed(1)} Hz, but this port is too small for that tuning. Increase the port size and try again.`);
-              return;
-            }
-            setMsg("");
-            set({
-              vb_l: toBuilt(a.vb_l, p.fill),
-              targetFb: Math.round(a.fb * 10) / 10,
-              length_cm: Math.round(len * 10) / 10,
-              ...withPreset(v.name, a.name),
-            });
-          }}
-        >
-          {alignLabel(p.align, p.drivers)}
-        </button>
-      </Presets>
       {msg && <p className="warn">{msg}</p>}
       <PortChecks v={v} vb_l={p.vb_l} air={p.air} ctx={p.portCtx} />
       <p className="hint">
@@ -535,29 +536,7 @@ function PrBody(
 
   return (
     <>
-      {/* The box: its volume, how many PRs and the mass on each, and the tuning they give. */}
-      <div className="fields">
-        <VbField vb_l={p.built_l} value={pr.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
-        <Num help="Number of identical passive radiators. More PRs means more cone area: less excursion each." label="PRs" value={pr.count} onChange={(v) => set({ count: Math.max(1, Math.round(v)) })} />
-        <Num help="Mass glued onto the PR cone (grams). More mass tunes the box lower." label="Added mass" unit="g" value={pr.addedMass_g} min={0} onChange={(v) => set({ addedMass_g: v })} />
-        <Fixed
-          label={t.mixed ? "Fb ≈" : "Fb"}
-          unit="Hz"
-          value={f1(t.fb)}
-          title={
-            t.mixed
-              ? "Approximate tuning of all the PRs together. With different PRs the response has more than one resonance; this sits between them. The charts show the real behaviour."
-              : "Box tuning frequency with the added mass"
-          }
-        />
-      </div>
-      <TuneRow
-        target={pr.targetFb}
-        onTarget={(x) => set({ targetFb: x })}
-        button="Set added mass"
-        title={t.mixed ? "Sets the added mass on group 1's PRs; the other groups stay as they are" : undefined}
-        onApply={tune}
-      />
+      {/* Presets and Best tuning first: you usually pick one, then fine-tune the numbers below. */}
       <Presets note={p.linked ? LINKED_NOTE : undefined}>
         <button
           className="chip"
@@ -587,10 +566,33 @@ function PrBody(
           {alignLabel(p.align, p.drivers)}
         </button>
       </Presets>
-      {msg && <p className="warn">{msg}</p>}
       <div className="row finder-row-button">
         <PrTuning ctx={p.finder} design={pr} vb_l={p.vb_l} linked={p.linked} onApply={(patch, summary) => p.onFound(patch, summary)} />
       </div>
+      {/* The box: its volume, how many PRs and the mass on each, and the tuning they give. */}
+      <div className="fields">
+        <VbField vb_l={p.built_l} value={pr.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
+        <Num help="Number of identical passive radiators. More PRs means more cone area: less excursion each." label="PRs" value={pr.count} onChange={(v) => set({ count: Math.max(1, Math.round(v)) })} />
+        <Num help="Mass glued onto the PR cone (grams). More mass tunes the box lower." label="Added mass" unit="g" value={pr.addedMass_g} min={0} onChange={(v) => set({ addedMass_g: v })} />
+        <Fixed
+          label={t.mixed ? "Fb ≈" : "Fb"}
+          unit="Hz"
+          value={f1(t.fb)}
+          title={
+            t.mixed
+              ? "Approximate tuning of all the PRs together. With different PRs the response has more than one resonance; this sits between them. The charts show the real behaviour."
+              : "Box tuning frequency with the added mass"
+          }
+        />
+      </div>
+      <TuneRow
+        target={pr.targetFb}
+        onTarget={(x) => set({ targetFb: x })}
+        button="Set added mass"
+        title={t.mixed ? "Sets the added mass on group 1's PRs; the other groups stay as they are" : undefined}
+        onApply={tune}
+      />
+      {msg && <p className="warn">{msg}</p>}
       <p className="hint">
         Added mass is per passive radiator.
         {t.mixed &&
