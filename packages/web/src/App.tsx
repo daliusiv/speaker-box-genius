@@ -42,6 +42,7 @@ import { VolumePanel } from "./VolumePanel.tsx";
 import { BuildSheet } from "./BuildSheet.tsx";
 import {
   airOf,
+  amplifierLoad,
   baffleDbFor,
   alignmentDriver,
   colorOf,
@@ -962,6 +963,22 @@ export function App(props: { initial: AppState | null }) {
                   </span>
                 </div>
               </div>
+              {/* The two most-used driver tools, one tap from the picker (all of them stay in Driver tools). */}
+              <div className="quick-actions">
+                <button type="button" className={`chip${pasting ? " on" : ""}`} onClick={() => setPasting(!pasting)} aria-pressed={pasting}>
+                  {pasting ? "Cancel paste" : "Paste datasheet"}
+                </button>
+                <button
+                  type="button"
+                  className="chip"
+                  onClick={() => {
+                    setMeasureOpen(true);
+                    setTimeout(() => document.getElementById("measure-panel")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+                  }}
+                >
+                  Measure from a .zma
+                </button>
+              </div>
               {(() => {
                 // A database driver whose values look implausible (db-tools plausibility checks).
                 const id = driverSource && driverSource.name === state.driverName ? driverSource.id : undefined;
@@ -1205,13 +1222,25 @@ export function App(props: { initial: AppState | null }) {
                   cable resistance matters); the response at a given power stays the same.
                 </p>
               )}
-              <p className="hint">
-                {state.isobaric
-                  ? `Each pair is two drivers working as one (face to face or one behind the other): same Fs and Qts, half the Vas, so about half the box. ${state.drivers * 2} drivers in total. `
-                  : "Multiple drivers share each box. "}
-                Wiring changes the impedance the amplifier sees and the voltage each driver gets; power is what the amplifier
-                delivers into the whole set.
-              </p>
+              {(() => {
+                const load = amplifierLoad(state, solved);
+                const ohms = (x: number) => (x >= 10 ? x.toFixed(0) : Number(x.toPrecision(2)).toString());
+                return load ? (
+                  <p className="amp-load">
+                    Amplifier sees <strong>{ohms(load.nominal)} Ω</strong> nominal <span className="muted">(Re {load.re.toFixed(2)} Ω)</span>
+                  </p>
+                ) : null;
+              })()}
+              <details className="why">
+                <summary>How wiring works</summary>
+                <p className="hint">
+                  {state.isobaric
+                    ? `Each pair is two drivers working as one (face to face or one behind the other): same Fs and Qts, half the Vas, so about half the box. ${state.drivers * 2} drivers in total. `
+                    : "Multiple drivers share each box. "}
+                  Wiring changes the impedance the amplifier sees and the voltage each driver gets; power is what the amplifier
+                  delivers into the whole set.
+                </p>
+              </details>
             </Card>
 
             {(measureOpen || measurement) && (
