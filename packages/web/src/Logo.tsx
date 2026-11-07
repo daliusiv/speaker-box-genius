@@ -11,7 +11,7 @@ export function Logo(props: { className?: string }) {
 }
 
 /** Line icons for the assistant's "What are you building?" tiles (24 × 24, drawn in currentColor). */
-export function UseIcon({ use }: { use: "car" | "home" | "hifi" | "tower" | "other" | "driver" }) {
+export function UseIcon({ use }: { use: "car" | "home" | "hifi" | "tower" | "other" | "driver" | "search" | "demo" }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   return (
     <svg className="use-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -63,6 +63,23 @@ export function UseIcon({ use }: { use: "car" | "home" | "hifi" | "tower" | "oth
           <circle cx="17.65" cy="6.35" r="0.6" />
           <circle cx="6.35" cy="17.65" r="0.6" />
           <circle cx="17.65" cy="17.65" r="0.6" />
+        </g>
+      )}
+      {use === "search" && (
+        <g {...common}>
+          {/* A magnifier over a small driver: find one. */}
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <circle cx="10.5" cy="10.5" r="2.8" />
+          <path d="M15.3 15.3 21 21" />
+        </g>
+      )}
+      {use === "demo" && (
+        <g {...common}>
+          {/* Three response curves on a chart: the example's sealed, ported and PR boxes. */}
+          <path d="M3 3.5v17h18" />
+          <path d="M5.5 17c3-6 5.5-9 14-9.5" />
+          <path d="M5.5 18.5c3.5-1 4.5-9 7.5-9.5 2-.3 3.5-.8 6.5-1" />
+          <path d="M5.5 19.5c4-.5 5.5-10 8.5-10.5" strokeDasharray="1.6 2" />
         </g>
       )}
       {use === "other" && (

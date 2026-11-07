@@ -36,7 +36,12 @@ import { KIND_COLORS, portLimitOf } from "./sim.ts";
 import { Logo, UseIcon } from "./Logo.tsx";
 
 const KEY = "sbg.assistant";
-const STEPS = ["What for", "Limits", "Priority", "Results"] as const;
+/** The wizard's steps and the step number each shows (2, once "Priority", is now the results' sort bar). */
+const STEPS = [
+  ["Goal", 0],
+  ["Limits", 1],
+  ["Results", 3],
+] as const;
 const SIZES = [4, 5, 5.25, 6.5, 8, 10, 12, 15, 18, 21];
 const BOX_LABEL: Record<AssistantBox, string> = { sealed: "Sealed", vented: "Ported", pr: "PR", line: "Line", bandpass: "Bandpass" };
 /** Whether a box type is offered for a use. */
@@ -138,10 +143,16 @@ export function DesignAssistant(props: {
   onPortLimit: (ms: number) => void;
   /** A shared list of results to show (from a "#assistant=…" link), the first time the dialog opens; undefined while the link is still being read. */
   shared?: SharedResults | null;
+  /** The launcher's "I have a speaker driver": close, and go to picking or entering one. */
+  onHaveDriver: () => void;
+  /** The launcher's "Explore live demo project" (and closing the launcher): close, keeping the example. */
+  onDemo: () => void;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [goal, setGoalRaw] = useState<AssistantGoal>(() => readGoal() ?? goalFor("car"));
   const [step, setStep] = useState(0);
+  /** The launcher ("Start a new project"), shown before the wizard each time the dialog opens. */
+  const [launch, setLaunch] = useState(true);
   const sharedUsed = useRef(false);
   /** The box type a shared link showed, applied once its results are in. */
   const sharedOnly = useRef<AssistantBox | "all">("all");
@@ -179,8 +190,9 @@ export function DesignAssistant(props: {
     if (!d) return;
     if (props.open && !d.open) {
       d.showModal();
-      // A new project starts at "What for", with the last limits remembered (a shared link: below).
+      // A new project starts at the launcher, then "Goal", with the last limits remembered (a shared link: below).
       setStep(0);
+      setLaunch(true);
     }
     if (!props.open && d.open) d.close();
   }, [props.open]);
@@ -195,6 +207,7 @@ export function DesignAssistant(props: {
     const pl = sh.portLimit_ms && sh.portLimit_ms !== portLimitOf(props.base) ? sh.portLimit_ms : undefined;
     if (pl) props.onPortLimit(pl);
     setSharedNote({ ...(pl ? { pl } : {}), ...(sh.db ? { db: sh.db } : {}) });
+    setLaunch(false);
     setStep(3);
   }, [props.open, props.shared]);
 
@@ -396,30 +409,28 @@ export function DesignAssistant(props: {
   }, [props.open, step, props.db, goalKey, settingsKey]);
 
   const brands = useMemo(() => [...new Set((props.db?.drivers ?? []).map((d) => d.brand))].sort(), [props.db]);
-  const close = () => props.onClose();
-  const next = () => setStep((s) => Math.min(3, s + 1));
+  // Closing the launcher keeps the example project, as "Explore live demo project" does.
+  const close = () => (launch ? props.onDemo() : props.onClose());
   const toggleBox = (b: AssistantBox) => setGoal({ boxes: goal.boxes.includes(b) ? goal.boxes.filter((x) => x !== b) : [...goal.boxes, b] });
 
-  // Back (after the first step) and one main button: Next, then "Show results" on the last step.
-  const nav =
-    step < 3 ? (
-      <div className="assist-nav">
-        {step > 0 && (
-          <button type="button" className="secondary" onClick={() => setStep(step - 1)}>
-            Back
-          </button>
-        )}
-        {step < 2 ? (
-          <button type="button" onClick={next}>
-            Next
-          </button>
-        ) : (
-          <button type="button" onClick={() => setStep(3)} disabled={goal.boxes.length === 0}>
-            Show results
-          </button>
-        )}
-      </div>
-    ) : null;
+  // Goal: back to the launcher (a goal tile moves on by itself). Limits: back, and on to the results.
+  const nav = launch ? null : step === 0 ? (
+    <div className="assist-nav">
+      <button type="button" className="secondary" onClick={() => setLaunch(true)}>
+        ‹ Back
+      </button>
+    </div>
+  ) : step === 1 ? (
+    <div className="assist-nav">
+      <button type="button" className="secondary" onClick={() => setStep(0)}>
+        ‹ Back
+      </button>
+      <button type="button" onClick={() => setStep(3)} disabled={goal.boxes.length === 0}>
+        Show matching drivers
+      </button>
+    </div>
+  ) : null;
+  const driverCount = props.db?.drivers.length ?? 0;
 
   const kinds = (["sealed", "vented", "pr", "bandpass", "line"] as const).filter((k) => (results ?? []).some((r) => r.box === k));
   const listed = (results ?? []).filter((r) => only === "all" || r.box === only);
@@ -437,8 +448,11 @@ export function DesignAssistant(props: {
     <dialog
       ref={dlg}
       className="library finder assistant"
-      aria-label="Design assistant"
-      onClose={close}
+      aria-label={launch ? "Start a new project" : "Design assistant"}
+      // The native close event also follows our own closing (props.open false): only Escape counts here.
+      onClose={() => {
+        if (props.open) close();
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) close();
       }}
@@ -451,25 +465,55 @@ export function DesignAssistant(props: {
             <Logo className="logo" />
             <div>
               <b>Speaker Box Genius</b>
-              <h2>Design assistant</h2>
+              <h2>{launch ? "Start a new project" : "Design assistant"}</h2>
             </div>
           </div>
           <button type="button" className="icon" onClick={close} aria-label="Close">
             ×
           </button>
         </header>
-        <ol className="assist-steps" aria-label="Steps">
-          {STEPS.map((s, i) => (
-            <li key={s}>
-              <button type="button" className="link" aria-current={i === step ? "step" : undefined} onClick={() => setStep(i)}>
-                {i + 1}. {s}
-              </button>
-            </li>
-          ))}
-        </ol>
+        {!launch && (
+          <ol className="assist-steps" aria-label="Steps">
+            {STEPS.map(([s, n], i) => (
+              <li key={s}>
+                <button type="button" className="link" aria-current={n === step ? "step" : undefined} onClick={() => setStep(n)}>
+                  {i + 1}. {s}
+                </button>
+              </li>
+            ))}
+          </ol>
+        )}
 
         <div className="assist-body">
-          {step === 0 && (
+          {launch && (
+            <div className="assist-launch">
+              <button type="button" className="assist-tile" onClick={props.onHaveDriver}>
+                <UseIcon use="driver" />
+                <span className="assist-tile-text">
+                  <b>I have a speaker driver</b>
+                  <span>
+                    Search {driverCount > 100 ? `${(Math.floor(driverCount / 100) * 100).toLocaleString("en")}+` : "the"} drivers or enter its T/S specs, and design the box
+                    around it.
+                  </span>
+                </span>
+              </button>
+              <button type="button" className="assist-tile" onClick={() => setLaunch(false)}>
+                <UseIcon use="search" />
+                <span className="assist-tile-text">
+                  <b>Find the best driver for my box or space</b>
+                  <span>Set your box size, amp power and goal: the assistant simulates every driver to find the matches.</span>
+                </span>
+              </button>
+              <button type="button" className="assist-tile assist-demo" onClick={props.onDemo}>
+                <UseIcon use="demo" />
+                <span className="assist-tile-text">
+                  <b>Explore the live demo project</b>
+                  <span>Compare sealed, ported and passive radiator boxes for a woofer that's already loaded.</span>
+                </span>
+              </button>
+            </div>
+          )}
+          {!launch && step === 0 && (
             <>
               <p className="hint">
                 What are you building? The assistant tries every suitable driver in the database and starts your project with the one you pick. This
@@ -498,19 +542,11 @@ export function DesignAssistant(props: {
                     </span>
                   </button>
                 ))}
-                {/* Last, as the way out: newcomers meet the uses first, and with five uses it rounds the grid to six. */}
-                <button type="button" className="assist-tile" onClick={close}>
-                  <UseIcon use="driver" />
-                  <span className="assist-tile-text">
-                    <b>I already have a driver</b>
-                    <span>Skip the assistant: search the database or enter its specs</span>
-                  </span>
-                </button>
               </div>
             </>
           )}
 
-          {step === 1 && (
+          {!launch && step === 1 && (
             <>
               <p className="hint">Your limits: the largest box (its net inside volume, all the drivers together), or the space it has to fit.</p>
               <div className="unit-switch assist-only" role="group" aria-label="Box size">
@@ -638,27 +674,7 @@ export function DesignAssistant(props: {
             </>
           )}
 
-          {step === 2 && (
-            <>
-              <p className="hint">What matters most? The list is sorted by it.</p>
-              <div className="assist-tiles">
-                {(Object.keys(PRIORITIES) as AssistantPriority[]).map((p) => (
-                  <button type="button" key={p} className={`assist-tile${goal.priority === p ? " on" : ""}`} aria-pressed={goal.priority === p} onClick={() => setGoal({ priority: p })}>
-                    <b>{PRIORITIES[p].label}</b>
-                    <span>{PRIORITIES[p].hint}</span>
-                  </button>
-                ))}
-              </div>
-              <div className="fields">
-                <Num label="Output at" unit="Hz" value={goal.loudAt_hz} min={10} help="The frequency output is compared at (shown for every result, and what “Loudest” ranks on)." onChange={(loudAt_hz) => setGoal({ loudAt_hz })} />
-                {goal.priority === "small" && (
-                  <Num label="Target F3" unit="Hz" value={goal.targetF3_hz} min={10} help="“Smallest box”: each box is shrunk until its F3 just reaches this." onChange={(targetF3_hz) => setGoal({ targetF3_hz })} />
-                )}
-              </div>
-            </>
-          )}
-
-          {step === 3 && (
+          {!launch && step === 3 && (
             <>
               <div className="assist-chips">
                 {chips.map((c) => (
@@ -674,6 +690,17 @@ export function DesignAssistant(props: {
                   </button>
                 ))}
               </div>
+              {/* Sorting by output or by size needs its frequency: asked for here, where it's used. */}
+              {goal.priority === "loud" && (
+                <div className="fields assist-sort-field">
+                  <Num label="Loudest at" unit="Hz" value={goal.loudAt_hz} min={10} help="The frequency output is compared at: what “Loudest” ranks on, and the dB each result shows." onChange={(loudAt_hz) => setGoal({ loudAt_hz })} />
+                </div>
+              )}
+              {goal.priority === "small" && (
+                <div className="fields assist-sort-field">
+                  <Num label="Target F3" unit="Hz" value={goal.targetF3_hz} min={10} help="“Smallest box”: each box is shrunk until its F3 just reaches this." onChange={(targetF3_hz) => setGoal({ targetF3_hz })} />
+                </div>
+              )}
               {sharedNote && (sharedNote.pl || dbChanged) && (
                 <p className="hint assist-shared-note" role="note">
                   {sharedNote.pl ? `This list uses the link's ${sharedNote.pl} m/s chuffing line (now yours too: Settings → Ports). ` : ""}
