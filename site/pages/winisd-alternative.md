@@ -29,7 +29,7 @@ Speaker Box Genius is built around those four problems.
 - **Transmission lines, tapped horns and front-loaded horns**, which WinISD doesn't model (checked against Hornresp).
 - **Charts for everything you check before you build:** response, cone excursion with an Xmax line, PR excursion, port air speed with a chuffing line, maximum SPL (and what limits it) with the amplifier voltage and current it takes, impedance and group delay.
 - **A T/S editor that never overwrites what you typed**, and that reads parameters pasted straight from a datasheet.
-- **A database of about 1,360 drivers and 46 passive radiators**, searchable, with links to each datasheet, and a [page for every driver](/drivers/) with suggested boxes to start from.
+- **A database of about 1,530 drivers and 55 passive radiators**, searchable, with links to each datasheet, and a [page for every driver](/drivers/) with suggested boxes to start from.
 - **Passive radiator tools:** find the best PRs for your driver and box, the added mass for a tuning, and the best tuning for a PR you already have.
 - **A net volume calculator** for boxes, cylinders, spheres and truncated pyramids, minus everything inside them, and a **cut list** for building the box.
 - **Live links:** the whole design lives in the link, so whoever opens it sees exactly what you see and can change it. Share also makes a forum image and ready-to-paste Reddit and diyAudio posts.
@@ -45,7 +45,7 @@ Speaker Box Genius is built around those four problems.
 | Install | Download and install | None (and it works offline once opened) |
 | Price | Free | Free (non-commercial licence) |
 | Box types | Sealed, vented, bandpass, passive radiator | The same, plus transmission lines and horns |
-| Driver data | Typed in, or files you find | Database of ~1,360 drivers, plus your own |
+| Driver data | Typed in, or files you find | Database of ~1,530 drivers, plus your own |
 | Sharing a design | Screenshots or project files | A live link, a forum image and forum posts |
 | Your WinISD files | | Opens `.wdr` drivers and `.wpr` projects |
 

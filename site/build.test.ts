@@ -118,6 +118,11 @@ test("driver pages: suggested boxes, charts, share link and brand indexes", asyn
   assert.doesNotMatch(html, /More guides/);
   assert.match(readFileSync(join(out, "drivers/dayton-audio/index.html"), "utf8"), /href="\/drivers\/dayton-audio\/dsa215-8\/"/);
   assert.match(readFileSync(join(out, "sitemap.xml"), "utf8"), /\/drivers\/dayton-audio\/dsa215-8\//);
+  assert.doesNotMatch(html, /class="note flag"/);
+  // A driver with a value to check says so near the top, with the way to report it.
+  const flagged = paths.map((x) => readFileSync(join(out, x, "index.html"), "utf8")).find((h) => h.includes('class="note flag"'));
+  assert.ok(flagged, "a driver page with a flag note");
+  assert.match(flagged, /class="note flag">⚠ [^<]+<a href="https:\/\/github\.com\/[^"]+data-correction/);
 });
 
 test("driver designs follow the app's presets, with a port that fits and a PR that keeps up", () => {

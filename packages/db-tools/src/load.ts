@@ -10,6 +10,7 @@ import {
   type PassiveRadiator,
 } from "../../schema/src/index.ts";
 import { checkConsistency } from "../../engine/src/ts.ts";
+import { driverFlags, passiveRadiatorFlags, type Flag } from "./plausibility.ts";
 
 export const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 
@@ -23,6 +24,8 @@ export interface Entry<T> {
   id: string; // "<brand-slug>/<model-slug>"
   file: string; // repo-relative
   data: T;
+  /** Plausibility flags (see plausibility.ts): values to check against the datasheet. */
+  flags: Flag[];
 }
 
 export interface LoadResult {
@@ -111,11 +114,14 @@ function loadTree(root: string, kind: Kind, result: LoadResult) {
             );
           }
         }
-        if (consistent) result.drivers.push({ id, file: rel, data: d });
+        if (consistent) result.drivers.push({ id, file: rel, data: d, flags: driverFlags(d) });
       } else {
         const errs = validatePassiveRadiator(data);
         errs.forEach((e) => result.errors.push(`${rel}: ${e}`));
-        if (errs.length === 0) result.passiveRadiators.push({ id, file: rel, data: data as PassiveRadiator });
+        if (errs.length === 0) {
+          const p = data as PassiveRadiator;
+          result.passiveRadiators.push({ id, file: rel, data: p, flags: passiveRadiatorFlags(p) });
+        }
       }
     }
 

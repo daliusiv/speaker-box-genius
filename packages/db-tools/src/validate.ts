@@ -14,9 +14,12 @@ const db = loadDatabase(base);
 for (const w of db.warnings) console.warn(`⚠️  ${w}`);
 for (const e of db.errors) console.error(`❌ ${e}`);
 
+const flagged = [...db.drivers, ...db.passiveRadiators].filter((e) => e.flags.length > 0);
+for (const e of flagged) for (const f of e.flags) console.warn(`🔎 ${e.file}: ${f.message}`);
+
 console.log(
   `\n${db.drivers.length} drivers, ${db.passiveRadiators.length} passive radiators, ${db.brands.size} brands` +
-    ` — ${db.errors.length} errors, ${db.warnings.length} warnings`,
+    ` — ${db.errors.length} errors, ${db.warnings.length} warnings, ${flagged.length} to check (pnpm db:review)`,
 );
 
 if (db.errors.length > 0) process.exit(1);

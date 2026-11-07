@@ -10,7 +10,7 @@ import { GD_CYCLES, mountsFit, dividerFor, portDisplacement_l, decodeShared, dec
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
-const rows: IndexRow[] = db.drivers.map(({ id, data: d }) => ({
+const rows: IndexRow[] = db.drivers.map(({ id, data: d, flags }) => ({
   id,
   brand: d.brand,
   model: d.model,
@@ -24,6 +24,7 @@ const rows: IndexRow[] = db.drivers.map(({ id, data: d }) => ({
   xmax_mm: d.ts.xmax_mm,
   pe_w: d.ts.pe_w,
   sd_cm2: d.ts.sd_cm2,
+  flags: flags.length ? flags.map((f) => f.code) : undefined,
 }));
 const recs = new Map(db.drivers.map((e) => [e.id, e.data]));
 function loaded(id: string): LoadedDriver {
@@ -52,6 +53,15 @@ function runAll(goal: AssistantGoal): { results: AssistantResult[]; tried: numbe
   const results = cands.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id), goal));
   return { results: rankResults(results, goal), tried: cands.length, ms: performance.now() - t };
 }
+
+test("drivers whose Xmax looks wrong for the cone are left out; other flags aren't", () => {
+  const goal = { ...goalFor("home", "balanced"), sizeMin_in: 0, sizeMax_in: 30 };
+  const base = rows.find((r) => prefilter([r], goal).length === 1)!;
+  assert.ok(base, "a driver the prefilter keeps");
+  assert.equal(prefilter([{ ...base, flags: ["xmax-high"] }], goal).length, 0);
+  assert.equal(prefilter([{ ...base, flags: ["xmax-low"] }], goal).length, 0);
+  assert.equal(prefilter([{ ...base, flags: ["size-sd"] }], goal).length, 1);
+});
 
 test("loads: DVC coils and two drivers are wired for the amplifier's minimum load", () => {
   // Dual 4 Ω coils: parallel 2 Ω or series 8 Ω.

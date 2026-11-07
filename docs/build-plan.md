@@ -187,7 +187,7 @@ Up to 8 designs recalculate as you type or drag, on the main thread. The only sl
 
 ## 7. Driver database ✅
 
-**About 1,360 drivers and 46 passive radiators from 15 brands.** Dayton Audio and SB Acoustics come direct with written permission (import workflows run by hand), driver-base (CC BY 4.0) covers the other brands. All records are `community` status so far; ⬜ the reviewed `verified` status isn't in use yet. Waiting on more manufacturer permissions. Every driver with enough parameters (about 1,230) also has a page on the site with suggested sealed, ported and PR boxes (§11, Phase 3).
+**About 1,530 drivers and 55 passive radiators from 18 brands.** Dayton Audio and SB Acoustics come direct with written permission (import workflows run by hand), driver-base (CC BY 4.0) covers the other brands. All records are `community` status so far; ⬜ the reviewed `verified` status isn't in use yet. Waiting on more manufacturer permissions. Every driver with enough parameters (about 1,230) also has a page on the site with suggested sealed, ported and PR boxes (§11, Phase 3).
 
 ### 7.1 Layout in the repo (as built)
 ```
@@ -274,7 +274,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - ✅ URL sharing, PNG (forum image) export.
 - ✅ WinISD `.wdr` import.
 - ✅ Repo set up: licences, CONTRIBUTING, CLA check, issue templates, CI, Pages deploy.
-- ✅ Database: ~1,360 drivers and 46 PRs (planned ~50 and ~10).
+- ✅ Database: ~1,530 drivers and 55 PRs (planned ~50 and ~10).
 - ✅ PWA offline support, installable.
 - ⏸️ **Soft launch:** held back on purpose. Next: private beta with 5–10 trusted forum regulars, then r/diyaudio, diyAudio, AVS, Parts Express Tech Talk, r/CarAV, r/BudgetAudiophile, Show HN.
 

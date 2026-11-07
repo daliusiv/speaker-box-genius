@@ -9,6 +9,11 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { loadDatabase, REPO_ROOT } from "./load.ts";
+import type { Source } from "../../schema/src/index.ts";
+
+/** Where the values came from, for the app's badges: measured beats datasheet beats community. */
+const sourceKind = (sources: Source[]) =>
+  sources.some((s) => s.kind === "measured") ? "measured" : sources.some((s) => s.kind === "datasheet") ? "datasheet" : "community";
 
 function argValue(name: string): string | undefined {
   const i = process.argv.indexOf(name);
@@ -28,7 +33,7 @@ if (db.errors.length > 0) {
 const index = {
   generated: new Date().toISOString(),
   brands: Object.fromEntries(db.brands),
-  drivers: db.drivers.map(({ id, data: d }) => ({
+  drivers: db.drivers.map(({ id, data: d, flags }) => ({
     id,
     brand: d.brand,
     model: d.model,
@@ -45,8 +50,11 @@ const index = {
     // For "use a driver as a passive radiator".
     sd_cm2: d.ts.sd_cm2,
     status: d.status,
+    source: sourceKind(d.sources),
+    // Values to check against the datasheet (plausibility.ts); only when there are any.
+    flags: flags.length ? flags.map((f) => f.code) : undefined,
   })),
-  passiveRadiators: db.passiveRadiators.map(({ id, data: p }) => ({
+  passiveRadiators: db.passiveRadiators.map(({ id, data: p, flags }) => ({
     id,
     brand: p.brand,
     model: p.model,
@@ -54,6 +62,8 @@ const index = {
     sd_cm2: p.params.sd_cm2,
     xmax_mm: p.params.xmax_mm,
     status: p.status,
+    source: sourceKind(p.sources),
+    flags: flags.length ? flags.map((f) => f.code) : undefined,
   })),
 };
 

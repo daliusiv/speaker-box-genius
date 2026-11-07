@@ -9,6 +9,7 @@
  */
 import { RHO, C, TS_PARAMS, estimateDriverDisplacement, evaluatePrCandidates, rankPrResults, type PrCandidate, type TsParam, type TsValues } from "../packages/engine/src/index.ts";
 import { loadDatabase, type Entry } from "../packages/db-tools/src/load.ts";
+import { doubtsXmax, type Flag } from "../packages/db-tools/src/plausibility.ts";
 import type { Driver, PassiveRadiator } from "../packages/schema/src/index.ts";
 import { DEFAULT_STATE, encodeStateShort, type AppState, type DesignState } from "../packages/web/src/state.ts";
 import { sizeAllForDriver } from "../packages/web/src/presets.ts";
@@ -81,6 +82,8 @@ export interface DriverPage {
   notes: string[];
   /** The PR chosen, if any. */
   pr?: { name: string; count: number; addedMass_g: number };
+  /** Values that look implausible (packages/db-tools/src/plausibility.ts). */
+  flags: Flag[];
 }
 
 /**
@@ -128,7 +131,7 @@ export function designDriver(e: Entry<Driver>, prs: ReturnType<typeof prCandidat
   const designs = runDesigns(state, solveDriver(state));
   if (designs.length === 0) return null;
   const [brandSlug] = e.id.split("/") as [string];
-  return { id: e.id, brand: rec.brand, brandSlug, model: rec.model, rec, state, designs, notes, pr };
+  return { id: e.id, brand: rec.brand, brandSlug, model: rec.model, rec, state, designs, notes, pr, flags: e.flags };
 }
 
 export async function shareLink(site: string, s: AppState) {
@@ -278,6 +281,12 @@ export function driverContent(p: DriverPage, links: PageLinks, chart: typeof imp
     ? ` Used with ${esc(p.brand)}'s permission; not covered by the database's CC BY-NC-SA licence, so ask ${esc(p.brand)} before reusing them.`
     : "";
   const report = `${REPO}/issues/new?template=data-correction.yml&title=${encodeURIComponent(`Correction: ${name}`)}`;
+  const checked = p.rec.status === "verified" ? " Checked against the datasheet by a reviewer." : "";
+  // Values that look wrong for this driver: say so where the numbers depend on them.
+  const doubt = doubtsXmax(p.flags.map((f) => f.code));
+  const flagNote = p.flags.length
+    ? `<p class="note flag">⚠ ${p.flags.map((f) => esc(f.message)).join(" ")} ${doubt ? "The cone excursion and maximum SPL below depend on it." : ""} <a href="${esc(report)}" rel="nofollow">Report the right value</a>.</p>`
+    : "";
 
   const notes = p.notes.length ? `<p class="muted">Not shown: ${p.notes.map(esc).join("; ")}.</p>` : "";
   const related = links.related.length
@@ -288,7 +297,7 @@ export function driverContent(p: DriverPage, links: PageLinks, chart: typeof imp
 <h1>${esc(name)}: box design</h1>
 <p class="lede">${esc(describe(p.rec))}. Suggested ${kindList} boxes worked out from its Thiele/Small parameters, ready to open and change in Speaker Box Genius.</p>
 <p class="cta"><a class="button" href="${esc(links.all)}">Open these designs in the app →</a></p>
-
+${flagNote}
 <h2 id="boxes">Suggested boxes</h2>
 <p>${suitability(solved.fs!, solved.qes!, solved.qts!)} The boxes use the flattest standard alignments; a smaller box trades some bass extension for size, which you can try in the app. Volumes are net: add the space taken by the driver, port${p.pr ? ", passive radiators" : ""} and bracing (the app's volume calculator does this).</p>
 <div class="table"><table class="cmp"><thead><tr><th>Box</th><th>Volume</th><th>Tuning</th><th>F3</th>${hasMax ? `<th>Max SPL at ${fRef} Hz</th>` : ""}</tr></thead><tbody>${rows}</tbody></table></div>
@@ -299,7 +308,7 @@ ${key}
 
 <h2 id="parameters">Parameters</h2>
 <div class="table"><table class="cmp ts"><tbody>${tsRows}</tbody></table></div>
-<p class="muted">${credit}${ownTerms} <a href="${esc(report)}" rel="nofollow">Report a mistake</a>.</p>
+<p class="muted">${credit}${ownTerms}${checked} <a href="${esc(report)}" rel="nofollow">Report a mistake</a>.</p>
 ${related}`;
 
   const desc = p.designs
@@ -336,6 +345,7 @@ td small{color:var(--muted)}
 .cmp tr.main td{border-bottom:0;padding-bottom:.1rem}
 .cmp tr.how td{padding-top:0;color:var(--muted);font-size:.88em}
 .ts{width:auto;min-width:16rem}
+.note.flag{border-left-color:#fbbf24}
 .tag{padding:0 .3rem;border:1px solid var(--border);border-radius:.3rem;color:var(--muted);font-size:.75rem}
 .sw{display:inline-block;width:.7rem;height:.7rem;margin-right:.45rem;border-radius:.2rem;vertical-align:baseline}
 .key span::before{border-top-color:var(--c)}

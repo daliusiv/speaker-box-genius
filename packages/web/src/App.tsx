@@ -31,7 +31,7 @@ import {
   type BandpassDesign,
   type DesignState,
 } from "./state.ts";
-import { loadDriver, loadIndex, type DbIndex } from "./library.ts";
+import { flagText, loadDriver, loadIndex, type DbIndex } from "./library.ts";
 import { Card, DriveValue, Num, REPO, Select, useNarrow } from "./components.tsx";
 import { DriverBrowser } from "./Library.tsx";
 import { PwaStatus, usePwa } from "./Pwa.tsx";
@@ -201,7 +201,7 @@ export function App(props: { initial: AppState | null }) {
     else window.open(`${location.pathname}${ASSISTANT_HASH}`, "_blank", "noopener");
   };
   /** Credit line for the driver loaded from the database; shown while its name is unchanged. */
-  const [driverSource, setDriverSource] = useState<{ name: string; url?: string; via?: "driver-base"; ts?: TsValues } | null>(null);
+  const [driverSource, setDriverSource] = useState<{ name: string; url?: string; via?: "driver-base"; ts?: TsValues; id?: string } | null>(null);
   const [wdrMsg, setWdrMsg] = useState("");
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const wdrInput = useRef<HTMLInputElement>(null);
@@ -854,7 +854,7 @@ export function App(props: { initial: AppState | null }) {
                       loadDriver(id).then(
                         (d) => {
                           offerSizing(d.name);
-                          setDriverSource({ name: d.name, ...d.source, ts: d.ts });
+                          setDriverSource({ name: d.name, ...d.source, ts: d.ts, id });
                           setStep((s) => withDriver(s, d));
                         },
                         () => alert("Couldn't load that driver."),
@@ -943,6 +943,12 @@ export function App(props: { initial: AppState | null }) {
                   </span>
                 </div>
               </div>
+              {(() => {
+                // A database driver whose values look implausible (db-tools plausibility checks).
+                const id = driverSource && driverSource.name === state.driverName ? driverSource.id : undefined;
+                const flag = id ? flagText(db?.drivers.find((r) => r.id === id)) : undefined;
+                return flag ? <p className="warn driver-flag">⚠ {flag}</p> : null;
+              })()}
               <TsEditor
                 entered={state.ts}
                 solved={solved}
@@ -2152,7 +2158,7 @@ export function App(props: { initial: AppState | null }) {
         onOpen={(d, rs, goal) => {
           const next = openResults(state, d, rs, goal);
           setStep(() => next);
-          setDriverSource({ name: d.name, ...d.source, ts: d.ts });
+          setDriverSource({ name: d.name, ...d.source, ts: d.ts, id: rs[0]?.driverId });
           setAssistant(false);
           const boxes = rs
             .map((r) =>

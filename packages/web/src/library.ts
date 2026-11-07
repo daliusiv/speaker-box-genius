@@ -5,7 +5,7 @@ import type { PrParams } from "./state.ts";
 export interface DbIndex {
   /** Build timestamp; used to make sure brand files match this index. */
   generated?: string;
-  drivers: {
+  drivers: ({
     id: string;
     brand: string;
     model: string;
@@ -20,8 +20,28 @@ export interface DbIndex {
     xmax_mm?: number;
     pe_w?: number;
     sd_cm2?: number;
-  }[];
-  passiveRadiators: { id: string; brand: string; model: string; size_in?: number; sd_cm2?: number; xmax_mm?: number }[];
+  } & DataQuality)[];
+  passiveRadiators: ({ id: string; brand: string; model: string; size_in?: number; sd_cm2?: number; xmax_mm?: number } & DataQuality)[];
+}
+
+/** Where an entry's values came from, and anything that needs checking (packages/db-tools/src/plausibility.ts). */
+export interface DataQuality {
+  status?: "community" | "verified";
+  source?: "datasheet" | "measured" | "community";
+  /** "xmax-high" | "xmax-low" | "size-sd"; absent when nothing looks wrong. */
+  flags?: string[];
+}
+
+/** True when an entry's Xmax looks wrong for its cone (likely peak-to-peak, or a typo). */
+export const doubtsXmax = (r: DataQuality | undefined) => !!r?.flags?.some((f) => f === "xmax-high" || f === "xmax-low");
+
+/** One line on what looks wrong, for tooltips and warnings. */
+export function flagText(r: DataQuality | undefined): string | undefined {
+  const f = r?.flags;
+  if (!f?.length) return undefined;
+  if (f.includes("xmax-high")) return "Xmax looks too large for this cone (perhaps quoted peak-to-peak). Check the datasheet before relying on excursion and maximum SPL.";
+  if (f.includes("xmax-low")) return "Xmax looks too small for this driver (perhaps a typo or inches). Check the datasheet before relying on excursion and maximum SPL.";
+  return "The size doesn't match the cone area (Sd). Check the datasheet.";
 }
 
 interface Physical {
