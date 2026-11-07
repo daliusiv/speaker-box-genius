@@ -15,6 +15,8 @@ export interface SmallSignal {
   sd_cm2: number;
   mms_g?: number;
   bl?: number;
+  /** Published Qts, checked against Qms and Qes (the engine always uses those two). */
+  qts?: number;
 }
 
 export const qts = (qms: number, qes: number) => (qms * qes) / (qms + qes);
@@ -47,7 +49,7 @@ export interface ConsistencyIssue {
 }
 
 /**
- * Compare published Mms and Bl with what fs, Vas, Sd, Re and Qes imply.
+ * Compare published Mms, Bl and Qts with what fs, Vas, Sd, Re, Qms and Qes imply.
  * Datasheets often disagree by a few percent through rounding, so callers
  * decide which tolerance counts as a warning and which as an error.
  */
@@ -79,6 +81,18 @@ export function checkConsistency(p: SmallSignal, air: Air = STANDARD_AIR): Consi
       implied,
       diff,
       message: `fs, Mms, Re and Qes imply Bl ≈ ${implied.toFixed(2)} T·m; published ${p.bl} T·m (${(diff * 100).toFixed(1)}% off)`,
+    });
+  }
+
+  if (p.qts !== undefined && p.qts > 0) {
+    const implied = qts(p.qms, p.qes);
+    const diff = Math.abs(p.qts - implied) / implied;
+    issues.push({
+      param: "qts",
+      published: p.qts,
+      implied,
+      diff,
+      message: `Qms and Qes imply Qts ≈ ${implied.toFixed(3)}; published ${p.qts} (${(diff * 100).toFixed(1)}% off)`,
     });
   }
   return issues;
