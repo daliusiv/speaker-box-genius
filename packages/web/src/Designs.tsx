@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   portEffectiveLength,
   prAddedMassForFb,
@@ -22,7 +22,7 @@ export interface PrPhysical {
   displacement_l?: number;
   cutout_mm?: number;
 }
-import { KIND_LABEL, PORT_LIMIT, portOf, portRoom_cm } from "./sim.ts";
+import { KIND_COLORS, KIND_LABEL, PORT_LIMIT, portOf, portRoom_cm } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { bandpassLossesFrom } from "./state.ts";
 import { prTuning, withPreset, ventedAlignmentFor } from "./presets.ts";
@@ -1177,15 +1177,82 @@ export function DesignCard(props: {
   );
 }
 
-export function AddDesign(props: { disabled: boolean; onAdd: (k: DesignKind) => void }) {
+const ADD_KINDS: { kind: DesignKind; what: string }[] = [
+  { kind: "sealed", what: "Simplest: tight bass with a gentle roll-off" },
+  { kind: "vented", what: "Deeper bass from a port, tuned to a frequency" },
+  { kind: "pr", what: "Like ported, with passive radiators instead of a port: no chuffing" },
+  { kind: "bandpass", what: "Driver between two chambers: loud over a narrow band" },
+  { kind: "line", what: "A folded line or horn behind the driver" },
+];
+
+/**
+ * One "+ Add a box" button: a menu of the box types, each with the colour its new box will get.
+ * Choosing one adds it (the caller scrolls to it) and closes the menu.
+ */
+export function AddBoxMenu(props: { designs: DesignState[]; max: number; onAdd: (k: DesignKind) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const full = props.designs.length >= props.max;
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent | TouchEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      ref.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    };
+    addEventListener("mousedown", close);
+    addEventListener("touchstart", close);
+    addEventListener("keydown", onKey);
+    // Focus the first choice, so the keyboard can pick one straight away.
+    ref.current?.querySelector<HTMLButtonElement>("[role=menuitem]")?.focus();
+    return () => {
+      removeEventListener("mousedown", close);
+      removeEventListener("touchstart", close);
+      removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  // The colour the next box of each kind gets (the same rule as the charts: the kind's next shade).
+  const nextColor = (k: DesignKind) => {
+    const shades = KIND_COLORS[k];
+    return shades[props.designs.filter((d) => d.kind === k).length % shades.length]!;
+  };
   return (
-    <div className="add-design">
-      <span>Add design:</span>
-      {(["sealed", "vented", "pr", "bandpass", "line"] as const).map((k) => (
-        <button key={k} className="secondary" disabled={props.disabled} onClick={() => props.onAdd(k)}>
-          + {KIND_LABEL[k]}
-        </button>
-      ))}
+    <div className="share add-box" ref={ref}>
+      <button
+        type="button"
+        className="secondary"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        disabled={full}
+        title={full ? `Up to ${props.max} designs: delete one to add another` : "Add a box design"}
+        onClick={() => setOpen(!open)}
+      >
+        + Add a box
+      </button>
+      {open && (
+        <div className="share-menu menu-left add-box-menu" role="menu" aria-label="Box type">
+          {ADD_KINDS.map(({ kind, what }) => (
+            <button
+              key={kind}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                props.onAdd(kind);
+              }}
+            >
+              <span className="swatch" style={{ background: nextColor(kind) }} aria-hidden="true" />
+              <span className="add-box-text">
+                <b>{KIND_LABEL[kind]}</b>
+                <span className="hint">{what}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

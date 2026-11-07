@@ -878,6 +878,38 @@ input.entered {
   margin-bottom: 0.6rem;
 }
 
+.add-box-menu {
+  min-width: 18rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+}
+
+.add-box-menu button[role="menuitem"] {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.add-box-menu .swatch {
+  flex: none;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-top: 0.25rem;
+  border-radius: 3px;
+}
+
+.add-box-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.add-box-text .hint {
+  margin: 0;
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+
 .designs-bar {
   display: flex;
   flex-wrap: wrap;
@@ -3212,7 +3244,8 @@ button.over-link {
   text-underline-offset: 3px;
 }
 
-/* The chart a jump lands on flashes once. */
+/* The chart a jump lands on (and a box just added) flashes once. */
+section.design.flash,
 figure.chart.flash {
   animation: chart-flash 1.6s ease-out;
 }
@@ -3302,6 +3335,7 @@ button.over-link.deep,
 }
 
 @media (prefers-reduced-motion: reduce) {
+  section.design.flash,
   figure.chart.flash {
     animation: none;
     box-shadow: 0 0 0 3px var(--accent);
@@ -4190,6 +4224,17 @@ button.new-btn > span:first-child {
 
 @media (max-width: 860px) {
   #measure-panel {
+    scroll-margin-top: 4.25rem;
+  }
+}
+
+/* A box scrolled to (just added) lands clear of the sticky box strip on phones. */
+section.design {
+  scroll-margin-top: 0.75rem;
+}
+
+@media (max-width: 860px) {
+  section.design {
     scroll-margin-top: 4.25rem;
   }
 }
