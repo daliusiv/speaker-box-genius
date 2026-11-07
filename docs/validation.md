@@ -94,6 +94,10 @@ Not in WinISD, so not part of the WinISD comparison (the default, "Air mass", is
 
 Butterworth (orders 1–4) and Linkwitz-Riley, applied to the voltage before the amplifier. Compared with Hornresp's Active Filter Wizard on the ported box at 25 Hz (2nd- and 3rd-order Butterworth, 4th-order Linkwitz-Riley): the filtered voltage agrees within 0.0005 %, and SPL, excursion, impedance and group delay as closely as without the filter (see the Hornresp notes, case B12).
 
+### Leaked air (Settings → Box losses → Leaked air)
+
+A box's leak (Ql) takes energy out; "Heard (like WinISD)", the default, also counts the air that escapes as sound, as through a real gap, and "Lost (like Hornresp)" leaves it out. Hornresp's QL is the second kind: with it, the bandpass cases match within 0.03 dB (4th-order port, parallel 6th-order), 0.05 dB (series 6th-order) and 0.1 dB (4th-order with a passive radiator) at the 95th percentile, where the parallel 6th-order box had differed by up to 1.3 dB. Impedance and excursion don't change. Checks (`bandpass.test.ts`): only the output changes, the leak's share grows above a bandpass box's passband, nothing changes without a leak.
+
 ### EQ (EQ card: Peaking, Low shelf, High shelf)
 
 Peaking and shelving bands are the standard analog (RBJ) shapes, applied to the voltage before the amplifier. Compared with Hornresp's Equaliser Filter Wizard on the ported box (case B15: a 40 Hz Q 2 −6 dB peak, a 30 Hz Q 0.71 +6 dB low shelf, a 150 Hz Q 0.71 −6 dB high shelf): the voltage reaching the speaker agrees within 0.00005 % from 10 Hz to 20 kHz (Hornresp's Ein), and SPL, excursion, impedance and group delay as closely as without EQ. Checks (`eq.test.ts`): each shape's gain at DC, at its corner and far above it.

@@ -367,6 +367,7 @@ export function simOptionsOf(s: AppState) {
     portCompression: s.settings.portCompression,
     splFrom: s.settings.lineSpl === "power" ? ("power" as const) : undefined,
     portModel: s.settings.portModel === "pipe" ? ("pipe" as const) : undefined,
+    leakage: s.settings.leakage === "absorbed" ? ("absorbed" as const) : undefined,
     coilTemp_C: s.settings.coilTemp_C > 20 ? s.settings.coilTemp_C : undefined,
     thermalLimit: s.settings.thermalLimit === "real" ? ("real" as const) : undefined,
     amp:
