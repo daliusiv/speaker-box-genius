@@ -69,7 +69,9 @@ export type EqStage =
   /** Parametric peaking EQ (cut or boost at freq, bandwidth set by q). */
   | { type: "peak"; freq: number; gain_db: number; q: number }
   /** Low shelf: gain_db below freq, flat above (q 0.707 = gentle). */
-  | { type: "lowshelf"; freq: number; gain_db: number; q: number };
+  | { type: "lowshelf"; freq: number; gain_db: number; q: number }
+  /** High shelf: gain_db above freq, flat below (q 0.707 = gentle). */
+  | { type: "highshelf"; freq: number; gain_db: number; q: number };
 
 /** Ratio of two quadratics in s = jω: (s² + b1·s + b0) / (s² + a1·s + a0), times k. */
 function biquad(w: number, b1: number, b0: number, a1: number, a0: number, k = 1, a2 = 1): Complex {
@@ -98,6 +100,15 @@ export function eqStageResponse(st: EqStage, f: number): Complex {
       const b = (Math.sqrt(A) / st.q) * w0;
       const num = cx(A * w0 * w0 - w * w, b * w);
       const den = cx(w0 * w0 - A * w * w, b * w);
+      return mul(cx(A), div(num, den));
+    }
+    case "highshelf": {
+      // RBJ analog prototype: A·(A·s² + (√A/Q)ω0·s + ω0²) / (s² + (√A/Q)ω0·s + A·ω0²)
+      const w0 = 2 * Math.PI * st.freq;
+      const A = 10 ** (st.gain_db / 40);
+      const b = (Math.sqrt(A) / st.q) * w0;
+      const num = cx(w0 * w0 - A * w * w, b * w);
+      const den = cx(A * w0 * w0 - w * w, b * w);
       return mul(cx(A), div(num, den));
     }
   }

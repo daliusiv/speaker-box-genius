@@ -860,7 +860,7 @@ export function decodeState(hash: string): AppState | null {
       baffle: { ...d.baffle, ...(raw.baffle ?? {}) },
       settings: { ...d.settings, ...raw.settings, losses: { ...d.settings.losses, ...raw.settings?.losses } },
       eq: Array.isArray(raw.eq)
-        ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf"].includes(e.type)).slice(0, 12)
+        ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf", "highshelf"].includes(e.type)).slice(0, 12)
         : [],
       measured: measuredFrom(raw.measured),
       compare,

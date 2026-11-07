@@ -94,6 +94,10 @@ Not in WinISD, so not part of the WinISD comparison (the default, "Air mass", is
 
 Butterworth (orders 1–4) and Linkwitz-Riley, applied to the voltage before the amplifier. Compared with Hornresp's Active Filter Wizard on the ported box at 25 Hz (2nd- and 3rd-order Butterworth, 4th-order Linkwitz-Riley): the filtered voltage agrees within 0.0005 %, and SPL, excursion, impedance and group delay as closely as without the filter (see the Hornresp notes, case B12).
 
+### EQ (EQ card: Peaking, Low shelf, High shelf)
+
+Peaking and shelving bands are the standard analog (RBJ) shapes, applied to the voltage before the amplifier. Compared with Hornresp's Equaliser Filter Wizard on the ported box (case B15: a 40 Hz Q 2 −6 dB peak, a 30 Hz Q 0.71 +6 dB low shelf, a 150 Hz Q 0.71 −6 dB high shelf): the voltage reaching the speaker agrees within 0.00005 % from 10 Hz to 20 kHz (Hornresp's Ein), and SPL, excursion, impedance and group delay as closely as without EQ. Checks (`eq.test.ts`): each shape's gain at DC, at its corner and far above it.
+
 ### Impulse and step response (chart "Impulse / step")
 
 The response at 48 kHz up to 20 kHz (from radiated power), inverse-FFT'd, peak scaled to 1, as Hornresp's impulse response; the step response is its running sum. Compared with Hornresp's WAV exports for a sealed and a ported box and an MLTL (see its notes): within 0.02 RMS of the peak. Checks (`transient.test.ts`): the FFT round trip; a sealed box's impulse starts positive at t = 0 with nothing before it and its step settles to zero; the impulse's spectrum is the simulated response.

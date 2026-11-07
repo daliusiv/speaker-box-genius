@@ -39,8 +39,8 @@ export function retune(s: AppState, id: string, fb: number): AppState {
   return next ? { ...s, designs: s.designs.map((x) => (x.id === id ? next : x)) } : s;
 }
 
-/** EQ points that can be dragged: peaking and low shelf (frequency and gain). */
-export const draggableEq = (e: EqItem): e is Extract<EqItem, { type: "peak" | "lowshelf" }> => e.on && (e.type === "peak" || e.type === "lowshelf");
+/** EQ points that can be dragged: peaking and shelves (frequency and gain). */
+export const draggableEq = (e: EqItem): e is Extract<EqItem, { type: "peak" | "lowshelf" | "highshelf" }> => e.on && e.type !== "linkwitz";
 
 /** Moves an EQ point to frequency f and gain g (dB), within 10–500 Hz and ±24 dB. */
 export function moveEq(s: AppState, id: string, f: number, g: number): AppState {

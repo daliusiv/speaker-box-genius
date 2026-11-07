@@ -15,6 +15,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { simulate, type SimulationOptions, type SimulationResult } from "../src/simulate.ts";
 import { transientResponse, type TransientOptions, type TransientResult } from "../src/transient.ts";
+import { eqResponse } from "../src/filters.ts";
 import { driverModel, type DriverInput, type EnclosureInput, type SemiInductance } from "../src/model.ts";
 import { pistonPowerFactor } from "../src/line.ts";
 import type { LineInput } from "../src/line.ts";
@@ -423,6 +424,8 @@ What the comparison settles, and the conventions it has to bridge:
 
 **High-pass filter (B12).** Hornresp's Active Filter Wizard and the app's Settings → High-pass filter are the same filters: with a 25 Hz high-pass on the ported box (2nd- and 3rd-order Butterworth, 4th-order Linkwitz-Riley), the voltage reaching the speaker agrees within 0.0005 %, and SPL, excursion, impedance and group delay as closely as without the filter (0.03 dB, 0.15 %, 0.3 %, 0.08 ms). The boxes exported as a full table are also held to their group delay now.
 
+**EQ (B15).** Hornresp's Equaliser Filter Wizard offers Peak EQ, Low Shelf, High Shelf, Low Pass and High Pass bands. Its Peak EQ and shelves are the standard analog (RBJ) shapes, the same as the app's Peaking, Low shelf and High shelf (the high shelf was added to the app to match): on the ported box with a 40 Hz Q 2 −6 dB peak, a 30 Hz Q 0.71 +6 dB low shelf and a 150 Hz Q 0.71 −6 dB high shelf, the voltage reaching the speaker agrees within 0.00005 % from 10 Hz to 20 kHz, and SPL, excursion, impedance and group delay as closely as without EQ.
+
 **Stuffed lines (S1–S5).** Hornresp models fill with D. K. Wilson's relaxation model (1997), set by the flow resistivity alone (Fr, mks rayls/m). The app used Delany–Bazley's empirical fit, which was 0.2–1.2 dB and 1–1.5 % out at Fr 150–2000. It now uses Wilson's model too, with porosity and tortuosity 1 (fibre) and the thermal relaxation time 1.75 × the viscous one (the one value fitted, against all three densities): within 0.07 dB and 0.3 % at every density, as close as the unstuffed line run the same way (S1), and an offset line stuffed only behind the driver (S5) within 0.05 dB and 0.3 % (the old model: 0.29 dB, 0.7 %). The app's fill is set in kg/m³ of polyester and turned into flow resistivity with Garai & Pompoli's measurements (481.65 rayls/m = 8.0 kg/m³); Hornresp's "Total Polyfill" readout uses its own empirical figure for one product (481.65 rayls/m = 9.9 kg/m³), so densities from the two programs aren't interchangeable, flow resistivities are.
 
 **Frequency-dependent damping (B13).** Hornresp's FDD model (double-click the Cms label) takes two values, Rms (N·s/m) and Ams (m/N). Two exports of the sealed box (Rms 2 / Ams 3.0E-04 and Rms 8 / Ams 1.0E-03) pin it down exactly: the suspension becomes Rms + 1/(jω(Cms − j·Ams)), a complex compliance (a loss that's the same fraction Ams/Cms of the stiffness at every frequency, as rubber and foam behave) with its own Rms in place of the one from Qms. That fits Hornresp's motional impedance to 0.0003 % on average. The app has the same model (Driver → Suspension losses → Frequency-dependent): within 0.46 % in impedance and 0.04 dB, as close as the box without it.
@@ -459,6 +462,8 @@ export interface HornrespBoxCase {
   semi?: SemiInductance;
   /** A high-pass filter before the amplifier (Hornresp's Active Filter Wizard). */
   highPass?: SimulationOptions["highPass"];
+  /** EQ before the amplifier (Hornresp's Equaliser Filter Wizard). */
+  eq?: SimulationOptions["eq"];
   /** SPL from radiated power (lines, as Hornresp works them out). */
   splFrom?: "power";
   /** Compare up to here (Hz) instead of HORNRESP_BOX_F_MAX (stuffed lines run to 1 kHz). */
@@ -519,8 +524,10 @@ export interface HornrespBoxRun {
     coilMean?: number; coilP95?: number;
     /** Group delay (ms), where the full table was exported: 95th percentile |difference|. */
     gdP95?: number;
+    /** EQ cases: the voltage reaching the speaker against Hornresp's Ein, worst |difference| (%), 10 Hz–20 kHz. */
+    einMax?: number;
   };
-  pass: { spl?: boolean; ze: boolean; xd: boolean; cone?: boolean; vent?: boolean; coil?: boolean; gd?: boolean };
+  pass: { spl?: boolean; ze: boolean; xd: boolean; cone?: boolean; vent?: boolean; coil?: boolean; gd?: boolean; ein?: boolean };
 }
 
 export function runHornrespBox(id: string): HornrespBoxRun {
@@ -529,7 +536,7 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
   const driver = { ...hornrespDriver(HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}), ...(c.fdd ? { fdd: c.fdd } : {}) };
   const base: SimulationOptions = {
-    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom, highPass: c.highPass,
+    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom, highPass: c.highPass, eq: c.eq,
   };
   const r = simulate(driver, c.input, base);
   const fTop = c.fMax ?? HORNRESP_BOX_F_MAX;
@@ -569,6 +576,12 @@ export function runHornrespBox(id: string): HornrespBoxRun {
     const gd = gdr.filter(notInNull).map((x) => Math.abs(interp(r.freq, r.groupDelayMs, x.Freq!) - x.Delay!));
     stats.gdP95 = percentile(gd, 0.95);
     pass.gd = stats.gdP95 < tol.gdP95;
+  }
+  // EQ: the voltage it passes to the speaker, against Hornresp's Ein over its whole range.
+  if (c.eq && full && full[0]?.Ein !== undefined) {
+    const all = readTable(join(dir, "hornresp.txt"));
+    stats.einMax = Math.max(...all.map((x) => { const h = eqResponse(c.eq!, x.Freq!); return Math.abs((2.83 * Math.hypot(h.re, h.im)) / x.Ein! - 1) * 100; }));
+    pass.ein = stats.einMax < 0.01;
   }
   let spl: Pair[] = [];
   if (splRows) {
