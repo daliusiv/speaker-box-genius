@@ -47,6 +47,7 @@ export function BuildSheet(props: {
   // What to build: the calculator's box, or one of the transmission lines folded into a box.
   const lines = s.designs.filter((x): x is LineDesign => x.kind === "line");
   const [what, setWhat] = useState<string>("box");
+  const [copied, setCopied] = useState(false);
   const line = lines.find((x) => x.id === what) ?? null;
 
   // Print just the sheet: a copy goes straight under <body>, everything else is hidden while printing.
@@ -150,6 +151,23 @@ export function BuildSheet(props: {
   const vol = volumeFor(s, d);
   const sim = line ? props.designs.find((x) => x.design.id === line.id) : d ? props.designs.find((x) => x.design.id === d.id) : undefined;
   const outside = fold ? fold.outside : { width: v.width_cm * 10, height: v.height_cm * 10, depth: v.depth_cm * 10 };
+  // The cut list as plain text (Markdown-friendly), for a message, a forum post or a notes app.
+  const copyList = () => {
+    const u = lenUnit.trim() || "in";
+    const lines = [
+      `Cut list${d ? ` for ${d.name}` : line ? ` for ${line.name}` : ""}: outside ${len(outside.width)} × ${len(outside.height)} × ${len(outside.depth)} ${u} (W × H × D), ${len(v.wall_mm)} ${u} walls`,
+      "",
+      `| Part | Qty | Size (${u}) |`,
+      "|---|---:|---:|",
+      ...[...c.panels, ...c.braces].map((p) => `| ${p.name} | ${p.qty} | ${len(p.a)} × ${len(p.b)} |`),
+      ...c.holes.map((h) => `- ${h.qty} × ${h.name.toLowerCase()}: ${h.diameter !== undefined ? `⌀ ${len(h.diameter)}` : `${len(h.width!)} × ${len(h.height!)}`} ${u} (${h.where.toLowerCase()})`),
+      ...(port && port.length > 0 ? [`- ${port.count} × port ${port.slot ? "channel" : "tube"}, ${len(port.length)} ${u} long`] : []),
+    ];
+    void navigator.clipboard?.writeText(lines.join("\n")).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
   const braceL = braceVolume(c.braces, v.wall_mm);
   const bracingL = vol.deductions.find((x) => x.label.startsWith("Bracing"))?.litres ?? 0;
 
@@ -373,6 +391,9 @@ export function BuildSheet(props: {
       <div className="row">
         <button type="button" onClick={() => void print()}>
           Print or save as PDF
+        </button>
+        <button type="button" className="secondary" onClick={copyList}>
+          {copied ? "Copied ✓" : "Copy cut list"}
         </button>
       </div>
     </Card>

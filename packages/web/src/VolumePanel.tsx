@@ -29,10 +29,10 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
   const [aim, setAim] = useState(() => Math.round(r.net_l * 10) / 10);
   const [proportions, setProportions] = useState<"keep" | "golden">("keep");
   const [found, setFound] = useState("");
-  const find = () => {
-    const dims = dimensionsFor(s, target, aim, proportions);
+  const find = (aimAt = aim) => {
+    const dims = dimensionsFor(s, target, aimAt, proportions);
     if (!dims) {
-      setFound(`No size reaches ${fmt(aim, "vol", 1)}: the deductions alone are larger. Lower them or aim higher.`);
+      setFound(`No size reaches ${fmt(aimAt, "vol", 1)}: the deductions alone are larger. Lower them or aim higher.`);
       return;
     }
     props.onChange(dims);
@@ -40,12 +40,59 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
     setFound(`Done: ${describe(dims, fmt)} gives ${fmt(got, "vol", 2)}.`);
   };
 
+  // Not linked: the calculator sizes a box of its own. Offer the first box design's volume as the
+  // target in one tap, without linking (linking would set that design's volume from this box).
+  const offer = target ? undefined : s.designs.find((d) => d.on && (d.kind === "sealed" || d.kind === "vented" || d.kind === "pr"));
   return (
     <Card title="Volume calculator">
+      {offer && (
+        <div className="calc-offer">
+          <span>Not linked to a design: this box is sized on its own.</span>
+          <button
+            type="button"
+            className="chip"
+            onClick={() => {
+              const l = Math.round(offer.vb_l * 10) / 10;
+              setAim(l);
+              find(l);
+            }}
+          >
+            Size for {offer.name || "the first design"} ({fmt(offer.vb_l, "vol", 1)})
+          </button>
+        </div>
+      )}
       <div className="fields">
         <Select help="Which designs take their box volume from this calculator (their volume field then follows it)." label="Used by" value={target ? v.link : "none"} options={linkOptions} onChange={(x) => set("link", x)} />
         <Select help="Outside shape of the enclosure: box, cylinder (tube), sphere or tapered box (frustum)." label="Shape" value={v.shape} options={SHAPES} onChange={(x) => set("shape", x)} />
       </div>
+
+      <h3>Size the box</h3>
+      <div className="fields">
+        <Num help="The net volume you want; Size the box sets the dimensions for it." label="Target" q="vol" value={aim} onChange={setAim} />
+        <Select<"keep" | "golden"> help="Keep the box's current proportions, or use the golden ratio (spreads its internal standing waves)."
+          label="Ratio"
+          value={v.shape === "box" ? proportions : "keep"}
+          options={
+            v.shape === "box"
+              ? [
+                  { value: "keep", text: "Keep the current ones" },
+                  { value: "golden", text: "Golden ratio (1 : 1.618 : 0.618)" },
+                ]
+              : [{ value: "keep", text: "Keep the current ones" }]
+          }
+          onChange={setProportions}
+        />
+      </div>
+      <div className="row">
+        <button className="secondary" onClick={() => find()}>
+          Size the box
+        </button>
+      </div>
+      <p className="hint">
+        Outside dimensions for this net volume, with the
+        walls and everything below taken off.
+      </p>
+      {found && <p className="hint">{found}</p>}
 
       <h3>External size</h3>
       <div className="fields">
@@ -76,34 +123,6 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
         )}
         <Num help="Wall thickness (e.g. 18 mm MDF). Taken off every side to get the inside volume." label="Walls" q="mm" value={v.wall_mm} min={0} onChange={(x) => set("wall_mm", x)} />
       </div>
-
-      <h3>Size the box</h3>
-      <div className="fields">
-        <Num help="The net volume you want; Size the box sets the dimensions for it." label="Target" q="vol" value={aim} onChange={setAim} />
-        <Select<"keep" | "golden"> help="Keep the box's current proportions, or use the golden ratio (spreads its internal standing waves)."
-          label="Ratio"
-          value={v.shape === "box" ? proportions : "keep"}
-          options={
-            v.shape === "box"
-              ? [
-                  { value: "keep", text: "Keep the current ones" },
-                  { value: "golden", text: "Golden ratio (1 : 1.618 : 0.618)" },
-                ]
-              : [{ value: "keep", text: "Keep the current ones" }]
-          }
-          onChange={setProportions}
-        />
-      </div>
-      <div className="row">
-        <button className="secondary" onClick={find}>
-          Size the box
-        </button>
-      </div>
-      <p className="hint">
-        Outside dimensions for this net volume, with the
-        walls and everything below taken off.
-      </p>
-      {found && <p className="hint">{found}</p>}
 
       <h3>Takes up space inside</h3>
       <div className="fields">
