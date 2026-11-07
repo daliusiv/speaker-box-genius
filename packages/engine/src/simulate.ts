@@ -1,4 +1,5 @@
 import { abs, add, arg, cx, div, inv, mul, parallel, scale, sub, type Complex } from "./complex.ts";
+import { passiveActive, passiveBankGain, passiveInputImpedance, passiveThevenin, type PassiveNetwork } from "./passive.ts";
 import { STANDARD_AIR, type Air } from "./constants.ts";
 import { baffledPistonImpedance, lineNetwork, pistonPowerFactor, type LineInput } from "./line.ts";
 import { eqResponse, highPassResponse, type EqStage, type HighPass } from "./filters.ts";
@@ -148,6 +149,12 @@ export interface SimulationOptions {
   air?: Air;
   /** Amplifier output + cable resistance (Ω), shared by the whole driver bank. Default 0. */
   rg?: number;
+  /**
+   * Passive parts between the amplifier (after rg) and the driver bank: up to four branches,
+   * in line and across, as in Hornresp's passive Filter Wizard. The impedance chart then shows
+   * what the amplifier sees.
+   */
+  passive?: PassiveNetwork | null;
   /**
    * Isobaric (compound) loading: each "driver" is a pair of identical drivers
    * working as one (twice the moving mass, half the compliance, same Sd), with the
@@ -307,6 +314,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   // A source resistance shared by N parallel drivers looks like N·Rg to each one (Rg/N in series).
   const rgTotal = opts.rg ?? 0;
   const rgDriver = wiring === "parallel" ? rgTotal * n : rgTotal / n;
+  const net = passiveActive(opts.passive) ? opts.passive : null;
+  // Per driver, a source shared by the bank: N parallel drivers each see N × its impedance.
+  const perDriverZ = (z: Complex) => (wiring === "parallel" ? scale(z, n) : scale(z, 1 / n));
 
   // Box elements
   const summary: SimulationResult["summary"] = { volts, referenceSpl: 0, f3: null, f6: null };
@@ -449,11 +459,13 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const w = 2 * Math.PI * f;
 
     const zvc = voiceCoilImpedance(d, w);
-    const ze = add(zvc, cx(rgDriver));
+    // Through a passive network the bank sees a Thévenin source: a voltage and an impedance per frequency.
+    const th = net ? passiveThevenin(net, w, rgTotal) : null;
+    const ze = add(zvc, th ? perDriverZ(th.z) : cx(rgDriver));
     let filter = opts.highPass ? highPassResponse(opts.highPass, f) : cx(1);
     if (opts.eq && opts.eq.length > 0) filter = mul(filter, eqResponse(opts.eq, f));
     const filterGain2 = filter.re * filter.re + filter.im * filter.im;
-    const pg = div(mul(filter, cx((vDriver * d.bl) / d.sd)), ze);
+    const pg = div(mul(mul(filter, th ? th.v : cx(1)), cx((vDriver * d.bl) / d.sd)), ze);
     const zae = div(cx((d.bl * d.bl) / sd2), ze);
     const susp = suspensionImpedance(d, w);
     let zas = cx(susp.re / sd2, (w * boxMms + susp.im) / sd2);
@@ -648,7 +660,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
 
     // Electrical input impedance of the whole bank
     const zDriver = add(zvc, div(cx((d.bl * d.bl) / sd2), zMech));
-    const zIn = wiring === "parallel" ? scale(zDriver, 1 / n) : scale(zDriver, n);
+    const zBank = wiring === "parallel" ? scale(zDriver, 1 / n) : scale(zDriver, n);
+    // What the amplifier sees: the bank, through the passive network if there is one.
+    const zIn = net ? passiveInputImpedance(net, w, zBank) : zBank;
     out.zmag[i] = abs(zIn);
     out.zph[i] = (arg(zIn) * 180) / Math.PI;
 
@@ -660,12 +674,13 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     if (d.pe !== null) {
       if (opts.thermalLimit === "real") {
         // Real power into the bank: |V_bank|² · Re(Z) / |Z|².
-        const vBank = (vAmpNow * abs(zIn)) / abs(zAmpNow);
-        const pReal = (vBank * vBank * zIn.re) / (abs(zIn) * abs(zIn));
+        const vBank = net ? vAmpNow * abs(passiveBankGain(net, w, zBank, rgTotal)) : (vAmpNow * abs(zIn)) / abs(zAmpNow);
+        const pReal = (vBank * vBank * zBank.re) / (abs(zBank) * abs(zBank));
         limits.push(["thermal", pReal > 0 ? (pNow * d.pe * n) / pReal : Infinity]);
       } else {
-        // Thermal: the filter reduces the voltage reaching the coil at this frequency.
-        limits.push(["thermal", (d.pe * n) / Math.max(filterGain2, 1e-12)]);
+        // Thermal: the filter (and any passive parts) reduce the voltage reaching the coil at this frequency.
+        const gNet = net ? abs(passiveBankGain(net, w, zBank, 0)) ** 2 : 1;
+        limits.push(["thermal", (d.pe * n) / Math.max(filterGain2 * gNet, 1e-12)]);
       }
     }
     if (opts.amp?.volts && vAmpNow > 0) limits.push(["amp", pNow * (opts.amp.volts / vAmpNow) ** 2]);
@@ -713,7 +728,11 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   }
 
   // Passband reference: mass-controlled asymptote  p = ρ·N·V·Bl·Sd / (Re·Mms·k·π·r)
-  const pRef = (air.rho * n * vDriver * d.bl * d.sd) / ((d.re + rgDriver) * d.mms * space * Math.PI * r);
+  // Through a passive network: its resistive part (coils as wires, capacitors left out), as a plain resistance would.
+  const thRef = net ? passiveThevenin(net, 1, rgTotal, true) : null;
+  const vRef = thRef ? vDriver * thRef.v.re : vDriver;
+  const rRef = thRef ? perDriverZ(thRef.z).re : rgDriver;
+  const pRef = (air.rho * n * vRef * d.bl * d.sd) / ((d.re + rRef) * d.mms * space * Math.PI * r);
   summary.referenceSpl = 20 * Math.log10(pRef / 2e-5);
   summary.f3 = crossing(freq, out.spl, summary.referenceSpl - 3);
   summary.f6 = crossing(freq, out.spl, summary.referenceSpl - 6);

@@ -1,4 +1,4 @@
-import type { EqStage, HighPassType, PassiveRadiatorInput, SemiInductance, TsValues } from "@sbg/engine";
+import type { EqStage, HighPassType, PassiveBranch, PassiveRadiatorInput, SemiInductance, TsValues } from "@sbg/engine";
 import { stuffable, stuffingFrom, type Stuffing } from "./stuffing.ts";
 
 export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line";
@@ -301,6 +301,8 @@ export interface AppState {
    */
   baffle: { on: boolean; fromBox: boolean; width_cm: number; height_cm: number; x_cm: number; y_cm: number };
   highPass: { on: boolean; type: HighPassType; order: number; freq: number };
+  /** Passive parts between the amplifier and the drivers: branches 1–4 (in line, across, in line, across). */
+  passive: { on: boolean; branches: PassiveBranch[] };
   settings: Settings;
   eq: EqItem[];
   /** Measurements overlaid on the charts (travel with the link). */
@@ -454,6 +456,7 @@ export const DEFAULT_STATE: AppState = {
   roomGain: { mode: "off", length_cm: 250, slope: 12, max_db: 18 },
   baffle: { on: false, fromBox: true, width_cm: 25, height_cm: 40, x_cm: 12.5, y_cm: 15 },
   highPass: { on: false, type: "butterworth", order: 2, freq: 18 },
+  passive: { on: false, branches: [{}, {}, {}, {}] },
   settings: {
     units: "metric",
     air: "standard",
@@ -559,6 +562,23 @@ export function encodeState(s: AppState): string {
 // - top-level keys, whole (ts never partially: its keys mean "values the user typed");
 // - one level into objects that decoding merges with their defaults;
 // - per design, its keys against a fresh design of the same kind, one level into front/rear/params.
+/** A link's passive network: four branches of non-negative R (Ω), L (mH), C (µF), joined in series or parallel. */
+function passiveFrom(raw: Raw): AppState["passive"] | null {
+  if (!raw || typeof raw !== "object" || !Array.isArray(raw.branches)) return null;
+  const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : undefined);
+  const branches = [0, 1, 2, 3].map((k) => {
+    const b = raw.branches[k] ?? {};
+    const out: PassiveBranch = {};
+    const r = num(b.r), l = num(b.l_mH), c = num(b.c_uF);
+    if (r !== undefined) out.r = r;
+    if (l !== undefined) out.l_mH = l;
+    if (c !== undefined) out.c_uF = c;
+    if (b.join === "parallel") out.join = "parallel";
+    return out;
+  });
+  return { on: raw.on === true, branches };
+}
+
 const MERGED_TOP = new Set(["settings", "volume", "highPass", "roomGain", "baffle"]);
 const MERGED_DESIGN = new Set(["front", "rear", "params", "fold"]);
 const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -863,6 +883,7 @@ export function decodeState(hash: string): AppState | null {
         slope: raw.roomGain?.slope === 6 ? 6 : 12,
       },
       highPass: { ...d.highPass, ...raw.highPass },
+      passive: passiveFrom(raw.passive) ?? d.passive,
       baffle: { ...d.baffle, ...(raw.baffle ?? {}) },
       settings: { ...d.settings, ...raw.settings, losses: { ...d.settings.losses, ...raw.settings?.losses } },
       eq: Array.isArray(raw.eq)
