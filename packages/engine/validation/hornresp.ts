@@ -89,7 +89,7 @@ The mouth's output on its own (Hornresp's "Horn" output) is compared where it wa
 
 The first seven cases were checked against Hornresp 55.30 first, then against 60.60 with the same results; the five with other drivers (a 12″ subwoofer, a 4″ full-range) came with 60.60.
 
-Stuffed lines (08 and 09 in the records) aren't automated: Hornresp uses segment filling only in its Loudspeaker Wizard, so they were read off its charts. Acoustic power agreed within about 1 dB from 20 Hz to 1 kHz, and every impedance peak fell at the same frequency (straight TL: 63 Hz / 13.8 Ω against ~63 Hz / ~14.0 Ω). The two fibre models differ, so stuffed lines are judged on the trend.`;
+Stuffed lines are compared with Hornresp's Loudspeaker Wizard (the only place it models segment filling) in the box cases below (S1–S5).`;
 
 /** Hornresp's exported table: one row per frequency, columns by their header. */
 export function readTable(file: string): Record<string, number>[] {
@@ -416,6 +416,8 @@ What the comparison settles, and the conventions it has to bridge:
 
 **Lossy Le is not modelled.** Hornresp's Lossy Le (double-click the Le label) first asks whether the driver has high Le and Xmax. Answered No, the results are identical to plain Le for this driver. Answered Yes, the impedance is unchanged but the response and excursion are those of the same driver with Bl about 14 % lower (10.65 → about 9.2 T·m: within 0.02 dB and 0.1 % that way): an empirical correction for long-throw, high-inductance drivers, not a coil model. The app's L2R2 and semi-inductance models change the coil's impedance and the response together, so it has no equivalent; a driver measured with its real Bl needs none.
 
+**Stuffed lines (S1–S5).** Hornresp models fill with D. K. Wilson's relaxation model (1997), set by the flow resistivity alone (Fr, mks rayls/m). The app used Delany–Bazley's empirical fit, which was 0.2–1.2 dB and 1–1.5 % out at Fr 150–2000. It now uses Wilson's model too, with porosity and tortuosity 1 (fibre) and the thermal relaxation time 1.75 × the viscous one (the one value fitted, against all three densities): within 0.07 dB and 0.3 % at every density, as close as the unstuffed line run the same way (S1), and an offset line stuffed only behind the driver (S5) within 0.05 dB and 0.3 % (the old model: 0.29 dB, 0.7 %). The app's fill is set in kg/m³ of polyester and turned into flow resistivity with Garai & Pompoli's measurements (481.65 rayls/m = 8.0 kg/m³); Hornresp's "Total Polyfill" readout uses its own empirical figure for one product (481.65 rayls/m = 9.9 kg/m³), so densities from the two programs aren't interchangeable, flow resistivities are.
+
 **Semi-inductance.** Hornresp's semi-inductance model (Thorborg and Futtrup) is the coil impedance Re' + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)); two sets on the sealed box (B8a: Leb 0.3 mH, Le 1 mH, Ke 0.05 sH, Rss 30 Ω; B8b: Leb 1.36 mH, Le 3.16 mH, Ke 0.21 sH, Rss 30.6 Ω) pin that down exactly. The app has the same model (Driver → Coil model → Semi-inductance): impedance within 0.3 % on average up to 20 kHz, and the SPL the coil takes away up there (compared as the change from the plain B1 box, so the box's own radiation doesn't enter) within 0.03 dB. A third record (B8c) sets Re' to 6.5 Ω against Re 5.9 Ω: Hornresp takes Re' as the coil's resistance everywhere in the circuit and keeps Bl as the T/S give it (from Re), and the app does the same (Re′ in the model's fields); within 0.22 % in impedance.
 
 **Power compression.** Hornresp's Tools → Power Compression sets the voice coil's temperature; at 120 °C its Re rises by 39.3 %, copper's 0.393 %/°C, as the app's Settings → Voice coil °C does. The sealed box (B9) and the mass-loaded line (case 16) at 120 °C match as closely as at 20 °C: 0.05 dB and 0.5 % in impedance for the box, 0.02 dB and 0.3 % for the line.
@@ -442,6 +444,10 @@ export interface HornrespBoxCase {
   splDeltaFrom?: string;
   /** Hornresp's semi-inductance model (its Re' is the driver's Re), in place of Le. */
   semi?: SemiInductance;
+  /** SPL from radiated power (lines, as Hornresp works them out). */
+  splFrom?: "power";
+  /** Compare up to here (Hz) instead of HORNRESP_BOX_F_MAX (stuffed lines run to 1 kHz). */
+  fMax?: number;
   /** Amplifier and cable resistance (Ω): Hornresp's Rg. */
   rg?: number;
   /** Voice-coil temperature (°C): Hornresp's Power Compression. */
@@ -506,10 +512,11 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
   const driver = { ...hornrespDriver(HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}) };
   const base: SimulationOptions = {
-    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, coilTemp_C: c.coilTemp_C, rg: c.rg,
+    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom,
   };
   const r = simulate(driver, c.input, base);
-  const table = (name: string) => (existsSync(join(dir, name)) ? readTable(join(dir, name)).filter((x) => x.Freq! <= HORNRESP_BOX_F_MAX) : null);
+  const fTop = c.fMax ?? HORNRESP_BOX_F_MAX;
+  const table = (name: string) => (existsSync(join(dir, name)) ? readTable(join(dir, name)).filter((x) => x.Freq! <= fTop) : null);
   const full = table("hornresp.txt");
   const wizard = (k: string) => full ?? table(`hornresp-${k}.txt`);
   const coneRows = table("hornresp-cone.txt");

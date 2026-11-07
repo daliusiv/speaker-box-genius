@@ -62,10 +62,10 @@ function lineTuning(freq: Float64Array, z: Float64Array): number | null {
   let before = -Infinity;
   for (let k = 1; k < i - 1; k++) {
     const sk = slope(k);
-    if (k > 1 && before > 0.3 && sk < slope(k - 1) && sk <= slope(k + 1) && sk < 0.5 * before) {
+    if (k > 1 && before > 0.3 && sk < slope(k - 1) && sk <= slope(k + 1) && sk < 0.75 * before) {
       let after = -Infinity;
       for (let m = k + 1; m < i; m++) after = Math.max(after, slope(m));
-      if (sk < 0.5 * after) return freq[k]!;
+      if (sk < 0.75 * after) return freq[k]!;
     }
     before = Math.max(before, sk);
   }

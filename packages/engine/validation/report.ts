@@ -125,6 +125,8 @@ export interface HornrespBoxCaseReport {
   options: string;
   /** Impedance compared up to here (Hz), for coil-model cases. */
   zeFMax?: number;
+  /** Everything compared up to here (Hz) when not the boxes' 300 Hz (stuffed lines). */
+  fMax?: number;
   /** [frequency, Hornresp, ours]; spl is empty where only the outputs were exported one by one. */
   spl: [number, number, number][];
   ze: [number, number, number][];
@@ -236,6 +238,7 @@ function hornrespBoxCase(id: string): HornrespBoxCaseReport {
     tol: run.tol,
     options,
     ...(c.zeFMax ? { zeFMax: c.zeFMax } : {}),
+    ...(c.fMax ? { fMax: c.fMax } : {}),
     spl: thinPairs(run.spl, 2),
     ze: thinPairs(run.ze, 3),
     xd: thinPairs(run.xd, 4),

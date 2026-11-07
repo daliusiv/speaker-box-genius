@@ -242,7 +242,7 @@ function hornrespBoxCase(k: HornrespBoxCaseReport, mtol: Report["hornresp"]["max
   return `<section class="case" id="hornresp-${k.id}">
 <h3>${esc(k.title)} ${ok(k.pass)}</h3>
 <p class="setup">${esc(k.setup)}${k.options ? ` · ${esc(k.options)}` : ""} · <a href="${REPO}/tree/main/packages/engine/test/fixtures/hornresp-boxes/${k.id}">${esc(k.id)}</a></p>
-<div class="table"><table class="cmp"><thead><tr><th>Measure (10–300 Hz${k.zeFMax ? `; impedance to ${k.zeFMax / 1000} kHz` : ""})</th><th>Result</th><th>Tolerance</th></tr></thead><tbody>${rows}</tbody></table></div>
+<div class="table"><table class="cmp"><thead><tr><th>Measure (10–${k.fMax ?? 300} Hz${k.zeFMax ? `; impedance to ${k.zeFMax / 1000} kHz` : ""})</th><th>Result</th><th>Tolerance</th></tr></thead><tbody>${rows}</tbody></table></div>
 <div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Cone's output alone", "dB", k.cone)}${fig("Port's or radiator's output alone", "dB", k.vent)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}${ms.figs}${ir.figs}</div>
 </section>`;
 }
@@ -332,8 +332,8 @@ ${w.map((k) => winisdCase(k, q)).join("\n")}
 <h3 id="hornresp-lines">Lines and horns</h3>
 ${h.map((k) => hornrespCase(k, rep.hornresp.tol, rep.hornresp.maxSplTol, rep.hornresp.impulseTol)).join("\n")}
 <div class="known"><h4>Notes</h4>${notes(rep.hornresp.notes)}</div>
-<h3 id="hornresp-boxes">Boxes</h3>
-<p>Sealed, ported, passive-radiator and bandpass boxes and two drivers, compared from 10 to ${rep.hornresp.boxes.fMax} Hz (the boxes are modelled without standing waves inside, as Hornresp's lumped chambers are). Where Hornresp's outputs were exported one by one, the cone's and the port's (or radiator's) are compared each on its own.</p>
+<h3 id="hornresp-boxes">Boxes and stuffed lines</h3>
+<p>Sealed, ported, passive-radiator and bandpass boxes and two drivers, compared from 10 to ${rep.hornresp.boxes.fMax} Hz, and stuffed lines from Hornresp's Loudspeaker Wizard to 1 kHz (the boxes are modelled without standing waves inside, as Hornresp's lumped chambers are). Where Hornresp's outputs were exported one by one, the cone's and the port's (or radiator's) are compared each on its own.</p>
 ${b.map((k) => hornrespBoxCase(k, rep.hornresp.maxSplTol, rep.hornresp.impulseTol)).join("\n")}
 <div class="known"><h4>Notes</h4>${notes(rep.hornresp.boxes.notes)}</div>
 
