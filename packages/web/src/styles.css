@@ -4181,3 +4181,15 @@ button.new-btn > span:first-child {
     gap: 0.35rem;
   }
 }
+
+/* Scrolled to when it opens: clear of the sticky box strip on phones. */
+#measure-panel {
+  scroll-margin-top: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 860px) {
+  #measure-panel {
+    scroll-margin-top: 4.25rem;
+  }
+}
