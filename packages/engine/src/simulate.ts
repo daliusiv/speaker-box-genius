@@ -202,6 +202,13 @@ export interface SimulationResult {
   portVelocity: Float64Array | null;
   /** Bandpass only: peak air velocity in the rear chamber's port (to the outside, or into the front chamber). */
   rearPortVelocity: Float64Array | null;
+  /**
+   * Peak sound pressure inside the box (Pa): what pushes on the cone's back and the walls
+   * (Hornresp's "Rear Chamber Diaphragm Peak Pressure"). Bandpass: the rear chamber. Null for lines.
+   */
+  boxPressurePa: Float64Array | null;
+  /** Bandpass only: peak sound pressure in the front chamber (Pa), on the cone's front. */
+  frontChamberPressurePa: Float64Array | null;
   impedanceOhm: Float64Array;
   impedancePhaseDeg: Float64Array;
   /**
@@ -421,6 +428,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         : null,
     vport: box.kind === "vented" || box.kind === "line" || bp?.front ? new Float64Array(N) : null,
     vport2: bp?.rear ? new Float64Array(N) : null,
+    pbox: box.kind !== "line" ? new Float64Array(N) : null,
+    pfront: bp ? new Float64Array(N) : null,
     zmag: new Float64Array(N),
     zph: new Float64Array(N),
     pmax: new Float64Array(N),
@@ -464,6 +473,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       ui = div(pg, add(zae, zMech));
       const ud = scale(ui, n);
       const flows = bp.flows(w, scale(unit.pF, 1), scale(unit.pR, 1));
+      out.pbox![i] = Math.SQRT2 * abs(mul(ud, unit.pR));
+      out.pfront![i] = Math.SQRT2 * abs(mul(ud, unit.pF));
       u0 = mul(ud, flows.radiated);
       if (bp.front && out.vport) {
         // A pipe's air moves fastest at whichever end its standing wave puts the motion.
@@ -575,6 +586,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       zMech = sol.zm;
       ui = sol.u;
       const pBox = sol.pb;
+      out.pbox![i] = Math.SQRT2 * abs(pBox);
 
       // Radiated volume velocity = −(flow into the box air spring).
       u0 = scale(div(pBox, zAir), -1);
@@ -757,6 +769,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         : null,
     portVelocity: out.vport,
     rearPortVelocity: out.vport2,
+    boxPressurePa: out.pbox,
+    frontChamberPressurePa: out.pfront,
     impedanceOhm: out.zmag,
     impedancePhaseDeg: out.zph,
     parts: out.parts,

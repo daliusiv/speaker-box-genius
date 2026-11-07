@@ -103,7 +103,7 @@ const LIMIT_KINDS: Record<string, { label: string; short: string; color: string 
   amp: { label: "Amplifier", short: "amplifier limit", color: "#0891b2" },
 };
 
-type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay" | "transient";
+type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay" | "transient" | "pressure";
 
 /**
  * The level a design's relative response is drawn against: a plain cone's level, or for a
@@ -670,12 +670,14 @@ export function App(props: { initial: AppState | null }) {
   // The charts under the tab row: one at a time, the choice remembered; unavailable ones are left out.
   const hasPr = prDesigns.length > 0;
   const hasPort = designs.some((d) => d.result.portVelocity || d.result.rearPortVelocity);
+  const hasBoxPressure = designs.some((d) => d.result.boxPressurePa);
   const chartTabs: { id: ChartId; label: string }[] = [
     ...(narrow ? [{ id: "excursion" as const, label: "Excursion" }] : []),
     ...(hasPr ? [{ id: "pr" as const, label: "PR excursion" }] : []),
     ...(hasPort ? [{ id: "port" as const, label: "Port speed" }] : []),
     { id: "maxspl", label: "Max SPL" },
     { id: "impedance", label: "Impedance" },
+    ...(hasBoxPressure ? [{ id: "pressure" as const, label: "Box pressure" }] : []),
     ...(zaDesigns.length > 0 ? [{ id: "za" as const, label: "Line load (Za)" }] : []),
     { id: "delay", label: "Group delay" },
     { id: "transient", label: "Impulse / step" },
@@ -1929,6 +1931,33 @@ export function App(props: { initial: AppState | null }) {
                   })),
                 ].filter((s) => s.y)}
                 limits={[{ value: portLimitOf(state), label: `Chuffing risk ${portLimitOf(state)} m/s`, color: LIMIT_RED }]}
+                yMin={0}
+              />
+            )}
+            {hasBoxPressure && (
+              <LogChart
+                forum
+                chartId="pressure"
+                hidden={chartTab !== "pressure"}
+                best="low"
+                shortTitle="Box pressure"
+                title="Sound pressure inside the box (peak): the load on the cone and the walls"
+                unit="Pa"
+                freq={freq}
+                series={[
+                  ...designs.map((d) => ({
+                    label: d.design.kind === "bandpass" ? `${d.label} (rear chamber)` : d.label,
+                    color: d.color,
+                    dash: d.dash,
+                    y: d.result.boxPressurePa,
+                  })),
+                  ...designs.map((d) => ({
+                    label: `${d.label} (front chamber)`,
+                    color: d.color,
+                    dash: "5 3",
+                    y: d.result.frontChamberPressurePa,
+                  })),
+                ].filter((s) => s.y)}
                 yMin={0}
               />
             )}
