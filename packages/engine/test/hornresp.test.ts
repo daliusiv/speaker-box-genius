@@ -80,6 +80,8 @@ for (const id of hornrespBoxIds()) {
   db("the cone's output alone", s.coneMean, s.coneP95);
   db("the port's or passive radiator's output alone", s.ventMean, s.ventP95);
   db("the coil model's effect on SPL, up to 20 kHz", s.coilMean, s.coilP95);
+  if (s.gdP95 !== undefined)
+    test(`Hornresp box ${id}: group delay`, () => assert.ok(s.gdP95! < t.gdP95, `95th percentile ${s.gdP95!.toFixed(2)} ms`));
 }
 
 // Maximum SPL (Hornresp's Tools > Maximum SPL), where it was exported.

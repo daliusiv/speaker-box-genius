@@ -1,0 +1,23 @@
+{
+  "title": "Ported box, 2nd-order Butterworth high-pass at 25 Hz",
+  "text": "B2 with Hornresp's Active Filter Wizard: high-pass 25 Hz, 2nd-order Butterworth (Settings → High-pass filter)",
+  "frontAir": 1,
+  "portModel": "pipe",
+  "highPass": {
+    "type": "butterworth",
+    "order": 2,
+    "freq": 25
+  },
+  "input": {
+    "kind": "vented",
+    "vb_l": 30,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7,
+      "length_cm": 15
+    },
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

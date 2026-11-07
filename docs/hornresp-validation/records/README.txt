@@ -46,6 +46,10 @@ B10                     B1 with Rg = 0.50 (edit and Calculate)
 B11-sealed-2P / -2S     B1 with two drivers, parallel and series (import these:
                         counts typed into the editor didn't simulate both cones)
 
+B12 (bw2 / bw3 / lr4)   B2 with Tools > Filter Wizard (Active): high pass 25 Hz,
+                        order 2, 3 (Butterworth) and 4 (Linkwitz-Riley), On,
+                        then File > Export in the chart window
+
 Impulse response: B1, B2 and 05, the chart window's Impulse Response, Export
 (a 16-bit 48 kHz WAV, t = 0 at sample 10000; masking as Hornresp has it).
 

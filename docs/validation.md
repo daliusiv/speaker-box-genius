@@ -90,6 +90,10 @@ aren't kept in the repository.
 
 Not in WinISD, so not part of the WinISD comparison (the default, "Air mass", is what's compared). It is how Hornresp models ports, so the Hornresp box cases use it: the ported box matches within 0.3 % in impedance and 0.02 dB in the port's own output. A port is modelled as a uniform pipe of its throat's area and its effective length (end corrections included, so it tunes the box exactly as the air-mass port), radiating at its outer end: it adds the pipe's resonances at about c / 2L, 2c / 2L, … Checks (`portflare.test.ts`): within 0.35 dB of the air-mass port below 60 Hz (the pipe's air is slightly springy, which the air-mass model leaves out), and the port's air speed peaks within 5 % of c / 2L. Not modelled: the box's own standing waves, which drive the port hardest when they coincide (the port card warns when they do), and wall losses in the port. Bandpass ports are pipes too: those to the outside like a vented box's, and a series box's rear port as a pipe joining the two chambers (`portflare.test.ts`: within 0.5 dB of air-mass ports below 60 Hz).
 
+### High-pass filter (Settings → High-pass filter)
+
+Butterworth (orders 1–4) and Linkwitz-Riley, applied to the voltage before the amplifier. Compared with Hornresp's Active Filter Wizard on the ported box at 25 Hz (2nd- and 3rd-order Butterworth, 4th-order Linkwitz-Riley): the filtered voltage agrees within 0.0005 %, and SPL, excursion, impedance and group delay as closely as without the filter (see the Hornresp notes, case B12).
+
 ### Impulse and step response (chart "Impulse / step")
 
 The response at 48 kHz up to 20 kHz (from radiated power), inverse-FFT'd, peak scaled to 1, as Hornresp's impulse response; the step response is its running sum. Compared with Hornresp's WAV exports for a sealed and a ported box and an MLTL (see its notes): within 0.02 RMS of the peak. Checks (`transient.test.ts`): the FFT round trip; a sealed box's impulse starts positive at t = 0 with nothing before it and its step settles to zero; the impulse's spectrum is the simulated response.
