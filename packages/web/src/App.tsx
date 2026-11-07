@@ -1477,15 +1477,17 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(thermalLimit) => set("settings", { ...state.settings, thermalLimit })}
                 />
-                <Num help="The amplifier's maximum output voltage (RMS), as a limit on the Max SPL chart. 0 = no limit."
+                <Num help="The amplifier's maximum output voltage (RMS), as a limit on the Max SPL chart. Leave it blank for no limit."
                   label="Amp max volts"
+                  zeroText="No limit"
                   unit="V"
                   value={state.settings.ampVolts}
                   min={0}
                   onChange={(ampVolts) => set("settings", { ...state.settings, ampVolts: Math.max(0, ampVolts) })}
                 />
-                <Num help="The amplifier's maximum output current (RMS), as a limit on the Max SPL chart. 0 = no limit."
+                <Num help="The amplifier's maximum output current (RMS), as a limit on the Max SPL chart. Leave it blank for no limit."
                   label="Amp max current"
+                  zeroText="No limit"
                   unit="A"
                   value={state.settings.ampAmps}
                   min={0}
