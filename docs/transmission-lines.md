@@ -31,6 +31,8 @@ Export writes a record in the layout of recent Hornresp versions (`|SECTION:` he
 
 Import reads `Key = value` pairs in order from a file or a one-line forum paste, with comma or point decimals and the INI form (`L12=40.90, PAR`). Unknown flares (Hyp, Tra, Obl) are read as Par with a warning; Lrc, chamber ports and angles other than 2π are flagged, as is a front horn with no rear chamber (Vrc or Lrc = 0, which Hornresp models as an open back). The record's driver can replace the current one, with its count and wiring (`2P` / `2S`).
 
+Settings → Amp + cable is written as Rg (and read back: the import says to set it). The high-pass filter, EQ bands (as Peak EQ, Low Shelf, High Shelf), passive parts (the same four branches), a hot coil and non-Hornresp air come with the export as steps to repeat in Hornresp's Filter Wizard and Power Compression tool: the record fields that hold them aren't documented, so they aren't written.
+
 Hornresp 55.30 and 60.60 import the exported records unchanged (checked with the fourteen validation records in `docs/hornresp-validation/records`; the layout test compares against a record Hornresp itself exported).
 
 ## Folding (`linefold.ts`)

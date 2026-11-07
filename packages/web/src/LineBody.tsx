@@ -26,7 +26,7 @@ function HornrespPanel(p: {
   const power = p.sim.power ?? 1;
   const eg = p.driver ? (p.sim.convention === "volts" ? power : Math.sqrt(power * p.driver.re)) : 2.83;
   const out = p.driver
-    ? toHornresp(p.d, p.driver, { eg, drivers: p.drivers, wiring: p.sim.wiring, name: p.d.name, pmax: p.driver.pe_w, xmax_mm: p.driver.xmax_mm })
+    ? toHornresp(p.d, p.driver, { eg, drivers: p.drivers, wiring: p.sim.wiring, name: p.d.name, pmax: p.driver.pe_w, xmax_mm: p.driver.xmax_mm, sim: p.sim })
     : "Enter the driver's parameters first.";
   const download = () => {
     if (typeof out === "string") return;
@@ -53,6 +53,7 @@ function HornrespPanel(p: {
       lines: [
         `Read ${r.design.sections?.length ?? 0} section${r.design.sections?.length === 1 ? "" : "s"} (${r.design.end === "horn" ? "front-loaded horn" : r.design.end === "tapped" ? "tapped horn" : r.design.end === "port" ? "line with a port" : "line"})${used ? " and the driver" : ""}.`,
         ...(count ? [count] : []),
+        ...(r.rg ? [`The record has Rg = ${r.rg} Ω: set Settings → Amp + cable to ${r.rg} Ω to compare.`] : []),
         ...r.warnings,
       ],
     });
