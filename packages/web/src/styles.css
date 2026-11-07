@@ -779,8 +779,15 @@ textarea {
   display: block;
 }
 
+/* What you typed: bold with an accent edge. Calculated: a recessed, dashed box. */
 input.entered {
   font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+input.derived {
+  border-style: dashed;
+  background: transparent;
 }
 
 input.derived::placeholder,
@@ -992,6 +999,29 @@ button:disabled {
 .presets .hint {
   flex-basis: 100%;
   margin: 0;
+}
+
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.quick-actions button.chip {
+  min-height: 2rem;
+  padding-inline: 0.8rem;
+}
+
+.amp-load {
+  margin: 0.6rem 0 0.2rem;
+  font-size: 0.9rem;
+}
+
+details.why > summary {
+  color: var(--muted);
+  font-size: 0.8rem;
+  cursor: pointer;
 }
 
 button.chip {

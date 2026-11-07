@@ -694,6 +694,18 @@ export function switchDrive(s: AppState, to: "watts" | "volts"): Pick<AppState, 
   return { drive: to, volts: s.volts, power: near(p, s.power) ? s.power : Math.min(10000, Math.max(1, Math.round(p * 10) / 10)) };
 }
 
+/**
+ * What the amplifier sees across the whole driver bank (after DVC, isobaric pairing and
+ * wiring): the cold Re the simulation uses, and the nominal impedance scaled the same way.
+ * Null without a complete driver.
+ */
+export function amplifierLoad(s: AppState, solved: SolveResult): { re: number; nominal: number } | null {
+  if (solved.missing.length > 0 || !(solved.values.re! > 0)) return null;
+  const re = bankResistance(driverInputOf(s, solved), { drivers: s.drivers, wiring: s.wiring, isobaric: s.isobaric ? { coils: s.isoCoils } : null });
+  if (!(re > 0)) return null;
+  return { re, nominal: s.nominal_ohms * (re / solved.values.re!) };
+}
+
 /** The drive level as people read it: "100 W" or "2.83 V". */
 export const driveLabel = (s: Pick<AppState, "drive" | "power" | "volts">) => (s.drive === "volts" ? `${s.volts} V` : `${s.power} W`);
 /** ", voice coil at 100 °C" when the coil is simulated hot; empty when cold. */
