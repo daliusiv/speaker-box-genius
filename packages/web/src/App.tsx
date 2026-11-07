@@ -304,7 +304,11 @@ export function App(props: { initial: AppState | null }) {
   };
   // Phones show one screen at a time: the charts, or one panel of controls (bottom tab bar).
   const [phoneView, setPhoneView] = useState<"charts" | "panel">("charts");
+  /** Set by the launcher's "I have a speaker driver": the driver picked next is shown on the charts. */
+  const pickToCharts = useRef(false);
   const showOnPhone = (v: "charts" | "panel", p?: PanelId) => {
+    // Moving on by hand ends the launcher's errand.
+    pickToCharts.current = false;
     if (p) choosePanel(p);
     setPhoneView(v);
     window.scrollTo({ top: 0 });
@@ -861,6 +865,12 @@ export function App(props: { initial: AppState | null }) {
                           offerSizing(d.name);
                           setDriverSource({ name: d.name, ...d.source, ts: d.ts, id });
                           setStep((s) => withDriver(s, d));
+                          // From the launcher: straight to what the driver does (the charts, on phones).
+                          if (pickToCharts.current) {
+                            pickToCharts.current = false;
+                            setPhoneView("charts");
+                            window.scrollTo({ top: 0 });
+                          }
                         },
                         () => alert("Couldn't load that driver."),
                       )
@@ -2161,6 +2171,7 @@ export function App(props: { initial: AppState | null }) {
           choosePanel("driver");
           setPhoneView("panel");
           window.scrollTo({ top: 0 });
+          pickToCharts.current = true;
           // Straight into the driver database's search, as soon as its list has loaded (a few seconds at most).
           const started = Date.now();
           const openSearch = () => {
