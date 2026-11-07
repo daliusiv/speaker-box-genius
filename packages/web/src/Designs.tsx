@@ -11,7 +11,7 @@ import {
   type AlignmentDriver,
   type Air,
 } from "@sbg/engine";
-import { Fixed, Num, Select } from "./components.tsx";
+import { Fixed, Num, Select, useNarrow } from "./components.tsx";
 import { PassiveRadiatorBrowser } from "./Library.tsx";
 import { loadPrChoice, type DbIndex } from "./library.ts";
 import { PrTuning } from "./PrTuning.tsx";
@@ -50,6 +50,8 @@ import type {
 } from "./state.ts";
 
 const f1 = (v: number) => (Number.isFinite(v) ? v.toFixed(1) : "–");
+/** Up to one decimal, without a trailing ".0" (330, 18, 12.5). */
+const short = (v: number) => (Number.isFinite(v) ? String(Math.round(v * 10) / 10) : "–");
 
 interface CommonProps<D extends DesignState> {
   design: D;
@@ -490,31 +492,7 @@ function PrBody(
 
   return (
     <>
-      <PassiveRadiatorBrowser
-        rows={p.db?.passiveRadiators}
-        drivers={p.db?.drivers}
-        onPick={(id) =>
-          loadPrChoice(id).then(
-            ({ name, params, displacement_l, cutout_mm }) => {
-              set({ prName: name, params });
-              p.onPrPhysical({ displacement_l, cutout_mm });
-            },
-            () => alert("Couldn't load that passive radiator."),
-          )
-        }
-      />
-      <div className="row finder-row-button">
-        <PrFinder
-          ctx={p.finder}
-          design={pr}
-          vb_l={p.vb_l}
-          linked={p.linked}
-          db={p.db}
-          onUse={(patch, summary, physical) => p.onFound(patch, summary, physical)}
-        />
-        <PrTuning ctx={p.finder} design={pr} vb_l={p.vb_l} linked={p.linked} onApply={(patch, summary) => p.onFound(patch, summary)} />
-      </div>
-      <p className="pr-name">{pr.prName}</p>
+      {/* The box: its volume, how many PRs and the mass on each, and the tuning they give. */}
       <div className="fields">
         <VbField vb_l={p.built_l} value={pr.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
         <Num help="Number of identical passive radiators. More PRs means more cone area: less excursion each." label="PRs" value={pr.count} onChange={(v) => set({ count: Math.max(1, Math.round(v)) })} />
@@ -529,32 +507,7 @@ function PrBody(
               : "Box tuning frequency with the added mass"
           }
         />
-        <PrParamFields params={pr.params} onChange={setP} />
       </div>
-
-      {pr.extra.map((g, i) => (
-        <PrGroupCard
-          key={i}
-          title={`Passive radiator group ${i + 2}`}
-          group={g}
-          db={p.db}
-          onChange={(patch) => setGroup(i, patch)}
-          onRemove={() => set({ extra: pr.extra.filter((_, k) => k !== i) })}
-        />
-      ))}
-      <div className="add-design">
-        <button
-          type="button"
-          className="secondary"
-          title="Put a second kind of passive radiator in the same box (or the same PR with a different added mass)"
-          onClick={() =>
-            set({ extra: [...pr.extra, { prName: pr.prName, count: 1, addedMass_g: pr.addedMass_g, params: { ...pr.params } }] })
-          }
-        >
-          + Add a different passive radiator
-        </button>
-      </div>
-
       <TuneRow
         target={pr.targetFb}
         onTarget={(x) => set({ targetFb: x })}
@@ -592,12 +545,109 @@ function PrBody(
         </button>
       </Presets>
       {msg && <p className="warn">{msg}</p>}
+      <div className="row finder-row-button">
+        <PrTuning ctx={p.finder} design={pr} vb_l={p.vb_l} linked={p.linked} onApply={(patch, summary) => p.onFound(patch, summary)} />
+      </div>
       <p className="hint">
-        Added mass is per passive radiator. PR Mms is the bare moving mass from the datasheet.
+        Added mass is per passive radiator.
         {t.mixed &&
-          " With mixed PRs each group gets its own excursion curve and Xmax line; the tuning helpers adjust group 1's added mass."}
+          " PRs and Added mass here are group 1's. With mixed PRs each group gets its own excursion curve and Xmax line; the tuning helpers adjust group 1's added mass."}
       </p>
+
+      {/* Which passive radiator: the model and its datasheet parameters. */}
+      <PrCard title={t.mixed ? "Passive radiator group 1" : "Passive radiator"} name={pr.prName} params={pr.params} onParams={setP}>
+        <PassiveRadiatorBrowser
+          rows={p.db?.passiveRadiators}
+          drivers={p.db?.drivers}
+          onPick={(id) =>
+            loadPrChoice(id).then(
+              ({ name, params, displacement_l, cutout_mm }) => {
+                set({ prName: name, params });
+                p.onPrPhysical({ displacement_l, cutout_mm });
+              },
+              () => alert("Couldn't load that passive radiator."),
+            )
+          }
+        />
+        <div className="row finder-row-button">
+          <PrFinder
+            ctx={p.finder}
+            design={pr}
+            vb_l={p.vb_l}
+            linked={p.linked}
+            db={p.db}
+            onUse={(patch, summary, physical) => p.onFound(patch, summary, physical)}
+          />
+        </div>
+      </PrCard>
+      {pr.extra.map((g, i) => (
+        <PrGroupCard
+          key={i}
+          title={`Passive radiator group ${i + 2}`}
+          group={g}
+          db={p.db}
+          onChange={(patch) => setGroup(i, patch)}
+          onRemove={() => set({ extra: pr.extra.filter((_, k) => k !== i) })}
+        />
+      ))}
+      <div className="add-design pr-add">
+        <button
+          type="button"
+          className="secondary"
+          title="Put a second kind of passive radiator in the same box (or the same PR with a different added mass)"
+          onClick={() =>
+            set({ extra: [...pr.extra, { prName: pr.prName, count: 1, addedMass_g: pr.addedMass_g, params: { ...pr.params } }] })
+          }
+        >
+          + Add a different passive radiator
+        </button>
+      </div>
     </>
+  );
+}
+
+/**
+ * One kind of passive radiator: its name, how to pick it (children), optional per-group fields,
+ * and its datasheet parameters, folded on phones (they come from the database and rarely change).
+ */
+function PrCard(props: {
+  title: string;
+  name: string;
+  params: PrDesign["params"];
+  onParams: (patch: Partial<PrDesign["params"]>) => void;
+  onRemove?: () => void;
+  /** Fields that belong to this group in the box (count, added mass). */
+  fields?: ReactNode;
+  children?: ReactNode;
+}) {
+  const narrow = useNarrow();
+  const q = props.params;
+  return (
+    <section className="pr-card" aria-label={props.title}>
+      <div className="pr-card-head">
+        <h3>{props.title}</h3>
+        {props.onRemove && (
+          <button type="button" className="icon" aria-label={`Remove ${props.title}`} title="Remove this group" onClick={props.onRemove}>
+            ×
+          </button>
+        )}
+      </div>
+      {props.children}
+      <p className="pr-name">{props.name}</p>
+      {props.fields && <div className="fields">{props.fields}</div>}
+      <details className="pr-specs" open={!narrow}>
+        <summary>
+          Parameters
+          <span className="pr-specs-sum">
+            Sd {short(q.sd_cm2)} cm² · Xmax {short(q.xmax_mm)} mm
+          </span>
+        </summary>
+        <div className="fields">
+          <PrParamFields params={q} onChange={props.onParams} />
+        </div>
+        <p className="hint">From the datasheet. PR Mms is the bare moving mass, without added mass.</p>
+      </details>
+    </section>
   );
 }
 
@@ -611,17 +661,19 @@ function PrGroupCard(props: {
 }) {
   const g = props.group;
   return (
-    <div className={props.title ? "pr-group" : undefined}>
-      {props.title && (
-        <div className="pr-group-head">
-          <h3>{props.title}</h3>
-          {props.onRemove && (
-            <button type="button" className="icon" aria-label={`Remove ${props.title}`} title="Remove this group" onClick={props.onRemove}>
-              ×
-            </button>
-          )}
-        </div>
-      )}
+    <PrCard
+      title={props.title ?? "Passive radiator"}
+      name={g.prName}
+      params={g.params}
+      onParams={(patch) => props.onChange({ params: { ...g.params, ...patch } })}
+      onRemove={props.onRemove}
+      fields={
+        <>
+          <Num help="Number of identical passive radiators in this group." label="PRs" value={g.count} onChange={(v) => props.onChange({ count: Math.max(1, Math.round(v)) })} />
+          <Num help="Mass glued onto each PR cone in this group (grams). More mass tunes lower." label="Added mass" unit="g" value={g.addedMass_g} min={0} onChange={(v) => props.onChange({ addedMass_g: v })} />
+        </>
+      }
+    >
       <PassiveRadiatorBrowser
         rows={props.db?.passiveRadiators}
         drivers={props.db?.drivers}
@@ -632,13 +684,7 @@ function PrGroupCard(props: {
           )
         }
       />
-      <p className="pr-name">{g.prName}</p>
-      <div className="fields">
-        <Num help="Number of identical passive radiators in this group." label="PRs" value={g.count} onChange={(v) => props.onChange({ count: Math.max(1, Math.round(v)) })} />
-        <Num help="Mass glued onto each PR cone in this group (grams). More mass tunes lower." label="Added mass" unit="g" value={g.addedMass_g} min={0} onChange={(v) => props.onChange({ addedMass_g: v })} />
-        <PrParamFields params={g.params} onChange={(patch) => props.onChange({ params: { ...g.params, ...patch } })} />
-      </div>
-    </div>
+    </PrCard>
   );
 }
 
@@ -694,7 +740,7 @@ function ChamberPrs(props: {
           title={mixed ? "Approximate tuning of all this chamber's PRs together; the charts show the real behaviour." : "Tuning of this chamber's PRs"}
         />
       </div>
-      <div className="add-design">
+      <div className="add-design pr-add">
         <button
           type="button"
           className="secondary"
