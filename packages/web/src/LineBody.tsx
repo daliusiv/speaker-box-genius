@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Sparkle } from "./Logo.tsx";
 import type { AlignmentDriver, DriverInput, SimulationOptions } from "@sbg/engine";
 import { Fixed, Num, Select } from "./components.tsx";
 import { lineFoldOf, lineLength, lineVolume } from "./sim.ts";
@@ -554,6 +555,7 @@ export function LineBody(p: {
             title="Redesign the horn for this cutoff: throat ½ cone area, mouth and length for the cutoff, chambers from the driver"
             onClick={() => p.driver && set({ ...frontHorn(d, p.driver, p.drivers, d.targetFb), name: d.name })}
           >
+            <Sparkle />
             Size the horn
           </button>
         </div>
@@ -561,6 +563,7 @@ export function LineBody(p: {
       <div className="tune">
         <Num help="The tuning you want. Press the button to rescale the line (or size the port) for it." label="Tune to" unit="Hz" value={d.targetFb} min={5} onChange={(targetFb) => set({ targetFb })} />
         <button className="secondary" onClick={() => tune()} disabled={!p.driver} title={d.end === "port" ? "Find the port length for this tuning" : "Scale the line's length (driver, tap and sections follow) for this tuning"}>
+          <Sparkle />
           {d.end === "port" ? "Set port length" : "Set line length"}
         </button>
       </div>
@@ -576,6 +579,7 @@ export function LineBody(p: {
       <div className="row line-best">
         <span>Which type suits this driver?</span>
         <button className="secondary" disabled={!p.driver || (cmp !== null && !cmp.done)} onClick={compare} title="Make every preset for this driver, tune it and compare size, bass, smoothness, excursion and mouth speed at this power">
+          <Sparkle />
           Compare types
         </button>
       </div>

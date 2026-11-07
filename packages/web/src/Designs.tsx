@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Sparkle } from "./Logo.tsx";
 import {
   portEffectiveLength,
   prAddedMassForFb,
@@ -193,6 +194,7 @@ function TuneRow(props: { target: number; onTarget: (v: number) => void; button:
     <div className="tune">
       <Num help="The tuning frequency you want. Press the button to size the port (or PR mass) for it." label="Tune to" unit="Hz" value={props.target} onChange={props.onTarget} />
       <button className="secondary" onClick={props.onApply} title={props.title}>
+        <Sparkle />
         {props.button}
       </button>
     </div>
@@ -966,6 +968,7 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
       {p.onSize && b.order !== "6s" && (
         <div className="size-all">
           <button type="button" className="secondary" onClick={p.onSize} disabled={p.linked}>
+            <Sparkle />
             Size for a flat band
           </button>
           <span className="hint">

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Sparkle } from "./Logo.tsx";
 import { Card, Num, Select } from "./components.tsx";
 import { useUnits } from "./units.ts";
 import { dimensionsFor, linkedDesign, volumeFor } from "./sim.ts";
@@ -57,6 +58,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
               find(l);
             }}
           >
+<Sparkle />
             Size for {offer.name || "the first design"} ({fmt(offer.vb_l, "vol", 1)})
           </button>
         </div>
@@ -85,6 +87,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
       </div>
       <div className="row">
         <button className="secondary" onClick={() => find()}>
+          <Sparkle />
           Size the box
         </button>
       </div>

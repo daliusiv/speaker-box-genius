@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Sparkle } from "./Logo.tsx";
 import {
   evaluatePrCandidates,
   largestPrFor,
@@ -268,6 +269,7 @@ export function PrFinder(props: {
         disabled={!ctx.driver || !props.db}
         title={ctx.driver ? "Try every passive radiator in the database for this driver and box" : "Enter the driver's parameters and Xmax first"}
       >
+        <Sparkle />
         Find a PR for this driver…
       </button>
       <dialog
@@ -334,6 +336,7 @@ export function PrFinder(props: {
               <p className="hint">
                 Stopped after {found.stopped.done} of {found.stopped.total}: the best of those tried so far.{" "}
                 <button type="button" className="link" onClick={() => setRerun((n) => n + 1)}>
+                  <Sparkle />
                   Try them all
                 </button>
               </p>

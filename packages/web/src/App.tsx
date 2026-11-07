@@ -93,7 +93,7 @@ import { openResults, withDriver } from "./assistant.ts";
 import type { SharedResults } from "./assistant.ts";
 import { ASSISTANT_HASH, SHARED_LINK, SHARED_RESULTS, START_IN_ASSISTANT, untouched } from "./start.ts";
 import { DesignAssistant } from "./DesignAssistant.tsx";
-import { Logo } from "./Logo.tsx";
+import { Logo, Sparkle } from "./Logo.tsx";
 import { submitDriverUrl } from "./submit.ts";
 
 const LIMIT_RED = "#dc2626";
@@ -1032,6 +1032,7 @@ export function App(props: { initial: AppState | null }) {
                     showMeasurePanel();
                   }}
                 >
+                  <Sparkle />
                   Measure from a .zma
                 </button>
               </div>
@@ -1305,6 +1306,7 @@ export function App(props: { initial: AppState | null }) {
           <div className="tab-panel" role="tabpanel" id="panel-boxes" aria-labelledby="tab-boxes">
             <div className="size-all">
               <button className="secondary" onClick={sizeBoxes} disabled={solved.missing.length > 0}>
+                <Sparkle />
                 Size all boxes for this driver
               </button>
               <span className="hint">Sealed Qtc 0.707; ported and PR a flat alignment (QB3, or Keele for higher Qts); bandpass the lowest flat band in its volume. Undo takes it back.</span>
@@ -2347,6 +2349,7 @@ export function App(props: { initial: AppState | null }) {
                 run();
               }}
             >
+              <Sparkle />
               {toast.action.label}
             </button>
           )}

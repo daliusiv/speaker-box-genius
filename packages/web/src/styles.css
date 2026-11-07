@@ -4238,3 +4238,24 @@ section.design {
     scroll-margin-top: 4.25rem;
   }
 }
+
+/* The assistant's sparkle on buttons that work something out for you. */
+svg.sparkle {
+  flex: none;
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  margin-right: 0.35em;
+  vertical-align: -0.18em;
+}
+
+/* In the accent colour on plain buttons and links (on filled buttons it takes the text colour). */
+button.secondary svg.sparkle,
+button.link svg.sparkle,
+[role="menuitem"] svg.sparkle {
+  color: var(--accent);
+}
+
+button.link svg.sparkle {
+  margin-right: 0.25em;
+}

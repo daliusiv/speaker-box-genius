@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Sparkle } from "./Logo.tsx";
 
 /**
  * First-visit help. New visitors get a short "Getting started" card; people who open
@@ -87,6 +88,7 @@ export function GettingStarted(props: { onDismiss: () => void; onAssistant?: () 
         <p className="welcome-assist">
           Not sure which driver or box?{" "}
           <button type="button" className="link" onClick={props.onAssistant}>
+            <Sparkle />
             Ask the Design assistant
           </button>
           : tell it what you're building and your limits, and it ranks drivers and boxes from the database.

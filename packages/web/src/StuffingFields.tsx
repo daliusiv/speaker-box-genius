@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Sparkle } from "./Logo.tsx";
 import { ventedFb, type Air } from "@sbg/engine";
 import { Fixed, Num, Select } from "./components.tsx";
 import { readMeasured } from "./Measured.tsx";
@@ -242,6 +243,7 @@ function FitFromMeasurement(props: { design: DesignState & { kind: StuffableKind
         </label>
         {sweeps.length > 0 && (
           <button type="button" className="secondary" onClick={() => run(chosen, state)}>
+<Sparkle />
             Fit
           </button>
         )}

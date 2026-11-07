@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Sparkle } from "./Logo.tsx";
 import { BUMP_LIMIT, bestPrTuning, evaluateTuning, type Fix, type PrTuningResult, type TuningGoal, type TuningPoint } from "@sbg/engine";
 import type { FinderContext } from "./PrFinder.tsx";
 import type { PrDesign } from "./state.ts";
@@ -127,6 +128,7 @@ export function PrTuning(props: {
               : "Enter the driver's parameters first"
         }
       >
+        <Sparkle />
         Best tuning…
       </button>
       <dialog
