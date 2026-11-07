@@ -78,7 +78,7 @@ import {
 } from "./sim.ts";
 import { RoomGainPanel } from "./RoomGain.tsx";
 import { BafflePanel } from "./BafflePanel.tsx";
-import { AddDesign, DesignCard } from "./Designs.tsx";
+import { AddBoxMenu, DesignCard } from "./Designs.tsx";
 import { useFolded } from "./fold.ts";
 import { COMPAT, COMPAT_NAMES, compatOf, nearestCompat, withCompat, type CompatPreset } from "./compat.ts";
 import { MeasuredCard, measuredSeries } from "./Measured.tsx";
@@ -629,8 +629,25 @@ export function App(props: { initial: AppState | null }) {
 
   const updateDesign = (d: DesignState) =>
     setState((s) => ({ ...s, designs: s.designs.map((x) => (x.id === d.id ? d : x)) }));
-  const addDesign = (kind: DesignState["kind"]) =>
-    setStep((s) => (s.designs.length >= MAX_DESIGNS ? s : { ...s, designs: [...s.designs, newDesign(kind, s.designs)] }));
+  // A box just added from the menu: scrolled to (and flashed) once it's on the page.
+  const scrollToNew = useRef<string | null>(null);
+  const addDesign = (kind: DesignState["kind"]) => {
+    if (state.designs.length >= MAX_DESIGNS) return;
+    const d = newDesign(kind, state.designs);
+    scrollToNew.current = d.id;
+    setStep((s) => (s.designs.length >= MAX_DESIGNS ? s : { ...s, designs: [...s.designs, d] }));
+  };
+  useEffect(() => {
+    const id = scrollToNew.current;
+    if (!id) return;
+    scrollToNew.current = null;
+    const el = document.querySelector<HTMLElement>(`[data-design="${CSS.escape(id)}"]`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.remove("flash");
+    void el.offsetWidth;
+    el.classList.add("flash");
+  }, [state.designs]);
   const duplicateDesign = (d: DesignState) =>
     setStep((s) => {
       if (s.designs.length >= MAX_DESIGNS) return s;
@@ -1317,20 +1334,16 @@ export function App(props: { initial: AppState | null }) {
               // Fold or open every box at once; the add buttons are at the bottom of the list.
               const shown = state.designs.filter((d) => d.on).map((d) => d.id);
               const allFolded = shown.length > 0 && shown.every((id) => folds.isFolded(id));
-              return state.designs.length > 1 ? (
+              return (
                 <div className="designs-bar">
-                  <button type="button" className="secondary" onClick={() => folds.foldAll(shown, !allFolded)}>
-                    {allFolded ? "Open all" : "Fold all"}
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary"
-                    onClick={() => document.querySelector(".add-design")?.scrollIntoView({ behavior: "smooth", block: "center" })}
-                  >
-                    + Add a box
-                  </button>
+                  <AddBoxMenu designs={state.designs} max={MAX_DESIGNS} onAdd={addDesign} />
+                  {state.designs.length > 1 && (
+                    <button type="button" className="secondary" onClick={() => folds.foldAll(shown, !allFolded)}>
+                      {allFolded ? "Open all" : "Fold all"}
+                    </button>
+                  )}
                 </div>
-              ) : null;
+              );
             })()}
             {state.designs.map((d) => (
               <DesignCard
@@ -1425,7 +1438,6 @@ export function App(props: { initial: AppState | null }) {
                 }
               />
             ))}
-            <AddDesign disabled={state.designs.length >= MAX_DESIGNS} onAdd={addDesign} />
           </div>
         )}
         {panel === "signal" && (
