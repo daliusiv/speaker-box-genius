@@ -31,7 +31,9 @@ A bandpass box in a space has its driver on a divider panel across the space: th
 
 ![My space in the Limits step: the box's outside size and wall thickness.](img/assistant-space.png)
 
-![Results that fill a 45 × 40 × 40 cm space, each port running along its longest side.](img/assistant-space-results.png) Opening a result sets the volume calculator to your space, and a box that fills it takes its volume from there, so the app shows the same net volume.
+![Results that fill a 45 × 40 × 40 cm space, each port running along its longest side.](img/assistant-space-results.png)
+
+Opening a result sets the volume calculator to your space, and a box that fills it takes its volume from there, so the app shows the same net volume.
 
 ## What it tries
 

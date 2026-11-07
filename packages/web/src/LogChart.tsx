@@ -171,6 +171,9 @@ const padOf = (k: number, tall: boolean) =>
     ? { l: 34 + 14 * (k - 1), r: 6 + 6 * (k - 1), t: 8 + 6 * (k - 1), b: 20 + 12 * (k - 1) }
     : { l: 48 + 22 * (k - 1), r: 12 + 16 * (k - 1), t: 22 + 12 * (k - 1), b: 28 + 14 * (k - 1) };
 const X_TICKS = [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000];
+/** A y label. Phones' lean margin fits about three digits, so thousands become "1.5k". */
+export const tickLabel = (v: number, tall: boolean) =>
+  tall && Math.abs(v) >= 1000 ? `${Number((v / 1000).toFixed(2))}k` : String(Number(v.toFixed(6)));
 
 function niceStep(range: number): number {
   const raw = range / 5;
@@ -541,7 +544,7 @@ export function LogChart({
           <g key={v}>
             <line className="grid" x1={PAD.l} x2={W - PAD.r} y1={yOf(v)} y2={yOf(v)} />
             <text className="tick" x={PAD.l - 6} y={yOf(v) + 4 * k} textAnchor="end" {...fs(11)}>
-              {Number(v.toFixed(6))}
+              {tickLabel(v, tall)}
             </text>
           </g>
         ))}

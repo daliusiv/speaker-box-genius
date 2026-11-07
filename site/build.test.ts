@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, existsSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build, markdown, parsePage, resolveExamples } from "./build.ts";
@@ -151,4 +151,15 @@ test("a driver page with a value to check says so near the top, with the way to 
   const flags = [{ code: "xmax-high" as const, message: "Xmax 19 mm is very large for a 60 mm cone." }];
   const html = driverContent(designDriver({ ...e, flags }, [])!, links, chart).content;
   assert.match(html, /class="note flag">⚠ Xmax 19 mm is very large for a 60 mm cone\. The cone excursion and maximum SPL below depend on it\. <a href="https:\/\/github\.com\/[^"]+data-correction/);
+});
+
+test("every guide image is a figure of its own (an image inside a paragraph shows at full size)", () => {
+  const dir = join(import.meta.dirname, "pages");
+  for (const f of readdirSync(dir).filter((x) => x.endsWith(".md"))) {
+    readFileSync(join(dir, f), "utf8")
+      .split(/\n\s*\n/)
+      .forEach((para) => {
+        if (/!\[/.test(para)) assert.match(para.trim(), /^!\[[^\]]*\]\([^)]*\)$/, `${f}: an image shares its paragraph: ${para.slice(0, 80)}`);
+      });
+  }
 });

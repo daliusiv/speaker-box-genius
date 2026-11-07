@@ -1,10 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { Transient } from "./sim.ts";
 
 const W = 640;
-const H = 260;
-const PAD = { l: 44, r: 12, t: 14, b: 28 };
 
 /**
  * Impulse or step response of each design against time (ms), scaled to a peak of ±1. A plain
@@ -12,6 +10,24 @@ const PAD = { l: 44, r: 12, t: 14, b: 28 };
  */
 export function TimeChart(props: { title: string; curves: Transient[]; view: "impulse" | "step"; from_ms: number; to_ms: number; hidden?: boolean; actions?: ReactNode }) {
   const [hoverT, setHoverT] = useState<number | null>(null);
+  // Like the frequency charts: on a phone the 640-unit chart shrinks, so text and lines grow by
+  // k to stay readable, and the chart gets taller.
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [k, setK] = useState(1);
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([e]) => {
+      const w = e?.contentRect.width ?? W;
+      setK(w > 0 ? Math.min(2, Math.max(1, W / w)) : 1);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const tall = k > 1.3;
+  const H = tall ? 470 : 260;
+  const PAD = tall ? { l: 30 + 14 * (k - 1), r: 8 + 6 * (k - 1), t: 10 + 6 * (k - 1), b: 22 + 14 * (k - 1) } : { l: 44, r: 12, t: 14, b: 28 };
+  const fs = { style: { fontSize: `${11 * k}px` } };
   const PW = W - PAD.l - PAD.r;
   const PH = H - PAD.t - PAD.b;
   const xOf = (t: number) => PAD.l + ((t - props.from_ms) / (props.to_ms - props.from_ms)) * PW;
@@ -73,6 +89,7 @@ export function TimeChart(props: { title: string; curves: Transient[]; view: "im
           </div>
         )}
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}
           role="img"
           aria-label={`${props.title} against time, ${props.from_ms} to ${props.to_ms} ms`}
@@ -94,23 +111,23 @@ export function TimeChart(props: { title: string; curves: Transient[]; view: "im
           </g>
           <g className="ticks">
             {xTicks.map((t) => (
-              <text key={`tx${t}`} className="tick" x={xOf(t)} y={H - 9} textAnchor="middle">
+              <text key={`tx${t}`} className="tick" x={xOf(t)} y={H - 9 * k} textAnchor="middle" {...fs}>
                 {t < 0 ? `−${-t}` : t}
               </text>
             ))}
             {[-1, -0.5, 0, 0.5, 1].map((v) => (
-              <text key={`ty${v}`} className="tick" x={PAD.l - 6} y={yOf(v) + 4} textAnchor="end">
+              <text key={`ty${v}`} className="tick" x={PAD.l - 6} y={yOf(v) + 4 * k} textAnchor="end" {...fs}>
                 {v < 0 ? `−${-v}` : v}
               </text>
             ))}
-            <text className="tick" x={PAD.l + PW} y={H - 9} textAnchor="end" dy="-12">
+            <text className="tick" x={PAD.l + PW} y={H - 9 * k - 12 * k} textAnchor="end" {...fs}>
               ms
             </text>
           </g>
           {props.curves.map((c) => (
-            <path key={c.label} d={path(c)} fill="none" stroke={c.color} strokeWidth={1.8} strokeDasharray={c.dash} strokeLinejoin="round" />
+            <path key={c.label} d={path(c)} fill="none" stroke={c.color} strokeWidth={1.8 * k} strokeDasharray={c.dash} strokeLinejoin="round" />
           ))}
-          {hoverT !== null && <line x1={xOf(hoverT)} x2={xOf(hoverT)} y1={PAD.t} y2={PAD.t + PH} stroke="currentColor" strokeOpacity={0.3} />}
+          {hoverT !== null && <line x1={xOf(hoverT)} x2={xOf(hoverT)} y1={PAD.t} y2={PAD.t + PH} stroke="currentColor" strokeOpacity={0.3} strokeWidth={k} />}
         </svg>
       </div>
     </figure>
