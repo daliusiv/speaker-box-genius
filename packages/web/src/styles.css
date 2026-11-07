@@ -1759,6 +1759,30 @@ button.check-fix {
   color: var(--on-accent);
 }
 
+/* Settings: match a program's conventions in one tap. */
+.compat {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.compat-label {
+  font-weight: 600;
+}
+
+.compat .unit-switch button {
+  min-height: 2.25rem;
+  padding-inline: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.compat-custom {
+  flex-basis: 100%;
+  margin: 0;
+}
+
 /* The drive above the charts: a full-width slider that stays in reach while scrolling. */
 .drive-bar {
   position: sticky;
