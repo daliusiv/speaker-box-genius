@@ -64,6 +64,12 @@ export function TimeChart(props: { title: string; curves: Transient[]; view: "im
     flush();
     return d;
   };
+  const readAt = (e: { clientX: number; currentTarget: SVGSVGElement }) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * W;
+    const t = props.from_ms + ((px - PAD.l) / PW) * (props.to_ms - props.from_ms);
+    setHoverT(t >= props.from_ms && t <= props.to_ms ? t : null);
+  };
   const valueAt = (c: Transient, t: number) => {
     const y = props.view === "impulse" ? c.impulse : c.step;
     let i = 0;
@@ -93,13 +99,11 @@ export function TimeChart(props: { title: string; curves: Transient[]; view: "im
           viewBox={`0 0 ${W} ${H}`}
           role="img"
           aria-label={`${props.title} against time, ${props.from_ms} to ${props.to_ms} ms`}
-          onPointerMove={(e) => {
-            const r = e.currentTarget.getBoundingClientRect();
-            const px = ((e.clientX - r.left) / r.width) * W;
-            const t = props.from_ms + ((px - PAD.l) / PW) * (props.to_ms - props.from_ms);
-            setHoverT(t >= props.from_ms && t <= props.to_ms ? t : null);
-          }}
-          onPointerLeave={() => setHoverT(null)}
+          // As on the frequency charts: a tap or a sideways drag shows the values, and they stay up
+          // after the finger lifts (a finger lifting also "leaves"); a mouse leaving clears them.
+          onPointerMove={(e) => readAt(e)}
+          onPointerDown={(e) => readAt(e)}
+          onPointerLeave={(e) => e.pointerType === "mouse" && setHoverT(null)}
         >
           <g className="grid">
             {xTicks.map((t) => (
@@ -129,6 +133,24 @@ export function TimeChart(props: { title: string; curves: Transient[]; view: "im
           ))}
           {hoverT !== null && <line x1={xOf(hoverT)} x2={xOf(hoverT)} y1={PAD.t} y2={PAD.t + PH} stroke="currentColor" strokeOpacity={0.3} strokeWidth={k} />}
         </svg>
+      </div>
+      {/* Phones: the values in a strip under the plot, as on the frequency charts (the floating box is for desktops). */}
+      <div className="chart-strip" role="status">
+        <div className="strip-head">
+          {hoverT === null ? <span className="muted">Tap the chart for values (peak = 1)</span> : <b>{hoverT.toFixed(1)} ms</b>}
+        </div>
+        {props.curves.map((c) => (
+          <div key={c.label} className="strip-item">
+            <svg className="strip-line" viewBox="0 0 22 8" aria-hidden="true">
+              <line x1="1" y1="4" x2="21" y2="4" stroke={c.color} strokeWidth="3" strokeDasharray={c.dash} strokeLinecap="round" />
+            </svg>
+            <span className="strip-name" title={c.label}>
+              {c.label}
+            </span>
+            <span />
+            <span className="strip-value">{hoverT === null ? "" : valueAt(c, hoverT).toFixed(2)}</span>
+          </div>
+        ))}
       </div>
     </figure>
   );
