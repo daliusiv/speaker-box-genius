@@ -3,7 +3,7 @@
   "model": "DC130A-8",
   "type": "woofer",
   "nominal_ohms": 8,
-  "size_in": 5,
+  "size_in": 5.25,
   "ts": {
     "fs": 53.2,
     "qms": 1.9,

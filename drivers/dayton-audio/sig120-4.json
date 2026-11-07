@@ -3,6 +3,7 @@
   "model": "SIG120-4",
   "type": "woofer",
   "nominal_ohms": 4,
+  "size_in": 4,
   "ts": {
     "fs": 74.6,
     "qms": 4.84,

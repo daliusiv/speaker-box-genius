@@ -1,7 +1,7 @@
 {
   "brand": "Eminence",
   "model": "LA6 Cbmr",
-  "type": "midbass",
+  "type": "midrange",
   "nominal_ohms": 8,
   "size_in": 6,
   "ts": {

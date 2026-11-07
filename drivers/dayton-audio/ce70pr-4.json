@@ -3,7 +3,7 @@
   "model": "CE70PR-4",
   "type": "full-range",
   "nominal_ohms": 4,
-  "size_in": 2,
+  "size_in": 2.5,
   "ts": {
     "fs": 109,
     "qms": 3.5,

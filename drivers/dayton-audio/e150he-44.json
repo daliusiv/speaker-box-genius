@@ -3,6 +3,7 @@
   "model": "E150HE-44",
   "type": "subwoofer",
   "nominal_ohms": 8,
+  "size_in": 5.5,
   "ts": {
     "fs": 35,
     "qms": 2.93,

@@ -3,7 +3,7 @@
   "model": "ND91-8",
   "type": "full-range",
   "nominal_ohms": 8,
-  "size_in": 3,
+  "size_in": 3.5,
   "ts": {
     "fs": 70.7,
     "qms": 4.29,

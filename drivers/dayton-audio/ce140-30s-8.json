@@ -36,5 +36,6 @@
       "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "plausibility_note": "A 1 x 5 inch racetrack driver: Sd 25.1 cm² matches its area, so the 1-inch size is its short side (checked Nov 2026)."
 }

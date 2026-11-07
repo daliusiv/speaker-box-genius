@@ -3,6 +3,7 @@
   "model": "SIG150-4",
   "type": "woofer",
   "nominal_ohms": 4,
+  "size_in": 5.25,
   "ts": {
     "fs": 61.5,
     "qms": 5.78,

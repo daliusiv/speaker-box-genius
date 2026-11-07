@@ -3,7 +3,7 @@
   "model": "CE38M-8",
   "type": "woofer",
   "nominal_ohms": 8,
-  "size_in": 1,
+  "size_in": 1.5,
   "ts": {
     "fs": 191.8,
     "qms": 1.59,
@@ -35,5 +35,6 @@
       "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "plausibility_note": "Xmax 0.1 mm is the value Dayton Audio publishes for this 1.5-inch mini speaker, not a typo (checked Nov 2026)."
 }

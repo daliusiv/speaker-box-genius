@@ -3,7 +3,7 @@
   "model": "DS135-8",
   "type": "woofer",
   "nominal_ohms": 8,
-  "size_in": 3,
+  "size_in": 5,
   "ts": {
     "fs": 52.5,
     "qms": 2.02,
@@ -19,6 +19,7 @@
     "pe_w": 50
   },
   "physical": {
+    "cutout_mm": 111.5,
     "depth_mm": 68.6
   },
   "sources": [
@@ -35,6 +36,5 @@
       "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
-  "status": "community",
-  "notes": "Published cutout 111.5 mm can't fit a 3\" driver, so it's left out."
+  "status": "community"
 }

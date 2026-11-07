@@ -36,5 +36,6 @@
       "note": "Dayton Audio specification sheet (PDF)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "plausibility_note": "A 2 x 7 inch racetrack driver: Sd 56.4 cm² matches its area, so the 2-inch size is its short side (checked Nov 2026)."
 }

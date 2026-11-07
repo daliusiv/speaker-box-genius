@@ -3,7 +3,7 @@
   "model": "DC160-4",
   "type": "woofer",
   "nominal_ohms": 4,
-  "size_in": 6,
+  "size_in": 6.5,
   "ts": {
     "fs": 39,
     "qms": 3.31,

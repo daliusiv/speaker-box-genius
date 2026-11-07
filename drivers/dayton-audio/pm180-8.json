@@ -3,6 +3,7 @@
   "model": "PM180-8",
   "type": "midrange",
   "nominal_ohms": 8,
+  "size_in": 6.5,
   "ts": {
     "fs": 53.2,
     "qms": 4.13,

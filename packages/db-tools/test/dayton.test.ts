@@ -8,6 +8,7 @@ import {
   parsePager,
   parseCm2,
   parseInches,
+  titleInches,
   parseLitres,
   parseMm,
   parseProduct,
@@ -28,6 +29,9 @@ test("unit parsing", () => {
   assert.equal(parseInches('6-1/2"'), 6.5);
   assert.equal(parseInches('5-1/4"'), 5.25);
   assert.equal(parseInches('3/4"'), 0.75);
+  // Decimals weren't read before: "6.5\"" came out as 6.
+  assert.equal(parseInches('6.5"'), 6.5);
+  assert.equal(parseInches('3.50"'), 3.5);
   assert.equal(parseMm("282 mm"), 282);
   assert.equal(parseMm('11.1"'), 281.9);
   assert.equal(parseLitres("84.1 liters"), 84.1);
@@ -199,6 +203,7 @@ test("re-import keeps displacement, submissions and verified status, drops deale
   const fresh = parseProduct(fx("rss315hf-4.html"), URL, "2026-11-03").driver!;
   keepExisting(fresh, {
     status: "verified",
+    plausibility_note: "Checked.",
     physical: { displacement_l: 2.4 },
     sources: [
       { kind: "datasheet" as const, url: "https://www.soundimports.eu/x", note: "SoundImports" },
@@ -206,6 +211,7 @@ test("re-import keeps displacement, submissions and verified status, drops deale
       { kind: "measured" as const, method: "DATS v3", by: "github:alice" },
     ],
   });
+  assert.equal(fresh.plausibility_note, "Checked.");
   assert.equal(fresh.status, "verified");
   assert.equal(fresh.physical?.displacement_l, 2.4);
   assert.equal(fresh.sources.length, 4); // two from the importer + the submission + the measurement
@@ -218,4 +224,13 @@ test("midranges are imported as midrange; woofer/midrange stays a woofer", () =>
   assert.equal(mid.driver!.type, "midrange");
   const wm = parseProduct(page("x", MX12.map(([k, v]): [string, string] => (k === "Speaker Type" ? [k, "Woofer/Midrange"] : [k, v]))), URL, "d");
   assert.equal(wm.driver!.type, "woofer");
+});
+
+test("the product title's size wins over the Nominal Diameter field", () => {
+  assert.equal(titleInches('DS135-8 5" Designer Series Woofer Speaker 8 Ohm', "DS135-8"), 5);
+  assert.equal(titleInches('DC160-8 6-1/2" Classic Woofer 8 Ohm', "DC160-8"), 6.5);
+  assert.equal(titleInches('SIG150-4 5.25" Signature Series Woofer', "SIG150-4"), 5.25);
+  // Racetrack drivers have no single size.
+  assert.equal(titleInches('HARB252-8 1" x 5" Dual Motor High Aspect Ratio BMT', "HARB252-8"), undefined);
+  assert.equal(titleInches("Some driver without a size", "X1"), undefined);
 });

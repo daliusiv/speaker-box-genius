@@ -4,7 +4,8 @@ import { mkdtempSync, readFileSync, readdirSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build, markdown, parsePage, resolveExamples } from "./build.ts";
-import { cardData, designDriver, driverState, loadDb, prCandidate } from "./drivers.ts";
+import { cardData, designDriver, driverContent, driverState, loadDb, prCandidate } from "./drivers.ts";
+import { chart } from "./chart.ts";
 import { cardSvg } from "./og.ts";
 
 // One build for every test below (it takes a while: a page per driver). Share cards need
@@ -119,10 +120,6 @@ test("driver pages: suggested boxes, charts, share link and brand indexes", asyn
   assert.match(readFileSync(join(out, "drivers/dayton-audio/index.html"), "utf8"), /href="\/drivers\/dayton-audio\/dsa215-8\/"/);
   assert.match(readFileSync(join(out, "sitemap.xml"), "utf8"), /\/drivers\/dayton-audio\/dsa215-8\//);
   assert.doesNotMatch(html, /class="note flag"/);
-  // A driver with a value to check says so near the top, with the way to report it.
-  const flagged = paths.map((x) => readFileSync(join(out, x, "index.html"), "utf8")).find((h) => h.includes('class="note flag"'));
-  assert.ok(flagged, "a driver page with a flag note");
-  assert.match(flagged, /class="note flag">⚠ [^<]+<a href="https:\/\/github\.com\/[^"]+data-correction/);
 });
 
 test("driver designs follow the app's presets, with a port that fits and a PR that keeps up", () => {
@@ -143,6 +140,17 @@ test("driver designs follow the app's presets, with a port that fits and a PR th
   const svg = cardSvg(cardData(p));
   assert.match(svg, /^<svg[^>]+width="1200" height="630"/);
   assert.match(svg, />Dayton Audio DSA215-8</);
+});
+
+test("a driver page with a value to check says so near the top, with the way to report it", () => {
+  const db = loadDb();
+  const e = db.drivers.find((x) => x.id === "dayton-audio/dsa215-8")!;
+  const links = { all: "https://speakerboxgenius.com/#z=x", related: [] };
+  const clean = driverContent(designDriver(e, [])!, links, chart).content;
+  assert.doesNotMatch(clean, /class="note flag"/);
+  const flags = [{ code: "xmax-high" as const, message: "Xmax 19 mm is very large for a 60 mm cone." }];
+  const html = driverContent(designDriver({ ...e, flags }, [])!, links, chart).content;
+  assert.match(html, /class="note flag">⚠ Xmax 19 mm is very large for a 60 mm cone\. The cone excursion and maximum SPL below depend on it\. <a href="https:\/\/github\.com\/[^"]+data-correction/);
 });
 
 test("every guide image is a figure of its own (an image inside a paragraph shows at full size)", () => {

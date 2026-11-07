@@ -2,7 +2,7 @@
   "brand": "Dayton Audio",
   "model": "DMA70-PR",
   "type": "passive-radiator",
-  "size_in": 2,
+  "size_in": 2.5,
   "params": {
     "mms_g": 12,
     "sd_cm2": 22.9,

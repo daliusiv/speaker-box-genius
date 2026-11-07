@@ -3,6 +3,7 @@
   "model": "MB620-8",
   "type": "woofer",
   "nominal_ohms": 8,
+  "size_in": 6.5,
   "ts": {
     "fs": 104,
     "qms": 4.29,

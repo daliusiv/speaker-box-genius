@@ -2,7 +2,7 @@
   "brand": "Dayton Audio",
   "model": "ND140-PR",
   "type": "passive-radiator",
-  "size_in": 5,
+  "size_in": 5.25,
   "params": {
     "mms_g": 16.4,
     "sd_cm2": 86.6,

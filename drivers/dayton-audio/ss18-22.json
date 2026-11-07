@@ -3,7 +3,7 @@
   "model": "SS18-22",
   "type": "subwoofer",
   "nominal_ohms": 4,
-  "size_in": 15,
+  "size_in": 18,
   "ts": {
     "fs": 21,
     "qms": 3.4,

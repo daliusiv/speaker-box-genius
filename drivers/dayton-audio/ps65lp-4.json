@@ -3,7 +3,7 @@
   "model": "PS65LP-4",
   "type": "full-range",
   "nominal_ohms": 4,
-  "size_in": 6,
+  "size_in": 6.5,
   "ts": {
     "fs": 67.3,
     "qms": 3.85,

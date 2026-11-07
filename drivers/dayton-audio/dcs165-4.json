@@ -3,7 +3,7 @@
   "model": "DCS165-4",
   "type": "subwoofer",
   "nominal_ohms": 4,
-  "size_in": 6,
+  "size_in": 6.5,
   "ts": {
     "fs": 35.7,
     "qms": 6.62,
