@@ -47,6 +47,13 @@ test("consistency check: self-consistent driver is within 1%", () => {
   for (const i of issues) assert.ok(i.diff < 0.01, i.message);
 });
 
+test("consistency check: a published Qts that Qms and Qes don't give is caught", () => {
+  const [ok] = checkConsistency({ fs: 30, qms: 5.2, qes: 0.4, vas_l: 50, re: 3.4, sd_cm2: 330, qts: 0.37 });
+  assert.ok(ok?.param === "qts" && ok.diff < 0.01, String(ok?.message));
+  const [bad] = checkConsistency({ fs: 30, qms: 5.2, qes: 0.4, vas_l: 50, re: 3.4, sd_cm2: 330, qts: 0.47 });
+  assert.ok(bad && bad.diff > 0.2, String(bad?.message));
+});
+
 test("consistency check: Vas typed in ft³ instead of litres is caught", () => {
   const [mms] = checkConsistency({ fs: 30, qms: 5.2, qes: 0.4, vas_l: 1.77, re: 3.4, sd_cm2: 330, mms_g: 86.9 });
   assert.ok(mms && mms.diff > 0.9, mms?.message ?? "no Mms issue reported");
