@@ -431,7 +431,9 @@ What the comparison settles, and the conventions it has to bridge:
 
 **Power compression.** Hornresp's Tools → Power Compression sets the voice coil's temperature; at 120 °C its Re rises by 39.3 %, copper's 0.393 %/°C, as the app's Settings → Voice coil °C does. The sealed box (B9) and the mass-loaded line (case 16) at 120 °C match as closely as at 20 °C: 0.05 dB and 0.5 % in impedance for the box, 0.02 dB and 0.3 % for the line.
 
-The fourth-order and parallel sixth-order bandpass boxes are held to looser SPL limits: above about 150 Hz, more than 12 dB below the passband, the app's output rises up to 1 dB above Hornresp's (the impedance and excursion still match within 0.4 %), and the parallel box's slope below 15 Hz, 50 dB down, sits up to 1.3 dB lower. The front port's air speed in the fourth-order box peaks at 3.39 m/s at 51 Hz in the app and about 3.38 m/s on Hornresp's chart.`;
+**Leaks don't radiate in Hornresp's bandpass boxes.** Hornresp's QL takes energy out of a chamber, but its Wizard's output is the vent's alone: the air that escapes through the leak isn't heard. The app counts it as sound, as a real gap would be, and the leak's share grows above the passband (the vent's output falls at 12 dB/octave, the leak's at 6), so there the app's total sits above Hornresp's: up to 1 dB at 260 Hz with a port (B4), 1.8 dB with a passive radiator (B14), 20 dB below the passband. The fourth-order boxes are therefore compared by the vent's own output, which matches: the port within 0.03 dB, the DSA270-PR within 0.1 dB (with the same 3.83 g of front air as B3), impedance and excursion within 0.8 %. The radiator's excursion peaks at 0.98 mm at 48 Hz in both. The front port's air speed in the fourth-order box peaks at 3.39 m/s at 51 Hz in the app and about 3.38 m/s on Hornresp's chart.
+
+The parallel sixth-order bandpass box is held to looser SPL limits: above about 150 Hz the app's output rises up to 1 dB above Hornresp's, likely the same leak, and its slope below 15 Hz, 50 dB down, sits up to 1.3 dB lower.`;
 
 export interface HornrespBoxCase {
   title: string;
@@ -597,7 +599,15 @@ export function runHornrespBox(id: string): HornrespBoxRun {
       } else if (c.input.kind === "vented") {
         area = (Math.PI * (c.input.port as { diameter_cm: number }).diameter_cm ** 2) / 4 / 1e4;
         u = (r.portVelocity![i]! * area * (c.input.portCount ?? 1)) / Math.SQRT2;
-      } else throw new Error(`${id}: the vent's output is compared for ported and PR boxes only`);
+      } else if (c.input.kind === "bandpass" && c.input.front.prs?.length === 1) {
+        // A 4th-order bandpass box's front passive radiators or port: Hornresp's Wizard output is theirs alone.
+        const g = c.input.front.prs[0]!;
+        area = g.pr.sd_cm2 / 1e4;
+        u = (w * (r.prExcursionMm![i]! / 1000) * area * g.count) / Math.SQRT2;
+      } else if (c.input.kind === "bandpass" && c.input.front.port && !c.input.rear.port && !c.input.rear.prs) {
+        area = (Math.PI * (c.input.front.port as { diameter_cm: number }).diameter_cm ** 2) / 4 / 1e4;
+        u = (r.portVelocity![i]! * area * (c.input.front.portCount ?? 1)) / Math.SQRT2;
+      } else throw new Error(`${id}: the vent's output is compared for ported, PR and PR-bandpass boxes only`);
       return db(w, u, area);
     });
     vent = pair(ventRows, "SPL", ventDb);
