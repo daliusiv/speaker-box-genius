@@ -328,6 +328,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   // Cone loaded by a piston's radiation impedance: Mms less one side's air (8ρa³/3), as for lines.
   const pistonLoad = opts.coneLoad === "piston" && !bp && !line;
   const boxMms = pistonLoad ? Math.max(d.mms - (8 * air.rho * Math.pow(d.sd / Math.PI, 1.5)) / 3, d.mms * 0.05) : d.mms;
+  // The moving mass in the bass with a piston load: n cones side by side carry √n × one cone's front air.
+  const mLow = pistonLoad ? boxMms + (Math.sqrt(n) * 8 * air.rho * Math.pow(d.sd / Math.PI, 1.5)) / 3 : d.mms;
   const lineMmd = line ? Math.max(d.mms - (16 * air.rho * Math.pow(d.sd / Math.PI, 1.5)) / 3, d.mms * 0.05) : 0;
   // Port compression in a mass-loaded line's port (same model as vented boxes).
   let lineNl = 0;
@@ -359,9 +361,10 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     // bandpass: handled by `bp`
   } else if (single.kind === "sealed") {
     const alpha = (d.cms * d.sd * d.sd) / cab;
-    fRef = (1 / (2 * Math.PI * Math.sqrt(d.mms * d.cms))) * Math.sqrt(1 + n * alpha);
+    fRef = (1 / (2 * Math.PI * Math.sqrt(mLow * d.cms))) * Math.sqrt(1 + n * alpha);
     summary.fc = fRef;
-    const qts = (driverIn.qms * driverIn.qes) / (driverIn.qms + driverIn.qes);
+    // Qts scales with √(mass) at a fixed compliance and resistance.
+    const qts = ((driverIn.qms * driverIn.qes) / (driverIn.qms + driverIn.qes)) * Math.sqrt(mLow / d.mms);
     summary.qtc = qts * Math.sqrt(1 + n * alpha);
   } else if (single.kind === "vented") {
     ventCount = single.portCount ?? 1;
@@ -732,7 +735,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const thRef = net ? passiveThevenin(net, 1, rgTotal, true) : null;
   const vRef = thRef ? vDriver * thRef.v.re : vDriver;
   const rRef = thRef ? perDriverZ(thRef.z).re : rgDriver;
-  const pRef = (air.rho * n * vRef * d.bl * d.sd) / ((d.re + rRef) * d.mms * space * Math.PI * r);
+  const pRef = (air.rho * n * vRef * d.bl * d.sd) / ((d.re + rRef) * mLow * space * Math.PI * r);
   summary.referenceSpl = 20 * Math.log10(pRef / 2e-5);
   summary.f3 = crossing(freq, out.spl, summary.referenceSpl - 3);
   summary.f6 = crossing(freq, out.spl, summary.referenceSpl - 6);

@@ -539,6 +539,9 @@ export function App(props: { initial: AppState | null }) {
           settings: {
             ...s.settings,
             air: "winisd",
+            // WinISD's models: leaked air is heard, the cone's air is a fixed mass.
+            leakage: "radiates",
+            coneLoad: "mass",
             // Isobaric pairs have two coils in series, each with WinISD's Rg.
             rg: Number(((p.rg * (p.isobaric ? 2 : 1)) / p.drivers).toPrecision(6)),
             inductance: p.simulateLe,
