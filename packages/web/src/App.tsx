@@ -833,7 +833,7 @@ export function App(props: { initial: AppState | null }) {
 
       <aside className="panel">
         <PanelTabs value={panel} onChange={choosePanel} badges={tabBadges} className="desktop-tabs" />
-        {narrow && solved.missing.length === 0 && <StatusStrip designs={designs} state={state} onJump={jumpTo} />}
+        {narrow && solved.missing.length === 0 && <StatusStrip designs={designs} state={state} onJump={jumpTo} onPower={() => showOnPhone("charts")} />}
         {panel === "driver" && (
           <div className="tab-panel" role="tabpanel" id="panel-driver" aria-labelledby="tab-driver">
             <Card title="Driver">
@@ -2306,11 +2306,27 @@ function deepText(deep: NonNullable<Limits["deep"]>, state: AppState): string {
  * kept at the top while you scroll, so changing a box shows its effect without going to the
  * charts. Tapping a box goes to the chart for its limit (or the response).
  */
-function StatusStrip({ designs, state, onJump }: { designs: Design[]; state: AppState; onJump: (kind: LimitKind | null, ids: string[]) => void }) {
+function StatusStrip({
+  designs,
+  state,
+  onJump,
+  onPower,
+}: {
+  designs: Design[];
+  state: AppState;
+  onJump: (kind: LimitKind | null, ids: string[]) => void;
+  onPower: () => void;
+}) {
   const mains = designs.filter((d) => !d.compare);
   if (mains.length === 0) return null;
+  const drive = state.drive === "volts" ? `${Number(state.volts.toPrecision(3))} V` : `${Number(state.power.toPrecision(3))} W`;
   return (
     <div className="status-strip" role="group" aria-label="Boxes at a glance">
+      {/* The drive the limits are checked at: set on the charts, so it's shown (not edited) here. */}
+      <button type="button" className="strip-box strip-power" onClick={onPower} title="The power the limits are checked at. Change it on the charts." aria-label={`Drive ${drive}: change it on the charts`}>
+        <span aria-hidden="true">⚡</span>
+        {drive}
+      </button>
       {mains.map((d) => {
         const l = limitsOf(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state));
         const f3 = d.result.summary.f3;
