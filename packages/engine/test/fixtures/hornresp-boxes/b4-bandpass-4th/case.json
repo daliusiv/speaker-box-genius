@@ -22,9 +22,5 @@
       "qp": null
     }
   },
-  "portModel": "pipe",
-  "tol": {
-    "splMean": 0.3,
-    "splP95": 1.1
-  }
+  "portModel": "pipe"
 }

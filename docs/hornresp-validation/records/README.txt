@@ -52,6 +52,9 @@ B11-sealed-2P / -2S     B1 with two drivers, parallel and series (import these:
 B13a / B13b             B1 with the FDD model (double-click the Cms label, On):
                         Rms 2.00 / Ams 3.00E-04, and Rms 8.00 / Ams 1.00E-03
 
+B14-bandpass-4th-pr     B4 with a DSA270-PR in place of the front port (Edit,
+                        double-click the Ap1 label: it reads PR)       (Wizard)
+
 B12 (bw2 / bw3 / lr4)   B2 with Tools > Filter Wizard (Active): high pass 25 Hz,
                         order 2, 3 (Butterworth) and 4 (Linkwitz-Riley), On,
                         then File > Export in the chart window
@@ -68,7 +71,7 @@ More than one driver is written with its wiring: "2P" (parallel) or "2S"
 The boxes' chambers are 5 cm deep (Lc), so Hornresp treats them as plain volumes.
 B1-B3 and B7: Calculate, then File > Export in the chart window; for B2 and B3
 also Tools > Output > Horn (the cone's front) and the port's or radiator's
-output, each exported on its own. B4-B6: Wizard, then export Power, Impedance and
+output, each exported on its own. B4-B6 and B14: Wizard, then export Power, Impedance and
 Displacement one by one.
 
 For each record:
