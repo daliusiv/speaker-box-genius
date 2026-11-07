@@ -1,4 +1,4 @@
-import { flowResistivity, portEffectiveLength, semiActive, STANDARD_AIR, type DriverInput, type SemiInductance, type TsValues } from "@sbg/engine";
+import { flowResistivity, passiveActive, portEffectiveLength, semiActive, STANDARD_AIR, type DriverInput, type SemiInductance, type SimulationOptions, type TsValues } from "@sbg/engine";
 import { lineLength } from "./sim.ts";
 import type { LineDesign, LineSection } from "./state.ts";
 
@@ -101,9 +101,9 @@ export interface HornrespExport {
 export function toHornresp(
   d: LineDesign,
   driver: DriverInput,
-  o: { eg: number; drivers: number; wiring?: "parallel" | "series"; name: string; pmax?: number; xmax_mm?: number },
+  o: { eg: number; drivers: number; wiring?: "parallel" | "series"; name: string; pmax?: number; xmax_mm?: number; sim?: SimulationOptions },
 ): HornrespExport | string {
-  const warnings: string[] = [];
+  const warnings: string[] = signalNotes(o.sim);
   const L = lineLength(d);
   const tiny = 0.01; // Hornresp's way of saying "the driver is at the closed end"
   let segs: Seg[];
@@ -158,7 +158,7 @@ export function toHornresp(
   head("RADIATION, SOURCE AND MOUTH PARAMETER VALUES");
   put("Ang", "2.0 x Pi", "half space");
   put("Eg", r2(o.eg), "volts");
-  put("Rg", "0.00");
+  put("Rg", r2(Math.max(0, o.sim?.rg ?? 0)), "amplifier + cable resistance (Ω)");
   if (mouthExp) {
     // Mouth circumference in wavelengths at the last segment's flare cutoff (free space).
     const cir = (2 * Math.sqrt((last.s2 / 1e4) / Math.PI) * Math.PI * expCutoff(last)) / C_HR;
@@ -317,6 +317,8 @@ export interface HornrespImport {
   driver?: { ts: TsValues; le_mh: number; xmax_mm?: number; name: string; semi?: SemiInductance; fdd?: { rms: number; ams_mm_per_n: number } };
   /** How many drivers the record has, and their wiring ("2P" / "2S"). */
   drivers?: { count: number; wiring: "parallel" | "series" };
+  /** The record's amplifier + cable resistance (Rg, Ω), when it isn't 0. */
+  rg?: number;
   warnings: string[];
 }
 
@@ -468,5 +470,44 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
     if (nd[2]) drivers = { count: Number(nd[1]), wiring: nd[2].toUpperCase() === "S" ? "series" : "parallel" };
     else warnings.push(`The record says ${nd[1]} drivers without P or S; Hornresp reads that as one driver, so it was left as it is.`);
   }
-  return { design, ...(driver ? { driver } : {}), ...(drivers ? { drivers } : {}), warnings };
+  const rg = get("Rg");
+  return { design, ...(driver ? { driver } : {}), ...(drivers ? { drivers } : {}), ...(rg !== undefined && rg > 0 ? { rg } : {}), warnings };
+}
+
+const fmt = (v: number) => Number(v.toPrecision(4)).toString();
+
+/**
+ * The drive settings Hornresp keeps outside the record's main values, as steps to repeat in
+ * Hornresp: its record fields for them aren't documented, so they aren't written. Rg is written.
+ */
+export function signalNotes(sim: SimulationOptions | undefined): string[] {
+  if (!sim) return [];
+  const out: string[] = [];
+  const hp = sim.highPass;
+  if (hp) {
+    out.push(
+      `High-pass filter: in Hornresp's chart window, Tools → Filter Wizard → Active, high pass ${fmt(hp.freq)} Hz, ${hp.type === "butterworth" ? "Butterworth" : "Linkwitz-Riley"} order ${hp.order}, then On.`,
+    );
+  }
+  const eq = sim.eq ?? [];
+  const bands = eq.filter((e): e is Exclude<typeof e, { type: "linkwitz" }> => e.type !== "linkwitz");
+  if (bands.length > 0) {
+    const name = { peak: "Peak EQ", lowshelf: "Low Shelf", highshelf: "High Shelf" } as const;
+    const list = bands.map((e) => `${name[e.type]} ${fmt(e.freq)} Hz, Q ${fmt(e.q)}, ${e.gain_db > 0 ? "+" : ""}${fmt(e.gain_db)} dB`);
+    out.push(`EQ: Tools → Filter Wizard → Equaliser (click a band's type label to change it): ${list.join("; ")}${bands.length > 6 ? " (Hornresp has 6 bands)" : ""}.`);
+  }
+  if (eq.some((e) => e.type === "linkwitz")) out.push("The Linkwitz Transform has no Hornresp equivalent and isn't exported.");
+  if (passiveActive(sim.passive)) {
+    const parts = sim.passive.branches.slice(0, 4).map((b, k) => {
+      const v = [(b.r ?? 0) > 0 ? `R ${fmt(b.r!)} Ω` : "", (b.l_mH ?? 0) > 0 ? `L ${fmt(b.l_mH!)} mH` : "", (b.c_uF ?? 0) > 0 ? `C ${fmt(b.c_uF!)} µF` : ""].filter(Boolean);
+      return v.length ? `${k + 1}: ${v.join(", ")}${b.join === "parallel" ? " (parallel)" : ""}` : "";
+    });
+    out.push(`Passive parts: Tools → Filter Wizard → Passive, the same four branches (double-click a branch's label for parallel): ${parts.filter(Boolean).join("; ")}.`);
+  }
+  if ((sim.coilTemp_C ?? 20) > 20) out.push(`Hot voice coil: Tools → Power Compression at ${fmt(sim.coilTemp_C!)} °C.`);
+  const air = sim.air;
+  if (air && (Math.abs(air.rho - 1.205) > 1e-3 || Math.abs(air.c - 344) > 0.05)) {
+    out.push("Air: Hornresp uses ρ 1.205 kg/m³ and c 344 m/s. For a like-for-like comparison, set Settings → Air to Hornresp defaults.");
+  }
+  return out;
 }

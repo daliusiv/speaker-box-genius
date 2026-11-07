@@ -247,3 +247,40 @@ test("frequency-dependent damping: written into Hornresp's FDD fields (Ams in m/
   assert.ok(typeof none !== "string");
   assert.equal(none.driver?.fdd, undefined);
 });
+
+test("the amplifier's resistance is written as Rg and read back; other drive settings come as Hornresp steps", () => {
+  const sim = {
+    rg: 0.5,
+    highPass: { type: "butterworth" as const, order: 2, freq: 25 },
+    eq: [
+      { type: "peak" as const, freq: 40, gain_db: -6, q: 2 },
+      { type: "highshelf" as const, freq: 150, gain_db: -6, q: 0.71 },
+      { type: "linkwitz" as const, f0: 40, q0: 0.7, fp: 25, qp: 0.7 },
+    ],
+    passive: { branches: [{ l_mH: 2, r: 0.3 }, { c_uF: 200 }, {}, { r: 6, c_uF: 10, join: "parallel" as const }] },
+    coilTemp_C: 120,
+    air: { rho: 1.2, c: 343 } as never,
+  };
+  const out = toHornresp(base, driver, { eg: 2.83, drivers: 1, name: "x", sim });
+  assert.ok(typeof out !== "string");
+  assert.match(out.text, /\r\nRg = 0\.50\r\n/);
+  const w = out.warnings.join("\n");
+  assert.match(w, /Active, high pass 25 Hz, Butterworth order 2/);
+  assert.match(w, /Peak EQ 40 Hz, Q 2, -6 dB; High Shelf 150 Hz, Q 0\.71, -6 dB/);
+  assert.match(w, /Linkwitz Transform has no Hornresp equivalent/);
+  assert.match(w, /Passive, .*1: R 0\.3 Ω, L 2 mH; 2: C 200 µF; 4: R 6 Ω, C 10 µF \(parallel\)/);
+  assert.match(w, /Power Compression at 120 °C/);
+  assert.match(w, /Hornresp defaults/);
+  const back = fromHornresp(out.text, base);
+  assert.ok(typeof back !== "string");
+  assert.equal(back.rg, 0.5);
+  // Nothing set: Rg 0, no notes, nothing read back.
+  const plain = toHornresp(base, driver, { eg: 2.83, drivers: 1, name: "x", sim: { air: { rho: 1.205, c: 344 } as never } });
+  assert.ok(typeof plain !== "string");
+  assert.match(plain.text, /\r\nRg = 0\.00\r\n/);
+  const noSim = toHornresp(base, driver, { eg: 2.83, drivers: 1, name: "x" });
+  assert.ok(typeof noSim !== "string");
+  assert.deepEqual(plain.warnings, noSim.warnings, "no extra notes");
+  const plainBack = fromHornresp(plain.text, base);
+  assert.ok(typeof plainBack !== "string" && plainBack.rg === undefined);
+});
