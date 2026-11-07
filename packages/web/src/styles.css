@@ -1510,8 +1510,8 @@ figure.chart[hidden] {
   }
 }
 
-/* The very narrowest (320 px): no readable size fits, so the logo stands alone. */
-@media (max-width: 339px) {
+/* Phones: the name doesn't fit next to the buttons without being cut off, so the logo stands alone. */
+@media (max-width: 479px) {
   .top h1 {
     position: absolute;
     width: 1px;
@@ -2967,10 +2967,14 @@ details.more .hint {
   margin-left: 0.75rem;
 }
 
-/* Undo/redo when there's nothing to undo: dimmed, but still visible. */
+/* Undo/redo when there's nothing to undo: dimmed, but still easy to find. */
 .undo-redo button.icon:disabled {
-  opacity: 1;
-  color: var(--faint);
+  opacity: 0.55;
+  color: var(--muted);
+}
+
+.undo-redo button.icon:not(:disabled) {
+  color: var(--fg);
 }
 
 @media (pointer: coarse) {
@@ -3110,6 +3114,12 @@ button.strip-box {
 
 button.strip-box.is-over {
   border-color: color-mix(in srgb, var(--over) 55%, transparent);
+}
+
+button.strip-box.strip-power {
+  gap: 0.25rem;
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .strip-box .dot {
