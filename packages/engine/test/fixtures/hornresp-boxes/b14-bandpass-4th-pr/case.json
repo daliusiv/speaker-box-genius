@@ -2,6 +2,7 @@
   "title": "4th-order bandpass with a passive radiator",
   "text": "12 L sealed rear, 15 L front opened by a Dayton DSA270-PR instead of a port; Hornresp's QL 7 in the front chamber",
   "frontAir": 0,
+  "leakage": "absorbed",
   "input": {
     "kind": "bandpass",
     "qicl": null,
@@ -28,9 +29,5 @@
       "qa": null,
       "qp": null
     }
-  },
-  "tol": {
-    "splMean": 0.3,
-    "splP95": 1.1
   }
 }

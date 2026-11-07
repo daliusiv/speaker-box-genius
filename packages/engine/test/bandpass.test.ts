@@ -126,3 +126,21 @@ test("a bandpass front port flared at both ends: its air speed is judged at the 
   const peak = (x: Float64Array) => Math.max(...x);
   assert.ok(peak(b.portVelocity!) < 0.55 * peak(a.portVelocity!), `${peak(b.portVelocity!)} vs ${peak(a.portVelocity!)}`);
 });
+
+test("leakage absorbed (like Hornresp): only the output changes, and only where there is a leak", () => {
+  // Only the front chamber leaks (QL 7, as in Hornresp's B4); no other losses.
+  const box = { kind: "bandpass" as const, rear: { vb_l: 12, ql: Infinity, qa: Infinity }, front: { vb_l: 15, port: port(7, 15), ql: 7, qa: Infinity, qp: Infinity }, qicl: Infinity };
+  const heard = simulate(drv, box, { ...opts, fMax: 1000 });
+  const lost = simulate(drv, box, { ...opts, fMax: 1000, leakage: "absorbed" });
+  assert.ok(maxRel(heard.impedanceOhm, lost.impedanceOhm) < 1e-12 && maxRel(heard.excursionMm, lost.excursionMm) < 1e-12);
+  // The leak's share grows above the passband (vent −12 dB/octave, leak −6): the leaked air adds output there.
+  const at = (r: typeof heard, f: number) => r.spl[r.freq.findIndex((x) => x >= f)]!;
+  assert.ok(at(heard, 300) - at(lost, 300) > 1, `${at(heard, 300) - at(lost, 300)} dB at 300 Hz`);
+  assert.ok(Math.abs(at(heard, 50) - at(lost, 50)) < 0.2, "the passband hardly changes");
+  const tight = { ...box, rear: { vb_l: 12, ql: Infinity }, front: { ...box.front, ql: Infinity } };
+  assert.ok(maxDiff(simulate(drv, tight, opts).spl, simulate(drv, tight, { ...opts, leakage: "absorbed" }).spl) < 1e-9);
+  // Sealed and vented boxes too: the leak's flow comes off what they radiate.
+  const vb = { kind: "vented" as const, vb_l: 30, port: port(7, 15), ql: 7 };
+  const d = maxDiff(simulate(drv, vb, opts).spl, simulate(drv, vb, { ...opts, leakage: "absorbed" }).spl);
+  assert.ok(d > 0.01 && d < 3, `vented ${d} dB`);
+});

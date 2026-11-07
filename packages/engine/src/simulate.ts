@@ -125,6 +125,12 @@ export interface SimulationOptions {
    */
   portModel?: "lumped" | "pipe";
   /**
+   * Box leakage (Ql): the air that leaks out "radiates" as sound (default: a real gap does, and
+   * WinISD counts it), or is "absorbed", a pure loss, as Hornresp has it. Changes the output
+   * only, mostly where the box's own output is low (a bandpass box away from its passband).
+   */
+  leakage?: "radiates" | "absorbed";
+  /**
    * Voice-coil temperature (°C). Above 20 °C the coil's resistance rises (copper, about
    * 0.39 %/°C) while Bl stays: less output for the same voltage and a higher Qes, i.e. the
    * driver's power compression. Default 20 (the datasheet's cold values, like WinISD).
@@ -289,7 +295,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
 
   // Box elements
   const summary: SimulationResult["summary"] = { volts, referenceSpl: 0, f3: null, f6: null };
-  const bp = box.kind === "bandpass" ? bandpassNetwork(box, d, n, air, summary, opts.portModel === "pipe") : null;
+  const bp = box.kind === "bandpass" ? bandpassNetwork(box, d, n, air, summary, opts.portModel === "pipe", opts.leakage === "absorbed") : null;
   const line = box.kind === "line" ? lineNetwork(box, air) : null;
   // A line or horn models the air on the cone's sides explicitly, so the cone carries its bare
   // moving mass Mmd = Mms − 16ρa³/3 (both sides' free-air load, as Hornresp defines it). An open
@@ -560,6 +566,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
 
       // Radiated volume velocity = −(flow into the box air spring).
       u0 = scale(div(pBox, zAir), -1);
+      // Leakage as a pure loss (like Hornresp): the air leaving through it isn't heard.
+      if (opts.leakage === "absorbed" && Number.isFinite(ral)) u0 = sub(u0, scale(pBox, 1 / ral));
       // A port as a pipe: what leaves its outer end differs from what enters from the box.
       let pipeOutEach: Complex | null = null;
       if (ventPipe && zVent) {
@@ -847,6 +855,7 @@ function bandpassNetwork(
   air: Air,
   summary: SimulationResult["summary"],
   pipes = false,
+  leaksAbsorbed = false,
 ) {
   const ec = box.endCorrection ?? DEFAULT_END_CORRECTION;
   const series = box.rearPortTo === "front";
@@ -989,6 +998,8 @@ function bandpassNetwork(
       // A pipe holds air of its own, so what leaves it differs from what enters (also between chambers).
       if (frontVent.kind === "port") radiated = add(radiated, scale(sub(f.portOut, f.port), frontVent.port.count));
       if (rearVent?.kind === "port") radiated = add(radiated, scale(sub(r.portOut, r.port), rearVent.port.count));
+      // Leaks as a pure loss (like Hornresp): what escapes through them isn't heard.
+      if (leaksAbsorbed) radiated = sub(sub(radiated, scale(pF, 1 / F.ral)), scale(pR, 1 / R.ral));
       return {
         radiated,
         frontPortEach: f.port,

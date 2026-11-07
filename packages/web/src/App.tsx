@@ -1480,6 +1480,15 @@ export function App(props: { initial: AppState | null }) {
                   min={1}
                   onChange={(ql) => set("settings", { ...state.settings, losses: { ...state.settings.losses, ql } })}
                 />
+                <Select<"radiates" | "absorbed"> help="Where the air that leaks out goes. Heard (like WinISD): it radiates as sound, as through a real gap. Lost (like Hornresp): a pure loss. It matters mostly for bandpass boxes away from their passband, where the leak's sound can be as loud as the port's."
+                  label="Leaked air"
+                  value={state.settings.leakage}
+                  options={[
+                    { value: "radiates", text: "Heard (like WinISD)" },
+                    { value: "absorbed", text: "Lost (like Hornresp)" },
+                  ]}
+                  onChange={(leakage) => set("settings", { ...state.settings, leakage })}
+                />
                 <Num help="Absorption loss (stuffing, wall flex) as a Q: lower means more loss. 100 is WinISD's default (little stuffing). A design with its own Stuffing setting uses that setting's Qa instead."
                   label="Absorb Qa"
                   value={state.settings.losses.qa}

@@ -2,6 +2,7 @@
   "title": "6th-order bandpass (series)",
   "text": "The same chambers, with the rear port opening into the front; Hornresp's QL 7 in the front, referred to the lower tuning (the rear port against both chambers, 31.5 Hz): 13.73 at the front's own 61.8 Hz",
   "frontAir": 0,
+  "leakage": "absorbed",
   "input": {
     "kind": "bandpass",
     "qicl": null,

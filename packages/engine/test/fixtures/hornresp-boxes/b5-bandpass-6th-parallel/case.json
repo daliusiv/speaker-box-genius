@@ -2,6 +2,7 @@
   "title": "6th-order bandpass (parallel)",
   "text": "20 L rear with a 6 × 20 cm port, 15 L front with a 7 × 15 cm port, both to the outside; Hornresp's QL 7, referred to the lower tuning (41.7 Hz): 7 in the rear, 10.38 in the front (61.8 Hz)",
   "frontAir": 0,
+  "leakage": "absorbed",
   "input": {
     "kind": "bandpass",
     "qicl": null,
@@ -28,9 +29,5 @@
       "qp": null
     }
   },
-  "portModel": "pipe",
-  "tol": {
-    "splMean": 0.3,
-    "splP95": 1.1
-  }
+  "portModel": "pipe"
 }

@@ -434,9 +434,7 @@ What the comparison settles, and the conventions it has to bridge:
 
 **Power compression.** Hornresp's Tools → Power Compression sets the voice coil's temperature; at 120 °C its Re rises by 39.3 %, copper's 0.393 %/°C, as the app's Settings → Voice coil °C does. The sealed box (B9) and the mass-loaded line (case 16) at 120 °C match as closely as at 20 °C: 0.05 dB and 0.5 % in impedance for the box, 0.02 dB and 0.3 % for the line.
 
-**Leaks don't radiate in Hornresp's bandpass boxes.** Hornresp's QL takes energy out of a chamber, but its Wizard's output is the vent's alone: the air that escapes through the leak isn't heard. The app counts it as sound, as a real gap would be, and the leak's share grows above the passband (the vent's output falls at 12 dB/octave, the leak's at 6), so there the app's total sits above Hornresp's: up to 1 dB at 260 Hz with a port (B4), 1.8 dB with a passive radiator (B14), 20 dB below the passband. The fourth-order boxes are therefore compared by the vent's own output, which matches: the port within 0.03 dB, the DSA270-PR within 0.1 dB (with the same 3.83 g of front air as B3), impedance and excursion within 0.8 %. The radiator's excursion peaks at 0.98 mm at 48 Hz in both. The front port's air speed in the fourth-order box peaks at 3.39 m/s at 51 Hz in the app and about 3.38 m/s on Hornresp's chart.
-
-The parallel sixth-order bandpass box is held to looser SPL limits: above about 150 Hz the app's output rises up to 1 dB above Hornresp's, likely the same leak, and its slope below 15 Hz, 50 dB down, sits up to 1.3 dB lower.`;
+**Leaks don't radiate in Hornresp.** Hornresp's QL takes energy out of a chamber, but the air that escapes through the leak isn't heard: its output is the vents' alone. The app, like WinISD, counts that air as sound, as through a real gap. It matters in bandpass boxes, where the leak's share grows away from the passband (above it the vent's output falls at 12 dB/octave, the leak's at 6), up to 1 dB above Hornresp's at 260 Hz with a port (B4) and 1.8 dB with a passive radiator (B14), and in the parallel sixth-order box (B5) 1.3 dB below it under 15 Hz. Hornresp has QL only in bandpass boxes; its ordinary boxes have no leak. Settings → Box losses → Leaked air → "Lost (like Hornresp)" leaves it out, and the bandpass cases use it: the fourth-order boxes within 0.03 dB (port) and 0.1 dB (DSA270-PR, with the same 3.83 g of front air as B3), the parallel sixth-order box within 0.03 dB at the 95th percentile (it was held to 1.1 dB) and the series one within 0.05 dB (from 0.29), and impedance and excursion within 0.8 %. The radiator's excursion peaks at 0.98 mm at 48 Hz in both. The front port's air speed in the fourth-order box peaks at 3.39 m/s at 51 Hz in the app and about 3.38 m/s on Hornresp's chart.`;
 
 export interface HornrespBoxCase {
   title: string;
@@ -474,6 +472,8 @@ export interface HornrespBoxCase {
   coilTemp_C?: number;
   /** "pipe": the port as a short pipe, as Hornresp has it (its output rises towards the pipe's resonance). */
   portModel?: "lumped" | "pipe";
+  /** Leakage as Hornresp has it ("absorbed"): bandpass boxes, whose QL matters. */
+  leakage?: "radiates" | "absorbed";
   drivers?: number;
   wiring?: "parallel" | "series";
   /** Looser limits where Hornresp's loss model parts from ours (see the notes). */
@@ -536,7 +536,7 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
   const driver = { ...hornrespDriver(HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}), ...(c.fdd ? { fdd: c.fdd } : {}) };
   const base: SimulationOptions = {
-    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom, highPass: c.highPass, eq: c.eq,
+    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, leakage: c.leakage, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom, highPass: c.highPass, eq: c.eq,
   };
   const r = simulate(driver, c.input, base);
   const fTop = c.fMax ?? HORNRESP_BOX_F_MAX;
