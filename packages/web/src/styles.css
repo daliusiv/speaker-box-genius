@@ -707,11 +707,20 @@ h3 {
   letter-spacing: 0.04em;
 }
 
+/* A worked-out value (Fb from the port, Vb from the calculator…): a dashed box with "=" in
+   front, so it reads as a result, not something to type into. */
 .fixed {
   padding: 0.3rem 0.45rem;
-  border: 1px dashed var(--border);
+  border: 1px dashed color-mix(in srgb, var(--muted) 55%, transparent);
   border-radius: 6px;
+  background: transparent;
   font-weight: 600;
+}
+
+output.fixed::before {
+  content: "= ";
+  color: var(--muted);
+  font-weight: 400;
 }
 
 .warn {
