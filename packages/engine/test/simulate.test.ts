@@ -318,6 +318,9 @@ test("piston cone load (like Hornresp): the same deep bass as a fixed mass, side
   // Two drivers side by side push one piston of 2·Sd: each carries √2 × one cone's air, lowering the resonance.
   const two = simulate(drv, { ...box, vb_l: 20.8 }, { ...o, coneLoad: "piston", drivers: 2 });
   assert.ok(peakF(two) < peakF(piston) * 0.995, `${peakF(two)} vs ${peakF(piston)} Hz`);
+  // The summary's Fc follows the piston's bass mass (√n × one cone's air), as the impedance peak does.
+  assert.ok(Math.abs(two.summary.fc! / peakF(two) - 1) < 0.01, `Fc ${two.summary.fc} vs peak ${peakF(two)}`);
+  assert.ok(Math.abs(piston.summary.fc! / mass.summary.fc! - 1) < 1e-9, "one driver: the same Fc as the fixed mass");
   // Bandpass boxes and lines keep their own models.
   const bp = { kind: "bandpass" as const, rear: { vb_l: 12 }, front: { vb_l: 15, port: { shape: "round" as const, diameter_cm: 7, length_cm: 15 } }, qicl: Infinity };
   assert.deepEqual(simulate(drv, bp, { ...o, coneLoad: "piston" }).spl, simulate(drv, bp, o).spl);

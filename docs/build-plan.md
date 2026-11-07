@@ -123,7 +123,7 @@ A **lumped-element equivalent circuit** solved in the frequency domain at log-sp
 - **Port:** acoustic mass with end corrections, round or slot ports, several ports, flared ends, **port compression**, and an option to model ports as **pipes** (with their own resonances).
 - **Passive radiator:** Mmp with added mass, Cmp, Rmp, Sdp, Xmax; 1, 2 or 4 identical PRs, and PR groups in bandpass chambers.
 - **Bandpass:** 4th and 6th order, each chamber ported, closed or with PRs, with inter-chamber leakage.
-- **Lines and horns (beta):** 1-D duct of tapered sections (parallel, conical, exponential), stuffing (Delany–Bazley), offset driver, MLTL port, tapped horn, front-loaded horn with chambers.
+- **Lines and horns (beta):** 1-D duct of tapered sections (parallel, conical, exponential), stuffing (Wilson relaxation model, as in Hornresp), offset driver, MLTL port, tapped horn, front-loaded horn with chambers.
 - **Radiation:** half or full space, baffle step, car-cabin or room gain.
 
 ### 4.2 Outputs (per design, per frequency) ✅

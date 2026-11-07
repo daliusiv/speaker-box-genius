@@ -100,7 +100,7 @@ A box's leak (Ql) takes energy out; "Heard (like WinISD)", the default, also cou
 
 ### Cone air load (Settings → Box losses → Cone air load)
 
-Sealed, ported and PR boxes. "Fixed mass (like WinISD)", the default, keeps the air in front of the cone in Mms. "Piston, like Hornresp" takes that air (8ρa³/3) out of Mms and loads the cone with a baffled piston's radiation impedance instead, n × that of a piston of n·Sd for n drivers side by side. Compared with Hornresp (see the notes): two drivers in one box (B7, B11) and two identical boxes side by side (Tools → Multiple Speakers, B17: one box of twice the volume with twice the drivers) within 0.04 dB and 0.25 % in impedance. Checks (`simulate.test.ts`): the same in the deep bass, a lighter cone up high, two drivers' resonance lower, bandpass boxes unchanged.
+Sealed, ported and PR boxes. "Fixed mass (like WinISD)", the default, keeps the air in front of the cone in Mms. "Piston, like Hornresp" takes that air (8ρa³/3) out of Mms and loads the cone with a baffled piston's radiation impedance instead, n × that of a piston of n·Sd for n drivers side by side. Compared with Hornresp (see the notes): two drivers in one box (B7, B11) and two identical boxes side by side (Tools → Multiple Speakers, B17: one box of twice the volume with twice the drivers) within 0.04 dB and 0.25 % in impedance (the SPL compared from radiated power, as Hornresp gives it; the app's box charts are on-axis, which is within 0.17 dB of it here). With it, a sealed box's Fc, Qtc and F3 use the piston's bass mass (√n × one cone's front air). Checks (`simulate.test.ts`): the same in the deep bass, a lighter cone up high, two drivers' resonance lower, bandpass boxes unchanged.
 
 ### Box pressure (chart "Box pressure")
 
