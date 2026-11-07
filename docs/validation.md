@@ -96,7 +96,7 @@ Butterworth (orders 1–4) and Linkwitz-Riley, applied to the voltage before the
 
 ### Leaked air (Settings → Box losses → Leaked air)
 
-A box's leak (Ql) takes energy out; "Heard (like WinISD)", the default, also counts the air that escapes as sound, as through a real gap, and "Lost (like Hornresp)" leaves it out. Hornresp's QL is the second kind: with it, the bandpass cases match within 0.03 dB (4th-order port, parallel 6th-order), 0.05 dB (series 6th-order) and 0.1 dB (4th-order with a passive radiator) at the 95th percentile, where the parallel 6th-order box had differed by up to 1.3 dB. Impedance and excursion don't change. Checks (`bandpass.test.ts`): only the output changes, the leak's share grows above a bandpass box's passband, nothing changes without a leak.
+A box's leak (Ql) takes energy out; "Heard (like WinISD)", the default, also counts the air that escapes as sound, as through a real gap, and "Lost (like Hornresp)" leaves it out. Hornresp's QL is the second kind: with it, the bandpass cases match within 0.03 dB (4th-order port, parallel 6th-order), 0.05 dB (series 6th-order) and 0.1 dB (4th-order with a passive radiator) at the 95th percentile, where the parallel 6th-order box had differed by up to 1.3 dB. Impedance and excursion don't change. Hornresp has no QL for ordinary sealed, ported and PR boxes (their records have no leak), so there the setting is checked only against itself. Checks (`bandpass.test.ts`): only the output changes, the leak's share grows above a bandpass box's passband, nothing changes without a leak.
 
 ### EQ (EQ card: Peaking, Low shelf, High shelf)
 
