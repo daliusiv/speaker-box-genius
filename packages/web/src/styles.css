@@ -3617,10 +3617,6 @@ button.assist-tile.on {
   gap: 0.5rem;
 }
 
-button.assist-skip {
-  align-self: flex-start;
-}
-
 /* Assistant header: the logo and name, as in the app's own header. */
 .assist-brand {
   display: flex;

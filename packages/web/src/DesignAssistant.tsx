@@ -498,10 +498,15 @@ export function DesignAssistant(props: {
                     </span>
                   </button>
                 ))}
+                {/* Last, as the way out: newcomers meet the uses first, and with five uses it rounds the grid to six. */}
+                <button type="button" className="assist-tile" onClick={close}>
+                  <UseIcon use="driver" />
+                  <span className="assist-tile-text">
+                    <b>I already have a driver</b>
+                    <span>Skip the assistant: search the database or enter its specs</span>
+                  </span>
+                </button>
               </div>
-              <button type="button" className="link assist-skip" onClick={close}>
-                I already have a driver: skip the assistant
-              </button>
             </>
           )}
 

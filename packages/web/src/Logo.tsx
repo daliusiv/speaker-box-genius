@@ -11,7 +11,7 @@ export function Logo(props: { className?: string }) {
 }
 
 /** Line icons for the assistant's "What are you building?" tiles (24 × 24, drawn in currentColor). */
-export function UseIcon({ use }: { use: "car" | "home" | "hifi" | "tower" | "other" }) {
+export function UseIcon({ use }: { use: "car" | "home" | "hifi" | "tower" | "other" | "driver" }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   return (
     <svg className="use-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -51,6 +51,18 @@ export function UseIcon({ use }: { use: "car" | "home" | "hifi" | "tower" | "oth
           <circle cx="12" cy="9.4" r="2.6" />
           <circle cx="12" cy="15.6" r="2.6" />
           <path d="M8.5 21v1.5M15.5 21v1.5" />
+        </g>
+      )}
+      {use === "driver" && (
+        <g {...common}>
+          {/* A driver from the front: the basket with four bolt holes, the cone and its dust cap. */}
+          <circle cx="12" cy="12" r="9.5" />
+          <circle cx="12" cy="12" r="6.5" />
+          <circle cx="12" cy="12" r="2.4" />
+          <circle cx="6.35" cy="6.35" r="0.6" />
+          <circle cx="17.65" cy="6.35" r="0.6" />
+          <circle cx="6.35" cy="17.65" r="0.6" />
+          <circle cx="17.65" cy="17.65" r="0.6" />
         </g>
       )}
       {use === "other" && (
