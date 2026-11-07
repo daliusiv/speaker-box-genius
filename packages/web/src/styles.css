@@ -2324,6 +2324,13 @@ label.check {
   margin: 0.3rem 0;
   font-size: 0.9rem;
 }
+
+/* A checkbox keeps its own size: inputs are full width by default, which spread a narrow
+   label's box and name apart (the assistant's brand list). */
+label.check > input[type="checkbox"] {
+  flex: none;
+  width: auto;
+}
 .measured-row {
   border-top: 1px solid var(--border);
   padding: 0.4rem 0 0.2rem;
