@@ -294,7 +294,8 @@ export interface AppState {
    */
   dvc: { on: boolean; entered: "one" | "parallel" | "series"; wired: "parallel" | "series" };
   /** Low-frequency lift of the listening space, added to the SPL curves. */
-  roomGain: { mode: "off" | "car" | "room"; length_cm: number; slope: 6 | 12; max_db: number };
+  /** "curve": a profile of your own (dB against Hz, 0 dB where the space adds nothing), imported from a .txt or .frd file. */
+  roomGain: { mode: "off" | "car" | "room" | "curve"; length_cm: number; slope: 6 | 12; max_db: number; curve?: RoomCurve };
   /**
    * Baffle step: the speaker free-standing (full space) with its front baffle, instead of
    * an infinite baffle. Size from the volume calculator's box when `fromBox`.
@@ -562,6 +563,25 @@ export function encodeState(s: AppState): string {
 // - top-level keys, whole (ts never partially: its keys mean "values the user typed");
 // - one level into objects that decoding merges with their defaults;
 // - per design, its keys against a fresh design of the same kind, one level into front/rear/params.
+/** A room-gain profile of your own: its file name and points (Hz increasing, dB). */
+export interface RoomCurve {
+  name: string;
+  f: number[];
+  v: number[];
+}
+
+/** A link's room-gain mode and profile: a "curve" mode needs a valid profile, or it's off. */
+function roomCurveFields(raw: Raw): { mode: AppState["roomGain"]["mode"]; curve?: RoomCurve } {
+  const c = raw?.curve;
+  const ok =
+    c && Array.isArray(c.f) && Array.isArray(c.v) && c.f.length === c.v.length && c.f.length >= 2 && c.f.length <= 400 &&
+    c.f.every((x: unknown, i: number) => typeof x === "number" && x > 0 && (i === 0 || x > c.f[i - 1])) &&
+    c.v.every((x: unknown) => typeof x === "number" && Number.isFinite(x) && Math.abs(x) <= 60);
+  const curve: RoomCurve | undefined = ok ? { name: typeof c.name === "string" ? c.name.slice(0, 40) : "Room curve", f: c.f, v: c.v } : undefined;
+  const mode = ["off", "car", "room", "curve"].includes(raw?.mode) ? raw.mode : "off";
+  return { mode: mode === "curve" && !curve ? "off" : mode, ...(curve ? { curve } : {}) };
+}
+
 /** A link's passive network: four branches of non-negative R (Ω), L (mH), C (µF), joined in series or parallel. */
 function passiveFrom(raw: Raw): AppState["passive"] | null {
   if (!raw || typeof raw !== "object" || !Array.isArray(raw.branches)) return null;
@@ -876,12 +896,12 @@ export function decodeState(hash: string): AppState | null {
       power: raw.power ?? d.power,
       drive: raw.drive === "volts" ? "volts" : "watts",
       volts: typeof raw.volts === "number" && raw.volts > 0 && Number.isFinite(raw.volts) ? raw.volts : d.volts,
-      roomGain: {
+      roomGain: (({ curve: _unchecked, ...given }: Raw) => ({
         ...d.roomGain,
-        ...(raw.roomGain ?? {}),
-        mode: ["off", "car", "room"].includes(raw.roomGain?.mode) ? raw.roomGain.mode : "off",
+        ...given,
+        ...roomCurveFields(raw.roomGain),
         slope: raw.roomGain?.slope === 6 ? 6 : 12,
-      },
+      }))(raw.roomGain ?? {}),
       highPass: { ...d.highPass, ...raw.highPass },
       passive: passiveFrom(raw.passive) ?? d.passive,
       baffle: { ...d.baffle, ...(raw.baffle ?? {}) },

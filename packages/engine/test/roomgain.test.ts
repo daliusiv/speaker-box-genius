@@ -38,3 +38,12 @@ test("bad input gives no lift", () => {
   assert.equal(roomGainDb(50, { f0: 0, slopeDbPerOct: 12, maxDb: 18 }), 0);
   assert.equal(roomGainDb(50, { f0: 60, slopeDbPerOct: 12, maxDb: 0 }), 0);
 });
+
+test("a room-gain profile of your own: its points, straight lines in log f between, the end values beyond", () => {
+  const g = { curve: { f: [10, 20, 40, 80], v: [12, 9, 3, 0] } };
+  near(roomGainDb(20, g), 9, 1e-12, "a point");
+  near(roomGainDb(Math.sqrt(20 * 40), g), 6, 1e-9, "halfway in log f");
+  near(roomGainDb(5, g), 12, 1e-12, "below the first point");
+  near(roomGainDb(500, g), 0, 1e-12, "above the last point");
+  assert.equal(roomGainDb(30, { curve: { f: [], v: [] } }), 0);
+});
