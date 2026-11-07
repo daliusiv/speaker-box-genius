@@ -2151,6 +2151,26 @@ export function App(props: { initial: AppState | null }) {
       <DesignAssistant
         open={assistant}
         onClose={() => setAssistant(false)}
+        onHaveDriver={() => {
+          setAssistant(false);
+          choosePanel("driver");
+          setPhoneView("panel");
+          window.scrollTo({ top: 0 });
+          // Straight into the driver database's search, as soon as its list has loaded (a few seconds at most).
+          const started = Date.now();
+          const openSearch = () => {
+            const b = document.querySelector<HTMLButtonElement>("#panel-driver .dp-row .browse:not(:disabled)");
+            if (b) b.click();
+            else if (Date.now() - started < 5000) setTimeout(openSearch, 150);
+          };
+          setTimeout(openSearch, 60);
+        }}
+        onDemo={() => {
+          setAssistant(false);
+          // The example's boxes: the Boxes panel on wide screens, the charts on phones.
+          choosePanel("boxes");
+          setPhoneView("charts");
+        }}
         db={db}
         base={state}
         onPortLimit={(portLimit_ms) => set("settings", { ...state.settings, portLimit_ms })}
