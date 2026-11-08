@@ -60,7 +60,7 @@ export function DriverMenu(props: {
           </button>
           <hr />
           <button role="menuitem" onClick={pick(props.onImport)}>
-            Import WinISD .wdr / .wpr…
+            Import WinISD or OpenISD file…
           </button>
           <button role="menuitem" onClick={pick(props.onExport)}>
             Export WinISD .wdr

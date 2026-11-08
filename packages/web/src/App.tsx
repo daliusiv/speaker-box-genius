@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   coilHeatFactor,
   impedanceMagnitude,
+  parseOwdr,
+  parseOwpr,
   parseWdr,
   parseWpr,
   resampleMagnitude,
@@ -33,6 +35,7 @@ import {
   type DesignState,
   type Settings,
 } from "./state.ts";
+import { applyOwpr, withOpenisdDriver } from "./owprImport.ts";
 import { flagText, loadDriver, loadIndex, type DbIndex } from "./library.ts";
 import { Card, DriveValue, Num, REPO, Select, useNarrow } from "./components.tsx";
 import { DriverBrowser } from "./Library.tsx";
@@ -421,6 +424,7 @@ export function App(props: { initial: AppState | null }) {
       // WinISD saves in the Windows code page; latin1 keeps most names intact.
       const text = new TextDecoder("latin1").decode(await file.arrayBuffer());
       if (/^\[Box\]/im.test(text)) return importWpr(file.name, text);
+      if (/^\s*\{/.test(text)) return importOpenisd(file.name, new TextDecoder("utf-8").decode(await file.arrayBuffer()));
       const d = parseWdr(text);
       offerSizing([d.brand, d.model].filter(Boolean).join(" ") || file.name);
       setStep((s) => ({
@@ -449,6 +453,29 @@ export function App(props: { initial: AppState | null }) {
       setWdrMsg(`Imported ${file.name}.`);
     } catch (e) {
       setWdrMsg(`Couldn't read ${file.name}: ${(e as Error).message}`);
+    }
+  };
+
+  /** An OpenISD project (.owpr) or driver (.owdr): both are JSON. */
+  const importOpenisd = (fileName: string, text: string) => {
+    try {
+      const raw = JSON.parse(text);
+      if (raw && typeof raw === "object" && "specs" in raw) {
+        const d = parseOwdr(text);
+        const name = [d.brand, d.model].filter(Boolean).join(" ") || fileName.replace(/\.owdr$/i, "");
+        offerSizing(name);
+        setStep((s) => withOpenisdDriver(s, d, name));
+        setWdrMsg(`Imported OpenISD driver ${fileName}.`);
+        return;
+      }
+      const p = parseOwpr(text);
+      // The notes don't depend on the rest of the state, so take them from the current one.
+      const { notes } = applyOwpr(state, p, fileName);
+      notify(`Imported ${fileName}.`);
+      setStep((s) => applyOwpr(s, p, fileName).state);
+      setWdrMsg(`Imported OpenISD project ${fileName} with its drive, amplifier resistance and box losses. ${notes.join(" ")}`.trim());
+    } catch (e) {
+      setWdrMsg(`Couldn't read ${fileName}: ${(e as Error).message}`);
     }
   };
 
@@ -1101,7 +1128,7 @@ export function App(props: { initial: AppState | null }) {
                 <input
                   ref={wdrInput}
                   type="file"
-                  accept=".wdr,.wpr,.txt"
+                  accept=".wdr,.wpr,.owpr,.owdr,.txt,.json"
                   hidden
                   onChange={(e) => {
                     const f = e.currentTarget.files?.[0];
@@ -1690,7 +1717,7 @@ export function App(props: { initial: AppState | null }) {
                   Box losses are Q values at the tuning frequency: lower means more loss. 10 / 100 / 100 matches WinISD&rsquo;s
                   defaults. A bandpass can also set its own losses for each chamber, and a sealed, ported or passive radiator design with Stuffing set uses that stuffing&rsquo;s Qa. For like-for-like checks against WinISD,
                   choose its air values, its amplifier resistance (Amp + cable) and leave out Le, or simply import the WinISD
-                  project (.wpr).
+                  project (.wpr). OpenISD projects (.owpr) import too, with their own air and losses.
                 </p>
               </details>
 
