@@ -133,7 +133,7 @@ A **lumped-element equivalent circuit** solved in the frequency domain at log-sp
 |---|---|
 | SPL @ input power | Sum of volume velocities → far-field pressure (or radiated power, like Hornresp) |
 | Driver cone excursion | X = U_d / (jω·Sd), peak in mm, with an **X_max redline** |
-| PR excursion | X = U_pr / (jω·Sdp) with a **PR X_max redline**, per PR |
+| PR excursion | X = U_pr / (jω·Sdp) with a **PR X_max redline**, per PR, and a caution band from an adjustable share of X_max (75 % by default; Settings → PR caution) |
 | Port air velocity | v = U_p / Sp, peak or RMS m/s, with a **chuffing line** |
 | Impedance | Magnitude, against a measured .zma overlay |
 | Group delay | −dφ/dω |

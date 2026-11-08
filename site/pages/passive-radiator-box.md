@@ -80,6 +80,8 @@ This is where PR designs fail. Look at **both** excursion charts at the power yo
 
 At 35 W with the 30 Hz high-pass filter, the woofer peaks at **5.2 mm** and the PR at **7.6 mm**. Both are within their limits.
 
+The PR chart also shades a band from **75 % of the PR's Xmax** up to it (8.25 mm here). A PR's suspension stiffens as it nears its limit, so its travel stops growing in step with the woofer's and its distortion rises; staying under the band leaves that headroom. 75 % is a rule of thumb, not a datasheet figure: change it, or turn it off, with **PR caution** in **Settings**. This design's 7.6 mm is 69 %, under the band.
+
 ![PR excursion at 35 W with the 30 Hz high-pass filter: 7.6 mm at most, against an Xmax of 11 mm (the red line).](img/pr-excursion.png)
 
 Without the high-pass filter, the same 35 W pushes the woofer to 12 mm (more than twice its Xmax) down at 15 Hz, where the PR no longer holds it back. A PR box almost always needs a high-pass filter (a "subsonic" filter) just below the tuning.

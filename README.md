@@ -27,7 +27,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 ### Charts
 
 - **SPL**, relative or absolute (dB SPL), with each design's **F3** marked
-- **Cone excursion** with an **Xmax redline**, and **passive radiator excursion** with each PR's own Xmax
+- **Cone excursion** with an **Xmax redline**, and **passive radiator excursion** with each PR's own Xmax and a shaded caution band below it (75 % of Xmax by default, a rule of thumb)
 - **Port air velocity** with a **chuffing-risk line** (peak or RMS; 17 m/s by default, your own in Settings → Ports, used by every check and the design assistant)
 - **Box pressure**: the peak sound pressure inside the box (both chambers of a bandpass), the load on the cone and the walls; matches Hornresp's diaphragm pressure chart
 - **Maximum SPL**: the loudest each box can play at every frequency, with a band showing what limits it there (Xmax, PR Xmax, port speed or thermal power), and the **amplifier voltage and current** needed to reach it, after the filter and EQ

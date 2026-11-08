@@ -87,6 +87,14 @@ export interface Limit {
   color: string;
 }
 
+/** A shaded horizontal band between two values across the whole chart (a caution zone under a limit). */
+export interface Band {
+  from: number;
+  to: number;
+  label: string;
+  color: string;
+}
+
 /** A shaded band from the left edge up to `below` Hz, with its own limit drawn across it only. */
 export interface Zone {
   below: number;
@@ -102,6 +110,7 @@ interface Props {
   series: Series[];
   limits?: Limit[];
   zones?: Zone[];
+  bands?: Band[];
   markers?: Marker[];
   points?: Point[];
   ribbons?: Ribbon[];
@@ -197,6 +206,7 @@ export function LogChart({
   series,
   limits = [],
   zones = [],
+  bands = [],
   markers = [],
   points = [],
   ribbons = [],
@@ -269,6 +279,7 @@ export function LogChart({
     hi = Math.max(hi, l.value * 1.1);
   }
   for (const z of zones) hi = Math.max(hi, z.value * 1.1);
+  for (const b of bands) hi = Math.max(hi, b.to * 1.1);
   if (!Number.isFinite(lo)) {
     lo = 0;
     hi = 1;
@@ -555,6 +566,16 @@ export function LogChart({
         )}
 
         <g clipPath={`url(#${clipId})`}>
+          {bands.map((b, bi) => (
+            <g key={`band-${bi}`}>
+              <rect className="band" x={PAD.l} y={yOf(b.to)} width={W - PAD.l - PAD.r} height={Math.max(0, yOf(b.from) - yOf(b.to))} fill={b.color} opacity={0.12} />
+              {b.label && (
+                <text className="limit-label" x={PAD.l + 4} y={yOf(b.from) - 4} textAnchor="start" fill={b.color} {...fs(11)}>
+                  {b.label}
+                </text>
+              )}
+            </g>
+          ))}
           {zones.map((z, zi) => {
             const x2 = Math.min(W - PAD.r, Math.max(PAD.l, xOf(z.below)));
             if (x2 <= PAD.l) return null;

@@ -573,6 +573,17 @@ export function App(props: { initial: AppState | null }) {
     label: `PR Xmax ${x} mm`,
     color: LIMIT_RED,
   }));
+  // Caution band under each PR Xmax, from the share set in Settings (a rule of thumb: suspensions stiffen there).
+  const prCaution = state.settings.prCaution_pct;
+  const prBands =
+    prCaution > 0 && prCaution < 100
+      ? prLimits.map((l, i) => ({
+          from: (l.value * prCaution) / 100,
+          to: l.value,
+          label: i === 0 ? `Over ${prCaution} % of PR Xmax: suspension stiffens (rule of thumb)` : "",
+          color: "#d97706",
+        }))
+      : [];
   // One curve per PR group; groups after the first are dashed and named after their PR.
   const prSeries: Series[] = prDesigns.flatMap((d) => {
     const names = prGroupLabels(d.design);
@@ -1663,6 +1674,15 @@ export function App(props: { initial: AppState | null }) {
                   min={5}
                   onChange={(v) => set("settings", { ...state.settings, portLimit_ms: v > 0 ? v : PORT_LIMIT })}
                 />
+                <Num
+                  help="Passive radiators: the PR excursion chart shades a caution band from this share of the PR's Xmax up to it. A PR's suspension stiffens and its distortion rises as it nears Xmax; 70–80 % is a common rule of thumb, not a datasheet figure. Clear it for no band."
+                  label="PR caution"
+                  unit="% Xmax"
+                  value={state.settings.prCaution_pct}
+                  min={10}
+                  zeroText="Off"
+                  onChange={(v) => set("settings", { ...state.settings, prCaution_pct: Math.min(99, Math.round(v)) })}
+                />
               </div>
               <details className="more">
                 <summary>About ports as pipes and port speed</summary>
@@ -2002,6 +2022,7 @@ export function App(props: { initial: AppState | null }) {
                 freq={freq}
                 series={prSeries}
                 limits={prLimits}
+                bands={prBands}
                 yMin={0}
               />
             )}

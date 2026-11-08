@@ -1212,3 +1212,8 @@ function sharedOf(raw: Record<string, unknown>): SharedResults | null {
   const db = typeof raw.d === "string" && raw.d.length <= 40 ? raw.d : undefined;
   return { goal, ...(pl ? { portLimit_ms: pl } : {}), ...(o ? { only: o } : {}), ...(db ? { db } : {}) };
 }
+
+/** ", past the 75 % where a PR's suspension stiffens", when the PRs' share of travel is over the caution set in Settings. */
+export function prCautionNote(prUse: number, caution_pct: number): string {
+  return caution_pct > 0 && prUse * 100 > caution_pct ? `, past the ${caution_pct} % where a PR's suspension stiffens (rule of thumb)` : "";
+}
