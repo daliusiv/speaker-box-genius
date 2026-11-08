@@ -27,7 +27,8 @@ const BUTTERWORTH: Record<number, number[][]> = {
   ],
 };
 
-function sections(hp: HighPass): number[][] {
+/** The high-pass filter's low-pass prototype sections (ascending coefficients, p = ωc/s). */
+export function highPassPrototype(hp: HighPass): number[][] {
   if (hp.type === "butterworth") {
     const s = BUTTERWORTH[hp.order];
     if (!s) throw new RangeError("Butterworth order must be 1–4");
@@ -44,7 +45,7 @@ export function highPassResponse(hp: HighPass, f: number): Complex {
   // High-pass from low-pass prototype: substitute p = ωc / s, with s = jω → p = −j·fc/f
   const p = cx(0, -hp.freq / f);
   let h = cx(1);
-  for (const c of sections(hp)) {
+  for (const c of highPassPrototype(hp)) {
     let den = cx(0);
     let pk = cx(1);
     for (const a of c) {
