@@ -34,6 +34,8 @@ import {
   type BandpassDesign,
   type DesignState,
   type Settings,
+  NO_LOSS,
+  qText,
 } from "./state.ts";
 import { applyOwpr, withOpenisdDriver } from "./owprImport.ts";
 import { applyWpr } from "./wprImport.ts";
@@ -1542,10 +1544,11 @@ export function App(props: { initial: AppState | null }) {
 
               <h3 className="set-head">Box losses</h3>
               <div className="fields">
-                <Num help="Box leakage loss as a Q at the tuning frequency: lower means a leakier box. 10 is WinISD's default (a typical well-built box)."
+                <Num help="Box leakage loss as a Q at the tuning frequency: lower means a leakier box. 10 is WinISD's default (a typical well-built box). Clear it for no leak."
                   label="Leak Ql"
                   value={state.settings.losses.ql}
                   min={1}
+                  none={NO_LOSS}
                   onChange={(ql) => set("settings", { ...state.settings, losses: { ...state.settings.losses, ql } })}
                 />
                 <Select<"radiates" | "absorbed"> help="Where the air that leaks out goes. Heard (like WinISD): it radiates as sound, as through a real gap. Lost (like Hornresp): a pure loss. It matters mostly for bandpass boxes away from their passband, where the leak's sound can be as loud as the port's."
@@ -1566,16 +1569,18 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(coneLoad) => set("settings", { ...state.settings, coneLoad })}
                 />
-                <Num help="Absorption loss (stuffing, wall flex) as a Q: lower means more loss. 100 is WinISD's default (little stuffing). A design with its own Stuffing setting uses that setting's Qa instead."
+                <Num help="Absorption loss (stuffing, wall flex) as a Q: lower means more loss. 100 is WinISD's default (little stuffing). A design with its own Stuffing setting uses that setting's Qa instead. Clear it for no absorption."
                   label="Absorb Qa"
                   value={state.settings.losses.qa}
                   min={1}
+                  none={NO_LOSS}
                   onChange={(qa) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qa } })}
                 />
-                <Num help="Port friction loss as a Q: lower means a lossier port. 100 is WinISD's default."
+                <Num help="Port friction loss as a Q: lower means a lossier port. 100 is WinISD's default. Clear it for no port loss."
                   label="Port Qp"
                   value={state.settings.losses.qp}
                   min={1}
+                  none={NO_LOSS}
                   onChange={(qp) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qp } })}
                 />
               </div>
@@ -2205,7 +2210,7 @@ export function App(props: { initial: AppState | null }) {
         <footer className="muted">
           <p>
             Small-signal lumped model: no Bl/Cms non-linearity (port compression and a hot voice coil are in Settings). Box losses Ql{" "}
-            {state.settings.losses.ql}, Qa {state.settings.losses.qa}, Qp {state.settings.losses.qp}. Free for non-commercial use.
+            {qText(state.settings.losses.ql)}, Qa {qText(state.settings.losses.qa)}, Qp {qText(state.settings.losses.qp)}. Free for non-commercial use.
           </p>
           <ul className="footer-links">
             <li><a href="/drivers/">Drivers</a></li>

@@ -18,7 +18,7 @@ import { parseWpr } from "../packages/engine/src/index.ts";
 import { WINISD_CASES } from "../packages/engine/validation/winisd.ts";
 import { HORNRESP_AIR, HORNRESP_DRIVER, hornrespDriver, readBoxCase } from "../packages/engine/validation/hornresp.ts";
 import type { EnclosureInput, PassiveRadiatorInput, PortInput } from "../packages/engine/src/index.ts";
-import { DEFAULT_STATE, encodeStateShort, newDesign, type AppState, type BandpassDesign, type DesignState, type LineDesign, type PortFields, type PrDesign, type PrGroupState, type PrParams, type VentedDesign } from "../packages/web/src/state.ts";
+import { DEFAULT_STATE, encodeStateShort, newDesign, NO_LOSS_Q, type AppState, type BandpassDesign, type DesignState, type LineDesign, type PortFields, type PrDesign, type PrGroupState, type PrParams, type VentedDesign } from "../packages/web/src/state.ts";
 import { applyWpr } from "../packages/web/src/wprImport.ts";
 import { fromHornresp } from "../packages/web/src/hornresp.ts";
 
@@ -94,8 +94,8 @@ export function hornrespLineState(id: string, title: string): AppState | null {
   };
 }
 
-/** No loss: the comparisons leave losses out (Infinity); a link carries a very high Q instead. */
-const NONE = 1e9;
+/** No loss: the comparisons leave losses out (Infinity); a link carries the app's "none" (NO_LOSS_Q). */
+const NONE = NO_LOSS_Q;
 const q = (v: number | undefined) => (v === undefined || !Number.isFinite(v) ? NONE : v);
 /** The DSA270-PR's Xmax (the cases give its mass, area and suspension; the app also wants its travel). */
 const DSA270_XMAX = 11;

@@ -25,7 +25,7 @@ export interface PrPhysical {
 }
 import { KIND_COLORS, KIND_LABEL, PORT_LIMIT, portOf, portRoom_cm } from "./sim.ts";
 import { useUnits } from "./units.ts";
-import { bandpassLossesFrom } from "./state.ts";
+import { bandpassLossesFrom, NO_LOSS, qText } from "./state.ts";
 import { prTuning, withPreset, ventedAlignmentFor } from "./presets.ts";
 import { PrFinder, type FinderContext } from "./PrFinder.tsx";
 import { StuffingFields, type StuffingFitContext } from "./StuffingFields.tsx";
@@ -911,9 +911,9 @@ function BandpassLossesEditor(p: {
     const setC = (patch: Partial<ChamberLosses>) => p.onChange({ ...l!, [which]: { ...c, ...patch } });
     return (
       <>
-        <Num label={`${label} Ql`} value={c.ql} onChange={(ql) => setC({ ql })} title="Leakage: lower means a leakier chamber" />
-        <Num label={`${label} Qa`} value={c.qa} onChange={(qa) => setC({ qa })} title="Absorption: lower means more stuffing" />
-        {port && <Num label={`${label} Qp`} value={c.qp} onChange={(qp) => setC({ qp })} title="Port friction: lower means a lossier port" />}
+        <Num label={`${label} Ql`} value={c.ql} none={NO_LOSS} onChange={(ql) => setC({ ql })} title="Leakage: lower means a leakier chamber (clear it for none)" />
+        <Num label={`${label} Qa`} value={c.qa} none={NO_LOSS} onChange={(qa) => setC({ qa })} title="Absorption: lower means more stuffing (clear it for none)" />
+        {port && <Num label={`${label} Qp`} value={c.qp} none={NO_LOSS} onChange={(qp) => setC({ qp })} title="Port friction: lower means a lossier port (clear it for none)" />}
       </>
     );
   };
@@ -925,7 +925,7 @@ function BandpassLossesEditor(p: {
           label="Losses"
           value={l ? "own" : "shared"}
           options={[
-            { value: "shared", text: `Same as Settings (Ql ${p.shared.ql}, Qa ${p.shared.qa}, Qp ${p.shared.qp})` },
+            { value: "shared", text: `Same as Settings (Ql ${qText(p.shared.ql)}, Qa ${qText(p.shared.qa)}, Qp ${qText(p.shared.qp)})` },
             { value: "own", text: "Per chamber" },
           ]}
           onChange={(v) => p.onChange(v === "own" ? bandpassLossesFrom(p.shared) : null)}
@@ -939,6 +939,7 @@ function BandpassLossesEditor(p: {
             <Num
               label="Baffle Q"
               value={l.qicl}
+              none={NO_LOSS}
               onChange={(qicl) => p.onChange({ ...l, qicl })}
               title="Leakage between the chambers, around the driver and through the baffle (WinISD's Qiclfr)"
             />
