@@ -27,9 +27,12 @@ export function loadDb() {
   return db;
 }
 
-/** The app's state for a database driver, as picking it in the app sets it (App.tsx, onPick). */
-// Driver pages show the boxes at 100 W, as before the app started at 1 W (8 Nov 2026).
-export function driverState(rec: Driver, base: AppState = { ...DEFAULT_STATE, power: 100 }): AppState {
+/**
+ * The app's state for a database driver, as picking it in the app sets it (App.tsx, onPick),
+ * driven at its power rating (the app's 1 W when it has none): the page's links open where the
+ * limits mean something, and Size all boxes judges ports there too.
+ */
+export function driverState(rec: Driver, base: AppState = DEFAULT_STATE): AppState {
   const ts: TsValues = {};
   for (const k of Object.keys(TS_PARAMS) as TsParam[]) {
     const v = (rec.ts as unknown as Record<string, number | undefined>)[k];
@@ -49,6 +52,7 @@ export function driverState(rec: Driver, base: AppState = { ...DEFAULT_STATE, po
     r2_ohm: rec.ts.r2_ohm ?? 0,
     xmax_mm: rec.ts.xmax_mm ?? base.xmax_mm,
     pe_w: rec.ts.pe_w ?? base.pe_w,
+    ...(rec.ts.pe_w !== undefined && rec.ts.pe_w > 0 ? { drive: "watts" as const, power: Math.min(10000, Math.round(rec.ts.pe_w)) } : {}),
     volume: { ...base.volume, ...(disp !== undefined ? { driverDisp_l: disp } : {}), driverCutout_mm: p?.cutout_mm ?? 0 },
     dvc: dvc ? { on: true, entered: dvc, wired: dvc } : { ...base.dvc, on: false },
   };
@@ -295,6 +299,7 @@ export function driverContent(p: DriverPage, links: PageLinks, chart: typeof imp
 <h1>${esc(name)}: box design</h1>
 <p class="lede">${esc(describe(p.rec))}. Suggested ${kindList} boxes worked out from its Thiele/Small parameters, ready to open and change in Speaker Box Genius.</p>
 <p class="cta"><a class="button" href="${esc(links.all)}">Open these designs in the app →</a></p>
+${p.rec.ts.pe_w ? `<p class="muted">They open at its ${f1(p.rec.ts.pe_w)} W power rating; the app's 1 W button (as WinISD and Hornresp start) is next to it.</p>` : ""}
 ${flagNote}
 <h2 id="boxes">Suggested boxes</h2>
 <p>${suitability(solved.fs!, solved.qes!, solved.qts!)} The boxes use the flattest standard alignments; a smaller box trades some bass extension for size, which you can try in the app. Volumes are net: add the space taken by the driver, port${p.pr ? ", passive radiators" : ""} and bracing (the app's volume calculator does this).</p>
