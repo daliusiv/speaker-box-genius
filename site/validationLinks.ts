@@ -219,12 +219,6 @@ export interface CaseLink {
   note?: string;
 }
 
-/**
- * Two drivers side by side are compared on Hornresp's SPL from radiated power; the app works a
- * box's SPL out on axis (its "from radiated power" setting is for lines), up to 0.3 dB apart.
- */
-const ON_AXIS_NOTE = "the app shows this box's SPL on axis; this comparison uses Hornresp's SPL from radiated power (up to 0.3 dB apart; impedance and excursion are the same)";
-
 /** Links for every case that has one, keyed by the page's anchor ("winisd-ported", "hornresp-05-mltl"). */
 export async function validationLinks(site: string, cases: { winisd: { id: string }[]; hornresp: { id: string; title: string }[]; boxes?: { id: string }[] }): Promise<Record<string, CaseLink>> {
   const out: Record<string, CaseLink> = {};
@@ -239,7 +233,7 @@ export async function validationLinks(site: string, cases: { winisd: { id: strin
   }
   for (const c of cases.boxes ?? []) {
     const s = hornrespBoxState(c.id);
-    if (s) out[`hornresp-${c.id}`] = await link(s, readBoxCase(c.id).splFrom === "power" && s.designs[0]?.kind !== "line" ? ON_AXIS_NOTE : undefined);
+    if (s) out[`hornresp-${c.id}`] = await link(s);
   }
   return out;
 }

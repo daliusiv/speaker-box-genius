@@ -44,7 +44,7 @@ export const COMPAT_NAMES: Record<CompatKey, string> = {
   coneLoad: "Cone air load",
   portModel: "Ports",
   portCompression: "Port compression",
-  lineSpl: "Line/horn SPL",
+  lineSpl: "SPL",
 };
 
 /** The preset the settings are closest to, and the settings that differ from it. */
