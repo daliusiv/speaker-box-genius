@@ -23,7 +23,7 @@ Phases 0–2 are done, most of Phase 3 is done, and much of the "later" list has
 | 3. Community | 🟡 | Design gallery with OG images, embeddable widget, PR deploy previews |
 | Later / stretch | 🟡 | Large-signal (nonlinear) model, 3D box preview, i18n |
 
-Beyond the plan: transmission lines and horns with Hornresp import/export, a published [validation page](https://speakerboxgenius.com/validation/), 17 SEO guides, a [page for every driver](https://speakerboxgenius.com/drivers/) with suggested boxes and its own share card, compare-with-a-second-driver, PR finder, hot voice coil, ports modelled as pipes, amplifier volts and amps at max SPL, WinISD project export, OpenISD import, and air from your own temperature, humidity and pressure.
+Beyond the plan: transmission lines and horns with Hornresp import/export, a published [validation page](https://speakerboxgenius.com/validation/), 19 SEO guides, a [page for every driver](https://speakerboxgenius.com/drivers/) with suggested boxes and its own share card, compare-with-a-second-driver, PR finder, hot voice coil, ports modelled as pipes, amplifier volts and amps at max SPL, WinISD project export, OpenISD import, and air from your own temperature, humidity and pressure.
 
 ---
 
@@ -291,7 +291,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 ### Phase 3: Community and virality 🟡
 - ✅ Issue-to-PR database bot and CI consistency checks. ⬜ Preview comments (needs PR preview deploys, deferred).
 - ✅ Saved projects in the browser plus JSON project files. (localStorage rather than IndexedDB.)
-- ✅ **SEO content pages:** 17 guides with live examples, WinISD and Hornresp alternative pages, sitemap; Google Search Console set up.
+- ✅ **SEO content pages:** 19 guides with live examples, WinISD and Hornresp alternative pages, sitemap; Google Search Console set up.
 - ✅ **Validation page** built from the test results.
 - ✅ **Driver pages:** one page per driver (about 1,390) with suggested sealed, ported and PR boxes at the driver's power rating, charts, parameters, a live link and its own share card (`site/drivers.ts`, `site/og.ts`). Deploys reuse the share cards that haven't changed (`site/cardCache.ts`, kept with `actions/cache`), so only new or changed drivers' cards are drawn. Titles are what people search for ("<Brand> <Model>: box size, port tuning and T/S parameters"), with breadcrumbs (Drivers › Brand › Model) and the driver as the page's subject in its structured data. No suggested box is over 300 L: sealed boxes are capped there, bigger ported and PR boxes are left off with the reason on the page. Ported and PR boxes over twice Vas are left off too (high-Qts drivers, Qts ≥ 0.49 in practice; the page says the driver suits a sealed box).
 - ⬜ Design gallery with pre-rendered pages and OG images (deferred until after launch; the driver pages share its page and share-card code).
