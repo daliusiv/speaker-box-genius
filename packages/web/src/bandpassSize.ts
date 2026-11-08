@@ -23,6 +23,8 @@ export type BandpassOrder = "4" | "6p";
 
 export interface BandpassSearch {
   orders: BandpassOrder[];
+  /** Port end correction (× equivalent diameter) the ports are cut for; default 0.732. */
+  endCorrection?: number;
   /** Both chambers together (L). */
   maxVolume_l: number;
   drivers: number;
@@ -112,7 +114,7 @@ export function sizeBandpass(
   const KINDS = ["straight", "flared", "slot"] as const;
   /** The port of `kind` for a chamber (else the first that fits). */
   const portFor = (vol: number, fb: number, kind: (typeof KINDS)[number]) => {
-    const c = portCandidates(vol, fb, air);
+    const c = portCandidates(vol, fb, air, null, search.endCorrection);
     return c.find((p) => p.kind === kind) ?? c[0] ?? null;
   };
   const score = (t: BandpassFound) => (search.priority === "loud" ? -t.loud : t.f3);

@@ -27,6 +27,7 @@ import { KIND_COLORS, KIND_LABEL, PORT_LIMIT, portOf, portRoom_cm } from "./sim.
 import { useUnits } from "./units.ts";
 import { bandpassLossesFrom, NO_LOSS, qText } from "./state.ts";
 import { alignmentHelp, moreVentedFor, prTuning, withPreset, ventedAlignmentFor, ventedPresetPatch, type PortPicker } from "./presets.ts";
+import { SLOT_WALL_K, slotTuningRange } from "./ports.ts";
 import { PrFinder, type FinderContext } from "./PrFinder.tsx";
 import { StuffingFields, type StuffingFitContext } from "./StuffingFields.tsx";
 import { stuffFactor, stuffable, stuffingEffect, type StuffableKind } from "./stuffing.ts";
@@ -65,6 +66,8 @@ interface CommonProps<D extends DesignState> {
   fill: number;
   linked: boolean;
   air: Air;
+  /** Port end correction in use (Settings → Ports). */
+  ec: number;
   /** Solved driver for alignment presets; null while parameters are incomplete. */
   align: AlignmentDriver | null;
   drivers: number;
@@ -261,12 +264,13 @@ function PortChecks(props: {
   v: PortFields & { flare_cm?: number };
   vb_l: number;
   air: Air;
+  ec: number;
   ctx: Pick<PortContext, "portVelocity" | "internalMax_cm" | "portVelocityAt" | "portCompression" | "drive" | "portLimit">;
 }) {
-  const { v, vb_l, air, ctx } = props;
+  const { v, vb_l, air, ec, ctx } = props;
   const { fmt } = useUnits();
   const port = portOf(v);
-  const leff = portEffectiveLength(port); // m
+  const leff = portEffectiveLength(port, ec); // m
   const pipe = air.c / (2 * leff);
   const notes: CheckNote[] = [];
   const sizeField = v.shape === "round" ? "Port Ø" : "Width";
@@ -290,12 +294,12 @@ function PortChecks(props: {
   const limit = ctx.portLimit ?? PORT_LIMIT;
   if (ctx.portVelocity !== null && ctx.portVelocity > limit) {
     const k = ctx.portVelocity / limit;
-    const fbNow = ventedFb(vb_l, port, v.count, undefined, air);
+    const fbNow = ventedFb(vb_l, port, v.count, ec, air);
     const bigger: typeof port =
       v.shape === "round"
         ? { ...port, shape: "round", diameter_cm: v.diameter_cm * Math.sqrt(k) }
         : { ...port, shape: "slot", width_cm: v.slotWidth_cm * k, height_cm: v.slotHeight_cm };
-    const newLen = portLengthForFb(vb_l, { ...bigger, length_cm: 0 }, fbNow, v.count, undefined, air);
+    const newLen = portLengthForFb(vb_l, { ...bigger, length_cm: 0 }, fbNow, v.count, ec, air);
     const size = v.shape === "round" ? `${fmt(v.diameter_cm * Math.sqrt(k), "len")} diameter` : `${fmt(v.slotWidth_cm * k, "len")} wide`;
     const ports = Math.ceil(v.count * k);
     const ends = ctx.portVelocityAt === "ends";
@@ -321,6 +325,23 @@ function PortChecks(props: {
         `At ${ctx.drive ?? "this power"} the port loses about ${pc.db.toFixed(1)} dB around ${pc.f.toFixed(0)} Hz to turbulence (approximate model, shown in the SPL chart). ` +
         (v.shape === "round" && !(v.flare_cm! > 0) ? "More port area or flared ends reduce it." : "More port area reduces it further."),
       fix: sizeField,
+    });
+  }
+
+  // A slot along the box walls: the walls run on past its inner end, so it acts longer than any
+  // end correction for a free tube says. How much can't be worked out reliably, so give the
+  // tuning as a range (K 0.9–1.5) and how to trim, unless the user has set their own K.
+  const range = slotTuningRange(v, vb_l, ec, air);
+  if (range) {
+    notes.push({
+      warn: false,
+      chip: `Along the walls: ~${range.low.toFixed(1)}–${range.high.toFixed(1)} Hz`,
+      text:
+        `A slot built along the box walls usually tunes lower than calculated: its walls carry on past the inner end, so more air moves with it, ` +
+        `and no simulator (this one, WinISD or Hornresp) can work out how much. Builders typically report a few hertz. At this length expect roughly ` +
+        `${range.low.toFixed(1)}–${range.high.toFixed(1)} Hz rather than ${range.fb.toFixed(1)} Hz. Build it at ${fmt(v.length_cm, "len")}, measure the impedance, ` +
+        `and if the dip is low, shorten the slot a little at a time towards about ${fmt(range.trim_cm, "len")} (its length for ${range.fb.toFixed(1)} Hz with an end correction of ${SLOT_WALL_K.mid}). ` +
+        `A slot that stands clear of the walls tunes as calculated. If you've measured your own slots, enter their end correction in Settings → Ports.`,
     });
   }
 
@@ -414,10 +435,10 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext; pickP
   const v = p.design;
   const [msg, setMsg] = useState("");
   const set = (patch: Partial<VentedDesign>) => p.onChange({ ...v, ...patch });
-  const fb = ventedFb(p.vb_l, portOf(v), v.count, undefined, p.air);
+  const fb = ventedFb(p.vb_l, portOf(v), v.count, p.ec, p.air);
 
   const tune = () => {
-    const len = portLengthForFb(p.vb_l, portOf(v, 0), v.targetFb, v.count, undefined, p.air);
+    const len = portLengthForFb(p.vb_l, portOf(v, 0), v.targetFb, v.count, p.ec, p.air);
     if (!(len > 0)) {
       setMsg(`Even a zero-length port tunes below ${v.targetFb} Hz with this port area. Use a bigger port (or more ports), or a lower tuning.`);
       return;
@@ -432,7 +453,7 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext; pickP
    * changed to one that fits, as Size all boxes picks it.
    */
   const applyAlignment = (a: { name: string; vb_l: number; fb: number }) => {
-    const out = ventedPresetPatch(v, a, p.fill, p.air, p.portCtx.internalMax_cm, p.pickPort);
+    const out = ventedPresetPatch(v, a, p.fill, p.air, p.portCtx.internalMax_cm, p.pickPort, p.ec);
     setMsg(out.msg);
     if (out.patch) set(out.patch);
   };
@@ -499,12 +520,12 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext; pickP
       </div>
       <TuneRow target={v.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set port length" onApply={tune} />
       {msg && <p className="warn">{msg}</p>}
-      <PortChecks v={v} vb_l={p.vb_l} air={p.air} ctx={p.portCtx} />
+      <PortChecks v={v} vb_l={p.vb_l} air={p.air} ec={p.ec} ctx={p.portCtx} />
       <p className="hint">
-        Physical port length{v.flare_cm > 0 && v.shape === "round" ? ", end to end including the flares" : ""}; end correction (0.732 ×
-        diameter, like WinISD) is added automatically.
+        Physical port length{v.flare_cm > 0 && v.shape === "round" ? ", end to end including the flares" : ""}; end correction ({p.ec} ×
+        diameter{p.ec === 0.732 ? ", like WinISD" : ", from Settings"}) is added automatically.
         {v.shape === "round" && v.flare_cm > 0 && v.length_cm < 2 * v.flare_cm && " The port is shorter than its two flares: lengthen it or use a smaller radius."}
-        {v.shape === "slot" && " A slot along a box wall behaves slightly longer than this model assumes."}
+        {v.shape === "slot" && " A slot along the box walls acts longer than this: see its tuning range above."}
       </p>
     </>
   );
@@ -846,14 +867,15 @@ function PortEditor(props: {
   /** Volume of the chamber the port tunes. */
   vb_l: number;
   air: Air;
+  ec: number;
   onChange: (p: PortFields) => void;
 }) {
   const v = props.port;
   const [msg, setMsg] = useState("");
   const set = (patch: Partial<PortFields>) => props.onChange({ ...v, ...patch });
-  const fb = ventedFb(props.vb_l, portOf(v), v.count, undefined, props.air);
+  const fb = ventedFb(props.vb_l, portOf(v), v.count, props.ec, props.air);
   const tune = () => {
-    const len = portLengthForFb(props.vb_l, portOf(v, 0), v.targetFb, v.count, undefined, props.air);
+    const len = portLengthForFb(props.vb_l, portOf(v, 0), v.targetFb, v.count, props.ec, props.air);
     if (!(len > 0)) {
       setMsg(`Even a zero-length port tunes below ${v.targetFb} Hz with this port area. Use a bigger port (or more ports), or a lower tuning.`);
       return;
@@ -1004,11 +1026,12 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
       </div>
       {b.frontOpening === "port" ? (
         <>
-          <PortEditor port={b.front} vb_l={b.frontVb_l} air={p.air} onChange={(front) => set({ front })} />
+          <PortEditor port={b.front} vb_l={b.frontVb_l} air={p.air} ec={p.ec} onChange={(front) => set({ front })} />
           <PortChecks
             v={b.front}
             vb_l={b.frontVb_l}
             air={p.air}
+            ec={p.ec}
             ctx={{ portVelocity: p.portCtx.portVelocity, internalMax_cm: null, portLimit: p.portCtx.portLimit, portVelocityAt: p.portCtx.portVelocityAt }}
           />
         </>
@@ -1031,11 +1054,12 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
           </div>
           {b.rearOpening === "port" ? (
             <>
-              <PortEditor port={b.rear} vb_l={p.vb_l} air={p.air} onChange={(rear) => set({ rear })} />
+              <PortEditor port={b.rear} vb_l={p.vb_l} air={p.air} ec={p.ec} onChange={(rear) => set({ rear })} />
               <PortChecks
                 v={b.rear}
                 vb_l={p.vb_l}
                 air={p.air}
+                ec={p.ec}
                 ctx={{ portVelocity: p.portCtx.rearPortVelocity, internalMax_cm: p.portCtx.internalMax_cm, portLimit: p.portCtx.portLimit }}
               />
             </>
@@ -1081,6 +1105,8 @@ export function DesignCard(props: {
   canDelete: boolean;
   db: DbIndex | null;
   air: Air;
+  /** Port end correction in use (Settings → Ports). */
+  ec: number;
   align: AlignmentDriver | null;
   drivers: number;
   portCtx: PortContext;
@@ -1125,6 +1151,7 @@ export function DesignCard(props: {
     fill,
     linked: props.linked,
     air: props.air,
+    ec: props.ec,
     align: props.align,
     drivers: props.drivers,
   };
@@ -1178,7 +1205,7 @@ export function DesignCard(props: {
         />
       )}
       {stuffable(d.kind) && (
-        <StuffingFields design={d as DesignState & { kind: StuffableKind }} built_l={props.built_l} air={props.air} fit={props.fit} onChange={props.onChange} />
+        <StuffingFields design={d as DesignState & { kind: StuffableKind }} built_l={props.built_l} air={props.air} ec={props.ec} fit={props.fit} onChange={props.onChange} />
       )}
       {d.kind !== "line" && <p className="dims-link hint">
         {props.linked ? (

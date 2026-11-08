@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   coilHeatFactor,
+  DEFAULT_END_CORRECTION,
   impedanceMagnitude,
   parseOwdr,
   parseOwpr,
@@ -26,6 +27,7 @@ import {
   decodeStateAny,
   encodeState,
   encodeStateShort,
+  END_CORRECTION_MAX,
   MAX_DESIGNS,
   newDesign,
   newId,
@@ -50,6 +52,7 @@ import { VolumePanel } from "./VolumePanel.tsx";
 import { BuildSheet } from "./BuildSheet.tsx";
 import {
   airOf,
+  endCorrectionOf,
   amplifierLoad,
   baffleDbFor,
   lowDrive,
@@ -1299,6 +1302,7 @@ export function App(props: { initial: AppState | null }) {
                 canDelete={state.designs.length > 1}
                 db={db}
                 air={airOf(state)}
+                ec={endCorrectionOf(state)}
                 align={finderCtx.align}
                 drivers={state.drivers}
                 portCtx={portContext(state, designs, d.id)}
@@ -1656,6 +1660,14 @@ export function App(props: { initial: AppState | null }) {
                     { value: "on", text: "On (approximate, at this power)" },
                   ]}
                   onChange={(x) => set("settings", { ...state.settings, portCompression: x === "on" })}
+                />
+                <Num
+                  help="How much longer than its physical length a port acts, as K × its diameter (a slot: the diameter of a circle of the same area). 0.732 is one end in the baffle and one free inside the box, like WinISD; 0.85 both ends flanged. A slot built along the box walls acts longer still, by an amount nobody can calculate well: leave 0.732 and use the slot's tuning range, or enter the K you measured on your own builds. Used for the ports of ported and bandpass boxes: their tuning, Set port length and sizing (transmission lines model their port ends themselves)."
+                  label="End correction K"
+                  unit="× Ø"
+                  value={state.settings.endCorrection}
+                  min={0}
+                  onChange={(v) => set("settings", { ...state.settings, endCorrection: Number.isFinite(v) && v >= 0 ? Math.min(END_CORRECTION_MAX, v) : DEFAULT_END_CORRECTION })}
                 />
                 <Select<"peak" | "rms"> help="Port air speed shown as the peak value or as RMS (peak ÷ 1.41). The chuffing line moves with it."
                   label="Port speed"

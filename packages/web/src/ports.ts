@@ -3,8 +3,8 @@
  * bandpass sizing) try, each the largest of its kind that fits straight inside its chamber by
  * the app's own "too long to fit" rule (portRoom_cm), and how fast is too fast for each.
  */
-import { portLengthForFb, type Air } from "@sbg/engine";
-import { portRoom_cm } from "./sim.ts";
+import { DEFAULT_END_CORRECTION, portLengthForFb, ventedFb, type Air } from "@sbg/engine";
+import { portOf, portRoom_cm } from "./sim.ts";
 import type { PortFields, VentedDesign } from "./state.ts";
 
 const r1 = (v: number) => Math.round(v * 10) / 10;
@@ -18,9 +18,9 @@ export type AssistantPort =
 const PORT_SIZES = [20, 15, 12.5, 10, 7.5, 6, 5, 4, 3];
 
 /** The widest straight round port that fits when there are exactly `count` of them, as a candidate. */
-export function choosePortCount(vb_l: number, fb: number, air: Air, count: number): AssistantPort | null {
+export function choosePortCount(vb_l: number, fb: number, air: Air, count: number, ec = DEFAULT_END_CORRECTION): AssistantPort | null {
   for (const d of PORT_SIZES) {
-    const len = portLengthForFb(vb_l, { shape: "round", diameter_cm: d, length_cm: 10 }, fb, count, undefined, air);
+    const len = portLengthForFb(vb_l, { shape: "round", diameter_cm: d, length_cm: 10 }, fb, count, ec, air);
     if (len > 1 && len <= portRoom_cm(vb_l, d, null)) return { kind: "straight", diameter_cm: d, flare_cm: 0, length_cm: r1(len), count };
   }
   return null;
@@ -31,10 +31,10 @@ export function choosePortCount(vb_l: number, fb: number, air: Air, count: numbe
  * as the app's "Port too long to fit" check (portRoom_cm: a cube of this volume, less a port
  * diameter). Two ports when one won't fit.
  */
-export function choosePort(vb_l: number, fb: number, air: Air, space: PortSpace | null = null): { diameter_cm: number; length_cm: number; count: number } | null {
+export function choosePort(vb_l: number, fb: number, air: Air, space: PortSpace | null = null, ec = DEFAULT_END_CORRECTION): { diameter_cm: number; length_cm: number; count: number } | null {
   for (const count of [1, 2]) {
     for (const d of PORT_SIZES) {
-      const len = portLengthForFb(vb_l, { shape: "round", diameter_cm: d, length_cm: 10 }, fb, count, undefined, air);
+      const len = portLengthForFb(vb_l, { shape: "round", diameter_cm: d, length_cm: 10 }, fb, count, ec, air);
       if (len > 1 && len <= portRoom_cm(vb_l, d, space?.long_cm ?? null)) return { diameter_cm: d, length_cm: r1(len), count };
     }
   }
@@ -54,14 +54,14 @@ const r05 = (v: number) => Math.round(v * 2) / 2;
  * In a box built to a known space (`space`), its real inside: the longest inside dimension for
  * the length, the next for a slot's width.
  */
-export function portCandidates(vb_l: number, fb: number, air: Air, space: PortSpace | null = null): AssistantPort[] {
+export function portCandidates(vb_l: number, fb: number, air: Air, space: PortSpace | null = null, ec = DEFAULT_END_CORRECTION): AssistantPort[] {
   const out: AssistantPort[] = [];
   const room = (clearance: number) => portRoom_cm(vb_l, clearance, space?.long_cm ?? null);
-  const straight = choosePort(vb_l, fb, air, space);
+  const straight = choosePort(vb_l, fb, air, space, ec);
   if (straight) out.push({ kind: "straight", flare_cm: 0, ...straight });
   for (const d of PORT_SIZES) {
     const flare = Math.max(1, r05(d / 4));
-    const len = portLengthForFb(vb_l, { shape: "round", diameter_cm: d, length_cm: 10, flare_cm: flare }, fb, 1, undefined, air);
+    const len = portLengthForFb(vb_l, { shape: "round", diameter_cm: d, length_cm: 10, flare_cm: flare }, fb, 1, ec, air);
     if (len >= 2 * flare + 1 && len <= room(d)) {
       out.push({ kind: "flared", diameter_cm: d, flare_cm: flare, length_cm: r1(len), count: 1 });
       break;
@@ -70,7 +70,7 @@ export function portCandidates(vb_l: number, fb: number, air: Air, space: PortSp
   const width = Math.floor((space?.wide_cm ?? Math.cbrt(vb_l * 1000)) * 2) / 2;
   for (const h of SLOT_HEIGHTS) {
     if (h * 3 > width) continue;
-    const len = portLengthForFb(vb_l, { shape: "slot", width_cm: width, height_cm: h, length_cm: 10 }, fb, 1, undefined, air);
+    const len = portLengthForFb(vb_l, { shape: "slot", width_cm: width, height_cm: h, length_cm: 10 }, fb, 1, ec, air);
     if (len > 1 && len <= room(h)) {
       out.push({ kind: "slot", slotWidth_cm: width, slotHeight_cm: h, length_cm: r1(len), count: 1 });
       break;
@@ -115,4 +115,27 @@ export function portSpeedFor(p: AssistantPort, vp: number): number {
   if (p.kind !== "flared") return vp;
   const throat = (vp * ((p.diameter_cm + 2 * p.flare_cm) / p.diameter_cm) ** 2) / FLARED_THROAT;
   return Math.max(vp, throat);
+}
+
+/**
+ * End corrections (× equivalent diameter) for a slot built along the box walls: no formula
+ * holds up, so a range. 0.9 is about JL Audio's "add half the slot's height"; 1.5 matches
+ * builders' reports of slots tuning 3–4 Hz low or ending up 10–15 % shorter (the forums'
+ * "shelf vent" 2.227 is the worst case on a circulated chart). 1.2 is the trim target: low
+ * enough that a slot cut to it rarely ends up too short.
+ */
+export const SLOT_WALL_K = { low: 0.9, mid: 1.2, high: 1.5 };
+
+/**
+ * The likely tuning of a slot port built along the box walls (high: K 0.9, low: K 1.5) and the
+ * length to trim towards for the tuning the app shows (K 1.2). Null for round ports, or when
+ * the end correction in use already allows for the walls (K ≥ 0.9).
+ */
+export function slotTuningRange(v: PortFields, vb_l: number, ec: number, air: Air): { fb: number; low: number; high: number; trim_cm: number } | null {
+  if (v.shape !== "slot" || ec >= SLOT_WALL_K.low || !(v.length_cm > 0)) return null;
+  const port = portOf(v);
+  const fb = ventedFb(vb_l, port, v.count, ec, air);
+  const trim_cm = portLengthForFb(vb_l, portOf(v, 0), fb, v.count, SLOT_WALL_K.mid, air);
+  if (!(fb > 0) || !(trim_cm > 0)) return null;
+  return { fb, low: ventedFb(vb_l, port, v.count, SLOT_WALL_K.high, air), high: ventedFb(vb_l, port, v.count, SLOT_WALL_K.low, air), trim_cm };
 }

@@ -1,4 +1,4 @@
-import { parseWpr } from "@sbg/engine";
+import { DEFAULT_END_CORRECTION, parseWpr } from "@sbg/engine";
 import { MAX_DESIGNS, newDesign, type AppState, type DesignState } from "./state.ts";
 
 type WprProject = ReturnType<typeof parseWpr>;
@@ -20,6 +20,10 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
   const d = p.driver;
   const base = fileName.replace(/\.wpr$/i, "");
   const label = [d.brand, d.model].filter(Boolean).join(" ") || base;
+  // WinISD keeps an end correction per port; the app has one (Settings → Ports), from the
+  // project's port (a bandpass's front port, which sets its output).
+  const ports = [p.port, p.bandpass?.front.port, p.bandpass?.rear.port].filter((x) => x !== undefined);
+  const ec = ports[0]?.endCorrection ?? DEFAULT_END_CORRECTION;
   const state = ((): AppState => {
     let design: DesignState | null = null;
     if (p.box.type === "vented" && p.port) {
@@ -121,6 +125,7 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
         // WinISD's models: leaked air is heard, the cone's air is a fixed mass.
         leakage: "radiates",
         coneLoad: "mass",
+        endCorrection: ec,
         // Isobaric pairs have two coils in series, each with WinISD's Rg.
         rg: Number(((p.rg * (p.isobaric ? 2 : 1)) / p.drivers).toPrecision(6)),
         inductance: p.simulateLe,
@@ -159,6 +164,12 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
     p.unsupportedFilters > 0
       ? ` ${p.unsupportedFilters} filter${p.unsupportedFilters > 1 ? "s" : ""} in the project ${p.unsupportedFilters > 1 ? "were" : "was"} not imported; add ${p.unsupportedFilters > 1 ? "them" : "it"} by hand.`
       : "";
-  const message = `Imported WinISD project ${fileName} with its power, amplifier resistance and air settings.${filterNote}${unsupportedNote}${driversNote}${isoNote}${boxNote}${lossNote}`;
+  const ecNote =
+    ec !== DEFAULT_END_CORRECTION
+      ? ` Port end correction set to the project's ${ec} (Settings → Ports).${ports.some((x) => x.endCorrection !== ec) ? ` The project's ports use different end corrections; the app uses one for all, ${ec}.` : ""}`
+      : ports.some((x) => x.endCorrection !== ec)
+        ? ` The project's ports use different end corrections; the app uses one for all, ${ec}.`
+        : "";
+  const message = `Imported WinISD project ${fileName} with its power, amplifier resistance and air settings.${filterNote}${unsupportedNote}${driversNote}${isoNote}${boxNote}${lossNote}${ecNote}`;
   return { state, message };
 }
