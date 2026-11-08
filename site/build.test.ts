@@ -114,6 +114,19 @@ test("validation cases: in number order, each with its own key, and the same imp
   assert.deepEqual(heads, ["worst", "worst"]);
 });
 
+test("validation cases sit in four closed groups that a link opens, with a way back to the summary", async () => {
+  const { out } = await built();
+  const html = readFileSync(join(out, "validation/index.html"), "utf8");
+  const groups = [...html.matchAll(/<details class="group" id="([\w-]+)"><summary>([^<]+)/g)].map((m) => [m[1], m[2]!.trim()]);
+  assert.deepEqual(groups.map((g) => g[0]), ["winisd-cases", "hornresp-lines", "hornresp-boxes", "hornresp-stuffed"]);
+  assert.ok(!/<details class="group"[^>]* open/.test(html), "closed until asked for");
+  // Every case is inside a group; the summary and known differences are not.
+  const before = html.split('<details class="group"')[0]!;
+  assert.ok(!before.includes('<section class="case"') && before.includes('id="summary"') && before.includes('id="known-differences"'));
+  assert.match(html, /<a class="to-summary" href="#summary">/);
+  assert.match(html, /d\.open=true/);
+});
+
 test("driver pages: suggested boxes, charts, share link and brand indexes", async () => {
   const { out, paths } = await built();
   const driverPages = paths.filter((p) => /^\/drivers\/[^/]+\/[^/]+\/$/.test(p));
