@@ -4259,3 +4259,34 @@ button.link svg.sparkle,
 button.link svg.sparkle {
   margin-right: 0.25em;
 }
+
+/* Quick drive choices next to the W / V switch: 1 W (like WinISD and Hornresp) and the driver's rating. */
+.drive-quick {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.drive-bar {
+  flex-wrap: wrap;
+}
+
+/* Phones: the slider keeps the first row; W / V and the quick choices share the second. */
+@media (max-width: 600px) {
+  .drive-bar input[type="range"] {
+    flex-basis: 8rem;
+  }
+
+  .drive-quick {
+    margin-left: auto;
+  }
+}
+
+.drive-quick button.chip {
+  min-height: 2rem;
+  white-space: nowrap;
+}
+
+.drive-quick button.chip[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-fg, #111);
+}

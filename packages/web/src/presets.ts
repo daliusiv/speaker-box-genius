@@ -184,7 +184,8 @@ function portText(p: AssistantPort): string {
 }
 
 /**
- * The port for a ported box of `vb_l` tuned to `fb` at the current drive: of the ports that
+ * The port for a ported box of `vb_l` tuned to `fb`, at the driver's rated power (else the
+ * current drive): of the ports that
  * fit straight inside (one tube, two tubes, a flared tube, a slot along a wall, simplest to
  * build first), the first that stays under the chuffing line; if none does, the quietest
  * (the size report and the box's warning say so). Null if none fits at all.
@@ -197,16 +198,20 @@ export function bestVentedPort(s: AppState, d: DesignState & { kind: "vented" },
   const two = one && choosePortCount(vb_l, fb, air, 2);
   const cands = [...(one ? [one] : []), ...(two ? [two] : []), ...tried.filter((p) => p !== one)];
   if (cands.length === 0) return null;
-  const solved = solveDriver(s);
-  const drv = driverInputOf(s, solved);
-  const opts = simOptionsOf(s);
+  // Judged at the driver's power rating when it has one (the box is built for what it can take,
+  // not the 1 W the charts may be showing), else at the current drive.
+  const rated = s.pe_w > 0;
+  const at: AppState = rated ? { ...s, drive: "watts", power: s.pe_w } : s;
+  const solved = solveDriver(at);
+  const drv = driverInputOf(at, solved);
+  const opts = simOptionsOf(at);
   // The simulation's port speeds are peak; the chuffing line is in the displayed convention.
   const vLimit = portLimitOf(s) * (s.settings.velocity === "rms" ? Math.SQRT2 : 1);
   let best: { p: AssistantPort; v: number } | null = null;
   for (const p of cands) {
     const x = { ...d, vb_l, targetFb: fb, ...portFieldsOf(p) } as DesignState;
     const r = simulate(drv, enclosureOf(x, vb_l, lossesFor(s, x), s.volume.wall_mm), opts);
-    const v = portSpeedFor(p, limitsOf(r, s.xmax_mm, s.highPass.on, vLimit).vp ?? Infinity);
+    const v = portSpeedFor(p, limitsOf(r, at.xmax_mm, at.highPass.on, vLimit).vp ?? Infinity);
     if (v <= vLimit) {
       best = { p, v };
       break;
@@ -217,7 +222,7 @@ export function bestVentedPort(s: AppState, d: DesignState & { kind: "vented" },
   const p = best!.p;
   return {
     fields: { flare_cm: 0, ...portFieldsOf(p) } as Partial<DesignState & { kind: "vented" }>,
-    text: quiet ? portText(p) : `${portText(p)} (still over the chuffing line at this power)`,
+    text: quiet ? portText(p) : `${portText(p)} (still over the chuffing line at ${rated ? `its ${Math.round(s.pe_w)} W rating` : "this power"})`,
     quiet,
   };
 }

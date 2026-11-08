@@ -446,7 +446,8 @@ export const DEFAULT_STATE: AppState = {
   r2_ohm: 0,
   xmax_mm: 12,
   pe_w: 250,
-  power: 100,
+  // 1 W into Re, as WinISD and Hornresp (2.83 V into 8 Ω) start, so the charts read the same.
+  power: 1,
   drive: "watts",
   volts: 2.83,
   drivers: 1,
@@ -618,9 +619,12 @@ function stripKeys(v: Raw, d: Raw, mergedOneLevel: Set<string>, keep: string[]):
   return out;
 }
 
-/** The state with default values left out (see above). */
+/** The default drive before 8 Nov 2026, for links and saves made then (they leave the power out). */
+const LEGACY_POWER_W = 100;
+
+/** The state with default values left out (see above). The power is always kept (see LEGACY_POWER_W). */
 export function compactState(s: AppState): Raw {
-  const out = stripKeys({ ...s, designs: [] }, { ...DEFAULT_STATE, designs: [] }, MERGED_TOP, ["v", "driverBrand"]);
+  const out = stripKeys({ ...s, designs: [] }, { ...DEFAULT_STATE, designs: [] }, MERGED_TOP, ["v", "driverBrand", "power"]);
   const before: DesignState[] = [];
   out.designs = s.designs.map((d) => {
     const base = newDesign(d.kind, before);
@@ -893,7 +897,9 @@ export function decodeState(hash: string): AppState | null {
     return {
       v: 3,
       ...driverSlotFrom(raw, d),
-      power: raw.power ?? d.power,
+      // Links and saves leave out values equal to the default, and the default was 100 W until
+      // 8 Nov 2026: one without a power was made at 100 W. (compactState now always writes it.)
+      power: raw.power ?? LEGACY_POWER_W,
       drive: raw.drive === "volts" ? "volts" : "watts",
       volts: typeof raw.volts === "number" && raw.volts > 0 && Number.isFinite(raw.volts) ? raw.volts : d.volts,
       roomGain: (({ curve: _unchecked, ...given }: Raw) => ({

@@ -58,19 +58,27 @@ test("Size all boxes picks the simplest port that keeps quiet, else the quietest
   const { bestVentedPort } = await import("../src/presets.ts");
   const base = withDriver(DEFAULT_STATE, driver("dayton-audio/dsa175-8"));
   const vented = base.designs.find((d) => d.kind === "vented") as VentedDesign;
-  // Quiet at a few watts: one plain tube is enough.
-  const low = bestVentedPort({ ...base, power: 1 }, vented, 5.8, 51)!;
+  // Judged at the rated power (Pe). Quiet at a watt: one plain tube is enough.
+  const low = bestVentedPort({ ...base, pe_w: 1 }, vented, 5.8, 51)!;
   assert.equal(low.fields.count, 1);
   assert.equal(low.fields.flare_cm, 0);
   assert.ok(low.quiet);
   // At 70 W nothing that fits a 5.8 L box keeps quiet: the quietest is chosen, and the report says so.
-  const loud = bestVentedPort({ ...base, power: 70 }, vented, 5.8, 51)!;
-  assert.ok(!loud.quiet && /still over the chuffing line/.test(loud.text), loud.text);
+  const loud = bestVentedPort({ ...base, pe_w: 70 }, vented, 5.8, 51)!;
+  assert.ok(!loud.quiet && /still over the chuffing line at its 70 W rating/.test(loud.text), loud.text);
   // A middle power where one tube chuffs but a bigger opening doesn't.
   let found = false;
   for (const w of [2, 4, 8, 15, 30]) {
-    const b = bestVentedPort({ ...base, power: w }, vented, 5.8, 51)!;
+    const b = bestVentedPort({ ...base, pe_w: w }, vented, 5.8, 51)!;
     if (b.quiet && (b.fields.count! > 1 || b.fields.shape === "slot" || b.fields.flare_cm! > 0)) found = true;
   }
   assert.ok(found, "a bigger port configuration is chosen when one tube would chuff");
+});
+
+test("the port is judged at the driver's rating, not the 1 W the charts start at", async () => {
+  const { bestVentedPort } = await import("../src/presets.ts");
+  const base = withDriver(DEFAULT_STATE, driver("dayton-audio/dsa175-8"));
+  const vented = base.designs.find((d) => d.kind === "vented") as VentedDesign;
+  assert.equal(base.power, 1);
+  assert.deepEqual(bestVentedPort(base, vented, 5.8, 51), bestVentedPort({ ...base, power: 70 }, vented, 5.8, 51));
 });

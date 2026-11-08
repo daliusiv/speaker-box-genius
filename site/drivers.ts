@@ -28,7 +28,8 @@ export function loadDb() {
 }
 
 /** The app's state for a database driver, as picking it in the app sets it (App.tsx, onPick). */
-export function driverState(rec: Driver, base: AppState = DEFAULT_STATE): AppState {
+// Driver pages show the boxes at 100 W, as before the app started at 1 W (8 Nov 2026).
+export function driverState(rec: Driver, base: AppState = { ...DEFAULT_STATE, power: 100 }): AppState {
   const ts: TsValues = {};
   for (const k of Object.keys(TS_PARAMS) as TsParam[]) {
     const v = (rec.ts as unknown as Record<string, number | undefined>)[k];
