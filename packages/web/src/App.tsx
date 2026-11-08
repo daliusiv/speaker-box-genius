@@ -16,7 +16,8 @@ import { TimeChart } from "./TimeChart.tsx";
 import { draggableEq, eqQ, moveEq, retune, tunable } from "./chartEdit.ts";
 import { useUndoable } from "./useUndoable.ts";
 import { sizeAllForDriver, sizeBandpassDesign } from "./presets.ts";
-import type { FinderContext } from "./PrFinder.tsx";
+import { loadCandidates, type FinderContext } from "./PrFinder.tsx";
+import { sizeForNewDriver } from "./quickStart.ts";
 import { initialPanel, PanelTabs, rememberPanel, TabRow, type PanelId } from "./PanelTabs.tsx";
 import {
   DEFAULT_STATE,
@@ -920,22 +921,32 @@ export function App(props: { initial: AppState | null }) {
                         />
                       </label>
                     }
-                    onPick={(id) =>
-                      loadDriver(id).then(
-                        (d) => {
-                          offerSizing(d.name);
+                    onPick={(id) => {
+                      // From the assistant's "I have a speaker driver": the project is still the untouched
+                      // example, so every box is sized for the new driver (with a port and a PR to suit)
+                      // in the same undo step. Picked any other time, sizing is only offered: the boxes may be yours.
+                      const fresh = pickToCharts.current;
+                      pickToCharts.current = false;
+                      const prs = fresh && db ? loadCandidates(db).catch(() => null) : Promise.resolve(null);
+                      return Promise.all([loadDriver(id), prs]).then(
+                        ([d, cands]) => {
                           setDriverSource({ name: d.name, ...d.source, ts: d.ts, id });
-                          setStep((s) => withDriver(s, d));
-                          // From the launcher: straight to what the driver does (the charts, on phones).
-                          if (pickToCharts.current) {
-                            pickToCharts.current = false;
-                            setPhoneView("charts");
-                            window.scrollTo({ top: 0 });
+                          if (!fresh) {
+                            offerSizing(d.name);
+                            setStep((s) => withDriver(s, d));
+                            return;
                           }
+                          const r = sizeForNewDriver(withDriver(latest.current, d), cands);
+                          setStep(r.state);
+                          setSizeReport({ changed: r.changed, skipped: r.skipped });
+                          notify(r.changed.length > 0 ? `Loaded “${d.name}” and sized the boxes for it.` : `Loaded “${d.name}”.`);
+                          // Straight to what the driver does (the charts, on phones).
+                          setPhoneView("charts");
+                          window.scrollTo({ top: 0 });
                         },
                         () => alert("Couldn't load that driver."),
-                      )
-                    }
+                      );
+                    }}
                   />
                   <span className="dp-icons">
                     {driverSource && driverSource.name === state.driverName && driverSource.url && (
