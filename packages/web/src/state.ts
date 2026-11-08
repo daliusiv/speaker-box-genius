@@ -208,6 +208,12 @@ export interface Settings {
    * the usual guide for quiet hi-fi ports; car SPL builds often accept 25–30.
    */
   portLimit_ms: number;
+  /**
+   * Passive radiators: the share of Xmax (%) from which the PR excursion chart shades a caution
+   * band, where a PR's suspension stiffens and its distortion rises (a rule of thumb, not a
+   * datasheet figure). 0 = no band.
+   */
+  prCaution_pct: number;
 }
 
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
@@ -481,6 +487,7 @@ export const DEFAULT_STATE: AppState = {
     coneLoad: "mass",
     coilTemp_C: 20,
     portLimit_ms: 17,
+    prCaution_pct: 75,
   },
   eq: [],
   measured: [],

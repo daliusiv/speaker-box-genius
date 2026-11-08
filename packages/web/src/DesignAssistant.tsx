@@ -26,6 +26,7 @@ import {
   type AssistantResult,
   type AssistantUse,
   type IndexRow,
+  prCautionNote,
 } from "./assistant.ts";
 import { loadDriver, type DbIndex, type LoadedDriver } from "./library.ts";
 import type { WorkerJob, WorkerReply } from "./assistantWorker.ts";
@@ -824,7 +825,7 @@ export function DesignAssistant(props: {
                             Tuned to {r.fb} Hz with {r.pr.count > 1 ? `${r.pr.count} × ` : "a "}
                             {r.pr.name}, {r.pr.addedMass_g} g added to {r.pr.count > 1 ? "each" : "it"}
                           </span>
-                          {`; ${r.pr.count > 1 ? "they use" : "it uses"} ${Math.round(r.pr.prUse * 100)} % of ${r.pr.count > 1 ? "their" : "its"} travel when the driver reaches its Xmax. `}
+                          {`; ${r.pr.count > 1 ? "they use" : "it uses"} ${Math.round(r.pr.prUse * 100)} % of ${r.pr.count > 1 ? "their" : "its"} travel when the driver reaches its Xmax${prCautionNote(r.pr.prUse, props.base.settings.prCaution_pct)}. `}
                         </>
                       )}
                       {r.box === "line" && r.line
