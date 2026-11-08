@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
 import {
-  evaluatePrCandidates,
   largestPrFor,
   rankPrResults,
   type AlignmentDriver,
@@ -13,6 +12,7 @@ import {
 } from "@sbg/engine";
 import { DRIVER_AS_PR, loadDriverAsPassiveRadiator, loadPassiveRadiator, type DbIndex } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
+import { startSearch } from "./search.ts";
 import type { PrDesign, PrParams } from "./state.ts";
 
 /** What the finder needs from the app: the driver and how the boxes are driven. */
@@ -155,9 +155,9 @@ export function PrFinder(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, driverKey]);
 
-  // Simulating every candidate takes a while (seconds with drivers as PRs), so it runs in short
-  // slices between paints: the progress bar moves, the window stays usable, and it can be stopped
-  // (keeping the results so far).
+  // Simulating every candidate takes a while (seconds with drivers as PRs), so it runs in a
+  // worker (search.ts; in slices between paints where there is none): the progress bar moves,
+  // the window stays usable, and it can be stopped (keeping the results so far).
   const [found, setFound] = useState<{ results: PrFinderResult[] | null; error: string; stopped?: { done: number; total: number } }>({
     results: null,
     error: "",
@@ -167,50 +167,43 @@ export function PrFinder(props: {
     setSimming(null);
     if (!isOpen || !cands || !ctx.driver || (withDrivers && !driverCands)) return;
     const all = withDrivers ? [...cands, ...driverCands!] : cands;
-    const steps = evaluatePrCandidates(ctx.driver, all, {
-      vb_l: target.vb_l,
-      targetFb: target.fb,
-      losses: ctx.losses,
-      sim: ctx.sim,
-      fMin: ctx.fMin,
-    });
     const out: PrFinderResult[] = [];
     let done = 0;
-    let live = true;
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    let shown = 0;
     const finish = (stopped?: { done: number; total: number }) => {
-      live = false;
-      clearTimeout(timer);
       stopRef.current = null;
       setSimming(null);
       setFound({ results: rankPrResults(out), error: "", stopped });
     };
-    const slice = () => {
-      if (!live) return;
-      const t0 = performance.now();
-      try {
-        while (performance.now() - t0 < 30) {
-          const n = steps.next();
-          if (n.done) return finish();
-          out.push(...n.value);
-          done++;
-        }
-      } catch (e) {
-        live = false;
-        stopRef.current = null;
-        setSimming(null);
-        setFound({ results: null, error: (e as Error).message });
-        return;
-      }
-      setSimming({ done, total: all.length });
-      timer = setTimeout(slice, 0);
+    const stopSearch = startSearch(
+      { kind: "pr", driver: ctx.driver, candidates: all, options: { vb_l: target.vb_l, targetFb: target.fb, losses: ctx.losses, sim: ctx.sim, fMin: ctx.fMin } },
+      {
+        step: (s) => {
+          if (s.kind !== "pr") return;
+          out.push(...s.results);
+          done = s.done;
+          // The progress bar at most every 50 ms: a worker sends a message per candidate.
+          const now = performance.now();
+          if (now - shown > 50) {
+            shown = now;
+            setSimming({ done, total: all.length });
+          }
+        },
+        done: () => finish(),
+        error: (message) => {
+          stopRef.current = null;
+          setSimming(null);
+          setFound({ results: null, error: message });
+        },
+      },
+    );
+    stopRef.current = () => {
+      stopSearch();
+      finish({ done, total: all.length });
     };
-    stopRef.current = () => finish({ done, total: all.length });
     setSimming({ done: 0, total: all.length });
-    timer = setTimeout(slice, 30);
     return () => {
-      live = false;
-      clearTimeout(timer);
+      stopSearch();
       stopRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

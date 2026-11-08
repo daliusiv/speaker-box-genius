@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
 import type { AlignmentDriver, DriverInput, SimulationOptions } from "@sbg/engine";
 import { Fixed, Num, Select } from "./components.tsx";
 import { lineFoldOf, lineLength, lineVolume } from "./sim.ts";
-import { bestLine, compareOne, frontHorn, makePreset, presetFor, SHOWN_PRESETS, rankLines, tuneLine, type LineBest, type LineCompare, type LineGoal, type PresetId } from "./lineopt.ts";
+import { startSearch } from "./search.ts";
+import { frontHorn, makePreset, presetFor, SHOWN_PRESETS, rankLines, tuneLine, type LineBest, type LineCompare, type LineGoal, type PresetId } from "./lineopt.ts";
 import type { LineDesign, LineSection } from "./state.ts";
 import { foldShapes } from "./foldShapes.ts";
 import { fromHornresp, toHornresp, type HornrespImport } from "./hornresp.ts";
@@ -355,17 +356,31 @@ export function LineBody(p: {
     set({ ...made, name: d.name });
   };
 
+  // The running search (best line or compare types), stopped when the design changes or the card goes.
+  const stopLine = useRef<(() => void) | null>(null);
+  useEffect(() => () => stopLine.current?.(), []);
   // "Best line": search driver position and stuffing, then retune the length.
   const [best, setBest] = useState<{ goal: LineGoal; result: LineBest | null; busy: boolean } | null>(null);
-  useEffect(() => setBest(null), [d]);
+  useEffect(() => {
+    stopLine.current?.();
+    setBest(null);
+  }, [d]);
   const findBest = (goal: LineGoal) => {
     if (!p.driver) return;
     const driver = p.driver;
     setBest({ goal, result: null, busy: true });
-    setTimeout(() => {
-      const r = bestLine(driver, d, p.sim, goal, p.wall_mm);
-      setBest({ goal, result: r, busy: false });
-    }, 30);
+    stopLine.current?.();
+    stopLine.current = startSearch(
+      { kind: "bestLine", driver, design: d, sim: p.sim, goal, wall_mm: p.wall_mm },
+      {
+        step: (s) => s.kind === "bestLine" && setBest({ goal, result: s.result, busy: false }),
+        done: () => {},
+        error: (message) => {
+          setBest(null);
+          setMsg(`Couldn't search: ${message}`);
+        },
+      },
+    );
   };
   const useBest = (r: LineBest) => {
     if (!p.driver) return;
@@ -383,19 +398,31 @@ export function LineBody(p: {
   // "Which type suits this driver?": every preset made, tuned and simulated, one per tick.
   const [cmp, setCmp] = useState<{ rows: LineCompare[]; done: boolean } | null>(null);
   const cmpKey = JSON.stringify([p.driver, p.drivers, p.sim, p.wall_mm]);
-  useEffect(() => setCmp(null), [cmpKey]);
+  useEffect(() => {
+    stopLine.current?.();
+    setCmp(null);
+  }, [cmpKey]);
   const compare = () => {
     if (!p.driver) return;
     const driver = p.driver;
     const rows: LineCompare[] = [];
     setCmp({ rows: [], done: false });
-    const next = (k: number) => {
-      if (k >= SHOWN_PRESETS.length) return setCmp({ rows: rankLines(rows, driver.xmax_mm, p.portLimit * (p.rms ? Math.SQRT2 : 1)), done: true });
-      rows.push(compareOne(SHOWN_PRESETS[k]!.id, driver, d, p.sim, p.align, p.drivers, p.wall_mm));
-      setCmp({ rows: [...rows], done: false });
-      setTimeout(() => next(k + 1), 20);
-    };
-    setTimeout(() => next(0), 20);
+    stopLine.current?.();
+    stopLine.current = startSearch(
+      { kind: "compare", presets: SHOWN_PRESETS.map((x) => x.id), driver, design: d, sim: p.sim, align: p.align, drivers: p.drivers, wall_mm: p.wall_mm },
+      {
+        step: (s) => {
+          if (s.kind !== "compare") return;
+          rows.push(s.row);
+          setCmp({ rows: [...rows], done: false });
+        },
+        done: () => setCmp({ rows: rankLines(rows, driver.xmax_mm, p.portLimit * (p.rms ? Math.SQRT2 : 1)), done: true }),
+        error: (message) => {
+          setCmp(null);
+          setMsg(`Couldn't compare: ${message}`);
+        },
+      },
+    );
   };
   const useRow = (r: LineCompare) => {
     if (!r.design) return;
