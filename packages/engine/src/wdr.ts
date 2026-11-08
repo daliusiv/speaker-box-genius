@@ -97,11 +97,24 @@ export interface WdrExport {
   comment?: string;
 }
 
+/**
+ * A number as WinISD (a Delphi program) reads it: dot decimals, 12 significant digits, never
+ * scientific notation (JavaScript writes 1e-7 below 0.000001), and 0 for anything not finite
+ * (NaN or Infinity would stop WinISD opening the file).
+ */
+export function winisdNumber(v: number | undefined): string {
+  if (v === undefined || !Number.isFinite(v)) return "0";
+  const x = Number(v.toPrecision(12));
+  const s = String(x);
+  if (!/e/i.test(s)) return s;
+  return x.toLocaleString("en-US", { useGrouping: false, maximumSignificantDigits: 12, maximumFractionDigits: 20 });
+}
+
 /** Write a .wdr file WinISD can open (dot decimals, SI units). */
 export function writeWdr(d: WdrExport): string {
   const t = d.ts;
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const n = (v: number | undefined) => (v === undefined ? "0" : String(Number(v.toPrecision(12))));
+  const n = winisdNumber;
   const qts = t.qts ?? (t.qms !== undefined && t.qes !== undefined ? (t.qms * t.qes) / (t.qms + t.qes) : undefined);
   const lines: [string, string][] = [
     ["Brand", d.brand],
@@ -364,7 +377,7 @@ export interface WprExport {
  * key it writes, unused ones zeroed), so WinISD opens it and parseWpr reads it back.
  */
 export function writeWpr(p: WprExport): string {
-  const n = (v: number) => String(Number(v.toPrecision(12)));
+  const n = winisdNumber;
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const section = (name: string, rows: [string, string | number][]) =>
     `[${name}]\r\n` + rows.map(([k, v]) => `${k}=${typeof v === "number" ? n(v) : v}`).join("\r\n") + "\r\n";
