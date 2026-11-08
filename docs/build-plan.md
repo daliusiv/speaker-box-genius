@@ -11,9 +11,9 @@ Drafted 2 Nov 2026 · Rev 2: non-commercial source-available licence, GitHub Pag
 
 ---
 
-## 0. Where it stands (5 Nov 2026)
+## 0. Where it stands (8 Nov 2026)
 
-Phases 0–2 are done, most of Phase 3 is done, and much of the "later" list has shipped too (bandpass, transmission lines and horns, port compression, cut list). The app is live but **not publicly launched**: the next step is a private beta with 5–10 forum regulars, then the launch posts.
+Phases 0–2 are done, most of Phase 3 is done, and much of the "later" list has shipped too (bandpass, transmission lines and horns, port compression, cut list). The app is live but **not publicly launched**. Next: a hands-on check against WinISD itself (including opening an exported `.wpr`), privacy-friendly analytics, then live links posted in real build threads on r/diyaudio and diyAudio (no closed beta; see §14).
 
 | Phase | Status | Still open |
 |---|---|---|
@@ -23,7 +23,7 @@ Phases 0–2 are done, most of Phase 3 is done, and much of the "later" list has
 | 3. Community | 🟡 | Design gallery with OG images, embeddable widget, PR deploy previews |
 | Later / stretch | 🟡 | Large-signal (nonlinear) model, 3D box preview, i18n |
 
-Beyond the plan: transmission lines and horns with Hornresp import/export, a published [validation page](https://speakerboxgenius.com/validation/), 15 SEO guides, a [page for every driver](https://speakerboxgenius.com/drivers/) with suggested boxes and its own share card, compare-with-a-second-driver, PR finder, hot voice coil, ports modelled as pipes, amplifier volts and amps at max SPL.
+Beyond the plan: transmission lines and horns with Hornresp import/export, a published [validation page](https://speakerboxgenius.com/validation/), 15 SEO guides, a [page for every driver](https://speakerboxgenius.com/drivers/) with suggested boxes and its own share card, compare-with-a-second-driver, PR finder, hot voice coil, ports modelled as pipes, amplifier volts and amps at max SPL, WinISD project export, OpenISD import, and air from your own temperature, humidity and pressure.
 
 ---
 
@@ -101,9 +101,9 @@ Beyond the plan: transmission lines and horns with Hornresp import/export, a pub
 | State | Zustand + Immer | React state + URL hash | Not needed; one state object serialises to the URL directly |
 | Charts | uPlot | Hand-written SVG (`LogChart`) | Full control over phone layout, legend, leader marker and redlines; fast enough |
 | Complex math | Hand-rolled `Complex`, typed arrays | ✅ Same | |
-| Worker comms | Web Worker + Comlink | Main thread | Solves are fast enough; the PR finder runs in slices with a progress bar instead |
+| Worker comms | Web Worker + Comlink | Native Web Workers for the slow searches; the rest on the main thread | No dependency. Solves are fast enough to run as you type; the design assistant, PR finder, Best line and Compare types run in workers (in slices on the page where a worker can't start) |
 | URL compression | lz-string or fflate | Browser `CompressionStream` (deflate-raw) | No dependency |
-| Testing | Vitest + Playwright | `node:test` (288 tests); Playwright for manual checks | No dependency |
+| Testing | Vitest + Playwright | `node:test` (about 650 tests); Puppeteer for manual checks | No dependency |
 | Monorepo | pnpm workspaces | ✅ `engine`, `web`, `schema`, `db-tools` | |
 | Hosting/CI | GitHub Pages + Actions | ✅ Same, custom domain | |
 | Schema validation | Zod + JSON Schema | Hand-written types and checks in `db-tools` | No dependency |
@@ -120,6 +120,7 @@ A **lumped-element equivalent circuit** solved in the frequency domain at log-sp
 
 - **Driver:** Re, Le (plain, or L2R2 for lossy coils), Bl, Mms, Cms, Rms, Sd. Any number of drivers in series or parallel, **isobaric** pairs, **dual voice coil** drivers, **hot voice coil** (Re rises with temperature).
 - **Box:** Cab from net Vb, leakage (Ql), absorption (Qa), port loss (Qp), all set in Settings and read from WinISD projects.
+- **Air:** standard (20 °C), WinISD's or Hornresp's constants, or your own temperature, humidity and pressure (density from the partial pressures of dry air and vapour, speed of sound from the mixture).
 - **Port:** acoustic mass with end corrections, round or slot ports, several ports, flared ends, **port compression**, and an option to model ports as **pipes** (with their own resonances).
 - **Passive radiator:** Mmp with added mass, Cmp, Rmp, Sdp, Xmax; 1, 2 or 4 identical PRs, and PR groups in bandpass chambers.
 - **Bandpass:** 4th and 6th order, each chamber ported, closed or with PRs, with inter-chamber leakage.
@@ -141,7 +142,7 @@ A **lumped-element equivalent circuit** solved in the frequency domain at log-sp
 | Amplifier at max | The amplifier's RMS voltage, current and real power needed to reach Max SPL at each frequency, after the high-pass filter and EQ, into the speaker's impedance (shown as the Max SPL chart's **Volts** and **Amps** views) |
 | Lines and horns | Line load (Za), cone and mouth contributions, pressure and air speed along the line |
 
-**Input power convention:** V = √(P·Re) by default (like WinISD), or drive in volts (e.g. 2.83 V). The active one is always shown.
+**Input power convention:** V = √(P·Re) by default (like WinISD), or drive in volts (e.g. 2.83 V). The active one is always shown. New projects start at 1 W, like WinISD and Hornresp, with one tap for 1 W or the driver's rated power.
 
 ### 4.3 Signal-chain extras ✅
 High-pass filters (Butterworth any order 1–4, Linkwitz–Riley 2 and 4), Linkwitz Transform, peaking and shelving EQ, amplifier and cable resistance. ⬜ Bessel high-pass not added.
@@ -154,7 +155,7 @@ High-pass filters (Butterworth any order 1–4, Linkwitz–Riley 2 and 4), Linkw
 - **Known limits:** small-signal model, so no Bl(x)/Cms(x) nonlinearity. (Port compression and hot-coil compression were added.)
 
 ### 4.5 Performance ✅
-Up to 8 designs recalculate as you type or drag, on the main thread. The only slow job, the PR finder trying every PR in the database, runs in slices with a progress bar and a stop button.
+Up to 8 designs recalculate as you type or drag, on the main thread. The slow jobs (the design assistant's search, the PR finder trying every PR and optionally every driver, Best line and Compare types for lines) run in Web Workers with a progress bar and a stop button (`assistantWorker.ts`, `searchWorker.ts`); where a worker can't start they run on the page in short slices.
 
 ---
 
@@ -176,7 +177,8 @@ Up to 8 designs recalculate as you type or drag, on the main thread. The only sl
 | DATS, REW, ARTA exports | Import | ✅ |
 | `.frd` | Import | ✅ Measured SPL overlay |
 | WinISD `.wdr` drivers | Import + Export | ✅ Also a bulk CLI (`pnpm db:import-wdr`) |
-| WinISD `.wpr` projects | Import | ✅ Sealed, vented, PR, bandpass, filters, losses, isobaric, DVC |
+| WinISD `.wpr` projects | Import + Export | ✅ Sealed, vented, PR, bandpass, filters, losses, isobaric, DVC. Export: one design per file, with a note of what WinISD can't hold (EQ, passive parts, baffle step, room gain; slot ports written as round ports of the same area) |
+| OpenISD `.owpr` projects, `.owdr` drivers | Import | ✅ Driver, air, drive, amp resistance, losses, high-pass and EQ, every box type |
 | Hornresp records | Import + Export | ✅ Lines and horns |
 | CSV of every curve | Export | ✅ |
 | Forum image (PNG) | Export | ✅ Summary, charts and a QR code to the live design |
@@ -236,10 +238,10 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 ## 9. UX and layout ✅ (with changes)
 
 - **Driver card** with Main and **Compare** pickers (a second driver drawn dashed in every box, with Swap).
-- **Designs:** up to 8, colour-coded, each easy to show/hide, rename or duplicate.
+- **Designs:** up to 8, colour-coded, added from one **+ Add a box** menu, each easy to show/hide, rename or duplicate.
 - **Charts:** SPL (relative or dB SPL, F3 marked), excursion, PR excursion, port speed, Max SPL (SPL / Volts / Amps), impedance, group delay, Za. Over-limit parts glow red; hover or tap reads every curve; a **leader marker** shows the best curve.
 - **Drive** in W or V at the top, for every design.
-- **Alignment presets:** Qtc 0.5 / 0.577 / 0.707 for sealed; QB3, B4 and Keele for ported. ⬜ SBB4, SC4 and Bessel vented alignments not added.
+- **Alignment presets:** Qtc 0.5 / 0.577 / 0.707 for sealed; QB3, B4 and Keele for ported (textbook, lossless, as WinISD's and Hornresp's figures are). **Size all boxes** uses Qtc 0.707 (twice Vas when Qts is near 0.707) and picks each port. ⬜ SBB4, SC4 and Bessel vented alignments not added.
 - **PR tools:** finder, best tuning, added mass for a tuning.
 - **Phones: full editing**, not only viewing (changed from the plan): tall charts, a legend under each chart, one chart at a time.
 - **Dark theme only** (changed from the plan; the print build sheet stays white).
@@ -276,7 +278,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - ✅ Repo set up: licences, CONTRIBUTING, CLA check, issue templates, CI, Pages deploy.
 - ✅ Database: ~1,530 drivers and 55 PRs (planned ~50 and ~10).
 - ✅ PWA offline support, installable.
-- ⏸️ **Soft launch:** held back on purpose. Next: private beta with 5–10 trusted forum regulars, then r/diyaudio, diyAudio, AVS, Parts Express Tech Talk, r/CarAV, r/BudgetAudiophile, Show HN.
+- ⏸️ **Soft launch:** held back on purpose. Next (8 Nov 2026): no closed beta; after the WinISD check and analytics, answer real build threads with live links on r/diyaudio, diyAudio, AVS, Parts Express Tech Talk, r/CarAV, r/BudgetAudiophile, Show HN.
 
 ### Phase 2: Power-user features ✅
 - ✅ Multiple drivers (series/parallel), isobaric, DVC, multiple ports, slot ports. 🟡 Non-identical PRs only as groups in bandpass chambers.
@@ -284,14 +286,14 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - ✅ .zma/.frd import with overlay; T/S fitting from impedance.
 - ✅ In-app driver search and "Send to the database".
 - ✅ Alignment presets, PR tools, size for a target volume.
-- 🟡 **Design assistant** (Nov 2026): goal → limits → priority → ranked drivers and boxes from the database, one tap to open. Stage A: sealed and ported. ⬜ Stage B: passive radiator boxes (pairing each driver with a database PR), "fit my space" from W × H × D, shareable results.
+- ✅ **Design assistant** (Nov 2026): goal → limits → priority → ranked drivers and boxes from the database, one tap to open. Sealed, ported, passive radiator boxes (each driver paired with a database PR), lines and bandpass boxes; "fit my space" from W × H × D; shareable results.
 
 ### Phase 3: Community and virality 🟡
 - ✅ Issue-to-PR database bot and CI consistency checks. ⬜ Preview comments (needs PR preview deploys, deferred).
 - ✅ Saved projects in the browser plus JSON project files. (localStorage rather than IndexedDB.)
 - ✅ **SEO content pages:** 15 guides with live examples, WinISD and Hornresp alternative pages, sitemap; Google Search Console set up.
 - ✅ **Validation page** built from the test results.
-- ✅ **Driver pages:** one page per driver (about 1,230) with suggested sealed, ported and PR boxes, charts, parameters, a live link and its own share card (`site/drivers.ts`, `site/og.ts`).
+- ✅ **Driver pages:** one page per driver (about 1,390) with suggested sealed, ported and PR boxes at the driver's power rating, charts, parameters, a live link and its own share card (`site/drivers.ts`, `site/og.ts`). No suggested box is over 300 L: sealed boxes are capped there, bigger ported and PR boxes are left off with the reason on the page.
 - ⬜ Design gallery with pre-rendered pages and OG images (deferred until after launch; the driver pages share its page and share-card code).
 - ⬜ Embeddable iframe widget for blogs and build logs.
 - ⬜ About page (licence in plain words, privacy, credits) and privacy-friendly analytics before launch.
@@ -350,7 +352,7 @@ The engine has no UI dependency, so other non-commercial tools can reuse it.
 | Model misused beyond linear range | Limitation notes, red past X_max, port-speed warnings, Max SPL limits | ✅ |
 | Long URLs / no link previews | Short deflated links, forum image with QR code, site preview card | 🟡 Per-design previews need the gallery |
 | Scope creep | Lines and horns were taken on (beta, validated); crossovers stay out | 🟡 |
-| **Competition** (other web WinISD clones appearing, Nov 2026) | Get the private beta out; lean on validation, PR tools and sharing | New |
+| **Competition** (other web WinISD clones appearing, Nov 2026) | Post live links in real build threads; lean on validation, PR tools and sharing | New |
 
 ---
 
@@ -361,7 +363,7 @@ The engine has no UI dependency, so other non-commercial tools can reuse it.
 3. ~~**Framework preference**~~ **Decided:** React.
 4. ~~**Reference drivers for golden tests**~~ **Decided:** Dayton Audio DSA215-8 (with the DSA270-PR) across 15 WinISD and 7 Hornresp setups.
 5. ~~**GitHub username/org**~~ **Decided:** `daliusiv`.
-6. **New:** when to run the private beta, and who to invite.
+6. ~~**When to run the private beta**~~ **Decided 8 Nov 2026:** no closed beta. After the WinISD check and analytics, answer real build threads with live links.
 7. **New:** PR preview deploys (declined for now; options: a gh-pages preview action, or Cloudflare/Netlify).
 
 ---

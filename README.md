@@ -20,7 +20,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 - **Sealed**, **ported** (vented) and **passive radiator** boxes
 - **4th- and 6th-order bandpass**, each chamber with its own port or passive radiators
-- **Transmission lines**: open lines, mass-loaded lines, **tapped horns** and **front-loaded horns**, built from tapered sections (parallel, conical or exponential), with stuffing, the driver anywhere along the line and a drawing of the folded box
+- **Transmission lines**: open lines, mass-loaded lines, **tapped horns** and **front-loaded horns**, built from tapered sections (parallel, conical or exponential), with stuffing, the driver anywhere along the line and a drawing of the folded box. Presets and **Compare types** cover every type but the tapped horn, whose starting point is being reworked; set one up by hand or import it from Hornresp
 - **Stuffing** per sealed, ported or passive radiator design: lined walls, a fibre fill by weight (g/L or lb/ft³, with the grams to weigh out) or your own measured values, so an empty and a stuffed box can sit on one chart; **fit to a measured impedance sweep** (.zma) finds the volume a finished box really acts as and its Qa
 - Up to **8 designs side by side** on the same charts, each easy to switch on or off, rename or duplicate
 
@@ -43,16 +43,16 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **A T/S parameter editor that never overwrites what you typed.** Type any set of parameters in any order; the rest are calculated (shown in grey), and contradictions are flagged
 - **Paste straight from a datasheet**: the parameters are picked out of the text, with units like "1.9 ft³" or "35630 mm²" converted
 - **A driver database of about 1,530 drivers from 18 brands**, plus 55 passive radiators, searchable and filterable, with links to each manufacturer's datasheet. Values that look wrong for a driver (an Xmax too large for its cone, say) are marked "check" until someone confirms them against the datasheet, and the design assistant leaves those drivers out
-- **A page for every driver** on the site ([speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/)), with suggested sealed, ported and passive radiator boxes, their charts, and a link that opens them in the app
+- **A page for every driver** on the site ([speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/)), with suggested sealed, ported and passive radiator boxes (none over 300 L) at the driver's power rating, their charts, and a link that opens them in the app
 - **Compare with another driver**: a second driver drawn dashed in every box, with **Swap** to make it the main one
 - **Multiple drivers**: any number, wired in series or parallel, **isobaric** pairs and **dual voice coil** drivers
 - **Measure your own driver** from a free-air impedance sweep (DATS, REW, ARTA and others, as `.zma`, `.txt` or `.csv`), with an added-mass sweep for Vas
 - Voice-coil inductance models (Le, and L2R2 for a closer match to measurements), and a **hot voice coil** setting for power compression
-- **Import and export WinISD `.wdr`** drivers, and send a driver to the database from the app
+- **Import and export WinISD** `.wdr` drivers and `.wpr` projects (open any sealed, ported, PR or ported bandpass box in WinISD), **import OpenISD** `.owpr` projects and `.owdr` drivers, and send a driver to the database from the app
 
 ### Sizing and tuning
 
-- **Alignment presets**: Qtc 0.5, 0.577 and 0.707 for sealed boxes; QB3, B4 and Keele for ported ones; one tap sizes every box for the driver
+- **Alignment presets**: Qtc 0.5, 0.577 and 0.707 for sealed boxes; QB3, B4 and Keele for ported ones; one tap sizes every box for the driver (sealed at Qtc 0.707, or twice Vas when Qts is so close to 0.707 that the box would run away) and picks each port: the simplest that fits and stays under the chuffing line at the driver's rated power
 - **Find a passive radiator**: tries every PR in the database (and, optionally, woofers used as PRs) in groups of 1, 2 or 4, tunes each with added mass and ranks them by bass extension and spare travel
 - **Best PR tuning**: the added mass for the flattest response, the deepest bass or the smallest box for a target F3
 - **Port fit checks**: the port length for a tuning, whether it fits inside the box, round or slot ports, flared ends, and an option to model ports as pipes (with their own resonances)
@@ -60,7 +60,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 ### Signal and room
 
-- **Drive by power or voltage** (W or V, e.g. 2.83 V for datasheet comparisons)
+- **Drive by power or voltage** (W or V, e.g. 2.83 V for datasheet comparisons). New projects start at 1 W, like WinISD and Hornresp, with one tap for 1 W or the driver's rated power
 - **High-pass filter** (Butterworth or Linkwitz–Riley, any order), **Linkwitz Transform**, peaking, low-shelf and high-shelf **EQ** (matched with Hornresp)
 - **Passive parts** between the amplifier and the drivers: series coils (with their resistance), capacitors across, Zobels and L-pads, in up to four branches (Hornresp's layout); the impedance chart shows what the amplifier sees
 - **Car cabin or room gain**, or **your own room-gain curve** (.txt or .frd, as Hornresp imports it), and **baffle step** for free-standing speakers
@@ -84,6 +84,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 - **Metric or imperial** units
 - **WinISD mode** (its air constants, peak or RMS port speed) and **Hornresp mode** (its air constants, SPL from radiated power), for like-for-like comparisons
+- **Your own air**: temperature, humidity and pressure (for altitude or a hot car), which set the air's density and speed of sound
 - Box losses (Ql, Qa, Qp) and amplifier resistance
 
 ## Accuracy
@@ -108,7 +109,7 @@ There are two ways to help:
 
 ## Development
 
-Requires Node.js 22.6+ and pnpm 10. The repo has two packages: `packages/engine` (the simulation, plain TypeScript) and `packages/web` (the React app).
+Requires Node.js 22.6+ and pnpm 10. The repo has four packages: `packages/engine` (the simulation, plain TypeScript), `packages/web` (the React app), `packages/schema` (data formats) and `packages/db-tools` (database checks, bundling and imports), plus `site/` (the guides, validation page and driver pages).
 
 ```bash
 pnpm install
