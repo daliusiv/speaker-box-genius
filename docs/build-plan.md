@@ -23,7 +23,7 @@ Phases 0–2 are done, most of Phase 3 is done, and much of the "later" list has
 | 3. Community | 🟡 | Design gallery with OG images, embeddable widget, PR deploy previews |
 | Later / stretch | 🟡 | Large-signal (nonlinear) model, 3D box preview, i18n |
 
-Beyond the plan: transmission lines and horns with Hornresp import/export, a published [validation page](https://speakerboxgenius.com/validation/), 15 SEO guides, a [page for every driver](https://speakerboxgenius.com/drivers/) with suggested boxes and its own share card, compare-with-a-second-driver, PR finder, hot voice coil, ports modelled as pipes, amplifier volts and amps at max SPL, WinISD project export, OpenISD import, and air from your own temperature, humidity and pressure.
+Beyond the plan: transmission lines and horns with Hornresp import/export, a published [validation page](https://speakerboxgenius.com/validation/), 17 SEO guides, a [page for every driver](https://speakerboxgenius.com/drivers/) with suggested boxes and its own share card, compare-with-a-second-driver, PR finder, hot voice coil, ports modelled as pipes, amplifier volts and amps at max SPL, WinISD project export, OpenISD import, and air from your own temperature, humidity and pressure.
 
 ---
 
@@ -71,11 +71,11 @@ Beyond the plan: transmission lines and horns with Hornresp import/export, a pub
 │  State: React state ⇄ URL hash (versioned; short links deflated with the    │
 │  browser's CompressionStream, defaults stripped). Projects in localStorage. │
 │                                                                             │
-│  @sbg/engine (pure TS, no DOM), run on the main thread                      │
+│  @sbg/engine (pure TS, no DOM): main thread; slow searches in Web Workers   │
 │   ├─ Lumped-element solver (complex, per frequency); 1-D line/horn model    │
 │   ├─ T/S solver (entered vs derived), consistency checks, datasheet parser  │
 │   ├─ Impedance fitter (free-air and added-mass T/S, L2R2 coil)              │
-│   └─ Parsers: .zma/.frd/.txt/.csv, WinISD .wdr/.wpr, Hornresp records       │
+│   └─ Parsers: .zma/.frd/.txt/.csv, WinISD .wdr/.wpr, OpenISD, Hornresp      │
 │                                                                             │
 │  Driver DB: index.json + one shard per brand, from the same Pages site      │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -149,7 +149,7 @@ High-pass filters (Butterworth any order 1–4, Linkwitz–Riley 2 and 4), Linkw
 
 ### 4.4 Accuracy ✅
 - **Validation against WinISD 0.7.0.950:** 15 cases, 114 values from real WinISD projects (sealed, ported, PR, both bandpass types, isobaric, DVC, parallel drivers, high-pass, Le, leakage). Response within about 0.01 dB for sealed and ported boxes.
-- **Validation against Hornresp 55.30:** 7 lines and horns, SPL mean 0.03–0.08 dB, impedance mean 0.09–0.19 %.
+- **Validation against Hornresp 60.60** (and 55.30 before it): 17 line and horn records with three drivers and 4 box cases on the validation page, plus more box, stuffed-line, filter and EQ cases as CI tests. Lines and horns: SPL within about 0.05 dB on average, impedance about 0.2 %.
 - Every comparison is a CI test, and the results are published at **[speakerboxgenius.com/validation](https://speakerboxgenius.com/validation/)**, rebuilt from the same code (see `docs/validation.md`).
 - Analytic and property tests for alignments, filters, isobaric equivalence, amplifier figures and more.
 - **Known limits:** small-signal model, so no Bl(x)/Cms(x) nonlinearity. (Port compression and hot-coil compression were added.)
@@ -291,7 +291,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 ### Phase 3: Community and virality 🟡
 - ✅ Issue-to-PR database bot and CI consistency checks. ⬜ Preview comments (needs PR preview deploys, deferred).
 - ✅ Saved projects in the browser plus JSON project files. (localStorage rather than IndexedDB.)
-- ✅ **SEO content pages:** 15 guides with live examples, WinISD and Hornresp alternative pages, sitemap; Google Search Console set up.
+- ✅ **SEO content pages:** 17 guides with live examples, WinISD and Hornresp alternative pages, sitemap; Google Search Console set up.
 - ✅ **Validation page** built from the test results.
 - ✅ **Driver pages:** one page per driver (about 1,390) with suggested sealed, ported and PR boxes at the driver's power rating, charts, parameters, a live link and its own share card (`site/drivers.ts`, `site/og.ts`). No suggested box is over 300 L: sealed boxes are capped there, bigger ported and PR boxes are left off with the reason on the page.
 - ⬜ Design gallery with pre-rendered pages and OG images (deferred until after launch; the driver pages share its page and share-card code).
@@ -361,7 +361,7 @@ The engine has no UI dependency, so other non-commercial tools can reuse it.
 1. ~~**Name and repo slug**~~ **Decided:** Speaker Box Genius, `daliusiv/speaker-box-genius`, custom domain speakerboxgenius.com.
 2. ~~**CLA or DCO?**~~ **Decided 4 Nov 2026: a licence-grant CLA** ([`CLA.md`](../CLA.md)), checked by `.github/workflows/cla.yml`. Contributors keep copyright; database-only PRs are exempt.
 3. ~~**Framework preference**~~ **Decided:** React.
-4. ~~**Reference drivers for golden tests**~~ **Decided:** Dayton Audio DSA215-8 (with the DSA270-PR) across 15 WinISD and 7 Hornresp setups.
+4. ~~**Reference drivers for golden tests**~~ **Decided:** Dayton Audio DSA215-8 (with the DSA270-PR) across 15 WinISD setups and the first 7 Hornresp records (later Hornresp records add a 12″ subwoofer and a 4″ full-range driver).
 5. ~~**GitHub username/org**~~ **Decided:** `daliusiv`.
 6. ~~**When to run the private beta**~~ **Decided 8 Nov 2026:** no closed beta. After the WinISD check and analytics, answer real build threads with live links.
 7. **New:** PR preview deploys (declined for now; options: a gh-pages preview action, or Cloudflare/Netlify).

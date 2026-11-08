@@ -61,7 +61,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 ### Signal and room
 
 - **Drive by power or voltage** (W or V, e.g. 2.83 V for datasheet comparisons). New projects start at 1 W, like WinISD and Hornresp, with one tap for 1 W or the driver's rated power
-- **High-pass filter** (Butterworth or Linkwitz–Riley, any order), **Linkwitz Transform**, peaking, low-shelf and high-shelf **EQ** (matched with Hornresp)
+- **High-pass filter** (Butterworth 6–24 dB/oct or Linkwitz–Riley 12 and 24 dB/oct), **Linkwitz Transform**, peaking, low-shelf and high-shelf **EQ** (matched with Hornresp)
 - **Passive parts** between the amplifier and the drivers: series coils (with their resistance), capacitors across, Zobels and L-pads, in up to four branches (Hornresp's layout); the impedance chart shows what the amplifier sees
 - **Car cabin or room gain**, or **your own room-gain curve** (.txt or .frd, as Hornresp imports it), and **baffle step** for free-standing speakers
 
