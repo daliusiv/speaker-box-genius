@@ -4,6 +4,7 @@ description: What polyfill and other stuffing really do inside a speaker box, ho
 path: guides/box-stuffing
 image: stuffing-sealed-spl.png
 order: 16
+group: measuring
 ---
 
 # Polyfill and box stuffing: does it really make a box bigger?

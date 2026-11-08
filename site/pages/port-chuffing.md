@@ -4,6 +4,7 @@ description: Why ports chuff, the 17 m/s rule, and how to get a port that's quie
 path: guides/port-chuffing
 image: port-speed.png
 order: 4
+group: ported
 ---
 
 # Port chuffing: how big should my port be?

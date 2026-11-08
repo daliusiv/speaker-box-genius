@@ -3,6 +3,7 @@ title: "Mass-loaded transmission lines (MLTL): tuning a tall ported tower"
 description: Why a tall, slim ported box behaves as a mass-loaded line, and how to set its port, driver position and stuffing, with a worked 8-inch example you can open and change.
 path: guides/mltl
 order: 18
+group: lines
 ---
 
 # Mass-loaded transmission lines (MLTL): tuning a tall ported tower

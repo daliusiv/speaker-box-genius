@@ -4,6 +4,7 @@ description: Line types, length and tuning, stuffing and folding, with a worked 
 path: guides/transmission-line
 image: tl-spl.png
 order: 3
+group: lines
 ---
 
 # How to design a transmission line speaker

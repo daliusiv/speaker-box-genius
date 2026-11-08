@@ -4,6 +4,7 @@ description: Put two woofers in the same boxes, on the same charts, to see which
 path: guides/compare-drivers
 image: compare-spl.png
 order: 9
+group: start
 ---
 
 # How to compare two drivers for the same box

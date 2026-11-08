@@ -4,6 +4,7 @@ description: Why ported and passive radiator boxes need a high-pass filter below
 path: guides/subsonic-filter
 image: subsonic-on.png
 order: 7
+group: ported
 ---
 
 # Subsonic filter: what frequency and slope?

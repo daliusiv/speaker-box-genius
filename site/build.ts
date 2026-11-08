@@ -39,8 +39,20 @@ export interface Page {
   path: string;
   image?: string;
   order: number;
+  /** Which section of the guides index it's listed in (an id from GUIDE_GROUPS). */
+  group?: string;
   body: string;
 }
+
+/** The guides index's sections, in order. Every guide names one in its front matter (`group:`). */
+export const GUIDE_GROUPS = [
+  { id: "start", title: "Start here", intro: "Pick a driver, choose a box type and learn the parameters that decide it." },
+  { id: "switching", title: "Switching from WinISD or Hornresp", intro: "What carries over, what's different, and how to bring your files across." },
+  { id: "ported", title: "Ported and passive radiator boxes", intro: "Port size and noise, tuning, passive radiators and protecting the driver below tuning." },
+  { id: "sealed", title: "Sealed boxes, EQ and isobaric", intro: "Choosing Qtc, getting deep bass from a small box with EQ, and isobaric pairs." },
+  { id: "lines", title: "Transmission lines and horns", intro: "Line types, length, stuffing and mass-loaded towers." },
+  { id: "measuring", title: "Measuring and fine-tuning", intro: "When a built box doesn't match the simulation: losses, stuffing and measurements." },
+] as const;
 
 /** Splits a page file into its front matter and Markdown body. */
 export function parsePage(text: string, file = "page"): Page {
@@ -53,7 +65,8 @@ export function parsePage(text: string, file = "page"): Page {
   }
   for (const k of ["title", "description", "path"]) if (!meta[k]) throw new Error(`${file}: front matter needs "${k}"`);
   const path = `/${meta.path!.replace(/^\/+|\/+$/g, "")}/`;
-  return { title: meta.title!, description: meta.description!, path, image: meta.image, order: Number(meta.order ?? 99), body: m[2]! };
+  if (meta.group && !GUIDE_GROUPS.some((g) => g.id === meta.group)) throw new Error(`${file}: unknown group "${meta.group}" (one of ${GUIDE_GROUPS.map((g) => g.id).join(", ")})`);
+  return { title: meta.title!, description: meta.description!, path, image: meta.image, order: Number(meta.order ?? 99), group: meta.group, body: m[2]! };
 }
 
 export const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -170,6 +183,7 @@ export function resolveExamples(body: string, links: Record<string, string>, fil
 const STYLE = `
 :root{color-scheme:dark;--bg:#090a0f;--fg:#e8ebf2;--muted:#8e96aa;--accent:#fb923c;--card:#12141c;--border:#222634}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{background:var(--bg);color:var(--fg)}
 body{margin:0;font:17px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 a{color:var(--accent)}
@@ -181,7 +195,8 @@ a{color:var(--accent)}
 .nav a[aria-current]{color:var(--fg)}
 @media (max-width:520px){.brand span{display:none}.nav{gap:.8rem}.nav .button{padding:.45rem .8rem}}
 @media (max-width:400px){.top{padding:.9rem .8rem;gap:.5rem}.nav{gap:.65rem;font-size:.95rem}.nav .button{padding:.4rem .65rem}}
-@media (max-width:440px){.nav .wide:not([aria-current]){display:none}.nav .opt{display:none}}
+@media (max-width:440px){.nav .opt{display:none}}
+@media (max-width:359px){.nav .wide:not([aria-current]){display:none}}
 .button{display:inline-block;padding:.55rem 1rem;border-radius:.6rem;background:var(--accent);color:#12141c;font-weight:650;text-decoration:none;white-space:nowrap}
 main{max-width:46rem;margin:0 auto;padding:.5rem 1.1rem 3rem}
 h1{font-size:2.1rem;line-height:1.15;margin:1rem 0 .6rem;letter-spacing:-.01em}
@@ -204,10 +219,20 @@ th,td{padding:.45rem .6rem;border-bottom:1px solid var(--border);text-align:left
 th{color:var(--muted);font-weight:600}
 .cta{display:flex;flex-wrap:wrap;gap:.6rem;margin:1.5rem 0}
 .cta .button{white-space:normal}
-.cards{display:grid;gap:1rem;padding:0;list-style:none}
-.cards li{padding:1rem 1.1rem;border:1px solid var(--border);border-radius:.8rem;background:var(--card)}
+.cards{display:grid;gap:1rem;padding:0;list-style:none;grid-template-columns:repeat(auto-fill,minmax(min(19rem,100%),1fr))}
+.cards li{position:relative;margin:0;padding:1rem 1.1rem;border:1px solid var(--border);border-radius:.8rem;background:var(--card);transition:border-color .15s,background-color .15s}
+.cards li:hover,.cards li:focus-within{border-color:var(--accent)}
 .cards a{font-weight:650;font-size:1.1rem;text-decoration:none}
+.cards a::after{content:"";position:absolute;inset:0;border-radius:.8rem}
+.cards a:focus-visible{outline:none}
+.cards li:has(a:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
 .cards p{margin:.3rem 0 0;color:var(--muted)}
+.cards.small{grid-template-columns:repeat(auto-fill,minmax(min(15rem,100%),1fr));gap:.8rem}
+.cards.small a{font-size:1rem}
+.group-intro{color:var(--muted);margin:-.2rem 0 1rem}
+.find{width:100%;margin:.4rem 0 .6rem;padding:.65rem .9rem;border:1px solid var(--border);border-radius:.6rem;background:var(--card);color:var(--fg);font:inherit}
+.find:focus{outline:2px solid var(--accent);outline-offset:1px}
+.related{margin-top:3rem}
 footer{max-width:46rem;margin:0 auto;padding:1.5rem 1.1rem 3rem;border-top:1px solid var(--border);color:var(--muted);font-size:.9rem}
 footer a{color:var(--muted)}
 `;
@@ -227,12 +252,12 @@ const NAV = [
   { href: "/validation/", label: "Validation", match: (p: string) => p === "/validation/", wide: true },
 ];
 
-export function layout(o: { title: string; description: string; path: string; image?: string; imagePath?: string; content: string; guides: Page[]; style?: string; moreGuides?: boolean; ld?: PageLd }): string {
+export function layout(o: { title: string; description: string; path: string; image?: string; imagePath?: string; content: string; guides: Page[]; style?: string; ld?: PageLd }): string {
   const url = `${SITE}${o.path}`;
   const image = `${SITE}${o.imagePath ?? (o.image ? `/guides/img/${o.image}` : "/og-image.png")}`;
   const ld = {
     "@context": "https://schema.org",
-    "@type": "Article",
+    "@type": o.ld?.list ? "CollectionPage" : "Article",
     headline: o.title,
     description: o.description,
     url,
@@ -241,6 +266,10 @@ export function layout(o: { title: string; description: string; path: string; im
     author: ORG,
     publisher: ORG,
     ...(o.ld?.about ? { about: o.ld.about } : {}),
+    // A list page (the guides index): its entries as an ItemList.
+    ...(o.ld?.list
+      ? { mainEntity: { "@type": "ItemList", itemListElement: o.ld.list.map((x, i) => ({ "@type": "ListItem", position: i + 1, name: x.name, url: `${SITE}${x.path}` })) } }
+      : {}),
   };
   // Breadcrumbs (Google shows them in place of the URL): the last one is this page.
   const crumbs = o.ld?.crumbs?.length
@@ -250,7 +279,6 @@ export function layout(o: { title: string; description: string; path: string; im
         itemListElement: o.ld.crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c.name, item: `${SITE}${c.path ?? o.path}` })),
       }
     : null;
-  const others = o.moreGuides === false ? [] : o.guides.filter((g) => g.path !== o.path);
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -283,7 +311,6 @@ ${GOATCOUNTER}
 ${o.content}
 </main>
 <footer>
-${others.length ? `<p>More guides: ${others.map((g) => `<a href="${g.path}">${escapeHtml(g.title)}</a>`).join(" · ")}</p>` : ""}
 <p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
 </footer>
 </body>
@@ -325,7 +352,7 @@ async function buildDriverPages(write: (path: string, html: string) => void, gui
           writeFileSync(join(outDir, imagePath), jpg);
         }
       }
-      write(driverPath(p.id), layout({ ...page, path: driverPath(p.id), imagePath, content: page.content, guides, style, moreGuides: false }));
+      write(driverPath(p.id), layout({ ...page, path: driverPath(p.id), imagePath, content: page.content, guides, style }));
     }
   } finally {
     await cards?.close();
@@ -335,9 +362,9 @@ async function buildDriverPages(write: (path: string, html: string) => void, gui
     .map((slug) => ({ slug, name: db.brands.get(slug)?.name ?? pages.find((p) => p.brandSlug === slug)!.brand, pages: pages.filter((p) => p.brandSlug === slug) }))
     .sort((a, b) => a.name.localeCompare(b.name));
   for (const b of byBrand) {
-    write(brandPath(b.slug), layout({ ld: { crumbs: [{ name: "Drivers", path: "/drivers/" }, { name: b.name }] }, title: `${b.name} drivers: box sizes and T/S parameters`, description: `Suggested sealed, ported and passive radiator boxes for ${b.pages.length} ${b.name} drivers.`, path: brandPath(b.slug), content: brandContent(b.name, b.pages), guides, style, moreGuides: false }));
+    write(brandPath(b.slug), layout({ ld: { crumbs: [{ name: "Drivers", path: "/drivers/" }, { name: b.name }] }, title: `${b.name} drivers: box sizes and T/S parameters`, description: `Suggested sealed, ported and passive radiator boxes for ${b.pages.length} ${b.name} drivers.`, path: brandPath(b.slug), content: brandContent(b.name, b.pages), guides, style }));
   }
-  write("/drivers/", layout({ title: "Driver box designs", description: `Suggested sealed, ported and passive radiator boxes for ${pages.length} drivers, with charts and live designs to open and change.`, path: "/drivers/", content: driversIndexContent(byBrand), guides, style, moreGuides: false }));
+  write("/drivers/", layout({ title: "Driver box designs", description: `Suggested sealed, ported and passive radiator boxes for ${pages.length} drivers, with charts and live designs to open and change.`, path: "/drivers/", content: driversIndexContent(byBrand), guides, style }));
 }
 
 /**
@@ -356,6 +383,46 @@ async function startCards(): Promise<Rasterizer | null> {
     console.warn(`Chrome didn't start (${(e as Error).message}): driver pages use the site's share card.`);
     return null;
   }
+}
+
+const card = (g: Page) => `<li><a href="${g.path}">${escapeHtml(g.title)}</a><p>${escapeHtml(g.description)}</p></li>`;
+
+/**
+ * The guides index: the guides in their sections (GUIDE_GROUPS), each sorted by `order`, with
+ * a filter box. The box is hidden until its script runs, so without JavaScript the page is just
+ * the sections.
+ */
+export function guidesIndex(guides: Page[]): string {
+  const sections = GUIDE_GROUPS.map((grp) => {
+    const list = guides.filter((g) => g.group === grp.id).sort((a, b) => a.order - b.order);
+    if (!list.length) return "";
+    return `<section class="group"><h2 id="${grp.id}">${escapeHtml(grp.title)}</h2>\n<p class="group-intro">${escapeHtml(grp.intro)}</p>\n<ul class="cards">${list.map(card).join("")}</ul></section>`;
+  }).filter(Boolean);
+  return [
+    "<h1>Speaker box design guides</h1>",
+    '<p class="lede">How to design speaker boxes, with live examples you can open and change in Speaker Box Genius. New to it? Start with the <a href="/guides/design-assistant/">design assistant</a> or <a href="/guides/sealed-vs-ported/">sealed, ported or passive radiator</a>.</p>',
+    '<input class="find" type="search" placeholder="Search the guides" aria-label="Search the guides" hidden>',
+    '<p class="none" hidden>No guide matches that. Try a shorter word.</p>',
+    ...sections,
+    `<script>${GUIDE_FILTER}</script>`,
+  ].join("\n");
+}
+
+/** Filters the index's cards as you type: every word typed must start a word of a card's title or description. Empty sections hide. */
+const GUIDE_FILTER = `(()=>{const f=document.querySelector(".find"),n=document.querySelector(".none");if(!f)return;f.hidden=false;f.addEventListener("input",()=>{const norm=t=>" "+t.toLowerCase().replace(/[^a-z0-9\\/]+/g," "),q=norm(f.value).split(" ").filter(Boolean);let any=false;for(const s of document.querySelectorAll(".group")){let shown=0;for(const li of s.querySelectorAll("li")){const t=norm(li.textContent),ok=q.every(w=>t.includes(" "+w));li.hidden=!ok;if(ok)shown++}s.hidden=!shown;if(shown)any=true}n.hidden=any})})();`;
+
+/**
+ * "Related guides" at the end of a guide: up to four from its own section (nearest `order`
+ * first), topped up from "Start here" when the section is small.
+ */
+export function relatedGuides(page: Page, guides: Page[]): string {
+  const others = guides.filter((g) => g.path !== page.path);
+  const near = (a: Page, b: Page) => Math.abs(a.order - page.order) - Math.abs(b.order - page.order) || a.order - b.order;
+  const same = others.filter((g) => page.group && g.group === page.group).sort(near);
+  const start = others.filter((g) => g.group === "start" && !same.includes(g)).sort((a, b) => a.order - b.order);
+  const pick = [...same, ...start].slice(0, 4);
+  if (!pick.length) return "";
+  return `\n<section class="related"><h2 id="related-guides">Related guides</h2>\n<ul class="cards small">${pick.map((g) => `<li><a href="${g.path}">${escapeHtml(g.title)}</a></li>`).join("")}</ul>\n<p><a href="/guides/">All guides →</a></p></section>`;
 }
 
 /** The commit being built: GitHub Actions' GITHUB_SHA, else git, else none. */
@@ -383,15 +450,21 @@ export async function build(outDir: string): Promise<string[]> {
   };
 
   for (const { file, page } of pages) {
-    write(page.path, layout({ ...page, content: markdown(resolveExamples(page.body, links, file)), guides }));
+    const content = markdown(resolveExamples(page.body, links, file)) + relatedGuides(page, guides);
+    write(page.path, layout({ ...page, content, guides }));
   }
 
-  const index = [
-    "<h1>Guides</h1>",
-    '<p class="lede">How to design speaker boxes, with live examples you can open and change in Speaker Box Genius.</p>',
-    `<ul class="cards">${guides.map((g) => `<li><a href="${g.path}">${escapeHtml(g.title)}</a><p>${escapeHtml(g.description)}</p></li>`).join("")}</ul>`,
-  ].join("\n");
-  write("/guides/", layout({ title: "Guides", description: "Speaker box design guides with live, editable examples.", path: "/guides/", content: index, guides }));
+  write(
+    "/guides/",
+    layout({
+      title: "Speaker box design guides",
+      description: "Free guides to designing sealed, ported, passive radiator and transmission line speaker boxes, each with live examples you can open and change.",
+      path: "/guides/",
+      content: guidesIndex(guides),
+      guides,
+      ld: { list: guides.map((g) => ({ name: g.title, path: g.path })) },
+    }),
+  );
 
   const report = readReport();
   write(
@@ -414,7 +487,6 @@ export async function build(outDir: string): Promise<string[]> {
       path: "/about/",
       content: markdown(readFileSync(join(HERE, "about.md"), "utf8")),
       guides,
-      moreGuides: false,
     }),
   );
 
@@ -426,7 +498,6 @@ export async function build(outDir: string): Promise<string[]> {
       path: "/privacy/",
       content: markdown(readFileSync(join(HERE, "privacy.md"), "utf8")),
       guides,
-      moreGuides: false,
     }),
   );
 

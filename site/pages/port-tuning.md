@@ -4,6 +4,7 @@ description: Why a built ported box tunes away from its design (net volume, end 
 path: guides/port-tuning
 image: port-tuning-impedance.png
 order: 12
+group: ported
 ---
 
 # My port tunes higher (or lower) than designed: why, and how to fix it

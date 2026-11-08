@@ -4,6 +4,7 @@ description: The real reasons a built speaker measures differently from its simu
 path: guides/simulation-vs-measurement
 image: mismatch-spl.png
 order: 11
+group: measuring
 ---
 
 # Why your measurement doesn't match the simulation

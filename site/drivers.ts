@@ -250,6 +250,8 @@ export interface PageLinks {
 export interface PageLd {
   about?: Record<string, unknown>;
   crumbs?: { name: string; path?: string }[];
+  /** Makes the page a CollectionPage listing these pages (an ItemList), instead of an Article. */
+  list?: { name: string; path: string }[];
 }
 
 /**

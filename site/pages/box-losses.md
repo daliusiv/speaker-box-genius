@@ -4,6 +4,7 @@ description: What leakage, absorption and port losses are, what values real boxe
 path: guides/box-losses
 image: losses-impedance-ql10.png
 order: 13
+group: measuring
 ---
 
 # Box losses (Ql, Qa, Qp): what values should you use?

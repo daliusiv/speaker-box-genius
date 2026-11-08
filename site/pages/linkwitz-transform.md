@@ -4,6 +4,7 @@ description: How the Linkwitz Transform works, how to choose f0, Q0, fp and Qp, 
 path: guides/linkwitz-transform
 image: lt-spl.png
 order: 14
+group: sealed
 ---
 
 # Linkwitz Transform: deep bass from a small sealed box, and what it really costs
