@@ -50,6 +50,8 @@ The box is about 44 cm deep inside. The 10 cm port nearly fits, but chuffs; the 
 
 The [design assistant](/guides/design-assistant/) works through the same choices for you: for each ported result it tries a plain tube, then a flared tube, then a slot along a wall, each the largest that fits straight, and keeps the first under your chuffing line.
 
+**Use a longer cabinet.** A tall Sonotube has a long straight run inside for a long port; [shaped cabinets](/guides/shaped-cabinets/) builds this sub as a box, a tube, a sphere and a tapered box, and shows how much port each one fits.
+
 **Bend the port.** A round port can have an elbow or two. The air speed and tuning barely change with gentle bends; keep the open end at least one port diameter away from the walls.
 
 **Make the box bigger or tune it higher.** A bigger box needs a shorter port for the same area and tuning, and so does a higher tuning (at the cost of less deep bass). Try it in the example: change the volume, then press **Set port length** to recut the port.
