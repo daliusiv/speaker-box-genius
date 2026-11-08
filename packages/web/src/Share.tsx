@@ -143,14 +143,22 @@ export function curvesCsv(state: AppState, designs: Design[]): string {
 
 const STYLE_PROPS = [
   "fill",
+  "fill-opacity",
   "stroke",
   "stroke-width",
   "stroke-dasharray",
+  "stroke-opacity",
+  "stroke-linejoin",
+  "stroke-linecap",
+  // Labels have a halo in the card's colour drawn under the text: without paint-order the halo
+  // is painted over it, and the label shows as a dark speck (F3, Xmax, chuffing line labels).
+  "paint-order",
   "opacity",
   "font-size",
   "font-family",
   "font-weight",
   "text-anchor",
+  "dominant-baseline",
 ] as const;
 
 /** Copy an on-screen chart SVG with its CSS baked in, so it renders identically as an image. */
