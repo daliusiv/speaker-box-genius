@@ -24,7 +24,7 @@ The same woofer can go in a small sealed box, a big ported box or a passive radi
 Two numbers from the datasheet point the way:
 
 - **Qts**, the driver's total Q. Low Qts (under about 0.4) suits a ported box; high Qts (over about 0.6) suits a sealed box, or even an open baffle. In between, either works.
-- **EBP**, the "efficiency bandwidth product": Fs divided by Qes. Under about 50 points to sealed, over about 90 to ported, and in between either.
+- **EBP**, the "efficiency bandwidth product": Fs divided by Qes. Under about 50 points to sealed, over about 90 to ported, and in between either. Whatever the box, efficiency, depth and size trade against each other: see [Hofmann's Iron Law](/guides/hofmann-iron-law/).
 
 | Driver | Qts | EBP | Suits |
 |---|---|---|---|

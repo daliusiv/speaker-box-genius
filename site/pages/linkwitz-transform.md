@@ -33,7 +33,7 @@ A **Dayton Audio RSS265HF-4** 10″ subwoofer in a **20 L** sealed box: about ha
 
 ![Response at 40 W: the 20 L box with the LT (blue) is flat to about 30 Hz; the same box without EQ (orange) and the 37 L box (green) roll off from the mid 40s.](img/lt-spl.png)
 
-The LT box goes **15 Hz deeper** than the box twice its size. But look at the maximum SPL: **all three boxes reach exactly the same level** at 25 Hz before the cone hits its Xmax (12.3 mm). The LT doesn't make the sub louder, and the small box needs more amplifier power at the bottom than the big one.
+The LT box goes **15 Hz deeper** than the box twice its size. But look at the maximum SPL: **all three boxes reach exactly the same level** at 25 Hz before the cone hits its Xmax (12.3 mm). The LT doesn't make the sub louder, and the small box needs more amplifier power at the bottom than the big one. That's [Hofmann's Iron Law](/guides/hofmann-iron-law/) at work: depth from a small box is paid for in efficiency.
 
 ## Why it doesn't raise the maximum output
 

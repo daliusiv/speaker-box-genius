@@ -523,6 +523,32 @@ function portShapeExample(pipes: boolean) {
   };
 }
 
+/**
+ * The Hofmann's Iron Law guide: a B&C 18SW115 (8 Ω, PA) as the main driver and a Dayton Audio
+ * SS18-22 (dual 2 Ω coils in series, 4 Ω, home) as the comparison driver, at 1 W, in each maker's
+ * recommended ported box: B&C's 150 L tuned to 35 Hz, and Parts Express's 5 ft³ (141.6 L) for the
+ * SS18-22 (F3 26 Hz; tuned here to 21 Hz, its QB3 tuning), with a 20 cm port behind an 18 Hz
+ * 24 dB/oct high-pass filter; "sealed" puts both in a 141.6 L sealed box with no filter.
+ */
+function ironLawExample(box: "ported" | "sealed") {
+  return (): AppState => {
+    const base = withDriver({ ...DEFAULT_STATE, power: 1, highPass: box === "ported" ? highPass(4, 18) : { ...DEFAULT_STATE.highPass, on: false } }, "bc-speakers/18sw115-8ohm");
+    const home = withDriver(DEFAULT_STATE, "dayton-audio/ss18-22");
+    const v = byKind(DEFAULT_STATE, "vented") as Vented;
+    return {
+      ...base,
+      compare: asCompare({ ...home, dvc: { on: true, entered: "series", wired: "series" } }),
+      designs:
+        box === "ported"
+          ? [
+              { ...ventedWith(v, "PA box: 150 L, 35 Hz", 150, 35, { shape: "round", diameter_cm: 20 }), id: "d1" },
+              { ...ventedWith(v, "Home box: 141.6 L, 21 Hz", 141.6, 21, { shape: "round", diameter_cm: 20 }), id: "d2" },
+            ]
+          : [{ ...byKind(DEFAULT_STATE, "sealed"), id: "d1", name: "Sealed 141.6 L", vb_l: 141.6 }],
+    };
+  };
+}
+
 export const EXAMPLES: Record<string, () => AppState> = {
   "stuffing-sealed": stuffingSealed(false),
   "stuffing-sealed-losses": stuffingSealed(true),
@@ -558,6 +584,8 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "dvc-volts": dvcExample("volts"),
   "port-shape": portShapeExample(false),
   "port-shape-pipes": portShapeExample(true),
+  "iron-law": ironLawExample("ported"),
+  "iron-law-sealed": ironLawExample("sealed"),
 };
 
 /** Share links (`https://…/#z=…`) for every example. */

@@ -206,3 +206,43 @@ test("round vs slot port guide: tuning, end correction, air speed, compression, 
   near(peakNear(pipes[0]!, 300, 400), 347, 6, "round port pipe peak");
   near(peakNear(pipes[2]!, 230, 300), 268, 6, "longer slot pipe peak");
 });
+
+test("Hofmann's Iron Law guide: efficiency, the law's constant, same-box SPL at 1 W and max SPL", async () => {
+  const { alignmentDriver } = await import("../packages/web/src/sim.ts");
+  const { ventedAlignmentFor } = await import("../packages/web/src/presets.ts");
+  const { withDriver, ventedWith, byKind } = await import("./examples.ts");
+  const { DEFAULT_STATE } = await import("../packages/web/src/state.ts");
+  const c = 343.2;
+  const k: number[] = [];
+  for (const [id, db, vb, fb, f3] of [["bc-speakers/18sw115-8ohm", 94.8, 63.3, 39.2, 53.5], ["dayton-audio/ss18-22", 88.9, 145.6, 21.4, 25.0]] as const) {
+    const s = withDriver({ ...DEFAULT_STATE, power: 1 }, id);
+    const v = solveDriver(s).values;
+    const eta = ((4 * Math.PI ** 2) / c ** 3) * v.fs! ** 3 * (v.vas_l! / 1000) / v.qes!;
+    near(112.1 + 10 * Math.log10(eta), db, 0.06, `${id} 1 W efficiency`);
+    const a = ventedAlignmentFor(alignmentDriver(solveDriver(s), s)!, 1)!;
+    assert.equal(a.name, "QB3");
+    near(a.vb_l, vb, 0.06, `${id} QB3 volume`);
+    near(a.fb, fb, 0.06, `${id} QB3 tuning`);
+    const box = { ...ventedWith(byKind(DEFAULT_STATE, "vented") as never, "QB3", Math.round(a.vb_l * 10) / 10, Math.round(a.fb * 10) / 10, { shape: "round", diameter_cm: 15 }), id: "x" };
+    const r = runDesigns({ ...s, designs: [box] }, solveDriver(s))[0]!.result;
+    near(r.summary.f3!, f3, 0.06, `${id} QB3 F3`);
+    k.push(eta / (r.summary.f3! ** 3 * (a.vb_l / 1000)));
+  }
+  near(10 * Math.log10(k[1]! / k[0]!), 0.38, 0.05, "the two drivers' Iron Law constants");
+  // Both drivers in both ported boxes and the sealed box, at 1 W; rows: B&C (PA, home), Dayton (PA, home).
+  const P = run("iron-law").map((d) => d.result);
+  const S = run("iron-law-sealed").map((d) => d.result);
+  const spl = (r: (typeof P)[number], hz: number) => at(r.freq, r.spl, hz);
+  const want: [typeof P[number], number[]][] = [
+    [P[0]!, [81.3, 87.9, 93.1, 94.5, 95.4]], [P[2]!, [80.2, 86.7, 93.8, 90.4, 89.8]],
+    [P[1]!, [84.8, 86.3, 88.3, 93.8, 95.1]], [P[3]!, [85.4, 87.1, 88.5, 89.7, 89.5]],
+    [S[0]!, [79.9, 82.3, 85.8, 93.4, 94.9]], [S[1]!, [80.7, 82.9, 85.7, 89.3, 89.3]],
+  ];
+  want.forEach(([r, row], i) => [25, 30, 40, 100, 150].forEach((hz, j) => near(spl(r, hz), row[j]!, 0.06, `row ${i} at ${hz} Hz`)));
+  near(P[3]!.summary.f3!, 26.4, 0.1, "home box F3 with the Dayton");
+  near(P[0]!.summary.f3!, 35.0, 0.1, "PA box F3 with the B&C");
+  // Max SPL: ported home box and sealed.
+  const max = (r: (typeof P)[number], hz: number) => at(r.freq, r.maxSpl, hz);
+  [[20, 0], [25, 0.6], [30, -0.4], [40, 0.4], [60, 2.8], [100, 5.3]].forEach(([hz, d]) => near(max(P[1]!, hz!) - max(P[3]!, hz!), d!, 0.06, `home box max SPL difference at ${hz} Hz`));
+  [[15, -4.7], [20, -3.9], [30, -2.0]].forEach(([hz, d]) => near(max(S[0]!, hz!) - max(S[1]!, hz!), d!, 0.06, `sealed max SPL difference at ${hz} Hz`));
+});

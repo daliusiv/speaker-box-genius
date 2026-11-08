@@ -34,7 +34,7 @@ The **Dayton Audio DSA215-8**, an 8″ woofer:
 
 ## The ones that decide the box
 
-**Fs, the free-air resonance.** The frequency where the cone, on its suspension, wants to move most easily. A box can't make a woofer play much below its Fs efficiently, so a low Fs is the first sign of a deep-bass driver.
+**Fs, the free-air resonance.** The frequency where the cone, on its suspension, wants to move most easily. A box can't make a woofer play much below its Fs efficiently, so a low Fs is the first sign of a deep-bass driver. It costs efficiency: a driver's reference efficiency goes with Fs³ × Vas ÷ Qes, which is where [Hofmann's Iron Law](/guides/hofmann-iron-law/) comes from.
 
 **Qts, the total Q.** How much the driver damps its own resonance. It's the single best guide to the box type:
 
