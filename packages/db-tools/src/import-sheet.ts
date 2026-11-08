@@ -41,7 +41,7 @@ import {
   type DriverType,
   type PassiveRadiator,
 } from "../../schema/src/index.ts";
-import { BRANDS, convertRecord, sizeInches, type DbRecord } from "./driverbase.ts";
+import { BRANDS, convertRecord, DIRECT_BRANDS, sizeInches, type DbRecord } from "./driverbase.ts";
 import { keepExisting, slugOf } from "./dayton.ts";
 import { loadDatabase, REPO_ROOT } from "./load.ts";
 import { readSheet, type Rows } from "./sheet.ts";
@@ -640,9 +640,9 @@ function main() {
   const reportPath = arg("report") ?? join(REPO_ROOT, `${brandSlug}-import-report.md`);
   writeFileSync(reportPath, report);
   console.log(report);
-  if (!known || !["Dayton Audio", "SB Acoustics"].includes(brand.name)) {
+  if (!known || !DIRECT_BRANDS.has(brand.name)) {
     console.log(
-      `Next: add "${brand.name}" to DIRECT_BRANDS in packages/db-tools/src/driverbase.ts so a driver-base re-import doesn't overwrite these entries, ` +
+      `Next: add "${brand.name}" to DIRECT_BRANDS in packages/db-tools/src/driverbase.ts so a driver-base re-import doesn't add its own records for this brand, ` +
         "record the permission in docs/data-permissions.md, run pnpm validate:db, and open one data-only PR.",
     );
   }

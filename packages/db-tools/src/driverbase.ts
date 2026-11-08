@@ -27,8 +27,12 @@ export const DRIVER_BASE_URL = "https://github.com/JonathanDCohen/driver-base";
 export const ATTRIBUTION =
   "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes.";
 
-/** Brands we import from the manufacturer directly, so driver-base copies are skipped. */
-export const DIRECT_BRANDS = new Set(["Dayton Audio", "SB Acoustics", "B&C Speakers", "Purifi"]);
+/**
+ * Brands we import from the manufacturer directly (with written permission), so driver-base
+ * records for them are skipped: the brand stays one source. Names as driver-base and our
+ * _brand.json files spell them (driverbase.test.ts checks every direct brand folder is here).
+ */
+export const DIRECT_BRANDS = new Set(["Dayton Audio", "SB Acoustics", "B&C Speakers", "Purifi", "Markaudio", "Mark Audio", "REDCATT"]);
 
 /** driver-base manufacturer name → our brand folder and _brand.json. */
 export const BRANDS: Record<string, { slug: string; brand: Brand }> = {
@@ -396,7 +400,7 @@ async function main() {
     "",
     `Source: ${DRIVER_BASE_URL} (\`web/drivers.json\`, generated ${data.generated_at ?? "?"}), data licensed CC BY 4.0.`,
     "",
-    `Records considered (woofer, full-range, coax, guitar/bass; Dayton Audio and SB Acoustics excluded): ${considered}. Written: ${total}. Already in the database: ${kept.length}. Adjusted: ${adjusted.length}. Skipped: ${skipped.length}.`,
+    `Records considered (woofer, full-range, coax, guitar/bass; brands imported directly excluded: ${[...DIRECT_BRANDS].join(", ")}): ${considered}. Written: ${total}. Already in the database: ${kept.length}. Adjusted: ${adjusted.length}. Skipped: ${skipped.length}.`,
     "",
     "### Written per brand",
     ...[...written.entries()].sort((a, b) => b[1].length - a[1].length).map(([m, l]) => `- ${m}: ${l.length}`),

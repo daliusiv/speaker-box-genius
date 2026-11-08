@@ -128,3 +128,22 @@ test("a size smaller than the cone falls back to the model name", () => {
   assert.match(c.notes.join(" "), /model name/);
   assert.equal(convert(rec({ nominal_size_mm: 12.7 }), one).driver!.size_in, undefined);
 });
+
+test("every brand we import from the manufacturer is on DIRECT_BRANDS, so driver-base can't add to it", async () => {
+  const { DIRECT_BRANDS } = await import("../src/driverbase.ts");
+  const { readdirSync, readFileSync, existsSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { REPO_ROOT } = await import("../src/load.ts");
+  const dir = join(REPO_ROOT, "drivers");
+  for (const b of readdirSync(dir, { withFileTypes: true })) {
+    if (!b.isDirectory() || !existsSync(join(dir, b.name, "_brand.json"))) continue;
+    const files = readdirSync(join(dir, b.name)).filter((f) => f.endsWith(".json") && f !== "_brand.json");
+    const fromDriverBase = files.filter((f) => readFileSync(join(dir, b.name, f), "utf8").includes("driver-base")).length;
+    // A brand with a real set of entries and none from driver-base came from the manufacturer
+    // (a handful entered by hand, like Scan-Speak's three, doesn't count).
+    if (files.length >= 10 && fromDriverBase === 0) {
+      const name = JSON.parse(readFileSync(join(dir, b.name, "_brand.json"), "utf8")).name;
+      assert.ok(DIRECT_BRANDS.has(name), `${name}: ${files.length} entries from the manufacturer, not on DIRECT_BRANDS`);
+    }
+  }
+});
