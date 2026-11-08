@@ -47,7 +47,7 @@ Speaker Box Genius is built around those four problems.
 | Box types | Sealed, vented, bandpass, passive radiator | The same, plus transmission lines and horns |
 | Driver data | Typed in, or files you find | Database of ~1,530 drivers, plus your own |
 | Sharing a design | Screenshots or project files | A live link, a forum image and forum posts |
-| Your WinISD files | | Opens `.wdr` drivers and `.wpr` projects |
+| Your WinISD files | | Opens `.wdr` drivers and `.wpr` projects, and saves any box as a `.wpr` |
 
 ## Does it give the same answers?
 
@@ -61,6 +61,7 @@ For like-for-like comparisons, set **Air** to **WinISD defaults** in Settings, a
 2. **Or pick a driver from the database.** Press **Browse drivers** and search by brand, model or size.
 3. **Add boxes** on the Boxes tab, and press a preset (Qtc 0.707, QB3 and others) to size each one for the driver.
 4. **Share it:** the **Share** button gives you the link, a forum image and posts ready to paste.
+5. **Check it in WinISD if you like:** under **Share**, **Open in WinISD** saves a box as a `.wpr` project with the driver and settings, and says what WinISD can't hold (EQ, passive parts, baffle step, room gain).
 
 [[Open the example|winisd-example]]
 

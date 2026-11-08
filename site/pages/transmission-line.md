@@ -31,7 +31,7 @@ So a line is a balance between three things: **its length** (which sets the tuni
 | Tapped horn | The front of the driver feeds the line further along (an expanding horn) | Big, efficient subwoofers |
 | Front horn | The driver at the throat of a horn | Efficiency in a narrow band |
 
-The app has each of these as a starting point: add a **Transmission line** design on the Boxes tab and pick a type, or press **Compare types** to see them all for your driver.
+The app has a starting point for each of these but the tapped horn: add a **Transmission line** design on the Boxes tab and press a preset, or press **Compare types** to see them all for your driver. The tapped horn's preset gave poor, very large designs, so it's off while it's reworked; set one up by hand (**Type**: tapped horn) or import it from Hornresp.
 
 ## The worked example
 
