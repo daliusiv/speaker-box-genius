@@ -241,7 +241,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - **Designs:** up to 8, colour-coded, added from one **+ Add a box** menu, each easy to show/hide, rename or duplicate.
 - **Charts:** SPL (relative or dB SPL, F3 marked), excursion, PR excursion, port speed, Max SPL (SPL / Volts / Amps), impedance, group delay, Za. Over-limit parts glow red; hover or tap reads every curve; a **leader marker** shows the best curve.
 - **Drive** in W or V at the top, for every design.
-- **Alignment presets:** Qtc 0.5 / 0.577 / 0.707 for sealed; QB3, B4 and Keele for ported (textbook, lossless, as WinISD's and Hornresp's figures are). **Size all boxes** uses Qtc 0.707 (twice Vas when Qts is near 0.707) and picks each port. ⬜ SBB4, SC4 and Bessel vented alignments not added.
+- **Alignment presets:** Qtc 0.5 / 0.577 / 0.707 for sealed; QB3, B4 and Keele for ported (textbook, lossless, as WinISD's and Hornresp's figures are). **Size all boxes** uses Qtc 0.707 (twice Vas when Qts is near 0.707) and picks each port. Ported and PR cards also offer the families that suit the driver's Qts: SC4/C4 (Chebyshev), SBB4/BB4 (boom box, port at Fs) and SQB3 (to a 6 dB peak), checked against Bullock's published tables. Bessel (BL4) is a single Qts (≈ 0.316), not a family, so it isn't a preset.
 - **PR tools:** finder, best tuning, added mass for a tuning.
 - **Phones: full editing**, not only viewing (changed from the plan): tall charts, a legend under each chart, one chart at a time.
 - **Dark theme only** (changed from the plan; the print build sheet stays white).

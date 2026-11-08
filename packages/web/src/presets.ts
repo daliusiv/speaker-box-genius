@@ -10,6 +10,8 @@ import {
   type Air,
   type AlignmentDriver,
   type VentedAlignment,
+  moreVentedAlignments,
+  type ShapedAlignment,
 } from "@sbg/engine";
 import { airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
 import type { AppState, BandpassDesign, DesignState, PrDesign } from "./state.ts";
@@ -50,6 +52,29 @@ const r1 = (v: number) => Math.round(v * 10) / 10;
 /** The flat vented alignment for this driver: QB3/B4 up to Qts ≈ 0.38, Keele's above it (to Qts 0.6). */
 export const ventedAlignmentFor = (a: AlignmentDriver, drivers: number): VentedAlignment | null =>
   qb3Alignment(a, drivers) ?? keeleAlignment(a, drivers);
+
+/** The other vented alignment families that suit this driver (C4/SC4, BB4/SBB4, SQB3), as preset chips. */
+export const moreVentedFor = (a: AlignmentDriver, drivers: number): ShapedAlignment[] => moreVentedAlignments(a, drivers);
+
+/** What a family's preset does, for its chip's tooltip. */
+export function alignmentHelp(a: ShapedAlignment): string {
+  const db = `${a.db.toFixed(1)} dB`;
+  const size = `${a.vb_l.toFixed(1)} L tuned to ${a.fb.toFixed(1)} Hz`;
+  switch (a.name) {
+    case "SC4":
+      return `Sub-Chebyshev: flat, about QB3's size but tuned lower, with a gentler roll-off. ${size}.`;
+    case "C4":
+      return `Chebyshev: deeper than the flat preset in a bigger box, with a ${db} ripple above the roll-off. ${size}.`;
+    case "SBB4":
+      return `Sub-boom box: port tuned to Fs (a longer port), a box about QB3's size or a little bigger, flat with a gentle roll-off and good transients. ${size}.`;
+    case "BB4":
+      return `Boom box: port tuned to Fs; peaks ${db} before rolling off. ${size}.`;
+    case "SQB3":
+      return `Super QB3: QB3 carried past B4; peaks ${db} before rolling off. ${size}.`;
+    default:
+      return size;
+  }
+}
 
 /** Largest sealed box offered, as a multiple of Vas: past it the box adds little bass. */
 export const SEALED_MAX_VAS = 2;
