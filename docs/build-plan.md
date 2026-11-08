@@ -2,7 +2,7 @@
 
 *A modern, zero-install, web-based replacement for WinISD: enclosure and passive radiator simulation, a real-world volume calculator, and shareable live links.*
 
-Drafted 2 Nov 2026 · Rev 2: non-commercial source-available licence, GitHub Pages only (no server), driver database stored in the repo · **Rev 3 (5 Nov 2026): updated to what has been built.** Each section now says what shipped and where the build departed from the plan; ✅ done, 🟡 partly done, ⬜ not started.
+Drafted 2 Nov 2026 · Rev 2: non-commercial source-available licence, GitHub Pages only (no server), driver database stored in the repo · **Rev 3 (5 Nov 2026): updated to what has been built** (kept current since; last 8 Nov 2026). Each section now says what shipped and where the build departed from the plan; ✅ done, 🟡 partly done, ⬜ not started.
 
 **Project constraints (decided, all held):**
 - Public GitHub repo; anyone can contribute, **nobody can resell it** → non-commercial licence (see §2).
@@ -348,7 +348,7 @@ The engine has no UI dependency, so other non-commercial tools can reuse it.
 | Someone resells it anyway | Licence plus CLA keeps the ability to enforce or grant exceptions | ✅ |
 | NC licence puts some contributors off | Explained in the README; contributing kept easy (issue forms, bot) | ✅ |
 | Review bottleneck as maintainer | CODEOWNERS, automated checks | 🟡 No other reviewers yet |
-| WinISD habits | WinISD defaults (Ql 10, power convention), WinISD mode, `.wpr` import | ✅ |
+| WinISD habits | WinISD defaults (Ql 10, power convention, 1 W start), WinISD mode, `.wpr` import and export | ✅ |
 | Model misused beyond linear range | Limitation notes, red past X_max, port-speed warnings, Max SPL limits | ✅ |
 | Long URLs / no link previews | Short deflated links, forum image with QR code, site preview card | 🟡 Per-design previews need the gallery |
 | Scope creep | Lines and horns were taken on (beta, validated); crossovers stay out | 🟡 |
