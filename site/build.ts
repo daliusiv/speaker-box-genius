@@ -212,6 +212,9 @@ footer{max-width:46rem;margin:0 auto;padding:1.5rem 1.1rem 3rem;border-top:1px s
 footer a{color:var(--muted)}
 `;
 
+/** Speaker Box Genius as a schema.org Organization: every page's author and publisher. */
+const ORG = { "@type": "Organization", name: "Speaker Box Genius", url: SITE };
+
 /** JSON for a <script> tag: "<" escaped so a name can never close the tag. */
 const jsonLd = (x: unknown) => JSON.stringify(x).replace(/</g, "\\u003c");
 
@@ -234,8 +237,9 @@ export function layout(o: { title: string; description: string; path: string; im
     description: o.description,
     url,
     image,
-    author: { "@type": "Person", name: "Dalius Ivanovas" },
-    publisher: { "@type": "Organization", name: "Speaker Box Genius", url: SITE },
+    // The site as author and publisher: no personal name in every page's data.
+    author: ORG,
+    publisher: ORG,
     ...(o.ld?.about ? { about: o.ld.about } : {}),
   };
   // Breadcrumbs (Google shows them in place of the URL): the last one is this page.

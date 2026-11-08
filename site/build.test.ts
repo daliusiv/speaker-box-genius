@@ -153,6 +153,8 @@ test("driver and brand pages: search titles and structured data (subject and bre
   const lds = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g)].map((m) => JSON.parse(m[1]!));
   assert.equal(lds.length, 2);
   assert.equal(lds[0].about.name, "Dayton Audio DSA215-8");
+  assert.deepEqual(lds[0].author, { "@type": "Organization", name: "Speaker Box Genius", url: "https://speakerboxgenius.com" });
+  assert.doesNotMatch(html, /"@type":"Person"/);
   assert.deepEqual(
     lds[1].itemListElement.map((x: { name: string; item: string }) => [x.name, x.item]),
     [
