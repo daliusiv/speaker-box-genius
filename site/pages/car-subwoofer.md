@@ -42,7 +42,7 @@ The ported boxes play **6–7 dB louder** at 30–40 Hz, which is a lot (about f
 
 - **Small, flat and accurate:** sealed. Size it for a Qtc around 0.7–0.8; in a car, a slightly small box is fine.
 - **Loudest for the watts:** ported, tuned in the low 30s or high 20s Hz, and EQ the hump down if you don't like it.
-- **Tight on space but want output:** a sealed box with more amplifier power usually beats a ported box that's been squeezed too small.
+- **Tight on space but want output:** a sealed box with more amplifier power usually beats a ported box that's been squeezed too small. A small box tuned high is what gives ported boxes their "boomy" reputation; see the [group delay guide](/guides/group-delay/).
 - **Bandpass boxes** (4th and 6th order) are popular in cars for very high output in a narrow band; the app models those too, and the [design assistant](/guides/design-assistant/) can suggest them (tick **Bandpass** in its limits). On a bandpass design, **Size for a flat band** sizes both chambers and their ports for your driver in the same total volume.
 
 ## Things that are different in a car

@@ -55,7 +55,7 @@ Three things stand out.
 
 ## What you'll hear
 
-**Timing.** A low Qtc has the best-behaved step response, and the gap is often blamed for "slow" or "boomy" bass. But look at the group delay: at 40 Hz every box is within about 2 ms of the others, and one cycle at 40 Hz lasts 25 ms. The best-known listening tests on group delay found thresholds of 1–3 ms, but only from 500 Hz up [4]; in the bass, thresholds are usually taken to be around a cycle or more [5]. The ringing of a Qtc 1.0 box lasts a cycle or so of a note that goes on for many [3]. These boxes don't differ audibly in their timing; they differ in their **frequency response**: how much deep bass, and whether there's a peak.
+**Timing.** A low Qtc has the best-behaved step response, and the gap is often blamed for "slow" or "boomy" bass. But look at the group delay: at 40 Hz every box is within about 2 ms of the others, and one cycle at 40 Hz lasts 25 ms. The best-known listening tests on group delay found thresholds of 1–3 ms, but only from 500 Hz up [4]; in the bass, thresholds are usually taken to be around a cycle or more [5]. The ringing of a Qtc 1.0 box lasts a cycle or so of a note that goes on for many [3]. These boxes don't differ audibly in their timing; they differ in their **frequency response**: how much deep bass, and whether there's a peak. The [group delay guide](/guides/group-delay/) compares sealed and ported boxes the same way.
 
 **Free-standing (anechoic)**, then:
 

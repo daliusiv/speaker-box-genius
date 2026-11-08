@@ -65,7 +65,7 @@ Start **a little below the box's tuning**, about 0.8 times Fb (19 Hz for this su
 
 Butterworth filters are flat to the corner; Linkwitz–Riley filters start rolling off earlier (−6 dB at the corner frequency) and protect a little more for the same setting.
 
-A steep filter adds some **group delay** (in the example, from 25 ms to 43 ms at 25 Hz with the 24 dB/oct filter). That's well below what people notice at those frequencies.
+A steep filter adds some **group delay** (in the example, from 25 ms to 43 ms at 25 Hz with the 24 dB/oct filter). That's well below what people notice at those frequencies (see the [group delay guide](/guides/group-delay/)).
 
 ## Where the filter lives
 

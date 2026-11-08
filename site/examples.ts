@@ -10,7 +10,7 @@ import type { Stuffing } from "../packages/web/src/stuffing.ts";
 
 /** A fresh line design, as "+ Transmission line" adds one. */
 const newLine = (s: AppState) => newDesign("line", s.designs);
-import { portLengthForFb, sealedVolumeForAlignment, type PortInput } from "../packages/engine/src/index.ts";
+import { keeleAlignment, portLengthForFb, sealedVolumeForAlignment, type PortInput } from "../packages/engine/src/index.ts";
 import { alignmentDriver, driverInputOf, runDesigns, simOptionsOf, solveDriver } from "../packages/web/src/sim.ts";
 import { compareLines } from "../packages/web/src/lineopt.ts";
 
@@ -364,6 +364,34 @@ function qtcExample(): AppState {
 }
 
 /**
+ * The group delay guide: a Dayton Audio RSS315HF-4 12″ sub at 50 W in three boxes: sealed for
+ * Qtc 0.707 (36.3 L), a small ported box tuned high (50 L at 42 Hz, peaked) and its low-tuned
+ * Keele alignment (83.5 L at 23.8 Hz), both with a 10 cm port. `subsonic` adds the 18 Hz
+ * 24 dB/oct high-pass filter a low-tuned box needs.
+ */
+function groupDelayExample(subsonic: boolean) {
+  return (): AppState => {
+    let s = withDriver({ ...DEFAULT_STATE, power: 50 }, "dayton-audio/rss315hf-4");
+    if (subsonic) s = { ...s, highPass: highPass(4, 18) };
+    const align = alignmentDriver(solveDriver(s), s)!;
+    const keele = keeleAlignment(align);
+    const vb = sealedVolumeForAlignment(align, 0.707);
+    if (!keele || !vb) throw new Error("The group delay example needs a sealed and a Keele box");
+    const vented = byKind(DEFAULT_STATE, "vented") as Vented;
+    const kVb = Math.round(keele.vb_l * 10) / 10;
+    const kFb = Math.round(keele.fb * 10) / 10;
+    return {
+      ...s,
+      designs: [
+        { ...byKind(DEFAULT_STATE, "sealed"), id: "d1", name: `Sealed, Qtc 0.707 (${Math.round(vb * 10) / 10} L)`, vb_l: Math.round(vb * 10) / 10 },
+        { ...ventedWith(vented, "Ported, tuned high (50 L, 42 Hz)", 50, 42, { shape: "round", diameter_cm: 10 }), id: "d2" },
+        { ...ventedWith(vented, `Ported, tuned low (${kVb} L, ${kFb} Hz)`, kVb, kFb, { shape: "round", diameter_cm: 10 }), id: "d3" },
+      ],
+    };
+  };
+}
+
+/**
  * The MLTL guide: the transmission line guide's DSA215-8 MLTL (from Compare types, 24 L, 86 cm,
  * a 7.3 cm port, tuned to 40 Hz, stuffed behind the driver), the same line empty, and the same
  * volume and port as a plain ported box, at 25 W behind a 28 Hz high-pass filter.
@@ -409,6 +437,8 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "port-example": portExample,
   "tl-example": tlExample,
   "qtc-example": qtcExample,
+  "group-delay": groupDelayExample(false),
+  "group-delay-subsonic": groupDelayExample(true),
   "mltl-example": mltlExample,
 };
 

@@ -78,7 +78,7 @@ An LT boosts everything below fp, all the way down, so without a filter, rumble 
 
 ## Group delay
 
-The LT changes the timing of the bass. In the example, group delay at 20 Hz rises from about 5 ms to 11 ms, while at 40 Hz it falls from 6 ms to 4 ms. The peak delay is higher, but over the range that matters for music it's often improved, because the response is flatter there [2]. Either way, a few milliseconds at these frequencies is far below the delays shown to be audible in listening tests [10].
+The LT changes the timing of the bass. In the example, group delay at 20 Hz rises from about 5 ms to 11 ms, while at 40 Hz it falls from 6 ms to 4 ms. The peak delay is higher, but over the range that matters for music it's often improved, because the response is flatter there [2]. Either way, a few milliseconds at these frequencies is far below the delays shown to be audible in listening tests [10]. The [group delay guide](/guides/group-delay/) puts these numbers next to sealed and ported boxes.
 
 ## How to build one
 

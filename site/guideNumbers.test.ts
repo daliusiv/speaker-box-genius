@@ -4,7 +4,7 @@ import { EXAMPLES } from "./examples.ts";
 import { runDesigns, solveDriver } from "../packages/web/src/sim.ts";
 
 /**
- * The sealed Qtc and MLTL guides quote the app's simulation of their examples: these are the
+ * The sealed Qtc, MLTL and group delay guides quote the app's simulation of their examples: these are the
  * headline numbers, so a change to the engine or the database that moves them fails here and
  * the guide gets updated with it.
  */
@@ -46,4 +46,35 @@ test("MLTL guide: port lengths, tuning and F3 of the ported box, the empty line 
   near(empty!.result.summary.fb!, 41.6, 0.06, "empty line tuning");
   near(mltl!.result.summary.fb!, 40.0, 0.06, "MLTL tuning");
   near(mltl!.result.summary.f3!, 40.2, 0.06, "MLTL F3");
+});
+
+test("group delay guide: sizes, F3, response peak and group delay of the three boxes, with and without the subsonic filter", () => {
+  const want = [
+    { vb: 36.3, f3: 46.4, gd: { 25: 6.0, 30: 6.0, 40: 5.5, 50: 4.7, 60: 3.8, 80: 2.4 } },
+    { vb: 50, f3: 35.2, gd: { 25: 9.4, 30: 10.0, 40: 15.4, 50: 15.1, 60: 7.5, 80: 2.9 }, peak: { db: 5.4, hz: 51 }, gdPeak: { ms: 17.6, hz: 45 } },
+    { vb: 83.5, f3: 23.3, gd: { 25: 25.2, 30: 15.5, 40: 7.1, 50: 4.5, 60: 3.2, 80: 2.0 }, gdPeak: { ms: 29.0, hz: 21.6 } },
+  ];
+  run("group-delay").forEach((d, i) => {
+    const r = d.result;
+    const w = want[i]!;
+    assert.equal(d.design.vb_l, w.vb, d.design.name);
+    near(r.summary.f3!, w.f3, 0.1, `${d.design.name} F3`);
+    for (const [hz, ms] of Object.entries(w.gd)) near(at(r.freq, r.groupDelayMs, Number(hz)), ms, 0.2, `${d.design.name} group delay at ${hz} Hz`);
+    let gi = 0;
+    let si = 0;
+    for (let k = 0; k < r.freq.length; k++) {
+      if (r.freq[k]! >= 10 && r.groupDelayMs[k]! > r.groupDelayMs[gi]!) gi = k;
+      if (r.freq[k]! < 200 && r.spl[k]! > r.spl[si]!) si = k;
+    }
+    if (w.gdPeak) {
+      near(r.groupDelayMs[gi]!, w.gdPeak.ms, 0.2, `${d.design.name} peak group delay`);
+      near(r.freq[gi]!, w.gdPeak.hz, 1, `${d.design.name} peak group delay frequency`);
+    }
+    if (w.peak) {
+      near(r.spl[si]! - r.summary.referenceSpl, w.peak.db, 0.1, `${d.design.name} response peak`);
+      near(r.freq[si]!, w.peak.hz, 1.5, `${d.design.name} response peak frequency`);
+    }
+  });
+  const filtered = run("group-delay-subsonic").map((d) => at(d.result.freq, d.result.groupDelayMs, 40));
+  [10.7, 20.5, 12.3].forEach((ms, i) => near(filtered[i]!, ms, 0.2, `subsonic filter: box ${i + 1} at 40 Hz`));
 });
