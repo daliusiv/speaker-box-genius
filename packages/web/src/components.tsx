@@ -55,12 +55,14 @@ export function Num(props: {
   onChange: (v: number) => void;
   /** Where 0 means "none": the box is left blank with this as its placeholder (e.g. "No limit"), and clearing it sets 0. */
   zeroText?: string;
+  /** Where a very large value means "none" (a loss Q): from `at` up the box is blank with `text` as its placeholder, and clearing it sets `at`. */
+  none?: { text: string; at: number };
 }) {
   const units = useUnits();
   const u = props.q ? units.unit(props.q) : { unit: props.unit ?? "", k: 1 };
   const shown = props.value * u.k;
   const converted = u.k !== 1;
-  const blank = (v: number) => props.zeroText !== undefined && v === 0;
+  const blank = (v: number) => (props.zeroText !== undefined && v === 0) || (props.none !== undefined && v >= props.none.at * u.k);
   const [text, setText] = useState(blank(shown) ? "" : tidy(shown, converted));
   useEffect(() => {
     if (blank(shown)) {
@@ -80,12 +82,13 @@ export function Num(props: {
       <input
         inputMode="decimal"
         value={text}
-        placeholder={props.zeroText}
+        placeholder={props.zeroText ?? props.none?.text}
         onChange={(e) => {
           const t = e.currentTarget.value;
           setText(t);
           const v = Number(t.replace(",", "."));
           if (t.trim() === "" && props.zeroText !== undefined) props.onChange(0);
+          else if (t.trim() === "" && props.none !== undefined) props.onChange(props.none.at);
           else if (t.trim() !== "" && Number.isFinite(v) && v >= min) props.onChange(v / u.k);
         }}
       />

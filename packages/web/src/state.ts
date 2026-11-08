@@ -637,6 +637,13 @@ function stripKeys(v: Raw, d: Raw, mergedOneLevel: Set<string>, keep: string[]):
 /** The default drive before 8 Nov 2026, for links and saves made then (they leave the power out). */
 const LEGACY_POWER_W = 100;
 
+/** A loss Q this high is no loss at all (shown as "none"; clearing a loss field sets it). */
+export const NO_LOSS_Q = 1e9;
+/** A loss Q for showing: "none" from 10⁶ up (no loss for any practical purpose). */
+export const qText = (q: number) => (q >= 1e6 ? "none" : String(q));
+/** The props a loss-Q field takes for its "none". */
+export const NO_LOSS = { text: "None", at: NO_LOSS_Q } as const;
+
 /**
  * The ported box's port before 8 Nov 2026 (link version 3 and older): 10 cm, 30 cm, straight,
  * too long to fit its 60 L. Links leave out what equals the defaults, so a v3 link without
