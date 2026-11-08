@@ -4,7 +4,7 @@
  */
 import { portLengthForFb } from "@sbg/engine";
 import { prTuning } from "./presets.ts";
-import { airOf, portOf, vbOf } from "./sim.ts";
+import { airOf, endCorrectionOf, portOf, vbOf } from "./sim.ts";
 import type { AppState, DesignState, EqItem } from "./state.ts";
 
 const r1 = (v: number) => Math.round(v * 10) / 10;
@@ -20,7 +20,7 @@ export function retuned(s: AppState, d: DesignState, fb: number): DesignState | 
   const air = airOf(s);
   const target = roundF(Math.min(200, Math.max(5, fb)));
   if (d.kind === "vented") {
-    const len = portLengthForFb(vb, portOf(d, 0), target, d.count, undefined, air);
+    const len = portLengthForFb(vb, portOf(d, 0), target, d.count, endCorrectionOf(s), air);
     if (!(len >= 0.5) || !Number.isFinite(len)) return null;
     return { ...d, length_cm: r1(len), targetFb: target };
   }

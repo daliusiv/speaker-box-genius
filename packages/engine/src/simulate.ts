@@ -110,6 +110,11 @@ export interface SimulationOptions {
    * Hornresp), which is less than V²/Re wherever the impedance rises above Re.
    */
   thermalLimit?: "nominal" | "real";
+  /**
+   * Port end correction (× the port's equivalent diameter) for boxes that don't set their own:
+   * default 0.732, one end flanged and one free, like WinISD.
+   */
+  endCorrection?: number;
   /** Amplifier limits for the max-SPL curve: RMS volts and amps at its output. */
   amp?: { volts?: number; amps?: number } | null;
   /** Port air velocity limit (m/s, peak) used for the max-SPL curve. Default 17. */
@@ -326,7 +331,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
 
   // Box elements
   const summary: SimulationResult["summary"] = { volts, referenceSpl: 0, f3: null, f6: null };
-  const bp = box.kind === "bandpass" ? bandpassNetwork(box, d, n, air, summary, opts.portModel === "pipe", opts.leakage === "absorbed") : null;
+  const bp = box.kind === "bandpass" ? bandpassNetwork({ ...box, endCorrection: box.endCorrection ?? opts.endCorrection }, d, n, air, summary, opts.portModel === "pipe", opts.leakage === "absorbed") : null;
   const line = box.kind === "line" ? lineNetwork(box, air) : null;
   // A line or horn models the air on the cone's sides explicitly, so the cone carries its bare
   // moving mass Mmd = Mms − 16ρa³/3 (both sides' free-air load, as Hornresp defines it). An open
@@ -374,7 +379,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     summary.qtc = qts * Math.sqrt(1 + n * alpha);
   } else if (single.kind === "vented") {
     ventCount = single.portCount ?? 1;
-    const ec = single.endCorrection ?? DEFAULT_END_CORRECTION;
+    const ec = single.endCorrection ?? opts.endCorrection ?? DEFAULT_END_CORRECTION;
     fRef = ventedFb(single.vb_l, single.port, ventCount, ec, air);
     summary.fb = fRef;
     const map = portAcousticMass(single.port, ec, air);

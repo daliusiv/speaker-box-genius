@@ -47,6 +47,8 @@ export function StuffingFields(props: {
   /** Net volume as built (the calculator's when linked). */
   built_l: number;
   air: Air;
+  /** Port end correction in use. */
+  ec?: number;
   fit?: StuffingFitContext;
   onChange: (d: DesignState) => void;
 }) {
@@ -72,8 +74,8 @@ export function StuffingFields(props: {
   let fbStuffed: number | null = null;
   try {
     if (d.kind === "vented") {
-      fbEmpty = ventedFb(props.built_l, portOf(d), d.count, undefined, props.air);
-      fbStuffed = ventedFb(acting, portOf(d), d.count, undefined, props.air);
+      fbEmpty = ventedFb(props.built_l, portOf(d), d.count, props.ec, props.air);
+      fbStuffed = ventedFb(acting, portOf(d), d.count, props.ec, props.air);
     } else if (d.kind === "pr") {
       fbEmpty = prTuning(d, props.built_l, props.air).fb;
       fbStuffed = prTuning(d, acting, props.air).fb;

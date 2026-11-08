@@ -28,7 +28,7 @@ import {
 import { doubtsXmax, type DbIndex, type LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
 import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
-import { airOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
+import { airOf, endCorrectionOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
 import { portCandidates, portFieldsOf, portSpeedFor, chamberPortFields, needsSpace, type AssistantPort, type PortSpace } from "./ports.ts";
 import { bandRipple, sizeBandpass, type BandpassFound, type BandpassOrder } from "./bandpassSize.ts";
 export { choosePort, portCandidates, portFieldsOf, type AssistantPort } from "./ports.ts";
@@ -564,7 +564,7 @@ export function evaluateDriver(
     return { long_cm: a!, wide_cm: b! };
   };
   const ventedAt = (vb: number, fb: number) => {
-    const port = portCandidates(vb, fb, air, portSpace(vb))[0];
+    const port = portCandidates(vb, fb, air, portSpace(vb), endCorrectionOf(s))[0];
     return port ? { design: withPort(vb, fb, port), port } : null;
   };
   /**
@@ -574,7 +574,7 @@ export function evaluateDriver(
    */
   const bestPort = (vb: number, fb: number, useSpace = true) => {
     let best: { design: VentedDesign; port: AssistantPort; v: number } | null = null;
-    for (const port of portCandidates(vb, fb, air, useSpace ? portSpace(vb) : null)) {
+    for (const port of portCandidates(vb, fb, air, useSpace ? portSpace(vb) : null, endCorrectionOf(s))) {
       const design = withPort(vb, fb, port);
       const l = limitsOf(run(design, vb), d.xmax_mm!, false, vLimit);
       const v = portSpeedFor(port, l.vp ?? Infinity);
@@ -681,6 +681,7 @@ export function evaluateDriver(
         {
           orders: [order],
           maxVolume_l,
+          endCorrection: endCorrectionOf(s),
           drivers: goal.drivers,
           priority: goal.priority === "loud" ? "loud" : "low",
           loudAt_hz: goal.loudAt_hz,

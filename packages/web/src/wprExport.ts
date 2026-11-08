@@ -1,5 +1,5 @@
-import { DEFAULT_END_CORRECTION, portLengthForFb, ventedFb, writeWpr, type WprExport, type WprPortOut } from "@sbg/engine";
-import { airOf, builtVbOf, colorOf, dvcFactors, lossesFor, solveDriver, switchDrive } from "./sim.ts";
+import { portLengthForFb, ventedFb, writeWpr, type WprExport, type WprPortOut } from "@sbg/engine";
+import { airOf, builtVbOf, colorOf, dvcFactors, endCorrectionOf, lossesFor, solveDriver, switchDrive } from "./sim.ts";
 import type { AppState, DesignState, PortFields } from "./state.ts";
 import { stuffFactor } from "./stuffing.ts";
 
@@ -30,7 +30,7 @@ export function wprFor(s: AppState, d: DesignState): { text: string; notes: stri
   const brand = s.driverBrand && name.startsWith(s.driverBrand) ? s.driverBrand : "";
   const vb = builtVbOf(s, d) * (d.kind === "line" ? 1 : stuffFactor(d));
   if (d.kind !== "line" && stuffFactor(d) !== 1) notes.push("stuffing is written as the extra volume it acts as (WinISD has no stuffing)");
-  const ec = DEFAULT_END_CORRECTION;
+  const ec = endCorrectionOf(s);
   const portOut = (p: PortFields & { flare_cm?: number }, v: number): WprPortOut => {
     let diameter_cm = p.diameter_cm;
     if (p.shape === "slot") {

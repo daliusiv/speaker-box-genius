@@ -14,7 +14,7 @@ import {
   moreVentedAlignments,
   type ShapedAlignment,
 } from "@sbg/engine";
-import { airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, portOf, portRoom_cm, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
+import { airOf, endCorrectionOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, portOf, portRoom_cm, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
 import type { AppState, BandpassDesign, DesignState, PrDesign, VentedDesign } from "./state.ts";
 import { sizeBandpass } from "./bandpassSize.ts";
 import { choosePortCount, portCandidates, portFieldsOf, portSpeedFor, type AssistantPort } from "./ports.ts";
@@ -205,6 +205,7 @@ export function sizeBandpassDesign(s: AppState, d: BandpassDesign): { design: Ba
     {
       orders: [d.order],
       maxVolume_l: total,
+      endCorrection: endCorrectionOf(s),
       drivers: s.drivers,
       priority: "low",
       portLimit: vLimit,
@@ -240,10 +241,11 @@ function portText(p: AssistantPort): string {
  */
 export function bestVentedPort(s: AppState, d: DesignState & { kind: "vented" }, vb_l: number, fb: number): { fields: Partial<DesignState & { kind: "vented" }>; text: string; quiet: boolean } | null {
   const air = airOf(s);
-  const tried = portCandidates(vb_l, fb, air);
+  const ec = endCorrectionOf(s);
+  const tried = portCandidates(vb_l, fb, air, null, ec);
   // Two tubes as well as one: double the area for the same diameter (when one tube fits).
   const one = tried.find((p) => p.kind === "straight" && p.count === 1);
-  const two = one && choosePortCount(vb_l, fb, air, 2);
+  const two = one && choosePortCount(vb_l, fb, air, 2, ec);
   const cands = [...(one ? [one] : []), ...(two ? [two] : []), ...tried.filter((p) => p !== one)];
   if (cands.length === 0) return null;
   // Judged at the driver's power rating when it has one (the box is built for what it can take,
@@ -291,9 +293,10 @@ export function ventedPresetPatch(
   air: Air,
   internalMax_cm: number | null,
   pick?: PortPicker,
+  ec?: number,
 ): { patch: Partial<VentedDesign> | null; msg: string } {
   const box = { vb_l: Math.round((a.vb_l / fill) * 10) / 10, targetFb: Math.round(a.fb * 10) / 10, ...withPreset(v.name, a.name) };
-  const len = portLengthForFb(a.vb_l, portOf(v, 0), a.fb, v.count, undefined, air);
+  const len = portLengthForFb(a.vb_l, portOf(v, 0), a.fb, v.count, ec, air);
   const clearance = v.shape === "round" ? v.diameter_cm : v.slotHeight_cm;
   if (len > 0 && len <= portRoom_cm(a.vb_l, clearance, internalMax_cm)) return { patch: { ...box, length_cm: Math.round(len * 10) / 10 }, msg: "" };
   const why = len > 0 ? "would be too long to fit" : "is too small for that tuning";

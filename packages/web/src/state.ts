@@ -1,4 +1,4 @@
-import type { EqStage, HighPassType, PassiveBranch, PassiveRadiatorInput, SemiInductance, TsValues } from "@sbg/engine";
+import { DEFAULT_END_CORRECTION, type EqStage, type HighPassType, type PassiveBranch, type PassiveRadiatorInput, type SemiInductance, type TsValues } from "@sbg/engine";
 import { stuffable, stuffingFrom, type Stuffing } from "./stuffing.ts";
 
 export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line";
@@ -197,6 +197,12 @@ export interface Settings {
   lineSpl: "on-axis" | "power";
   /** Vented boxes: ports as lumped air masses (like WinISD) or as pipes with their own resonances. */
   portModel: "lumped" | "pipe";
+  /**
+   * Port end correction K (× the port's equivalent diameter): how much longer than its physical
+   * length a port acts. 0.732 (one end flanged, one free, like WinISD) unless you know better,
+   * e.g. from measuring your own slot ports.
+   */
+  endCorrection: number;
   /** Box leakage: the air that leaks out is heard ("radiates", like WinISD) or lost ("absorbed", like Hornresp). */
   leakage: "radiates" | "absorbed";
   /** Sealed, ported and PR boxes: the cone's front air as a fixed mass (like WinISD) or a piston's radiation impedance (like Hornresp). */
@@ -483,6 +489,7 @@ export const DEFAULT_STATE: AppState = {
     portCompression: false,
     lineSpl: "on-axis",
     portModel: "lumped",
+    endCorrection: DEFAULT_END_CORRECTION,
     leakage: "radiates",
     coneLoad: "mass",
     coilTemp_C: 20,
@@ -584,6 +591,12 @@ export interface RoomCurve {
 }
 
 /** A link's air conditions, each within what the earth's surface sees (else the default's). */
+/** A port end correction from a saved project or link: 0–3 (× diameter), else WinISD's 0.732. */
+export const END_CORRECTION_MAX = 3;
+function endCorrectionFrom(raw: unknown): number {
+  return typeof raw === "number" && Number.isFinite(raw) && raw >= 0 && raw <= END_CORRECTION_MAX ? raw : DEFAULT_END_CORRECTION;
+}
+
 function airConditionsFrom(raw: Raw | undefined, d: Settings["airConditions"]): Settings["airConditions"] {
   const pick = (v: unknown, lo: number, hi: number, dv: number) => (typeof v === "number" && Number.isFinite(v) && v >= lo && v <= hi ? v : dv);
   return {
@@ -958,6 +971,7 @@ export function decodeState(hash: string): AppState | null {
         ...d.settings,
         ...raw.settings,
         losses: { ...d.settings.losses, ...raw.settings?.losses },
+        endCorrection: endCorrectionFrom(raw.settings?.endCorrection),
         airConditions: airConditionsFrom(raw.settings?.airConditions, d.settings.airConditions),
       },
       eq: Array.isArray(raw.eq)

@@ -13,6 +13,7 @@ import {
   simulate,
   transitionFrequency,
   bankResistance,
+  DEFAULT_END_CORRECTION,
   solveTs,
   type DriverInput,
   type EqStage,
@@ -358,10 +359,14 @@ export function driverInputOf(s: AppState, solved: SolveResult): DriverInput {
   };
 }
 
+/** The port end correction in use (Settings → Ports): K × the equivalent diameter. */
+export const endCorrectionOf = (s: Pick<AppState, "settings">): number => s.settings.endCorrection ?? DEFAULT_END_CORRECTION;
+
 /** How every design is driven and simulated (drive level, wiring, filters, air…), without EQ. */
 export function simOptionsOf(s: AppState) {
   return {
     rg: s.settings.rg,
+    endCorrection: endCorrectionOf(s),
     power: s.drive === "volts" ? s.volts : s.power,
     convention: s.drive === "volts" ? ("volts" as const) : undefined,
     drivers: s.drivers,
