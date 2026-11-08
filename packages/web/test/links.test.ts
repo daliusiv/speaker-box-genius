@@ -172,3 +172,27 @@ test("passive parts, new settings and a high shelf survive a link exactly", asyn
   const fixed = decodeState(encodeState(raw))!;
   assert.deepEqual(fixed.passive, { on: true, branches: [{ c_uF: 10 }, {}, {}, {}] });
 });
+
+test("the example's ported box has a port that fits and tunes it; older links keep their old port", async () => {
+  const { portRoom_cm, airOf } = await import("../src/sim.ts");
+  const { ventedFb, DEFAULT_END_CORRECTION } = await import("@sbg/engine");
+  const { DEFAULT_STATE, decodeState, decodeStateAny, encodeStateShort, compactState } = await import("../src/state.ts");
+  const v = DEFAULT_STATE.designs.find((d) => d.kind === "vented")!;
+  assert.ok(v.kind === "vented");
+  if (v.kind !== "vented") return;
+  assert.ok(v.length_cm <= portRoom_cm(v.vb_l, v.diameter_cm), "fits a cube-shaped box of its volume");
+  const fb = ventedFb(v.vb_l, { shape: "round", diameter_cm: v.diameter_cm, length_cm: v.length_cm, flare_cm: v.flare_cm }, v.count, DEFAULT_END_CORRECTION, airOf(DEFAULT_STATE));
+  assert.ok(Math.abs(fb - v.targetFb) < 0.1, `tunes to ${fb}`);
+  // A new short link of the example opens the new port.
+  const again = (await decodeStateAny(await encodeStateShort(DEFAULT_STATE)))!.designs.find((d) => d.kind === "vented")!;
+  assert.deepEqual(again, v);
+  // A link made before 8 Nov 2026 (version 3) left the old default port out: it opens that port.
+  const raw = compactState(DEFAULT_STATE) as Record<string, any>;
+  const old = { ...raw, v: 3, designs: raw.designs.map((d: Record<string, any>) => (d.kind === "vented" ? { id: d.id, kind: d.kind, name: d.name } : d)) };
+  const opened = decodeState("s=" + Buffer.from(JSON.stringify(old)).toString("base64url"))!.designs.find((d) => d.kind === "vented")!;
+  assert.ok(opened.kind === "vented" && opened.diameter_cm === 10 && opened.length_cm === 30 && opened.flare_cm === 0);
+  // One that gave its own port keeps it.
+  const own = { ...old, designs: old.designs.map((d: Record<string, any>) => (d.kind === "vented" ? { ...d, diameter_cm: 12, length_cm: 25 } : d)) };
+  const kept = decodeState("s=" + Buffer.from(JSON.stringify(own)).toString("base64url"))!.designs.find((d) => d.kind === "vented")!;
+  assert.ok(kept.kind === "vented" && kept.diameter_cm === 12 && kept.length_cm === 25 && kept.flare_cm === 0);
+});
