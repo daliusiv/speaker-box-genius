@@ -414,6 +414,19 @@ function subsExample(pair: boolean) {
 }
 
 /**
+ * The power compression guide: a Dayton Audio RSS315HF-4 in its flat ported box (Keele's
+ * alignment, 83.5 L at 23.8 Hz, a 12.5 cm port) at 25 V, with the voice coil at `temp_C`.
+ */
+export const COMPRESSION_TEMPS = [20, 120, 180];
+function compressionExample(temp_C: number) {
+  return (): AppState => {
+    const s = withDriver({ ...DEFAULT_STATE, drive: "volts", volts: 25 }, "dayton-audio/rss315hf-4");
+    const vented = ventedWith(byKind(DEFAULT_STATE, "vented") as Vented, `Ported 83.5 L, coil at ${temp_C} °C`, 83.5, 23.8, { shape: "round", diameter_cm: 12.5 });
+    return { ...s, settings: { ...s.settings, coilTemp_C: temp_C }, designs: [{ ...vented, id: "d1" }] };
+  };
+}
+
+/**
  * The MLTL guide: the transmission line guide's DSA215-8 MLTL (from Compare types, 24 L, 86 cm,
  * a 7.3 cm port, tuned to 40 Hz, stuffed behind the driver), the same line empty, and the same
  * volume and port as a plain ported box, at 25 W behind a 28 Hz high-pass filter.
@@ -461,6 +474,9 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "qtc-example": qtcExample,
   "group-delay": groupDelayExample(false),
   "subs-one-15": subsExample(false),
+  "coil-20": compressionExample(20),
+  "coil-120": compressionExample(120),
+  "coil-180": compressionExample(180),
   "subs-two-10s": subsExample(true),
   "group-delay-subsonic": groupDelayExample(true),
   "mltl-example": mltlExample,
