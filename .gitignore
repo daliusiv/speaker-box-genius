@@ -16,3 +16,6 @@ issue-error.md
 # Importer reports
 dayton-import-report.md
 driverbase-import-report.md
+
+# Share cards kept between site builds (site/cardCache.ts)
+.cache/
