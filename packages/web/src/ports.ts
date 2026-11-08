@@ -17,6 +17,15 @@ export type AssistantPort =
 /** Round port sizes tried, largest first (cm, inside diameter). */
 const PORT_SIZES = [20, 15, 12.5, 10, 7.5, 6, 5, 4, 3];
 
+/** The widest straight round port that fits when there are exactly `count` of them, as a candidate. */
+export function choosePortCount(vb_l: number, fb: number, air: Air, count: number): AssistantPort | null {
+  for (const d of PORT_SIZES) {
+    const len = portLengthForFb(vb_l, { shape: "round", diameter_cm: d, length_cm: 10 }, fb, count, undefined, air);
+    if (len > 1 && len <= portRoom_cm(vb_l, d, null)) return { kind: "straight", diameter_cm: d, flare_cm: 0, length_cm: r1(len), count };
+  }
+  return null;
+}
+
 /**
  * The widest round port (fewest chuffing problems) that still fits straight, by the same rule
  * as the app's "Port too long to fit" check (portRoom_cm: a cube of this volume, less a port

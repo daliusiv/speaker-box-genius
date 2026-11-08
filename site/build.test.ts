@@ -129,7 +129,8 @@ test("driver designs follow the app's presets, with a port that fits and a PR th
   const [sealed, vented, pr] = p.designs.map((d) => d.design) as any[];
   assert.equal(sealed.preset, "Qtc 0.707");
   assert.equal(vented.preset, "QB3");
-  assert.ok(vented.length_cm + vented.diameter_cm <= 1.618 * Math.cbrt(vented.vb_l * 1000), "the port fits");
+  const across = vented.shape === "slot" ? vented.slotHeight_cm : vented.diameter_cm;
+  assert.ok(vented.length_cm + across <= 1.618 * Math.cbrt(vented.vb_l * 1000), "the port fits");
   assert.ok(Math.abs(p.designs[1]!.result.summary.fb! - vented.targetFb) < 0.2, "the port tunes the box");
   assert.equal(pr.kind, "pr");
   assert.ok(pr.addedMass_g >= 0);

@@ -13,7 +13,7 @@ import { doubtsXmax, type Flag } from "../packages/db-tools/src/plausibility.ts"
 import type { Driver, PassiveRadiator } from "../packages/schema/src/index.ts";
 import { DEFAULT_STATE, encodeStateShort, type AppState, type DesignState } from "../packages/web/src/state.ts";
 import { sizeAllForDriver } from "../packages/web/src/presets.ts";
-import { airOf, driverInputOf, runDesigns, simOptionsOf, solveDriver, type Design } from "../packages/web/src/sim.ts";
+import { driverInputOf, runDesigns, simOptionsOf, solveDriver, type Design } from "../packages/web/src/sim.ts";
 
 type Vented = Extract<DesignState, { kind: "vented" }>;
 type Pr = Extract<DesignState, { kind: "pr" }>;
@@ -68,7 +68,6 @@ export function prCandidate(e: Entry<PassiveRadiator>): PrCandidate & { params: 
 }
 
 export { choosePort } from "../packages/web/src/assistant.ts";
-import { choosePort } from "../packages/web/src/assistant.ts";
 
 export interface DriverPage {
   id: string;
@@ -99,20 +98,13 @@ export function designDriver(e: Entry<Driver>, prs: ReturnType<typeof prCandidat
 
   const { state: sized, skipped } = sizeAllForDriver(s0);
   const notes = skipped.map((x) => x.replace(/^[^:]+: /, ""));
-  const air = airOf(sized);
   const keep: DesignState[] = [];
   let pr: DriverPage["pr"];
   for (const d of sized.designs) {
     if (!d.preset) continue; // not sized for this driver: left out
     if (d.kind === "sealed") keep.push(d);
-    if (d.kind === "vented") {
-      const port = choosePort(d.vb_l, d.targetFb, air);
-      if (!port) {
-        notes.push(`no round port fits ${r1(d.vb_l)} L tuned to ${r1(d.targetFb)} Hz`);
-        continue;
-      }
-      keep.push({ ...(d as Vented), shape: "round", ...port });
-    }
+    // Ported: the port Size all boxes chose (the simplest that fits and keeps quiet at this power).
+    if (d.kind === "vented") keep.push(d);
     if (d.kind === "pr") {
       const best = rankPrResults(
         [...evaluatePrCandidates(driverInputOf(sized, solved), prs, { vb_l: d.vb_l, targetFb: d.targetFb, sim: simOptionsOf(sized), losses: sized.settings.losses, counts: [1, 2, 4] })].flat(),
@@ -180,7 +172,12 @@ function boxText(d: Design): string {
   if (x.kind === "sealed") return `Closed box, ${esc(x.preset ?? "")}`;
   if (x.kind === "vented") {
     const v = x as Vented;
-    return `${count(v.count)[0]!.toUpperCase()}${count(v.count).slice(1)} ${cmIn(v.diameter_cm)} round port${v.count > 1 ? "s" : ""}, ${cmIn(v.length_cm)} long (${esc(x.preset ?? "")})`;
+    const n = `${count(v.count)[0]!.toUpperCase()}${count(v.count).slice(1)}`;
+    const what =
+      v.shape === "slot"
+        ? `${cmIn(v.slotWidth_cm)} × ${cmIn(v.slotHeight_cm)} slot port${v.count > 1 ? "s" : ""}`
+        : `${cmIn(v.diameter_cm)} ${v.flare_cm > 0 ? `flared (${cmIn(v.flare_cm)} round-overs)` : "round"} port${v.count > 1 ? "s" : ""}`;
+    return `${n} ${what}, ${cmIn(v.length_cm)} long (${esc(x.preset ?? "")})`;
   }
   if (x.kind === "pr") {
     const p = x as Pr;

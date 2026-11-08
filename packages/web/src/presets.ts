@@ -1,6 +1,5 @@
 import {
   keeleAlignment,
-  portLengthForFb,
   prAddedMassForFb,
   prFb,
   prGroupsAddedMassForFb,
@@ -12,9 +11,10 @@ import {
   type AlignmentDriver,
   type VentedAlignment,
 } from "@sbg/engine";
-import { airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, portOf, prGroupsOf, simOptionsOf, solveDriver } from "./sim.ts";
+import { airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, prGroupsOf, simOptionsOf, solveDriver } from "./sim.ts";
 import type { AppState, BandpassDesign, DesignState, PrDesign } from "./state.ts";
 import { sizeBandpass } from "./bandpassSize.ts";
+import { choosePortCount, portCandidates, portFieldsOf, portSpeedFor, type AssistantPort } from "./ports.ts";
 import { stuffFactor } from "./stuffing.ts";
 
 /** "31.1 L" or, for a stuffed box, "31.1 L (stuffed, acting as 37.3 L)". */
@@ -87,13 +87,13 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
           skipped.push(`${d.name}: the driver's Qts is too high for a flat vented alignment (above 0.6)`);
           return d;
         }
-        const len = portLengthForFb(qb3.vb_l, portOf(d, 0), qb3.fb, d.count, undefined, air);
-        if (!(len > 0)) {
-          skipped.push(`${d.name}: its port is too small to tune ${r1(qb3.vb_l)} L to ${r1(qb3.fb)} Hz`);
+        const best = bestVentedPort(s, d, qb3.vb_l, qb3.fb);
+        if (!best) {
+          skipped.push(`${d.name}: no port fits ${r1(qb3.vb_l)} L tuned to ${r1(qb3.fb)} Hz`);
           return d;
         }
-        changed.push(`${d.name} → ${sizeText(d, qb3.vb_l)} at ${r1(qb3.fb)} Hz (${qb3.name})`);
-        return { ...d, vb_l: r1(qb3.vb_l / stuffFactor(d)), targetFb: r1(qb3.fb), length_cm: r1(len), ...withPreset(d.name, qb3.name) };
+        changed.push(`${d.name} → ${sizeText(d, qb3.vb_l)} at ${r1(qb3.fb)} Hz (${qb3.name}), ${best.text}`);
+        return { ...d, vb_l: r1(qb3.vb_l / stuffFactor(d)), targetFb: r1(qb3.fb), ...best.fields, ...withPreset(d.name, qb3.name) };
       }
       case "pr": {
         if (!qb3) {
@@ -173,5 +173,51 @@ export function sizeBandpassDesign(s: AppState, d: BandpassDesign): { design: Ba
   return {
     design: { ...x, ...withPreset(d.name, "Flat band") },
     text: `${r1(x.vb_l)} + ${r1(x.frontVb_l)} L, ${tune}, ${band}${limits}`,
+  };
+}
+
+/** How a port reads in the size report: "2 × 7.5 cm ports", "a 10 cm flared port", "a 30 × 4 cm slot". */
+function portText(p: AssistantPort): string {
+  const n = p.count > 1 ? `${p.count} × ` : "a ";
+  if (p.kind === "slot") return `${n}${p.slotWidth_cm} × ${p.slotHeight_cm} cm slot${p.count > 1 ? "s" : ""}`;
+  return `${n}${p.diameter_cm} cm${p.kind === "flared" ? " flared" : ""} port${p.count > 1 ? "s" : ""}`;
+}
+
+/**
+ * The port for a ported box of `vb_l` tuned to `fb` at the current drive: of the ports that
+ * fit straight inside (one tube, two tubes, a flared tube, a slot along a wall, simplest to
+ * build first), the first that stays under the chuffing line; if none does, the quietest
+ * (the size report and the box's warning say so). Null if none fits at all.
+ */
+export function bestVentedPort(s: AppState, d: DesignState & { kind: "vented" }, vb_l: number, fb: number): { fields: Partial<DesignState & { kind: "vented" }>; text: string; quiet: boolean } | null {
+  const air = airOf(s);
+  const tried = portCandidates(vb_l, fb, air);
+  // Two tubes as well as one: double the area for the same diameter (when one tube fits).
+  const one = tried.find((p) => p.kind === "straight" && p.count === 1);
+  const two = one && choosePortCount(vb_l, fb, air, 2);
+  const cands = [...(one ? [one] : []), ...(two ? [two] : []), ...tried.filter((p) => p !== one)];
+  if (cands.length === 0) return null;
+  const solved = solveDriver(s);
+  const drv = driverInputOf(s, solved);
+  const opts = simOptionsOf(s);
+  // The simulation's port speeds are peak; the chuffing line is in the displayed convention.
+  const vLimit = portLimitOf(s) * (s.settings.velocity === "rms" ? Math.SQRT2 : 1);
+  let best: { p: AssistantPort; v: number } | null = null;
+  for (const p of cands) {
+    const x = { ...d, vb_l, targetFb: fb, ...portFieldsOf(p) } as DesignState;
+    const r = simulate(drv, enclosureOf(x, vb_l, lossesFor(s, x), s.volume.wall_mm), opts);
+    const v = portSpeedFor(p, limitsOf(r, s.xmax_mm, s.highPass.on, vLimit).vp ?? Infinity);
+    if (v <= vLimit) {
+      best = { p, v };
+      break;
+    }
+    if (!best || v < best.v) best = { p, v };
+  }
+  const quiet = best!.v <= vLimit;
+  const p = best!.p;
+  return {
+    fields: { flare_cm: 0, ...portFieldsOf(p) } as Partial<DesignState & { kind: "vented" }>,
+    text: quiet ? portText(p) : `${portText(p)} (still over the chuffing line at this power)`,
+    quiet,
   };
 }
