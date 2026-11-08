@@ -69,7 +69,7 @@ function largest(k: WinIsdCaseReport, q: Q): string {
 
 const ok = (pass: boolean) => (pass ? '<span class="ok">✓</span>' : '<span class="bad">✗ outside</span>');
 
-function winisdCase(k: WinIsdCaseReport, q: Q): string {
+function winisdCase(k: WinIsdCaseReport, q: Q, link?: string): string {
   const rows = k.checks
     .map((c) => {
       const u = q[c.what];
@@ -94,7 +94,7 @@ function winisdCase(k: WinIsdCaseReport, q: Q): string {
   });
   return `<section class="case" id="winisd-${k.id}">
 <h3>${esc(k.title)} ${ok(k.pass)}</h3>
-<p class="setup">${esc(k.setup)} · <a href="${REPO}/blob/main/packages/engine/test/fixtures/${k.fixture}">${esc(k.fixture)}</a></p>
+<p class="setup">${esc(k.setup)} · <a href="${REPO}/blob/main/packages/engine/test/fixtures/${k.fixture}">${esc(k.fixture)}</a>${openLink(link)}</p>
 <div class="table"><table class="cmp"><thead><tr><th>Quantity</th><th>WinISD</th><th>Ours</th><th>Difference<br><small>tolerance</small></th></tr></thead><tbody>${rows}</tbody></table></div>
 ${charts.length ? `${KEY_WINISD}<div class="charts">${charts.join("")}</div>` : ""}
 ${k.notes ? `<div class="known"><h4>Known differences</h4>${notes(k.notes)}</div>` : ""}
@@ -164,7 +164,7 @@ function maxSplParts(ms: MaxSplReport[] | undefined, tol: Report["hornresp"]["ma
   return { rows, figs };
 }
 
-function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"], mtol: Report["hornresp"]["maxSplTol"], itol: Report["hornresp"]["impulseTol"]): string {
+function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"], mtol: Report["hornresp"]["maxSplTol"], itol: Report["hornresp"]["impulseTol"], link?: string): string {
   const ms = maxSplParts(k.maxSpl, mtol);
   const ir = impulseParts(k.impulse, itol);
   const s = k.stats;
@@ -197,13 +197,13 @@ function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"], mto
     })}<figcaption>${label}</figcaption></figure>`;
   return `<section class="case" id="hornresp-${k.id}">
 <h3>${esc(k.title)} ${ok(k.pass)}</h3>
-<p class="setup">${esc(k.setup)} · <a href="${REPO}/tree/main/packages/engine/test/fixtures/hornresp/${k.id}">${esc(k.id)}</a></p>
+<p class="setup">${esc(k.setup)} · <a href="${REPO}/tree/main/packages/engine/test/fixtures/hornresp/${k.id}">${esc(k.id)}</a>${openLink(link)}</p>
 <div class="table"><table class="cmp"><thead><tr><th>Measure (10 Hz–1 kHz)</th><th>Result</th><th>Tolerance</th></tr></thead><tbody>${rows}</tbody></table></div>
 ${KEY_HORNRESP}<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}${ms.figs}${ir.figs}</div>
 </section>`;
 }
 
-function hornrespBoxCase(k: HornrespBoxCaseReport, mtol: Report["hornresp"]["maxSplTol"], itol: Report["hornresp"]["impulseTol"]): string {
+function hornrespBoxCase(k: HornrespBoxCaseReport, mtol: Report["hornresp"]["maxSplTol"], itol: Report["hornresp"]["impulseTol"], link?: string): string {
   const ms = maxSplParts(k.maxSpl, mtol);
   const ir = impulseParts(k.impulse, itol);
   const s = k.stats;
@@ -244,7 +244,7 @@ function hornrespBoxCase(k: HornrespBoxCaseReport, mtol: Report["hornresp"]["max
       : "";
   return `<section class="case" id="hornresp-${k.id}">
 <h3>${esc(k.title)} ${ok(k.pass)}</h3>
-<p class="setup">${esc(k.setup)}${k.options ? ` · ${esc(k.options)}` : ""} · <a href="${REPO}/tree/main/packages/engine/test/fixtures/hornresp-boxes/${k.id}">${esc(k.id)}</a></p>
+<p class="setup">${esc(k.setup)}${k.options ? ` · ${esc(k.options)}` : ""} · <a href="${REPO}/tree/main/packages/engine/test/fixtures/hornresp-boxes/${k.id}">${esc(k.id)}</a>${openLink(link)}</p>
 <div class="table"><table class="cmp"><thead><tr><th>Measure (10–${k.fMax ?? 300} Hz${k.zeFMax ? `; impedance to ${k.zeFMax / 1000} kHz` : ""})</th><th>Result</th><th>Tolerance</th></tr></thead><tbody>${rows}</tbody></table></div>
 ${KEY_HORNRESP}<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Cone's output alone", "dB", k.cone)}${fig("Port's or radiator's output alone", "dB", k.vent)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}${ms.figs}${ir.figs}</div>
 </section>`;
@@ -257,7 +257,12 @@ ${KEY_HORNRESP}<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Cone'
 export interface BuildInfo {
   commit?: string;
   date: Date;
+  /** "Open in app" links by case anchor ("winisd-ported", "hornresp-05-mltl"); see validationLinks.ts. */
+  links?: Record<string, string>;
 }
+
+/** The case's "Open in app" link, if it has one. */
+const openLink = (href: string | undefined) => (href ? ` · <a class="open" href="${href}">Open in app →</a>` : "");
 
 /** Opens the group holding the case a link points to (on load and on every # change), then scrolls to it. */
 const GROUP_SCRIPT = `(function(){function show(){var id=decodeURIComponent(location.hash.slice(1));if(!id)return;var el=document.getElementById(id);if(!el)return;for(var d=el;d;d=d.parentElement)if(d.tagName==="DETAILS")d.open=true;el.scrollIntoView();}addEventListener("hashchange",show);document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest('a[href^="#"]');if(a)setTimeout(show,0);});show();})();`;
@@ -286,6 +291,7 @@ td small,th small{color:var(--muted);font-weight:400}
 .case{margin:2rem 0 2.5rem;scroll-margin-top:1rem}
 .case h3{margin-bottom:.2rem}
 .setup{margin:.2rem 0 .6rem;color:var(--muted);font-size:.95rem}
+.setup a.open{font-weight:700;white-space:nowrap}
 .known{margin-top:1rem;padding:.2rem 1rem;border-left:3px solid var(--accent);border-radius:.4rem;background:var(--card)}
 .known h4{margin:.7rem 0 0;font-size:.95rem}
 .known p,.known li{font-size:.95rem}
@@ -348,14 +354,14 @@ export function validationContent(rep: Report, info: BuildInfo): string {
 
 <h2 id="winisd">WinISD</h2>
 <p>Each case is a real WinISD project (linked) with values read from WinISD's cursor read-out, next to ours (Speaker Box Genius); values marked <span class="tag">graph</span> were read off its graphs, so they're held to reading accuracy. Relative quantities (excursion, air speed, impedance, group delay, power) are compared in percent. ${esc(rep.winisd.driver)}.</p>
-${group("winisd-cases", `${w.length} WinISD cases`, w, w.map((k) => winisdCase(k, q)).join("\n"))}
+${group("winisd-cases", `${w.length} WinISD cases`, w, w.map((k) => winisdCase(k, q, info.links?.[`winisd-${k.id}`])).join("\n"))}
 
 <h2 id="hornresp">Hornresp</h2>
 <p>Each case is a Hornresp record with Hornresp's own results (SPL, impedance and its phase, cone excursion, group delay and the line's acoustic impedance), compared at every exported frequency from 10 Hz to ${rep.hornresp.fMax >= 1000 ? `${rep.hornresp.fMax / 1000} kHz` : `${rep.hornresp.fMax} Hz`}. ${esc(rep.hornresp.driver)}. The records are in <a href="${REPO}/tree/main/docs/hornresp-validation/records">docs/hornresp-validation</a>; open them in Hornresp to repeat any case.</p>
-${group("hornresp-lines", `Lines and horns: ${h.length} cases`, h, h.map((k) => hornrespCase(k, rep.hornresp.tol, rep.hornresp.maxSplTol, rep.hornresp.impulseTol)).join("\n") + `<div class="known"><h4>Notes</h4>${notes(rep.hornresp.notes)}</div>`)}
+${group("hornresp-lines", `Lines and horns: ${h.length} cases`, h, h.map((k) => hornrespCase(k, rep.hornresp.tol, rep.hornresp.maxSplTol, rep.hornresp.impulseTol, info.links?.[`hornresp-${k.id}`])).join("\n") + `<div class="known"><h4>Notes</h4>${notes(rep.hornresp.notes)}</div>`)}
 <p>Sealed, ported, passive-radiator and bandpass boxes and two drivers, compared from 10 to ${rep.hornresp.boxes.fMax} Hz, and stuffed lines from Hornresp's Loudspeaker Wizard to 1 kHz (the boxes are modelled without standing waves inside, as Hornresp's lumped chambers are). Where Hornresp's outputs were exported one by one, the cone's and the port's (or radiator's) are compared each on its own.</p>
-${group("hornresp-boxes", `Boxes, filters and EQ: ${boxes.length} cases`, boxes, boxes.map((k) => hornrespBoxCase(k, rep.hornresp.maxSplTol, rep.hornresp.impulseTol)).join("\n") + `<div class="known"><h4>Notes</h4>${notes(rep.hornresp.boxes.notes)}</div>`)}
-${group("hornresp-stuffed", `Stuffed lines: ${stuffed.length} cases`, stuffed, stuffed.map((k) => hornrespBoxCase(k, rep.hornresp.maxSplTol, rep.hornresp.impulseTol)).join("\n"))}
+${group("hornresp-boxes", `Boxes, filters and EQ: ${boxes.length} cases`, boxes, boxes.map((k) => hornrespBoxCase(k, rep.hornresp.maxSplTol, rep.hornresp.impulseTol, info.links?.[`hornresp-${k.id}`])).join("\n") + `<div class="known"><h4>Notes</h4>${notes(rep.hornresp.boxes.notes)}</div>`)}
+${group("hornresp-stuffed", `Stuffed lines: ${stuffed.length} cases`, stuffed, stuffed.map((k) => hornrespBoxCase(k, rep.hornresp.maxSplTol, rep.hornresp.impulseTol, info.links?.[`hornresp-${k.id}`])).join("\n"))}
 
 <h2 id="not-compared">Not compared</h2>
 <p>Some features have no equivalent in WinISD or Hornresp and are checked by their own tests instead: the L2R2 voice-coil model (fitted against Dayton Audio's published impedance measurements), a port's own pipe resonances, and a hot voice coil. They're described in <a href="${REPO}/blob/main/docs/validation.md#not-compared-with-winisd-or-hornresp">docs/validation.md</a>. With those settings at their defaults, the app gives the results above.</p>

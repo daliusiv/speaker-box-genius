@@ -21,6 +21,7 @@ import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
 import { exampleLinks } from "./examples.ts";
 import { readReport, validationContent, VALIDATION_STYLE } from "./validation.ts";
+import { validationLinks } from "./validationLinks.ts";
 import { CHART_STYLE, chart } from "./chart.ts";
 import { cardSvg, findChrome, Rasterizer } from "./og.ts";
 import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, loadDb, prCandidate, relatedDrivers, shareLink, type DriverPage } from "./drivers.ts";
@@ -358,13 +359,14 @@ export async function build(outDir: string): Promise<string[]> {
   ].join("\n");
   write("/guides/", layout({ title: "Guides", description: "Speaker box design guides with live, editable examples.", path: "/guides/", content: index, guides }));
 
+  const report = readReport();
   write(
     "/validation/",
     layout({
       title: "Validation against WinISD and Hornresp",
       description: "Every WinISD and Hornresp comparison Speaker Box Genius is tested against: the cases, how far apart the results are, and the known differences.",
       path: "/validation/",
-      content: validationContent(readReport(), { commit: buildCommit(), date: new Date() }),
+      content: validationContent(report, { commit: buildCommit(), date: new Date(), links: await validationLinks(SITE, { winisd: report.winisd.cases, hornresp: report.hornresp.cases }) }),
       guides,
       style: CHART_STYLE + VALIDATION_STYLE,
     }),
