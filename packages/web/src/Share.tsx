@@ -127,7 +127,7 @@ export function curvesCsv(state: AppState, designs: Design[]): string {
   const q = (s: string) => `"${s.replace(/"/g, '""')}"`;
   const freq = designs[0]!.result.freq;
   const lines = [
-    `# ${state.driverName}, ${subtitle(state)}, 1 m half space, air: ${state.settings.air}`,
+    `# ${state.driverName}, ${subtitle(state)}, 1 m half space, air: ${state.settings.air === "custom" ? `${state.settings.airConditions.temp_C} °C, ${state.settings.airConditions.humidity_pct} % RH, ${state.settings.airConditions.pressure_hPa} hPa` : state.settings.air}`,
     ["Frequency (Hz)", ...cols.map((c) => c.head)].map(q).join(","),
   ];
   for (let i = 0; i < freq.length; i++) {

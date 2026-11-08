@@ -54,3 +54,14 @@ test("the rated power is the whole bank's: Pe times the drivers, as the thermal 
   assert.equal(ratedPowerOf({ ...DEFAULT_STATE, pe_w: 70, drivers: 2 }), 140);
   assert.equal(ratedPowerOf({ ...DEFAULT_STATE, pe_w: 0 }), 0);
 });
+
+test("my own air conditions: the charts use them, links keep them, and nonsense in a link falls back", async () => {
+  const { airOf } = await import("../src/sim.ts");
+  const { decodeState, encodeState } = await import("../src/state.ts");
+  const cold: AppState = { ...DEFAULT_STATE, settings: { ...DEFAULT_STATE.settings, air: "custom", airConditions: { temp_C: 0, humidity_pct: 0, pressure_hPa: 1013.25 } } };
+  assert.ok(Math.abs(airOf(cold).rho - 1.2922) < 0.001);
+  const back = decodeState(encodeState(cold))!;
+  assert.deepEqual(back.settings.airConditions, cold.settings.airConditions);
+  const bad = decodeState(encodeState({ ...cold, settings: { ...cold.settings, airConditions: { temp_C: 900, humidity_pct: -5, pressure_hPa: "x" as never } } }))!;
+  assert.deepEqual(bad.settings.airConditions, DEFAULT_STATE.settings.airConditions);
+});

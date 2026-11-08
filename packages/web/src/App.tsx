@@ -31,6 +31,7 @@ import {
   type AppState,
   type BandpassDesign,
   type DesignState,
+  type Settings,
 } from "./state.ts";
 import { flagText, loadDriver, loadIndex, type DbIndex } from "./library.ts";
 import { Card, DriveValue, Num, REPO, Select, useNarrow } from "./components.tsx";
@@ -1571,16 +1572,33 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(units) => set("settings", { ...state.settings, units })}
                 />
-                <Select<"standard" | "winisd" | "hornresp"> help="Air density and speed of sound. Standard is 20 °C; pick WinISD's or Hornresp's values to compare results like for like."
+                <Select<Settings["air"]> help="Air density and speed of sound. Standard is 20 °C; pick WinISD's or Hornresp's values to compare results like for like, or your own temperature, humidity and pressure (a cold garage, a hot car, a house high up)."
                   label="Air"
                   value={state.settings.air}
                   options={[
                     { value: "standard", text: "Standard (20 °C, ρ 1.204, c 343.2)" },
                     { value: "winisd", text: "WinISD defaults (ρ 1.201, c 343.7)" },
                     { value: "hornresp", text: "Hornresp defaults (ρ 1.205, c 344)" },
+                    { value: "custom", text: "My conditions (°C, humidity, hPa)" },
                   ]}
                   onChange={(air) => set("settings", { ...state.settings, air })}
                 />
+                {state.settings.air === "custom" &&
+                  (() => {
+                    const ac = state.settings.airConditions;
+                    const setAc = (patch: Partial<typeof ac>) => set("settings", { ...state.settings, airConditions: { ...ac, ...patch } });
+                    const a = airOf(state);
+                    return (
+                      <>
+                        <Num help="Air temperature where the speaker plays. Colder air is denser and carries sound more slowly: the box acts a little bigger and the tuning drops." label="Temperature" unit="°C" value={ac.temp_C} min={-40} onChange={(temp_C) => setAc({ temp_C: Math.min(60, temp_C) })} />
+                        <Num help="Relative humidity. Damp air is slightly lighter, with slightly faster sound: a small effect." label="Humidity" unit="%" value={ac.humidity_pct} min={0} onChange={(humidity_pct) => setAc({ humidity_pct: Math.min(100, humidity_pct) })} />
+                        <Num help="Air pressure: 1013 hPa at sea level, about 12 hPa less for every 100 m up (a weather app shows today's). Thinner air carries less sound." label="Pressure" unit="hPa" value={ac.pressure_hPa} min={500} onChange={(pressure_hPa) => setAc({ pressure_hPa: Math.min(1100, pressure_hPa) })} />
+                        <p className="hint">
+                          ρ {a.rho.toFixed(3)} kg/m³, c {a.c.toFixed(1)} m/s
+                        </p>
+                      </>
+                    );
+                  })()}
                 <Num help="Resistance of the amplifier output plus the speaker cable. It adds to Re: a little less output and a slightly higher Q."
                   label="Amp + cable"
                   unit="Ω"
