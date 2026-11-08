@@ -256,7 +256,7 @@ export const COMPARE_KEYS = ["driverName", "driverBrand", "nominal_ohms", "ts", 
 export type CompareDriver = Pick<AppState, (typeof COMPARE_KEYS)[number]>;
 
 export interface AppState {
-  v: 3;
+  v: 4;
   driverName: string;
   /** Brand part of driverName (for WinISD export); empty if unknown. */
   driverBrand: string;
@@ -362,13 +362,15 @@ export function newDesign(kind: DesignKind, existing: DesignState[]): DesignStat
         name: `Ported${suffix}`,
         on: true,
         vb_l: 60,
+        // A port that fits a 60 L box and tunes it to 30 Hz (what Size all boxes picks for the
+        // example driver). Older links keep the old port (LEGACY_VENTED_PORT, link v3).
         shape: "round",
-        diameter_cm: 10,
+        diameter_cm: 7.5,
         slotWidth_cm: 20,
         slotHeight_cm: 5,
-        length_cm: 30,
+        length_cm: 21.5,
         count: 1,
-        flare_cm: 0,
+        flare_cm: 2,
         targetFb: 30,
       };
     case "line":
@@ -438,7 +440,7 @@ const defaultDesigns = (): DesignState[] => {
 
 /** The fictional example driver and PR from docs/examples. */
 export const DEFAULT_STATE: AppState = {
-  v: 3,
+  v: 4,
   driverName: "Example Audio EX10-4 (fictional)",
   driverBrand: "Example Audio",
   nominal_ohms: 4,
@@ -635,6 +637,13 @@ function stripKeys(v: Raw, d: Raw, mergedOneLevel: Set<string>, keep: string[]):
 /** The default drive before 8 Nov 2026, for links and saves made then (they leave the power out). */
 const LEGACY_POWER_W = 100;
 
+/**
+ * The ported box's port before 8 Nov 2026 (link version 3 and older): 10 cm, 30 cm, straight,
+ * too long to fit its 60 L. Links leave out what equals the defaults, so a v3 link without
+ * these fields meant this port.
+ */
+const LEGACY_VENTED_PORT = { diameter_cm: 10, length_cm: 30, flare_cm: 0 } as const;
+
 /** The state with default values left out (see above). The power is always kept (see LEGACY_POWER_W). */
 export function compactState(s: AppState): Raw {
   const out = stripKeys({ ...s, designs: [] }, { ...DEFAULT_STATE, designs: [] }, MERGED_TOP, ["v", "driverBrand", "power"]);
@@ -719,7 +728,7 @@ function migrate(raw: Raw): Raw {
     const { name: oldPrName, params: oldParams, ...prRest } = (raw.pr ?? {}) as Raw;
     const designs: DesignState[] = [
       { ...s, ...(raw.sealed ?? {}) },
-      { ...v, ...(raw.vented ?? {}) },
+      { ...v, ...LEGACY_VENTED_PORT, ...(raw.vented ?? {}) },
       { ...p, ...prRest, prName: oldPrName ?? p.prName, params: { ...p.params, ...(oldParams ?? {}) } },
     ];
     const idOf: Record<string, string> = { sealed: s.id, vented: v.id, pr: p.id };
@@ -730,6 +739,13 @@ function migrate(raw: Raw): Raw {
       designs,
       volume: { ...(raw.volume ?? {}), link: link && idOf[link] ? idOf[link] : "none" },
     };
+  }
+  if (raw.v === 3) {
+    // v3 measured ported boxes against the old default port (LEGACY_VENTED_PORT).
+    const designs = Array.isArray(raw.designs)
+      ? raw.designs.map((x: Raw) => (x?.kind === "vented" ? { ...LEGACY_VENTED_PORT, ...x } : x))
+      : raw.designs;
+    raw = { ...raw, v: 4, designs };
   }
   return raw;
 }
@@ -881,7 +897,7 @@ export function decodeState(hash: string): AppState | null {
   if (!m) return null;
   try {
     const raw = migrate(JSON.parse(fromBase64Url(m[1]!)) as Raw);
-    if (raw.v !== 3) return null;
+    if (raw.v !== 4) return null;
     const d = DEFAULT_STATE;
     const designs: DesignState[] = [];
     // Projects from the short-lived drivers A–D: driver B becomes the comparison; boxes copied for
@@ -908,7 +924,7 @@ export function decodeState(hash: string): AppState | null {
     }
     const compare = compareFrom(raw.compare ?? (Array.isArray(raw.extraDrivers) ? raw.extraDrivers[0] : null));
     return {
-      v: 3,
+      v: 4,
       ...driverSlotFrom(raw, d),
       // Links and saves leave out values equal to the default, and the default was 100 W until
       // 8 Nov 2026: one without a power was made at 100 W. (compactState now always writes it.)

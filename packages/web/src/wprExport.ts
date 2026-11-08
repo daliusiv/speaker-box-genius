@@ -1,4 +1,4 @@
-import { DEFAULT_END_CORRECTION, ventedFb, writeWpr, type WprExport, type WprPortOut } from "@sbg/engine";
+import { DEFAULT_END_CORRECTION, portLengthForFb, ventedFb, writeWpr, type WprExport, type WprPortOut } from "@sbg/engine";
 import { airOf, builtVbOf, colorOf, dvcFactors, lossesFor, solveDriver, switchDrive } from "./sim.ts";
 import type { AppState, DesignState, PortFields } from "./state.ts";
 import { stuffFactor } from "./stuffing.ts";
@@ -38,8 +38,14 @@ export function wprFor(s: AppState, d: DesignState): { text: string; notes: stri
       diameter_cm = 2 * Math.sqrt((p.slotWidth_cm * p.slotHeight_cm) / Math.PI);
       notes.push(`a ${p.slotWidth_cm} × ${p.slotHeight_cm} cm slot is written as a ${diameter_cm.toFixed(1)} cm round port of the same area`);
     }
-    if (p.flare_cm && p.flare_cm > 0) notes.push("flared ports are written as straight (WinISD's port has no round-overs); the tuning shown is the straight port's");
     const port = { shape: "round" as const, diameter_cm, length_cm: p.length_cm };
+    if (p.flare_cm && p.flare_cm > 0) {
+      // WinISD's port has no round-overs: a straight port of the same tuning (flares add effective length).
+      const fb = ventedFb(v, { ...port, flare_cm: p.flare_cm }, p.count, ec, air);
+      const length_cm = portLengthForFb(v, port, fb, p.count, ec, air);
+      notes.push(`a flared port is written as a ${length_cm.toFixed(1)} cm straight port with the same tuning (WinISD's ports have no round-overs; its port speed will read higher)`);
+      return { count: p.count, diameter_cm, length_cm, endCorrection: ec, fb };
+    }
     return { count: p.count, diameter_cm, length_cm: p.length_cm, endCorrection: ec, fb: ventedFb(v, port, p.count, ec, air) };
   };
   let box: WprExport["box"];
