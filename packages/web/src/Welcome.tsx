@@ -75,7 +75,12 @@ export function useWelcome() {
   };
 }
 
-export function GettingStarted(props: { onDismiss: () => void; onAssistant?: () => void }) {
+/** "over 1,500": the database's driver count rounded down to the hundred, once it has loaded. */
+export function driverCountText(n: number | undefined): string {
+  return n && n >= 100 ? ` (over ${(Math.floor(n / 100) * 100).toLocaleString("en-GB")} in the database)` : "";
+}
+
+export function GettingStarted(props: { onDismiss: () => void; onAssistant?: () => void; drivers?: number }) {
   return (
     <section className="card welcome" aria-labelledby="welcome-title">
       <div className="welcome-head">
@@ -96,7 +101,7 @@ export function GettingStarted(props: { onDismiss: () => void; onAssistant?: () 
       )}
       <ol>
         <li>
-          <b>Load your driver.</b> In <i>Driver</i>, use <i>Browse drivers</i> (over 1,400 in the database) or type the
+          <b>Load your driver.</b> In <i>Driver</i>, use <i>Browse drivers</i>{driverCountText(props.drivers)} or type the
           parameters in; <i>Driver tools</i> pastes from a datasheet or imports a WinISD file. Values you type are never
           overwritten; the rest are calculated.
         </li>
