@@ -106,3 +106,23 @@ test("one 15 vs two 10s guide: maximum SPL and the limit reached, in both boxes 
   assert.equal(limit("subs-two-10s", 0, 50), "thermal");
   assert.equal(limit("subs-two-10s", 1, 25), "port");
 });
+
+test("power compression guide: loss at the same voltage, the hump and the excursion at 120 and 180 °C", () => {
+  const [cold, warm, hot] = ["coil-20", "coil-120", "coil-180"].map((n) => run(n)[0]!.result);
+  const spl = (r: typeof cold, hz: number) => at(r!.freq, r!.spl, hz);
+  near(spl(cold, 25), 107.4, 0.06, "cold at 25 Hz");
+  const loss: Record<number, [number, number]> = { 20: [1.8, 2.7], 25: [2.3, 3.4], 30: [1.4, 2.1], 40: [0.6, 0.9], 50: [0.9, 1.4], 60: [1.4, 2.2], 80: [2.1, 3.2], 100: [2.5, 3.7], 150: [2.8, 4.1] };
+  for (const [hz, [l120, l180]] of Object.entries(loss)) {
+    near(spl(cold, Number(hz)) - spl(warm, Number(hz)), l120, 0.06, `loss at ${hz} Hz, 120 °C`);
+    near(spl(cold, Number(hz)) - spl(hot, Number(hz)), l180, 0.06, `loss at ${hz} Hz, 180 °C`);
+  }
+  const hump = (r: typeof cold) => {
+    const ref = spl(r, 150);
+    let best = -99;
+    for (let i = 0; i < r!.freq.length; i++) if (r!.freq[i]! < 300) best = Math.max(best, r!.spl[i]! - ref);
+    return best;
+  };
+  near(hump(warm), 1.35, 0.06, "hump at 120 °C");
+  near(hump(hot), 2.33, 0.06, "hump at 180 °C");
+  [8.81, 8.09, 7.71].forEach((mm, i) => near(at([cold, warm, hot][i]!.freq, [cold, warm, hot][i]!.excursionMm, 35), mm, 0.02, `excursion at 35 Hz, box ${i}`));
+});

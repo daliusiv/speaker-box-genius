@@ -98,7 +98,7 @@ For the example box, changing QL from 10 to 5 raises the F3 from 50.8 Hz to 55.3
 
 At high power the voice coil heats up, its resistance rises, and the driver plays quieter and with a higher Q. A coil at 100 °C has about 30 % more resistance than at 20 °C. In the example, that's **1–2 dB less** output across the bass. It's called power compression, and it's why a speaker driven hard never quite reaches its simulated SPL.
 
-**How to close it:** in **Settings**, set **Voice coil** to the temperature you expect (around 100–150 °C at sustained high power), and compare.
+**How to close it:** in **Settings**, set **Voice coil** to the temperature you expect (around 100–150 °C at sustained high power), and compare. The [power compression guide](/guides/power-compression/) shows what a hot coil does to a ported box in detail.
 
 ## 8. The voice-coil inductance model
 

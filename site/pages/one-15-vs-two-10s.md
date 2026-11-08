@@ -50,7 +50,7 @@ Two things stand out before any simulation:
 A subwoofer's maximum output at each frequency is set by whichever limit it reaches first [7]:
 
 - **Displacement.** At low frequencies, output for a given cone movement falls by 12 dB per octave, so the deep bass is limited by how much air the cone can move: Sd × Xmax [7]. With 1.16 L against 0.88 L, the 15 can be **20 × log(1.16 / 0.88) ≈ 2.4 dB** louder where both hit Xmax.
-- **Heat.** Higher up, the cone moves less and the coil's power rating takes over. With about the same efficiency per watt (equal motors), 700 W against 500 W is **10 × log(700 / 500) ≈ 1.5 dB** in favour of the pair.
+- **Heat.** Higher up, the cone moves less and the coil's power rating takes over. With about the same efficiency per watt (equal motors), 700 W against 500 W is **10 × log(700 / 500) ≈ 1.5 dB** in favour of the pair. (At sustained high power both coils heat and lose some of that; see the [power compression guide](/guides/power-compression/).)
 
 Where the change-over falls depends on the box and the amplifier. That's what the **Max SPL** chart shows.
 
