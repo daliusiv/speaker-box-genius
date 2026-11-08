@@ -35,6 +35,15 @@ jobs:
       - name: Build web app
         run: pnpm --filter @sbg/web build
 
+      # Driver share cards from the last deploy: only changed ones are drawn again (site/cardCache.ts).
+      # A new key each run saves the updated set; restore-keys picks up the latest one.
+      - name: Restore share cards
+        uses: actions/cache@v4
+        with:
+          path: .cache/cards
+          key: share-cards-${{ github.run_id }}
+          restore-keys: share-cards-
+
       - name: Build guide pages, sitemap and robots.txt
         run: pnpm build:site
 

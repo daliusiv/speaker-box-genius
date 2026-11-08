@@ -24,6 +24,7 @@ import { readReport, validationContent, VALIDATION_STYLE } from "./validation.ts
 import { validationLinks } from "./validationLinks.ts";
 import { CHART_STYLE, chart } from "./chart.ts";
 import { cardSvg, findChrome, Rasterizer } from "./og.ts";
+import { CardCache, cardSalt } from "./cardCache.ts";
 import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, loadDb, prCandidate, relatedDrivers, shareLink, type DriverPage, type PageLd } from "./drivers.ts";
 
 export const SITE = "https://speakerboxgenius.com";
@@ -292,22 +293,40 @@ async function buildDriverPages(write: (path: string, html: string) => void, gui
   const prs = db.passiveRadiators.map(prCandidate);
   const pages = db.drivers.map((e) => designDriver(e, prs)).filter((p): p is DriverPage => p !== null);
   const style = CHART_STYLE + DRIVERS_STYLE;
-  const cards = await startCards();
+  // Share cards: reused from the cache when unchanged (cardCache.ts); Chrome starts only when one has to be drawn.
+  const cardsOn = process.env.SBG_CARDS !== "0";
+  const cache = cardsOn ? new CardCache(process.env.SBG_CARD_CACHE ?? join(HERE, "..", ".cache", "cards"), cardSalt(readFileSync(join(HERE, "og.ts"), "utf8"))) : null;
+  let cards: Rasterizer | null | undefined;
+  let drawn = 0;
+  const raster = async () => (cards === undefined ? (cards = await startCards()) : cards);
   try {
     for (const p of pages) {
       const page = driverContent(p, { all: await shareLink(SITE, p.state), related: relatedDrivers(p, pages) }, chart);
       let imagePath: string | undefined;
-      if (cards) {
+      if (cache) {
         // The page's share card, next to it; pages without one keep the site's card.
-        imagePath = `${driverPath(p.id)}card.jpg`;
-        mkdirSync(join(outDir, driverPath(p.id)), { recursive: true });
-        writeFileSync(join(outDir, imagePath), await cards.image(cardSvg(cardData(p))));
+        const svg = cardSvg(cardData(p));
+        let jpg: Uint8Array | null = cache.get(svg);
+        if (!jpg) {
+          const r = await raster();
+          if (r) {
+            jpg = await r.image(svg);
+            cache.put(svg, jpg);
+            drawn++;
+          }
+        }
+        if (jpg) {
+          imagePath = `${driverPath(p.id)}card.jpg`;
+          mkdirSync(join(outDir, driverPath(p.id)), { recursive: true });
+          writeFileSync(join(outDir, imagePath), jpg);
+        }
       }
       write(driverPath(p.id), layout({ ...page, path: driverPath(p.id), imagePath, content: page.content, guides, style, moreGuides: false }));
     }
   } finally {
     await cards?.close();
   }
+  if (cache) console.log(`Share cards: ${cache.hits} reused, ${drawn} drawn${cache.misses > drawn ? `, ${cache.misses - drawn} left without one (no Chrome)` : ""}; ${cache.prune()} old ones removed from the cache.`);
   const byBrand = [...new Set(pages.map((p) => p.brandSlug))]
     .map((slug) => ({ slug, name: db.brands.get(slug)?.name ?? pages.find((p) => p.brandSlug === slug)!.brand, pages: pages.filter((p) => p.brandSlug === slug) }))
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -322,7 +341,6 @@ async function buildDriverPages(write: (path: string, html: string) => void, gui
  * when there's no Chrome, or when it won't start (the pages then use the site's card).
  */
 async function startCards(): Promise<Rasterizer | null> {
-  if (process.env.SBG_CARDS === "0") return null;
   const chrome = findChrome();
   if (!chrome) {
     console.warn("No Chrome found (set CHROME_PATH): driver pages use the site's share card.");
