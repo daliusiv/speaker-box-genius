@@ -164,3 +164,11 @@ test("every guide image is a figure of its own (an image inside a paragraph show
       });
   }
 });
+
+test("driver pages open the designs at the driver's power rating", () => {
+  const db = loadDb();
+  const e = db.drivers.find((x) => x.id === "dayton-audio/dsa215-8")!;
+  const s = driverState(e.data);
+  assert.equal(s.drive, "watts");
+  assert.equal(s.power, Math.round(e.data.ts.pe_w!));
+});
