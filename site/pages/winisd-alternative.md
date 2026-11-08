@@ -47,6 +47,7 @@ Speaker Box Genius is built around those four problems.
 | Price | Free | Free (non-commercial licence) |
 | Box types | Sealed, vented, bandpass, passive radiator | The same, plus transmission lines and horns |
 | Driver data | Typed in, or files you find | Database of ~1,530 drivers, plus your own |
+| Baffle step | Not modelled: the SPL is for an infinite baffle | Optional, with EQ or passive compensation ([how it works](/guides/baffle-step/)) |
 | Sharing a design | Screenshots or project files | A live link, a forum image and forum posts |
 | Your WinISD files | | Opens `.wdr` drivers and `.wpr` projects, and saves any box as a `.wpr` |
 
