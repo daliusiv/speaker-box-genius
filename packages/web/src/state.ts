@@ -168,8 +168,10 @@ export const ROOM_PRESETS = {
 export interface Settings {
   /** Unit system for box sizes and volumes. */
   units: "metric" | "imperial";
-  /** Air constants: 20 °C standard, or WinISD's values for like-for-like comparison. */
-  air: "standard" | "winisd" | "hornresp";
+  /** Air constants: 20 °C standard, WinISD's or Hornresp's values, or your own conditions. */
+  air: "standard" | "winisd" | "hornresp" | "custom";
+  /** The air for "custom": temperature, humidity and pressure (engine airAt). */
+  airConditions: { temp_C: number; humidity_pct: number; pressure_hPa: number };
   /** Port air velocity shown as peak (default) or RMS. */
   velocity: "peak" | "rms";
   /** Amplifier output + cable resistance (Ω). */
@@ -462,6 +464,7 @@ export const DEFAULT_STATE: AppState = {
   settings: {
     units: "metric",
     air: "standard",
+    airConditions: { temp_C: 20, humidity_pct: 50, pressure_hPa: 1013 },
     velocity: "peak",
     rg: 0,
     thermalLimit: "nominal",
@@ -569,6 +572,16 @@ export interface RoomCurve {
   name: string;
   f: number[];
   v: number[];
+}
+
+/** A link's air conditions, each within what the earth's surface sees (else the default's). */
+function airConditionsFrom(raw: Raw | undefined, d: Settings["airConditions"]): Settings["airConditions"] {
+  const pick = (v: unknown, lo: number, hi: number, dv: number) => (typeof v === "number" && Number.isFinite(v) && v >= lo && v <= hi ? v : dv);
+  return {
+    temp_C: pick(raw?.temp_C, -40, 60, d.temp_C),
+    humidity_pct: pick(raw?.humidity_pct, 0, 100, d.humidity_pct),
+    pressure_hPa: pick(raw?.pressure_hPa, 500, 1100, d.pressure_hPa),
+  };
 }
 
 /** A link's room-gain mode and profile: a "curve" mode needs a valid profile, or it's off. */
@@ -911,7 +924,12 @@ export function decodeState(hash: string): AppState | null {
       highPass: { ...d.highPass, ...raw.highPass },
       passive: passiveFrom(raw.passive) ?? d.passive,
       baffle: { ...d.baffle, ...(raw.baffle ?? {}) },
-      settings: { ...d.settings, ...raw.settings, losses: { ...d.settings.losses, ...raw.settings?.losses } },
+      settings: {
+        ...d.settings,
+        ...raw.settings,
+        losses: { ...d.settings.losses, ...raw.settings?.losses },
+        airConditions: airConditionsFrom(raw.settings?.airConditions, d.settings.airConditions),
+      },
       eq: Array.isArray(raw.eq)
         ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf", "highshelf"].includes(e.type)).slice(0, 12)
         : [],

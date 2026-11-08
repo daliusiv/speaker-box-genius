@@ -1,5 +1,6 @@
 import {
   STANDARD_AIR,
+  airAt,
   WINISD_AIR,
   baffleStepDb,
   lineNetwork,
@@ -171,7 +172,14 @@ export function lossesFor(s: AppState, d: DesignState): Settings["losses"] {
 
 /** Hornresp's air: c = 344 m/s, ρ = 1.205 kg/m³. */
 export const HORNRESP_AIR: Air = { rho: 1.205, c: 344 };
-export const airOf = (s: AppState): Air => (s.settings.air === "winisd" ? WINISD_AIR : s.settings.air === "hornresp" ? HORNRESP_AIR : STANDARD_AIR);
+export const airOf = (s: AppState): Air =>
+  s.settings.air === "winisd"
+    ? WINISD_AIR
+    : s.settings.air === "hornresp"
+      ? HORNRESP_AIR
+      : s.settings.air === "custom"
+        ? airAt(s.settings.airConditions)
+        : STANDARD_AIR;
 
 /** Chuffing guideline, in whichever convention (peak or RMS) the user chose to display: the default of the setting. */
 export const PORT_LIMIT = 17;
