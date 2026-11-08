@@ -5,6 +5,7 @@ export * from "./sealed.ts";
 export * from "./model.ts";
 export * from "./simulate.ts";
 export * from "./filters.ts";
+export * from "./dsp.ts";
 export * from "./passive.ts";
 export * from "./volume.ts";
 export * from "./tsSolver.ts";

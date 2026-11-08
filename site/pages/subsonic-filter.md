@@ -70,6 +70,8 @@ A steep filter adds some **group delay** (in the example, from 25 ms to 43 ms at
 
 Most subwoofer plate amplifiers, car amplifiers and DSPs have a "subsonic" or "high-pass" setting; some have a fixed one. If yours has a fixed filter, enter its frequency and slope in the app to see whether it protects the driver.
 
+On a PC (Equalizer APO), a Raspberry Pi (CamillaDSP) or a miniDSP, the app can write the filter for you: **Export to DSP** at the bottom of the **Signal** tab saves it as biquads at your sample rate, with any EQ.
+
 ## Doing it in the app
 
 1. Set the power you'll use on the Power bar above the charts.

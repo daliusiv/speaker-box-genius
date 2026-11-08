@@ -94,6 +94,7 @@ import { COMPAT, COMPAT_NAMES, compatOf, nearestCompat, withCompat, type CompatP
 import { MeasuredCard, measuredSeries } from "./Measured.tsx";
 import { HelpDock } from "./HelpDock.tsx";
 import { reportUrl, ShareMenu } from "./Share.tsx";
+import { DspExportPanel } from "./DspExport.tsx";
 import { EqPanel } from "./Eq.tsx";
 import { PassivePanel } from "./Passive.tsx";
 import { MeasurePanel, type Measurement } from "./Measure.tsx";
@@ -1421,6 +1422,8 @@ export function App(props: { initial: AppState | null }) {
                 notify(`Added a +${"gain_db" in item ? item.gain_db : 0} dB low shelf at ${"freq" in item ? item.freq : ""} Hz (EQ, all designs).`);
               }}
             />
+
+            <DspExportPanel state={state} notify={notify} />
           </div>
         )}
         {panel === "build" && (
