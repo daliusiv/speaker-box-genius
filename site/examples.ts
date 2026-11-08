@@ -392,6 +392,28 @@ function groupDelayExample(subsonic: boolean) {
 }
 
 /**
+ * The 15″ vs two 10″ guide: a Dayton Audio RSS390HF-4 (one 15″) or two RSS265HF-4 in parallel
+ * (2 Ω), in the same two boxes: 100 L sealed and 150 L ported at 22 Hz with a 15 cm port, behind
+ * an 18 Hz 24 dB/oct high-pass filter, driven by the same amplifier (one channel of a Crown
+ * XLS 1002: 350 W into 4 Ω = 37.4 V, 550 W into 2 Ω = 16.6 A), at 2.83 V.
+ */
+export const SUBS_AMP = { volts: 37.4, amps: 16.6 };
+function subsExample(pair: boolean) {
+  return (): AppState => {
+    let s = withDriver({ ...DEFAULT_STATE, drive: "volts", volts: 2.83, highPass: highPass(4, 18) }, pair ? "dayton-audio/rss265hf-4" : "dayton-audio/rss390hf-4");
+    s = { ...s, drivers: pair ? 2 : 1, wiring: "parallel", settings: { ...s.settings, ampVolts: SUBS_AMP.volts, ampAmps: SUBS_AMP.amps } };
+    const who = pair ? "Two 10″" : "One 15″";
+    return {
+      ...s,
+      designs: [
+        { ...byKind(DEFAULT_STATE, "sealed"), id: "d1", name: `${who}, 100 L sealed`, vb_l: 100 },
+        { ...ventedWith(byKind(DEFAULT_STATE, "vented") as Vented, `${who}, 150 L ported (22 Hz)`, 150, 22, { shape: "round", diameter_cm: 15 }), id: "d2" },
+      ],
+    };
+  };
+}
+
+/**
  * The MLTL guide: the transmission line guide's DSA215-8 MLTL (from Compare types, 24 L, 86 cm,
  * a 7.3 cm port, tuned to 40 Hz, stuffed behind the driver), the same line empty, and the same
  * volume and port as a plain ported box, at 25 W behind a 28 Hz high-pass filter.
@@ -438,6 +460,8 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "tl-example": tlExample,
   "qtc-example": qtcExample,
   "group-delay": groupDelayExample(false),
+  "subs-one-15": subsExample(false),
+  "subs-two-10s": subsExample(true),
   "group-delay-subsonic": groupDelayExample(true),
   "mltl-example": mltlExample,
 };
