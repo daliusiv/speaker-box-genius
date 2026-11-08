@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { parseWpr, writeWpr, type WprExport } from "../src/wdr.ts";
+import { parseWpr, winisdNumber, writeWdr, writeWpr, type WprExport } from "../src/wdr.ts";
 
 const fixture = (f: string) => readFileSync(new URL(`./fixtures/${f}`, import.meta.url), "utf8");
 
@@ -57,4 +57,24 @@ test("the written file has every section WinISD writes, in its order", () => {
   const sections = [...text.matchAll(/^\[(\w+)\]/gm)].map((m) => m[1]);
   assert.deepEqual(sections, ["ProjectInfo", "Driver", "Box", "VentFront", "VentRear", "VentIntra", "PlotSettings", "SignalSource", "Filters", "SimulatorOptions"]);
   assert.match(text, /\r\n/);
+});
+
+test("numbers are written the way WinISD reads them: no NaN, Infinity or scientific notation", () => {
+  assert.equal(winisdNumber(NaN), "0");
+  assert.equal(winisdNumber(Infinity), "0");
+  assert.equal(winisdNumber(undefined), "0");
+  assert.equal(winisdNumber(1e-7), "0.0000001");
+  assert.equal(winisdNumber(-4.5e-8), "-0.000000045");
+  assert.equal(winisdNumber(1.234567890123456e-9), "0.00000000123456789012");
+  assert.equal(winisdNumber(12.5), "12.5");
+  assert.equal(Number(winisdNumber(3e-7)), 3e-7);
+  // A whole project with awkward values: a stiff tweeter-like Cms, an Le of 0.1 µH, a NaN power.
+  const { exported } = fromWinisd("dsa215.wpr");
+  const odd: WprExport = { ...exported, power: NaN, driver: { ...exported.driver, ts: { ...exported.driver.ts, cms_mm_per_n: 0.0004 }, le_mh: 0.0001 } };
+  for (const text of [writeWpr(odd), writeWdr(odd.driver)]) {
+    for (const line of text.split("\r\n")) {
+      const v = line.split("=")[1] ?? "";
+      assert.ok(!/NaN|Infinity|\de[+-]?\d/i.test(v), `WinISD can't read ${line}`);
+    }
+  }
 });
