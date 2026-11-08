@@ -54,7 +54,7 @@ Beyond the plan: transmission lines and horns with Hornresp import/export, a pub
 
 **Contributions:** a licence-grant **CLA** ([`CLA.md`](../CLA.md), decided 4 Nov 2026): contributors keep copyright and grant the maintainer a licence on any terms, so commercial exceptions or a relicence stay possible. Checked by `.github/workflows/cla.yml` (sign by PR comment; signatures on the `cla-signatures` branch). The maintainer's own PRs, bots and database-only PRs are exempt.
 
-**Data-licence compatibility:** only outside data whose licence allows NC-SA reuse is imported. In practice: brands that gave written permission (Dayton Audio, SB Acoustics, B&C, Purifi and others; `docs/data-permissions.md`, where a few keep their own terms instead of CC BY-NC-SA), driver-base (CC BY 4.0) for other brands, and datasheet numbers entered by hand with a link. loudspeakerdatabase.com and GPL or "all rights reserved" sources are not used.
+**Data-licence compatibility:** only outside data whose licence allows NC-SA reuse is imported. In practice: brands that gave written permission (Dayton Audio, SB Acoustics, B&C, Purifi, Markaudio, REDCATT; `docs/data-permissions.md`, where a few keep their own terms instead of CC BY-NC-SA), driver-base (CC BY 4.0) for other brands, and datasheet numbers entered by hand with a link. loudspeakerdatabase.com and GPL or "all rights reserved" sources are not used.
 
 ---
 
@@ -189,7 +189,7 @@ Up to 8 designs recalculate as you type or drag, on the main thread. The slow jo
 
 ## 7. Driver database ✅
 
-**About 1,530 drivers and 55 passive radiators from 18 brands.** Dayton Audio, SB Acoustics, B&C and Purifi come direct with written permission (import workflows run by hand); Beyma, Markaudio and REDCATT have given permission too (`docs/data-permissions.md`); driver-base (CC BY 4.0) covers the other brands. All records are `community` status so far; ⬜ the reviewed `verified` status isn't in use yet. Waiting on more manufacturer permissions. Every driver with enough parameters (about 1,390) also has a page on the site with suggested sealed, ported and PR boxes (§11, Phase 3).
+**About 1,530 drivers and 55 passive radiators from 18 brands.** Dayton Audio, SB Acoustics, B&C, Purifi, Markaudio and REDCATT come direct with written permission (import workflows run by hand); Beyma and 18 Sound have said yes but their own data isn't in yet (`docs/data-permissions.md`); driver-base (CC BY 4.0) covers the other brands. All records are `community` status so far; ⬜ the reviewed `verified` status isn't in use yet. Waiting on more manufacturer permissions. Every driver with enough parameters (about 1,390) also has a page on the site with suggested sealed, ported and PR boxes (§11, Phase 3).
 
 ### 7.1 Layout in the repo (as built)
 ```
