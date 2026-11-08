@@ -66,9 +66,9 @@ export function alignmentHelp(a: ShapedAlignment): string {
     case "C4":
       return `Chebyshev: deeper than the flat preset in a bigger box, with a ${db} ripple above the roll-off. ${size}.`;
     case "SBB4":
-      return `Sub-boom box: port tuned to Fs (a longer port), a box about QB3's size or a little bigger, flat with a gentle roll-off and good transients. ${size}.`;
+      return `Sub-boom box: tuned to Fs, in a box about QB3's size or a little bigger; flat with a gentle roll-off and good transients. ${size}.`;
     case "BB4":
-      return `Boom box: port tuned to Fs; peaks ${db} before rolling off. ${size}.`;
+      return `Boom box: tuned to Fs; peaks ${db} before rolling off. ${size}.`;
     case "SQB3":
       return `Super QB3: QB3 carried past B4; peaks ${db} before rolling off. ${size}.`;
     default:
