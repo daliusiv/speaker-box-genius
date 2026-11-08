@@ -267,7 +267,7 @@ ${o.content}
 </main>
 <footer>
 ${others.length ? `<p>More guides: ${others.map((g) => `<a href="${g.path}">${escapeHtml(g.title)}</a>`).join(" · ")}</p>` : ""}
-<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/validation/">Validation</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
+<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
 </footer>
 </body>
 </html>
@@ -369,6 +369,18 @@ export async function build(outDir: string): Promise<string[]> {
       content: validationContent(report, { commit: buildCommit(), date: new Date(), links: await validationLinks(SITE, { winisd: report.winisd.cases, hornresp: report.hornresp.cases, boxes: report.hornresp.boxes.cases }) }),
       guides,
       style: CHART_STYLE + VALIDATION_STYLE,
+    }),
+  );
+
+  write(
+    "/about/",
+    layout({
+      title: "About",
+      description: "A free speaker box simulator in your browser. What it is, who builds it, the licence in plain words (free for non-commercial use), and credits.",
+      path: "/about/",
+      content: markdown(readFileSync(join(HERE, "about.md"), "utf8")),
+      guides,
+      moreGuides: false,
     }),
   );
 

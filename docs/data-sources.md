@@ -12,7 +12,7 @@ See [`data-permissions.md`](data-permissions.md). Dayton Audio entries are impor
 
 ## driver-base (CC BY 4.0)
 
-Entries for 18 Sound, B&C Speakers, Beyma, Celestion, Eminence, Faital Pro, HOQS, Jensen, Monacor, Peerless and RCF (except entries that were already in this database) come from (SB Acoustics entries also came from here until 4 Nov 2026, when they were replaced by SB Acoustics' own pages):
+Entries for 18 Sound, Beyma, Celestion, Eminence, Faital Pro, HOQS, Jensen, Monacor, Peerless and RCF (except entries that were already in this database) come from (SB Acoustics entries also came from here until 4 Nov 2026, and B&C Speakers entries until 5 Nov 2026, when they were replaced by each manufacturer's own data):
 
 > Data from driver-base (https://github.com/JonathanDCohen/driver-base), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
