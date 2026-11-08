@@ -120,7 +120,7 @@ pnpm dev           # run the web app locally
 pnpm build         # production build (what GitHub Pages serves)
 ```
 
-`pnpm build` also builds the content pages (`site/`): the guides, the validation page and a page per driver. Each driver page gets a share card drawn with headless Chrome, found at `CHROME_PATH` or the usual install paths; set `SBG_CARDS=0` to skip them (CI does).
+`pnpm build` also builds the content pages (`site/`): the guides, the validation page and a page per driver. Each driver page gets a share card drawn with headless Chrome, found at `CHROME_PATH` or the usual install paths; set `SBG_CARDS=0` to skip them (CI does). Cards are kept in `.cache/cards` (or `SBG_CARD_CACHE`) and only redrawn when a driver's card changes.
 
 Merging to `main` builds and deploys to GitHub Pages automatically.
 
