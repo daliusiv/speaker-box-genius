@@ -6,6 +6,9 @@
  * - Hornresp lines and horns: the case's Hornresp record through fromHornresp (the app's Hornresp
  *   import), with Hornresp's drive (2.83 V), air and SPL from radiated power, and the case's
  *   options (two drivers, a hot voice coil).
+ * - Hornresp boxes, filters, EQ and stuffed lines: the case's own test input (case.json) as app
+ *   settings and a design. There's no Hornresp box import in the app, so these are mapped here;
+ *   the driver is the one the comparison uses (Hornresp's front-air convention applied).
  *
  * validationLinks.test.ts checks that every linked project simulates to the case's reference.
  */
@@ -13,8 +16,9 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { parseWpr } from "../packages/engine/src/index.ts";
 import { WINISD_CASES } from "../packages/engine/validation/winisd.ts";
-import { HORNRESP_DRIVER } from "../packages/engine/validation/hornresp.ts";
-import { DEFAULT_STATE, encodeStateShort, newDesign, type AppState, type LineDesign } from "../packages/web/src/state.ts";
+import { HORNRESP_AIR, HORNRESP_DRIVER, hornrespDriver, readBoxCase } from "../packages/engine/validation/hornresp.ts";
+import type { EnclosureInput, PassiveRadiatorInput, PortInput } from "../packages/engine/src/index.ts";
+import { DEFAULT_STATE, encodeStateShort, newDesign, type AppState, type BandpassDesign, type DesignState, type LineDesign, type PortFields, type PrDesign, type PrGroupState, type PrParams, type VentedDesign } from "../packages/web/src/state.ts";
 import { applyWpr } from "../packages/web/src/wprImport.ts";
 import { fromHornresp } from "../packages/web/src/hornresp.ts";
 
@@ -90,16 +94,152 @@ export function hornrespLineState(id: string, title: string): AppState | null {
   };
 }
 
-/** Short links for every case that has one, keyed by the page's anchor ("winisd-ported", "hornresp-05-mltl"). */
-export async function validationLinks(site: string, cases: { winisd: { id: string }[]; hornresp: { id: string; title: string }[] }): Promise<Record<string, string>> {
-  const out: Record<string, string> = {};
+/** No loss: the comparisons leave losses out (Infinity); a link carries a very high Q instead. */
+const NONE = 1e9;
+const q = (v: number | undefined) => (v === undefined || !Number.isFinite(v) ? NONE : v);
+/** The DSA270-PR's Xmax (the cases give its mass, area and suspension; the app also wants its travel). */
+const DSA270_XMAX = 11;
+
+function prParams(pr: PassiveRadiatorInput): PrParams {
+  // Vas from Cms with Hornresp's air, which the link's settings use too.
+  const sd = pr.sd_cm2 / 1e4;
+  const vas_l = pr.vas_l ?? (HORNRESP_AIR.rho * HORNRESP_AIR.c ** 2 * sd * sd * (pr.cms_mm_per_n! / 1000)) * 1000;
+  return { mms_g: pr.mms_g, sd_cm2: pr.sd_cm2, vas_l, qms: pr.qms ?? 10, xmax_mm: pr.xmax_mm ?? DSA270_XMAX };
+}
+
+function portFields(p: PortInput, count: number, base: PortFields): PortFields {
+  return p.shape === "round"
+    ? { ...base, shape: "round", diameter_cm: p.diameter_cm, length_cm: p.length_cm, count, flare_cm: p.flare_cm ?? 0 }
+    : { ...base, shape: "slot", slotWidth_cm: p.width_cm, slotHeight_cm: p.height_cm, length_cm: p.length_cm, count, flare_cm: 0 };
+}
+
+const groups = (prs: { pr: PassiveRadiatorInput; count: number; addedMass_g?: number }[]): PrGroupState[] =>
+  prs.map((g) => ({ prName: "Dayton Audio DSA270-PR", count: g.count, addedMass_g: g.addedMass_g ?? 0, params: prParams(g.pr) }));
+
+/** The case's enclosure as an app design (and the losses it wants in Settings). */
+function boxDesign(input: EnclosureInput, name: string): { design: DesignState; losses: { ql: number; qa: number; qp: number } } | null {
+  const i = input as EnclosureInput & { ql?: number; qa?: number; qp?: number };
+  const losses = { ql: q(i.ql), qa: q(i.qa), qp: q(i.qp) };
+  switch (input.kind) {
+    case "sealed":
+      return { design: { ...newDesign("sealed", []), name, vb_l: input.vb_l }, losses };
+    case "vented": {
+      const v = newDesign("vented", []) as VentedDesign;
+      return { design: { ...v, ...portFields(input.port, input.portCount ?? 1, v), name, vb_l: input.vb_l, targetFb: v.targetFb }, losses };
+    }
+    case "passive-radiator": {
+      const p = newDesign("pr", []) as PrDesign;
+      return { design: { ...p, name, vb_l: input.vb_l, prName: "Dayton Audio DSA270-PR", count: input.prCount ?? 1, addedMass_g: input.addedMass_g ?? 0, params: prParams(input.pr), extra: [] }, losses };
+    }
+    case "bandpass": {
+      const b = newDesign("bandpass", []) as BandpassDesign;
+      const { rear, front } = input;
+      const chamber = (c: { ql?: number; qa?: number; qp?: number }) => ({ ql: q(c.ql), qa: q(c.qa), qp: q(c.qp) });
+      const order: BandpassDesign["order"] = !("port" in rear && rear.port) && !("prs" in rear && rear.prs) ? "4" : input.rearPortTo === "front" ? "6s" : "6p";
+      const design: BandpassDesign = {
+        ...b,
+        name,
+        order,
+        vb_l: rear.vb_l,
+        frontVb_l: front.vb_l,
+        front: "port" in front && front.port ? portFields(front.port, front.portCount ?? 1, b.front) : b.front,
+        rear: "port" in rear && rear.port ? portFields(rear.port, rear.portCount ?? 1, b.rear) : b.rear,
+        frontOpening: "prs" in front && front.prs ? "pr" : "port",
+        rearOpening: "prs" in rear && rear.prs ? "pr" : "port",
+        frontPrs: "prs" in front && front.prs ? groups(front.prs) : b.frontPrs,
+        rearPrs: "prs" in rear && rear.prs ? groups(rear.prs) : b.rearPrs,
+        losses: { front: chamber(front), rear: chamber(rear), qicl: q(input.qicl) },
+      };
+      return { design, losses };
+    }
+    case "line": {
+      const l = newDesign("line", []) as LineDesign;
+      const segs = input.segments;
+      return {
+        design: {
+          ...l,
+          name,
+          closedArea_cm2: segs[0]!.startArea_cm2,
+          sections: segs.map((g) => ({ length_cm: g.length_cm, endArea_cm2: g.endArea_cm2, taper: g.taper, fill_kgm3: g.fill_kgm3 ?? 0 })),
+          driverAt_cm: input.driverAt_cm ?? 0,
+          end: "open",
+          mouth: "front",
+          mouthDistance_cm: 0,
+        } as LineDesign,
+        losses,
+      };
+    }
+    default:
+      return null;
+  }
+}
+
+/** A Hornresp box, filter, EQ or stuffed-line case as an app project, from its test input. */
+export function hornrespBoxState(id: string): AppState | null {
+  const c = readBoxCase(id);
+  const box = boxDesign(c.input, c.title);
+  if (!box) return null;
+  const d = hornrespDriver({ ...HORNRESP_DRIVER }, c.frontAir);
+  return {
+    ...EMPTY,
+    driverName: "Dayton Audio DSA215-8 (Hornresp)",
+    driverBrand: "",
+    ts: { fs: d.fs, qms: d.qms, qes: d.qes, vas_l: d.vas_l, re: d.re, sd_cm2: d.sd_cm2 },
+    le_mh: d.le_mh ?? 0,
+    l2_mh: 0,
+    r2_ohm: 0,
+    semi: c.semi,
+    fdd: c.fdd,
+    xmax_mm: d.xmax_mm ?? EMPTY.xmax_mm,
+    pe_w: d.pe_w ?? 0,
+    drive: "volts",
+    volts: 2.83,
+    drivers: c.drivers ?? 1,
+    wiring: c.wiring ?? "parallel",
+    highPass: c.highPass ? { on: true, type: c.highPass.type, order: c.highPass.order, freq: c.highPass.freq } : { ...EMPTY.highPass, on: false },
+    eq: (c.eq ?? []).map((e, i) => ({ ...e, id: `e${i + 1}`, on: true, target: "all" })),
+    settings: {
+      ...EMPTY.settings,
+      air: "hornresp",
+      lineSpl: c.splFrom === "power" ? "power" : "on-axis",
+      rg: c.rg ?? 0,
+      coilTemp_C: c.coilTemp_C ?? EMPTY.settings.coilTemp_C,
+      portModel: c.portModel === "pipe" ? "pipe" : "lumped",
+      leakage: c.leakage ?? "radiates",
+      coneLoad: c.coneLoad ?? "mass",
+      losses: box.losses,
+    },
+    designs: [box.design],
+  };
+}
+
+/** A case's link, and a note when the app shows something the comparison doesn't. */
+export interface CaseLink {
+  href: string;
+  note?: string;
+}
+
+/**
+ * Two drivers side by side are compared on Hornresp's SPL from radiated power; the app works a
+ * box's SPL out on axis (its "from radiated power" setting is for lines), up to 0.3 dB apart.
+ */
+const ON_AXIS_NOTE = "the app shows this box's SPL on axis; this comparison uses Hornresp's SPL from radiated power (up to 0.3 dB apart; impedance and excursion are the same)";
+
+/** Links for every case that has one, keyed by the page's anchor ("winisd-ported", "hornresp-05-mltl"). */
+export async function validationLinks(site: string, cases: { winisd: { id: string }[]; hornresp: { id: string; title: string }[]; boxes?: { id: string }[] }): Promise<Record<string, CaseLink>> {
+  const out: Record<string, CaseLink> = {};
+  const link = async (s: AppState, note?: string): Promise<CaseLink> => ({ href: `${site}/#${await encodeStateShort(s)}`, ...(note ? { note } : {}) });
   for (const c of cases.winisd) {
     const s = winisdCaseState(c.id);
-    if (s) out[`winisd-${c.id}`] = `${site}/#${await encodeStateShort(s)}`;
+    if (s) out[`winisd-${c.id}`] = await link(s);
   }
   for (const c of cases.hornresp) {
     const s = hornrespLineState(c.id, c.title);
-    if (s) out[`hornresp-${c.id}`] = `${site}/#${await encodeStateShort(s)}`;
+    if (s) out[`hornresp-${c.id}`] = await link(s);
+  }
+  for (const c of cases.boxes ?? []) {
+    const s = hornrespBoxState(c.id);
+    if (s) out[`hornresp-${c.id}`] = await link(s, readBoxCase(c.id).splFrom === "power" && s.designs[0]?.kind !== "line" ? ON_AXIS_NOTE : undefined);
   }
   return out;
 }
