@@ -182,6 +182,9 @@ export function AppMenu(props: {
             <a role="menuitem" className="menu-link" href={`${REPO}/blob/main/LICENSE`} target="_blank" rel="noopener" onClick={() => close(false)}>
               Licence
             </a>
+            <a role="menuitem" className="menu-link" href="/privacy/">
+              Privacy
+            </a>
             <a role="menuitem" className="menu-link" href={`${REPO}/blob/main/docs/data-sources.md`} target="_blank" rel="noopener" onClick={() => close(false)}>
               Driver data credits
             </a>

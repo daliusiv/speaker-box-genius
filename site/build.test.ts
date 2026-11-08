@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, readdirSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { build, markdown, parsePage, resolveExamples } from "./build.ts";
+import { build, GOATCOUNTER, markdown, parsePage, resolveExamples } from "./build.ts";
 import { cardData, designDriver, driverContent, driverState, loadDb, PAGE_MAX_L, prCandidate } from "./drivers.ts";
 import { chart } from "./chart.ts";
 import { cardSvg } from "./og.ts";
@@ -190,4 +190,20 @@ test("driver pages open the designs at the driver's power rating", () => {
   const s = driverState(e.data);
   assert.equal(s.drive, "watts");
   assert.equal(s.power, Math.round(e.data.ts.pe_w!));
+});
+
+test("every page counts visits the same way, and the privacy page says what that sees", async () => {
+  const { out, paths } = await built();
+  assert.ok(paths.includes("/privacy/"));
+  for (const p of ["/guides/", "/winisd-alternative/", "/validation/", "/privacy/", "/drivers/", paths.find((x) => /^\/drivers\/[^/]+\/[^/]+\/$/.test(x))!]) {
+    const html = readFileSync(join(out, p, "index.html"), "utf8");
+    assert.equal(html.split(GOATCOUNTER).length - 1, 1, `${p}: one counter tag`);
+    assert.match(html, /<a href="\/privacy\/">Privacy<\/a>/, `${p}: links the privacy page`);
+  }
+  // The app counts with the same tag (and never sends the design: it's after the #).
+  const app = readFileSync(new URL("../packages/web/index.html", import.meta.url), "utf8");
+  assert.ok(app.includes(GOATCOUNTER.replace("></script>", "")), "the app's index.html has the same counter");
+  const privacy = readFileSync(join(out, "privacy/index.html"), "utf8");
+  assert.match(privacy, /GoatCounter/);
+  assert.match(privacy, /no cookies/i);
 });

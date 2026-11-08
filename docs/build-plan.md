@@ -13,7 +13,7 @@ Drafted 2 Nov 2026 · Rev 2: non-commercial source-available licence, GitHub Pag
 
 ## 0. Where it stands (8 Nov 2026)
 
-Phases 0–2 are done, most of Phase 3 is done, and much of the "later" list has shipped too (bandpass, transmission lines and horns, port compression, cut list). The app is live but **not publicly launched**. Next: a hands-on check against WinISD itself (including opening an exported `.wpr`), privacy-friendly analytics, then live links posted in real build threads on r/diyaudio and diyAudio (no closed beta; see §14).
+Phases 0–2 are done, most of Phase 3 is done, and much of the "later" list has shipped too (bandpass, transmission lines and horns, port compression, cut list). The app is live but **not publicly launched**. Next: a hands-on check against WinISD itself (including opening an exported `.wpr`), then live links posted in real build threads on r/diyaudio and diyAudio (no closed beta; see §14).
 
 | Phase | Status | Still open |
 |---|---|---|
@@ -278,7 +278,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - ✅ Repo set up: licences, CONTRIBUTING, CLA check, issue templates, CI, Pages deploy.
 - ✅ Database: ~1,530 drivers and 55 PRs (planned ~50 and ~10).
 - ✅ PWA offline support, installable.
-- ⏸️ **Soft launch:** held back on purpose. Next (8 Nov 2026): no closed beta; after the WinISD check and analytics, answer real build threads with live links on r/diyaudio, diyAudio, AVS, Parts Express Tech Talk, r/CarAV, r/BudgetAudiophile, Show HN.
+- ⏸️ **Soft launch:** held back on purpose. Next (8 Nov 2026): no closed beta; after the WinISD check (analytics are in), answer real build threads with live links on r/diyaudio, diyAudio, AVS, Parts Express Tech Talk, r/CarAV, r/BudgetAudiophile, Show HN.
 
 ### Phase 2: Power-user features ✅
 - ✅ Multiple drivers (series/parallel), isobaric, DVC, multiple ports, slot ports. 🟡 Non-identical PRs only as groups in bandpass chambers.
@@ -296,7 +296,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - ✅ **Driver pages:** one page per driver (about 1,390) with suggested sealed, ported and PR boxes at the driver's power rating, charts, parameters, a live link and its own share card (`site/drivers.ts`, `site/og.ts`). No suggested box is over 300 L: sealed boxes are capped there, bigger ported and PR boxes are left off with the reason on the page.
 - ⬜ Design gallery with pre-rendered pages and OG images (deferred until after launch; the driver pages share its page and share-card code).
 - ⬜ Embeddable iframe widget for blogs and build logs.
-- ⬜ About page (licence in plain words, privacy, credits) and privacy-friendly analytics before launch.
+- ✅ Privacy page (`/privacy/`) and privacy-friendly visit counts (GoatCounter: no cookies, never the design after the `#`; ad blockers hide some visits). ⬜ About page (licence in plain words, credits).
 
 ### Later / stretch
 - ✅ 4th and 6th order bandpass.
@@ -363,7 +363,7 @@ The engine has no UI dependency, so other non-commercial tools can reuse it.
 3. ~~**Framework preference**~~ **Decided:** React.
 4. ~~**Reference drivers for golden tests**~~ **Decided:** Dayton Audio DSA215-8 (with the DSA270-PR) across 15 WinISD setups and the first 7 Hornresp records (later Hornresp records add a 12″ subwoofer and a 4″ full-range driver).
 5. ~~**GitHub username/org**~~ **Decided:** `daliusiv`.
-6. ~~**When to run the private beta**~~ **Decided 8 Nov 2026:** no closed beta. After the WinISD check and analytics, answer real build threads with live links.
+6. ~~**When to run the private beta**~~ **Decided 8 Nov 2026:** no closed beta. After the WinISD check (analytics are in), answer real build threads with live links.
 7. **New:** PR preview deploys (declined for now; options: a gh-pages preview action, or Cloudflare/Netlify).
 
 ---

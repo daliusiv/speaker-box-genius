@@ -2344,6 +2344,7 @@ export function App(props: { initial: AppState | null }) {
             <li><a href="/drivers/">Drivers</a></li>
             <li><a href="/guides/">Guides</a></li>
             <li><a href="/validation/">Validation</a></li>
+            <li><a href="/privacy/">Privacy</a></li>
             <li><a href={`${REPO}/blob/main/LICENSE`}>Licence</a></li>
             <li><a href={`${REPO}/blob/main/docs/data-sources.md`}>Driver data: credits, corrections</a></li>
             <li><a href={REPO}>GitHub</a></li>
