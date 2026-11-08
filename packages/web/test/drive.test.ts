@@ -33,3 +33,17 @@ test("the amplifier load follows the wiring: 2 in parallel halve it, 2 in series
   assert.ok(Math.abs(load({ dvc: { on: true, entered: "one", wired: "series" } }).nominal - 8) < 1e-9);
   assert.equal(amplifierLoad({ ...DEFAULT_STATE, ts: { fs: 30 } } as AppState, solveDriver({ ...DEFAULT_STATE, ts: { fs: 30 } } as AppState)), null);
 });
+
+test("projects start at 1 W (as WinISD and Hornresp); links from before, with no power, open at the 100 W they were made with", async () => {
+  const { compactState, decodeState, encodeState } = await import("../src/state.ts");
+  assert.equal(DEFAULT_STATE.power, 1);
+  // A new link always carries its power, even the default.
+  assert.equal(compactState(DEFAULT_STATE).power, 1);
+  const back = decodeState(encodeState(DEFAULT_STATE))!;
+  assert.equal(back.power, 1);
+  // An old link: the power left out because it was the 100 W default then.
+  const old = compactState(DEFAULT_STATE) as Record<string, unknown>;
+  delete old.power;
+  const fromOld = decodeState(encodeState(old as never));
+  assert.equal(fromOld?.power, 100);
+});

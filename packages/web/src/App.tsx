@@ -936,19 +936,10 @@ export function App(props: { initial: AppState | null }) {
                             setStep((s) => withDriver(s, d));
                             return;
                           }
-                          // Driven at its power rating, so the first charts show what it can really do (the
-                          // example's 100 W is over many drivers' rating); set first, as ports are sized for it.
-                          let loaded = withDriver(latest.current, d);
-                          const pe = d.pe_w !== undefined && d.pe_w > 0 ? Math.min(10000, Math.round(d.pe_w)) : null;
-                          if (pe !== null) {
-                            loaded = { ...loaded, power: pe };
-                            if (loaded.drive === "volts") loaded = { ...loaded, ...switchDrive({ ...loaded, drive: "watts" }, "volts") };
-                          }
-                          const r = sizeForNewDriver(loaded, cands);
+                          const r = sizeForNewDriver(withDriver(latest.current, d), cands);
                           setStep(r.state);
                           setSizeReport({ changed: r.changed, skipped: r.skipped });
-                          const at = pe !== null ? ` at its ${pe} W rating` : "";
-                          notify(r.changed.length > 0 ? `Loaded “${d.name}” and sized the boxes for it${at}.` : `Loaded “${d.name}”${at}.`);
+                          notify(r.changed.length > 0 ? `Loaded “${d.name}” and sized the boxes for it.` : `Loaded “${d.name}”.`);
                           // Straight to what the driver does (the charts, on phones).
                           setPhoneView("charts");
                           window.scrollTo({ top: 0 });
@@ -1832,6 +1823,29 @@ export function App(props: { initial: AppState | null }) {
             <button aria-pressed={state.drive === "volts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "volts") }))}>
               V
             </button>
+          </div>
+          {/* One tap between WinISD's and Hornresp's 1 W (2.83 V into 8 Ω) and what the driver is rated for. */}
+          <div className="drive-quick" role="group" aria-label="Quick drive">
+            <button
+              type="button"
+              className="chip"
+              aria-pressed={state.drive === "watts" && state.power === 1}
+              title="1 W, as WinISD and Hornresp start: the response reads as the driver's sensitivity"
+              onClick={() => setStep((s) => ({ ...s, drive: "watts", power: 1 }))}
+            >
+              1 W
+            </button>
+            {state.pe_w > 0 && (
+              <button
+                type="button"
+                className="chip"
+                aria-pressed={state.drive === "watts" && state.power === Math.round(state.pe_w)}
+                title="The driver's power rating (Pe): see where it runs out of excursion or the port chuffs"
+                onClick={() => setStep((s) => ({ ...s, drive: "watts", power: Math.min(10000, Math.round(s.pe_w)) }))}
+              >
+                Rated {Math.round(state.pe_w)} W
+              </button>
+            )}
           </div>
         </div>
         {welcome.linkNote && <LinkNote onDismiss={welcome.dismissLinkNote} onTips={welcome.showTips} />}
