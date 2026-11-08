@@ -386,7 +386,8 @@ export function runHornresp(id: string): HornrespRun {
  * and hornresp-vent.txt for the port or passive radiator. The records are in docs/hornresp-validation/records.
  */
 export const HORNRESP_BOX_DIR = join(import.meta.dirname, "..", "test", "fixtures", "hornresp-boxes");
-export const hornrespBoxIds = () => (existsSync(HORNRESP_BOX_DIR) ? readdirSync(HORNRESP_BOX_DIR).sort() : []);
+/** In number order (B2 before B10). */
+export const hornrespBoxIds = () => (existsSync(HORNRESP_BOX_DIR) ? readdirSync(HORNRESP_BOX_DIR).sort((a, b) => a.localeCompare(b, "en", { numeric: true })) : []);
 /** Boxes are lumped models (no standing waves inside), so they're compared up to here. */
 export const HORNRESP_BOX_F_MAX = 300;
 
@@ -522,7 +523,7 @@ export interface HornrespBoxRun {
   /** Hornresp's impulse response, where it was exported. */
   impulse?: ImpulseRun;
   stats: {
-    splMean?: number; splP95?: number; zeMean: number; zeP95: number; zePhaseMean: number; xdMean: number; xdP95: number;
+    splMean?: number; splP95?: number; zeMean: number; zeP95: number; zeWorst: number; zePhaseMean: number; xdMean: number; xdP95: number;
     coneMean?: number; coneP95?: number; ventMean?: number; ventP95?: number;
     /** The coil's effect on SPL (difference from splDeltaFrom's), up to zeFMax. */
     coilMean?: number; coilP95?: number;
@@ -565,6 +566,7 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const stats: HornrespBoxRun["stats"] = {
     zeMean: mean(relErr(ze)),
     zeP95: percentile(relErr(ze), 0.95),
+    zeWorst: Math.max(...relErr(ze)),
     zePhaseMean: mean(zePh.map((p) => Math.abs(((p.ours - p.ref + 540) % 360) - 180))),
     xdMean: mean(relErr(xd)),
     xdP95: percentile(relErr(xd), 0.95),

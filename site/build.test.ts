@@ -103,6 +103,17 @@ test("the validation page shows every case from results.json, with the top bar",
   assert.match(readFileSync(join(out, "guides/index.html"), "utf8"), /<a href="\/guides\/" aria-current="page">Guides<\/a>/);
 });
 
+test("validation cases: in number order, each with its own key, and the same impedance columns in both Hornresp tables", async () => {
+  const { out } = await built();
+  const html = readFileSync(join(out, "validation/index.html"), "utf8");
+  const ids = [...html.matchAll(/<section class="case" id="hornresp-(b\d+)/g)].map((m) => Number(m[1]!.slice(1)));
+  assert.deepEqual(ids, [...ids].sort((a, b) => a - b), "B2 comes before B10");
+  const cases = html.split('<section class="case"').slice(1);
+  for (const c of cases) assert.match(c, /<p class="key">/, `a case without its key: ${c.slice(0, 60)}`);
+  const heads = [...html.matchAll(/<th>Impedance, mean \/ (\w+)<\/th>/g)].map((m) => m[1]);
+  assert.deepEqual(heads, ["worst", "worst"]);
+});
+
 test("driver pages: suggested boxes, charts, share link and brand indexes", async () => {
   const { out, paths } = await built();
   const driverPages = paths.filter((p) => /^\/drivers\/[^/]+\/[^/]+\/$/.test(p));
