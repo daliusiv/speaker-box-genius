@@ -78,3 +78,31 @@ test("group delay guide: sizes, F3, response peak and group delay of the three b
   const filtered = run("group-delay-subsonic").map((d) => at(d.result.freq, d.result.groupDelayMs, 40));
   [10.7, 20.5, 12.3].forEach((ms, i) => near(filtered[i]!, ms, 0.2, `subsonic filter: box ${i + 1} at 40 Hz`));
 });
+
+test("one 15 vs two 10s guide: maximum SPL and the limit reached, in both boxes on the same amplifier", () => {
+  const F = [20, 25, 30, 35, 40, 45, 50, 60, 80];
+  const want: Record<string, number[][]> = {
+    "subs-one-15": [
+      [101.8, 105.7, 108.9, 110.9, 112.1, 112.9, 113.4, 113.9, 114.2],
+      [106.5, 112.3, 114.6, 115.1, 115.2, 115.1, 115.1, 114.9, 114.6],
+    ],
+    "subs-two-10s": [
+      [99.3, 103.2, 106.4, 109.1, 111.4, 113.4, 114.1, 115.0, 115.8],
+      [106.5, 112.3, 113.0, 113.5, 114.6, 115.8, 115.9, 116.1, 116.3],
+    ],
+  };
+  for (const [name, rows] of Object.entries(want)) {
+    run(name).forEach((d, i) => {
+      F.forEach((hz, k) => near(at(d.result.freq, d.result.maxSpl, hz), rows[i]![k]!, 0.06, `${d.design.name} max SPL at ${hz} Hz`));
+    });
+  }
+  const limit = (name: string, box: number, hz: number) => {
+    const r = run(name)[box]!.result;
+    return r.limitedBy[r.freq.findIndex((f) => f >= hz)];
+  };
+  assert.equal(limit("subs-one-15", 0, 30), "xmax");
+  assert.equal(limit("subs-one-15", 0, 50), "amp");
+  assert.equal(limit("subs-two-10s", 0, 40), "xmax");
+  assert.equal(limit("subs-two-10s", 0, 50), "thermal");
+  assert.equal(limit("subs-two-10s", 1, 25), "port");
+});
