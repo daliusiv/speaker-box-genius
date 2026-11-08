@@ -936,16 +936,16 @@ export function App(props: { initial: AppState | null }) {
                             setStep((s) => withDriver(s, d));
                             return;
                           }
-                          const r = sizeForNewDriver(withDriver(latest.current, d), cands);
-                          // Driven at its power rating, so the first charts show what it can really do
-                          // (the example's 100 W is over many drivers' rating).
-                          let next = r.state;
+                          // Driven at its power rating, so the first charts show what it can really do (the
+                          // example's 100 W is over many drivers' rating); set first, as ports are sized for it.
+                          let loaded = withDriver(latest.current, d);
                           const pe = d.pe_w !== undefined && d.pe_w > 0 ? Math.min(10000, Math.round(d.pe_w)) : null;
                           if (pe !== null) {
-                            next = { ...next, power: pe };
-                            if (next.drive === "volts") next = { ...next, ...switchDrive({ ...next, drive: "watts" }, "volts") };
+                            loaded = { ...loaded, power: pe };
+                            if (loaded.drive === "volts") loaded = { ...loaded, ...switchDrive({ ...loaded, drive: "watts" }, "volts") };
                           }
-                          setStep(next);
+                          const r = sizeForNewDriver(loaded, cands);
+                          setStep(r.state);
                           setSizeReport({ changed: r.changed, skipped: r.skipped });
                           const at = pe !== null ? ` at its ${pe} W rating` : "";
                           notify(r.changed.length > 0 ? `Loaded “${d.name}” and sized the boxes for it${at}.` : `Loaded “${d.name}”${at}.`);
