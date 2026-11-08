@@ -173,7 +173,7 @@ export function equalizerApo(bq: Biquad[], fs: number, title: string): string {
 export function camillaDsp(bq: Biquad[], fs: number, title: string, channels = [0, 1]): string {
   const boost = maxBoostDb(bq, fs);
   const names: string[] = [];
-  const lines = [`# ${title}`, `# Speaker Box Genius filters as biquads for samplerate ${fs} (CamillaDSP 3). Add to your config.`, "filters:"];
+  const lines = [`# ${title}`, `# Speaker Box Genius filters as biquads for samplerate ${fs} (CamillaDSP 3). Add to your config.`, "# CamillaDSP 2: replace \"channels: [...]\" with one Filter step per channel, each with \"channel: N\".", "filters:"];
   if (boost > 0) {
     names.push("sbg_preamp");
     lines.push("  sbg_preamp:", "    type: Gain", "    parameters:", `      gain: ${(-Math.ceil(boost * 10) / 10).toFixed(1)}`);

@@ -5,12 +5,12 @@ export type DspFormat = "apo" | "camilla" | "minidsp" | "csv";
 
 export const DSP_FORMATS: { value: DspFormat; text: string; ext: string; help: string }[] = [
   { value: "apo", text: "Equalizer APO (Windows)", ext: "txt", help: "Save it in Equalizer APO's config folder and Include it from config.txt (or paste the lines in)." },
-  { value: "camilla", text: "CamillaDSP", ext: "yml", help: "Merge the filters and the pipeline step into your CamillaDSP config." },
-  { value: "minidsp", text: "miniDSP (advanced biquads)", ext: "txt", help: "Paste into a PEQ block's Advanced mode, or Import it (miniDSP's plug-ins take a1 and a2 with the signs inverted, as written)." },
+  { value: "camilla", text: "CamillaDSP 3", ext: "yml", help: "Merge the filters and the pipeline step into your CamillaDSP config. Written for CamillaDSP 3: for version 2, change the step's \"channels: [0, 1]\" to one step per channel with \"channel: 0\" and \"channel: 1\"." },
+  { value: "minidsp", text: "miniDSP (advanced biquads)", ext: "txt", help: "Paste into a PEQ block's Advanced mode, or Import it. a1 and a2 are written with their signs inverted, as miniDSP's plug-ins expect. If your plug-in wants every biquad in the block filled, add pass-through ones (b0=1, the rest 0). Use your processor's sample rate (48, 96 or 192 kHz)." },
   { value: "csv", text: "Coefficients (CSV)", ext: "csv", help: "b0, b1, b2, a1, a2 per section (a0 = 1), for any other DSP." },
 ];
 
-export const DSP_RATES = [44100, 48000, 96000];
+export const DSP_RATES = [44100, 48000, 96000, 192000];
 
 /** The filters the app applies to one design: the high-pass (when on) and the EQ that's on and aimed at it or at all designs. */
 export function dspFiltersFor(s: AppState, designId: string): { hp: HighPass | null; eq: EqStage[] } {

@@ -19,7 +19,7 @@ const HPS: HighPass[] = [
   ...[2, 4].map((order): HighPass => ({ type: "linkwitz-riley", order, freq: 18 })),
 ];
 
-for (const fs of [44100, 48000, 96000]) {
+for (const fs of [44100, 48000, 96000, 192000]) {
   test(`digital EQ matches the analog EQ below fs/10 (${fs} Hz)`, () => {
     for (const st of STAGES) {
       const bq = dspBiquads(null, [st], fs);

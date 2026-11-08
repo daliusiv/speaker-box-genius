@@ -181,7 +181,7 @@ Up to 8 designs recalculate as you type or drag, on the main thread. The slow jo
 | OpenISD `.owpr` projects, `.owdr` drivers | Import | ✅ Driver, air, drive, amp resistance, losses, high-pass and EQ, every box type |
 | Hornresp records | Import + Export | ✅ Lines and horns |
 | CSV of every curve | Export | ✅ |
-| High-pass and EQ as DSP biquads | Export | ✅ Equalizer APO, CamillaDSP, miniDSP advanced biquads, or a coefficient CSV, per design at 44.1, 48 or 96 kHz (bilinear transform prewarped at each filter's frequency; within 0.05 dB of the simulated filters below a tenth of the sample rate) |
+| High-pass and EQ as DSP biquads | Export | ✅ Equalizer APO, CamillaDSP 3, miniDSP advanced biquads, or a coefficient CSV, per design at 44.1, 48, 96 or 192 kHz (bilinear transform prewarped at each filter's frequency; within 0.05 dB of the simulated filters below a tenth of the sample rate). File layouts checked against each program's documentation (8 Nov 2026); ⬜ not yet loaded into the real programs |
 | Forum image (PNG) | Export | ✅ Summary, charts and a QR code to the live design |
 | JSON project file | Import + Export | ✅ |
 | Build sheet | Print | ✅ Panels, cutouts, cut list on stock sheets |
