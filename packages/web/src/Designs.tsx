@@ -26,7 +26,7 @@ export interface PrPhysical {
 import { KIND_COLORS, KIND_LABEL, PORT_LIMIT, portOf, portRoom_cm } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { bandpassLossesFrom, NO_LOSS, qText } from "./state.ts";
-import { alignmentHelp, moreVentedFor, prTuning, withPreset, ventedAlignmentFor } from "./presets.ts";
+import { alignmentHelp, moreVentedFor, prTuning, withPreset, ventedAlignmentFor, ventedPresetPatch, type PortPicker } from "./presets.ts";
 import { PrFinder, type FinderContext } from "./PrFinder.tsx";
 import { StuffingFields, type StuffingFitContext } from "./StuffingFields.tsx";
 import { stuffFactor, stuffable, stuffingEffect, type StuffableKind } from "./stuffing.ts";
@@ -410,7 +410,7 @@ function CheckChips({ notes }: { notes: CheckNote[] }) {
   );
 }
 
-function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
+function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext; pickPort?: PortPicker }) {
   const v = p.design;
   const [msg, setMsg] = useState("");
   const set = (patch: Partial<VentedDesign>) => p.onChange({ ...v, ...patch });
@@ -426,20 +426,15 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
     set({ length_cm: Math.round(len * 10) / 10 });
   };
 
-  /** A vented alignment's box and tuning, with this port's length for it. */
+  /**
+   * A vented alignment's box and tuning. This port keeps its size and gets the length for it
+   * when that fits the box straight (the "Port too long to fit" rule); otherwise the port is
+   * changed to one that fits, as Size all boxes picks it.
+   */
   const applyAlignment = (a: { name: string; vb_l: number; fb: number }) => {
-    const len = portLengthForFb(a.vb_l, portOf(v, 0), a.fb, v.count, undefined, p.air);
-    if (!(len > 0)) {
-      setMsg(`${a.name}: ${a.vb_l.toFixed(1)} L tuned to ${a.fb.toFixed(1)} Hz, but this port is too small for that tuning. Increase the port size and try again.`);
-      return;
-    }
-    setMsg("");
-    set({
-      vb_l: toBuilt(a.vb_l, p.fill),
-      targetFb: Math.round(a.fb * 10) / 10,
-      length_cm: Math.round(len * 10) / 10,
-      ...withPreset(v.name, a.name),
-    });
+    const out = ventedPresetPatch(v, a, p.fill, p.air, p.portCtx.internalMax_cm, p.pickPort);
+    setMsg(out.msg);
+    if (out.patch) set(out.patch);
   };
 
   return (
@@ -1089,6 +1084,8 @@ export function DesignCard(props: {
   align: AlignmentDriver | null;
   drivers: number;
   portCtx: PortContext;
+  /** Ported boxes: a port that fits when a preset's box is too small for the current one. */
+  pickPort?: PortPicker;
   /** Box losses from Settings (a bandpass can override them per chamber). */
   losses: ChamberLosses;
   /** Open the volume calculator for this design (linking it). */
@@ -1144,7 +1141,7 @@ export function DesignCard(props: {
       onDelete={props.onDelete}
     >
       {d.kind === "sealed" && <SealedBody {...common} design={d} onChange={props.onChange} />}
-      {d.kind === "vented" && <VentedBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} />}
+      {d.kind === "vented" && <VentedBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} pickPort={props.pickPort} />}
       {d.kind === "bandpass" && (
         <BandpassBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} db={props.db} losses={props.losses} onSize={props.onSizeBandpass} />
       )}

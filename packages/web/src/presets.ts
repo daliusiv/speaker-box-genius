@@ -4,6 +4,7 @@ import {
   prFb,
   prGroupsAddedMassForFb,
   prGroupsFb,
+  portLengthForFb,
   qb3Alignment,
   sealedVolumeForAlignment,
   simulate,
@@ -13,8 +14,8 @@ import {
   moreVentedAlignments,
   type ShapedAlignment,
 } from "@sbg/engine";
-import { airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
-import type { AppState, BandpassDesign, DesignState, PrDesign } from "./state.ts";
+import { airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, portOf, portRoom_cm, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
+import type { AppState, BandpassDesign, DesignState, PrDesign, VentedDesign } from "./state.ts";
 import { sizeBandpass } from "./bandpassSize.ts";
 import { choosePortCount, portCandidates, portFieldsOf, portSpeedFor, type AssistantPort } from "./ports.ts";
 import { stuffFactor } from "./stuffing.ts";
@@ -272,4 +273,31 @@ export function bestVentedPort(s: AppState, d: DesignState & { kind: "vented" },
     text: quiet ? portText(p) : `${portText(p)} (still over the chuffing line at ${rated ? `its ${ratedPowerOf(s)} W rating` : "this power"})`,
     quiet,
   };
+}
+
+/** A port that fits a vented box of vb_l (acting) tuned to fb, as Size all boxes picks it (bestVentedPort). */
+export type PortPicker = (d: VentedDesign, vb_l: number, fb: number) => { fields: Partial<VentedDesign>; text: string } | null;
+
+/**
+ * A vented alignment applied to a ported design: the box and tuning, and the port. The current
+ * port keeps its size and gets the length for the new tuning when that fits the box straight (the
+ * "Port too long to fit" rule, portRoom_cm); otherwise it's swapped for one that fits (`pick`, as
+ * Size all boxes does). `vb_l` is the volume the box acts as; `fill` the stuffing factor.
+ */
+export function ventedPresetPatch(
+  v: VentedDesign,
+  a: { name: string; vb_l: number; fb: number },
+  fill: number,
+  air: Air,
+  internalMax_cm: number | null,
+  pick?: PortPicker,
+): { patch: Partial<VentedDesign> | null; msg: string } {
+  const box = { vb_l: Math.round((a.vb_l / fill) * 10) / 10, targetFb: Math.round(a.fb * 10) / 10, ...withPreset(v.name, a.name) };
+  const len = portLengthForFb(a.vb_l, portOf(v, 0), a.fb, v.count, undefined, air);
+  const clearance = v.shape === "round" ? v.diameter_cm : v.slotHeight_cm;
+  if (len > 0 && len <= portRoom_cm(a.vb_l, clearance, internalMax_cm)) return { patch: { ...box, length_cm: Math.round(len * 10) / 10 }, msg: "" };
+  const why = len > 0 ? "would be too long to fit" : "is too small for that tuning";
+  const best = pick?.(v, a.vb_l, a.fb);
+  if (!best) return { patch: null, msg: `${a.name}: ${a.vb_l.toFixed(1)} L tuned to ${a.fb.toFixed(1)} Hz, but this port ${why} and no simple port fits. Try a bent port or a different box.` };
+  return { patch: { ...box, ...best.fields }, msg: `${a.name}: this port ${why}, so it's now ${best.text}.` };
 }
