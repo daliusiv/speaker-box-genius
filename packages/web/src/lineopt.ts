@@ -84,6 +84,13 @@ export const PRESETS: { id: PresetId; label: string; title: string }[] = [
   { id: "flh", label: "Front horn", title: "Front-loaded exponential horn: throat half the cone area, mouth sized for the cutoff (half space), sealed rear chamber, throat chamber for a top end about 4 × the cutoff" },
 ];
 
+/**
+ * The presets offered as buttons and in Compare types. The tapped horn's starting point gives
+ * poor, very large designs for most drivers, so it stays out until it's reworked (build plan,
+ * "Later"); tapped horns can still be set up by hand or imported from Hornresp.
+ */
+export const SHOWN_PRESETS = PRESETS.filter((x) => x.id !== "th");
+
 /** Split [0, L] into stuffed and empty sections along a taper from s1 to s2. */
 function twoPart(L: number, s1: number, s2: number, stuffedTo: number, fill: number): { closedArea_cm2: number; sections: LineSection[] } {
   const at = (t: number) => r1(s1 + (s2 - s1) * t);

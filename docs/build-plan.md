@@ -301,7 +301,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - ✅ Transmission lines, quarter-wave, MLTL, tapped and front-loaded horns (beta), validated against Hornresp.
 - ✅ Port compression, hot voice coil, ports as pipes, baffle step, room/cabin gain.
 - ✅ Cut list on stock sheets.
-- 🟡 Tapped-horn preset gives poor designs (≈500 L); improve it, then write its guide.
+- 🟡 Tapped-horn preset gives poor designs (≈500 L): hidden from the preset buttons and Compare types until it is reworked; then write its guide.
 - ⬜ Nonlinear Bl(x)/Kms(x) large-signal sim.
 - ⬜ 3D box preview, flat-pack export.
 - ⬜ i18n.
