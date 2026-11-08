@@ -460,8 +460,8 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
       .filter((e) => e.on && (e.target === "all" || e.target === d.id))
       .map(({ id: _id, on: _on, target: _t, ...stage }) => stage as EqStage);
     try {
-      // "Line/horn SPL" is a line setting: boxes keep their in-front SPL, as before.
-      const result = simulate(driver, enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm), { ...opts, eq, ...(d.kind === "line" ? {} : { splFrom: undefined }) });
+      // Settings → SPL applies to every design: in front of the box (default, like WinISD) or from radiated power (like Hornresp).
+      const result = simulate(driver, enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm), { ...opts, eq });
       if (s.settings.velocity === "rms") {
         if (result.portVelocity) result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
         if (result.rearPortVelocity) result.rearPortVelocity = result.rearPortVelocity.map((v) => v / Math.SQRT2);

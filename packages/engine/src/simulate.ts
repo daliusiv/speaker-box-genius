@@ -119,9 +119,10 @@ export interface SimulationOptions {
   /** EQ stages (Linkwitz Transform, peaking, shelving) ahead of the amplifier. */
   eq?: EqStage[];
   /**
-   * Lines and horns: "on-axis" (default) treats the cone and the mouth as point sources;
+   * "on-axis" (default, like WinISD) treats the cone, ports and mouths as point sources;
    * "power" scales each by the share of power a baffled piston of its size really radiates,
-   * as Hornresp does. They differ once the mouth is large next to the wavelength.
+   * as Hornresp does. They agree in the bass and part once a source is large next to the
+   * wavelength: a horn's mouth, a big cone, or two side by side (a 10″ cone: about 0.2 dB at 300 Hz).
    */
   splFrom?: "on-axis" | "power";
   /**

@@ -1667,25 +1667,27 @@ export function App(props: { initial: AppState | null }) {
                 </p>
               </details>
 
-              <h3 className="set-head">Lines and horns</h3>
+              <h3 className="set-head">SPL</h3>
               <div className="fields">
-                <Select<"on-axis" | "power"> help="How SPL is worked out for lines and horns: in front of the box, or from the power each opening radiates as Hornresp does."
-                  label="Line/horn SPL"
+                <Select<"on-axis" | "power"> help="How SPL is worked out, for every box: in front of it, adding the cone, ports and mouths as point sources (as WinISD does), or from the power each one radiates (as Hornresp does)."
+                  label="SPL"
                   value={state.settings.lineSpl}
                   options={[
-                    { value: "on-axis", text: "In front of the box" },
+                    { value: "on-axis", text: "In front of the box (like WinISD)" },
                     { value: "power", text: "From radiated power (like Hornresp)" },
                   ]}
                   onChange={(lineSpl) => set("settings", { ...state.settings, lineSpl })}
                 />
               </div>
               <details className="more">
-                <summary>About line and horn SPL</summary>
+                <summary>About the two ways</summary>
                 <p className="hint">
-                  Hornresp works SPL out from the power each opening radiates. That matches the in-front-of-the-box SPL in the
-                  bass and reads lower once a mouth is large next to the wavelength (about 1.5 dB at 500 Hz for an 850 cm²
-                  mouth). For like-for-like checks against Hornresp, pick its air and &ldquo;From radiated power&rdquo;, and set the
-                  drive to 2.83 V.
+                  Hornresp works SPL out from the power each cone, port or mouth radiates. That matches the in-front-of-the-box
+                  SPL in the bass and reads lower once a source is large next to the wavelength: for a 10″ cone about 0.2 dB at
+                  300 Hz and 0.6 dB at 500 Hz, twice that for two side by side, and about 1.5 dB at 500 Hz for an 850 cm² horn
+                  mouth. WinISD uses the in-front SPL.
+                  For like-for-like checks against Hornresp, pick its air and &ldquo;From radiated power&rdquo; (or the Hornresp
+                  preset), and set the drive to 2.83 V.
                 </p>
               </details>
             </Card>

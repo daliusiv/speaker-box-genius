@@ -77,18 +77,15 @@ test("every Hornresp box, filter, EQ and stuffed-line case opened in the app is 
     const eq = s.eq.map(({ id: _i, on: _o, target: _t, ...e }) => e);
     const r = simulate(driverInputOf(s, solveDriver(s)), enclosureOf(d, builtVbOf(s, d), lossesFor(s, d), s.volume.wall_mm), {
       ...simOptionsOf(s),
-      ...(d.kind === "line" ? {} : { splFrom: undefined }),
       eq: eq as never,
       fMin: 10,
       fMax: Math.max(1000, c.zeFMax ?? 0),
       points: 8000,
     });
-    // Two drivers side by side are compared on SPL from radiated power, which the app does for lines only (the page says so).
-    const onAxis = c.splFrom === "power" && d.kind !== "line";
     for (let i = 0; i < r.freq.length && r.freq[i]! <= (c.fMax ?? 300); i++) {
       assert.ok(Math.abs(r.impedanceOhm[i]! / ref.impedanceOhm[i]! - 1) < 1e-5, `${id}: impedance at ${r.freq[i]} Hz`);
       assert.ok(Math.abs(r.excursionMm[i]! / ref.excursionMm[i]! - 1) < 1e-5, `${id}: excursion at ${r.freq[i]} Hz`);
-      assert.ok(Math.abs(r.spl[i]! - ref.spl[i]!) < (onAxis ? 0.35 : 1e-4), `${id}: SPL at ${r.freq[i]} Hz`);
+      assert.ok(Math.abs(r.spl[i]! - ref.spl[i]!) < 1e-4, `${id}: SPL at ${r.freq[i]} Hz`);
     }
   }
 });
