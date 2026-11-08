@@ -3,7 +3,7 @@ import { Sparkle } from "./Logo.tsx";
 import type { AlignmentDriver, DriverInput, SimulationOptions } from "@sbg/engine";
 import { Fixed, Num, Select } from "./components.tsx";
 import { lineFoldOf, lineLength, lineVolume } from "./sim.ts";
-import { bestLine, compareOne, frontHorn, makePreset, PRESETS, presetFor, rankLines, tuneLine, type LineBest, type LineCompare, type LineGoal, type PresetId } from "./lineopt.ts";
+import { bestLine, compareOne, frontHorn, makePreset, presetFor, SHOWN_PRESETS, rankLines, tuneLine, type LineBest, type LineCompare, type LineGoal, type PresetId } from "./lineopt.ts";
 import type { LineDesign, LineSection } from "./state.ts";
 import { foldShapes } from "./foldShapes.ts";
 import { fromHornresp, toHornresp, type HornrespImport } from "./hornresp.ts";
@@ -390,8 +390,8 @@ export function LineBody(p: {
     const rows: LineCompare[] = [];
     setCmp({ rows: [], done: false });
     const next = (k: number) => {
-      if (k >= PRESETS.length) return setCmp({ rows: rankLines(rows, driver.xmax_mm, p.portLimit * (p.rms ? Math.SQRT2 : 1)), done: true });
-      rows.push(compareOne(PRESETS[k]!.id, driver, d, p.sim, p.align, p.drivers, p.wall_mm));
+      if (k >= SHOWN_PRESETS.length) return setCmp({ rows: rankLines(rows, driver.xmax_mm, p.portLimit * (p.rms ? Math.SQRT2 : 1)), done: true });
+      rows.push(compareOne(SHOWN_PRESETS[k]!.id, driver, d, p.sim, p.align, p.drivers, p.wall_mm));
       setCmp({ rows: [...rows], done: false });
       setTimeout(() => next(k + 1), 20);
     };
@@ -570,7 +570,7 @@ export function LineBody(p: {
       )}
       <div className="presets">
         <span>Presets:</span>
-        {PRESETS.map((x) => (
+        {SHOWN_PRESETS.map((x) => (
           <button key={x.id} className="chip" disabled={!p.driver} title={x.title} onClick={() => preset(x.id)}>
             {x.label}
           </button>
@@ -628,7 +628,7 @@ export function LineBody(p: {
               {!cmp.done && (
                 <tr>
                   <td colSpan={6} className="hint">
-                    Sizing and tuning {PRESETS[cmp.rows.length]?.label}…
+                    Sizing and tuning {SHOWN_PRESETS[cmp.rows.length]?.label}…
                   </td>
                 </tr>
               )}
