@@ -15,6 +15,11 @@ export interface AlignmentDriver {
   qms: number;
   qes: number;
   vas_l: number;
+  /**
+   * The box's leakage Q (QL) the vented alignment allows for, as the simulation will use it.
+   * Omitted or ∞: a lossless box (Thiele's original tables).
+   */
+  ql?: number;
 }
 
 export interface VentedAlignment {
@@ -46,6 +51,8 @@ export const B4_QTS = 1 / Math.sqrt(4 + 2 * Math.SQRT2); // ≈ 0.3827 (B4 has a
  */
 export function qb3Alignment(d: AlignmentDriver, drivers = 1): VentedAlignment | null {
   const q = qtsOf(d.qms, d.qes);
+  const ql = d.ql ?? Infinity;
+  if (Number.isFinite(ql) && ql > 0) return lossyQb3(d, q, ql, drivers);
   if (q > B4_QTS + 1e-6) return null;
   const a2 = Math.sqrt(2 / (q * q) - 2);
   const h = 1 / (2 * a2 * q * q);
@@ -56,6 +63,46 @@ export function qb3Alignment(d: AlignmentDriver, drivers = 1): VentedAlignment |
     vb_l: (d.vas_l * drivers) / alpha,
     fb: h * d.fs,
   };
+}
+
+/**
+ * QB3 in a box with leakage QL (Small, "Vented-Box Loudspeaker Systems", JAES 1973): the same
+ * two conditions (no ω⁶ or ω⁴ term in |G|²) on the lossy coefficients
+ *   a1 = (QL + h·Qt)/(√h·QL·Qt), a2 = (h + (α + 1 + h²)·QL·Qt)/(h·QL·Qt), a3 = (h·QL + Qt)/(√h·QL·Qt).
+ * The ω⁶ condition (a1² = 2·a2) gives α for each h; the ω⁴ one (a2² + 2 = 2·a1·a3) is then
+ * solved for h. Leakage loses output near Fb, so the box comes out a little bigger and
+ * tuned a little higher than the lossless one. Null where no such box exists or it would peak (Qts too high).
+ */
+function lossyQb3(d: AlignmentDriver, q: number, ql: number, drivers: number): VentedAlignment | null {
+  const coeffs = (h: number) => {
+    const a1 = (ql + h * q) / (Math.sqrt(h) * ql * q);
+    const a3 = (h * ql + q) / (Math.sqrt(h) * ql * q);
+    const a2 = (a1 * a1) / 2;
+    const alpha = (a2 * h * ql * q - h) / (ql * q) - 1 - h * h;
+    // c: the ω² term. Positive for QB3, zero at B4; negative would be a peak (Qts too high).
+    return { alpha, f: a2 * a2 + 2 - 2 * a1 * a3, c: a3 * a3 - 2 * a2 };
+  };
+  // Scan h for a sign change of the ω⁴ condition where α > 0, then bisect.
+  const hs = Array.from({ length: 400 }, (_, i) => 0.2 * 40 ** (i / 399));
+  for (let i = 1; i < hs.length; i++) {
+    const [lo, hi] = [hs[i - 1]!, hs[i]!];
+    const a = coeffs(lo);
+    const b = coeffs(hi);
+    if (!(a.alpha > 0 && b.alpha > 0) || Math.sign(a.f) === Math.sign(b.f)) continue;
+    let [x0, x1, f0] = [lo, hi, a.f];
+    for (let k = 0; k < 60; k++) {
+      const m = (x0 + x1) / 2;
+      const fm = coeffs(m).f;
+      if (Math.sign(fm) === Math.sign(f0)) [x0, f0] = [m, fm];
+      else x1 = m;
+    }
+    const h = (x0 + x1) / 2;
+    const { alpha, c } = coeffs(h);
+    // Past B4 (c < 0) the "flat" box peaks: Qts is too high for QB3 (Keele's alignment takes over).
+    if (c < -0.05) return null;
+    return { name: Math.abs(c) <= 0.05 ? "B4" : "QB3", vb_l: (d.vas_l * drivers) / alpha, fb: h * d.fs };
+  }
+  return null;
 }
 
 /**

@@ -207,7 +207,8 @@ export function alignmentDriver(solved: SolveResult, s: AppState) {
   const v = solved.values;
   if (solved.missing.length > 0) return null;
   // An isobaric pair has the same Fs and Qs with half the Vas.
-  return { fs: v.fs!, qms: v.qms!, qes: v.qes! * dvcFactors(s).qes, vas_l: v.vas_l! / (s.isobaric ? 2 : 1) };
+  // ql: vented alignments allow for the box leakage the charts use, so they come out flat as charted.
+  return { fs: v.fs!, qms: v.qms!, qes: v.qes! * dvcFactors(s).qes, vas_l: v.vas_l! / (s.isobaric ? 2 : 1), ql: s.settings.losses.ql };
 }
 
 /** The line's pieces for the engine: each section runs from the previous end area to its own. */

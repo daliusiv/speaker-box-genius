@@ -937,9 +937,18 @@ export function App(props: { initial: AppState | null }) {
                             return;
                           }
                           const r = sizeForNewDriver(withDriver(latest.current, d), cands);
-                          setStep(r.state);
+                          // Driven at its power rating, so the first charts show what it can really do
+                          // (the example's 100 W is over many drivers' rating).
+                          let next = r.state;
+                          const pe = d.pe_w !== undefined && d.pe_w > 0 ? Math.min(10000, Math.round(d.pe_w)) : null;
+                          if (pe !== null) {
+                            next = { ...next, power: pe };
+                            if (next.drive === "volts") next = { ...next, ...switchDrive({ ...next, drive: "watts" }, "volts") };
+                          }
+                          setStep(next);
                           setSizeReport({ changed: r.changed, skipped: r.skipped });
-                          notify(r.changed.length > 0 ? `Loaded “${d.name}” and sized the boxes for it.` : `Loaded “${d.name}”.`);
+                          const at = pe !== null ? ` at its ${pe} W rating` : "";
+                          notify(r.changed.length > 0 ? `Loaded “${d.name}” and sized the boxes for it${at}.` : `Loaded “${d.name}”${at}.`);
                           // Straight to what the driver does (the charts, on phones).
                           setPhoneView("charts");
                           window.scrollTo({ top: 0 });

@@ -92,3 +92,37 @@ test("Keele alignment for a higher-Qts driver: near flat, F3 close to Keele's es
   // Outside its range there is no answer.
   assert.equal(keeleAlignment({ ...d, qes: 2 }), null);
 });
+
+test("QB3 with box leakage (Small): the simulated response is the lossy maximally flat one", () => {
+  for (const qts of [0.2, 0.29, 0.35, 0.38]) {
+    for (const ql of [5, 10, 30]) {
+      const qes = (qts * 5) / (5 - qts);
+      const t = { fs: 30, qms: 5, qes, vas_l: 50, re: 6, sd_cm2: 330, le_mh: 0 };
+      const a = qb3Alignment({ ...t, ql })!;
+      assert.ok(a, `Qts ${qts}, QL ${ql}`);
+      const port = { shape: "round" as const, diameter_cm: 8, length_cm: 10 };
+      port.length_cm = portLengthForFb(a.vb_l, port, a.fb);
+      const r = simulate(t, { kind: "vented", vb_l: a.vb_l, port, ql, qa: Infinity, qp: Infinity }, { fMin: 5, fMax: 500, points: 60, leakage: "radiates" });
+      // |G|² = ω⁸ / (ω⁸ + C·ω² + 1): the ω⁶ and ω⁴ terms are zero, as in the lossless QB3.
+      // Small's model counts the leaked air as output: the app's default ("radiates").
+      const h = a.fb / t.fs;
+      const a1 = (ql + h * qts) / (Math.sqrt(h) * ql * qts);
+      const a2 = (h + (t.vas_l / a.vb_l + 1 + h * h) * ql * qts) / (h * ql * qts);
+      const a3 = (h * ql + qts) / (Math.sqrt(h) * ql * qts);
+      assert.ok(Math.abs(a1 * a1 - 2 * a2) < 1e-6 && Math.abs(a2 * a2 + 2 - 2 * a1 * a3) < 1e-6, "ω⁶ and ω⁴ terms zero");
+      for (let i = 0; i < r.freq.length; i++) {
+        const w = r.freq[i]! / Math.sqrt(t.fs * a.fb);
+        const ideal = 10 * Math.log10(w ** 8 / (w ** 8 + (a3 * a3 - 2 * a2) * w * w + 1));
+        assert.ok(Math.abs(r.spl[i]! - r.summary.referenceSpl - ideal) < 0.01, `Qts ${qts} QL ${ql} at ${r.freq[i]!.toFixed(1)} Hz: ${(r.spl[i]! - r.summary.referenceSpl).toFixed(3)} vs ${ideal.toFixed(3)}`);
+      }
+    }
+  }
+});
+
+test("QB3 with leakage: past B4 (it would peak) there's none, and Keele's alignment takes over", () => {
+  const qes = (0.45 * 5) / (5 - 0.45);
+  assert.equal(qb3Alignment({ fs: 30, qms: 5, qes, vas_l: 50, ql: 10 }), null);
+  // No leakage given: Thiele's lossless table, as before.
+  const lossless = qb3Alignment({ fs: 38.36, qms: 1.66, qes: 0.35, vas_l: 18.7 })!;
+  assert.ok(Math.abs(lossless.vb_l - 5.58) < 0.01 && Math.abs(lossless.fb - 49.0) < 0.05);
+});
