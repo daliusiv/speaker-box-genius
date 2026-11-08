@@ -219,10 +219,14 @@ test("driver pages open the designs at the driver's power rating", () => {
 test("every page counts visits the same way, and the privacy page says what that sees", async () => {
   const { out, paths } = await built();
   assert.ok(paths.includes("/privacy/"));
+  assert.ok(paths.includes("/about/"));
+  const about = readFileSync(join(out, "about/index.html"), "utf8");
+  for (const must of [/PolyForm Noncommercial/, /CC BY-NC-SA/, /CLA/, /driver-base/, /not affiliated/i]) assert.match(about, must);
   for (const p of ["/guides/", "/winisd-alternative/", "/validation/", "/privacy/", "/drivers/", paths.find((x) => /^\/drivers\/[^/]+\/[^/]+\/$/.test(x))!]) {
     const html = readFileSync(join(out, p, "index.html"), "utf8");
     assert.equal(html.split(GOATCOUNTER).length - 1, 1, `${p}: one counter tag`);
     assert.match(html, /<a href="\/privacy\/">Privacy<\/a>/, `${p}: links the privacy page`);
+    assert.match(html, /<a href="\/about\/">About<\/a>/, `${p}: links the about page`);
   }
   // The app counts with the same tag (and never sends the design: it's after the #).
   const app = readFileSync(new URL("../packages/web/index.html", import.meta.url), "utf8");

@@ -296,7 +296,7 @@ At build time `db-tools` compiles the database into `index.json` (for search) an
 - ✅ **Driver pages:** one page per driver (about 1,390) with suggested sealed, ported and PR boxes at the driver's power rating, charts, parameters, a live link and its own share card (`site/drivers.ts`, `site/og.ts`). No suggested box is over 300 L: sealed boxes are capped there, bigger ported and PR boxes are left off with the reason on the page.
 - ⬜ Design gallery with pre-rendered pages and OG images (deferred until after launch; the driver pages share its page and share-card code).
 - ⬜ Embeddable iframe widget for blogs and build logs.
-- ✅ Privacy page (`/privacy/`) and privacy-friendly visit counts (GoatCounter: no cookies, never the design after the `#`; ad blockers hide some visits). ⬜ About page (licence in plain words, credits).
+- ✅ Privacy page (`/privacy/`) and privacy-friendly visit counts (GoatCounter: no cookies, never the design after the `#`; ad blockers hide some visits). ✅ About page (`/about/`: the licence and CLA in plain words, credits).
 
 ### Later / stretch
 - ✅ 4th and 6th order bandpass.
