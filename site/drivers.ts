@@ -246,12 +246,27 @@ export interface PageLinks {
   related: { id: string; label: string }[];
 }
 
-export function driverContent(p: DriverPage, links: PageLinks, chart: typeof import("./chart.ts").chart): { title: string; description: string; content: string } {
+/** Structured data for a page (schema.org): what it's about, and where it sits (breadcrumbs). */
+export interface PageLd {
+  about?: Record<string, unknown>;
+  crumbs?: { name: string; path?: string }[];
+}
+
+/**
+ * A driver page's title: what people search for a driver's box. "Port tuning" only when a
+ * ported box is suggested, "tuning" for a passive radiator box alone.
+ */
+export function driverTitle(name: string, kinds: string[]): string {
+  const tuning = kinds.includes("vented") ? "port tuning" : kinds.includes("pr") ? "tuning" : "";
+  return `${name}: box size${tuning ? `, ${tuning}` : ""} and T/S parameters`;
+}
+
+export function driverContent(p: DriverPage, links: PageLinks, chart: typeof import("./chart.ts").chart): { title: string; description: string; content: string; ld: PageLd } {
   const name = `${p.brand} ${p.model}`;
   const solved = solveDriver(p.state).values;
   const kinds = p.designs.map((d) => d.design.kind as BoxKind);
   const kindList = kinds.map((k) => KIND_NAME[k].toLowerCase()).join(", ").replace(/, ([^,]*)$/, " and $1");
-  const title = `${name} box design: ${kindList}`;
+  const title = driverTitle(name, kinds);
 
   // Max SPL compared at one frequency for every box: the middle F3, rounded.
   const f3s = p.designs.map((d) => d.result.summary.f3).filter((x): x is number => x !== null).sort((a, b) => a - b);
@@ -343,7 +358,11 @@ ${related}`;
       return `${KIND_NAME[d.design.kind as BoxKind].toLowerCase()} ${f1(d.vb_l)} L${d.design.kind === "sealed" ? "" : ` at ${f1(s.fb ?? NaN)} Hz`}${s.f3 !== null ? ` (F3 ${Math.round(s.f3)} Hz)` : ""}`;
     })
     .join(", ");
-  return { title, description: `Box designs for the ${name}: ${desc}. Charts, parameters and live designs to open and change.`, content };
+  const ld: PageLd = {
+    about: { "@type": "Thing", name, description: `${describe(p.rec)} by ${p.brand}` },
+    crumbs: [{ name: "Drivers", path: "/drivers/" }, { name: p.brand, path: brandPath(p.brandSlug) }, { name: p.model }],
+  };
+  return { title, description: `Box designs for the ${name}: ${desc}. Charts, parameters and live designs to open and change.`, content, ld };
 }
 
 /** What a driver's share card shows (site/og.ts draws it). */

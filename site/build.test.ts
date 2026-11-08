@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, readdirSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build, GOATCOUNTER, markdown, parsePage, resolveExamples } from "./build.ts";
-import { cardData, designDriver, driverContent, driverState, loadDb, PAGE_MAX_L, prCandidate } from "./drivers.ts";
+import { cardData, designDriver, driverContent, driverState, driverTitle, loadDb, PAGE_MAX_L, prCandidate } from "./drivers.ts";
 import { chart } from "./chart.ts";
 import { cardSvg } from "./og.ts";
 
@@ -146,6 +146,28 @@ test("driver pages: suggested boxes, charts, share link and brand indexes", asyn
   assert.doesNotMatch(html, /class="note flag"/);
 });
 
+test("driver and brand pages: search titles and structured data (subject and breadcrumbs)", async () => {
+  const { out } = await built();
+  const html = readFileSync(join(out, "drivers/dayton-audio/dsa215-8/index.html"), "utf8");
+  assert.match(html, /<title>Dayton Audio DSA215-8: box size, port tuning and T\/S parameters · Speaker Box Genius<\/title>/);
+  const lds = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g)].map((m) => JSON.parse(m[1]!));
+  assert.equal(lds.length, 2);
+  assert.equal(lds[0].about.name, "Dayton Audio DSA215-8");
+  assert.deepEqual(
+    lds[1].itemListElement.map((x: { name: string; item: string }) => [x.name, x.item]),
+    [
+      ["Drivers", "https://speakerboxgenius.com/drivers/"],
+      ["Dayton Audio", "https://speakerboxgenius.com/drivers/dayton-audio/"],
+      ["DSA215-8", "https://speakerboxgenius.com/drivers/dayton-audio/dsa215-8/"],
+    ],
+  );
+  const brand = readFileSync(join(out, "drivers/dayton-audio/index.html"), "utf8");
+  assert.match(brand, /<title>Dayton Audio drivers: box sizes and T\/S parameters/);
+  assert.match(brand, /"@type":"BreadcrumbList"/);
+  // Guides keep one block, without breadcrumbs.
+  assert.equal((readFileSync(join(out, "guides/passive-radiator-box/index.html"), "utf8").match(/application\/ld\+json/g) ?? []).length, 1);
+});
+
 test("driver designs follow the app's presets, with a port that fits and a PR that keeps up", () => {
   const db = loadDb();
   const e = db.drivers.find((x) => x.id === "dayton-audio/dsa215-8")!;
@@ -241,4 +263,10 @@ test("every page counts visits the same way, and the privacy page says what that
   const privacy = readFileSync(join(out, "privacy/index.html"), "utf8");
   assert.match(privacy, /GoatCounter/);
   assert.match(privacy, /no cookies/i);
+});
+
+test("driver page titles name port tuning only when a ported box is suggested", () => {
+  assert.equal(driverTitle("X Y", ["sealed", "vented", "pr"]), "X Y: box size, port tuning and T/S parameters");
+  assert.equal(driverTitle("X Y", ["sealed", "pr"]), "X Y: box size, tuning and T/S parameters");
+  assert.equal(driverTitle("X Y", ["sealed"]), "X Y: box size and T/S parameters");
 });

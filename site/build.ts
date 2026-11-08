@@ -24,7 +24,7 @@ import { readReport, validationContent, VALIDATION_STYLE } from "./validation.ts
 import { validationLinks } from "./validationLinks.ts";
 import { CHART_STYLE, chart } from "./chart.ts";
 import { cardSvg, findChrome, Rasterizer } from "./og.ts";
-import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, loadDb, prCandidate, relatedDrivers, shareLink, type DriverPage } from "./drivers.ts";
+import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, loadDb, prCandidate, relatedDrivers, shareLink, type DriverPage, type PageLd } from "./drivers.ts";
 
 export const SITE = "https://speakerboxgenius.com";
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -211,6 +211,9 @@ footer{max-width:46rem;margin:0 auto;padding:1.5rem 1.1rem 3rem;border-top:1px s
 footer a{color:var(--muted)}
 `;
 
+/** JSON for a <script> tag: "<" escaped so a name can never close the tag. */
+const jsonLd = (x: unknown) => JSON.stringify(x).replace(/</g, "\\u003c");
+
 /** A whole HTML page around some content. */
 /** The top bar's sections; the one a page belongs to is marked as current. */
 const NAV = [
@@ -220,7 +223,7 @@ const NAV = [
   { href: "/validation/", label: "Validation", match: (p: string) => p === "/validation/", wide: true },
 ];
 
-export function layout(o: { title: string; description: string; path: string; image?: string; imagePath?: string; content: string; guides: Page[]; style?: string; moreGuides?: boolean }): string {
+export function layout(o: { title: string; description: string; path: string; image?: string; imagePath?: string; content: string; guides: Page[]; style?: string; moreGuides?: boolean; ld?: PageLd }): string {
   const url = `${SITE}${o.path}`;
   const image = `${SITE}${o.imagePath ?? (o.image ? `/guides/img/${o.image}` : "/og-image.png")}`;
   const ld = {
@@ -232,7 +235,16 @@ export function layout(o: { title: string; description: string; path: string; im
     image,
     author: { "@type": "Person", name: "Dalius Ivanovas" },
     publisher: { "@type": "Organization", name: "Speaker Box Genius", url: SITE },
+    ...(o.ld?.about ? { about: o.ld.about } : {}),
   };
+  // Breadcrumbs (Google shows them in place of the URL): the last one is this page.
+  const crumbs = o.ld?.crumbs?.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: o.ld.crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c.name, item: `${SITE}${c.path ?? o.path}` })),
+      }
+    : null;
   const others = o.moreGuides === false ? [] : o.guides.filter((g) => g.path !== o.path);
   return `<!doctype html>
 <html lang="en">
@@ -253,7 +265,7 @@ export function layout(o: { title: string; description: string; path: string; im
 <meta name="color-scheme" content="dark">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-<script type="application/ld+json">${JSON.stringify(ld)}</script>
+<script type="application/ld+json">${jsonLd(ld)}</script>${crumbs ? `\n<script type="application/ld+json">${jsonLd(crumbs)}</script>` : ""}
 <style>${STYLE}${o.style ?? ""}</style>
 ${GOATCOUNTER}
 </head>
@@ -300,7 +312,7 @@ async function buildDriverPages(write: (path: string, html: string) => void, gui
     .map((slug) => ({ slug, name: db.brands.get(slug)?.name ?? pages.find((p) => p.brandSlug === slug)!.brand, pages: pages.filter((p) => p.brandSlug === slug) }))
     .sort((a, b) => a.name.localeCompare(b.name));
   for (const b of byBrand) {
-    write(brandPath(b.slug), layout({ title: `${b.name} drivers: box designs`, description: `Suggested sealed, ported and passive radiator boxes for ${b.pages.length} ${b.name} drivers.`, path: brandPath(b.slug), content: brandContent(b.name, b.pages), guides, style, moreGuides: false }));
+    write(brandPath(b.slug), layout({ ld: { crumbs: [{ name: "Drivers", path: "/drivers/" }, { name: b.name }] }, title: `${b.name} drivers: box sizes and T/S parameters`, description: `Suggested sealed, ported and passive radiator boxes for ${b.pages.length} ${b.name} drivers.`, path: brandPath(b.slug), content: brandContent(b.name, b.pages), guides, style, moreGuides: false }));
   }
   write("/drivers/", layout({ title: "Driver box designs", description: `Suggested sealed, ported and passive radiator boxes for ${pages.length} drivers, with charts and live designs to open and change.`, path: "/drivers/", content: driversIndexContent(byBrand), guides, style, moreGuides: false }));
 }
