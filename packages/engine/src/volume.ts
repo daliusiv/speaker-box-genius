@@ -8,9 +8,17 @@
 
 export type Shape =
   | { kind: "box"; width_cm: number; height_cm: number; depth_cm: number }
-  | { kind: "cylinder"; diameter_cm: number; length_cm: number }
+  /**
+   * A tube with flat end caps. `capWall_mm` is the end caps' thickness when it differs from the
+   * tube wall (a cardboard or PVC tube with MDF caps); absent = the same as the wall.
+   */
+  | { kind: "cylinder"; diameter_cm: number; length_cm: number; capWall_mm?: number }
   | { kind: "sphere"; diameter_cm: number }
-  /** Rectangular truncated pyramid: bottom W×D, top W×D, height. */
+  /**
+   * Rectangular truncated pyramid (a tapered box or wedge): bottom W×D, top W×D, height. The
+   * volume doesn't depend on where the top sits over the bottom (a wedge with one sloped face
+   * holds the same as one tapered on both sides); the walls are taken as tapering evenly.
+   */
   | {
       kind: "frustum";
       bottomWidth_cm: number;
@@ -32,7 +40,8 @@ export function grossVolume(shape: Shape, wall_mm = 0): number {
       break;
     case "cylinder": {
       const r = pos(shape.diameter_cm / 2 - t);
-      cm3 = Math.PI * r * r * pos(shape.length_cm - 2 * t); // end caps included
+      const cap = (shape.capWall_mm ?? wall_mm) / 10;
+      cm3 = Math.PI * r * r * pos(shape.length_cm - 2 * cap);
       break;
     }
     case "sphere": {
@@ -41,19 +50,86 @@ export function grossVolume(shape: Shape, wall_mm = 0): number {
       break;
     }
     case "frustum": {
-      // Prismatoid formula: exact for a rectangular frustum, even when the
-      // top and bottom are not similar rectangles.
-      const w1 = pos(shape.bottomWidth_cm - 2 * t);
-      const d1 = pos(shape.bottomDepth_cm - 2 * t);
-      const w2 = pos(shape.topWidth_cm - 2 * t);
-      const d2 = pos(shape.topDepth_cm - 2 * t);
-      const h = pos(shape.height_cm - 2 * t);
-      const mid = ((w1 + w2) / 2) * ((d1 + d2) / 2);
-      cm3 = (h / 6) * (w1 * d1 + 4 * mid + w2 * d2);
+      const f = frustumInside(shape, t);
+      // Prismatoid formula: exact for a rectangular frustum, even when the top and bottom
+      // are not similar rectangles.
+      const mid = ((f.w1 + f.w2) / 2) * ((f.d1 + f.d2) / 2);
+      cm3 = (f.h / 6) * (f.w1 * f.d1 + 4 * mid + f.w2 * f.d2);
       break;
     }
   }
   return cm3 / 1000;
+}
+
+/**
+ * The inside of a tapered box with walls t cm thick (measured square to each face). A sloping
+ * wall is thicker across the horizontal than t, by 1/cos of its slope, and the inside top and
+ * bottom sit t in from the outside ones, where the outside is already a little narrower (or
+ * wider). When the inside closes to a point or edge below the top, it stops there.
+ */
+function frustumInside(shape: Extract<Shape, { kind: "frustum" }>, t: number) {
+  const H = shape.height_cm;
+  if (!(H > 0)) return { w1: 0, d1: 0, w2: 0, d2: 0, h: 0 };
+  const sw = (shape.bottomWidth_cm - shape.topWidth_cm) / (2 * H);
+  const sd = (shape.bottomDepth_cm - shape.topDepth_cm) / (2 * H);
+  const ow = t * Math.hypot(1, sw);
+  const od = t * Math.hypot(1, sd);
+  const w = (z: number) => shape.bottomWidth_cm - 2 * sw * z - 2 * ow;
+  const d = (z: number) => shape.bottomDepth_cm - 2 * sd * z - 2 * od;
+  let z0 = t;
+  let z1 = H - t;
+  // Keep only the heights where the inside is open in both directions (each is linear in z).
+  for (const [f, s] of [[w, sw], [d, sd]] as const) {
+    const zero = f(0) / (2 * s); // where f reaches 0, if it slopes
+    if (s > 0) z1 = Math.min(z1, zero);
+    else if (s < 0) z0 = Math.max(z0, zero);
+    else if (f(0) <= 0) z1 = z0;
+  }
+  if (!(z1 > z0)) return { w1: 0, d1: 0, w2: 0, d2: 0, h: 0 };
+  return { w1: pos(w(z0)), d1: pos(d(z0)), w2: pos(w(z1)), d2: pos(d(z1)), h: z1 - z0 };
+}
+
+/** The longest straight run inside the shape (cm): how long a straight port can be, at most. */
+export function insideLongest_cm(shape: Shape, wall_mm = 0): number {
+  const t = wall_mm / 10;
+  switch (shape.kind) {
+    case "box":
+      return pos(Math.max(shape.width_cm, shape.height_cm, shape.depth_cm) - 2 * t);
+    case "cylinder":
+      return Math.max(pos(shape.diameter_cm - 2 * t), pos(shape.length_cm - (2 * (shape.capWall_mm ?? wall_mm)) / 10));
+    case "sphere":
+      return pos(shape.diameter_cm - 2 * t);
+    case "frustum": {
+      const f = frustumInside(shape, t);
+      return Math.max(f.w1, f.d1, f.w2, f.d2, f.h);
+    }
+  }
+}
+
+/**
+ * The enclosure's lowest standing wave (Hz), for air with sound speed c (m/s): a box's is half
+ * a wavelength across its longest inside dimension. Round shapes are different: a sphere's
+ * lowest is at ka = 2.0816 (the first zero of j1′), 1.32 times higher than half a wavelength
+ * across its diameter; a cylinder's across its diameter at ka = 1.8412 (J1′), 1.17 times
+ * higher, so its lowest is that or the one along its length, whichever is lower. A tapered
+ * box is taken as a box of its longest inside run (its modes shift with the taper).
+ */
+export function lowestMode_hz(shape: Shape, wall_mm = 0, c = 343): number {
+  const t = wall_mm / 10;
+  const m = (cm: number) => (cm > 0 ? c / (2 * cm / 100) : Infinity);
+  switch (shape.kind) {
+    case "sphere": {
+      const d = pos(shape.diameter_cm - 2 * t) / 100;
+      return d > 0 ? (2.0816 * c) / (Math.PI * d) : Infinity;
+    }
+    case "cylinder": {
+      const d = pos(shape.diameter_cm - 2 * t) / 100;
+      const across = d > 0 ? (1.8412 * c) / (Math.PI * d) : Infinity;
+      return Math.min(across, m(pos(shape.length_cm - (2 * (shape.capWall_mm ?? wall_mm)) / 10)));
+    }
+    default:
+      return m(insideLongest_cm(shape, wall_mm));
+  }
 }
 
 /**

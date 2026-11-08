@@ -251,6 +251,8 @@ interface PortContext {
   rearPortVelocity: number | null;
   /** Largest internal box dimension (cm) when the volume calculator feeds this design. */
   internalMax_cm: number | null;
+  /** The calculator's enclosure's lowest standing wave (Hz), when it feeds this design. */
+  boxMode_hz?: number | null;
   /** Where portVelocity was taken: the throat, or the mouths of a port flared at both ends. */
   portVelocityAt?: "throat" | "ends";
   /** Port compression at this drive (when switched on in Settings). */
@@ -265,7 +267,7 @@ function PortChecks(props: {
   vb_l: number;
   air: Air;
   ec: number;
-  ctx: Pick<PortContext, "portVelocity" | "internalMax_cm" | "portVelocityAt" | "portCompression" | "drive" | "portLimit">;
+  ctx: Pick<PortContext, "portVelocity" | "internalMax_cm" | "boxMode_hz" | "portVelocityAt" | "portCompression" | "drive" | "portLimit">;
 }) {
   const { v, vb_l, air, ec, ctx } = props;
   const { fmt } = useUnits();
@@ -345,9 +347,11 @@ function PortChecks(props: {
     });
   }
 
-  // The box's own lowest standing wave (half a wavelength across its longest inside dimension):
-  // when it lands near the port's pipe resonance it drives the port hard and the port rings.
-  const boxMode = air.c / (2 * (ctx.internalMax_cm ?? cube) / 100);
+  // The box's own lowest standing wave (for a box, half a wavelength across its longest inside
+  // dimension; spheres and tubes from their own modes): when it lands near the port's pipe
+  // resonance it drives the port hard and the port rings.
+  const known = ctx.boxMode_hz != null && Number.isFinite(ctx.boxMode_hz);
+  const boxMode = known ? ctx.boxMode_hz! : air.c / (2 * cube / 100);
   const coincide = Math.abs(boxMode / pipe - 1) < 0.15;
   notes.push({
     warn: pipe < 300 || coincide,
@@ -357,8 +361,8 @@ function PortChecks(props: {
       `letting midrange out of the box as a narrow peak.` +
       (pipe < 300 ? " That's low enough to reach the woofer's working range: cross over well below it, or use a shorter, narrower port." : "") +
       (coincide
-        ? ` The box's longest inside dimension (${fmt(ctx.internalMax_cm ?? cube, "len")}${ctx.internalMax_cm ? "" : " for a cube"}) has its own standing wave at about ${boxMode.toFixed(0)} Hz, close to it: the box will drive the port hard there. Damping on the walls (and keeping the port's inner end away from the box's middle) helps, or change the port length a little.`
-        : ` The box's own lowest standing wave is about ${boxMode.toFixed(0)} Hz${ctx.internalMax_cm ? "" : " (for a cube)"}.`) +
+        ? ` The box's own lowest standing wave${known ? "" : ` (for a cube ${fmt(cube, "len")} inside)`} is at about ${boxMode.toFixed(0)} Hz, close to it: the box will drive the port hard there. Damping on the walls (and keeping the port's inner end away from the box's middle) helps, or change the port length a little.`
+        : ` The box's own lowest standing wave is about ${boxMode.toFixed(0)} Hz${known ? "" : " (for a cube)"}.`) +
       " Settings → Ports → \u201cPipe\u201d draws the port's resonances on the SPL chart (the box's standing waves aren't simulated).",
     fix: pipe < 300 || coincide ? "Length" : undefined,
   });
@@ -1060,7 +1064,7 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
                 vb_l={p.vb_l}
                 air={p.air}
                 ec={p.ec}
-                ctx={{ portVelocity: p.portCtx.rearPortVelocity, internalMax_cm: p.portCtx.internalMax_cm, portLimit: p.portCtx.portLimit }}
+                ctx={{ portVelocity: p.portCtx.rearPortVelocity, internalMax_cm: p.portCtx.internalMax_cm, boxMode_hz: p.portCtx.boxMode_hz, portLimit: p.portCtx.portLimit }}
               />
             </>
           ) : (

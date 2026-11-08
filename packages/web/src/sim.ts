@@ -95,7 +95,12 @@ export function shapeOf(v: AppState["volume"]): Shape {
     case "box":
       return { kind: "box", width_cm: v.width_cm, height_cm: v.height_cm, depth_cm: v.depth_cm };
     case "cylinder":
-      return { kind: "cylinder", diameter_cm: v.diameter_cm, length_cm: v.height_cm };
+      return {
+        kind: "cylinder",
+        diameter_cm: v.diameter_cm,
+        length_cm: v.height_cm,
+        ...(typeof v.capWall_mm === "number" && Number.isFinite(v.capWall_mm) && v.capWall_mm >= 0 ? { capWall_mm: v.capWall_mm } : {}),
+      };
     case "sphere":
       return { kind: "sphere", diameter_cm: v.diameter_cm };
     case "frustum":
@@ -749,14 +754,14 @@ const GOLDEN = { w: 1, h: 1.618, d: 0.618 };
  * Outside dimensions that give a design the target box volume (the calculator's
  * net volume, after every deduction). The shape is
  * scaled as a whole, keeping its proportions, or for a box set to golden-ratio
- * proportions first. Wall thickness and deductions stay as they are. Null when no
+ * proportions first; a cylinder can instead keep its diameter and change only its length. Wall thickness and deductions stay as they are. Null when no
  * size reaches the target (deductions alone exceed it).
  */
 export function dimensionsFor(
   s: AppState,
   d: DesignState | undefined,
   target_l: number,
-  proportions: "keep" | "golden" = "keep",
+  proportions: "keep" | "golden" | "length" = "keep",
 ): AppState["volume"] | null {
   const v0 = s.volume;
   let base = v0;
@@ -764,7 +769,8 @@ export function dimensionsFor(
     const unit = Math.cbrt(v0.width_cm * v0.height_cm * v0.depth_cm / (GOLDEN.w * GOLDEN.h * GOLDEN.d));
     base = { ...v0, width_cm: unit * GOLDEN.w, height_cm: unit * GOLDEN.h, depth_cm: unit * GOLDEN.d };
   }
-  const scaled = (k: number): AppState["volume"] => ({
+  // A tube keeps its diameter (tubes come in set sizes): only its length changes.
+  const scaled = (k: number): AppState["volume"] => proportions === "length" && v0.shape === "cylinder" ? { ...base, height_cm: base.height_cm * k } : ({
     ...base,
     width_cm: base.width_cm * k,
     height_cm: base.height_cm * k,
