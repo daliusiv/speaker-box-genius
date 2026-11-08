@@ -65,3 +65,18 @@ test("my own air conditions: the charts use them, links keep them, and nonsense 
   const bad = decodeState(encodeState({ ...cold, settings: { ...cold.settings, airConditions: { temp_C: 900, humidity_pct: -5, pressure_hPa: "x" as never } } }))!;
   assert.deepEqual(bad.settings.airConditions, DEFAULT_STATE.settings.airConditions);
 });
+
+test("the 1 W note: about 1 W in watts or volts, well under the rating, and not otherwise", async () => {
+  const { lowDrive, ratedPowerOf } = await import("../src/sim.ts");
+  const base = { ...DEFAULT_STATE, drive: "watts" as const, power: 1 };
+  const low = lowDrive(base);
+  assert.ok(low && low.watts === 1 && low.rated === ratedPowerOf(base));
+  assert.equal(lowDrive({ ...base, power: 50 }), null);
+  // 2.83 V, the datasheet drive, is about 2.5 W into the example driver (4 Ω).
+  assert.ok(lowDrive({ ...base, drive: "volts", volts: 2.83 }));
+  assert.equal(lowDrive({ ...base, drive: "volts", volts: 20 }), null);
+  // A driver rated for little more than 1 W: 1 W is the real thing, no note.
+  assert.equal(lowDrive({ ...base, pe_w: 3 }), null);
+  // No rating: still a note, without the button.
+  assert.deepEqual(lowDrive({ ...base, pe_w: 0 }), { watts: 1, rated: 0 });
+});
