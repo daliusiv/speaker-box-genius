@@ -842,7 +842,7 @@ export function App(props: { initial: AppState | null }) {
               ↷
             </button>
           </div>
-          <ShareMenu state={state} designs={designs} shareUrl={shareUrl} />
+          <ShareMenu state={state} designs={designs} shareUrl={shareUrl} notify={(m) => notify(m)} />
           <AppMenu
             state={state}
             install={pwa.install}

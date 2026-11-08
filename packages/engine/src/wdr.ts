@@ -312,3 +312,178 @@ export function parseWpr(text: string): WprProject {
     ...parseFilters(s.get("filters")),
   };
 }
+
+/** A WinISD round port as written to a project: count, inside diameter and physical length. */
+export interface WprPortOut {
+  count: number;
+  diameter_cm: number;
+  length_cm: number;
+  /** End correction WinISD adds (× diameter); 0.732 is its default. */
+  endCorrection?: number;
+  /** The tuning this port gives (Hz), stored alongside it. */
+  fb: number;
+}
+
+/** What writeWpr needs: one box design, the driver, and the settings that change its results. */
+export interface WprExport {
+  driver: WdrExport;
+  /** Losses of the (rear) chamber. */
+  losses: { ql: number; qa: number; qp: number };
+  box:
+    | { type: "sealed"; vb_l: number }
+    | { type: "vented"; vb_l: number; port: WprPortOut }
+    | { type: "passive-radiator"; vb_l: number; fb: number; count: number; addedMass_g: number; pr: { mms_g: number; sd_cm2: number; vas_l: number; qms: number; xmax_mm: number } }
+    | {
+        type: "bandpass";
+        order: "4" | "6p" | "6s";
+        /** Rear chamber (the driver's back); its port only for 6th order (6p: to the room, 6s: into the front chamber). */
+        rear: { vb_l: number; port?: WprPortOut };
+        front: { vb_l: number; port: WprPortOut; losses: { ql: number; qa: number; qp: number } };
+        /** Leak between the chambers (WinISD Qiclfr). */
+        qicl: number;
+      };
+  /** WinISD's Rg, per driver (Ω). */
+  rg: number;
+  /** Drivers (WinISD wires them in parallel). */
+  drivers: number;
+  isobaric: boolean;
+  /** WinISD's input power (W). */
+  power: number;
+  /** Simulate the coil inductance (WinISD's VCInd). */
+  simulateLe: boolean;
+  /** Air: density and speed of sound, and the conditions WinISD keeps with them. */
+  air: { rho: number; c: number; temp_C: number; pressure_hPa: number; humidity_pct: number };
+  /** A Butterworth high-pass (WinISD's filter type 1), if any. */
+  highPass?: { order: number; freq: number };
+  /** Curve colour, "#rrggbb". */
+  color?: string;
+}
+
+/**
+ * Write a WinISD project (.wpr) for one box, laid out as WinISD 0.7 saves them (every section and
+ * key it writes, unused ones zeroed), so WinISD opens it and parseWpr reads it back.
+ */
+export function writeWpr(p: WprExport): string {
+  const n = (v: number) => String(Number(v.toPrecision(12)));
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const section = (name: string, rows: [string, string | number][]) =>
+    `[${name}]\r\n` + rows.map(([k, v]) => `${k}=${typeof v === "number" ? n(v) : v}`).join("\r\n") + "\r\n";
+  const vent = (name: string, v?: WprPortOut, vb_l = 0) => {
+    const area = v ? Math.PI * (v.diameter_cm / 200) ** 2 : 0;
+    return section(name, [
+      ["Num", v?.count ?? 1],
+      ["Shape", 1],
+      ["Fb", v?.fb ?? 0],
+      ["Vb", v ? vb_l / 1000 : 0],
+      ["dia1", v ? v.diameter_cm / 100 : 0.102],
+      ["dia2", v ? v.diameter_cm / 100 : 0.102],
+      ["carea", area],
+      ["len", v ? v.length_cm / 100 : 0],
+      ["endcorrection", v?.endCorrection ?? 0.732],
+      ["crosscalc", 1],
+    ]);
+  };
+  const b = p.box;
+  const rearLoss = p.losses;
+  const zero = { ql: 0, qa: 0, qp: 0 };
+  const front = b.type === "bandpass" ? b.front.losses : zero;
+  const bType = b.type === "sealed" ? 0 : b.type === "vented" ? 1 : b.type === "passive-radiator" ? 4 : b.order === "4" ? 2 : 3;
+  const vr = b.type === "bandpass" ? b.rear.vb_l : b.vb_l;
+  // A closed (rear) chamber's Fr is the driver's resonance in it: Fs·√(1 + Vas/Vr), Vas for all the drivers.
+  const vasAll = (p.driver.ts.vas_l ?? 0) * (p.drivers / (p.isobaric ? 2 : 1));
+  const closedFr = (p.driver.ts.fs ?? 0) * Math.sqrt(1 + vasAll / vr);
+  const fr =
+    b.type === "vented" ? b.port.fb : b.type === "passive-radiator" ? b.fb : b.type === "bandpass" ? (b.rear.port?.fb ?? closedFr) : closedFr;
+  const portArea = (v?: WprPortOut) => (v ? v.count * Math.PI * (v.diameter_cm / 200) ** 2 : 0);
+  // The [Driver] block, with the air WinISD keeps there.
+  const driver = writeWdr(p.driver).replace(/\r\n$/, "") + `\r\nc=${n(p.air.c)}\r\nroo=${n(p.air.rho)}\r\n`;
+  const rgb = /^#([0-9a-f]{6})$/i.exec(p.color ?? "")?.[1];
+  // WinISD stores colours as Windows COLORREF (0x00BBGGRR).
+  const colorref = rgb ? parseInt(rgb.slice(4, 6) + rgb.slice(2, 4) + rgb.slice(0, 2), 16) : 8388608;
+  let filters: [string, string | number][] = [["Count", 0]];
+  if (p.highPass) {
+    filters = [
+      ["Count", 1],
+      ["filter0type", 1],
+      ["filter0params", `0;1;${p.highPass.order};${n(p.highPass.freq)};0.707`],
+    ];
+  }
+  const parts = [
+    section("ProjectInfo", [
+      ["Description", "Exported from Speaker Box Genius"],
+      ["CreateDate", today],
+      ["ModifyDate", today],
+    ]),
+    driver,
+    section("Box", [
+      ["BType", bType],
+      ["Vf", b.type === "bandpass" ? b.front.vb_l / 1000 : 0],
+      ["Ff", b.type === "bandpass" ? b.front.port.fb : 0],
+      ["Qlf", front.ql],
+      ["Qaf", front.qa],
+      ["Qpf", front.qp],
+      ["Vr", vr / 1000],
+      ["Fr", fr],
+      ["Qlr", rearLoss.ql],
+      ["Qar", rearLoss.qa],
+      ["Qpr", rearLoss.qp],
+      ["Vc", 0],
+      ["Fc", 0],
+      ["Qlc", 0],
+      ["Qac", 0],
+      ["Qpc", 0],
+      ["Qiclfr", b.type === "bandpass" ? b.qicl : 100],
+      ["Qiclfc", 0],
+      ["Qiclcr", 0],
+      ["T", p.air.temp_C + 273.15],
+      ["p", p.air.pressure_hPa * 100],
+      ["phi", p.air.humidity_pct / 100],
+      ["d", 1],
+      ["Med", 0],
+      ["Nd", p.drivers],
+      ["Angle", 0],
+      ["Isobarik", p.isobaric ? 1 : 0],
+      ["alfaVC", 0.0039],
+      ["dTVC", 0],
+      ["Sdfport", b.type === "bandpass" ? portArea(b.front.port) : 0],
+      ["Sdrport", b.type === "vented" ? portArea(b.port) : b.type === "bandpass" && b.order === "6p" ? portArea(b.rear.port) : 0],
+      ...(b.type === "passive-radiator" ? ([["Npr", b.count]] as [string, number][]) : []),
+    ]),
+    vent("VentFront", b.type === "bandpass" ? b.front.port : undefined, b.type === "bandpass" ? b.front.vb_l : 0),
+    vent("VentRear", b.type === "vented" ? b.port : b.type === "bandpass" && b.order === "6p" ? b.rear.port : undefined, vr),
+    vent("VentIntra", b.type === "bandpass" && b.order === "6s" ? b.rear.port : undefined, vr),
+    section("PlotSettings", [
+      ["Color", colorref],
+      ["Width", 1],
+    ]),
+    section("SignalSource", [
+      ["Rg", p.rg],
+      ["P", p.power],
+    ]),
+    section("Filters", filters),
+  ];
+  if (b.type === "passive-radiator") {
+    // WinISD keeps a PR's Fs and Vas (its Mms follows from them).
+    const sd = b.pr.sd_cm2 / 1e4;
+    const cms = b.pr.vas_l / 1000 / (p.air.rho * p.air.c * p.air.c * sd * sd);
+    const fs = 1 / (2 * Math.PI * Math.sqrt((b.pr.mms_g / 1000) * cms));
+    parts.push(
+      section("PassiveRadiator", [
+        ["Vas", b.pr.vas_l / 1000],
+        ["Qms", b.pr.qms],
+        ["Fs", fs],
+        ["Sd", sd],
+        ["Xmax", b.pr.xmax_mm / 1000],
+        ["Me", b.addedMass_g / 1000],
+      ]),
+    );
+  }
+  parts.push(
+    section("SimulatorOptions", [
+      ["VCInd", p.simulateLe ? 1 : 0],
+      ["FlatResponse", 0],
+      ["TLPorts", 0],
+    ]),
+  );
+  return parts.join("\r\n");
+}
