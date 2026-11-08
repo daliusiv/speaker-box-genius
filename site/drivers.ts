@@ -12,8 +12,9 @@ import { loadDatabase, type Entry } from "../packages/db-tools/src/load.ts";
 import { doubtsXmax, type Flag } from "../packages/db-tools/src/plausibility.ts";
 import type { Driver, PassiveRadiator } from "../packages/schema/src/index.ts";
 import { DEFAULT_STATE, encodeStateShort, type AppState, type DesignState } from "../packages/web/src/state.ts";
-import { sizeAllForDriver } from "../packages/web/src/presets.ts";
-import { driverInputOf, runDesigns, simOptionsOf, solveDriver, type Design } from "../packages/web/src/sim.ts";
+import { sealedQtc, sizeAllForDriver, withPreset } from "../packages/web/src/presets.ts";
+import { stuffFactor } from "../packages/web/src/stuffing.ts";
+import { alignmentDriver, driverInputOf, runDesigns, simOptionsOf, solveDriver, type Design } from "../packages/web/src/sim.ts";
 
 type Vented = Extract<DesignState, { kind: "vented" }>;
 type Pr = Extract<DesignState, { kind: "pr" }>;
@@ -90,6 +91,9 @@ export interface DriverPage {
   flags: Flag[];
 }
 
+/** Largest box a driver page suggests (L). */
+export const PAGE_MAX_L = 300;
+
 /**
  * Suggested designs for one driver, or null if it gets no page (incomplete parameters, a
  * tweeter-like Fs, or no box type that suits it).
@@ -102,11 +106,23 @@ export function designDriver(e: Entry<Driver>, prs: ReturnType<typeof prCandidat
   if (solved.missing.length > 0) return null;
 
   const { state: sized, skipped } = sizeAllForDriver(s0);
+  const align = alignmentDriver(solved, s0);
   const notes = skipped.map((x) => x.replace(/^[^:]+: /, ""));
   const keep: DesignState[] = [];
   let pr: DriverPage["pr"];
   for (const d of sized.designs) {
     if (!d.preset) continue; // not sized for this driver: left out
+    // Pages suggest boxes people build at home; past this the alignment's box isn't a suggestion.
+    // A sealed box just gets the largest size and the Qtc that gives; ported and PR boxes
+    // would need another alignment, so they're left off.
+    if (d.vb_l > PAGE_MAX_L && d.kind === "sealed" && align) {
+      keep.push({ ...d, vb_l: PAGE_MAX_L, ...withPreset(d.name, `Qtc ${sealedQtc(align, PAGE_MAX_L * stuffFactor(d), sized.drivers).toFixed(2)}`) });
+      continue;
+    }
+    if (d.vb_l > PAGE_MAX_L) {
+      notes.push(`a ${d.kind === "sealed" ? "sealed" : d.kind === "pr" ? "passive radiator" : "ported"} box (its ${d.preset} box is ${Math.round(d.vb_l)} L, over ${PAGE_MAX_L} L)`);
+      continue;
+    }
     if (d.kind === "sealed") keep.push(d);
     // Ported: the port Size all boxes chose (the simplest that fits and keeps quiet at this power).
     if (d.kind === "vented") keep.push(d);

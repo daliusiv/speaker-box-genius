@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, readdirSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build, markdown, parsePage, resolveExamples } from "./build.ts";
-import { cardData, designDriver, driverContent, driverState, loadDb, prCandidate } from "./drivers.ts";
+import { cardData, designDriver, driverContent, driverState, loadDb, PAGE_MAX_L, prCandidate } from "./drivers.ts";
 import { chart } from "./chart.ts";
 import { cardSvg } from "./og.ts";
 
@@ -141,6 +141,25 @@ test("driver designs follow the app's presets, with a port that fits and a PR th
   const svg = cardSvg(cardData(p));
   assert.match(svg, /^<svg[^>]+width="1200" height="630"/);
   assert.match(svg, />Dayton Audio DSA215-8</);
+});
+
+test("no driver page suggests a box over the page limit, and a high-Qts driver's sealed box stays near twice Vas", () => {
+  const db = loadDb();
+  const prs = db.passiveRadiators.map(prCandidate);
+  // Qts 0.68: Qtc 0.707 would ask for about 2,400 L.
+  const hiQ = db.drivers.find((x) => x.id === "celestion/pulse-xl-15-25");
+  if (hiQ) {
+    const p = designDriver(hiQ, prs);
+    const sealed = p?.designs.find((d) => d.design.kind === "sealed")?.design;
+    assert.ok(sealed && sealed.vb_l <= Math.min(PAGE_MAX_L, 2.01 * hiQ.data.ts.vas_l!) && sealed.preset !== "Qtc 0.707", `${sealed?.vb_l} L, ${sealed?.preset}`);
+  }
+  // Big QB3 boxes for 18-inch drivers are left off, with a reason on the page.
+  const big = db.drivers.find((x) => x.id === "dayton-audio/umii18-22");
+  if (big) {
+    const p = designDriver(big, prs);
+    assert.ok(!p || p.designs.every((d) => d.design.vb_l <= PAGE_MAX_L));
+    if (p) assert.ok(p.notes.some((n) => /over 300 L/.test(n)), p.notes.join("; "));
+  }
 });
 
 test("a driver page with a value to check says so near the top, with the way to report it", () => {

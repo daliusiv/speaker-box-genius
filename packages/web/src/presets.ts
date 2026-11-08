@@ -51,6 +51,28 @@ const r1 = (v: number) => Math.round(v * 10) / 10;
 export const ventedAlignmentFor = (a: AlignmentDriver, drivers: number): VentedAlignment | null =>
   qb3Alignment(a, drivers) ?? keeleAlignment(a, drivers);
 
+/** Largest sealed box offered, as a multiple of Vas: past it the box adds little bass. */
+export const SEALED_MAX_VAS = 2;
+
+/**
+ * The sealed preset: Qtc 0.707, unless that needs a box bigger than twice Vas (Qts close to
+ * 0.707, where the box size runs away: a Qts of 0.68 asks for 13 × Vas). Then a box of twice
+ * Vas and the Qtc that gives, Qts·√1.5.
+ */
+export function sealedPreset(align: { qms: number; qes: number; vas_l: number }, drivers: number): { vb_l: number; name: string } | null {
+  const vb = sealedVolumeForAlignment(align as never, 0.707, drivers);
+  if (vb === null) return null;
+  const cap = SEALED_MAX_VAS * align.vas_l * drivers;
+  if (vb <= cap) return { vb_l: vb, name: "Qtc 0.707" };
+  return { vb_l: cap, name: `Qtc ${sealedQtc(align, cap, drivers).toFixed(2)}` };
+}
+
+/** A sealed box's Qtc for this driver (Qts·√(1 + Vas/Vb), no losses). */
+export function sealedQtc(align: { qms: number; qes: number; vas_l: number }, vb_l: number, drivers: number): number {
+  const qts = (align.qms * align.qes) / (align.qms + align.qes);
+  return qts * Math.sqrt(1 + (align.vas_l * drivers) / vb_l);
+}
+
 /**
  * Every design resized for the current driver with the presets on its card: sealed →
  * Qtc 0.707, ported and passive radiator → QB3/B4 (Keele's alignment for higher Qts),
@@ -74,13 +96,13 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
     }
     switch (d.kind) {
       case "sealed": {
-        const vb = sealedVolumeForAlignment(align, 0.707, drivers);
-        if (vb === null) {
+        const sealed = sealedPreset(align, drivers);
+        if (!sealed) {
           skipped.push(`${d.name}: the driver's Qts is already above 0.707`);
           return d;
         }
-        changed.push(`${d.name} → ${sizeText(d, vb)} (Qtc 0.707)`);
-        return { ...d, vb_l: r1(vb / stuffFactor(d)), ...withPreset(d.name, "Qtc 0.707") };
+        changed.push(`${d.name} → ${sizeText(d, sealed.vb_l)} (${sealed.name})`);
+        return { ...d, vb_l: r1(sealed.vb_l / stuffFactor(d)), ...withPreset(d.name, sealed.name) };
       }
       case "vented": {
         if (!qb3) {

@@ -1351,7 +1351,7 @@ export function App(props: { initial: AppState | null }) {
                 <Sparkle />
                 Size all boxes for this driver
               </button>
-              <span className="hint">Sealed Qtc 0.707; ported and PR a flat alignment (QB3, or Keele for higher Qts), ported with the simplest port that fits and stays quiet at the driver's rating; bandpass the lowest flat band in its volume. Undo takes it back.</span>
+              <span className="hint">Sealed Qtc 0.707 (for a Qts near 0.707, where that box runs away, twice Vas and a higher Qtc); ported and PR a flat alignment (QB3, or Keele for higher Qts), ported with the simplest port that fits and stays quiet at the driver's rating; bandpass the lowest flat band in its volume. Undo takes it back.</span>
             </div>
             {sizeReport && (
               <div className="size-report">
