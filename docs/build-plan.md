@@ -150,7 +150,7 @@ High-pass filters (Butterworth any order 1–4, Linkwitz–Riley 2 and 4), Linkw
 ### 4.4 Accuracy ✅
 - **Validation against WinISD 0.7.0.950:** 15 cases, 114 values from real WinISD projects (sealed, ported, PR, both bandpass types, isobaric, DVC, parallel drivers, high-pass, Le, leakage). Response within about 0.01 dB for sealed and ported boxes.
 - **Validation against Hornresp 60.60** (and 55.30 before it): 47 cases on the validation page: 17 line and horn records with three drivers, and 30 box, filter, EQ and stuffed-line cases. Lines and horns: SPL within about 0.05 dB on average, impedance about 0.2 %.
-- Every comparison is a CI test, and the results are published at **[speakerboxgenius.com/validation](https://speakerboxgenius.com/validation/)**, rebuilt from the same code (see `docs/validation.md`).
+- Every comparison is a CI test, and the results are published at **[speakerboxgenius.com/validation](https://speakerboxgenius.com/validation/)**, rebuilt from the same code (see `docs/validation.md`). Every case has an **Open in app** link to the same project, and a test holds each linked project to the case's reference (`site/validationLinks.ts`).
 - Analytic and property tests for alignments, filters, isobaric equivalence, amplifier figures and more.
 - **Known limits:** small-signal model, so no Bl(x)/Cms(x) nonlinearity. (Port compression and hot-coil compression were added.)
 

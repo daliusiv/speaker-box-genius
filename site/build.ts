@@ -366,7 +366,7 @@ export async function build(outDir: string): Promise<string[]> {
       title: "Validation against WinISD and Hornresp",
       description: "Every WinISD and Hornresp comparison Speaker Box Genius is tested against: the cases, how far apart the results are, and the known differences.",
       path: "/validation/",
-      content: validationContent(report, { commit: buildCommit(), date: new Date(), links: await validationLinks(SITE, { winisd: report.winisd.cases, hornresp: report.hornresp.cases }) }),
+      content: validationContent(report, { commit: buildCommit(), date: new Date(), links: await validationLinks(SITE, { winisd: report.winisd.cases, hornresp: report.hornresp.cases, boxes: report.hornresp.boxes.cases }) }),
       guides,
       style: CHART_STYLE + VALIDATION_STYLE,
     }),

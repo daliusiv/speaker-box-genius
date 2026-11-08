@@ -69,7 +69,7 @@ function largest(k: WinIsdCaseReport, q: Q): string {
 
 const ok = (pass: boolean) => (pass ? '<span class="ok">✓</span>' : '<span class="bad">✗ outside</span>');
 
-function winisdCase(k: WinIsdCaseReport, q: Q, link?: string): string {
+function winisdCase(k: WinIsdCaseReport, q: Q, link?: { href: string; note?: string }): string {
   const rows = k.checks
     .map((c) => {
       const u = q[c.what];
@@ -164,7 +164,7 @@ function maxSplParts(ms: MaxSplReport[] | undefined, tol: Report["hornresp"]["ma
   return { rows, figs };
 }
 
-function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"], mtol: Report["hornresp"]["maxSplTol"], itol: Report["hornresp"]["impulseTol"], link?: string): string {
+function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"], mtol: Report["hornresp"]["maxSplTol"], itol: Report["hornresp"]["impulseTol"], link?: { href: string; note?: string }): string {
   const ms = maxSplParts(k.maxSpl, mtol);
   const ir = impulseParts(k.impulse, itol);
   const s = k.stats;
@@ -203,7 +203,7 @@ ${KEY_HORNRESP}<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Imped
 </section>`;
 }
 
-function hornrespBoxCase(k: HornrespBoxCaseReport, mtol: Report["hornresp"]["maxSplTol"], itol: Report["hornresp"]["impulseTol"], link?: string): string {
+function hornrespBoxCase(k: HornrespBoxCaseReport, mtol: Report["hornresp"]["maxSplTol"], itol: Report["hornresp"]["impulseTol"], link?: { href: string; note?: string }): string {
   const ms = maxSplParts(k.maxSpl, mtol);
   const ir = impulseParts(k.impulse, itol);
   const s = k.stats;
@@ -258,11 +258,12 @@ export interface BuildInfo {
   commit?: string;
   date: Date;
   /** "Open in app" links by case anchor ("winisd-ported", "hornresp-05-mltl"); see validationLinks.ts. */
-  links?: Record<string, string>;
+  links?: Record<string, { href: string; note?: string }>;
 }
 
 /** The case's "Open in app" link, if it has one. */
-const openLink = (href: string | undefined) => (href ? ` · <a class="open" href="${href}">Open in app →</a>` : "");
+const openLink = (l: { href: string; note?: string } | undefined) =>
+  l ? ` · <a class="open" href="${l.href}">Open in app →</a>${l.note ? ` <small>(${esc(l.note)})</small>` : ""}` : "";
 
 /** Opens the group holding the case a link points to (on load and on every # change), then scrolls to it. */
 const GROUP_SCRIPT = `(function(){function show(){var id=decodeURIComponent(location.hash.slice(1));if(!id)return;var el=document.getElementById(id);if(!el)return;for(var d=el;d;d=d.parentElement)if(d.tagName==="DETAILS")d.open=true;el.scrollIntoView();}addEventListener("hashchange",show);document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest('a[href^="#"]');if(a)setTimeout(show,0);});show();})();`;

@@ -4,10 +4,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseWpr, simulate } from "../packages/engine/src/index.ts";
 import { WINISD_CASES } from "../packages/engine/validation/winisd.ts";
-import { HORNRESP_TITLES, HORNRESP_TOL, hornrespIds, readTable } from "../packages/engine/validation/hornresp.ts";
+import { HORNRESP_TITLES, HORNRESP_TOL, hornrespBoxIds, hornrespIds, readBoxCase, readTable, runHornrespBox } from "../packages/engine/validation/hornresp.ts";
 import { decodeStateAny } from "../packages/web/src/state.ts";
 import { builtVbOf, driverInputOf, enclosureOf, lossesFor, runDesigns, simOptionsOf, solveDriver } from "../packages/web/src/sim.ts";
-import { hornrespLineState, validationLinks, winisdCaseState } from "./validationLinks.ts";
+import { hornrespBoxState, hornrespLineState, validationLinks, winisdCaseState } from "./validationLinks.ts";
 
 const FIXTURES = join(import.meta.dirname, "../packages/engine/test/fixtures");
 const interp = (f: Float64Array, y: ArrayLike<number>, x: number) => {
@@ -66,13 +66,40 @@ test("every Hornresp line and horn opened in the app matches Hornresp (at the re
   }
 });
 
+test("every Hornresp box, filter, EQ and stuffed-line case opened in the app is the comparison's own simulation", () => {
+  for (const id of hornrespBoxIds()) {
+    const s = hornrespBoxState(id);
+    assert.ok(s, `${id}: no project`);
+    const c = readBoxCase(id);
+    const ref = runHornrespBox(id).result;
+    const d = s.designs[0]!;
+    // The app's pipeline (sim.ts): its driver, enclosure and options, at the comparison's sweep.
+    const eq = s.eq.map(({ id: _i, on: _o, target: _t, ...e }) => e);
+    const r = simulate(driverInputOf(s, solveDriver(s)), enclosureOf(d, builtVbOf(s, d), lossesFor(s, d), s.volume.wall_mm), {
+      ...simOptionsOf(s),
+      ...(d.kind === "line" ? {} : { splFrom: undefined }),
+      eq: eq as never,
+      fMin: 10,
+      fMax: Math.max(1000, c.zeFMax ?? 0),
+      points: 8000,
+    });
+    // Two drivers side by side are compared on SPL from radiated power, which the app does for lines only (the page says so).
+    const onAxis = c.splFrom === "power" && d.kind !== "line";
+    for (let i = 0; i < r.freq.length && r.freq[i]! <= (c.fMax ?? 300); i++) {
+      assert.ok(Math.abs(r.impedanceOhm[i]! / ref.impedanceOhm[i]! - 1) < 1e-5, `${id}: impedance at ${r.freq[i]} Hz`);
+      assert.ok(Math.abs(r.excursionMm[i]! / ref.excursionMm[i]! - 1) < 1e-5, `${id}: excursion at ${r.freq[i]} Hz`);
+      assert.ok(Math.abs(r.spl[i]! - ref.spl[i]!) < (onAxis ? 0.35 : 1e-4), `${id}: SPL at ${r.freq[i]} Hz`);
+    }
+  }
+});
+
 test("the links open those projects", async () => {
   const links = await validationLinks("https://speakerboxgenius.com", {
     winisd: [{ id: "bandpass-6" }],
     hornresp: [{ id: "06-tapped-horn", title: "Tapped horn" }],
   });
   assert.deepEqual(Object.keys(links), ["winisd-bandpass-6", "hornresp-06-tapped-horn"]);
-  const open = async (k: string) => decodeStateAny(links[k]!.split("#")[1]!);
+  const open = async (k: string) => decodeStateAny(links[k]!.href.split("#")[1]!);
   assert.deepEqual((await open("winisd-bandpass-6"))?.designs, winisdCaseState("bandpass-6")!.designs);
   const th = await open("hornresp-06-tapped-horn");
   assert.equal(th?.designs[0]?.kind, "line");
