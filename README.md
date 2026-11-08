@@ -126,7 +126,7 @@ Merging to `main` builds and deploys to GitHub Pages automatically.
 
 ## Licence
 
-Speaker Box Genius is **free and source-available for non-commercial use**. It is not "open source" in the OSI sense, because it doesn't allow commercial resale.
+Speaker Box Genius is **free and source-available for non-commercial use**. It is not "open source" in the OSI sense, because it doesn't allow commercial resale. The [About page](https://speakerboxgenius.com/about/) explains the licence and the contributor agreement in plain words.
 
 - **Code**: [PolyForm Noncommercial 1.0.0](LICENSE). Use it, change it and share it for personal, hobby, educational or non-profit purposes. Selling it or using it in a paid product needs permission.
 - **Driver database and docs**: [CC BY-NC-SA 4.0](LICENSE-DATA), except a few brands that allowed use here but not under Creative Commons (listed in LICENSE-DATA).

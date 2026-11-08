@@ -183,7 +183,7 @@ export function AppMenu(props: {
               Licence
             </a>
             <a role="menuitem" className="menu-link" href="/about/">
-              About and licence
+              About
             </a>
             <a role="menuitem" className="menu-link" href="/privacy/">
               Privacy
