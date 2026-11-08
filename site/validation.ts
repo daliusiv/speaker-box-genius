@@ -96,7 +96,7 @@ function winisdCase(k: WinIsdCaseReport, q: Q): string {
 <h3>${esc(k.title)} ${ok(k.pass)}</h3>
 <p class="setup">${esc(k.setup)} · <a href="${REPO}/blob/main/packages/engine/test/fixtures/${k.fixture}">${esc(k.fixture)}</a></p>
 <div class="table"><table class="cmp"><thead><tr><th>Quantity</th><th>WinISD</th><th>Ours</th><th>Difference<br><small>tolerance</small></th></tr></thead><tbody>${rows}</tbody></table></div>
-${charts.length ? `<div class="charts">${charts.join("")}</div>` : ""}
+${charts.length ? `${KEY_WINISD}<div class="charts">${charts.join("")}</div>` : ""}
 ${k.notes ? `<div class="known"><h4>Known differences</h4>${notes(k.notes)}</div>` : ""}
 </section>`;
 }
@@ -199,7 +199,7 @@ function hornrespCase(k: HornrespCaseReport, tol: Report["hornresp"]["tol"], mto
 <h3>${esc(k.title)} ${ok(k.pass)}</h3>
 <p class="setup">${esc(k.setup)} · <a href="${REPO}/tree/main/packages/engine/test/fixtures/hornresp/${k.id}">${esc(k.id)}</a></p>
 <div class="table"><table class="cmp"><thead><tr><th>Measure (10 Hz–1 kHz)</th><th>Result</th><th>Tolerance</th></tr></thead><tbody>${rows}</tbody></table></div>
-<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}${ms.figs}${ir.figs}</div>
+${KEY_HORNRESP}<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}${ms.figs}${ir.figs}</div>
 </section>`;
 }
 
@@ -223,6 +223,7 @@ function hornrespBoxCase(k: HornrespBoxCaseReport, mtol: Report["hornresp"]["max
     ...db("SPL change from the coil model (to 20 kHz)", s.coilMean, s.coilP95),
     row("Impedance, mean difference", `${s.zeMean.toFixed(2)} %`, `under ${t.zeMean} %`, s.zeMean < t.zeMean),
     row("Impedance, 95th percentile", `${s.zeP95.toFixed(2)} %`, `under ${t.zeP95} %`, s.zeP95 < t.zeP95),
+    row("Impedance, worst point", `${s.zeWorst.toFixed(2)} %`, "for reference", true),
     row("Impedance phase, mean difference", `${s.zePhaseMean.toFixed(2)}°`, `under ${t.zePhaseMean}°`, s.zePhaseMean < t.zePhaseMean),
     row("Cone excursion, mean difference", `${s.xdMean.toFixed(2)} %`, `under ${t.xdMean} %`, s.xdMean < t.xdMean),
     row("Cone excursion, 95th percentile", `${s.xdP95.toFixed(2)} %`, `under ${t.xdP95} %`, s.xdP95 < t.xdP95),
@@ -245,7 +246,7 @@ function hornrespBoxCase(k: HornrespBoxCaseReport, mtol: Report["hornresp"]["max
 <h3>${esc(k.title)} ${ok(k.pass)}</h3>
 <p class="setup">${esc(k.setup)}${k.options ? ` · ${esc(k.options)}` : ""} · <a href="${REPO}/tree/main/packages/engine/test/fixtures/hornresp-boxes/${k.id}">${esc(k.id)}</a></p>
 <div class="table"><table class="cmp"><thead><tr><th>Measure (10–${k.fMax ?? 300} Hz${k.zeFMax ? `; impedance to ${k.zeFMax / 1000} kHz` : ""})</th><th>Result</th><th>Tolerance</th></tr></thead><tbody>${rows}</tbody></table></div>
-<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Cone's output alone", "dB", k.cone)}${fig("Port's or radiator's output alone", "dB", k.vent)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}${ms.figs}${ir.figs}</div>
+${KEY_HORNRESP}<div class="charts">${fig("SPL at 1 m", "dB", k.spl)}${fig("Cone's output alone", "dB", k.cone)}${fig("Port's or radiator's output alone", "dB", k.vent)}${fig("Impedance", "Ω", k.ze)}${fig("Cone excursion", "mm", k.xd)}${ms.figs}${ir.figs}</div>
 </section>`;
 }
 
@@ -257,6 +258,10 @@ export interface BuildInfo {
   commit?: string;
   date: Date;
 }
+
+/** What the curves are, under each case (so a link straight to one case explains them). */
+const KEY_WINISD = '<p class="key"><span>Speaker Box Genius</span><span class="k-pt">WinISD read-outs</span></p>';
+const KEY_HORNRESP = '<p class="key"><span class="k-ref">Hornresp</span><span>Speaker Box Genius</span></p>';
 
 export const VALIDATION_STYLE = `
 .status{padding:.7rem 1rem;border:1px solid var(--border);border-radius:.7rem;background:var(--card);color:var(--muted);font-size:.95rem}
@@ -300,7 +305,7 @@ export function validationContent(rep: Report, info: BuildInfo): string {
     .map((k) => {
       const spl = k.stats.splMean !== undefined ? k.stats.splMean : (k.stats.coneMean ?? k.stats.ventMean)!;
       const p95 = k.stats.splP95 !== undefined ? k.stats.splP95 : Math.max(k.stats.coneP95 ?? 0, k.stats.ventP95 ?? 0);
-      return `<tr><td><a href="#hornresp-${k.id}">${esc(k.title)}</a></td><td>${spl.toFixed(2)} / ${p95.toFixed(2)} dB</td><td>${k.stats.zeMean.toFixed(2)} / ${k.stats.zeP95.toFixed(2)} %</td><td>${k.stats.xdMean.toFixed(2)} %</td><td>${ok(k.pass)}</td></tr>`;
+      return `<tr><td><a href="#hornresp-${k.id}">${esc(k.title)}</a></td><td>${spl.toFixed(2)} / ${p95.toFixed(2)} dB</td><td>${k.stats.zeMean.toFixed(2)} / ${k.stats.zeWorst.toFixed(2)} %</td><td>${k.stats.xdMean.toFixed(2)} %</td><td>${ok(k.pass)}</td></tr>`;
     })
     .join("");
 
@@ -313,24 +318,22 @@ export function validationContent(rep: Report, info: BuildInfo): string {
 <div class="table"><table><thead><tr><th>Case</th><th>Values</th><th>Largest difference</th><th>OK</th></tr></thead><tbody>${winisdSummary}</tbody></table></div>
 <h3>Hornresp ${esc(rep.hornresp.version.replace(/^Hornresp /, ""))}</h3>
 <div class="table"><table><thead><tr><th>Line or horn</th><th>SPL, mean / 95 %</th><th>Impedance, mean / worst</th><th>Excursion, mean</th><th>OK</th></tr></thead><tbody>${hornrespSummary}</tbody></table></div>
-<div class="table"><table><thead><tr><th>Box</th><th>SPL, mean / 95 %</th><th>Impedance, mean / 95 %</th><th>Excursion, mean</th><th>OK</th></tr></thead><tbody>${boxSummary}</tbody></table></div>
+<div class="table"><table><thead><tr><th>Box</th><th>SPL, mean / 95 %</th><th>Impedance, mean / worst</th><th>Excursion, mean</th><th>OK</th></tr></thead><tbody>${boxSummary}</tbody></table></div>
 
 <h2 id="known-differences">Known differences</h2>
 <ul>
 <li><strong>Passive radiator damping near the tuning.</strong> Tuning, radiator mass and stiffness match WinISD exactly, but near Fb WinISD shows less loss than the standard box-loss model (up to 0.5 dB at a high-Q peak). See <a href="#winisd-pr-18l">the PR cases</a>.</li>
-<li><strong>Level and impedance peaks.</strong> Against WinISD the absolute level sits a uniform ~0.03 dB (0.35 %) lower and impedance peaks up to 0.8 % higher, far below anything measurable.</li>
+<li><strong>Level and impedance peaks.</strong> Against WinISD the absolute level sits a uniform ~0.03 dB lower, and cone excursion and port air speed read 0.35 % lower: the same factor (20·log₁₀(1 − 0.0035) ≈ −0.03 dB), so it's one overall scale on the whole response, not a difference in its shape. Impedance peaks read up to 0.8 % higher. Both are far below anything measurable.</li>
 <li><strong>Conventions, not differences.</strong> WinISD applies the amplifier resistance to each driver and plots one driver's impedance, and drives isobaric pairs at half its stated power. The comparisons use WinISD's conventions; the app keeps power physical. Importing a WinISD project converts automatically.</li>
 <li><strong>Deep nulls in lines and horns.</strong> Against Hornresp, nulls fall at the same frequency but differ in depth, so SPL is held to its mean and 95th percentile.</li>
 </ul>
 
 <h2 id="winisd">WinISD</h2>
 <p>Each case is a real WinISD project (linked) with values read from WinISD's cursor read-out, next to ours (Speaker Box Genius); values marked <span class="tag">graph</span> were read off its graphs, so they're held to reading accuracy. Relative quantities (excursion, air speed, impedance, group delay, power) are compared in percent. ${esc(rep.winisd.driver)}.</p>
-<p class="key"><span>Speaker Box Genius</span><span class="k-pt">WinISD read-outs</span></p>
 ${w.map((k) => winisdCase(k, q)).join("\n")}
 
 <h2 id="hornresp">Hornresp</h2>
 <p>Each case is a Hornresp record with Hornresp's own results (SPL, impedance and its phase, cone excursion, group delay and the line's acoustic impedance), compared at every exported frequency from 10 Hz to ${rep.hornresp.fMax >= 1000 ? `${rep.hornresp.fMax / 1000} kHz` : `${rep.hornresp.fMax} Hz`}. ${esc(rep.hornresp.driver)}. The records are in <a href="${REPO}/tree/main/docs/hornresp-validation/records">docs/hornresp-validation</a>; open them in Hornresp to repeat any case.</p>
-<p class="key"><span class="k-ref">Hornresp</span><span>Speaker Box Genius</span></p>
 <h3 id="hornresp-lines">Lines and horns</h3>
 ${h.map((k) => hornrespCase(k, rep.hornresp.tol, rep.hornresp.maxSplTol, rep.hornresp.impulseTol)).join("\n")}
 <div class="known"><h4>Notes</h4>${notes(rep.hornresp.notes)}</div>
