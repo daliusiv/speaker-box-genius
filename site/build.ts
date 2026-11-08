@@ -28,6 +28,8 @@ import { cardData, brandContent, brandPath, designDriver, driverContent, driverP
 export const SITE = "https://speakerboxgenius.com";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = "https://github.com/daliusiv/speaker-box-genius";
+/** Visit counts (no cookies; see site/privacy.md). The app's index.html has the same tag. */
+export const GOATCOUNTER = '<script data-goatcounter="https://speakerboxgenius.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>';
 
 export interface Page {
   title: string;
@@ -252,6 +254,7 @@ export function layout(o: { title: string; description: string; path: string; im
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <script type="application/ld+json">${JSON.stringify(ld)}</script>
 <style>${STYLE}${o.style ?? ""}</style>
+${GOATCOUNTER}
 </head>
 <body>
 <header class="top">
@@ -263,7 +266,7 @@ ${o.content}
 </main>
 <footer>
 ${others.length ? `<p>More guides: ${others.map((g) => `<a href="${g.path}">${escapeHtml(g.title)}</a>`).join(" · ")}</p>` : ""}
-<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/validation/">Validation</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
+<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/validation/">Validation</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
 </footer>
 </body>
 </html>
@@ -364,6 +367,18 @@ export async function build(outDir: string): Promise<string[]> {
       content: validationContent(readReport(), { commit: buildCommit(), date: new Date() }),
       guides,
       style: CHART_STYLE + VALIDATION_STYLE,
+    }),
+  );
+
+  write(
+    "/privacy/",
+    layout({
+      title: "Privacy",
+      description: "No accounts, no cookies: your designs stay in your browser and your links. What the visit counter sees.",
+      path: "/privacy/",
+      content: markdown(readFileSync(join(HERE, "privacy.md"), "utf8")),
+      guides,
+      moreGuides: false,
     }),
   );
 
