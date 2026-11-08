@@ -81,7 +81,7 @@ The LT changes the timing of the bass. In the example, group delay at 20 Hz rise
 
 ## How to build one
 
-- **DSP:** most DSPs (miniDSP and others) can make an LT directly from f0, Q0, fp and Qp, or with a single biquad.
+- **DSP:** most DSPs (miniDSP and others) can make an LT directly from f0, Q0, fp and Qp, or with a single biquad. On the app's **Signal** tab, **Export to DSP** writes that biquad (with the rest of the design's EQ and high-pass) for Equalizer APO, CamillaDSP or miniDSP, at your DSP's sample rate.
 - **Analogue:** Linkwitz's original circuit uses one op-amp stage; Elliott Sound Products has a full project with a design spreadsheet [3][11].
 - **In the app:** on the **Signal** tab, add a **Linkwitz Transform** under **EQ**, choose which design it **Applies to**, and set **fp** and **Qp**. f0 and Q0 are filled in from the design.
 
