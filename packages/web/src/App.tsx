@@ -17,7 +17,7 @@ import { ChartEmphasis, CrosshairProvider, LogChart, shortName, type ChartHandle
 import { TimeChart } from "./TimeChart.tsx";
 import { draggableEq, eqQ, moveEq, retune, tunable } from "./chartEdit.ts";
 import { useUndoable } from "./useUndoable.ts";
-import { sizeAllForDriver, sizeBandpassDesign } from "./presets.ts";
+import { bestVentedPort, sizeAllForDriver, sizeBandpassDesign } from "./presets.ts";
 import { loadCandidates, type FinderContext } from "./PrFinder.tsx";
 import { sizeForNewDriver } from "./quickStart.ts";
 import { initialPanel, PanelTabs, rememberPanel, TabRow, type PanelId } from "./PanelTabs.tsx";
@@ -1280,6 +1280,7 @@ export function App(props: { initial: AppState | null }) {
                 built_l={builtVbOf(state, d)}
                 linked={state.volume.link === d.id}
                 onSizeBandpass={d.kind === "bandpass" ? () => sizeOneBandpass(d) : undefined}
+                pickPort={d.kind === "vented" ? (x, vb, fb) => bestVentedPort(state, x, vb, fb) : undefined}
                 lineFb={d.kind === "line" ? (designs.find((x) => x.design.id === d.id)?.result.summary.fb ?? null) : undefined}
                 driverDisp_l={state.volume.driverDisp_l * state.drivers * (state.isobaric ? 2 : 1)}
                 wall_mm={state.volume.wall_mm}
