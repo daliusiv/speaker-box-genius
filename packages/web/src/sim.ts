@@ -707,6 +707,9 @@ export function amplifierLoad(s: AppState, solved: SolveResult): { re: number; n
   return { re, nominal: s.nominal_ohms * (re / solved.values.re!) };
 }
 
+/** The power rating of the whole driver bank (W): each driver's Pe times the drivers, as the thermal limit counts it. 0 when unknown. */
+export const ratedPowerOf = (s: AppState): number => (s.pe_w > 0 ? Math.min(10000, Math.round(s.pe_w * s.drivers)) : 0);
+
 /** The drive level as people read it: "100 W" or "2.83 V". */
 export const driveLabel = (s: Pick<AppState, "drive" | "power" | "volts">) => (s.drive === "volts" ? `${s.volts} V` : `${s.power} W`);
 /** ", voice coil at 100 °C" when the coil is simulated hot; empty when cold. */

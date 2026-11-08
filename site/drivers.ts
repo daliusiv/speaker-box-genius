@@ -299,7 +299,7 @@ export function driverContent(p: DriverPage, links: PageLinks, chart: typeof imp
 <h1>${esc(name)}: box design</h1>
 <p class="lede">${esc(describe(p.rec))}. Suggested ${kindList} boxes worked out from its Thiele/Small parameters, ready to open and change in Speaker Box Genius.</p>
 <p class="cta"><a class="button" href="${esc(links.all)}">Open these designs in the app →</a></p>
-${p.rec.ts.pe_w ? `<p class="muted">They open at its ${f1(p.rec.ts.pe_w)} W power rating; the app's 1 W button (as WinISD and Hornresp start) is next to it.</p>` : ""}
+${p.rec.ts.pe_w ? `<p class="muted">They open at its ${Math.round(p.rec.ts.pe_w)} W power rating; the app's 1 W button (as WinISD and Hornresp start) is next to it.</p>` : ""}
 ${flagNote}
 <h2 id="boxes">Suggested boxes</h2>
 <p>${suitability(solved.fs!, solved.qes!, solved.qts!)} The boxes use the flattest standard alignments; a smaller box trades some bass extension for size, which you can try in the app. Volumes are net: add the space taken by the driver, port${p.pr ? ", passive radiators" : ""} and bracing (the app's volume calculator does this).</p>
