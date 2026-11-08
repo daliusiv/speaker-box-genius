@@ -1776,7 +1776,7 @@ export function App(props: { initial: AppState | null }) {
           </div>
         </div>
         {welcome.linkNote && <LinkNote onDismiss={welcome.dismissLinkNote} onTips={welcome.showTips} />}
-        {welcome.tips && <GettingStarted onDismiss={welcome.dismissTips} onAssistant={launchAssistant} />}
+        {welcome.tips && <GettingStarted onDismiss={welcome.dismissTips} onAssistant={launchAssistant} drivers={db?.drivers.length} />}
         <Summary designs={designs} state={state} missing={solved.missing.length > 0} narrow={narrow} onJump={jumpTo} />
 
         {designs.length > 0 && (
