@@ -45,6 +45,7 @@ import {
   airOf,
   amplifierLoad,
   baffleDbFor,
+  ratedPowerOf,
   alignmentDriver,
   colorOf,
   dvcFactors,
@@ -925,7 +926,9 @@ export function App(props: { initial: AppState | null }) {
                       // From the assistant's "I have a speaker driver": the project is still the untouched
                       // example, so every box is sized for the new driver (with a port and a PR to suit)
                       // in the same undo step. Picked any other time, sizing is only offered: the boxes may be yours.
-                      const fresh = pickToCharts.current;
+                      // Only while the boxes are still the example's: a search left open and used later
+                      // (after editing) is an ordinary pick.
+                      const fresh = pickToCharts.current && JSON.stringify(latest.current.designs) === JSON.stringify(DEFAULT_STATE.designs);
                       pickToCharts.current = false;
                       const prs = fresh && db ? loadCandidates(db).catch(() => null) : Promise.resolve(null);
                       return Promise.all([loadDriver(id), prs]).then(
@@ -1320,7 +1323,7 @@ export function App(props: { initial: AppState | null }) {
                 <Sparkle />
                 Size all boxes for this driver
               </button>
-              <span className="hint">Sealed Qtc 0.707; ported and PR a flat alignment (QB3, or Keele for higher Qts); bandpass the lowest flat band in its volume. Undo takes it back.</span>
+              <span className="hint">Sealed Qtc 0.707; ported and PR a flat alignment (QB3, or Keele for higher Qts), ported with the simplest port that fits and stays quiet at the driver's rating; bandpass the lowest flat band in its volume. Undo takes it back.</span>
             </div>
             {sizeReport && (
               <div className="size-report">
@@ -1835,15 +1838,15 @@ export function App(props: { initial: AppState | null }) {
             >
               1 W
             </button>
-            {state.pe_w > 0 && (
+            {ratedPowerOf(state) > 0 && (
               <button
                 type="button"
                 className="chip"
-                aria-pressed={state.drive === "watts" && state.power === Math.round(state.pe_w)}
-                title="The driver's power rating (Pe): see where it runs out of excursion or the port chuffs"
-                onClick={() => setStep((s) => ({ ...s, drive: "watts", power: Math.min(10000, Math.round(s.pe_w)) }))}
+                aria-pressed={state.drive === "watts" && state.power === ratedPowerOf(state)}
+                title={`The power rating (Pe${state.drivers > 1 ? ` × ${state.drivers} drivers` : ""}): see where it runs out of excursion or the port chuffs`}
+                onClick={() => setStep((s) => ({ ...s, drive: "watts", power: ratedPowerOf(s) }))}
               >
-                Rated {Math.round(state.pe_w)} W
+                Rated {ratedPowerOf(state)} W
               </button>
             )}
           </div>

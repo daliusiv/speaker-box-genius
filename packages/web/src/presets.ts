@@ -11,7 +11,7 @@ import {
   type AlignmentDriver,
   type VentedAlignment,
 } from "@sbg/engine";
-import { airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, prGroupsOf, simOptionsOf, solveDriver } from "./sim.ts";
+import { airOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
 import type { AppState, BandpassDesign, DesignState, PrDesign } from "./state.ts";
 import { sizeBandpass } from "./bandpassSize.ts";
 import { choosePortCount, portCandidates, portFieldsOf, portSpeedFor, type AssistantPort } from "./ports.ts";
@@ -200,8 +200,8 @@ export function bestVentedPort(s: AppState, d: DesignState & { kind: "vented" },
   if (cands.length === 0) return null;
   // Judged at the driver's power rating when it has one (the box is built for what it can take,
   // not the 1 W the charts may be showing), else at the current drive.
-  const rated = s.pe_w > 0;
-  const at: AppState = rated ? { ...s, drive: "watts", power: s.pe_w } : s;
+  const rated = ratedPowerOf(s) > 0;
+  const at: AppState = rated ? { ...s, drive: "watts", power: ratedPowerOf(s) } : s;
   const solved = solveDriver(at);
   const drv = driverInputOf(at, solved);
   const opts = simOptionsOf(at);
@@ -222,7 +222,7 @@ export function bestVentedPort(s: AppState, d: DesignState & { kind: "vented" },
   const p = best!.p;
   return {
     fields: { flare_cm: 0, ...portFieldsOf(p) } as Partial<DesignState & { kind: "vented" }>,
-    text: quiet ? portText(p) : `${portText(p)} (still over the chuffing line at ${rated ? `its ${Math.round(s.pe_w)} W rating` : "this power"})`,
+    text: quiet ? portText(p) : `${portText(p)} (still over the chuffing line at ${rated ? `its ${ratedPowerOf(s)} W rating` : "this power"})`,
     quiet,
   };
 }

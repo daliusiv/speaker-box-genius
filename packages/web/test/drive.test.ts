@@ -47,3 +47,10 @@ test("projects start at 1 W (as WinISD and Hornresp); links from before, with no
   const fromOld = decodeState(encodeState(old as never));
   assert.equal(fromOld?.power, 100);
 });
+
+test("the rated power is the whole bank's: Pe times the drivers, as the thermal limit counts it", async () => {
+  const { ratedPowerOf } = await import("../src/sim.ts");
+  assert.equal(ratedPowerOf({ ...DEFAULT_STATE, pe_w: 70 }), 70);
+  assert.equal(ratedPowerOf({ ...DEFAULT_STATE, pe_w: 70, drivers: 2 }), 140);
+  assert.equal(ratedPowerOf({ ...DEFAULT_STATE, pe_w: 0 }), 0);
+});
