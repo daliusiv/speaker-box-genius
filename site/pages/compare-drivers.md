@@ -53,7 +53,7 @@ Shortlisting? Each driver's [page](/drivers/) shows its suggested boxes, so you 
 3. Read the summary: each box shows a "vs" row for the second driver, with its F3 and whether it goes over a limit.
 4. Press **Swap** (⇅) to make the second driver the main one, for example to size the boxes for it with a preset, then swap back.
 
-The comparison driver uses the same number of drivers, wiring and settings as the main one, so the comparison is like for like.
+The comparison driver uses the same number of drivers, wiring and settings as the main one, so the comparison is like for like. Its voice coil wiring is its own, so you can compare one dual voice coil sub with itself wired the other way, as the [DVC wiring guide](/guides/dvc-wiring/) does.
 
 [[Open the worked example|compare-example]]
 

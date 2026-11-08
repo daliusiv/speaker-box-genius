@@ -108,6 +108,8 @@ What it shows:
 - **On this amplifier, the 15 can't use its rating.** 500 W into the 15's 3 Ω coil needs 38.7 V; the amplifier stops at 37.4 V, so from 35 Hz up the 15 is limited by the amplifier's voltage, short of its rating (about 375 W real power at 80 Hz). The pair reaches its own 700 W rating first, drawing up to about 16 A and 500 W at 80 Hz, and becomes current-limited only above about 85 Hz. That's where the pair's 1.6 dB lead in the upper bass comes from.
 - **Only if the amplifier is rated for 2 Ω.** Many plate amplifiers and home-theatre receivers aren't. Wired in **series** (8 Ω) instead, the same pair on the same amplifier is amplifier-limited everywhere above the port's range: 110.3 dB at 80 Hz in the sealed box, **3.9 dB below the 15** and 5.5 dB below the parallel pair.
 
+The same goes for the two coils of one dual voice coil sub: see [1 Ω vs 2 Ω vs 4 Ω DVC wiring](/guides/dvc-wiring/), which also shows what the amplifier and cable resistance cost at a low load.
+
 To try it, set **Amp max volts** and **Amp max current** in **Settings** from your amplifier's 4 Ω and 2 Ω ratings (volts = √(watts × 4 Ω) from the 4 Ω rating, amps = √(watts ÷ 2 Ω) from the 2 Ω rating), and open the **Max SPL** chart's **Volts** and **Amps** views.
 
 ## "Two 10s are faster"

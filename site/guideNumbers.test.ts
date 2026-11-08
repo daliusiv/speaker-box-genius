@@ -126,3 +126,50 @@ test("power compression guide: loss at the same voltage, the hump and the excurs
   near(hump(hot), 2.33, 0.06, "hump at 180 °C");
   [8.81, 8.09, 7.71].forEach((mm, i) => near(at([cold, warm, hot][i]!.freq, [cold, warm, hot][i]!.excursionMm, 35), mm, 0.02, `excursion at 35 Hz, box ${i}`));
 });
+
+test("DVC wiring guide: the same driver in series and parallel, with and without 0.15 Ω of amp + cable", () => {
+  const withRg = (name: string, rg: number) => {
+    const s = EXAMPLES[name]!();
+    const t = { ...s, settings: { ...s.settings, rg } };
+    return runDesigns(t, solveDriver(t)).map((d) => d.result);
+  };
+  // Rows: series sealed, series ported, parallel sealed, parallel ported.
+  const w = withRg("dvc-watts", 0.15);
+  const w0 = withRg("dvc-watts", 0);
+  const v = withRg("dvc-volts", 0.15);
+  const v0 = withRg("dvc-volts", 0);
+  const F = [20, 25, 30, 40, 50, 60, 80, 100, 150];
+  // Without resistance, the same power gives the same SPL either way, and the same voltage 6 dB more in parallel.
+  for (const box of [0, 1]) {
+    F.forEach((hz) => {
+      near(at(w0[box + 2]!.freq, w0[box + 2]!.spl, hz), at(w0[box]!.freq, w0[box]!.spl, hz), 0.01, `same power, no Rg, box ${box} at ${hz} Hz`);
+      near(at(v0[box + 2]!.freq, v0[box + 2]!.spl, hz) - at(v0[box]!.freq, v0[box]!.spl, hz), 6.02, 0.01, `same voltage, no Rg, box ${box} at ${hz} Hz`);
+    });
+  }
+  // What the 0.15 Ω costs at the same rated power: the guide's 0.1–0.3 dB in series and 0.3–1.1 dB in parallel.
+  const loss = (k: number) => F.map((hz) => at(w[k]!.freq, w[k]!.spl, hz) - at(w0[k]!.freq, w0[k]!.spl, hz));
+  for (const k of [0, 1]) loss(k).forEach((db) => assert.ok(db <= -0.07 && db >= -0.3, `series loss ${db}`));
+  for (const k of [2, 3]) loss(k).forEach((db) => assert.ok(db <= -0.3 && db >= -1.12, `parallel loss ${db}`));
+  // Same gain: parallel 5.2–5.8 dB louder with the 0.15 Ω.
+  for (const box of [0, 1]) F.forEach((hz) => {
+    const d = at(v[box + 2]!.freq, v[box + 2]!.spl, hz) - at(v[box]!.freq, v[box]!.spl, hz);
+    assert.ok(d >= 5.19 && d <= 5.8, `same voltage, box ${box} at ${hz} Hz: ${d}`);
+  });
+  // Impedance: a quarter in parallel; 4.25–16.4 Ω in series in the sealed box, peak at 52.7 Hz.
+  near(Math.max(...w[0]!.impedanceOhm), 16.4, 0.05, "series sealed impedance peak");
+  near(Math.max(...w[2]!.impedanceOhm), 4.1, 0.02, "parallel sealed impedance peak");
+  near(Math.min(...w[2]!.impedanceOhm), 1.06, 0.01, "parallel sealed impedance minimum");
+  // Max SPL on the Kicker: series amp-limited, parallel at the coil rating; +1.46 dB without Rg, 0.6–1.2 dB with it, 0 where the port limits.
+  const max = (r: (typeof w)[number], hz: number) => at(r.freq, r.maxSpl, hz);
+  const lim = (r: (typeof w)[number], hz: number) => r.limitedBy[r.freq.findIndex((f) => f >= hz)];
+  assert.equal(lim(w[0]!, 50), "amp");
+  assert.equal(lim(w[2]!, 50), "thermal");
+  assert.equal(lim(w[1]!, 25), "port");
+  assert.equal(lim(w[3]!, 25), "port");
+  near(max(w0[2]!, 50) - max(w0[0]!, 50), 1.46, 0.02, "max SPL gain without Rg");
+  for (const box of [0, 1]) [30, 40, 50, 60, 80, 100, 150].forEach((hz) => {
+    const d = max(w[box + 2]!, hz) - max(w[box]!, hz);
+    assert.ok(d >= 0.6 && d <= 1.25, `max SPL gain, box ${box} at ${hz} Hz: ${d}`);
+  });
+  near(max(w[3]!, 25), max(w[1]!, 25), 0.01, "port-limited at 25 Hz");
+});

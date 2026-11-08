@@ -105,6 +105,7 @@ That agrees with the Eighteen Sound measurements (+1.6 to +2.2 dB for twice the 
 
 - **Headroom on peaks.** Music and film have peaks far above the average. A kick drum or an explosion lasts a fraction of a second, too short to heat the coil [4], so peaks still get the full +3 dB, as long as the cone has excursion to spare, where the smaller amplifier would clip.
 - **Less compression at the same level.** A bigger amplifier playing at the same volume as the small one isn't hotter; the gain is only in what you can add on top.
+- **Not by rewiring.** Wiring a dual voice coil sub to 1 Ω only helps if the amplifier makes more power into the lower load, and the same coil heats the same way per watt (see [DVC wiring](/guides/dvc-wiring/)).
 
 But past a point, more watts mostly make heat. For sustained output, these help more:
 
