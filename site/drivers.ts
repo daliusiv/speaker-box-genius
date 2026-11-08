@@ -12,7 +12,7 @@ import { loadDatabase, type Entry } from "../packages/db-tools/src/load.ts";
 import { doubtsXmax, type Flag } from "../packages/db-tools/src/plausibility.ts";
 import type { Driver, PassiveRadiator } from "../packages/schema/src/index.ts";
 import { DEFAULT_STATE, encodeStateShort, type AppState, type DesignState } from "../packages/web/src/state.ts";
-import { sealedQtc, sizeAllForDriver, withPreset } from "../packages/web/src/presets.ts";
+import { SEALED_MAX_VAS, sealedQtc, sizeAllForDriver, withPreset } from "../packages/web/src/presets.ts";
 import { stuffFactor } from "../packages/web/src/stuffing.ts";
 import { alignmentDriver, driverInputOf, runDesigns, simOptionsOf, solveDriver, type Design } from "../packages/web/src/sim.ts";
 
@@ -121,6 +121,13 @@ export function designDriver(e: Entry<Driver>, prs: ReturnType<typeof prCandidat
     }
     if (d.vb_l > PAGE_MAX_L) {
       notes.push(`a ${d.kind === "sealed" ? "sealed" : d.kind === "pr" ? "passive radiator" : "ported"} box (its ${d.preset} box is ${Math.round(d.vb_l)} L, over ${PAGE_MAX_L} L)`);
+      continue;
+    }
+    // A flat ported alignment over twice Vas (the sealed box's cap too) means a high-Qts driver,
+    // which suits a sealed box: such a ported or PR box isn't a suggestion either.
+    if (d.kind !== "sealed" && align && d.vb_l * stuffFactor(d) > SEALED_MAX_VAS * align.vas_l * sized.drivers) {
+      const qts = (align.qms * align.qes) / (align.qms + align.qes);
+      notes.push(`a ${d.kind === "pr" ? "passive radiator" : "ported"} box (its ${d.preset} box is ${Math.round(d.vb_l)} L, over twice Vas: with a Qts of ${qts.toFixed(2)} this driver suits a sealed box)`);
       continue;
     }
     if (d.kind === "sealed") keep.push(d);

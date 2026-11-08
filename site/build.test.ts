@@ -177,6 +177,13 @@ test("no driver page suggests a box over the page limit, and a high-Qts driver's
     const sealed = p?.designs.find((d) => d.design.kind === "sealed")?.design;
     assert.ok(sealed && sealed.vb_l <= Math.min(PAGE_MAX_L, 2.01 * hiQ.data.ts.vas_l!) && sealed.preset !== "Qtc 0.707", `${sealed?.vb_l} L, ${sealed?.preset}`);
   }
+  // A high-Qts mid-bass driver (Qts 0.55): no ported or PR box over twice Vas; the page says it suits a sealed box.
+  const midbass = db.drivers.find((x) => x.id === "beyma/12cmv3");
+  if (midbass) {
+    const p = designDriver(midbass, prs)!;
+    assert.ok(p.designs.every((d) => d.design.kind === "sealed" || d.design.vb_l <= 2 * midbass.data.ts.vas_l!));
+    assert.ok(p.notes.some((n) => /suits a sealed box/.test(n)), p.notes.join("; "));
+  }
   // Big QB3 boxes for 18-inch drivers are left off, with a reason on the page.
   const big = db.drivers.find((x) => x.id === "dayton-audio/umii18-22");
   if (big) {
