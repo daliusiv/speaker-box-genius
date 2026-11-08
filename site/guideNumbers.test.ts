@@ -173,3 +173,36 @@ test("DVC wiring guide: the same driver in series and parallel, with and without
   });
   near(max(w[3]!, 25), max(w[1]!, 25), 0.01, "port-limited at 25 Hz");
 });
+
+test("round vs slot port guide: tuning, end correction, air speed, compression, max SPL and pipe resonance", async () => {
+  const { ventedFb, portLengthForFb, portPipeResonance, portEffectiveLength } = await import("../packages/engine/src/index.ts");
+  const lumped = run("port-shape").map((d) => d.result);
+  const pipes = run("port-shape-pipes").map((d) => d.result);
+  [35.0, 35.0, 30.6].forEach((fb, i) => near(lumped[i]!.summary.fb!, fb, 0.05, `box ${i + 1} tuning`));
+  // The end-correction table: the slot at 41.9 cm in 40 L, and the length for 35 Hz.
+  const slot = { shape: "slot" as const, width_cm: 25.5, height_cm: 3.18, length_cm: 41.9 };
+  const table: [number, number, number][] = [[0.732, 35.0, 41.9], [0.849, 34.6, 40.7], [0.888, 34.5, 40.4], [1.2, 33.4, 37.2], [1.5, 32.5, 34.1], [2.227, 30.6, 26.7]];
+  for (const [k, fb, len] of table) {
+    near(ventedFb(40, slot, 1, k), fb, 0.05, `slot tuning with K ${k}`);
+    near(portLengthForFb(40, slot, 35, 1, k), len, 0.05, `slot length for 35 Hz with K ${k}`);
+  }
+  near(portEffectiveLength(slot) * 100, 49.3, 0.05, "slot effective length");
+  near(portPipeResonance(slot), 347, 1.5, "slot pipe resonance");
+  [[15, 765], [20, 625], [26, 513], [30, 458]].forEach(([l, f]) => near(portPipeResonance({ shape: "round", diameter_cm: 10.16, length_cm: l! }), f!, 1, `4in tube ${l} cm`));
+  // Air speed, compression and max SPL at 350 W.
+  const vmax = (r: (typeof lumped)[number]) => Math.max(...Array.from(r.portVelocity!).filter((_, i) => r.freq[i]! > 15));
+  near(vmax(lumped[0]!), 11.2, 0.1, "flared port mouth speed");
+  near(vmax(lumped[1]!), 21.9, 0.1, "slot speed");
+  near(lumped[0]!.summary.portCompression!.db, 0.71, 0.05, "flared port compression");
+  near(lumped[1]!.summary.portCompression!.db, 1.73, 0.05, "slot compression");
+  const want = [[105.8, 109.9, 112.4], [102.3, 106.3, 109.8]];
+  want.forEach((row, i) => [30, 35, 40].forEach((hz, k) => near(at(lumped[i]!.freq, lumped[i]!.maxSpl, hz), row[k]!, 0.06, `box ${i + 1} max SPL at ${hz} Hz`)));
+  // Pipe resonance: a peak near 347 Hz for the round port, near 268 Hz for the longer slot.
+  const peakNear = (r: (typeof pipes)[number], lo: number, hi: number) => {
+    let best = -Infinity, f = 0;
+    r.freq.forEach((x, i) => { if (x > lo && x < hi && r.spl[i]! > best) { best = r.spl[i]!; f = x; } });
+    return f;
+  };
+  near(peakNear(pipes[0]!, 300, 400), 347, 6, "round port pipe peak");
+  near(peakNear(pipes[2]!, 230, 300), 268, 6, "longer slot pipe peak");
+});
