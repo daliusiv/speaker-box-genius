@@ -55,7 +55,7 @@ The ported box goes a full octave deeper (21 Hz against 42 Hz) and plays almost 
 - **Short of space?** Sealed. A sealed box also suits a car (cabin gain lifts its low end) and EQ such as a Linkwitz Transform, because it doesn't unload below a tuning.
 - **Want the most output for your watts?** Ported, if the box and the port fit.
 - **Ported is right, but the port won't fit or would chuff?** A passive radiator.
-- **Tight, well-damped bass?** Sealed, at Qtc 0.5–0.7; or ported tuned a little low.
+- **Tight, well-damped bass?** Sealed, at Qtc 0.5–0.7 (the [sealed Qtc guide](/guides/sealed-qtc/) compares them); or ported tuned a little low.
 
 ## Doing it in the app
 

@@ -10,7 +10,7 @@ import type { Stuffing } from "../packages/web/src/stuffing.ts";
 
 /** A fresh line design, as "+ Transmission line" adds one. */
 const newLine = (s: AppState) => newDesign("line", s.designs);
-import { portLengthForFb, type PortInput } from "../packages/engine/src/index.ts";
+import { portLengthForFb, sealedVolumeForAlignment, type PortInput } from "../packages/engine/src/index.ts";
 import { alignmentDriver, driverInputOf, runDesigns, simOptionsOf, solveDriver } from "../packages/web/src/sim.ts";
 import { compareLines } from "../packages/web/src/lineopt.ts";
 
@@ -344,6 +344,48 @@ function stuffingPorted(filled: boolean) {
   };
 }
 
+/**
+ * The sealed Qtc guide: a Dayton Audio RSS265HO-4 10″ (Qts 0.36) in sealed boxes for Qtc 0.5,
+ * 0.577, 0.707, 0.9 and 1.1, at 100 W, voice-coil inductance off so each box's own shape shows.
+ */
+export const QTCS = [0.5, 0.577, 0.707, 0.9, 1.1];
+function qtcExample(): AppState {
+  const s = withDriver({ ...DEFAULT_STATE, power: 100, settings: { ...DEFAULT_STATE.settings, inductance: false } }, "dayton-audio/rss265ho-4");
+  const align = alignmentDriver(solveDriver(s), s)!;
+  const sealed = byKind(DEFAULT_STATE, "sealed");
+  return {
+    ...s,
+    designs: QTCS.map((q, i) => {
+      const vb = sealedVolumeForAlignment(align, q);
+      if (!vb) throw new Error(`No sealed box for Qtc ${q}`);
+      return { ...sealed, id: `d${i + 1}`, name: `Qtc ${q}`, vb_l: Math.round(vb * 10) / 10, preset: `Qtc ${q}` };
+    }),
+  };
+}
+
+/**
+ * The MLTL guide: the transmission line guide's DSA215-8 MLTL (from Compare types, 24 L, 86 cm,
+ * a 7.3 cm port, tuned to 40 Hz, stuffed behind the driver), the same line empty, and the same
+ * volume and port as a plain ported box, at 25 W behind a 28 Hz high-pass filter.
+ */
+function mltlExample(): AppState {
+  const s = withDriver({ ...DEFAULT_STATE, power: 25, highPass: highPass(2, 28) }, "dayton-audio/dsa215-8");
+  const solved = solveDriver(s);
+  const rows = compareLines(driverInputOf(s, solved), newLine(s) as Extract<DesignState, { kind: "line" }>, simOptionsOf(s), alignmentDriver(solved, s), 1);
+  const mltl = rows.find((r) => r.id === "mltl")?.design;
+  if (!mltl) throw new Error("The MLTL couldn't be made for the example");
+  const vb = Math.round(mltl.vb_l * 10) / 10;
+  const ported = ventedWith(byKind(DEFAULT_STATE, "vented") as Vented, "Ported box", vb, mltl.targetFb, { shape: "round", diameter_cm: mltl.portDiameter_cm, flare_cm: mltl.portFlare_cm });
+  return {
+    ...s,
+    designs: [
+      { ...ported, id: "d1" },
+      { ...mltl, id: "d2", name: "MLTL, empty", sections: mltl.sections.map((x) => ({ ...x, fill_kgm3: 0 })) },
+      { ...mltl, id: "d3", name: "MLTL" },
+    ],
+  };
+}
+
 export const EXAMPLES: Record<string, () => AppState> = {
   "stuffing-sealed": stuffingSealed(false),
   "stuffing-sealed-losses": stuffingSealed(true),
@@ -366,6 +408,8 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "winisd-example": winisdExample,
   "port-example": portExample,
   "tl-example": tlExample,
+  "qtc-example": qtcExample,
+  "mltl-example": mltlExample,
 };
 
 /** Share links (`https://…/#z=…`) for every example. */
