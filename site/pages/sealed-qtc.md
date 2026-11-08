@@ -3,6 +3,7 @@ title: "Sealed box Qtc: 0.5, 0.707 or 1.1, and what you'll hear"
 description: What a sealed box's Qtc does to its size, bass extension, maximum output, group delay and in-room sound, with one 10-inch driver in five boxes you can open and change.
 path: guides/sealed-qtc
 order: 17
+group: sealed
 ---
 
 # Sealed box Qtc: 0.5, 0.707 or 1.1, and what you'll hear

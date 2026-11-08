@@ -4,6 +4,7 @@ description: Box size, tuning, added mass and excursion, step by step, with a wo
 path: guides/passive-radiator-box
 image: pr-spl.png
 order: 2
+group: ported
 ---
 
 # How to design a passive radiator box

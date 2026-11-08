@@ -4,6 +4,7 @@ description: What Fs, Qts, Vas, Xmax and the other T/S parameters mean in practi
 path: guides/thiele-small-parameters
 image: ts-spl.png
 order: 10
+group: start
 ---
 
 # Thiele/Small parameters explained

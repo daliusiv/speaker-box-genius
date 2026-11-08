@@ -4,6 +4,7 @@ description: How a car's cabin gain changes subwoofer box design, why small seal
 path: guides/car-subwoofer
 image: car-spl.png
 order: 8
+group: start
 ---
 
 # Car subwoofer box design: sealed or ported?

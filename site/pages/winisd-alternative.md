@@ -4,6 +4,7 @@ description: Speaker Box Genius does what WinISD does, in your browser on any co
 path: winisd-alternative
 image: winisd-charts.png
 order: 1
+group: switching
 ---
 
 # A free online WinISD alternative

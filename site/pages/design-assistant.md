@@ -4,6 +4,7 @@ description: Say what you're building and your limits, and the design assistant 
 path: guides/design-assistant
 image: assistant-results.png
 order: 2
+group: start
 ---
 
 # Design assistant: find a driver and a box

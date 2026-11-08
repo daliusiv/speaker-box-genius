@@ -4,6 +4,7 @@ description: What an isobaric pair really does (and doesn't do) to box size, sen
 path: guides/isobaric
 image: iso-spl.png
 order: 15
+group: sealed
 ---
 
 # Isobaric subwoofers: half the box, but what does it cost?

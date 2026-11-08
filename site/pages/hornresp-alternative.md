@@ -4,6 +4,7 @@ description: Design transmission lines, MLTLs, tapped horns and front-loaded hor
 path: hornresp-alternative
 image: tl-za.png
 order: 5
+group: switching
 ---
 
 # A free online Hornresp alternative for lines and horns

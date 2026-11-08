@@ -4,6 +4,7 @@ description: How to choose a box type from the driver's T/S parameters, and what
 path: guides/sealed-vs-ported
 image: box-types-spl.png
 order: 6
+group: start
 ---
 
 # Sealed, ported or passive radiator: which box for your driver?

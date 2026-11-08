@@ -272,3 +272,27 @@ test("driver page titles name port tuning only when a ported box is suggested", 
   assert.equal(driverTitle("X Y", ["sealed", "pr"]), "X Y: box size, tuning and T/S parameters");
   assert.equal(driverTitle("X Y", ["sealed"]), "X Y: box size and T/S parameters");
 });
+
+test("guides index: every guide in a section, cards once, search box, list data; guides end with related guides", async () => {
+  const { out } = await built();
+  const pages = readdirSync(join(import.meta.dirname, "pages")).filter((f) => f.endsWith(".md"));
+  for (const f of pages) assert.ok(parsePage(readFileSync(join(import.meta.dirname, "pages", f), "utf8"), f).group, `${f} has no group`);
+  assert.throws(() => parsePage("---\ntitle: T\ndescription: D\npath: guides/x\ngroup: nope\n---\nbody"), /unknown group/);
+  const html = readFileSync(join(out, "guides/index.html"), "utf8");
+  assert.match(html, /<title>Speaker box design guides · Speaker Box Genius<\/title>/);
+  assert.equal((html.match(/<section class="group">/g) ?? []).length, 6);
+  assert.match(html, /<input class="find" type="search"/);
+  assert.doesNotMatch(html, /More guides/);
+  // Each guide is linked once in the page body (the lede links two of them again).
+  const box = html.match(/href="\/guides\/box-stuffing\/"/g) ?? [];
+  assert.equal(box.length, 1);
+  const ld = JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)![1]!);
+  assert.equal(ld["@type"], "CollectionPage");
+  assert.equal(ld.mainEntity.itemListElement.length, pages.length);
+  const guide = readFileSync(join(out, "guides/box-stuffing/index.html"), "utf8");
+  assert.doesNotMatch(guide, /More guides/);
+  const related = guide.match(/<section class="related">([\s\S]*?)<\/section>/)![1]!;
+  assert.match(related, /href="\/guides\/box-losses\/"/);
+  assert.doesNotMatch(related, /href="\/guides\/box-stuffing\/"/);
+  assert.ok((related.match(/<li>/g) ?? []).length <= 4);
+});
