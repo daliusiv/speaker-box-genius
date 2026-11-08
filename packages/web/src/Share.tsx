@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { wprExportable, wprFor } from "./wprExport.ts";
 import { coilLabel, driveLabel, lineFoldOf, limitsOf, portLimitOf, prGroupLabels, type Design } from "./sim.ts";
 import { foldShapes } from "./foldShapes.ts";
 import { REPO } from "./components.tsx";
@@ -366,7 +367,7 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
 // Menu
 // ---------------------------------------------------------------------------
 
-export function ShareMenu(props: { state: AppState; designs: Design[]; shareUrl: () => string }) {
+export function ShareMenu(props: { state: AppState; designs: Design[]; shareUrl: () => string; notify?: (msg: string) => void }) {
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState("");
   const ref = useRef<HTMLDivElement>(null);
@@ -438,6 +439,19 @@ export function ShareMenu(props: { state: AppState; designs: Design[]; shareUrl:
     flash("Data downloaded ✓");
   };
 
+  const downloadWpr = (d: AppState["designs"][number]) => {
+    const out = wprFor(props.state, d);
+    if (typeof out === "string") return flash(out);
+    const url = URL.createObjectURL(new Blob([out.text], { type: "text/plain" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${`${props.state.driverName} ${d.name}`.replace(/[^\w.-]+/g, " ").trim() || "speaker-box"}.wpr`;
+    a.click();
+    URL.revokeObjectURL(url);
+    flash("WinISD project downloaded ✓");
+    if (out.notes.length > 0) props.notify?.(`WinISD project saved. Not in it: ${out.notes.join("; ")}.`);
+  };
+
   return (
     <div className="share" ref={ref}>
       <button onClick={() => setOpen(!open)} aria-expanded={open}>
@@ -460,6 +474,14 @@ export function ShareMenu(props: { state: AppState; designs: Design[]; shareUrl:
           <button role="menuitem" onClick={downloadCsv}>
             Download data (CSV)
           </button>
+          {/* One WinISD project per box (a .wpr holds one), for the boxes WinISD can open. */}
+          {props.state.designs
+            .filter((d) => d.on && wprExportable(d))
+            .map((d) => (
+              <button key={d.id} role="menuitem" onClick={() => downloadWpr(d)}>
+                Open in WinISD: {d.name} (.wpr)
+              </button>
+            ))}
           <p className="hint">Post the image and paste the text under it: the text carries the live link.</p>
           <hr />
           <a role="menuitem" className="menu-link" href={reportUrl(props.shareUrl())} target="_blank" rel="noopener">
