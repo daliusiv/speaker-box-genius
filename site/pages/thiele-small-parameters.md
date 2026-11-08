@@ -66,7 +66,7 @@ These describe the driver's moving parts directly; the parameters above come fro
 - **Vas** is Cms seen as air: Vas = ρ · c² · Sd² · Cms.
 - **Le**, the voice coil inductance, makes the impedance rise with frequency and rolls off the top end. It matters little for subwoofers, more for midbass.
 
-You can check a datasheet with these: for the DSA215-8, 2π × 35 × 0.0346 × 5.9 / 10.6² gives a Qes of 0.40, as stated.
+You can check a datasheet with these: for the DSA215-8, 2π × 35 × 0.0346 × 5.9 / 10.6² gives a Qes of 0.40, as stated. Because Qes depends on Re/Bl², wiring a dual voice coil driver's coils in series or in parallel doesn't change it: Bl doubles in series, but Re quadruples (see [DVC wiring](/guides/dvc-wiring/)). Anything else in series with the coil, such as the amplifier and the speaker wire, adds to Re and raises Qes a little.
 
 ## Entering them without mistakes
 

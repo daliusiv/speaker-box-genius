@@ -449,6 +449,37 @@ function mltlExample(): AppState {
   };
 }
 
+/**
+ * The DVC wiring guide: a Dayton Audio UMII12-22 (dual 2 Ω coils; its T/S parameters are for
+ * the coils in series) wired in series (4 Ω, the main driver) and in parallel (1 Ω, the
+ * comparison driver), in Dayton's 1 ft³ sealed and 2.5 ft³ ported (25 Hz) boxes, behind a
+ * 20 Hz 24 dB/oct high-pass filter, with 0.15 Ω of amplifier + cable resistance and the limits
+ * of a Kicker CXA1200.1 (600 W into 4 Ω = 49 V, 1200 W into 1 Ω = 34.6 A). "watts" drives each
+ * wiring with the same rated power (300 W); "volts" with the same amplifier voltage (20 V), as
+ * an unchanged gain knob would.
+ */
+export const DVC_AMP = { volts: 49, amps: 34.6 };
+export const DVC_RG = 0.15;
+function dvcExample(drive: "watts" | "volts") {
+  return (): AppState => {
+    const base = withDriver({ ...DEFAULT_STATE, highPass: highPass(4, 20) }, "dayton-audio/umii12-22");
+    const s: AppState = {
+      ...base,
+      ...(drive === "watts" ? { drive: "watts" as const, power: 300 } : { drive: "volts" as const, volts: 20 }),
+      dvc: { on: true, entered: "series", wired: "series" },
+      settings: { ...base.settings, rg: DVC_RG, ampVolts: DVC_AMP.volts, ampAmps: DVC_AMP.amps },
+    };
+    return {
+      ...s,
+      compare: asCompare({ ...s, dvc: { on: true, entered: "series", wired: "parallel" } }),
+      designs: [
+        { ...byKind(DEFAULT_STATE, "sealed"), id: "d1", name: "Sealed 28.3 L (1 ft³)", vb_l: 28.3 },
+        { ...ventedWith(byKind(DEFAULT_STATE, "vented") as Vented, "Ported 70.8 L (2.5 ft³), 25 Hz", 70.8, 25, { shape: "slot", width_cm: 5, height_cm: 30 }), id: "d2" },
+      ],
+    };
+  };
+}
+
 export const EXAMPLES: Record<string, () => AppState> = {
   "stuffing-sealed": stuffingSealed(false),
   "stuffing-sealed-losses": stuffingSealed(true),
@@ -480,6 +511,8 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "subs-two-10s": subsExample(true),
   "group-delay-subsonic": groupDelayExample(true),
   "mltl-example": mltlExample,
+  "dvc-watts": dvcExample("watts"),
+  "dvc-volts": dvcExample("volts"),
 };
 
 /** Share links (`https://…/#z=…`) for every example. */

@@ -44,6 +44,7 @@ The ported boxes play **6–7 dB louder** at 30–40 Hz, which is a lot (about f
 - **Loudest for the watts:** ported, tuned in the low 30s or high 20s Hz, and EQ the hump down if you don't like it.
 - **Tight on space but want output:** a sealed box with more amplifier power usually beats a ported box that's been squeezed too small. A small box tuned high is what gives ported boxes their "boomy" reputation; see the [group delay guide](/guides/group-delay/).
 - **One big sub or two smaller ones?** See [one 15″ or two 10″](/guides/one-15-vs-two-10s/): displacement wins the deep bass, power handling and a 2 Ω load the upper bass.
+- **Series or parallel voice coils?** See [DVC wiring](/guides/dvc-wiring/): the wiring doesn't change the sub, only the load, so wire for the amplifier. At 1 Ω, keep the speaker wire short and heavy.
 - **Bandpass boxes** (4th and 6th order) are popular in cars for very high output in a narrow band; the app models those too, and the [design assistant](/guides/design-assistant/) can suggest them (tick **Bandpass** in its limits). On a bandpass design, **Size for a flat band** sizes both chambers and their ports for your driver in the same total volume.
 
 ## Things that are different in a car
