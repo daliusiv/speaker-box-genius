@@ -10,8 +10,8 @@ import type { Stuffing } from "../packages/web/src/stuffing.ts";
 
 /** A fresh line design, as "+ Transmission line" adds one. */
 const newLine = (s: AppState) => newDesign("line", s.designs);
-import { baffleStepFrequency, keeleAlignment, portLengthForFb, sealedVolumeForAlignment, type PortInput } from "../packages/engine/src/index.ts";
-import { alignmentDriver, baffleOf, driverInputOf, runDesigns, simOptionsOf, solveDriver } from "../packages/web/src/sim.ts";
+import { baffleStepFrequency, estimateDriverDisplacement, keeleAlignment, portLengthForFb, sealedVolumeForAlignment, type PortInput } from "../packages/engine/src/index.ts";
+import { alignmentDriver, baffleOf, dimensionsFor, driverInputOf, runDesigns, simOptionsOf, solveDriver } from "../packages/web/src/sim.ts";
 import { compareLines } from "../packages/web/src/lineopt.ts";
 
 const ROOT = new URL("..", import.meta.url);
@@ -576,6 +576,33 @@ function baffleExample(kind: "ib" | "free" | "eq3" | "passive") {
   };
 }
 
+/**
+ * The shaped-cabinets guide's example: the port guide's sub (an RSS315HF-4 in 83.5 L at 23.8 Hz,
+ * 10 cm flared port, 300 W behind a 20 Hz high-pass) built four ways, each sized by the volume
+ * calculator ("Size the box") to the same 83.5 L net: a golden-ratio MDF box, a 14″ Sonotube
+ * with double-MDF end caps, a sphere and a tapered (truncated pyramid) box.
+ */
+export const SHAPED = { vb_l: 83.5, fb: 23.8 };
+export const SHAPED_START: Record<"box" | "tube" | "sphere" | "wedge", Partial<AppState["volume"]>> = {
+  box: { shape: "box", width_cm: 40, height_cm: 65, depth_cm: 25, wall_mm: 18, bracing_pct: 3 },
+  // A 14″ Sonotube: sold by its inside diameter (35.56 cm), 6 mm wall; end caps two layers of 19 mm MDF.
+  tube: { shape: "cylinder", diameter_cm: 36.8, height_cm: 100, wall_mm: 6, capWall_mm: 38, bracing_pct: 0 },
+  sphere: { shape: "sphere", diameter_cm: 60, wall_mm: 15, bracing_pct: 0 },
+  wedge: { shape: "frustum", width_cm: 50, depth_cm: 50, topWidth_cm: 30, topDepth_cm: 30, height_cm: 60, wall_mm: 18, bracing_pct: 3 },
+};
+function shapedExample(kind: keyof typeof SHAPED_START) {
+  return (): AppState => {
+    const s = withDriver({ ...DEFAULT_STATE, power: 300, highPass: highPass(4, 20) }, "dayton-audio/rss315hf-4");
+    const box = { ...ventedWith(byKind(s, "vented") as Vented, "Ported 83.5 L, 23.8 Hz", SHAPED.vb_l, SHAPED.fb, { shape: "round", diameter_cm: 10, flare_cm: 2.5 }), id: "d1" };
+    const start: AppState = {
+      ...s,
+      designs: [box],
+      volume: { ...s.volume, ...SHAPED_START[kind], link: "d1", driverDisp_l: Math.round(estimateDriverDisplacement(282, 146) * 100) / 100, portWall_mm: 3 },
+    };
+    return { ...start, volume: dimensionsFor(start, box, SHAPED.vb_l, kind === "box" ? "golden" : kind === "tube" ? "length" : "keep")! };
+  };
+}
+
 export const EXAMPLES: Record<string, () => AppState> = {
   "stuffing-sealed": stuffingSealed(false),
   "stuffing-sealed-losses": stuffingSealed(true),
@@ -610,6 +637,10 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "dvc-watts": dvcExample("watts"),
   "dvc-volts": dvcExample("volts"),
   "port-shape": portShapeExample(false),
+  "shape-box": shapedExample("box"),
+  "shape-tube": shapedExample("tube"),
+  "shape-sphere": shapedExample("sphere"),
+  "shape-wedge": shapedExample("wedge"),
   "port-shape-pipes": portShapeExample(true),
   "iron-law": ironLawExample("ported"),
   "iron-law-sealed": ironLawExample("sealed"),

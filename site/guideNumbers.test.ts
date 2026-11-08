@@ -280,3 +280,52 @@ test("baffle step guide: loss, step frequency, compensation, excursion and max S
   near(shape(30, 30, 15, 15), 218, 3, "30 cm square");
   near(shape(20, 100, 10, 25), 183, 3, "20 × 100 tower");
 });
+
+test("shaped cabinets guide: four shapes sized to the same net volume, their sizes, modes and the shortcuts' errors", async () => {
+  const { grossVolume, insideLongest_cm, lowestMode_hz } = await import("../packages/engine/src/index.ts");
+  const { shapeOf, volumeFor, linkedDesign } = await import("../packages/web/src/sim.ts");
+  const want = {
+    "shape-box": { dims: [49.3, 79.7, 30.4], gross: 93.2, net: 83.4, outer: 119, foot: 15.0, long: 76.1, mode: 226 },
+    "shape-tube": { dims: [36.8, 98.5], gross: 90.48, net: 83.5, outer: 97, foot: 10.6, long: 90.9, mode: 189 },
+    "shape-sphere": { dims: [58.7], gross: 90.48, net: 83.5, outer: 106, foot: 27.1, long: 55.7, mode: 409 },
+    "shape-wedge": { dims: [53.2, 53.2, 31.9, 31.9, 63.9], gross: 93.28, net: 83.5, outer: 118, foot: 28.3, long: 60.3, mode: 285 },
+  } as const;
+  for (const [name, w] of Object.entries(want)) {
+    const s = EXAMPLES[name]!();
+    const v = s.volume;
+    const dims = v.shape === "box" ? [v.width_cm, v.height_cm, v.depth_cm] : v.shape === "cylinder" ? [v.diameter_cm, v.height_cm] : v.shape === "sphere" ? [v.diameter_cm] : [v.width_cm, v.depth_cm, v.topWidth_cm, v.topDepth_cm, v.height_cm];
+    assert.deepEqual(dims, w.dims, `${name} size`);
+    const r = volumeFor(s, linkedDesign(s));
+    const sh = shapeOf(v);
+    near(r.gross_l, w.gross, 0.006, `${name} gross`);
+    near(r.net_l, w.net, 0.06, `${name} net`);
+    near(grossVolume(sh, 0), w.outer, 0.5, `${name} outside volume`);
+    const foot = v.shape === "box" || v.shape === "frustum" ? v.width_cm * v.depth_cm : Math.PI * (v.diameter_cm / 2) ** 2;
+    near(foot / 100, w.foot, 0.05, `${name} footprint`);
+    near(insideLongest_cm(sh, v.wall_mm), w.long, 0.05, `${name} longest run`);
+    near(lowestMode_hz(sh, v.wall_mm, 343.6), w.mode, 0.5, `${name} lowest mode`);
+    const d = run(name)[0]!.result.summary;
+    near(d.fb!, 23.8, 0.05, `${name} tuning`);
+    near(d.f3!, 24.5, 0.05, `${name} F3`);
+    assert.equal(run(name)[0]!.design.kind, "vented");
+  }
+  // Deductions: driver 3.01 L, port 4.02 L, bracing 2.80 L.
+  const box = volumeFor(EXAMPLES["shape-box"]!(), linkedDesign(EXAMPLES["shape-box"]!()));
+  assert.deepEqual(box.deductions.map((x) => Math.round(x.litres * 100) / 100), [3.01, 4.02, 2.8]);
+  // The tube entered wrongly.
+  const tube = EXAMPLES["shape-tube"]!();
+  const as = (patch: Partial<typeof tube.volume>) => { const t = { ...tube, volume: { ...tube.volume, ...patch } }; return { net: volumeFor(t, linkedDesign(t)).net_l, fb: runDesigns(t, solveDriver(t))[0]!.result.summary.fb! }; };
+  near(as({ capWall_mm: null }).net, 89.8, 0.05, "caps = wall");
+  near(as({ capWall_mm: null }).fb, 22.9, 0.05, "caps = wall tuning");
+  near(as({ diameter_cm: 35.6 }).net, 77.5, 0.05, "ID as OD");
+  near(as({ diameter_cm: 35.6 }).fb, 24.7, 0.05, "ID as OD tuning");
+  // Standing waves across a tube, the pipe resonance.
+  near((1.8412 * 343.6) / (Math.PI * 0.356), 565, 1, "tube across");
+  // The shortcuts: the frustum formula on a wedge, and upright walls on a pyramid.
+  const wedge = (q: number) => grossVolume({ kind: "frustum", bottomWidth_cm: 60, bottomDepth_cm: 60, topWidth_cm: 60, topDepth_cm: 60 * q, height_cm: 50 });
+  const naive = (q: number) => (50 / 3) * (3600 + 3600 * q + Math.sqrt(3600 * 3600 * q)) / 1000;
+  near(wedge(0), 90, 1e-9, "wedge to an edge");
+  near(naive(0), 60, 1e-9, "frustum formula on it");
+  near((naive(0.5) / wedge(0.5) - 1) * 100, -1.9, 0.05, "half-deep top");
+  near(grossVolume({ kind: "frustum", bottomWidth_cm: 50, bottomDepth_cm: 50, topWidth_cm: 0, topDepth_cm: 0, height_cm: 40 }, 18), 22.0, 0.05, "pyramid inside");
+});

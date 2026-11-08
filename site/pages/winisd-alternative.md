@@ -32,7 +32,7 @@ Speaker Box Genius is built around those four problems.
 - **A T/S editor that never overwrites what you typed**, and that reads parameters pasted straight from a datasheet.
 - **A database of about 1,530 drivers and 55 passive radiators**, searchable, with links to each datasheet, and a [page for every driver](/drivers/) with suggested boxes to start from.
 - **Passive radiator tools:** find the best PRs for your driver and box, the added mass for a tuning, and the best tuning for a PR you already have.
-- **A net volume calculator** for boxes, cylinders, spheres and truncated pyramids, minus everything inside them, and a **cut list** for building the box.
+- **A net volume calculator** for boxes, cylinders, spheres and truncated pyramids, minus everything inside them ([how it works for each shape](/guides/shaped-cabinets/)), and a **cut list** for building the box.
 - **Live links:** the whole design lives in the link, so whoever opens it sees exactly what you see and can change it. Share also makes a forum image and ready-to-paste Reddit and diyAudio posts.
 - **Compare drivers:** draw a second driver in every box, dashed, to see which one suits it better.
 
