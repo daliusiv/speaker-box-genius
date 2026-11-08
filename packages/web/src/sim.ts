@@ -719,6 +719,19 @@ export function amplifierLoad(s: AppState, solved: SolveResult): { re: number; n
 /** The power rating of the whole driver bank (W): each driver's Pe times the drivers, as the thermal limit counts it. 0 when unknown. */
 export const ratedPowerOf = (s: AppState): number => (s.pe_w > 0 ? Math.min(10000, Math.round(s.pe_w * s.drivers)) : 0);
 
+/**
+ * When the drive is about 1 W (3 W or less, in watts or volts: 2.83 V into a 4 Ω driver is about 2.5 W) and well under
+ * the driver's rating, the excursion and port-speed charts sit far below their red lines: the
+ * watts it amounts to and the rating, so the charts can say so. Null otherwise.
+ */
+export function lowDrive(s: AppState): { watts: number; rated: number } | null {
+  const watts = s.drive === "watts" ? s.power : switchDrive(s, "watts").power;
+  if (!(watts > 0) || watts > 3) return null;
+  const rated = ratedPowerOf(s);
+  if (rated > 0 && rated < 5 * watts) return null;
+  return { watts, rated };
+}
+
 /** The drive level as people read it: "100 W" or "2.83 V". */
 export const driveLabel = (s: Pick<AppState, "drive" | "power" | "volts">) => (s.drive === "volts" ? `${s.volts} V` : `${s.power} W`);
 /** ", voice coil at 100 °C" when the coil is simulated hot; empty when cold. */

@@ -49,6 +49,7 @@ import {
   airOf,
   amplifierLoad,
   baffleDbFor,
+  lowDrive,
   ratedPowerOf,
   alignmentDriver,
   colorOf,
@@ -414,6 +415,8 @@ export function App(props: { initial: AppState | null }) {
       : [];
   const series = (pick: (r: SimulationResult) => Float64Array | null): Series[] =>
     designs.map((d) => ({ label: d.label, color: d.color, dash: d.dash, y: pick(d.result) }));
+
+  const useRatedPower = () => setStep((s) => ({ ...s, drive: "watts", power: ratedPowerOf(s) }));
 
   // The short link once it's ready for this exact state; until then (150 ms after an edit) the long form, which is always correct.
   const shareUrl = () =>
@@ -2101,6 +2104,7 @@ export function App(props: { initial: AppState | null }) {
               ]}
               yMin={0}
             />
+            <LowDriveNote state={state} chart="excursion" hidden={narrow && chartTab !== "excursion"} onRated={useRatedPower} />
             {!narrow && (
               <TabRow<ChartId>
                 tabs={chartTabs}
@@ -2155,6 +2159,7 @@ export function App(props: { initial: AppState | null }) {
                 yMin={0}
               />
             )}
+            {hasPort && <LowDriveNote state={state} chart="port" hidden={chartTab !== "port"} onRated={useRatedPower} />}
             {hasBoxPressure && (
               <LogChart
                 forum
@@ -2855,5 +2860,28 @@ function volCell(built: number, acting: number | undefined, units: "metric" | "i
     <span title={`Built ${fmtQ(built, "vol", units)}; its stuffing makes it act as ${fmtQ(acting, "vol", units)}`}>
       {fmtQ(built, "vol", units).split(" ")[0]} → {fmtQ(acting, "vol", units)}
     </span>
+  );
+}
+
+/**
+ * Under the excursion and port-speed charts at about 1 W (WinISD's and Hornresp's starting
+ * point): those charts sit far below their red lines there, which can read as "this box is fine".
+ */
+function LowDriveNote(p: { state: AppState; chart: "excursion" | "port"; hidden: boolean; onRated: () => void }) {
+  const low = lowDrive(p.state);
+  if (!low || p.hidden) return null;
+  const at = p.state.drive === "watts" ? `${Number(p.state.power.toPrecision(3))} W` : `${p.state.volts} V (about ${Number(low.watts.toPrecision(2))} W)`;
+  const what = p.chart === "excursion" ? "the cone barely moves, so no box comes near Xmax" : "the port air is slow, so no port comes near the chuffing line";
+  return (
+    <p className="hint low-drive" role="note">
+      At {at}, {what}.{" "}
+      {low.rated > 0 ? (
+        <button type="button" className="link" onClick={p.onRated}>
+          Show at the rated {low.rated} W
+        </button>
+      ) : (
+        "Raise the power above the charts to see the limits."
+      )}
+    </p>
   );
 }
