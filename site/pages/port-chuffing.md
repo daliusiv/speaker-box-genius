@@ -44,7 +44,7 @@ The box is about 44 cm deep inside. The 10 cm port nearly fits, but chuffs; the 
 
 ## What to do when the right port won't fit
 
-**Use a slot port.** A slot along one wall of the box uses that wall as one of its sides, and it can run along the wall and turn the corner (an L shape) to get the length. A 5 × 30 cm slot is as quiet as a 15 cm tube here, and much easier to fit. In the app, set the port's shape to a slot.
+**Use a slot port.** A slot along one wall of the box uses that wall as one of its sides, and it can run along the wall and turn the corner (an L shape) to get the length. A 5 × 30 cm slot is as quiet as a 15 cm tube here, and much easier to fit. In the app, set the port's shape to a slot. A slot along the walls tends to tune a little lower than calculated, and its sharp edges are noisier than a flared tube's: see [round port vs slot port](/guides/round-vs-slot-port/).
 
 **Flare the ends.** Rounding the port's ends (with a radius of a few centimetres) slows the air where the noise starts, which helps a lot: the app shows the speed at the flared ends, 13.2 m/s here, though the middle of the 10 cm port is still at 29.7 m/s. Flared ports are the best answer when you're only a little over. In the app, set the port's **Flare r** (about a quarter of the diameter is a good start).
 

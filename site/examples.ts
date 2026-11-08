@@ -480,6 +480,49 @@ function dvcExample(drive: "watts" | "volts") {
   };
 }
 
+/**
+ * The round vs slot port guide: a Dayton Audio RSS265HF-4 in 40 L tuned to 35 Hz behind a 25 Hz
+ * 24 dB/oct high-pass filter, with a 4″ (10.16 cm) round port flared 2.5 cm at both ends, an
+ * 8:1 slot of the same area (25.5 × 3.2 cm) cut to the length the app gives for 35 Hz, and a
+ * stand-in for that slot built along the box walls: a straight tube of the same area with the
+ * extra length the forums' K = 2.227 shelf-vent end correction would add ((2.227 − 0.732) × the
+ * 10.16 cm equivalent diameter = 15.2 cm), i.e. how it may tune as built.
+ * At 350 W, the driver's rating. "pipes" turns on ports as pipes, to show the first pipe resonance.
+ */
+export const PORT_SHAPE = { round_cm: 10.16, flare_cm: 2.5, vb_l: 40, fb: 35, kShelf: 2.227 };
+function portShapeExample(pipes: boolean) {
+  return (): AppState => {
+    const base = withDriver({ ...DEFAULT_STATE, power: 350, highPass: highPass(4, 25) }, "dayton-audio/rss265hf-4");
+    const s: AppState = { ...base, settings: { ...base.settings, portCompression: true, ...(pipes ? { portModel: "pipe" as const } : {}) } };
+    const v = byKind(DEFAULT_STATE, "vented") as Vented;
+    const { round_cm, flare_cm, vb_l, fb, kShelf } = PORT_SHAPE;
+    const area = Math.PI * (round_cm / 2) ** 2;
+    const h = Math.round(Math.sqrt(area / 8) * 100) / 100;
+    const w = Math.round((area / h) * 10) / 10;
+    const slot = ventedWith(v, `8:1 slot ${w} × ${h} cm, as calculated`, vb_l, fb, { shape: "slot", width_cm: w, height_cm: h });
+    const extra = Math.round((kShelf - 0.732) * 2 * Math.sqrt((w * h) / Math.PI) * 10) / 10;
+    return {
+      ...s,
+      designs: [
+        { ...ventedWith(v, `4″ round port, flared`, vb_l, fb, { shape: "round", diameter_cm: round_cm, flare_cm }), id: "d1" },
+        { ...slot, id: "d2" },
+        // A wall-backed slot can't be modelled directly (the end correction is one setting for
+        // every port), so its stand-in: a plain tube of the same area, the extra end correction
+        // added as length. It tunes, moves air and resonates as the slot would with K 2.227.
+        {
+          ...slot,
+          id: "d3",
+          name: `Stand-in: the slot if its walls add K ${kShelf}`,
+          shape: "round",
+          diameter_cm: Math.round(2 * Math.sqrt((w * h) / Math.PI) * 100) / 100,
+          flare_cm: 0,
+          length_cm: Math.round((slot.length_cm + extra) * 10) / 10,
+        },
+      ],
+    };
+  };
+}
+
 export const EXAMPLES: Record<string, () => AppState> = {
   "stuffing-sealed": stuffingSealed(false),
   "stuffing-sealed-losses": stuffingSealed(true),
@@ -513,6 +556,8 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "mltl-example": mltlExample,
   "dvc-watts": dvcExample("watts"),
   "dvc-volts": dvcExample("volts"),
+  "port-shape": portShapeExample(false),
+  "port-shape-pipes": portShapeExample(true),
 };
 
 /** Share links (`https://…/#z=…`) for every example. */
