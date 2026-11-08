@@ -21,6 +21,10 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
   const target = linkedDesign(s);
   const r = volumeFor(s, target);
   const fill = target ? stuffFactor(target) : 1;
+  // Fields for parts the linked design doesn't have are hidden (unlinked: all shown).
+  const rearOf = (d: typeof target) => (d?.kind === "bandpass" && d.order !== "4" ? d.rearOpening : null);
+  const hasPr = !target || target.kind === "pr" || rearOf(target) === "pr";
+  const hasPort = !target || target.kind === "vented" || rearOf(target) === "port";
   const linkOptions: { value: string; text: string }[] = [
     { value: "none", text: "No design (just calculate)" },
     ...s.designs.filter((d) => d.kind !== "line").map((d) => ({ value: d.id, text: d.name || d.id })),
@@ -28,10 +32,25 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
 
   // Find dimensions for a target volume (what the box volume will be in the simulation).
   const [aim, setAim] = useState(() => Math.round(r.net_l * 10) / 10);
-  const [proportions, setProportions] = useState<"keep" | "golden">("keep");
+  // null = the shape's default (the first option below).
+  const [proportions, setProportions] = useState<"keep" | "golden" | "length" | null>(null);
+  const ratioOptions: { value: "keep" | "golden" | "length"; text: string }[] =
+    v.shape === "box"
+      ? [
+          { value: "keep", text: "Keep the current ones" },
+          { value: "golden", text: "Golden ratio (1 : 1.618 : 0.618)" },
+        ]
+      : v.shape === "cylinder"
+        ? [
+            { value: "length", text: "Keep the diameter (change the length)" },
+            { value: "keep", text: "Keep the current proportions" },
+          ]
+        : [{ value: "keep", text: "Keep the current ones" }];
+  // The choice in force for this shape (a tube defaults to keeping its diameter: tubes come in set sizes).
+  const ratio = proportions && ratioOptions.some((o) => o.value === proportions) ? proportions : ratioOptions[0]!.value;
   const [found, setFound] = useState("");
   const find = (aimAt = aim) => {
-    const dims = dimensionsFor(s, target, aimAt, proportions);
+    const dims = dimensionsFor(s, target, aimAt, ratio);
     if (!dims) {
       setFound(`No size reaches ${fmt(aimAt, "vol", 1)}: the deductions alone are larger. Lower them or aim higher.`);
       return;
@@ -71,17 +90,10 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
       <h3>Size the box</h3>
       <div className="fields">
         <Num help="The net volume you want; Size the box sets the dimensions for it." label="Target" q="vol" value={aim} onChange={setAim} />
-        <Select<"keep" | "golden"> help="Keep the box's current proportions, or use the golden ratio (spreads its internal standing waves)."
+        <Select<"keep" | "golden" | "length"> help={v.shape === "cylinder" ? "Keep the tube's diameter and find its length (tubes come in set sizes), or scale the whole tube." : "Keep the box's current proportions, or use the golden ratio (spreads its internal standing waves)."}
           label="Ratio"
-          value={v.shape === "box" ? proportions : "keep"}
-          options={
-            v.shape === "box"
-              ? [
-                  { value: "keep", text: "Keep the current ones" },
-                  { value: "golden", text: "Golden ratio (1 : 1.618 : 0.618)" },
-                ]
-              : [{ value: "keep", text: "Keep the current ones" }]
-          }
+          value={ratio}
+          options={ratioOptions}
           onChange={setProportions}
         />
       </div>
@@ -108,8 +120,8 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
         )}
         {v.shape === "cylinder" && (
           <>
-            <Num help="Outside diameter of the tube." label="Diameter" q="len" value={v.diameter_cm} onChange={(x) => set("diameter_cm", x)} />
-            <Num help="Outside length of the tube." label="Length" q="len" value={v.height_cm} onChange={(x) => set("height_cm", x)} />
+            <Num help="Outside diameter of the tube. Concrete-form tubes (Sonotube) are sold by their inside diameter: add twice the wall." label="Diameter" q="len" value={v.diameter_cm} onChange={(x) => set("diameter_cm", x)} />
+            <Num help="Outside length, end cap to end cap." label="Length" q="len" value={v.height_cm} onChange={(x) => set("height_cm", x)} />
           </>
         )}
         {v.shape === "sphere" && (
@@ -120,18 +132,21 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
             <Num help="Outside width at the bottom of the tapered box." label="Bottom W" q="len" value={v.width_cm} onChange={(x) => set("width_cm", x)} />
             <Num help="Outside depth at the bottom of the tapered box." label="Bottom D" q="len" value={v.depth_cm} onChange={(x) => set("depth_cm", x)} />
             <Num help="Outside width at the top (0 = a point, like a pyramid)." label="Top W" q="len" value={v.topWidth_cm} min={0} onChange={(x) => set("topWidth_cm", x)} />
-            <Num help="Outside depth at the top." label="Top D" q="len" value={v.topDepth_cm} min={0} onChange={(x) => set("topDepth_cm", x)} />
+            <Num help="Outside depth at the top. A wedge sloped on one face only (say, the front) holds the same: enter its depth at the top and at the bottom." label="Top D" q="len" value={v.topDepth_cm} min={0} onChange={(x) => set("topDepth_cm", x)} />
             <Num help="Outside height of the tapered box." label="Height" q="len" value={v.height_cm} onChange={(x) => set("height_cm", x)} />
           </>
         )}
-        <Num help="Wall thickness (e.g. 18 mm MDF). Taken off every side to get the inside volume." label="Walls" q="mm" value={v.wall_mm} min={0} onChange={(x) => set("wall_mm", x)} />
+        <Num help={v.shape === "cylinder" ? "Thickness of the tube's wall. Taken off all round to get the inside volume." : "Wall thickness (e.g. 18 mm MDF). Taken off every side to get the inside volume."} label="Walls" q="mm" value={v.wall_mm} min={0} onChange={(x) => set("wall_mm", x)} />
+        {v.shape === "cylinder" && (
+          <Num help="Thickness of each end cap (often thicker than the tube, e.g. two layers of 18 mm MDF). Taken off both ends. Follows the wall until you change it." label="End caps" q="mm" value={v.capWall_mm ?? v.wall_mm} min={0} onChange={(x) => set("capWall_mm", x)} />
+        )}
       </div>
 
       <h3>Takes up space inside</h3>
       <div className="fields">
         <Num help="Air each driver takes up inside the box (its displacement, from the datasheet)." label="Each driver" q="vol" value={v.driverDisp_l} min={0} onChange={(x) => set("driverDisp_l", x)} />
-        <Num help="Air each passive radiator takes up inside the box." label="Each PR" q="vol" value={v.prDisp_l} min={0} onChange={(x) => set("prDisp_l", x)} />
-        <Num help="Wall thickness of the port tube: the tube's own volume is taken off too." label="Port wall" q="mm" value={v.portWall_mm} min={0} onChange={(x) => set("portWall_mm", x)} />
+        {hasPr && <Num help="Air each passive radiator takes up inside the box." label="Each PR" q="vol" value={v.prDisp_l} min={0} onChange={(x) => set("prDisp_l", x)} />}
+        {hasPort && <Num help="Wall thickness of the port tube: the tube's own volume is taken off too." label="Port wall" q="mm" value={v.portWall_mm} min={0} onChange={(x) => set("portWall_mm", x)} />}
         <Num help="Bracing, as a share of the inside volume (5% is typical for a well-braced box)." label="Bracing" unit="%" value={v.bracing_pct} min={0} onChange={(x) => set("bracing_pct", x)} />
         <Num help="Anything else inside (crossover, amplifier plate, handles), in litres." label="Other" q="vol" value={v.other_l} min={0} onChange={(x) => set("other_l", x)} />
       </div>
@@ -181,6 +196,6 @@ function describe(v: AppState["volume"], fmt: (x: number, q: "len", digits?: num
     case "sphere":
       return `a sphere ${fmt(v.diameter_cm, "len", 1)} across`;
     case "frustum":
-      return `a truncated pyramid ${fmt(v.width_cm, "len", 1)} × ${fmt(v.depth_cm, "len", 1)} at the base, ${fmt(v.height_cm, "len", 1)} tall`;
+      return `a truncated pyramid ${fmt(v.width_cm, "len", 1)} × ${fmt(v.depth_cm, "len", 1)} at the base, ${fmt(v.topWidth_cm, "len", 1)} × ${fmt(v.topDepth_cm, "len", 1)} at the top, ${fmt(v.height_cm, "len", 1)} tall`;
   }
 }

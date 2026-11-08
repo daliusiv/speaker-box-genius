@@ -337,6 +337,8 @@ export interface AppState {
     topWidth_cm: number;
     topDepth_cm: number;
     wall_mm: number;
+    /** Cylinder: end-cap thickness (mm) when it differs from the tube wall; null = the same as the wall. */
+    capWall_mm: number | null;
     driverDisp_l: number;
     prDisp_l: number;
     portWall_mm: number;
@@ -510,6 +512,7 @@ export const DEFAULT_STATE: AppState = {
     topWidth_cm: 25,
     topDepth_cm: 30,
     wall_mm: 18,
+    capWall_mm: null,
     driverDisp_l: 1.8,
     prDisp_l: 0.6,
     portWall_mm: 3,

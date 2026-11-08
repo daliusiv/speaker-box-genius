@@ -3,6 +3,8 @@ import {
   coilHeatFactor,
   DEFAULT_END_CORRECTION,
   impedanceMagnitude,
+  insideLongest_cm,
+  lowestMode_hz,
   parseOwdr,
   parseOwpr,
   parseWdr,
@@ -52,6 +54,7 @@ import { VolumePanel } from "./VolumePanel.tsx";
 import { BuildSheet } from "./BuildSheet.tsx";
 import {
   airOf,
+  shapeOf,
   endCorrectionOf,
   amplifierLoad,
   baffleDbFor,
@@ -2386,19 +2389,16 @@ function portContext(state: AppState, designs: Design[], id: string) {
   const rearPeak = peakOf(r?.rearPortVelocity);
   const v = state.volume;
   let internalMax_cm: number | null = null;
+  let boxMode_hz: number | null = null;
   if (v.link === id) {
-    const t = v.wall_mm / 5; // both walls, in cm
-    internalMax_cm =
-      v.shape === "box" || v.shape === "frustum"
-        ? Math.max(v.width_cm, v.height_cm, v.depth_cm) - t
-        : v.shape === "cylinder"
-          ? Math.max(v.diameter_cm, v.height_cm) - t
-          : v.diameter_cm - t;
+    internalMax_cm = insideLongest_cm(shapeOf(v), v.wall_mm);
+    boxMode_hz = lowestMode_hz(shapeOf(v), v.wall_mm, airOf(state).c);
   }
   return {
     portVelocity: peak,
     rearPortVelocity: rearPeak,
     internalMax_cm,
+    boxMode_hz,
     portVelocityAt: r?.summary.portVelocityAt ?? "throat",
     portCompression: r?.summary.portCompression ?? null,
     portLimit: portLimitOf(state),
