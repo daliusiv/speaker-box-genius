@@ -61,7 +61,7 @@ The ported box goes a full octave deeper (21 Hz against 42 Hz) and plays almost 
 
 1. Pick your driver from the database (or type its parameters in).
 2. On the Boxes tab, add a sealed, a ported and a passive radiator design.
-3. Press a preset in each (**Qtc 0.707**, and **QB3**, **B4** or **Keele**, whichever suits the driver) to size them.
+3. Press a preset in each (**Qtc 0.707**, and **QB3**, **B4** or **Keele**, whichever suits the driver) to size them. The ported and PR cards also offer the other families that suit the driver (**SC4** or **C4**, **SBB4** or **BB4**, **SQB3**): hover one to see its box, tuning and shape.
 4. Compare the **response**, **Max SPL** and **excursion** charts at the power you'll use, with a high-pass filter. Switch Max SPL to **Volts** or **Amps** to see the amplifier each box needs.
 
 [[Open the worked example|box-types-example]]

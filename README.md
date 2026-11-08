@@ -52,7 +52,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 ### Sizing and tuning
 
-- **Alignment presets**: Qtc 0.5, 0.577 and 0.707 for sealed boxes; QB3, B4 and Keele for ported ones; one tap sizes every box for the driver (sealed at Qtc 0.707, or twice Vas when Qts is so close to 0.707 that the box would run away) and picks each port: the simplest that fits and stays under the chuffing line at the driver's rated power
+- **Alignment presets**: Qtc 0.5, 0.577 and 0.707 for sealed boxes; QB3, B4 and Keele for ported and PR boxes, plus the families that suit the driver's Qts (SC4/C4, SBB4/BB4 and SQB3); one tap sizes every box for the driver (sealed at Qtc 0.707, or twice Vas when Qts is so close to 0.707 that the box would run away) and picks each port: the simplest that fits and stays under the chuffing line at the driver's rated power
 - **Find a passive radiator**: tries every PR in the database (and, optionally, woofers used as PRs) in groups of 1, 2 or 4, tunes each with added mass and ranks them by bass extension and spare travel
 - **Best PR tuning**: the added mass for the flattest response, the deepest bass or the smallest box for a target F3
 - **Port fit checks**: the port length for a tuning, whether it fits inside the box, round or slot ports, flared ends, and an option to model ports as pipes (with their own resonances)

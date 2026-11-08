@@ -26,7 +26,7 @@ export interface PrPhysical {
 import { KIND_COLORS, KIND_LABEL, PORT_LIMIT, portOf, portRoom_cm } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { bandpassLossesFrom, NO_LOSS, qText } from "./state.ts";
-import { prTuning, withPreset, ventedAlignmentFor } from "./presets.ts";
+import { alignmentHelp, moreVentedFor, prTuning, withPreset, ventedAlignmentFor } from "./presets.ts";
 import { PrFinder, type FinderContext } from "./PrFinder.tsx";
 import { StuffingFields, type StuffingFitContext } from "./StuffingFields.tsx";
 import { stuffFactor, stuffable, stuffingEffect, type StuffableKind } from "./stuffing.ts";
@@ -426,6 +426,22 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
     set({ length_cm: Math.round(len * 10) / 10 });
   };
 
+  /** A vented alignment's box and tuning, with this port's length for it. */
+  const applyAlignment = (a: { name: string; vb_l: number; fb: number }) => {
+    const len = portLengthForFb(a.vb_l, portOf(v, 0), a.fb, v.count, undefined, p.air);
+    if (!(len > 0)) {
+      setMsg(`${a.name}: ${a.vb_l.toFixed(1)} L tuned to ${a.fb.toFixed(1)} Hz, but this port is too small for that tuning. Increase the port size and try again.`);
+      return;
+    }
+    setMsg("");
+    set({
+      vb_l: toBuilt(a.vb_l, p.fill),
+      targetFb: Math.round(a.fb * 10) / 10,
+      length_cm: Math.round(len * 10) / 10,
+      ...withPreset(v.name, a.name),
+    });
+  };
+
   return (
     <>
       {/* Presets first: you usually pick one, then fine-tune the numbers below. */}
@@ -440,22 +456,18 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext }) {
               setMsg("This driver's Qts is above 0.6: it suits a sealed box better than a vented one.");
               return;
             }
-            const len = portLengthForFb(a.vb_l, portOf(v, 0), a.fb, v.count, undefined, p.air);
-            if (!(len > 0)) {
-              setMsg(`${a.name}: ${a.vb_l.toFixed(1)} L tuned to ${a.fb.toFixed(1)} Hz, but this port is too small for that tuning. Increase the port size and try again.`);
-              return;
-            }
-            setMsg("");
-            set({
-              vb_l: toBuilt(a.vb_l, p.fill),
-              targetFb: Math.round(a.fb * 10) / 10,
-              length_cm: Math.round(len * 10) / 10,
-              ...withPreset(v.name, a.name),
-            });
+            applyAlignment(a);
           }}
         >
           {alignLabel(p.align, p.drivers)}
         </button>
+        {!p.linked &&
+          p.align &&
+          moreVentedFor(p.align, p.drivers).map((a) => (
+            <button key={a.name} className="chip" title={alignmentHelp(a)} onClick={() => applyAlignment(a)}>
+              {a.name}
+            </button>
+          ))}
       </Presets>
       <div className="fields">
         <Select help="Round tube, or a slot (rectangular, often along a wall). Slots are easy to build and less prone to chuffing at the same area."
@@ -536,6 +548,23 @@ function PrBody(
     set({ addedMass_g: Math.round(add) });
   };
 
+  /** A vented alignment's box and tuning, reached with added mass on these PRs. */
+  const applyPrAlignment = (a: { name: string; vb_l: number; fb: number }) => {
+    const add = t.massFor(a.fb, a.vb_l);
+    if (add === Infinity) return setMsg(unreachable(Math.round(a.fb * 10) / 10));
+    if (add < 0) {
+      setMsg(`${a.name} wants ${a.vb_l.toFixed(1)} L at ${a.fb.toFixed(1)} Hz, but these PRs tune lower than that even with no added mass. Try a lighter or stiffer PR, or fewer PRs.`);
+      return;
+    }
+    setMsg("");
+    set({
+      vb_l: toBuilt(a.vb_l, p.fill),
+      targetFb: Math.round(a.fb * 10) / 10,
+      addedMass_g: Math.round(add),
+      ...withPreset(pr.name, a.name),
+    });
+  };
+
   return (
     <>
       {/* Presets and Best tuning first: you usually pick one, then fine-tune the numbers below. */}
@@ -550,23 +579,18 @@ function PrBody(
               setMsg("This driver's Qts is above 0.6: it suits a sealed box better than a vented one.");
               return;
             }
-            const add = t.massFor(a.fb, a.vb_l);
-            if (add === Infinity) return setMsg(unreachable(Math.round(a.fb * 10) / 10));
-            if (add < 0) {
-              setMsg(`${a.name} wants ${a.vb_l.toFixed(1)} L at ${a.fb.toFixed(1)} Hz, but these PRs tune lower than that even with no added mass. Try a lighter or stiffer PR, or fewer PRs.`);
-              return;
-            }
-            setMsg("");
-            set({
-              vb_l: toBuilt(a.vb_l, p.fill),
-              targetFb: Math.round(a.fb * 10) / 10,
-              addedMass_g: Math.round(add),
-              ...withPreset(pr.name, a.name),
-            });
+            applyPrAlignment(a);
           }}
         >
           {alignLabel(p.align, p.drivers)}
         </button>
+        {!p.linked &&
+          p.align &&
+          moreVentedFor(p.align, p.drivers).map((a) => (
+            <button key={a.name} className="chip" title={`${alignmentHelp(a)} Reached with added mass.`} onClick={() => applyPrAlignment(a)}>
+              {a.name}
+            </button>
+          ))}
       </Presets>
       <div className="row finder-row-button">
         <PrTuning ctx={p.finder} design={pr} vb_l={p.vb_l} linked={p.linked} onApply={(patch, summary) => p.onFound(patch, summary)} />
