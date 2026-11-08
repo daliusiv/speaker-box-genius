@@ -246,3 +246,37 @@ test("Hofmann's Iron Law guide: efficiency, the law's constant, same-box SPL at 
   [[20, 0], [25, 0.6], [30, -0.4], [40, 0.4], [60, 2.8], [100, 5.3]].forEach(([hz, d]) => near(max(P[1]!, hz!) - max(P[3]!, hz!), d!, 0.06, `home box max SPL difference at ${hz} Hz`));
   [[15, -4.7], [20, -3.9], [30, -2.0]].forEach(([hz, d]) => near(max(S[0]!, hz!) - max(S[1]!, hz!), d!, 0.06, `sealed max SPL difference at ${hz} Hz`));
 });
+
+test("baffle step guide: loss, step frequency, compensation, excursion and max SPL", async () => {
+  const { baffleStepFrequency } = await import("../packages/engine/src/index.ts");
+  const { baffleOf } = await import("../packages/web/src/sim.ts");
+  const r = (name: string) => run(name)[0]!.result;
+  const ib = r("baffle-ib"), free = r("baffle-free"), eq3 = r("baffle-eq3"), pas = r("baffle-passive");
+  const spl = (x: typeof ib, hz: number) => at(x.freq, x.spl, hz);
+  [[40, 87.4], [100, 87.9], [200, 88.0], [500, 88.1]].forEach(([hz, v]) => near(spl(ib, hz!), v!, 0.06, `infinite baffle at ${hz} Hz`));
+  [[40, 81.5], [100, 82.4], [200, 84.0], [300, 85.5], [500, 87.8], [1000, 89.6]].forEach(([hz, v]) => near(spl(free, hz!), v!, 0.06, `free-standing at ${hz} Hz`));
+  [[40, -5.9], [100, -5.4], [200, -4.1], [300, -2.6]].forEach(([hz, v]) => near(spl(free, hz!) - spl(ib, hz!), v!, 0.06, `loss at ${hz} Hz`));
+  const s = EXAMPLES["baffle-free"]!();
+  const b = baffleOf(s, solveDriver(s).values.sd_cm2)!;
+  near(baffleStepFrequency(b), 272, 1, "step frequency");
+  near(free.summary.f3!, 31.2, 0.06, "F3 unchanged");
+  // +3 dB shelf: level, F3 and excursion at 2.83 V.
+  near(spl(eq3, 40), 84.4, 0.06, "+3 dB shelf at 40 Hz");
+  near(spl(eq3, 100), 85.1, 0.06, "+3 dB shelf at 100 Hz");
+  near(eq3.summary.f3!, 27.9, 0.06, "+3 dB shelf F3");
+  near(at(free.freq, free.excursionMm, 40), 1.55, 0.02, "excursion at 40 Hz");
+  near(at(eq3.freq, eq3.excursionMm, 40), 2.18, 0.02, "excursion at 40 Hz with +3 dB");
+  // Passive 2.4 mH ∥ 5.6 Ω: 81–84 dB from 40 Hz to 1 kHz.
+  near(spl(pas, 40), 81.2, 0.06, "passive at 40 Hz");
+  [60, 100, 200, 300, 500, 1000].forEach((hz) => { const v = spl(pas, hz); assert.ok(v >= 81.9 && v <= 84.2, `passive at ${hz} Hz: ${v}`); });
+  // Max SPL: infinite baffle vs free-standing.
+  [[30, 95.9, 90.0], [50, 97.6, 91.8], [100, 103.4, 97.9]].forEach(([hz, a, f]) => {
+    near(at(ib.freq, ib.maxSpl, hz!), a!, 0.06, `max SPL infinite baffle at ${hz} Hz`);
+    near(at(free.freq, free.maxSpl, hz!), f!, 0.06, `max SPL free-standing at ${hz} Hz`);
+  });
+  // The step for other baffles.
+  const shape = (width: number, height: number, x: number, y: number) => baffleStepFrequency({ ...b, width: width / 100, height: height / 100, x: x / 100, y: y / 100 });
+  near(shape(20, 20, 10, 10), 340, 3, "20 cm square");
+  near(shape(30, 30, 15, 15), 218, 3, "30 cm square");
+  near(shape(20, 100, 10, 25), 183, 3, "20 × 100 tower");
+});

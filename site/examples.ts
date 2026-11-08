@@ -10,8 +10,8 @@ import type { Stuffing } from "../packages/web/src/stuffing.ts";
 
 /** A fresh line design, as "+ Transmission line" adds one. */
 const newLine = (s: AppState) => newDesign("line", s.designs);
-import { keeleAlignment, portLengthForFb, sealedVolumeForAlignment, type PortInput } from "../packages/engine/src/index.ts";
-import { alignmentDriver, driverInputOf, runDesigns, simOptionsOf, solveDriver } from "../packages/web/src/sim.ts";
+import { baffleStepFrequency, keeleAlignment, portLengthForFb, sealedVolumeForAlignment, type PortInput } from "../packages/engine/src/index.ts";
+import { alignmentDriver, baffleOf, driverInputOf, runDesigns, simOptionsOf, solveDriver } from "../packages/web/src/sim.ts";
 import { compareLines } from "../packages/web/src/lineopt.ts";
 
 const ROOT = new URL("..", import.meta.url);
@@ -549,6 +549,33 @@ function ironLawExample(box: "ported" | "sealed") {
   };
 }
 
+/**
+ * The baffle step guide: an SB Acoustics SB17NRX2C35-8 in its Keele box (35 L tuned to 33 Hz,
+ * a 5 cm port flared 1 cm) at 2.83 V, on a 20 × 32 cm front baffle with the woofer 10 cm from
+ * the side and 22 cm from the top (a two-way's tweeter above it): on an infinite baffle
+ * ("ib"), free-standing ("free"), free-standing with the app's +3 dB low shelf at the step
+ * ("eq3"), and with a passive 6 dB compensation network, a 2.4 mH coil with a 5.6 Ω resistor
+ * across it in line with the woofer ("passive").
+ */
+export const BAFFLE = { on: true, fromBox: false, width_cm: 20, height_cm: 32, x_cm: 10, y_cm: 22 };
+function baffleExample(kind: "ib" | "free" | "eq3" | "passive") {
+  return (): AppState => {
+    const s = withDriver({ ...DEFAULT_STATE, drive: "volts", volts: 2.83 }, "sb-acoustics/sb17nrx2c35-8");
+    const align = alignmentDriver(solveDriver(s), s)!;
+    const a = keeleAlignment(align)!;
+    const vb = Math.round(a.vb_l * 10) / 10;
+    const fb = Math.round(a.fb * 10) / 10;
+    const box = { ...ventedWith(byKind(DEFAULT_STATE, "vented") as Vented, `Ported ${vb} L, ${fb} Hz`, vb, fb, { shape: "round", diameter_cm: 5, flare_cm: 1 }), id: "d1" };
+    const baffled = { ...s, designs: [box], baffle: kind === "ib" ? { ...BAFFLE, on: false } : BAFFLE };
+    if (kind === "eq3") {
+      const step = baffleStepFrequency(baffleOf(baffled, solveDriver(s).values.sd_cm2)!);
+      return { ...baffled, eq: [{ id: "e1", on: true, target: "all", type: "lowshelf", freq: Math.round(step), gain_db: 3, q: 0.5 }] };
+    }
+    if (kind === "passive") return { ...baffled, passive: { on: true, branches: [{ r: 5.6, l_mH: 2.4, join: "parallel" }, {}, {}, {}] } };
+    return baffled;
+  };
+}
+
 export const EXAMPLES: Record<string, () => AppState> = {
   "stuffing-sealed": stuffingSealed(false),
   "stuffing-sealed-losses": stuffingSealed(true),
@@ -586,6 +613,10 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "port-shape-pipes": portShapeExample(true),
   "iron-law": ironLawExample("ported"),
   "iron-law-sealed": ironLawExample("sealed"),
+  "baffle-ib": baffleExample("ib"),
+  "baffle-free": baffleExample("free"),
+  "baffle-eq3": baffleExample("eq3"),
+  "baffle-passive": baffleExample("passive"),
 };
 
 /** Share links (`https://…/#z=…`) for every example. */

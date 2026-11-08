@@ -54,7 +54,7 @@ Box simulators, WinISD included, assume the speaker is mounted in an infinite wa
 
 For the example box on a 22 × 32 cm baffle, turning on **Baffle step** (on the Signal tab) lowers the response by **5.7 dB** at 40–60 Hz and 2.4 dB at 300 Hz, relative to the half-space simulation. That's a large part of most "my bass is weaker than predicted" complaints.
 
-**How to close it:** turn on **Baffle step** and enter your baffle's size and the driver's position. Then either accept the step (a speaker near a wall gets much of it back), or compensate for it in the crossover or with EQ [4].
+**How to close it:** turn on **Baffle step** and enter your baffle's size and the driver's position. Then either accept the step (a speaker near a wall gets much of it back), or compensate for it in the crossover or with EQ [4]. [Baffle step loss explained](/guides/baffle-step/) works through a bookshelf example: where the step really falls, how much to compensate and what each way costs.
 
 ## 3. Your room
 
