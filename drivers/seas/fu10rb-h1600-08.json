@@ -1,0 +1,37 @@
+{
+  "brand": "SEAS",
+  "model": "FU10RB (H1600-08)",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 102,
+    "qms": 3.25,
+    "qes": 1.36,
+    "vas_l": 1.3,
+    "re": 6.42,
+    "sd_cm2": 38.5,
+    "qts": 0.96,
+    "le_mh": 0.16,
+    "bl": 3.56,
+    "xmax_mm": 2,
+    "pe_w": 40,
+    "mms_g": 4.19
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=376:h1600-08-fu10rb&catid=53:prestige-fullrange&Itemid=466",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (H1600-08). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/prestige/pdfdatasheet/FU10RB-H1600-08.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax 2 mm is half the published linear coil travel (4 mm peak to peak). Mms 4.19 g is the published moving mass plus air load (4.05 + 0.14 g). Published Vas 1 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 1.3 L from Cms."
+}

@@ -1,0 +1,37 @@
+{
+  "brand": "SEAS",
+  "model": "CD22RN4X",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 20,
+    "qms": 3.28,
+    "qes": 0.26,
+    "vas_l": 108,
+    "re": 6.1,
+    "sd_cm2": 230,
+    "qts": 0.24,
+    "le_mh": 3.47,
+    "bl": 11.4,
+    "xmax_mm": 7,
+    "pe_w": 100,
+    "mms_g": 43.62
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=63:h1192-08-cd22rn4x&catid=44:utv-prestige-woofers&Itemid=461",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (H1192-08). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/prestige/pdfdatasheet/h1192_cd22rn4x_datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Size 8\" from the frame size in the model name (the datasheet doesn't state it). Xmax 7 mm is half the published linear coil travel (14 mm peak to peak). Mms 43.62 g is the published moving mass plus air load (41.6 + 2.02 g)."
+}

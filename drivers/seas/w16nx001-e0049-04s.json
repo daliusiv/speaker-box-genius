@@ -1,0 +1,37 @@
+{
+  "brand": "SEAS",
+  "model": "W16NX001 (E0049-04S)",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 37,
+    "qms": 2.66,
+    "qes": 0.38,
+    "vas_l": 15,
+    "re": 3,
+    "sd_cm2": 94,
+    "qts": 0.33,
+    "le_mh": 0.25,
+    "bl": 5.3,
+    "xmax_mm": 7,
+    "pe_w": 80,
+    "mms_g": 14.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=355:e0049-04s-w16nx001&catid=49:excel-woofers&Itemid=359",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (E0049-04S). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/excel/pdfdataheet/e0049-04_w16nx001_datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Size 6.5\" from the frame size in the model name (the datasheet doesn't state it). Xmax 7 mm is half the published linear coil travel (14 mm peak to peak). Moving mass 14.8 g already agrees with Fs and Cms, so the air load (0.53 g) isn't added."
+}

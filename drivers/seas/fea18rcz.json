@@ -1,0 +1,37 @@
+{
+  "brand": "SEAS",
+  "model": "FEA18RCZ",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 42,
+    "qms": 6.29,
+    "qes": 0.42,
+    "vas_l": 31,
+    "re": 5.7,
+    "sd_cm2": 136,
+    "qts": 0.39,
+    "le_mh": 0.49,
+    "bl": 6.6,
+    "xmax_mm": 3,
+    "pe_w": 40,
+    "mms_g": 12.1
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=532:h1794-08-fea18rcz&catid=53:prestige-fullrange&Itemid=466",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (H1794-08). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/prestige/pdfdatasheet/FEA18RCZ-H1794-08_Datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax 3 mm is half the published linear coil travel (6 mm peak to peak)."
+}

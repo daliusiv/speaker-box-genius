@@ -1,0 +1,37 @@
+{
+  "brand": "SEAS",
+  "model": "A26RE4",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 25,
+    "qms": 3.84,
+    "qes": 0.43,
+    "vas_l": 169,
+    "re": 6.3,
+    "sd_cm2": 350,
+    "qts": 0.39,
+    "le_mh": 3.8,
+    "bl": 9.7,
+    "xmax_mm": 4,
+    "pe_w": 80,
+    "mms_g": 37.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=90:h1411-08-a26re4&catid=44:utv-prestige-woofers&Itemid=461",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (H1411-08). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/prestige/pdfdatasheet/H1411_A26RE4_Datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Size 10\" from the frame size in the model name (the datasheet doesn't state it). Xmax 4 mm is half the published linear coil travel (8 mm peak to peak). Moving mass 37.4 g already agrees with Fs and Cms, so the air load (3.8 g) isn't added."
+}

@@ -1,0 +1,37 @@
+{
+  "brand": "SEAS",
+  "model": "W16NX005",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 40,
+    "qms": 4.37,
+    "qes": 0.34,
+    "vas_l": 18,
+    "re": 6.4,
+    "sd_cm2": 104,
+    "qts": 0.32,
+    "le_mh": 0.45,
+    "bl": 7.9,
+    "xmax_mm": 7,
+    "pe_w": 180,
+    "mms_g": 13.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=611:e0115-08-w16nx005&catid=49&Itemid=246",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (E0115-08). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/E0115-08_W16NX005_datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "The datasheet's table is an image: values read by OCR, check them against the PDF. Size 6.5\" from the frame size in the model name (the datasheet doesn't state it). Xmax 7 mm is half the published linear coil travel (14 mm peak to peak)."
+}

@@ -1,0 +1,37 @@
+{
+  "brand": "SEAS",
+  "model": "W18EX003",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 7,
+  "ts": {
+    "fs": 32,
+    "qms": 4.85,
+    "qes": 0.32,
+    "vas_l": 29,
+    "re": 6.1,
+    "sd_cm2": 126,
+    "qts": 0.3,
+    "le_mh": 0.2,
+    "bl": 8.5,
+    "xmax_mm": 5,
+    "pe_w": 160,
+    "mms_g": 19
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=568:e0074-08-w18ex003&catid=49:excel-woofers&Itemid=359",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (E0074-08). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/E0074-08_W18EX003_datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "The datasheet's table is an image: values read by OCR, check them against the PDF. Size 7\" from the frame size in the model name (the datasheet doesn't state it). Xmax 5 mm is half the published linear coil travel (10 mm peak to peak)."
+}
