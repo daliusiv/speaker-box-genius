@@ -188,21 +188,26 @@ function subsonicExample(on: boolean) {
 }
 
 /**
- * The car subwoofer guide: an RSS265HF-4 at 200 W in a car (cabin gain on), behind a
- * 24 dB/oct high-pass at 24 Hz: a 28 L sealed box, and 45 L ported tuned to 33 or 28 Hz.
+ * The car subwoofer guide: a Dayton Audio RSS265HF-4 (Pe 350 W, Xmax 12.3 mm) at its full rated
+ * 350 W behind a 26 Hz 24 dB/oct subsonic filter: a 28 L sealed box, and 45 L ported tuned to
+ * 33 or 28 Hz (5 × 30 cm slot). In a car (2.5 m cabin, 12 dB/oct, up to 18 dB) or, with
+ * `cabin` false, the same boxes out of the car.
  */
-function carExample(): AppState {
-  const s = withDriver({ ...DEFAULT_STATE, power: 200, highPass: highPass(4, 24) }, "dayton-audio/rss265hf-4");
-  const sealed = byKind(s, "sealed") as Extract<DesignState, { kind: "sealed" }>;
-  const v = byKind(s, "vented") as Vented;
-  return {
-    ...s,
-    roomGain: { ...s.roomGain, mode: "car" },
-    designs: [
-      { ...sealed, id: "d1", name: "Sealed 28 L", vb_l: 28 },
-      { ...ventedWith(v, "Ported 45 L, 33 Hz", 45, 33, { shape: "slot", width_cm: 5, height_cm: 30 }), id: "d2" },
-      { ...ventedWith(v, "Ported 45 L, 28 Hz", 45, 28, { shape: "slot", width_cm: 5, height_cm: 30 }), id: "d3" },
-    ],
+function carExample(cabin: boolean) {
+  return (): AppState => {
+    const s = withDriver({ ...DEFAULT_STATE, power: 350, highPass: highPass(4, 26) }, "dayton-audio/rss265hf-4");
+    const sealed = byKind(s, "sealed") as Extract<DesignState, { kind: "sealed" }>;
+    const v = byKind(s, "vented") as Vented;
+    const slot = { shape: "slot" as const, width_cm: 5, height_cm: 30 };
+    return {
+      ...s,
+      roomGain: cabin ? { ...s.roomGain, mode: "car", length_cm: 250, slope: 12, max_db: 18 } : { ...s.roomGain, mode: "off" },
+      designs: [
+        { ...sealed, id: "d1", name: "Sealed 28 L", vb_l: 28 },
+        { ...ventedWith(v, "Ported 45 L, 33 Hz", 45, 33, slot), id: "d2" },
+        { ...ventedWith(v, "Ported 45 L, 28 Hz", 45, 28, slot), id: "d3" },
+      ],
+    };
   };
 }
 
@@ -654,7 +659,8 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "box-types-nofilter": boxTypesExample(false),
   "subsonic-off": subsonicExample(false),
   "subsonic-on": subsonicExample(true),
-  "car-example": carExample,
+  "car-example": carExample(true),
+  "car-nocabin": carExample(false),
   "compare-example": compareExample,
   "ts-example": tsExample,
   "pr-example": prExample,
