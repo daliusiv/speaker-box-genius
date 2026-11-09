@@ -46,7 +46,7 @@ A **Dayton Audio RSS315HF-4** 12-inch subwoofer (Fs 24.2 Hz, Qts 0.39, Vas 84 L)
 2. **Ported, tuned high:** 50 L at 42 Hz, the kind of small, punchy box often built for cars.
 3. **Ported, tuned low:** Keele's flat alignment for this driver, 83.5 L at 23.8 Hz.
 
-(Thiele's QB3, often suggested here, doesn't exist for a driver with this Qts. Keele's alignment is the flat ported box for it; see the [sealed, ported or passive radiator guide](/guides/sealed-vs-ported/).) Both ports are 10 cm tubes, and the drive is 50 W, so neither port goes over the chuffing line.
+(Thiele's textbook QB3 stops at a Qts of about 0.38, and Keele's alignment is the textbook flat box above it. The app's QB3 preset, sized as WinISD sizes it, gives this driver a slightly smaller box, 75.6 L at 24.4 Hz; see the [sealed, ported or passive radiator guide](/guides/sealed-vs-ported/).) Both ports are 10 cm tubes, and the drive is 50 W, so neither port goes over the chuffing line.
 
 | | Sealed | Ported, tuned high | Ported, tuned low |
 |---|---|---|---|

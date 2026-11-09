@@ -32,29 +32,29 @@ Not sure which driver to buy, or which box to put it in? The design assistant as
 
 ## A worked run: the home-subwoofer defaults
 
-Leave everything at **Home subwoofer**'s defaults and the assistant tries **733** of the database's drivers (the rest are outside the size range, aren't woofers, resonate above 60 Hz, lack the parameters or can't be wired to the amplifier's minimum load) and returns **1,431 boxes**. **456** are within their limits at 300 W, **67** more only pass Xmax in deep bass (amber, below), and **908** are over a limit. The top of the list, Balanced:
+Leave everything at **Home subwoofer**'s defaults and the assistant tries **733** of the database's drivers (the rest are outside the size range, aren't woofers, resonate above 60 Hz, lack the parameters or can't be wired to the amplifier's minimum load) and returns **1,434 boxes**. **458** are within their limits at 300 W, **86** more only pass Xmax in deep bass (amber, below), and **890** are over a limit. The top of the list, Balanced:
 
-![The home-sub results, best first. The Dayton RSS315HO-44 with four SB29NRX-00 radiators leads: F3 27 Hz, 106 dB at 30 Hz, 38 L. Each card gives the F3, the output at your frequency, the box, the grade, and where a subsonic filter is needed.](img/assistant-results.png)
+![The home-sub results, best first. The Dayton RSS315HO-44 with two RSS315-PR radiators leads: F3 25.6 Hz, 107 dB at 30 Hz, 43.5 L. Each card gives the F3, the output at your frequency, the box, the grade, and where a subsonic filter is needed.](img/assistant-results.png)
 
-The first result is a **Dayton Audio RSS315HO-44** 12″ (its two 4 Ω coils in series, 8 Ω) [1] with four **SB Acoustics SB29NRX-00** 10″ passive radiators [2], 350 g added to each, in **38.1 L** tuned to **22.2 Hz**. The card warns that the PRs use 94 % of their travel when the driver reaches its Xmax, past the 75 % where a PR's suspension starts to stiffen. SB Acoustics' 17 mm figure for this PR is its mechanical limit, not a linear one, so treat that as a real warning and check the **PR excursion** chart once it's open. **Open with ported too** puts the same driver in the same 38.1 L box with a port; the worked example adds its sealed box (23 L, Qtc 0.707) from its own card further down the list:
+The first result is a **Dayton Audio RSS315HO-44** 12″ (its two 4 Ω coils in series, 8 Ω) [1] with two **Dayton Audio RSS315-PR** 12″ passive radiators [2], 723 g added to each, in **43.5 L** tuned to **23 Hz**. The box is the driver's QB3 alignment, sized as WinISD sizes it. The card notes that the PRs use 80 % of their 26 mm travel when the driver reaches its Xmax, a little past the 75 % where a PR's suspension starts to stiffen, so check the **PR excursion** chart once it's open. **Open with ported too** puts the same driver in the same 43.5 L box with a port; the worked example adds its sealed box (23 L, Qtc 0.707) from its own card further down the list:
 
 [[Open the worked example|assistant-example]]
 
-| At 300 W, no filter | PR, 38.1 L | Ported, 38.1 L | Sealed, 23 L |
+| At 300 W, no filter | PR, 43.5 L | Ported, 43.5 L | Sealed, 23 L |
 |---|---|---|---|
-| F3 | 27.2 Hz | **26.4 Hz** | 43.3 Hz |
-| Output at 30 Hz | 106.3 dB | **106.6 dB** | 101.0 dB |
-| Peak cone travel, 20 Hz up (Xmax 14 mm) | 8.8 mm | 8.6 mm | 10.2 mm |
-| Peak PR travel, 20 Hz up (17 mm) | 10.6 mm | — | — |
-| Port air speed | — | **59.6 m/s** | — |
-| Grade | ✓ within limits from 20 Hz up | ⚠ port, safe to about 25 W | ✓ within limits down to 10 Hz |
-| Rank in the list | **1st** | 579th | 9th |
+| F3 | 25.5 Hz | **24.1 Hz** | 43.3 Hz |
+| Output at 30 Hz | 106.7 dB | **107.4 dB** | 101.0 dB |
+| Peak cone travel, 20 Hz up (Xmax 14 mm) | 9.6 mm | 8.7 mm | 10.2 mm |
+| Peak PR travel, 20 Hz up (26 mm) | 13.8 mm | — | — |
+| Port air speed | — | **38.1 m/s** | — |
+| Grade | ✓ within limits from 20 Hz up | ⚠ port, safe to about 61 W | ✓ within limits down to 10 Hz |
+| Rank in the list | **1st** | 546th | 7th |
 
-![The example's response: the ported box (orange) reaches 26.4 Hz, the PR box (green) 27.2 Hz, the sealed box (blue) 43.3 Hz.](img/assistant-example-spl.png)
+![The example's response: the ported box (orange) reaches 24.1 Hz, the PR box (green) 25.5 Hz, the sealed box (blue) 43.3 Hz.](img/assistant-example-spl.png)
 
-![Port air speed in the ported box at 300 W: 59.6 m/s, three and a half times the 17 m/s chuffing line.](img/assistant-example-port.png)
+![Port air speed in the ported box at 300 W: 38.1 m/s, more than twice the 17 m/s chuffing line.](img/assistant-example-port.png)
 
-The ported box goes only 0.8 Hz deeper than the PR box, and it can't be built to play at 300 W. A 38 L box tuned to 22 Hz needs a long port. The biggest that fits straight inside is **4 cm** across (flared, 18.4 cm long), and at 300 W its air moves at **59.6 m/s**. That box is only quiet up to about **25 W**. The PR box has no port to chuff, which is why it ranks first and the ported box 579th. That's the trade a passive radiator makes: a hertz of F3 and the cost of four radiators, against a port you can't fit.
+The ported box goes only 1.4 Hz deeper than the PR box, and it can't be built to play at 300 W. A 43.5 L box tuned to 23 Hz needs a long port. The biggest that fits straight inside is **5 cm** across (flared, 23.8 cm long), and at 300 W its air moves at **38.1 m/s**. That box is only quiet up to about **61 W**. The PR box has no port to chuff, which is why it ranks first and the ported box 546th. That's the trade a passive radiator makes: a hertz or so of F3 and the cost of two radiators, against a port you can't fit.
 
 ## How results are graded
 
@@ -62,14 +62,14 @@ Every design is simulated at your power and graded exactly as the app grades it,
 
 - **✓ Within its limits:** the cone stays inside its Xmax, and any port under the chuffing line, through the bass it plays.
 - **Deep bass (amber):** a ported, PR or line box only goes past Xmax **below 0.7 × its tuning**, and never past **2 × Xmax** down to 20 Hz. Music has little energy that low, so this is fine for most listening without a subsonic filter. The card says the power that would keep it within Xmax there too.
-- **⚠ Over a limit:** past Xmax in the bass it plays, or the port chuffs. These come after every result that's within its limits, with the power that would keep them within (the ported box above: about 25 W).
-- **Slow bass:** a note when the group delay in the band (from 0.8 × F3 up) is longer than one cycle of the note, where bass starts to sound late. The second result in the example's list, a UMII10-22 PR box, gets one: 39 ms at 26 Hz, 1.02 cycles.
+- **⚠ Over a limit:** past Xmax in the bass it plays, or the port chuffs. These come after every result that's within its limits, with the power that would keep them within (the ported box above: about 61 W).
+- **Slow bass:** a note when the group delay in the band (from 0.8 × F3 up) is longer than one cycle of the note, where bass starts to sound late. The third result in the example's list, a UMII10-22 PR box, gets one: 41 ms at 26 Hz, 1.06 cycles.
 
 **Where the checks stop.** With no high-pass filter, every box is checked from **20 Hz** up, sealed or tuned, or from its own F3 if that's lower: a box built to reach 18 Hz is checked at 18 Hz. Below that, music has little energy. Any design with a high-pass filter on the **Signal** tab is checked from 10 Hz, since the filter is part of the simulation. A card within its limits also says whether the cone (or a PR) passes Xmax below the checks, and up to what power it wouldn't: "within its limits from 20 Hz up" with a subsonic-filter warning, or "down to 10 Hz" when nothing passes Xmax at all.
 
 ![The example's cone travel at 300 W: within the 14 mm Xmax from 20 Hz up in all three boxes, but below 20 Hz the PR (green) and ported (orange) cones unload and pass it.](img/assistant-example-excursion.png)
 
-> **Common trap: "within its limits" means safe with any signal.** The grade ignores everything below 20 Hz, but your amplifier doesn't. On the excursion chart the PR box's cone reaches **20.4 mm at 15 Hz** (Xmax 14), and the card says it's only safe to 68 W down there. Turn on **Signal → High-pass filter**, 24 dB/oct at 18 Hz, and that drops to **8.9 mm**, for an F3 of 27.7 Hz instead of 27.2. The sealed box doesn't need it: its cone tops out at 11.2 mm, even at 10 Hz. See the [subsonic filter guide](/guides/subsonic-filter/).
+> **Common trap: "within its limits" means safe with any signal.** The grade ignores everything below 20 Hz, but your amplifier doesn't. On the excursion chart the PR box's cone reaches **21.0 mm at 15 Hz** (Xmax 14), and the card says it's only safe to 79 W down there. Turn on **Signal → High-pass filter**, 24 dB/oct at 18 Hz, and that drops to **9.1 mm**, for an F3 of 26.1 Hz instead of 25.5. The sealed box doesn't need it: its cone tops out at 11.2 mm, even at 10 Hz. See the [subsonic filter guide](/guides/subsonic-filter/).
 
 On a box tuned higher, the deep-bass zone is shaded on the excursion chart, with its own 2 × Xmax line:
 
@@ -78,14 +78,14 @@ On a box tuned higher, the deep-bass zone is shaded on the excursion chart, with
 ## How results are ranked
 
 - **Within its limits first**, always: over-limit results sort after every one that's within.
-- **Balanced** adds up each result's place in the list on three measures: F3, output at your frequency, and box size (counted at 0.6). It adds a small penalty for a response hump over 1.5 dB and a nudge down for a deep-bass grade. It doesn't use your target F3. So an 18″ ported box with an F3 of 50 Hz ranks 10th in this home-sub list, ahead of sealed boxes reaching 32 Hz, because it's loud and compact. If depth is what you're after, switch to **Deepest**.
+- **Balanced** adds up each result's place in the list on three measures: F3, output at your frequency, and box size (counted at 0.6). It adds a small penalty for a response hump over 1.5 dB and a nudge down for a deep-bass grade. It doesn't use your target F3. So an 18″ ported box with an F3 of 46 Hz ranks 8th in this home-sub list, ahead of sealed boxes reaching 32 Hz, because it's loud and compact. If depth is what you're after, switch to **Deepest**.
 - **Deepest**, **Loudest** and **Smallest box** sort on that one measure (Smallest only among results that reach your target F3).
 - Badges mark the deepest, loudest and smallest of the top 50 that are within their limits.
 
 ## What it tries
 
 - **Sealed:** sized for a Qtc of 0.707, or as big as your limit allows.
-- **Ported:** a flat alignment (QB3, or Keele for a higher Qts), capped at your limit; in a smaller box, the tuning with the lowest F3 that stays flat. The port is the simplest that fits straight inside the box and stays under the chuffing line at your power: a plain tube, then a flared tube, then a slot along a wall. If none does both, it gets the one that fits and is graded over the limit, as in the example.
+- **Ported:** the flat QB3 alignment, sized as WinISD sizes it (or the textbook one, if **Settings → Vented presets** says so), capped at your limit; in a smaller box, the tuning with the lowest F3 that stays flat. The port is the simplest that fits straight inside the box and stays under the chuffing line at your power: a plain tube, then a flared tube, then a slot along a wall. If none does both, it gets the one that fits and is graded over the limit, as in the example.
 - **Passive radiator boxes** (on by default for home subs, bookshelf woofers and towers; tick **Passive radiator** for the others): the ported box's size and tuning with the database's PRs instead of a port. The app's PR finder picks them, in groups of 1, 2 or 4, tuned with added mass. The finder sizes them so they don't run out of travel before the driver reaches its Xmax (from 20 Hz up), which is why a 12″ driver can end up with four 10″ PRs. A PR that runs out of travel first, or needs more than 3 × its own mass added, is ruled out. With **My space**, one that won't fit a face of the space is ruled out too. Without it, the card notes when the driver and PRs won't all fit the panels of a cube-shaped box of that volume, such as an 18″ PR on an 80 L box, so you can plan the box around them.
 - **Transmission lines** (bookshelf, tower and "something else"): a mass-loaded line (MLTL) and a classic tapered line from the app's line presets. Each is narrowed to your volume, tuned, and folded with the app's fold tool into a cabinet at most 125 cm tall, 50 cm deep and 45 cm wide. Lines longer than 3 m, or narrower on average than 0.8 × the cone, are left out.
 - **Bandpass boxes** (car, home and "something else" subwoofers): 4th order (sealed rear, ported front) and 6th order (both ported), found by a search within your volume. A bandpass box only plays a band, so its band (−3 dB from its own peak) has to reach at least 80 Hz to cross over to your main speakers. The same search is the **Size for a flat band** button on any bandpass design.
@@ -122,13 +122,13 @@ When filling the space reaches at least 3 % lower F3 than the flat alignment, a 
 
 ## Assistant myths, checked
 
-**"The top result is the best driver."** It's the best by the measure you picked, among those within their limits at your power. Balanced is a sum of ranks, not your target. Set the power to what your amplifier really gives, and re-sort if depth or size matters more. *Proof: on the same list, Balanced puts the RSS315HO-44 PR box first, Deepest a Peerless STW-350F188PR01-04 in 75.3 L with an RSS315-PR (F3 17.8 Hz, checked down to 17.8 Hz), and Loudest a Peerless SDF-375F75PR01-04 in 80 L with an RSS460-PR (110.6 dB at 30 Hz; its card warns that the 45 cm radiator and the driver won't fit a cube that size). Smallest box puts the same STW-350 in 28.2 L, but with four SB29NRX-00s carrying 1,154 g each, and its card warns those won't fit a cube that size either.*
+**"The top result is the best driver."** It's the best by the measure you picked, among those within their limits at your power. Balanced is a sum of ranks, not your target. Set the power to what your amplifier really gives, and re-sort if depth or size matters more. *Proof: on the same list, Balanced puts the RSS315HO-44 PR box first, Deepest a Dayton RSS315HFA-8 in 80 L with an RSS390-PR (F3 24.7 Hz), and Loudest an 18 Sound 15NTLS3500 ported in 80 L (110.2 dB at 30 Hz). Smallest box puts a Peerless STW-350F188PR01-04 in 28.2 L, but with four SB Acoustics SB29NRX-00s carrying 1,151 g each, and its card warns those won't all fit a cube that size.*
 
-**"A ported box always beats a PR box."** In the same box and tuning the port goes a little deeper here (26.4 Hz against 27.2 Hz). But only the PR box can play at 300 W, because the port that fits a 38 L box at 22 Hz chuffs above about 25 W. *Proof: the response and Port speed charts of the worked example.*
+**"A ported box always beats a PR box."** In the same box and tuning the port goes a little deeper here (24.1 Hz against 25.5 Hz). But only the PR box can play at 300 W, because the port that fits a 43.5 L box at 23 Hz chuffs above about 61 W. *Proof: the response and Port speed charts of the worked example.*
 
-**"Within its limits means I don't need a subsonic filter."** The grade stops at 20 Hz. Below that the example's PR box reaches 20.4 mm at 15 Hz, past its 14 mm Xmax, and its card says so. *Proof: the card's "from 20 Hz up" line, the excursion chart, then Signal → High-pass filter.*
+**"Within its limits means I don't need a subsonic filter."** The grade stops at 20 Hz. Below that the example's PR box reaches 21.0 mm at 15 Hz, past its 14 mm Xmax, and its card says so. *Proof: the card's "from 20 Hz up" line, the excursion chart, then Signal → High-pass filter.*
 
-**"Bigger power, louder results."** Only until a limit: at the default 300 W, 908 of the 1,431 home-sub boxes are over one. The card always says what sets its output (the amplifier, the cone, the port) and the power that keeps it within. *Proof: each card's limit line; Max SPL once opened.*
+**"Bigger power, louder results."** Only until a limit: at the default 300 W, 890 of the 1,434 home-sub boxes are over one. The card always says what sets its output (the amplifier, the cone, the port) and the power that keeps it within. *Proof: each card's limit line; Max SPL once opened.*
 
 ## Good to know
 
@@ -141,4 +141,4 @@ When filling the space reaches at least 3 % lower F3 than the flat alignment, a 
 ## Sources
 
 1. Dayton Audio, [RSS315HO-44 12″ Reference HO DVC subwoofer](https://www.daytonaudio.com/product/125/rss315ho-44-12-reference-ho-dvc-subwoofer-4-ohms-per-coil) (T/S parameters used with Dayton Audio's permission).
-2. SB Acoustics, [SB29NRX-00 10″ passive radiator](https://sbacoustics.com/product/10in-sb29nrx-00-norex/) and its [datasheet](https://sbacoustics.com/wp-content/uploads/2020/09/10in-SB29NRX-00.pdf) (used with SB Acoustics' permission).
+2. Dayton Audio, [RSS315-PR 12″ passive radiator](https://www.daytonaudio.com/product/1426/rss315-pr-12-aluminum-cone-passive-radiator): Mms 300 g, Xmax 26 mm (used with Dayton Audio's permission).

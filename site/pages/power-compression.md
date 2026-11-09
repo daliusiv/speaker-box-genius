@@ -57,7 +57,7 @@ The same table answers the amplifier question directly: going from half power to
 
 ## What a hot coil does to a ported subwoofer
 
-The example: a **Dayton Audio RSS315HF-4** 12″ in its flat ported box (Keele's alignment, 83.5 L tuned to 23.8 Hz, 12.5 cm port), driven at the same **25 V** with the coil at 20, 120 and 180 °C. Turn on the temperature in **Settings → Voice coil °C**; the app's model matches Hornresp's Power Compression tool at 120 °C (see the [validation page](/validation/)).
+The example: a **Dayton Audio RSS315HF-4** 12″ in a flat ported box (Keele's alignment, 83.5 L tuned to 23.8 Hz, 12.5 cm port), driven at the same **25 V** with the coil at 20, 120 and 180 °C. Turn on the temperature in **Settings → Voice coil °C**; the app's model matches Hornresp's Power Compression tool at 120 °C (see the [validation page](/validation/)).
 
 ![The RSS315HF-4 ported box at the same 25 V with the coil at 20 °C (blue), 120 °C (orange) and 180 °C (red): the level drops, and the shape gains a hump around 40–45 Hz.](img/power-compression.png)
 

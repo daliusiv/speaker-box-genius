@@ -47,8 +47,8 @@ export function prParams(id: string) {
 export const byKind = (s: AppState, kind: DesignState["kind"]) => s.designs.find((d) => d.kind === kind)!;
 
 /**
- * The passive radiator guide's worked example: a Dayton Audio DSA215-8 in 16.2 L (its QB3
- * alignment, tuned to 39.8 Hz), as a ported box and with one DS215-PR plus 17 g, at 35 W
+ * The passive radiator guide's worked example: a Dayton Audio DSA215-8 in 18 L (its QB3
+ * alignment as WinISD sizes it, tuned to 41.7 Hz), as a ported box and with one DS215-PR plus 4 g, at 35 W
  * behind a 30 Hz high-pass filter (what keeps the cone in check below the tuning).
  */
 function prExample(): AppState {
@@ -58,16 +58,16 @@ function prExample(): AppState {
   );
   const vented = byKind(s, "vented") as Extract<DesignState, { kind: "vented" }>;
   const pr = byKind(s, "pr") as Extract<DesignState, { kind: "pr" }>;
-  const vb = 16.2;
-  const fb = 39.8;
+  const vb = 18;
+  const fb = 41.7;
   // A 5 cm port: short enough to fit in the box, but it chuffs at 35 W (the guide's point).
   const port = { shape: "round" as const, diameter_cm: 5, length_cm: 10 };
   const length = portLengthForFb(vb, port, fb);
   return {
     ...s,
     designs: [
-      { ...vented, name: "Ported", vb_l: vb, shape: "round", diameter_cm: 5, length_cm: Math.round(length * 10) / 10, count: 1, targetFb: fb, preset: "QB3" },
-      { ...pr, name: "PR", vb_l: vb, prName: "Dayton Audio DS215-PR", params: prParams("dayton-audio/ds215-pr"), count: 1, addedMass_g: 17, targetFb: fb, extra: [] },
+      { ...vented, name: "Ported", vb_l: vb, shape: "round", diameter_cm: 5, flare_cm: 0, length_cm: Math.round(length * 10) / 10, count: 1, targetFb: fb, preset: "QB3" },
+      { ...pr, name: "PR", vb_l: vb, prName: "Dayton Audio DS215-PR", params: prParams("dayton-audio/ds215-pr"), count: 1, addedMass_g: 4, targetFb: fb, extra: [] },
     ],
   };
 }
@@ -146,23 +146,18 @@ function tlExample(): AppState {
 const highPass = (order: number, freq: number): AppState["highPass"] => ({ ...DEFAULT_STATE.highPass, on: true, type: "butterworth", order, freq });
 
 /**
- * Sealed vs ported vs PR: a Dayton Audio RSS265HF-4 10″ (Qts 0.45, EBP 48: either box suits
- * it) as the app's presets size it: sealed Qtc 0.707, ported Keele (6 × 30 cm slot), and two
- * RSS265-PRs in the same box, at 130 W behind a 24 dB/oct high-pass at 18 Hz.
- */
-/**
  * The sealed / ported / PR guide: a Dayton Audio RSS265HF-4 10″ at its 350 W rating, behind a
  * 24 dB/oct high-pass at 18 Hz (or none), in the boxes the presets give (tested against them):
- * sealed 37.3 L (Qtc 0.707); ported 82.8 L at 22 Hz (Keele's alignment) with a 10 cm flared
- * tube, 54.4 cm long (quiet at 350 W; the straight port Size all picks for a cube chuffs);
- * passive radiators, two RSS265-PR in the same 82.8 L with two of their 75 g disks each.
+ * sealed 37.3 L (Qtc 0.707); ported 86.4 L at 22.3 Hz (QB3, as WinISD sizes it) with a 10 cm
+ * flared tube, 50.5 cm long (quiet at 350 W; the straight port Size all picks for a cube chuffs);
+ * passive radiators, two RSS265-PR in the same 86.4 L with two of their 75 g disks each.
  */
-export const BOX_TYPES = { sealed_l: 37.3, vented_l: 82.8, fb: 22, prMass_g: 150 };
+export const BOX_TYPES = { sealed_l: 37.3, vented_l: 86.4, fb: 22.3, prMass_g: 150 };
 function boxTypesExample(filter: boolean) {
   return (): AppState => {
     const s = withDriver({ ...DEFAULT_STATE, power: 350, highPass: { ...highPass(4, 18), on: filter } }, "dayton-audio/rss265hf-4");
     const sealed = { ...(byKind(s, "sealed") as Extract<DesignState, { kind: "sealed" }>), id: "d1", name: "Sealed", vb_l: BOX_TYPES.sealed_l, preset: "Qtc 0.707" };
-    const ported = { ...ventedWith(byKind(s, "vented") as Vented, "Ported", BOX_TYPES.vented_l, BOX_TYPES.fb, { shape: "round", diameter_cm: 10, flare_cm: 2.5 }), id: "d2", preset: "Keele" };
+    const ported = { ...ventedWith(byKind(s, "vented") as Vented, "Ported", BOX_TYPES.vented_l, BOX_TYPES.fb, { shape: "round", diameter_cm: 10, flare_cm: 2.5 }), id: "d2", preset: "QB3" };
     const pr = {
       ...(byKind(s, "pr") as Extract<DesignState, { kind: "pr" }>),
       id: "d3",
@@ -172,7 +167,7 @@ function boxTypesExample(filter: boolean) {
       params: prParams("dayton-audio/rss265-pr"),
       count: 2,
       addedMass_g: BOX_TYPES.prMass_g,
-      targetFb: 23.1, // what two disks tune it to (the preset's 186 g gives 22 Hz)
+      targetFb: 22.8, // what two disks tune it to (the preset's 164 g gives 22.4 Hz)
       extra: [],
     };
     return { ...s, designs: [sealed, ported, pr] };
@@ -236,10 +231,10 @@ function compareExample(): AppState {
  * T/S parameters guide: the Dayton DSA215-8 (Qts 0.33, EBP 88) with the RSS210HF-4 (Qts 0.57,
  * EBP 43) as the comparison driver, in the DSA215-8's own boxes as Size all gives them (fixed
  * here; the test checks the presets still give them): sealed 10.4 L (Qtc 0.707) and ported
- * 16.2 L at 39.8 Hz (QB3) with a 5 cm port flared 0.8 cm. Driven at 21.7 V, the DSA215-8's
+ * 18 L at 41.7 Hz (QB3, as WinISD sizes it) with a 5 cm port flared 0.8 cm. Driven at 21.7 V, the DSA215-8's
  * rated 80 W into its 5.9 Ω coil, behind a 12 dB/oct high-pass at 30 Hz.
  */
-export const TS_EX = { volts: 21.7, sealed_l: 10.4, vented_l: 16.2, fb: 39.8, port_cm: 5, flare_cm: 0.8 };
+export const TS_EX = { volts: 21.7, sealed_l: 10.4, vented_l: 18, fb: 41.7, port_cm: 5, flare_cm: 0.8 };
 function tsExample(): AppState {
   const s = withDriver({ ...DEFAULT_STATE, drive: "volts", volts: TS_EX.volts, highPass: highPass(2, 30) }, "dayton-audio/dsa215-8");
   const v = byKind(s, "vented") as Vented;
@@ -661,11 +656,11 @@ function ampExample(kind: "one" | "parallel" | "series" | "bridged") {
 /**
  * The design assistant guide: what the assistant opens for its own home-subwoofer defaults (80 L,
  * 300 W, 4 Ω, 8–18″, balanced): its first result, a Dayton Audio RSS315HO-44 (coils in series,
- * 8 Ω) with one RSS315-PR (+431 g) in 38.1 L at 22.2 Hz, opened with the same driver's ported
- * box ("Open with ported too": the port it picks, 4 cm flared 1 cm, is all that fits) and its
+ * 8 Ω) with two RSS315-PRs (+723 g each) in 43.5 L at 23 Hz, opened with the same driver's ported
+ * box ("Open with ported too": the port it picks, 5 cm flared 1.5 cm, is all that fits) and its
  * sealed box. Fixed here; guideNumbers checks the assistant still gives them.
  */
-export const ASSISTANT_EX = { power: 300, pr_l: 38.1, fb: 22.2, prMass_g: 350, prCount: 4, sealed_l: 23, port: { diameter_cm: 4, flare_cm: 1, length_cm: 18.4 } };
+export const ASSISTANT_EX = { power: 300, pr_l: 43.5, fb: 23, prMass_g: 723, prCount: 2, sealed_l: 23, port: { diameter_cm: 5, flare_cm: 1.5, length_cm: 23.8 } };
 function assistantExample(): AppState {
   const s = withDriver({ ...DEFAULT_STATE, power: ASSISTANT_EX.power, highPass: { ...DEFAULT_STATE.highPass, on: false } }, "dayton-audio/rss315ho-44");
   const pr = byKind(DEFAULT_STATE, "pr") as Extract<DesignState, { kind: "pr" }>;
@@ -674,7 +669,7 @@ function assistantExample(): AppState {
     ...s,
     dvc: { on: true, entered: "series", wired: "series" },
     designs: [
-      { ...pr, id: "d1", name: "PR RSS315HO-44", vb_l: ASSISTANT_EX.pr_l, prName: "SB Acoustics SB29NRX-00", count: ASSISTANT_EX.prCount, addedMass_g: ASSISTANT_EX.prMass_g, targetFb: ASSISTANT_EX.fb, params: prParams("sb-acoustics/sb29nrx-00"), extra: [], preset: "Assistant" },
+      { ...pr, id: "d1", name: "PR RSS315HO-44", vb_l: ASSISTANT_EX.pr_l, prName: "Dayton Audio RSS315-PR", count: ASSISTANT_EX.prCount, addedMass_g: ASSISTANT_EX.prMass_g, targetFb: ASSISTANT_EX.fb, params: prParams("dayton-audio/rss315-pr"), extra: [], preset: "Assistant" },
       { ...v, id: "d2", name: "Ported RSS315HO-44", vb_l: ASSISTANT_EX.pr_l, shape: "round", ...ASSISTANT_EX.port, count: 1, targetFb: ASSISTANT_EX.fb, preset: "Assistant" },
       { ...byKind(DEFAULT_STATE, "sealed"), id: "d3", name: "Sealed RSS315HO-44", vb_l: ASSISTANT_EX.sealed_l, preset: "Assistant" },
     ],

@@ -25,7 +25,7 @@ A box simulator only needs one number from your cabinet: the **net internal volu
 
 ## The example: one sub, four cabinets
 
-The [port chuffing guide](/guides/port-chuffing/)'s sub: a **Dayton Audio RSS315HF-4** 12″ in its flat (Keele) alignment, **83.5 L tuned to 23.8 Hz**, with a 10 cm flared port 45.5 cm long, at 300 W behind a 20 Hz high-pass filter. The volume calculator sized each cabinet to 83.5 L net with **Size the box**:
+The [port chuffing guide](/guides/port-chuffing/)'s sub: a **Dayton Audio RSS315HF-4** 12″ in Keele's flat alignment, **83.5 L tuned to 23.8 Hz**, with a 10 cm flared port 45.5 cm long, at 300 W behind a 20 Hz high-pass filter. The volume calculator sized each cabinet to 83.5 L net with **Size the box**:
 
 ![The same 83.5 L sub as a golden-ratio box, a 14″ Sonotube, a sphere and a tapered box, drawn to scale, with the room each takes, its footprint and its lowest standing wave.](img/shaped-cabinets.png)
 

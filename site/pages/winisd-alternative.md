@@ -30,6 +30,7 @@ Speaker Box Genius is built around those four problems.
 - **Transmission lines, tapped horns and front-loaded horns**, which WinISD doesn't model (checked against Hornresp).
 - **Charts for everything you check before you build:** response, cone excursion with an Xmax line, PR excursion, port air speed with a chuffing line, maximum SPL (and what limits it) with the amplifier voltage and current it takes, impedance and group delay.
 - **A T/S editor that never overwrites what you typed**, and that reads parameters pasted straight from a datasheet.
+- **Alignment presets that give WinISD's boxes:** QB3, BB4/SBB4 and C4/SC4 are sized the way WinISD's new-project wizard sizes them, checked against WinISD for 19 drivers ([validation](/validation/#winisd-alignments)). The textbook lossless alignments are a setting away.
 - **A database of about 1,530 drivers and 55 passive radiators**, searchable, with links to each datasheet, and a [page for every driver](/drivers/) with suggested boxes to start from.
 - **Passive radiator tools:** find the best PRs for your driver and box, the added mass for a tuning, and the best tuning for a PR you already have.
 - **A net volume calculator** for boxes, cylinders, spheres and truncated pyramids, minus everything inside them ([how it works for each shape](/guides/shaped-cabinets/)), and a **cut list** for building the box.
@@ -61,7 +62,7 @@ For like-for-like comparisons, set **Air** to **WinISD defaults** in Settings, a
 
 1. **Bring your drivers and projects.** On the Driver tab, open **Driver tools** and choose **Import WinISD or OpenISD file…**. A `.wpr` (or OpenISD `.owpr`) project brings its box and its settings too, including a port end correction you changed from WinISD's 0.732 (**Settings → Ports → End correction K**).
 2. **Or pick a driver from the database.** Press **Browse drivers** and search by brand, model or size.
-3. **Add boxes** on the Boxes tab, and press a preset (Qtc 0.707, QB3 and others) to size each one for the driver.
+3. **Add boxes** on the Boxes tab, and press a preset (Qtc 0.707, QB3 and others) to size each one for the driver: the ported ones give the same box as WinISD's wizard.
 4. **Share it:** the **Share** button gives you the link, a forum image and posts ready to paste.
 5. **Check it in WinISD if you like:** under **Share**, **Open in WinISD** saves a box as a `.wpr` project with the driver and settings, and says what WinISD can't hold (EQ, passive parts, baffle step, room gain).
 
