@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: 22
       - name: Install pdftotext
-        run: command -v pdftotext || (sudo apt-get update -q && sudo apt-get install -yq poppler-utils); sudo apt-get install -yq tesseract-ocr
+        run: sudo apt-get update -q && sudo apt-get install -yq poppler-utils tesseract-ocr
       - name: Complete seas.no's certificate chain
         run: |
           echo | openssl s_client -connect www.seas.no:443 -servername www.seas.no 2>/dev/null | openssl x509 > leaf.pem
