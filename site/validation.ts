@@ -8,6 +8,10 @@ import type { Report, WinIsdCaseReport, HornrespCaseReport, HornrespBoxCaseRepor
 import { REPORT_FILE } from "../packages/engine/validation/report.ts";
 import { chart } from "./chart.ts";
 import { winisdBb4Alignment, winisdC4Alignment, winisdQb3Alignment, winisdQts } from "../packages/engine/src/winisdAlignments.ts";
+import { sealedVolumeForAlignment } from "../packages/engine/src/alignments.ts";
+import { WINISD_AIR } from "../packages/engine/src/constants.ts";
+import { prFb } from "../packages/engine/src/model.ts";
+import { simulate } from "../packages/engine/src/simulate.ts";
 
 const REPO = "https://github.com/daliusiv/speaker-box-genius";
 
@@ -111,6 +115,39 @@ export function alignmentSection(cases: AlignmentCheck[]): { html: string; vbWor
     .join("");
   const html = `<div class="table"><table><thead><tr><th>Driver</th><th>Qts <small>(with Rg)</small></th><th>QB3</th><th>BB4 / SBB4 <small>(Fb = Fs)</small></th><th>C4 / SC4</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   return { html, vbWorst, fbWorst, values };
+}
+
+/** WinISD's other wizard and panel numbers (fixtures/winisd-parity.json): sealed presets, Qtc and Fsc, PR tuning. */
+export function paritySection(): { html: string; values: number; worst: number } {
+  const F = JSON.parse(readFileSync(new URL("../packages/engine/test/fixtures/winisd-parity.json", import.meta.url), "utf8"));
+  let values = 0;
+  let worst = 0;
+  const d = (ours: number, w: number, digits: number) => {
+    values++;
+    const pc = ((ours - w) / w) * 100;
+    worst = Math.max(worst, Math.abs(pc));
+    return `<td>${num(w, digits)}</td><td>${num(ours, digits)} <small class="n">${signed(pc, 2)} %</small></td>`;
+  };
+  const drv = (qts: number) => ({ fs: 30, qms: 5, qes: 1 / (1 / qts - 1 / 5), vas_l: 50, re: 6 });
+  const sealed = F.sealed.cases
+    .map((c: { qts: number; qtc: number; vb: number }) => `<tr><td>${c.qts.toFixed(2)}</td><td>${c.qtc}</td>${d(sealedVolumeForAlignment({ ...drv(c.qts), style: "winisd" }, c.qtc)!, c.vb, 2)}</tr>`)
+    .join("");
+  const qtc = F.qtc.cases
+    .map((c: { vb: number; qa: number | null; qtc: number; fsc: number }) => {
+      const r = simulate({ ...drv(0.4), sd_cm2: 220 }, { kind: "sealed", vb_l: c.vb, ql: Infinity, qa: c.qa ?? Infinity }, { rg: 0.1, air: WINISD_AIR, fMin: 20, fMax: 200, points: 20 });
+      return `<tr><td>${num(c.vb, 2)} L, Qa ${c.qa ?? "none"}</td>${d(r.summary.qtc!, c.qtc, 3)}${d(r.summary.fc!, c.fsc, 2)}</tr>`;
+    })
+    .join("");
+  const pr = { mms_g: 300, sd_cm2: 506.7, xmax_mm: 26, qms: 4.79, vas_l: 78.9 };
+  const prs = F.prTuning.cases
+    .map((c: { vb: number; count: number; added_g: number; fb: number }) => `<tr><td>${c.vb} L, ${c.count} × RSS315-PR, +${num(c.added_g, 2)} g</td>${d(prFb(c.vb, pr, c.count, c.added_g, WINISD_AIR), c.fb, 2)}</tr>`)
+    .join("");
+  const html = `<div class="table"><table><thead><tr><th>Qts</th><th>Qtc</th><th>WinISD Vb (L)</th><th>Ours</th></tr></thead><tbody>${sealed}</tbody></table></div>
+<p>WinISD's Box panel (leak off: with its default leak, its Qtc and Fsc readouts move in ways its own response curves don't show, so they aren't compared):</p>
+<div class="table"><table><thead><tr><th>Box</th><th>WinISD Qtc</th><th>Ours</th><th>WinISD Fsc (Hz)</th><th>Ours</th></tr></thead><tbody>${qtc}</tbody></table></div>
+<p>Passive radiator tuning (WinISD's Fh):</p>
+<div class="table"><table><thead><tr><th>Box</th><th>WinISD Fh (Hz)</th><th>Ours</th></tr></thead><tbody>${prs}</tbody></table></div>`;
+  return { html, values, worst };
 }
 
 const ok = (pass: boolean) => (pass ? '<span class="ok">✓</span>' : '<span class="bad">✗ outside</span>');
@@ -357,6 +394,7 @@ export function validationContent(rep: Report, info: BuildInfo): string {
   const failing = w.filter((c) => !c.pass).length + h.filter((c) => !c.pass).length + b.filter((c) => !c.pass).length;
   const date = info.date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
   const al = alignmentSection(readAlignmentChecks());
+  const par = paritySection();
   const commit = info.commit ? ` from commit <a href="${REPO}/commit/${info.commit}"><code>${info.commit.slice(0, 7)}</code></a>` : "";
 
   const winisdSummary = w
@@ -405,8 +443,12 @@ export function validationContent(rep: Report, info: BuildInfo): string {
 ${group("winisd-cases", `${w.length} WinISD cases`, w, w.map((k) => winisdCase(k, q, info.links?.[`winisd-${k.id}`])).join("\n"))}
 
 <h3 id="winisd-alignments">Ported presets (alignments)</h3>
-<p>The ported and passive radiator presets (QB3, BB4/SBB4, C4/SC4) give the boxes WinISD's new-project wizard gives. WinISD doesn't use the textbook equations: each alignment is one curve of box size and tuning against the driver's Qts, and that Qts includes WinISD's 0.1&nbsp;Ω amplifier resistance in series with the voice coil. The app carries those curves, measured from WinISD for 32 drivers from Qts 0.14 to 0.76. Below, ${al.values} values for 19 other drivers (database drivers and test drivers, Re 3–6.5&nbsp;Ω) are compared with WinISD's own boxes: the largest difference is ${al.vbWorst.toFixed(2)}&nbsp;% in volume and ${al.fbWorst.toFixed(2)}&nbsp;% in tuning, the rounding of WinISD's two-decimal display. (Boxes under 2&nbsp;L differ by up to 0.01&nbsp;L, the same rounding.) WinISD's QB3 above Qts 0.62 and its C4 below 0.20 aren't offered: there WinISD's boxes stop making sense (the QB3 shrinks and tunes below Fs; the C4 shrinks to nothing). Settings &rarr; Vented presets &rarr; Textbook gives the lossless textbook alignments instead.</p>
+<p>The ported and passive radiator presets (QB3, BB4/SBB4, C4/SC4) give the boxes WinISD's new-project wizard gives. WinISD doesn't use the textbook equations: each alignment is one curve of box size and tuning against the driver's Qts, and that Qts includes WinISD's 0.1&nbsp;Ω amplifier resistance in series with the voice coil. The app carries those curves, measured from WinISD for 32 drivers from Qts 0.14 to 0.76. Below, ${al.values} values for 19 other drivers (database drivers and test drivers, Re 3–6.5&nbsp;Ω) are compared with WinISD's own boxes: the largest difference is ${al.vbWorst.toFixed(2)}&nbsp;% in volume and ${al.fbWorst.toFixed(2)}&nbsp;% in tuning, the rounding of WinISD's two-decimal display. (Boxes under 2&nbsp;L differ by up to 0.01&nbsp;L, the same rounding.) WinISD's QB3 above Qts 0.62 and its C4 below 0.20 aren't offered: there WinISD's boxes stop making sense (the QB3 shrinks and tunes below Fs; the C4 shrinks to nothing). Settings &rarr; Box presets &rarr; Textbook gives the lossless textbook alignments instead.</p>
 ${al.html}
+
+<h3 id="winisd-sealed">Sealed presets, Qtc, the driver editor and passive radiators</h3>
+<p>The sealed presets (Qtc 0.5, 0.577, 0.707) give the boxes WinISD's closed-box wizard gives. It doesn't use the textbook Vb = Vas / ((Qtc/Qts)² − 1) either: its Qts counts the 0.1&nbsp;Ω amplifier resistance (Qes × (Re + 0.1) / Re) and the box's absorption (1/Q + 1/100), so its boxes come out a few per cent bigger. A box's Qtc in the summary counts the same two. The T/S solver's Mms, Cms, Rms and Bl, and the reference efficiency, match WinISD's driver editor for four database drivers within its display rounding (with WinISD's air). Largest difference below: ${par.worst.toFixed(2)}&nbsp;% over ${par.values} values.</p>
+${par.html}
 
 <h2 id="hornresp">Hornresp</h2>
 <p>Each case is a Hornresp record with Hornresp's own results (SPL, impedance and its phase, cone excursion, group delay and the line's acoustic impedance), compared at every exported frequency from 10 Hz to ${rep.hornresp.fMax >= 1000 ? `${rep.hornresp.fMax / 1000} kHz` : `${rep.hornresp.fMax} Hz`}. ${esc(rep.hornresp.driver)}. The records are in <a href="${REPO}/tree/main/docs/hornresp-validation/records">docs/hornresp-validation</a>; open them in Hornresp to repeat any case.</p>

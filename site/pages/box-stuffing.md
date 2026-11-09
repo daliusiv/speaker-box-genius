@@ -98,15 +98,15 @@ The example: a **Dayton Audio RSS265HF-4** 10″ subwoofer, whose textbook seale
 
 | Box | Acts like | Qtc | F3 | At 30 Hz | Hump |
 |---|---|---|---|---|---|
-| 18 L, empty | 18 L | 0.90 | 45.4 Hz | −9.7 dB | +1.1 dB at 96 Hz |
-| 18 L, stuffed (volume only) | 22.5 L | 0.83 | 43.9 Hz | −8.6 dB | +0.8 dB |
-| 18 L, stuffed (volume and losses, Qa 20) | 22.5 L | 0.83 | 44.7 Hz | −8.7 dB | +0.7 dB |
-| 18 L, overstuffed (Qa 20) | 15.5 L | 0.96 | 47.5 Hz | −10.6 dB | +1.1 dB |
-| 37.3 L, empty | 37.3 L | 0.71 | 42.0 Hz | −7.0 dB | +0.4 dB |
+| 18 L, empty | 18 L | 0.92 | 44.8 Hz | −9.6 dB | +1.2 dB at 92 Hz |
+| 18 L, stuffed (volume only) | 22.5 L | 0.85 | 43.2 Hz | −8.5 dB | +0.9 dB |
+| 18 L, stuffed (volume and losses, Qa 20) | 22.5 L | 0.82 | 43.9 Hz | −8.6 dB | +0.7 dB |
+| 18 L, overstuffed (Qa 20) | 15.5 L | 0.93 | 46.9 Hz | −10.5 dB | +1.2 dB |
+| 37.3 L, empty | 37.3 L | 0.72 | 41.1 Hz | −6.8 dB | +0.5 dB |
 
 ![The RSS265HF-4: 18 L empty (blue), 18 L stuffed and acting as 22.5 L (orange), and the full-size 37.3 L box (green).](img/stuffing-sealed-spl.png)
 
-Stuffing the 18 L box closes only part of the gap to the full-size box: the F3 drops by under 1 Hz once the losses are counted, the response at 30 Hz improves by about 1 dB, and the hump above the passband shrinks from 1.1 dB to 0.7 dB. That matches what people hear: the bass gets a little **smoother and less boomy**, not much **deeper**. (Qtc and resonance are explained in the [Thiele/Small parameters guide](/guides/thiele-small-parameters/).)
+Stuffing the 18 L box closes only part of the gap to the full-size box: the F3 drops by under 1 Hz once the losses are counted, the response at 30 Hz improves by about 1 dB, and the hump above the passband shrinks from 1.2 dB to 0.7 dB. That matches what people hear: the bass gets a little **smoother and less boomy**, not much **deeper**. (Qtc and resonance are explained in the [Thiele/Small parameters guide](/guides/thiele-small-parameters/).)
 
 So:
 
@@ -128,12 +128,12 @@ The example: a **Dayton Audio DSA215-8** in its QB3 box, 16.2 L with a 5 cm port
 
 | Box | Tuning | F3 | At 30 Hz | At 40 Hz | At 60 Hz | Upper impedance peak |
 |---|---|---|---|---|---|---|
-| Empty | 39.8 Hz | 50.8 Hz | −12.8 dB | −6.4 dB | −1.6 dB | 26.9 Ω |
-| Filled | 36.3 Hz | 59.9 Hz | −11.3 dB | −6.3 dB | −3.0 dB | 20.7 Ω |
+| Empty | 39.8 Hz | 50.6 Hz | −12.7 dB | −6.4 dB | −1.5 dB | 26.9 Ω |
+| Filled | 36.3 Hz | 58.9 Hz | −11.2 dB | −6.3 dB | −2.9 dB | 20.7 Ω |
 
 ![The DSA215-8's ported box empty (blue) and filled (orange): the filled box tunes lower and gains a little at the very bottom, but loses the port's lift above the tuning, and its upper impedance peak drops.](img/stuffing-ported-spl.png)
 
-Filling the box doesn't kill the bass, but it **reshapes** it: the tuning drops 3.5 Hz and the very bottom gains 1.5 dB, while 50–60 Hz loses 1–1.5 dB. The −3 dB point actually *rises* by 9 Hz because the response becomes a long, soft slope instead of a shelf. Some people like that (it's a classic fix for a boomy box tuned too high); it's not what the box was designed to do.
+Filling the box doesn't kill the bass, but it **reshapes** it: the tuning drops 3.5 Hz and the very bottom gains 1.5 dB, while 50–60 Hz loses 1–1.5 dB. The −3 dB point actually *rises* by 8 Hz because the response becomes a long, soft slope instead of a shelf. Some people like that (it's a classic fix for a boomy box tuned too high); it's not what the box was designed to do.
 
 In practice:
 

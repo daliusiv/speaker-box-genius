@@ -19,8 +19,8 @@ That's what this guide sorts out. We'll turn an amp's watt ratings into the two 
 
 - **An amp's watt ratings hide two limits.** It runs out of **voltage** into high impedances and **current** into low ones. Two of its ratings give you both: the XLS 1002's 350 W into 4 Ω is 37.4 V, its 550 W into 2 Ω is 16.6 A.
 - **Match volts, not watts.** A driver's power rating is a voltage in disguise, worked out over its lowest impedance, about Re [4][5]. This sub's 400 W is 35.2 V. The "350 W" amp makes 37.4 V, which by the sub's own yardstick is 451 W.
-- **A 4 Ω sub isn't 4 Ω.** In its box this one swings from 3.15 Ω to 17.5 Ω. The watts it draws swing with it (70 W to 393 W at the same 35.2 V) while the sound stays within 1.5 dB.
-- **The dips are where current runs out.** Two subs in parallel dip to 1.94 Ω at the tuning and want 18.1 A there. The amp has 16.6 A, so it's the limit from 22 to 26 Hz and again above 75 Hz.
+- **A 4 Ω sub isn't 4 Ω.** In its box this one swings from 3.15 Ω to 17.5 Ω. The watts it draws swing with it (70 W to 381 W at the same 35.2 V) while the sound stays within 1.4 dB.
+- **The dips are where current runs out.** Two subs in parallel dip to 1.94 Ω at the tuning and want 17.2 A there. The amp has 16.6 A, so it's the limit from 22 to 25 Hz and again above 79 Hz.
 - **The cheapest fix is wiring.** One sub per channel, or both in series on the bridged amp, and the amp never limits.
 
 ## The setup: two 12s and a Crown
@@ -70,11 +70,11 @@ Two humps and two valleys:
 
 Here's where the car-audio crowd's **"box rise"** comes from. Hold the sub at its rated 35.2 V and measure what the amp delivers:
 
-![One sub at its rated 35.2 V. Left: its impedance. Right: the watts the amp delivers, 300 W at 25 Hz, down to 70 W at the 39.5 Hz peak, back up to 388 W at 150 Hz.](img/amp-matching-watts.png)
+![One sub at its rated 35.2 V. Left: its impedance. Right: the watts the amp delivers, 293 W at 25 Hz, down to 70 W at the 39.5 Hz peak, back up to 376 W at 150 Hz.](img/amp-matching-watts.png)
 
-Look at the right-hand chart: **300 W at 25 Hz, 70 W at 40 Hz, 328 W at 100 Hz, 388 W at 150 Hz**. Same voltage, a fivefold swing in watts, mirroring the impedance on the left.
+Look at the right-hand chart: **293 W at 25 Hz, 70 W at 40 Hz, 320 W at 100 Hz, 376 W at 150 Hz**. Same voltage, a fivefold swing in watts, mirroring the impedance on the left.
 
-And the sound? Between 30 and 200 Hz the SPL at that voltage stays within 1.5 dB. At the impedance peak the box is doing its job: the sub needs very little power there to play just as loud.
+And the sound? Between 30 and 200 Hz the SPL at that voltage stays within 1.4 dB. At the impedance peak the box is doing its job: the sub needs very little power there to play just as loud.
 
 > **Common trap: "box rise means my 1000 W amp only makes 300 W."** That's true of the watts [9], but it doesn't cost you output. What sets the SPL is the **voltage** the amp can swing, and the voltage limit doesn't care about the impedance. Fewer watts at the peaks is a free lunch, not a loss.
 
@@ -98,25 +98,25 @@ Here's where the impedance curve earns its keep. Two subs on one XLS 1002, four 
 
 | Wiring | Load | Max SPL at 30 Hz | at 100 Hz | Peak current | What limits it |
 |---|---|---|---|---|---|
-| One sub, one channel | 3.15–17.5 Ω | 111.5 dB | 112.7 dB | 11.2 A | the sub (400 W) |
-| Two in parallel, one channel | 1.58–8.8 Ω | 117.5 dB | 117.2 dB | 16.6 A (wants 22) | the amp's **current** at 22–26 Hz and above 75 Hz |
-| Two in series, one channel | 6.3–35 Ω | 112.0 dB | 113.3 dB | 5.9 A | the amp's **voltage**, everywhere |
-| Two in series, bridged | 6.3–35 Ω | 117.5 dB | 118.8 dB | 11.2 A | the subs (400 W each) |
+| One sub, one channel | 3.15–17.5 Ω | 111.3 dB | 112.5 dB | 10.8 A | the sub (400 W) |
+| Two in parallel, one channel | 1.58–8.8 Ω | 117.2 dB | 117.2 dB | 16.6 A (wants 21) | the amp's **current** at 22–25 Hz and above 79 Hz |
+| Two in series, one channel | 6.3–35 Ω | 111.9 dB | 113.2 dB | 5.8 A | the amp's **voltage**, everywhere |
+| Two in series, bridged | 6.3–35 Ω | 117.4 dB | 118.7 dB | 11.0 A | the subs (400 W each) |
 
 Each wiring hits a different wall:
 - **Series on one channel** splits 37.4 V between two subs: 18.7 V each where they could take 35.2. That's 5.5 dB short at 30 Hz, and barely louder than one sub alone.
-- **Bridged series** gives each sub its full 35.2 V with voltage to spare. It reaches the subs' own limits everywhere, with only 11.2 A of current at most.
+- **Bridged series** gives each sub its full 35.2 V with voltage to spare. It reaches the subs' own limits everywhere, with only 11.0 A of current at most.
 - **Parallel on one channel** is the interesting one. Most of the time it matches bridged, but not everywhere.
 
 ## Where the dips bite
 
 Two "4 Ω" subs in parallel are a "2 Ω" load, and the XLS 1002 is rated for 2 Ω. Job done? Here's the current the amp would need to drive them to their limits, from the app's Max SPL chart in its **Amps** view:
 
-![From the app: the amplifier current needed for maximum SPL with two subs in parallel on one channel. The curve climbs to the dashed 16.6 A line around the 24 Hz tuning and again from 75 Hz up, where the band underneath turns amplifier blue.](img/amp-matching-current.png)
+![From the app: the amplifier current needed for maximum SPL with two subs in parallel on one channel. The curve climbs to the dashed 16.6 A line around the 24 Hz tuning and again from 79 Hz up, where the band underneath turns amplifier blue.](img/amp-matching-current.png)
 
 Follow the orange line. It climbs to the dashed **16.6 A** line twice:
-- **Around the tuning (22–26 Hz).** The load dips to 1.94 Ω at 23.8 Hz, and the subs would like 18.1 A there. The amp gives 16.6, so the output is 0.7 dB short (115.1 dB instead of 115.8).
-- **From 75 Hz up.** The load keeps falling, to 1.76 Ω at 100 Hz and 1.58 Ω near 180 Hz. The output is 1.6 dB short at 100 Hz and 2.5 dB short at 150 Hz.
+- **Around the tuning (22–25 Hz).** The load dips to 1.94 Ω at 23.8 Hz, and the subs would like 17.2 A there. The amp gives 16.6, so the output is 0.3 dB short (115.1 dB instead of 115.4).
+- **From 79 Hz up.** The load keeps falling, to 1.76 Ω at 100 Hz and 1.58 Ω near 180 Hz. The output is 1.2 dB short at 100 Hz and 2.0 dB short at 150 Hz.
 
 The coloured band under the chart shows the same thing: blue (amplifier) where current runs out, grey (the sub's rating) in between.
 

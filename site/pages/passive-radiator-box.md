@@ -56,9 +56,9 @@ Rather than checking every PR by hand, press **Find a PR for this driver…** in
 
 | PRs | Added mass | F3 | Travel used when the woofer reaches its Xmax |
 |---|---|---|---|
-| 1 × Dayton DSA270-PR (10″) | 79 g | 51.6 Hz | 47 % |
-| 1 × Dayton DS215-PR (8″) | 4 g | 54.1 Hz | 73 % |
-| 2 × SB Acoustics SB20PFC-00 (8″) | 48 g each | 51.2 Hz | 39 % |
+| 1 × Dayton DSA270-PR (10″) | 79 g | 51.3 Hz | 47 % |
+| 1 × Dayton DS215-PR (8″) | 4 g | 53.6 Hz | 73 % |
+| 2 × SB Acoustics SB20PFC-00 (8″) | 48 g each | 50.9 Hz | 39 % |
 
 The bigger the PR (or the more of them), the more travel it has to spare and the deeper the box goes, but the dearer it gets and the more room it takes on the box. The rest of this guide uses the single DS215-PR: the cheapest and smallest option that still keeps up.
 
@@ -79,7 +79,7 @@ This is where PR designs fail. Look at **both** excursion charts at the power yo
 - **Cone excursion** against the woofer's Xmax (5.5 mm).
 - **PR excursion** against the PR's Xmax (11 mm).
 
-At 35 W with the 30 Hz high-pass filter, the woofer peaks at **5.4 mm** and the PR at **7.8 mm**. Both are within their limits.
+At 35 W with the 30 Hz high-pass filter, the woofer peaks at **5.3 mm** and the PR at **7.8 mm**. Both are within their limits.
 
 The PR chart also shades a band from **75 % of the PR's Xmax** up to it (8.25 mm here). A PR's suspension stiffens as it nears its limit, so its travel stops growing in step with the woofer's and its distortion rises; staying under the band leaves that headroom. 75 % is a rule of thumb, not a datasheet figure: change it, or turn it off, with **PR caution** in **Settings**. This design's 7.8 mm is 71 %, under the band.
 
@@ -91,13 +91,13 @@ The **Max SPL** chart puts it together: the loudest the box can play at each fre
 
 ## Step 5: compare it with a port
 
-It's worth putting a ported box of the same size next to the PR box, because the result often surprises people: **the port goes a little deeper** (F3 49.4 Hz against the PR box's 54.2 Hz). The catch is the port itself:
+It's worth putting a ported box of the same size next to the PR box, because the result often surprises people: **the port goes a little deeper** (F3 49.2 Hz against the PR box's 53.6 Hz). The catch is the port itself:
 
 | Port diameter (plain tube) | Length for 41.7 Hz | Peak air speed at 35 W |
 |---|---|---|
-| 5 cm | 15 cm | 21.8 m/s: chuffs (over 17 m/s) |
-| 6 cm | 23 cm | 15.2 m/s |
-| 7 cm | 32 cm | 11.1 m/s |
+| 5 cm | 15 cm | 21.5 m/s: chuffs (over 17 m/s) |
+| 6 cm | 23 cm | 14.9 m/s |
+| 7 cm | 32 cm | 11.0 m/s |
 
 An 18 L box is only about 26 cm deep. The 7 cm port doesn't fit without bending it round; the 6 cm port just squeezes in, leaving 3 cm behind its inner end where a port diameter is the usual advice; and the 5 cm port that fits easily chuffs. That's where the passive radiator earns its place: in a small box, at real power, it does the port's job without the noise. In the example, the ported box uses the 5 cm port; try 6 or 7 cm and watch the port speed fall and its length grow.
 

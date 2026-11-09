@@ -1287,7 +1287,7 @@ export function App(props: { initial: AppState | null }) {
                 <Sparkle />
                 Size all boxes for this driver
               </button>
-              <span className="hint">Sealed Qtc 0.707 (for a Qts near 0.707, where that box runs away, twice Vas and a higher Qtc); ported and PR the flat vented preset (QB3, sized like WinISD unless Settings says textbook), ported with the simplest port that fits and stays quiet at the driver's rating; bandpass the lowest flat band in its volume. Undo takes it back.</span>
+              <span className="hint">Sealed Qtc 0.707 (for a Qts near 0.707, where that box runs away, twice Vas and a higher Qtc); ported and PR the flat vented preset (QB3); both sized like WinISD unless Settings says textbook; ported with the simplest port that fits and stays quiet at the driver's rating; bandpass the lowest flat band in its volume. Undo takes it back.</span>
             </div>
             {sizeReport && (
               <div className="size-report">
@@ -1566,7 +1566,7 @@ export function App(props: { initial: AppState | null }) {
                       </>
                     );
                   })()}
-                <Num help="Resistance of the amplifier output plus the speaker cable. It adds to Re: a little less output and a slightly higher Q."
+                <Num help="Resistance of the amplifier output plus the speaker cable. It adds to Re: a little less output and a slightly higher Q. 0.1 Ω by default, as WinISD assumes, so responses and presets match it."
                   label="Amp + cable"
                   unit="Ω"
                   value={state.settings.rg}
@@ -1615,8 +1615,8 @@ export function App(props: { initial: AppState | null }) {
 
               <h3 className="set-head">Alignment presets</h3>
               <div className="fields">
-                <Select<"winisd" | "textbook"> help="How the ported and passive radiator presets (QB3, BB4/SBB4, C4/SC4) size the box. Like WinISD: the boxes WinISD's new-project wizard gives, which allow for a box that leaks a little and for WinISD's 0.1 Ω amplifier resistance. Textbook: Thiele's and Small's lossless equations (QB3 up to B4, Keele's alignment above it, and SQB3); their boxes come out up to about 10 % smaller (C4 much more at high Qts)."
-                  label="Vented presets"
+                <Select<"winisd" | "textbook"> help="How the presets size the box. Like WinISD: the boxes WinISD's new-project wizard gives. Its ported and passive radiator alignments (QB3, BB4/SBB4, C4/SC4) allow for a box that leaks a little; its sealed ones (Qtc 0.5, 0.577, 0.707) for the box's damping; both for its 0.1 Ω amplifier resistance. Textbook: Thiele's and Small's lossless equations (QB3 up to B4, Keele's alignment above it, and SQB3; Vb = Vas / ((Qtc/Qts)² − 1) sealed); their boxes come out a few per cent smaller (up to about 10 % ported, C4 much more at high Qts)."
+                  label="Box presets"
                   value={state.settings.alignments}
                   options={[
                     { value: "winisd", text: "Like WinISD" },
@@ -1673,7 +1673,7 @@ export function App(props: { initial: AppState | null }) {
                 <p className="hint">
                   Box losses are Q values at the tuning frequency: lower means more loss. 10 / 100 / 100 matches WinISD&rsquo;s
                   defaults. A bandpass can also set its own losses for each chamber, and a sealed, ported or passive radiator design with Stuffing set uses that stuffing&rsquo;s Qa. For like-for-like checks against WinISD,
-                  choose its air values, its amplifier resistance (Amp + cable) and leave out Le, or simply import the WinISD
+                  choose its air values (Amp + cable is already WinISD&rsquo;s 0.1 &Omega;) and leave out Le, or simply import the WinISD
                   project (.wpr). OpenISD projects (.owpr) import too, with their own air and losses.
                 </p>
               </details>

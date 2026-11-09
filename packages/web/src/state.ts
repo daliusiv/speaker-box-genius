@@ -495,7 +495,7 @@ export const DEFAULT_STATE: AppState = {
     air: "standard",
     airConditions: { temp_C: 20, humidity_pct: 50, pressure_hPa: 1013 },
     velocity: "peak",
-    rg: 0,
+    rg: 0.1, // WinISD's default (Rg 0.1 Ω): with it, presets and responses match WinISD as it opens
     thermalLimit: "nominal",
     ampVolts: 0,
     ampAmps: 0,

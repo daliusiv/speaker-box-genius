@@ -32,8 +32,8 @@ An **SB Acoustics SB17NRX2C35-8**, a popular 6.5″ two-way woofer [7], in a Kee
 
 | SPL at 2.83 V | 40 Hz | 100 Hz | 200 Hz | 300 Hz | 500 Hz | 1 kHz |
 |---|---|---|---|---|---|---|
-| Infinite baffle (what WinISD shows) | 87.4 | 87.9 | 88.0 | 88.1 | 88.1 | 88.0 |
-| Free-standing | 81.5 | 82.4 | 84.0 | 85.5 | 87.8 | 89.6 |
+| Infinite baffle (what WinISD shows) | 87.4 | 87.8 | 87.9 | 87.9 | 87.9 | 87.9 |
+| Free-standing | 81.4 | 82.4 | 83.8 | 85.3 | 87.6 | 89.5 |
 | Difference | −5.9 | −5.4 | −4.1 | −2.6 | −0.3 | +1.6 |
 
 The simulation said flat at 88 dB; free-standing, the bass is 6 dB down and the upper midrange 1–2 dB up. That 8 dB tilt is the thin, forward sound. The box's F3 is the same 31 Hz either way: the step is a tilt across the whole bass and midbass, not a loss of extension.
@@ -91,7 +91,7 @@ John Murphy's advice is to compensate the diffraction loss fully, and treat the 
 A **low shelf** boosts everything below the step. In the app, **Signal → Baffle step** has two buttons that add one at the step frequency: **Compensate +3 dB (near a wall)** and **+6 dB (free-standing)**.
 
 - **+3 dB** lifts the bass to 84.4 dB at 40 Hz, leaving a 3 dB tilt for the room to fill.
-- **The cost is power and excursion.** At 2.83 V, the cone moves 1.55 mm at 40 Hz with no shelf, 2.18 mm with +3 dB and 3.05 mm with +6 dB. For the same bass level as the infinite-baffle simulation you need **4 times the amplifier power** below the step. It doesn't raise the maximum output: the cone and the voice coil hit their limits at the same bass level as before, just at a lower volume setting.
+- **The cost is power and excursion.** At 2.83 V, the cone moves 1.54 mm at 40 Hz with no shelf, 2.16 mm with +3 dB and 3.03 mm with +6 dB. For the same bass level as the infinite-baffle simulation you need **4 times the amplifier power** below the step. It doesn't raise the maximum output: the cone and the voice coil hit their limits at the same bass level as before, just at a lower volume setting.
 
 ### Passive: a coil and a resistor
 
@@ -105,9 +105,9 @@ With it, the bookshelf measures **81–84 dB from 40 Hz to 1 kHz**, flat within 
 
 | | Bass level | Upper midrange | Sensitivity | Amplifier power for the same bass |
 |---|---|---|---|---|
-| No compensation | 81.5 dB | 89.6 dB | high, but thin | the same |
-| Active +6 dB shelf | 87.4 dB | 90 dB | as designed | 4 times |
-| Passive 6 dB network | 81.2 dB | 84 dB | 5–6 dB lower | the same (you turn it up) |
+| No compensation | 81.4 dB | 89.5 dB | high, but thin | the same |
+| Active +6 dB shelf | 87.3 dB | 90 dB | as designed | 4 times |
+| Passive 6 dB network | 81.1 dB | 84 dB | 5–6 dB lower | the same (you turn it up) |
 
 Either way you pay about the same, in amplifier power: the passive speaker needs the same 4 times the power for the same loudness, it just takes it across the whole range.
 

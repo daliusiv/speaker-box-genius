@@ -16,7 +16,9 @@ Every sealed box design starts with one choice: the **Qtc**. It decides the box 
 
 A driver on its own resonates at Fs with a total Q of Qts. Put it in a sealed box and the air inside adds a second spring, so both rise by the same factor: the system resonates at **fc** with a total Q of **Qtc** [1]:
 
-- Qtc = Qts × √(1 + Vas ÷ Vb), and fc = Fs × Qtc ÷ Qts.
+- Qtc = Qts × √(1 + Vas ÷ Vb), and fc = Fs × √(1 + Vas ÷ Vb).
+
+The app sizes its presets the way WinISD does, which counts two small things the textbook formula leaves out: the resistance of the amplifier and cable in front of the coil (0.1 Ω by default, in **Settings**), which raises the driver's Q a little, and the damping of the box itself. So its Qtc 0.707 box comes out a few per cent bigger than the formula gives, and reads 0.707 once it's built.
 
 A smaller box means a stiffer air spring, so a higher fc and a higher Qtc. The Qtc sets the shape of the roll-off; the textbook values have names [2][3]:
 
@@ -35,21 +37,21 @@ A **Dayton Audio RSS265HO-4**, a 10″ subwoofer with Fs 26.9 Hz, Qts 0.36, Vas 
 
 | Qtc | 0.5 | 0.577 | 0.707 | 0.9 | 1.1 |
 |---|---|---|---|---|---|
-| Box (net) | **30.1 L** | 18.0 L | **9.9 L** | 5.4 L | **3.4 L** |
-| fc | 37.8 Hz | 43.7 Hz | 53.6 Hz | 68.3 Hz | 83.6 Hz |
-| F3 | 60.3 Hz | 57.9 Hz | **56.9 Hz** | 60.5 Hz | 67.4 Hz |
+| Box (net) | **32.9 L** | 19.3 L | **10.6 L** | 5.7 L | **3.6 L** |
+| fc | 37.0 Hz | 42.7 Hz | 52.3 Hz | 66.8 Hz | 81.4 Hz |
+| F3 | 58.6 Hz | 56.3 Hz | **55.4 Hz** | 59.1 Hz | 65.6 Hz |
 | Peak above the passband | none | none | none | 0.5 dB | 1.4 dB |
-| Level at 40 Hz | −5.8 dB | −6.0 dB | −7.0 dB | −9.5 dB | −12.6 dB |
-| Level at 25 Hz | **−10.8 dB** | −12.0 dB | **−14.3 dB** | −17.9 dB | **−21.3 dB** |
-| Group delay at 40 Hz | 4.2 ms | 4.7 ms | 4.9 ms | 3.9 ms | 2.7 ms |
-| Max SPL at 30 Hz | 100.2 dB | 100.2 dB | 100.2 dB | 96.8 dB | 93.6 dB |
-| …limited by | Xmax, at 329 W | Xmax, at 390 W | Xmax, at 599 W | the 600 W rating | the 600 W rating |
+| Level at 40 Hz | −5.6 dB | −5.8 dB | −6.6 dB | −9.1 dB | −12.1 dB |
+| Level at 25 Hz | **−10.5 dB** | −11.6 dB | **−13.9 dB** | −17.5 dB | **−20.8 dB** |
+| Group delay at 40 Hz | 4.3 ms | 4.8 ms | 5.0 ms | 4.0 ms | 2.8 ms |
+| Max SPL at 30 Hz | 100.2 dB | 100.2 dB | 100.2 dB | 97.0 dB | 93.8 dB |
+| …limited by | Xmax, at 326 W | Xmax, at 383 W | Xmax, at 576 W | the 600 W rating | the 600 W rating |
 
 Three things stand out.
 
-**F3 hardly moves.** From Qtc 0.5 to 0.9 the box shrinks from 30 L to 5.4 L, yet the F3 stays between 57 and 61 Hz. The F3 alone hides the difference: the low-Q boxes start rolling off earlier but fall more gently, so an octave further down they're far louder. At 25 Hz the Qtc 0.5 box is 3.5 dB ahead of the Qtc 0.707 box and 10.5 dB ahead of the Qtc 1.1 box.
+**F3 hardly moves.** From Qtc 0.5 to 0.9 the box shrinks from 33 L to 5.7 L, yet the F3 stays between 56 and 59 Hz. The F3 alone hides the difference: the low-Q boxes start rolling off earlier but fall more gently, so an octave further down they're far louder. At 25 Hz the Qtc 0.5 box is 3.4 dB ahead of the Qtc 0.707 box and 10.3 dB ahead of the Qtc 1.1 box.
 
-**Maximum output is set by the cone, not the box.** At 30 Hz the three bigger boxes all reach the same 100.2 dB, where the cone hits its Xmax. The smaller of them needs almost twice the power to get there (599 W against 329 W). The two smallest boxes run out of the driver's 600 W rating first, a few dB short. A small box doesn't lower the ceiling; it makes the amplifier and the voice coil work harder to reach it. The same holds for EQ: see the [Linkwitz Transform guide](/guides/linkwitz-transform/).
+**Maximum output is set by the cone, not the box.** At 30 Hz the three bigger boxes all reach the same 100.2 dB, where the cone hits its Xmax. The smaller of them needs almost twice the power to get there (576 W against 326 W). The two smallest boxes run out of the driver's 600 W rating first, a few dB short. A small box doesn't lower the ceiling; it makes the amplifier and the voice coil work harder to reach it. The same holds for EQ: see the [Linkwitz Transform guide](/guides/linkwitz-transform/).
 
 **Above 0.707 a peak appears.** Small at 0.9 (0.5 dB), clearer at 1.1 (1.4 dB in this simulation, with the default box losses taking a little off the textbook value), and the deep bass falls away fast.
 
@@ -64,7 +66,7 @@ Three things stand out.
 - **Qtc 0.8–1.0:** a small box with a slight lift in the upper bass and less below it.
 - **Above about 1.1:** a clear peak and little deep bass: the "boomy" sealed box.
 
-**In a room**, the room adds bass below its lowest mode: in theory up to 12 dB per octave, less in real rooms with real walls [6]. A sealed box that falls gently gets that back, which is why low-Q sealed subwoofers have a reputation for sounding even and "tight" in rooms, and why a box with a peak plus room gain can sound boomy. With the app's **Room** gain preset (a 5 m room, 6 dB per octave), the boxes are at **−7.3 dB** (Qtc 0.5), **−10.8 dB** (0.707) and **−17.8 dB** (1.1) at 25 Hz. In a car the cabin gain is larger still, which is one reason small, high-Q sealed boxes work there.
+**In a room**, the room adds bass below its lowest mode: in theory up to 12 dB per octave, less in real rooms with real walls [6]. A sealed box that falls gently gets that back, which is why low-Q sealed subwoofers have a reputation for sounding even and "tight" in rooms, and why a box with a peak plus room gain can sound boomy. With the app's **Room** gain preset (a 5 m room, 6 dB per octave), the boxes are at **−6.7 dB** (Qtc 0.5), **−10.1 dB** (0.707) and **−17.0 dB** (1.1) at 25 Hz. In a car the cabin gain is larger still, which is one reason small, high-Q sealed boxes work there.
 
 ## Choosing
 

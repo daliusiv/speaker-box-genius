@@ -28,10 +28,10 @@ The **Dayton Audio DSA215-8** 8″ woofer (Fs 35 Hz, Qts 0.33, Xmax 5.5 mm) at *
 |---|---|---|---|
 | Port length | 27.1 cm | 21.6 cm | 21.6 cm |
 | Tuning | 39.8 Hz | 41.6 Hz | 40.0 Hz |
-| F3 | 43.3 Hz | 40.0 Hz | **40.2 Hz** |
-| Ripple above F3 | 1.1 dB | **31.7 dB** | **3.7 dB** |
+| F3 | 43.2 Hz | 40.0 Hz | **40.2 Hz** |
+| Ripple above F3 | 1.0 dB | **31.7 dB** | **3.7 dB** |
 | Peak cone excursion | 4.9 mm | 5.2 mm | 5.1 mm |
-| Peak port air speed | 10.7 m/s | 13.8 m/s | 12.8 m/s |
+| Peak port air speed | 10.6 m/s | 13.5 m/s | 12.6 m/s |
 
 *Ripple is the peak-to-peak variation of the response from 1.5 × F3 to 400 Hz, as the app's **Best line** measures it.*
 
@@ -48,11 +48,11 @@ As in a ported box, a wider port needs a longer tube for the same tuning, and mo
 
 | Port | Length for 40 Hz | Peak air speed | F3 | Ripple |
 |---|---|---|---|---|
-| 5 cm | 9.6 cm | 26.9 m/s | 40.4 Hz | 3.2 dB |
-| 6 cm | 14.2 cm | 18.8 m/s | 40.4 Hz | 3.3 dB |
-| 7.3 cm | 21.6 cm | 12.8 m/s | 40.2 Hz | 3.7 dB |
-| 9 cm | 33.2 cm | 8.6 m/s | 39.9 Hz | 5.5 dB |
-| 10 cm | 40.9 cm | 7.1 m/s | 39.6 Hz | 8.2 dB |
+| 5 cm | 9.6 cm | 26.5 m/s | 40.4 Hz | 3.2 dB |
+| 6 cm | 14.2 cm | 18.5 m/s | 40.3 Hz | 3.3 dB |
+| 7.3 cm | 21.6 cm | 12.6 m/s | 40.2 Hz | 3.7 dB |
+| 9 cm | 33.2 cm | 8.4 m/s | 39.9 Hz | 5.5 dB |
+| 10 cm | 40.9 cm | 7.0 m/s | 39.6 Hz | 8.2 dB |
 
 The narrow ports chuff (the usual limit is about 17 m/s; see the [port guide](/guides/port-chuffing/)). The wide ones are quiet but long, and the ripple grows. In between, 7.3 cm is quiet enough at 25 W and keeps the line smooth. That's the MLTL preset's choice: it widens the port only until the air speed is under 15 m/s at your power.
 
@@ -64,7 +64,7 @@ The driver's position along the line decides which standing waves it drives. Mov
 
 | Driver from the closed end | F3 | Ripple | Peak cone excursion |
 |---|---|---|---|
-| 0 (at the end) | 40.6 Hz | 7.9 dB | 4.7 mm |
+| 0 (at the end) | 40.5 Hz | 7.9 dB | 4.7 mm |
 | 10 % (9 cm) | 40.5 Hz | 6.4 dB | 4.8 mm |
 | 20 % (17 cm) | 40.3 Hz | 3.9 dB | 5.0 mm |
 | 25 % (22 cm) | 40.2 Hz | 3.7 dB | 5.1 mm |
@@ -80,11 +80,11 @@ Stuffing (polyester fibre, wool) soaks up the standing waves, but it also damps 
 | Stuffing | Behind the driver only (22 cm): F3 | Ripple | The whole line: F3 | Ripple |
 |---|---|---|---|---|
 | None | 40.0 Hz | 31.7 dB | 40.0 Hz | 31.7 dB |
-| 4 kg/m³ | 40.3 Hz | 5.7 dB | 44.8 Hz | 1.4 dB |
-| 8 kg/m³ | 40.2 Hz | 3.7 dB | 49.3 Hz | 0.9 dB |
-| 12 kg/m³ | 40.1 Hz | 2.8 dB | 53.1 Hz | 1.1 dB |
+| 4 kg/m³ | 40.2 Hz | 5.7 dB | 44.6 Hz | 1.4 dB |
+| 8 kg/m³ | 40.2 Hz | 3.7 dB | 48.9 Hz | 0.9 dB |
+| 12 kg/m³ | 40.0 Hz | 2.8 dB | 52.6 Hz | 1.0 dB |
 
-Stuffing behind the driver tames the ripple at no cost in bass. Filling the whole line smooths it a little more, but the F3 climbs by 5 to 13 Hz: the port can no longer do its job, and the box turns into a leaky, heavily damped one. Start with **8 kg/m³ behind the driver** (light polyester fibre is about 4–8 kg/m³) and leave the rest of the line open. Why fibre slows sound and makes air act springier is in the [box stuffing guide](/guides/box-stuffing/).
+Stuffing behind the driver tames the ripple at no cost in bass. Filling the whole line smooths it a little more, but the F3 climbs by 4 to 13 Hz: the port can no longer do its job, and the box turns into a leaky, heavily damped one. Start with **8 kg/m³ behind the driver** (light polyester fibre is about 4–8 kg/m³) and leave the rest of the line open. Why fibre slows sound and makes air act springier is in the [box stuffing guide](/guides/box-stuffing/).
 
 ## Step 4: check the excursion and the port
 

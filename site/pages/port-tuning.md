@@ -82,7 +82,7 @@ In the app, load your impedance measurement (`.zma`) with the **Measured** card 
 
 ## What a few hertz really costs
 
-A tuning a little off isn't a disaster. In the example, the box tuned 3 Hz high (42.6 Hz) has its F3 at **52.9 Hz** instead of 50.8 Hz, and about 1.5 dB less output around 30–40 Hz. It's worth fixing, but it's rarely the reason a speaker sounds wrong; check the other causes in [why your measurement doesn't match the simulation](/guides/simulation-vs-measurement/).
+A tuning a little off isn't a disaster. In the example, the box tuned 3 Hz high (42.6 Hz) has its F3 at **52.6 Hz** instead of 50.6 Hz, and about 1.5 dB less output around 30–40 Hz. It's worth fixing, but it's rarely the reason a speaker sounds wrong; check the other causes in [why your measurement doesn't match the simulation](/guides/simulation-vs-measurement/).
 
 [[Open the example|port-tuning-example]]
 

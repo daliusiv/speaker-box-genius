@@ -374,9 +374,14 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const alpha = (d.cms * d.sd * d.sd) / cab;
     fRef = (1 / (2 * Math.PI * Math.sqrt(mLow * d.cms))) * Math.sqrt(1 + n * alpha);
     summary.fc = fRef;
-    // Qts scales with √(mass) at a fixed compliance and resistance.
-    const qts = ((driverIn.qms * driverIn.qes) / (driverIn.qms + driverIn.qes)) * Math.sqrt(mLow / d.mms);
-    summary.qtc = qts * Math.sqrt(1 + n * alpha);
+    // Qtc as WinISD shows it with its leak off: the coil's Q counts the source resistance in front
+    // of it (Rg: Qes·(Re + Rg)/Re), and the box's absorption Qa adds its damping (measured 9 Nov 2026).
+    // Both Qs scale with √(mass) at a fixed compliance and resistance.
+    const k = Math.sqrt(1 + n * alpha);
+    const qes = ((driverIn.qes * (d.re + rgDriver)) / cold.re) * Math.sqrt(mLow / d.mms); // a hot coil (d.re) raises Qes too
+    const qms = driverIn.qms * Math.sqrt(mLow / d.mms);
+    const qaBox = finiteOr(single.qa, DEFAULT_LOSSES.qa);
+    summary.qtc = 1 / (1 / (qes * k) + 1 / (qms * k) + (Number.isFinite(qaBox) ? 1 / qaBox : 0));
   } else if (single.kind === "vented") {
     ventCount = single.portCount ?? 1;
     const ec = single.endCorrection ?? opts.endCorrection ?? DEFAULT_END_CORRECTION;

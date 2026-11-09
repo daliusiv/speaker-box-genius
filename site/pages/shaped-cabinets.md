@@ -41,7 +41,7 @@ The [port chuffing guide](/guides/port-chuffing/)'s sub: a **Dayton Audio RSS315
 | Longest straight run inside (cm) | 76.1 | 90.9 | 55.7 | 60.3 |
 | Lowest standing wave (Hz) | 226 | 189 | 409 | ~285 |
 | **Tuning, Fb (Hz)** | **23.8** | **23.8** | **23.8** | **23.8** |
-| **F3, −3 dB (Hz)** | **24.5** | **24.5** | **24.5** | **24.5** |
+| **F3, −3 dB (Hz)** | **24.4** | **24.4** | **24.4** | **24.4** |
 
 The driver's displacement (3.01 L) is the app's estimate from its 282 mm cutout and 146 mm depth; the port tube takes 4.02 L with 3 mm walls.
 
@@ -133,7 +133,7 @@ The **Cut list** is for rectangular boxes only.
 
 | Claim | Verdict |
 |---|---|
-| "The shape changes the bass" | **No.** Not in the simulation: below the cabinet's first standing wave, only the net volume and the port matter. The four cabinets here all tune to 23.8 Hz with F3 24.5 Hz. |
+| "The shape changes the bass" | **No.** Not in the simulation: below the cabinet's first standing wave, only the net volume and the port matter. The four cabinets here all tune to 23.8 Hz with F3 24.4 Hz. |
 | "Sonotube volume is `π r² L`" | **Yes,** with the *inside* radius (the tube's nominal size) and the length *between* the end caps. |
 | "A tube needs no bracing" | **Mostly.** The wall works in tension. The flat end caps are what flex; make them thick [5][9]. |
 | "Frustum volume is `h/3 (A₁ + A₂ + √A₁A₂)`" | **Only for similar top and bottom.** On a wedge it's up to 33% low; use `h/6 (A₁ + 4M + A₂)` [12][13]. |

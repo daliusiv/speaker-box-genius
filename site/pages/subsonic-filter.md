@@ -27,17 +27,17 @@ The 12″ **Dayton Audio RSS315HF-4** from the [port guide](/guides/port-chuffin
 
 | High-pass filter | Peak cone excursion | F3 | Output at 20 Hz |
 |---|---|---|---|
-| None | **35.4 mm** at 10 Hz: 2.5 × Xmax | 23.3 Hz | −6.8 dB |
-| 12 dB/oct at 20 Hz | 13.0 mm at 16 Hz | 25.8 Hz | −9.8 dB |
-| 24 dB/oct at 15 Hz | 19.1 mm at 16 Hz: over Xmax | 23.5 Hz | −7.2 dB |
-| 24 dB/oct at 18 Hz | 13.6 mm at 18 Hz | 23.9 Hz | −8.3 dB |
-| **24 dB/oct at 20 Hz** | **10.7 mm** at 34 Hz | 24.5 Hz | −9.8 dB |
+| None | **35.0 mm** at 10 Hz: 2.4 × Xmax | 23.2 Hz | −6.6 dB |
+| 12 dB/oct at 20 Hz | 12.9 mm at 16 Hz | 25.6 Hz | −9.7 dB |
+| 24 dB/oct at 15 Hz | 18.9 mm at 16 Hz: over Xmax | 23.4 Hz | −7.1 dB |
+| 24 dB/oct at 18 Hz | 13.4 mm at 17 Hz | 23.8 Hz | −8.2 dB |
+| **24 dB/oct at 20 Hz** | **10.6 mm** at 34 Hz | 24.4 Hz | −9.7 dB |
 
 ![Cone excursion with no filter: under Xmax across the useful range, then far past it below 20 Hz.](img/subsonic-off.png)
 
 ![The same sub with a 24 dB/oct filter at 20 Hz: the cone stays inside its Xmax at every frequency.](img/subsonic-on.png)
 
-With no filter, the cone is fine down to about 20 Hz and then shoots past its Xmax. A 24 dB/oct filter at 20 Hz keeps it within 10.7 mm, and costs just over a hertz of F3.
+With no filter, the cone is fine down to about 20 Hz and then shoots past its Xmax. A 24 dB/oct filter at 20 Hz keeps it within 10.6 mm, and costs just over a hertz of F3.
 
 [[Open the example with the filter|subsonic-on]]
 
@@ -65,7 +65,7 @@ Start **a little below the box's tuning**, about 0.8 times Fb (19 Hz for this su
 
 Butterworth filters are flat to the corner; Linkwitz–Riley filters start rolling off earlier (−6 dB at the corner frequency) and protect a little more for the same setting.
 
-A steep filter adds some **group delay** (in the example, from 25 ms to 43 ms at 25 Hz with the 24 dB/oct filter). That's well below what people notice at those frequencies (see the [group delay guide](/guides/group-delay/)).
+A steep filter adds some **group delay** (in the example, from 25 ms to 44 ms at 25 Hz with the 24 dB/oct filter). That's well below what people notice at those frequencies (see the [group delay guide](/guides/group-delay/)).
 
 ## Where the filter lives
 
