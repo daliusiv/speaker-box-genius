@@ -818,6 +818,19 @@ export function evaluateDriver(
       }
     }
     const c = prs.find((x) => x.id === found!.id)!;
+    // No space given: nothing says what shape the box is, so it isn't ruled out, but say when
+    // the driver and PRs won't all go on a cube-shaped box of this volume (a 15″ PR on a tower).
+    const notes = [...box.notes];
+    if (!sp) {
+      const side = Math.cbrt(box.vb * 1000);
+      const od = c.od_cm ?? 1.3 * 2 * Math.sqrt(c.pr.sd_cm2 / Math.PI);
+      const parts = [...drivers, ...Array.from({ length: found.count }, () => ({ d_cm: od, depth_cm: 0 }))];
+      if (!mountsFit(parts, { width_cm: side, height_cm: side, depth_cm: side, wall_mm: 0 })) {
+        notes.push(
+          `The driver and ${found.count > 1 ? `${found.count} PRs` : "PR"} (${Math.round(od)} cm across${found.count > 1 ? " each" : ""}) won't all fit the panels of a cube-shaped ${r1(box.vb)} L box: plan the box around them, or use My space to check it`,
+        );
+      }
+    }
     const base = newDesign("pr", []) as PrDesign;
     const design: PrDesign = {
       ...base,
@@ -829,7 +842,7 @@ export function evaluateDriver(
       targetFb: r1(box.fb),
       extra: [],
     };
-    finish("pr", design, box.vb, box.notes, box.fb, undefined, undefined, undefined, {
+    finish("pr", design, box.vb, notes, box.fb, undefined, undefined, undefined, {
       name: found.name,
       count: found.count,
       addedMass_g: Math.round(found.addedMass_g),

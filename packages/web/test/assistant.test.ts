@@ -505,3 +505,22 @@ test("a car design is tried in the user's own cabin when they set one up, else a
   const s = openResults({ ...DEFAULT_STATE, roomGain: hatch }, loaded(r.driverId), [r], goal);
   assert.deepEqual(s.roomGain, hatch);
 });
+
+test("a PR box with no space given notes when the driver and PRs won't fit the panels of a cube-shaped box of its volume", async () => {
+  const { prCandidate } = await import("../../../site/drivers.ts");
+  const prs = db.passiveRadiators.map(prCandidate);
+  const goal = { ...goalFor("home", "balanced"), boxes: ["pr"] as AssistantGoal["boxes"] };
+  const row = rows.find((r) => r.id === "dayton-audio/rss460ho-4")!;
+  const [r] = evaluateDriver(DEFAULT_STATE, row, loaded(row.id), goal, "pr", prs);
+  assert.ok(r, "an 18″ in 80 L gets a PR box");
+  const side = Math.cbrt(r.vb_l * 1000);
+  const note = r.notes.find((n) => n.includes("cube-shaped"));
+  // Every 18″ driver is wider than a face of an 80 L cube (43 cm inside), so it's flagged; and the result stays.
+  assert.ok(side < 45, `${side}`);
+  assert.ok(note, r.notes.join(" | "));
+  assert.match(note!, /use My space to check it/);
+  // A small PR on a box with room is not flagged.
+  const small = rows.find((x) => x.id === "dayton-audio/rss265hf-4")!;
+  const [s] = evaluateDriver(DEFAULT_STATE, small, loaded(small.id), goalFor("home", "balanced"), "pr", prs);
+  if (s && s.pr!.count === 1 && s.vb_l > 60) assert.ok(!s.notes.some((n) => n.includes("cube-shaped")), s.notes.join(" | "));
+});
