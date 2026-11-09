@@ -1,3 +1,4 @@
+import { compareWith, compareMessage } from "./compareDriver.ts";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   coilHeatFactor,
@@ -919,24 +920,9 @@ export function App(props: { initial: AppState | null }) {
                     onPick={(id) =>
                       loadDriver(id).then(
                         (d) => {
-                          setStep((s) => ({
-                            ...s,
-                            compare: {
-                              driverName: d.name,
-                              driverBrand: d.brand,
-                              nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
-                              ts: d.ts,
-                              le_mh: d.le_mh ?? 0,
-                              l2_mh: d.l2_mh ?? 0,
-                              r2_ohm: d.r2_ohm ?? 0,
-                              semi: undefined,
-                              fdd: undefined,
-                              xmax_mm: d.xmax_mm ?? s.xmax_mm,
-                              pe_w: d.pe_w ?? s.pe_w,
-                              dvc: d.dvcWiring ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring } : { ...s.dvc, on: false },
-                            },
-                          }));
-                          notify(`Comparing with ${d.name}: dashed curves in every box.`);
+                          const { compare, borrowed } = compareWith(latest.current, d);
+                          setStep((s) => ({ ...s, compare }));
+                          notify(compareMessage(d.name, borrowed, flagText(db?.drivers.find((r) => r.id === id))));
                         },
                         () => alert("Couldn't load that driver."),
                       )
@@ -2193,7 +2179,8 @@ export function App(props: { initial: AppState | null }) {
                   ),
                 };
               })}
-              ribbons={mainDesigns.map((d) => ({ label: d.label, color: d.color, kinds: d.result.limitedBy }))}
+              // Each box's first limit, then the comparison driver's in the same box (outlined marker).
+              ribbons={designs.map((d) => ({ label: d.label, color: d.color, kinds: d.result.limitedBy, ...(d.compare ? { hollow: true } : {}) }))}
               ribbonKinds={LIMIT_KINDS}
               limits={
                 maxMode === "volts" && state.settings.ampVolts > 0
