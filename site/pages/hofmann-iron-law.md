@@ -87,7 +87,7 @@ Now swap boxes. Each driver goes into its maker's recommended ported box, and th
 |---|---|---|---|---|---|
 | PA box: B&C / Dayton | 81.2 / 80.1 | 87.8 / 86.6 | 93.0 / 93.7 | 94.5 / 90.3 | 95.3 / 89.6 |
 | Home box: B&C / Dayton | 84.7 / 85.3 | 86.2 / 87.0 | 88.3 / 88.4 | 93.7 / 89.5 | 94.9 / 89.3 |
-| Sealed 141.6 L: B&C / Dayton | 79.9 / 80.7 | 82.3 / 82.9 | 85.8 / 85.7 | 93.3 / 89.1 | 94.8 / 89.1 |
+| Sealed 141.6 L: B&C / Dayton | 79.8 / 80.6 | 82.3 / 82.9 | 85.7 / 85.7 | 93.3 / 89.1 | 94.8 / 89.1 |
 
 In every box, **the deep bass is the same per watt**, within about 1 dB. Below the system's resonance, a driver's output per watt is set by its motor (Bl²/Re), its cone area and the box, not by how heavy its cone is. These two have nearly the same motor and cone, so they make nearly the same deep bass. The heavy cone only lowers the output above resonance.
 
@@ -104,7 +104,7 @@ The Iron Law is about efficiency at small signals. How loud a sub can play is se
 ![Maximum SPL at each driver's power rating. Left: the 141.6 L ported box, where the two are within 0.6 dB from 18 to 40 Hz and the B&C is ahead above. Right: 141.6 L sealed, where the Dayton's longer throw puts it ahead below about 40 Hz.](img/iron-law-maxspl.png)
 
 - **In the ported home box**, from 18 to 40 Hz both are within 0.6 dB: the port does most of the work near its tuning, and at 20 Hz its air speed is the limit for both (112.3 dB). From 50 Hz up the B&C pulls ahead, by 2.9 dB at 60 Hz and 5.4 dB at 100 Hz. That's its 5.9 dB of efficiency and its higher power rating.
-- **Sealed, the cone moves all the air**, and the Dayton's 26 mm of travel counts: **+4.6 dB at 15 Hz, +3.8 dB at 20 Hz** and +2.0 dB at 30 Hz. The B&C hits its Xmax first; the Dayton reaches its power rating first. From about 40 Hz up the B&C is ahead again.
+- **Sealed, the cone moves all the air**, and the Dayton's 26 mm of travel counts: **+4.6 dB at 15 Hz, +3.8 dB at 20 Hz** and +1.9 dB at 30 Hz. The B&C hits its Xmax first; the Dayton reaches its power rating first. From about 40 Hz up the B&C is ahead again.
 
 So a PA driver isn't "unable to do deep bass": it does the same deep bass per watt, and with EQ and a big amplifier it can play deep. A long-throw home driver earns its place where the cone has to move a lot of air, in sealed and small boxes deep down. See [one 15″ or two 10″](/guides/one-15-vs-two-10s/) for displacement against power handling in more detail.
 

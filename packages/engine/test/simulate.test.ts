@@ -15,7 +15,7 @@ import {
   type DriverInput,
   type PortInput,
 } from "../src/model.ts";
-import { isobaricPair, simulate } from "../src/simulate.ts";
+import { isobaricPair, simulate, voltsPerRootWatt } from "../src/simulate.ts";
 import { qts } from "../src/ts.ts";
 
 /** Fictional 10" driver (same as docs/examples). Le = 0 so the textbook formulas apply exactly. */
@@ -231,7 +231,8 @@ test("driving by voltage gives the same limits and maximum SPL as the equivalent
 test("hot voice coil: Re up 0.393 %/°C, output down towards the Re ratio above the bass, Q up, impedance up", () => {
   const D = { fs: 30, qms: 4, qes: 0.4, vas_l: 50, re: 6, sd_cm2: 330, xmax_mm: 8, pe_w: 300 };
   const box = { kind: "sealed" as const, vb_l: 30 };
-  const o = { power: 100, fMin: 10, fMax: 400, points: 300 };
+  // The amplifier's volts set from the cold Re (the physical case; WinISD's own convention is checked below).
+  const o = { power: 100, fMin: 10, fMax: 400, points: 300, driveModel: "circuit" as const };
   const k = coilHeatFactor(100);
   assert.ok(Math.abs(k - 1.3144) < 1e-4);
   assert.equal(coilHeatFactor(20), 1);
@@ -250,6 +251,10 @@ test("hot voice coil: Re up 0.393 %/°C, output down towards the Re ratio above 
   // Same watts on the dial, less taken by the hot coil: the thermal limit allows more drive.
   const mi = at(c, 300);
   assert.ok(h.maxSpl[mi]! >= c.maxSpl[mi]! - 20 * Math.log10(k) - 0.01);
+  // WinISD sets the volts from the hot Re (V = √(P·Re_hot)), so the same watts lose only about half as much.
+  const wc = simulate(D, box, { ...o, driveModel: "winisd" });
+  const wh = simulate(D, box, { ...o, driveModel: "winisd", coilTemp_C: 100 });
+  assert.ok(Math.abs(wc.spl[i]! - wh.spl[i]! - (drop - 10 * Math.log10(k))) < 1e-9, "WinISD: volts up by √(Re ratio)");
 });
 
 test("semi-inductance coil: Re + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)), replacing Le; scales with isobaric coils", () => {
@@ -324,4 +329,25 @@ test("piston cone load (like Hornresp): the same deep bass as a fixed mass, side
   // Bandpass boxes and lines keep their own models.
   const bp = { kind: "bandpass" as const, rear: { vb_l: 12 }, front: { vb_l: 15, port: { shape: "round" as const, diameter_cm: 7, length_cm: 15 } }, qicl: Infinity };
   assert.deepEqual(simulate(drv, bp, { ...o, coneLoad: "piston" }).spl, simulate(drv, bp, o).spl);
+});
+
+test("WinISD's watts are the amplifier volts voltsPerRootWatt gives: same results driven either way", () => {
+  const D = { fs: 30, qms: 4, qes: 0.4, vas_l: 50, re: 6, sd_cm2: 330, le_mh: 1.5, xmax_mm: 8, pe_w: 300 };
+  const box = { kind: "vented" as const, vb_l: 60, port: { shape: "round" as const, diameter_cm: 10, length_cm: 30 } };
+  for (const extra of [{}, { drivers: 2 }, { isobaric: { coils: "series" as const } }, { coilTemp_C: 80 }]) {
+    const o = { rg: 0.5, fMin: 15, fMax: 300, points: 60, ...extra };
+    const w = simulate(D, box, { ...o, power: 100, driveModel: "winisd" });
+    const v = simulate(D, box, { ...o, power: 10 * voltsPerRootWatt(D, { ...o, driveModel: "winisd" }), convention: "volts" });
+    w.spl.forEach((x, i) => assert.ok(Math.abs(x - v.spl[i]!) < 1e-9, `${JSON.stringify(extra)} SPL at ${w.freq[i]} Hz`));
+    w.excursionMm.forEach((x, i) => assert.ok(Math.abs(x / v.excursionMm[i]! - 1) < 1e-9, "excursion"));
+    w.impedanceOhm.forEach((x, i) => assert.ok(Math.abs(x / v.impedanceOhm[i]! - 1) < 1e-9, "impedance: the real driver, without Rg"));
+    // The amplifier's volts and amps at max SPL are the real ones either way (where the cone or
+    // port sets the limit; the power rating is counted in each model's own watts).
+    w.ampAtMax.volts.forEach((x, i) => w.limitedBy[i] !== "thermal" && v.limitedBy[i] !== "thermal" && assert.ok(Math.abs(x / v.ampAtMax.volts[i]! - 1) < 1e-9, `${JSON.stringify(extra)} amp volts at ${w.freq[i]} Hz`));
+    w.ampAtMax.amps.forEach((x, i) => w.limitedBy[i] !== "thermal" && v.limitedBy[i] !== "thermal" && assert.ok(Math.abs(x / v.ampAtMax.amps[i]! - 1) < 1e-9, "amp current"));
+    assert.ok(w.limitedBy.some((l) => l !== "thermal"), "some points limited by the cone or port");
+    assert.ok(Math.abs(w.summary.volts / v.summary.volts - 1) < 1e-9, "drive volts");
+  }
+  // The circuit model: watts set the volts from the cold Re.
+  assert.ok(Math.abs(voltsPerRootWatt(D, { rg: 0.5 }) - Math.sqrt(6)) < 1e-12);
 });

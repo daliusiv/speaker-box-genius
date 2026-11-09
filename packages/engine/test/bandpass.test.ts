@@ -9,12 +9,15 @@ const port = (d: number, l: number) => ({ shape: "round" as const, diameter_cm: 
 // A tiny front chamber with an opening so wide and short that it is acoustically
 // transparent: its air spring is far stiffer than the opening's air mass.
 const open = { vb_l: 0.01, port: port(2000, 0), ql: Infinity, qa: Infinity, qp: Infinity };
+// A sealed box's absorption (Qa) is taken against box + suspension, as WinISD does; a bandpass
+// chamber's against its own air. This Qa makes a sealed box absorb as a chamber with Qa = qa does.
+const sealedQa = (qa: number, vb_l: number) => (qa * (1 + drv.vas_l / vb_l)) / (drv.vas_l / vb_l);
 const maxDiff = (a: Float64Array, b: Float64Array) => a.reduce((m, v, i) => Math.max(m, Math.abs(v - b[i]!)), 0);
 const maxRel = (a: Float64Array, b: Float64Array) => a.reduce((m, v, i) => Math.max(m, Math.abs(v / b[i]! - 1)), 0);
 
 test("bandpass with a transparent front chamber reduces to a sealed box", () => {
   const bp = simulate(drv, { kind: "bandpass", rear: { vb_l: 20 }, front: open, qicl: Infinity }, opts);
-  const sealed = simulate(drv, { kind: "sealed", vb_l: 20 }, opts);
+  const sealed = simulate(drv, { kind: "sealed", vb_l: 20, qa: sealedQa(100, 20) }, opts);
   assert.ok(maxDiff(bp.spl, sealed.spl) < 0.015, `SPL ${maxDiff(bp.spl, sealed.spl)}`);
   assert.ok(maxRel(bp.excursionMm, sealed.excursionMm) < 0.002);
   assert.ok(maxRel(bp.impedanceOhm, sealed.impedanceOhm) < 0.002);
@@ -71,7 +74,7 @@ test("each chamber's losses act on that chamber: a transparent front leaves the 
   const losses = { ql: 5, qa: 15, qp: 30 };
   const rp = port(7.5, 30);
   const cases = [
-    { bp: { vb_l: 20, ql: losses.ql, qa: losses.qa }, box: { kind: "sealed" as const, vb_l: 20, ql: losses.ql, qa: losses.qa } },
+    { bp: { vb_l: 20, ql: losses.ql, qa: losses.qa }, box: { kind: "sealed" as const, vb_l: 20, ql: losses.ql, qa: sealedQa(losses.qa, 20) } },
     { bp: { vb_l: 25, port: rp, ...losses }, box: { kind: "vented" as const, vb_l: 25, port: rp, ...losses } },
   ];
   for (const { bp, box } of cases) {

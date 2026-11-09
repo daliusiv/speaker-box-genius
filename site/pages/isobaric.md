@@ -40,7 +40,7 @@ A **Dayton Audio RSS265HF-4** 10″ subwoofer (4 Ω, 350 W) in its textbook Qtc 
 
 | | Single, 37.3 L | Pair (coils parallel), 18.7 L | Pair (coils series), 18.7 L |
 |---|---|---|---|
-| F3 / Qtc | 41.1 Hz / 0.72 | 40.3 Hz / 0.74 | 41.5 Hz / 0.71 |
+| F3 / Qtc | 41.2 Hz / 0.72 | 40.4 Hz / 0.74 | 41.7 Hz / 0.71 |
 | Impedance (lowest above 60 Hz) | 3.6 Ω | **1.8 Ω** | 7.1 Ω |
 | Output at 60 Hz, **10 V** | 98.2 dB | 98.1 dB | **92.2 dB** |
 | Output at 60 Hz, **100 W** | 103.6 dB | **100.5 dB** | **100.7 dB** |
@@ -48,11 +48,11 @@ A **Dayton Audio RSS265HF-4** 10″ subwoofer (4 Ω, 350 W) in its textbook Qtc 
 | **Maximum SPL at 25 / 30 / 40 Hz** | 97.2 / 100.4 / 105.4 dB | **the same** | **the same** |
 | Amplifier needed at 30 Hz to reach it | 26 V, 3.0 A | 27 V, **5.9 A** | **53 V**, 3.0 A |
 
-![The isobaric pair in 18.7 L (blue, F3 40.3 Hz) has almost exactly the single driver's response in 37.3 L (F3 40.3 Hz and Qtc 0.74, against 41.1 Hz and 0.72). In the full 37.3 L box (light blue, F3 39.7 Hz) the pair is over-damped (Qtc 0.62): a softer, more gradual corner.](img/iso-spl.png)
+![The isobaric pair in 18.7 L (blue, F3 40.4 Hz) has almost exactly the single driver's response in 37.3 L (F3 40.4 Hz and Qtc 0.74, against 41.2 Hz and 0.72). In the full 37.3 L box (light blue, F3 39.9 Hz) the pair is over-damped (Qtc 0.62): a softer, more gradual corner.](img/iso-spl.png)
 
 ## What the numbers say
 
-**The box really is half the size,** for almost exactly the same response: F3 41.1 Hz and Qtc 0.72 for one driver, 40.3 Hz and 0.74 for the pair in parallel, 41.5 Hz and 0.71 in series. The small differences come from the 0.1 Ω of amplifier and cable resistance, which weighs more against the parallel pair's halved impedance than against the series pair's doubled one.
+**The box really is half the size,** for almost exactly the same response: F3 41.2 Hz and Qtc 0.72 for one driver, 40.4 Hz and 0.74 for the pair in parallel, 41.7 Hz and 0.71 in series. The small differences come from the 0.1 Ω of amplifier and cable resistance, which weighs more against the parallel pair's halved impedance than against the series pair's doubled one.
 
 **The output per watt is 3 dB lower,** however you wire the coils. You're powering two motors to move one cone's worth of air [1]. At 100 W, the pair plays 3 dB quieter than the single driver.
 

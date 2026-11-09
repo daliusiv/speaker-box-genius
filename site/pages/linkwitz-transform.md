@@ -25,7 +25,7 @@ A **Dayton Audio RSS265HF-4** 10″ subwoofer in a **20 L** sealed box: about ha
 
 | | 20 L + LT | 20 L, no EQ | 37 L, no EQ |
 |---|---|---|---|
-| F3 | **28.9 Hz** | 44.0 Hz | 41.1 Hz |
+| F3 | **28.9 Hz** | 44.0 Hz | 41.2 Hz |
 | Output at 25 Hz (40 W) | 95.9 dB | 87.7 dB | 90.4 dB |
 | Peak cone excursion (40 W) | 11.4 mm | 4.3 mm | 5.6 mm |
 | **Maximum SPL at 25 Hz** | **97.1 dB** | **97.1 dB** | **97.2 dB** |

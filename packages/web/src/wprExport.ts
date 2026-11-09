@@ -3,10 +3,14 @@ import { airOf, builtVbOf, colorOf, dvcFactors, endCorrectionOf, lossesFor, solv
 import type { AppState, DesignState, PortFields } from "./state.ts";
 import { stuffFactor } from "./stuffing.ts";
 
-/** Which designs WinISD can open: sealed, ported and PR boxes, and bandpass boxes with ports. */
+/**
+ * Which designs WinISD can open: sealed, ported and PR boxes, and bandpass boxes with ports.
+ * WinISD's only 6th-order bandpass has both chambers ported to the room: it opens a series one
+ * (rear chamber ported into the front) as that, so those aren't written.
+ */
 export function wprExportable(d: DesignState): boolean {
   if (d.kind === "sealed" || d.kind === "vented" || d.kind === "pr") return true;
-  if (d.kind === "bandpass") return d.frontOpening === "port" && (d.order === "4" || d.rearOpening === "port");
+  if (d.kind === "bandpass") return d.frontOpening === "port" && (d.order === "4" || (d.order === "6p" && d.rearOpening === "port"));
   return false;
 }
 
@@ -20,7 +24,8 @@ export function wprExportable(d: DesignState): boolean {
 export function wprFor(s: AppState, d: DesignState): { text: string; notes: string[] } | string {
   const solved = solveDriver(s);
   if (solved.missing.length > 0) return "Enter enough driver parameters to simulate first.";
-  if (!wprExportable(d)) return `WinISD can't open a ${d.kind === "line" ? "transmission line" : "bandpass box with passive radiators"}.`;
+  if (!wprExportable(d))
+    return `WinISD can't open a ${d.kind === "line" ? "transmission line" : d.kind === "bandpass" && d.order === "6s" && d.frontOpening === "port" && d.rearOpening === "port" ? "6th-order bandpass box with the rear chamber ported into the front (it only has the kind ported to the room)" : "bandpass box with passive radiators"}.`;
   const notes: string[] = [];
   const air = airOf(s);
   const t = solved.values;
@@ -73,6 +78,8 @@ export function wprFor(s: AppState, d: DesignState): { text: string; notes: stri
   } else box = { type: "sealed", vb_l: vb };
   if (s.wiring === "series" && s.drivers > 1) notes.push(`WinISD wires drivers in parallel: its SPL at the same power matches, but the amplifier load differs`);
   if (s.highPass.on && s.highPass.type !== "butterworth") notes.push("only a Butterworth high-pass is written; set yours in WinISD's filters");
+  if (s.settings.driveModel !== "winisd" && s.settings.rg > 0)
+    notes.push("WinISD's watts go into the coil and the amp + cable resistance together: set Settings → Watts to “Into coil + cable” for the same numbers in both");
   if (s.eq.some((e) => e.on)) notes.push("EQ isn't written");
   if (s.passive.on) notes.push("passive parts aren't written");
   if (s.baffle.on) notes.push("baffle step isn't written");
@@ -97,8 +104,9 @@ export function wprFor(s: AppState, d: DesignState): { text: string; notes: stri
     rg: (s.settings.rg * s.drivers) / (s.isobaric ? 2 : 1),
     drivers: s.drivers,
     isobaric: s.isobaric,
-    // WinISD drives an isobaric pair at half the power in the coils (see the importer).
-    power: s.isobaric ? power * 2 : power,
+    // WinISD drives an isobaric pair from one driver's Re, as the WinISD drive model does; from the
+    // cold Re of the pair (the circuit model) the same volts need twice WinISD's watts.
+    power: s.isobaric && s.settings.driveModel === "circuit" ? power * 2 : power,
     simulateLe: s.settings.inductance,
     air: { ...air, ...ac },
     highPass: s.highPass.on && s.highPass.type === "butterworth" ? { order: s.highPass.order, freq: s.highPass.freq } : undefined,

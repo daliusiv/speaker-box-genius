@@ -205,6 +205,12 @@ export interface Settings {
   endCorrection: number;
   /** Box leakage: the air that leaks out is heard ("radiates", like WinISD) or lost ("absorbed", like Hornresp). */
   leakage: "radiates" | "absorbed";
+  /**
+   * What the watts mean: "winisd" (like WinISD) the power into the coil and the amp + cable
+   * resistance, with a hot coil's Re; "circuit" (like Hornresp) the volts an amplifier gives
+   * into the cold Re, with the amp + cable resistance in the circuit.
+   */
+  driveModel: "winisd" | "circuit";
   /** Sealed, ported and PR boxes: the cone's front air as a fixed mass (like WinISD) or a piston's radiation impedance (like Hornresp). */
   coneLoad: "mass" | "piston";
   /** Voice-coil temperature (°C): 20 = the datasheet's cold values (like WinISD); hotter raises Re. */
@@ -506,6 +512,7 @@ export const DEFAULT_STATE: AppState = {
     portModel: "lumped",
     endCorrection: DEFAULT_END_CORRECTION,
     leakage: "radiates",
+    driveModel: "circuit",
     coneLoad: "mass",
     coilTemp_C: 20,
     portLimit_ms: 17,

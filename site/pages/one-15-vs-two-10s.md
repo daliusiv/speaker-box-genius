@@ -67,7 +67,7 @@ A **24 dB/octave subsonic filter at 18 Hz** protects both. The amplifier is one 
 
 ![Both at 28.3 V in dB SPL: the 15″ solid, the two 10″ dashed; blue the 100 L sealed box, orange the 150 L ported box. The pair is about 2 dB louder at 80 Hz in either box.](img/subs-spl.png)
 
-**At the same voltage, the pair is louder: 113.6 against 111.6 dB at 80 Hz** in the sealed box. That's mostly not efficiency. Per watt they're within 0.2 dB (86.7 and 86.9 dB/W into Re, after the 0.1 Ω of amplifier and cable). The 2 Ω pair takes about 458 W from the same 28.3 V, the 15 about 267 W: 2.3 dB more power. In the same box the 15 goes deeper: F3 33.6 Hz (Qtc 0.77) against 39.8 Hz (Qtc 0.68), because its Vas is twice the pair's.
+**At the same voltage, the pair is louder: 113.6 against 111.6 dB at 80 Hz** in the sealed box. That's mostly not efficiency. Per watt they're within 0.2 dB (86.7 and 86.9 dB/W into Re, after the 0.1 Ω of amplifier and cable). The 2 Ω pair takes about 458 W from the same 28.3 V, the 15 about 267 W: 2.3 dB more power. In the same box the 15 goes deeper: F3 33.6 Hz (Qtc 0.77) against 40.0 Hz (Qtc 0.68), because its Vas is twice the pair's.
 
 ![Cone excursion at 28.3 V: the 15″ (solid) stays under its 14 mm Xmax in both boxes; the two 10″ (dashed) pass their 12.3 mm, 14.6 mm at 24 Hz sealed and 14.0 mm at 17 Hz ported.](img/subs-excursion.png)
 

@@ -11,6 +11,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { simulate } from "../src/simulate.ts";
 import { WINISD_CASES, WINISD_VERSION, QUANTITY, runCase, type Quantity, type Setup } from "./winisd.ts";
+import { OCR_MISREADS, RUN_CASES, RUN_TOL, runRunCase, type RunGraph } from "./winisd-run.ts";
 import {
   HORNRESP_BOX_F_MAX,
   HORNRESP_BOX_NOTES,
@@ -137,10 +138,54 @@ export interface HornrespBoxCaseReport {
   impulse?: ImpulseReport;
 }
 
+/** The full WinISD run (winisd-run.ts): per project, how many readings were compared and the largest difference per graph. */
+export interface WinIsdRunReport {
+  date: string;
+  readings: number;
+  compared: number;
+  /** Readings left out, counted by reason. */
+  skipped: Record<string, number>;
+  tol: typeof RUN_TOL;
+  cases: { id: string; title: string; compared: number; worst: Partial<Record<RunGraph, number>>; pass: boolean }[];
+  known: { id: string; graph: RunGraph; f: number; winisd: number; ours: number; note: string }[];
+  ocr: { id: string; graph: RunGraph; f: number; note: string }[];
+}
+
+function winisdRun(): WinIsdRunReport {
+  const skipped: Record<string, number> = {};
+  let readings = 0;
+  let compared = 0;
+  const known: WinIsdRunReport["known"] = [];
+  const cases = RUN_CASES.map((c) => {
+    const rows = runRunCase(c);
+    readings += rows.length;
+    const worst: Partial<Record<RunGraph, number>> = {};
+    let n = 0;
+    for (const r of rows) {
+      if (r.skip) {
+        const why = r.skip.startsWith("OCR misread") ? "OCR misread" : r.skip;
+        skipped[why] = (skipped[why] ?? 0) + 1;
+        continue;
+      }
+      n++;
+      if (r.known) known.push({ id: r.id, graph: r.graph, f: r.f, winisd: r.winisd, ours: Number(r.ours.toPrecision(5)), note: r.known });
+      else worst[r.graph] = Math.max(worst[r.graph] ?? 0, Number(Math.abs(r.diff).toPrecision(3)));
+    }
+    compared += n;
+    return { id: c.id, title: c.title, compared: n, worst, pass: rows.every((r) => r.skip || r.pass) };
+  });
+  const ocr = Object.entries(OCR_MISREADS).map(([k, note]) => {
+    const [id, graph, f] = k.split("|");
+    return { id: id!, graph: graph as RunGraph, f: Number(f), note };
+  });
+  return { date: "2026-11-09", readings, compared, skipped, tol: RUN_TOL, cases, known, ocr };
+}
+
 export interface Report {
   /** Label and unit of each quantity; for relative ones (rel) a check's diff and tol are fractions. */
   quantities: typeof QUANTITY;
   winisd: { version: string; driver: string; cases: WinIsdCaseReport[] };
+  winisdRun: WinIsdRunReport;
   hornresp: {
     version: string;
     driver: string;
@@ -257,6 +302,7 @@ export function buildReport(): Report {
       driver: "Dayton Audio DSA215-8; 100 W, amplifier resistance 0.1 Ω, losses Ql 10 / Qa 100 / Qp 100 and WinISD's air, unless a case says otherwise",
       cases: WINISD_CASES.map(winisdCase),
     },
+    winisdRun: winisdRun(),
     hornresp: {
       version: HORNRESP_VERSION,
       driver: "Dayton Audio DSA215-8 (Le 1 mH) unless a case names another driver, at 2.83 V in half space, Hornresp's air (c 344 m/s, ρ 1.205 kg/m³), SPL from radiated power",

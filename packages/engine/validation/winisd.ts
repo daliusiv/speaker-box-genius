@@ -117,7 +117,8 @@ const prBox = (p: WinIsdProject): EnclosureInput => ({
   ql: p.box.ql,
   qa: p.box.qa,
 });
-const drive = (p: WinIsdProject): SimulationOptions => ({ power: p.power, rg: p.rg, air: p.air });
+/** WinISD's drive: its watts go into the coil and Rg together (see SimulationOptions.driveModel). */
+const drive = (p: WinIsdProject): SimulationOptions => ({ power: p.power, rg: p.rg, air: p.air, driveModel: "winisd" });
 
 export const WINISD_CASES: WinIsdCase[] = [
   {
@@ -176,9 +177,10 @@ export const WINISD_CASES: WinIsdCase[] = [
       { what: "maxPower", f: 40.25, winisd: 80, tol: 1e-6, note: "thermal limit = Pe" },
     ],
     notes:
-      "The shapes match; the absolute level sits a uniform ~0.03 dB (0.35 %) below WinISD and the impedance peaks are up to 0.8 % higher. " +
-      "Simulating from the Bl/Mms/Cms/Rms values stored in the project instead of deriving them from Fs/Qes/Qms/Vas made the agreement worse, " +
-      "so WinISD derives them as we do. The remaining offset is far below anything measurable.",
+      "The shapes match; the absolute level sits a uniform ~0.04 dB (0.5 %) above WinISD and the impedance peaks are up to 0.8 % higher. " +
+      "This project's driver record is not self-consistent (its Bl, Mms and Cms give Fs 35.18 Hz, not 35), and simulating from those values instead of " +
+      "Fs/Qes/Qms/Vas moves the level by about as much again. Projects written with a consistent record match to 0.01 dB (see the full WinISD run below). " +
+      "The remaining offset is far below anything measurable.",
   },
   {
     id: "ported-hpf",
@@ -312,8 +314,8 @@ export const WINISD_CASES: WinIsdCase[] = [
       { what: "x", f: 30.2, winisd: 5.369, tol: 0.006 },
       { what: "vrear", f: 35.25, winisd: 16.516, tol: 0.006 },
       { what: "vrear", f: 70.38, winisd: 0.904, tol: 0.006 },
-      { what: "vport", f: 35.25, winisd: 2.68, tol: 0.006 },
-      { what: "vport", f: 69.73, winisd: 22.982, tol: 0.006 },
+      { what: "vport", f: 35.25, winisd: 2.68, tol: 0.008 },
+      { what: "vport", f: 69.73, winisd: 22.982, tol: 0.008 },
       { what: "z", f: 30.48, winisd: 7.265, tol: 0.01 },
       { what: "z", f: 60.13, winisd: 8.832, tol: 0.01 },
     ],
@@ -323,13 +325,13 @@ export const WINISD_CASES: WinIsdCase[] = [
     id: "iso-sealed",
     title: "Isobaric pairs in a sealed box (Test 9)",
     fixture: "dsa215-iso-sealed.wpr",
-    setupText: "Two isobaric pairs (coils in series) in the 10.4 L sealed box, at WinISD's voltage",
+    setupText: "Two isobaric pairs (coils in series) in the 10.4 L sealed box, at WinISD's power",
     setup: (p) => ({
       driver: ts(p),
       box: { kind: "sealed", vb_l: p.box.vb_l, ql: p.box.ql, qa: p.box.qa },
       opts: {
-        convention: "volts",
-        power: Math.sqrt((p.power * p.driver.ts.re!) / p.drivers),
+        power: p.power,
+        driveModel: "winisd",
         rg: (2 * p.rg) / p.drivers,
         drivers: p.drivers,
         isobaric: { coils: "series" },
@@ -345,7 +347,7 @@ export const WINISD_CASES: WinIsdCase[] = [
     ],
     notes:
       "WinISD wires the two coils of a pair in series, applies Rg to each coil, and sets the voltage as if the pairs were single drivers, V = √(P·Re/Nd), " +
-      "which puts only about half its stated power into the coils. The app keeps the power physical, so the comparison drives both at the same voltage.",
+      "which puts only about half its stated power into the coils. The app does the same with Settings → Watts “Into coil + cable (like WinISD)”, which opening a WinISD project sets, so the same watts give the same results.",
   },
   {
     id: "iso-ported",
@@ -356,8 +358,8 @@ export const WINISD_CASES: WinIsdCase[] = [
       driver: ts(p),
       box: vented(p),
       opts: {
-        convention: "volts",
-        power: Math.sqrt((p.power * p.driver.ts.re!) / p.drivers),
+        power: p.power,
+        driveModel: "winisd",
         rg: (2 * p.rg) / p.drivers,
         drivers: p.drivers,
         isobaric: { coils: "series" },

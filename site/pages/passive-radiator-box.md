@@ -56,9 +56,9 @@ Rather than checking every PR by hand, press **Find a PR for this driver…** in
 
 | PRs | Added mass | F3 | Travel used when the woofer reaches its Xmax |
 |---|---|---|---|
-| 1 × Dayton DSA270-PR (10″) | 79 g | 51.3 Hz | 47 % |
-| 1 × Dayton DS215-PR (8″) | 4 g | 53.6 Hz | 73 % |
-| 2 × SB Acoustics SB20PFC-00 (8″) | 48 g each | 50.9 Hz | 39 % |
+| 1 × Dayton DSA270-PR (10″) | 79 g | 50.7 Hz | 47 % |
+| 1 × Dayton DS215-PR (8″) | 4 g | 52.5 Hz | 74 % |
+| 2 × SB Acoustics SB20PFC-00 (8″) | 48 g each | 50.4 Hz | 39 % |
 
 The bigger the PR (or the more of them), the more travel it has to spare and the deeper the box goes, but the dearer it gets and the more room it takes on the box. The rest of this guide uses the single DS215-PR: the cheapest and smallest option that still keeps up.
 
@@ -79,11 +79,11 @@ This is where PR designs fail. Look at **both** excursion charts at the power yo
 - **Cone excursion** against the woofer's Xmax (5.5 mm).
 - **PR excursion** against the PR's Xmax (11 mm).
 
-At 35 W with the 30 Hz high-pass filter, the woofer peaks at **5.3 mm** and the PR at **7.8 mm**. Both are within their limits.
+At 35 W with the 30 Hz high-pass filter, the woofer peaks at **5.3 mm** and the PR at **7.9 mm**. Both are within their limits.
 
-The PR chart also shades a band from **75 % of the PR's Xmax** up to it (8.25 mm here). A PR's suspension stiffens as it nears its limit, so its travel stops growing in step with the woofer's and its distortion rises; staying under the band leaves that headroom. 75 % is a rule of thumb, not a datasheet figure: change it, or turn it off, with **PR caution** in **Settings**. This design's 7.8 mm is 71 %, under the band.
+The PR chart also shades a band from **75 % of the PR's Xmax** up to it (8.25 mm here). A PR's suspension stiffens as it nears its limit, so its travel stops growing in step with the woofer's and its distortion rises; staying under the band leaves that headroom. 75 % is a rule of thumb, not a datasheet figure: change it, or turn it off, with **PR caution** in **Settings**. This design's 7.9 mm is 72 %, under the band.
 
-![PR excursion at 35 W with the 30 Hz high-pass filter: 7.8 mm at most, against an Xmax of 11 mm (the red line).](img/pr-excursion.png)
+![PR excursion at 35 W with the 30 Hz high-pass filter: 7.9 mm at most, against an Xmax of 11 mm (the red line).](img/pr-excursion.png)
 
 Without the high-pass filter, the same 35 W pushes the woofer to 12 mm (more than twice its Xmax) down at 15 Hz, where the PR no longer holds it back. A PR box almost always needs a high-pass filter (a "subsonic" filter) just below the tuning.
 
@@ -91,7 +91,7 @@ The **Max SPL** chart puts it together: the loudest the box can play at each fre
 
 ## Step 5: compare it with a port
 
-It's worth putting a ported box of the same size next to the PR box, because the result often surprises people: **the port goes a little deeper** (F3 49.2 Hz against the PR box's 53.6 Hz). The catch is the port itself:
+It's worth putting a ported box of the same size next to the PR box, because the result often surprises people: **the port goes a little deeper** (F3 49.2 Hz against the PR box's 52.5 Hz). The catch is the port itself:
 
 | Port diameter (plain tube) | Length for 41.7 Hz | Peak air speed at 35 W |
 |---|---|---|

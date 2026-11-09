@@ -150,6 +150,30 @@ export function paritySection(): { html: string; values: number; worst: number }
   return { html, values, worst };
 }
 
+/** The full WinISD run: a table per project of what was compared and the largest difference per graph. */
+function runSection(r: Report["winisdRun"], group: (id: string, label: string, cases: { pass: boolean }[], body: string) => string): string {
+  const fmt = (g: keyof Report["winisdRun"]["tol"], d: number) => (r.tol[g].rel ? `${(d * 100).toFixed(2)} %` : `${d.toFixed(3)} ${r.tol[g].unit}`);
+  const rows = r.cases
+    .map((c) => {
+      const worst = (Object.entries(c.worst) as [keyof Report["winisdRun"]["tol"], number][]).map(([g, d]) => `${esc(r.tol[g].label)} ${fmt(g, d)}`).join("; ");
+      return `<tr><td><code>${esc(c.id)}</code> ${esc(c.title)}</td><td>${c.compared}</td><td><small class="n">${worst || "—"}</small></td><td>${ok(c.pass)}</td></tr>`;
+    })
+    .join("");
+  const tols = (Object.entries(r.tol) as [keyof Report["winisdRun"]["tol"], Report["winisdRun"]["tol"][keyof Report["winisdRun"]["tol"]]][])
+    .filter(([g]) => g !== "tfpr")
+    .map(([, t]) => `${esc(t.label)} ${t.rel ? `${(t.tol * 100).toFixed(1)} %` : `${t.tol} ${esc(t.unit)}`}`)
+    .join(", ");
+  const skipped = Object.entries(r.skipped)
+    .sort((a, b) => b[1] - a[1])
+    .map(([why, n]) => `<li>${n}: ${esc(why)}</li>`)
+    .join("");
+  const known = r.known.map((k) => `<li><code>${esc(k.id)}</code> ${esc(r.tol[k.graph].label)} at ${num(k.f, 2)} Hz: WinISD ${k.winisd}, ours ${k.ours}. ${esc(k.note)}</li>`).join("");
+  const ocr = r.ocr.map((k) => `<code>${esc(k.id)}</code> ${esc(r.tol[k.graph].label)} at ${num(k.f, 2)} Hz (${esc(k.note)})`).join("; ");
+  return `<p>${r.cases.length} WinISD projects written by the app's own WinISD export and opened in WinISD, with ${r.readings} values read off WinISD's graph cursor at six frequencies from 15 to 150 Hz: sealed, ported, passive radiator and bandpass boxes with losses, amplifier resistance, coil inductance and heating, air conditions, distance, two and four drivers, isobaric pairs, high-pass filters and runs at rated power. ${r.compared} values are compared, each within ${tols} (or WinISD's last displayed digit). The projects and readings are in <a href="${REPO}/tree/main/packages/engine/test/fixtures/winisd-run">fixtures/winisd-run</a>.</p>
+${group("winisd-run-cases", `${r.cases.length} projects, ${r.compared} values`, r.cases, `<div class="table"><table><thead><tr><th>Project</th><th>Values</th><th>Largest difference</th><th>OK</th></tr></thead><tbody>${rows}</tbody></table></div>
+<div class="known"><h4>Left out</h4><ul>${skipped}</ul><p>OCR misreads, one digit off and plain against the neighbouring values: ${ocr}.</p><h4>Leftover differences</h4><ul>${known}</ul></div>`)}`;
+}
+
 const ok = (pass: boolean) => (pass ? '<span class="ok">✓</span>' : '<span class="bad">✗ outside</span>');
 
 function winisdCase(k: WinIsdCaseReport, q: Q, link?: { href: string; note?: string }): string {
@@ -391,7 +415,7 @@ export function validationContent(rep: Report, info: BuildInfo): string {
   const stuffed = b.filter((k) => /^s\d/.test(k.id));
   const boxes = b.filter((k) => !stuffed.includes(k));
   const checks = w.reduce((n, c) => n + c.checks.length, 0);
-  const failing = w.filter((c) => !c.pass).length + h.filter((c) => !c.pass).length + b.filter((c) => !c.pass).length;
+  const failing = w.filter((c) => !c.pass).length + h.filter((c) => !c.pass).length + b.filter((c) => !c.pass).length + rep.winisdRun.cases.filter((c) => !c.pass).length;
   const date = info.date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
   const al = alignmentSection(readAlignmentChecks());
   const par = paritySection();
@@ -421,7 +445,7 @@ export function validationContent(rep: Report, info: BuildInfo): string {
   };
   return `<h1>Validation</h1>
 <p class="lede">Speaker Box Genius is checked against WinISD and Hornresp, the two free simulators most DIY builders know. Every comparison on this page is an automated test that runs on every change to the code, and the page is rebuilt from those results.</p>
-<p class="status"><strong>${w.length} WinISD cases (${checks} values) and ${h.length + b.length} Hornresp cases, ${failing ? `${failing} outside tolerance` : "all within tolerance"}.</strong> Built${commit} on ${date}.</p>
+<p class="status"><strong>${w.length} WinISD cases (${checks} values), the full WinISD run (${rep.winisdRun.compared} values) and ${h.length + b.length} Hornresp cases, ${failing ? `${failing} outside tolerance` : "all within tolerance"}.</strong> Built${commit} on ${date}.</p>
 
 <h2 id="summary">Summary</h2>
 <h3>WinISD ${esc(rep.winisd.version.replace(/^WinISD /, ""))}</h3>
@@ -432,15 +456,19 @@ export function validationContent(rep: Report, info: BuildInfo): string {
 
 <h2 id="known-differences">Known differences</h2>
 <ul>
-<li><strong>Passive radiator damping near the tuning.</strong> Tuning, radiator mass and stiffness match WinISD exactly, but near Fb WinISD shows less loss than the standard box-loss model (up to 0.5 dB at a high-Q peak). See <a href="#winisd-pr-18l">the PR cases</a>.</li>
-<li><strong>Level and impedance peaks.</strong> Against WinISD the absolute level sits a uniform ~0.03 dB lower, and cone excursion and port air speed read 0.35 % lower: the same factor (20·log₁₀(1 − 0.0035) ≈ −0.03 dB), so it's one overall scale on the whole response, not a difference in its shape. Impedance peaks read up to 0.8 % higher. Both are far below anything measurable.</li>
-<li><strong>Conventions, not differences.</strong> WinISD applies the amplifier resistance to each driver and plots one driver's impedance, and drives isobaric pairs at half its stated power. The comparisons use WinISD's conventions; the app keeps power physical. Importing a WinISD project converts automatically.</li>
+<li><strong>Max SPL and the port.</strong> WinISD's maximum SPL is limited only by the driver's power rating and Xmax; the app's is also limited by port air speed (the chuffing line in Settings), on purpose. Where the port sets the limit, the two differ.</li>
+<li><strong>6th-order bandpass, series.</strong> WinISD's only 6th-order bandpass has both chambers ported to the room. The app's series kind (rear chamber ported into the front) has no WinISD equivalent and isn't written to WinISD projects.</li>
+<li><strong>Level on the DSA215-8 projects.</strong> On the hand-made projects below the level sits a uniform ~0.04 dB above WinISD (cone excursion and port speed 0.5 %): their driver record isn't self-consistent (its Bl, Mms and Cms give Fs 35.18 Hz, not 35). On the full run, whose projects carry a consistent record, the level matches to 0.01 dB.</li>
+<li><strong>Conventions, not differences.</strong> WinISD applies the amplifier resistance to each driver (each coil of an isobaric pair) and plots one driver's impedance; the app shares it between the drivers and shows what the amplifier sees. The comparisons use WinISD's conventions, and importing a WinISD project converts automatically. WinISD's watts go into the voice coil and the amp + cable resistance together; the app does the same with Settings → Watts “Into coil + cable”, which the WinISD preset and opening a WinISD project set (the default counts watts from the amplifier, a few hundredths of a dB apart at 0.1 Ω).</li>
 <li><strong>Deep nulls in lines and horns.</strong> Against Hornresp, nulls fall at the same frequency but differ in depth, so SPL is held to its mean and 95th percentile.</li>
 </ul>
 
 <h2 id="winisd">WinISD</h2>
 <p>Each case is a real WinISD project (linked) with values read from WinISD's cursor read-out, next to ours (Speaker Box Genius); values marked <span class="tag">graph</span> were read off its graphs, so they're held to reading accuracy. Relative quantities (excursion, air speed, impedance, group delay, power) are compared in percent. ${esc(rep.winisd.driver)}.</p>
 ${group("winisd-cases", `${w.length} WinISD cases`, w, w.map((k) => winisdCase(k, q, info.links?.[`winisd-${k.id}`])).join("\n"))}
+
+<h3 id="winisd-run">The full WinISD run (9 November 2026)</h3>
+${runSection(rep.winisdRun, group)}
 
 <h3 id="winisd-alignments">Ported presets (alignments)</h3>
 <p>The ported and passive radiator presets (QB3, BB4/SBB4, C4/SC4) give the boxes WinISD's new-project wizard gives. WinISD doesn't use the textbook equations: each alignment is one curve of box size and tuning against the driver's Qts, and that Qts includes WinISD's 0.1&nbsp;Ω amplifier resistance in series with the voice coil. The app carries those curves, measured from WinISD for 32 drivers from Qts 0.14 to 0.76. Below, ${al.values} values for 19 other drivers (database drivers and test drivers, Re 3–6.5&nbsp;Ω) are compared with WinISD's own boxes: the largest difference is ${al.vbWorst.toFixed(2)}&nbsp;% in volume and ${al.fbWorst.toFixed(2)}&nbsp;% in tuning, the rounding of WinISD's two-decimal display. (Boxes under 2&nbsp;L differ by up to 0.01&nbsp;L, the same rounding.) WinISD's QB3 above Qts 0.62 and its C4 below 0.20 aren't offered: there WinISD's boxes stop making sense (the QB3 shrinks and tunes below Fs; the C4 shrinks to nothing). Settings &rarr; Box presets &rarr; Textbook gives the lossless textbook alignments instead.</p>

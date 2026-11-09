@@ -22,6 +22,7 @@ differences.
 | `packages/engine/src/winisdAlignments.ts` | The ported presets as WinISD's wizard sizes them: its QB3, BB4 and C4 curves, measured from WinISD (32 drivers, Qts 0.14–0.76) |
 | `packages/engine/test/fixtures/winisd-alignments.json`, `winisd-alignments.test.ts` | WinISD's own boxes for 19 other drivers, checked on every push and shown on the page ("Ported presets") |
 | `packages/engine/test/fixtures/winisd-parity.json`, `winisd-parity.test.ts` | WinISD's sealed boxes, Qtc and Fsc, driver editor values and PR tunings ("Sealed presets") |
+| `packages/engine/validation/winisd-run.ts`, `test/fixtures/winisd-run/`, `winisd-run.test.ts` | The full WinISD run: 51 projects and about 1,300 values read from WinISD's graphs ("The full WinISD run") |
 
 So the page always shows what the tests check, and a change to the engine that moves a result
 has to come with the updated `results.json`.
@@ -54,6 +55,38 @@ values until a field is edited.) The app's Amp + cable setting defaults to WinIS
 driver editor's Mms, Cms, Rms, Bl, η0 and EBP for four database drivers (with WinISD's air), and
 three passive radiator tunings (WinISD takes a PR's compliance from its Vas; the app's .wpr
 export writes the Vas of the compliance it simulates). The page shows them under "Sealed presets".
+
+## The full WinISD run (9 November 2026)
+
+51 projects written by the app's .wpr export, opened in WinISD and read off its graph cursor at
+15, 22, 33, 50, 80 and 150 Hz: sealed, ported, PR and 4th/6th-order bandpass boxes; losses; Rg;
+Le; air, distance and a hot coil; 2 and 4 drivers; isobaric pairs; high-pass filters; and runs at
+rated power. The values were read by OCR, so a signed value is accepted with either sign (a minus
+can be lost) and values the OCR passes disagreed on were dropped. What isn't compared, and the
+few leftover differences, are listed in `winisd-run.ts` and on the page.
+
+What the run settled about how WinISD computes. The box losses and the bandpass phase are now the
+app's for everyone; WinISD's watts are Settings → Watts "Into coil + cable (like WinISD)", which
+the WinISD preset and opening a WinISD project set (the default stays the amplifier's view):
+
+- **Watts.** WinISD's watts go into the voice coil and
+  its Rg together: V = √(P·(Re + Rg)) at the amplifier, with Rg in the circuit; with a hot coil,
+  Re is the hot one (WinISD's dTVC, 0.39 %/°C). An isobaric pair (coils in series) is driven from
+  one driver's Re, with Rg on each coil. "Amp volts from cold Re" keeps the circuit view (as
+  Hornresp: V = √(P·Re) cold, Rg taking its share), and a drive set in volts is always the
+  amplifier's volts.
+- **Box losses.** Each Q is at the box's tuning, as before, but WinISD takes a sealed box's Qa
+  against the box in series with the driver's suspension (the compliance that sets Fc), and a
+  PR box's Ql and Qa against the box in series with the radiators' suspensions. Before, PR boxes
+  were up to 0.5 dB off near Fb.
+- **Bandpass phase.** A bandpass box's sound is its ports': its phase is 180° from a cone facing
+  the room.
+- **WinISD's projects.** The export writes the driver's full record (Bl, Mms, Cms, Rms) and
+  `KLe=0`: with only Fs, Qes, Qms and Vas WinISD fills its own values in, and its impedance and
+  isobaric curves change; without `KLe=0` it applies its own lossy-inductance model.
+- **Not followed on purpose.** WinISD's maximum SPL has no port-speed limit; WinISD plots one
+  driver's impedance (one coil of an isobaric pair); and WinISD has no series 6th-order bandpass,
+  so the app doesn't write one.
 
 ## Adding or updating a case
 
@@ -164,4 +197,4 @@ The default holds Pe against V²/Re, as WinISD does (that's what the WinISD case
 
 ### Hot voice coil (Settings → Voice coil °C)
 
-Not in WinISD (20 °C, the default, is what's compared); it is Hornresp's Power Compression, compared at 120 °C for a sealed box and an MLTL (see its notes: within 0.05 dB and 0.5 %). Re(T) = Re · (1 + 0.00393 (T − 20)), Bl, suspension and Le unchanged; watts are turned into volts with the cold Re (as an amplifier rating would be), and the thermal limit counts the smaller power the hot coil takes. Checks (`simulate.test.ts`): factor 1.3144 at 100 °C; above the bass the output falls towards 20·log of the Re ratio (2.37 dB at 100 °C; 0.13 dB short of it at 10 × fs with Qes 0.4, where the motor's damping still counts); less loss near resonance (higher Q); impedance minimum up by the Re ratio. Relative view: referred to the hot driver (shape and F3); dB SPL view: the lost output.
+WinISD's "voice coil temperature rise" (compared in the full WinISD run: same results at +60 °C) and Hornresp's Power Compression, compared at 120 °C for a sealed box and an MLTL (see its notes: within 0.05 dB and 0.5 %). Re(T) = Re · (1 + 0.00393 (T − 20)), Bl, suspension and Le unchanged. With Settings → Watts "Into coil + cable" (WinISD's way, the default) the watts go into the hot coil; with "Amp volts from cold Re" (Hornresp's way, and a drive set in volts) the volts stay and the hot coil takes less power, which the thermal limit counts. Checks (`simulate.test.ts`): factor 1.3144 at 100 °C; above the bass the output falls towards 20·log of the Re ratio (2.37 dB at 100 °C; 0.13 dB short of it at 10 × fs with Qes 0.4, where the motor's damping still counts); less loss near resonance (higher Q); impedance minimum up by the Re ratio. Relative view: referred to the hot driver (shape and F3); dB SPL view: the lost output.

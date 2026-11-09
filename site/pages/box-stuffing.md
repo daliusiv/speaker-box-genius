@@ -98,15 +98,15 @@ The example: a **Dayton Audio RSS265HF-4** 10″ subwoofer, whose textbook seale
 
 | Box | Acts like | Qtc | F3 | At 30 Hz | Hump |
 |---|---|---|---|---|---|
-| 18 L, empty | 18 L | 0.92 | 44.8 Hz | −9.6 dB | +1.2 dB at 92 Hz |
-| 18 L, stuffed (volume only) | 22.5 L | 0.85 | 43.2 Hz | −8.5 dB | +0.9 dB |
-| 18 L, stuffed (volume and losses, Qa 20) | 22.5 L | 0.82 | 43.9 Hz | −8.6 dB | +0.7 dB |
-| 18 L, overstuffed (Qa 20) | 15.5 L | 0.93 | 46.9 Hz | −10.5 dB | +1.2 dB |
-| 37.3 L, empty | 37.3 L | 0.72 | 41.1 Hz | −6.8 dB | +0.5 dB |
+| 18 L, empty | 18 L | 0.92 | 44.9 Hz | −9.6 dB | +1.1 dB at 92 Hz |
+| 18 L, stuffed (volume only) | 22.5 L | 0.85 | 43.3 Hz | −8.5 dB | +0.8 dB |
+| 18 L, stuffed (volume and losses, Qa 20) | 22.5 L | 0.82 | 44.3 Hz | −8.7 dB | +0.7 dB |
+| 18 L, overstuffed (Qa 20) | 15.5 L | 0.93 | 47.2 Hz | −10.5 dB | +1.1 dB |
+| 37.3 L, empty | 37.3 L | 0.72 | 41.2 Hz | −6.9 dB | +0.4 dB |
 
 ![The RSS265HF-4: 18 L empty (blue), 18 L stuffed and acting as 22.5 L (orange), and the full-size 37.3 L box (green).](img/stuffing-sealed-spl.png)
 
-Stuffing the 18 L box closes only part of the gap to the full-size box: the F3 drops by under 1 Hz once the losses are counted, the response at 30 Hz improves by about 1 dB, and the hump above the passband shrinks from 1.2 dB to 0.7 dB. That matches what people hear: the bass gets a little **smoother and less boomy**, not much **deeper**. (Qtc and resonance are explained in the [Thiele/Small parameters guide](/guides/thiele-small-parameters/).)
+Stuffing the 18 L box closes only part of the gap to the full-size box: the F3 drops by under 1 Hz once the losses are counted, the response at 30 Hz improves by about 1 dB, and the hump above the passband shrinks from 1.1 dB to 0.7 dB. That matches what people hear: the bass gets a little **smoother and less boomy**, not much **deeper**. (Qtc and resonance are explained in the [Thiele/Small parameters guide](/guides/thiele-small-parameters/).)
 
 So:
 

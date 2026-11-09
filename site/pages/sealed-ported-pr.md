@@ -15,8 +15,8 @@ The same woofer can go in a small sealed box, a big ported box or a passive radi
 
 ## The short answer
 
-- **Sealed is the smallest box, ported plays loudest near its tuning.** Here sealed is 39.8 L with F3 41.0 Hz; ported is 86.4 L with F3 21.1 Hz, and 12.0 dB more output at 25 Hz.
-- **The passive radiator box lands in between.** Same box as ported, F3 23.8 Hz, 2 dB behind it at 25 Hz, and no port to fit. Below its tuning it falls away much faster.
+- **Sealed is the smallest box, ported plays loudest near its tuning.** Here sealed is 39.8 L with F3 41.1 Hz; ported is 86.4 L with F3 21.1 Hz, and 12.0 dB more output at 25 Hz.
+- **The passive radiator box lands in between.** Same box as ported, F3 23.2 Hz, 2 dB behind it at 25 Hz, and no port to fit. Below its tuning it falls away much faster.
 - **Above about 30 Hz the box type barely matters for output.** All three run out of cone travel at about the same level at 40 Hz (within 3.2 dB), because the port only helps near the tuning.
 - **Every box needs a subsonic filter at full power.** Without one the ported cone swings 43.5 mm at 10 Hz, more than three times its 12.3 mm Xmax. Even the sealed cone reaches 20.0 mm.
 - **Qts and EBP are a starting point, not a verdict.** By EBP this driver "leans sealed", yet it's 12.0 dB louder at 25 Hz ported. Simulate both.
@@ -43,15 +43,15 @@ Some practical notes:
 
 ## Depth: an octave between them
 
-![From the app: relative response of the three boxes at 350 W with the 18 Hz filter. Ported (orange) is 3 dB down at 21.1 Hz, passive radiators (green) at 23.8 Hz, sealed (blue) at 41.0 Hz.](img/box-types-spl.png)
+![From the app: relative response of the three boxes at 350 W with the 18 Hz filter. Ported (orange) is 3 dB down at 21.1 Hz, passive radiators (green) at 23.2 Hz, sealed (blue) at 41.1 Hz.](img/box-types-spl.png)
 
-**Look at where each curve crosses the −3 dB line.** The ported box (orange) holds flat to 21.1 Hz, a full octave below the sealed box's 41.0 Hz (blue). The PR box (green) gets most of the way, to 23.8 Hz, then drops off a cliff: by 15 Hz it's far below the other two.
+**Look at where each curve crosses the −3 dB line.** The ported box (orange) holds flat to 21.1 Hz, a full octave below the sealed box's 41.1 Hz (blue). The PR box (green) gets most of the way, to 23.2 Hz, then drops off a cliff: by 15 Hz it's far below the other two.
 
 That cliff is the passive radiator's own resonance. A PR is a port with a spring attached. With 150 g added it resonates at 19.6 × √(200 ÷ 350) = 14.8 Hz, and at that frequency it cancels the woofer's output, putting a notch in the response [5][6]. A port has no spring, so it has no notch.
 
 A sealed box rolls off at 12 dB per octave, the ported and PR boxes at 24 dB or more [2][5]. That's why the sealed curve, starting an octave higher, is still above the PR's below about 19 Hz.
 
-> **Rule of thumb:** for the same box and tuning, a PR box gives up a few hertz of F3 to a port. Here two disks give F3 23.8 Hz against 21.1 Hz. Three disks tune it lower (20.7 Hz), but the notch moves up too, and F3 gets worse (27.4 Hz).
+> **Rule of thumb:** for the same box and tuning, a PR box gives up a few hertz of F3 to a port. Here two disks give F3 23.2 Hz against 21.1 Hz. Three disks tune it lower (20.7 Hz), but the notch moves up too, and F3 gets worse (26.2 Hz).
 
 ## Output: where each box runs out
 
@@ -63,24 +63,24 @@ Response curves don't say how loud each box can go. The app's **Max SPL** chart 
 |---|---|---|---|---|
 | Sealed | 93.3 dB | 97.4 dB | 100.4 dB | 105.4 dB |
 | Ported | **104.6 dB** | **109.4 dB** | **107.3 dB** | **108.6 dB** |
-| Passive radiators | 95.8 dB | 106.4 dB | 105.2 dB | 107.5 dB |
+| Passive radiators | 96.1 dB | 106.8 dB | 105.3 dB | 107.6 dB |
 
 Three things to notice in that chart:
 
 - **At 25 Hz the ported box is 12.0 dB ahead of sealed.** Near the tuning the port does the work and the cone barely moves (6.3 mm at 22.5 Hz, against 17.0 mm for the sealed cone at 25 Hz). The ported box takes its full 350 W at 25 Hz; the sealed cone hits Xmax at 183 W.
-- **At 40 Hz the gap shrinks to 3.2 dB.** Above the tuning the port stops helping and every cone is back to its own travel. All three hit Xmax at about 278–282 W there. Look at the red bands: from 30 to 45 Hz all three boxes are excursion-limited.
+- **At 40 Hz the gap shrinks to 3.2 dB.** Above the tuning the port stops helping and every cone is back to its own travel. All three hit Xmax at about 276–284 W there. Look at the red bands: from 30 to 45 Hz all three boxes are excursion-limited.
 - **Below 15.6 Hz the sealed box out-plays the ported one** (and below 19.2 Hz the PR box). Below tuning a ported or PR box stops loading the cone, which is the next section.
 
 The amplifier each box needs for its 25 Hz maximum is different too:
 - **Sealed:** 24.5 V and 3.6 A.
 - **Ported:** 35.0 V and 6.5 A (its full 350 W).
-- **PR:** 30.9 V and 4.9 A.
+- **PR:** 30.9 V and 5.0 A.
 
 Switch the chart to **Volts** or **Amps** to see the whole curve; [matching an amplifier](/guides/amp-matching/) explains reading it.
 
 ## Cone travel: why every box needs a subsonic filter
 
-![Cone excursion at 350 W. Left, no filter: below 20 Hz the ported cone (orange) climbs to 43.5 mm at 10 Hz and the PR cone (green) to 35.6 mm, while the sealed cone (blue) stays at 20.0 mm. Right, with a 24 dB/oct high-pass at 18 Hz: the peaks drop to 18.4, 19.7 and 17.0 mm.](img/box-types-excursion.png)
+![Cone excursion at 350 W. Left, no filter: below 20 Hz the ported cone (orange) climbs to 43.5 mm at 10 Hz and the PR cone (green) to 35.6 mm, while the sealed cone (blue) stays at 20.0 mm. Right, with a 24 dB/oct high-pass at 18 Hz: the peaks drop to 18.4, 19.8 and 17.0 mm.](img/box-types-excursion.png)
 
 Look at the left panel first, below 20 Hz. With no filter:
 - **The ported cone (orange) shoots to 43.5 mm** at 10 Hz, more than three times its 12.3 mm Xmax. Below its tuning the port no longer holds the cone back, so it flaps against nothing [7].
@@ -89,12 +89,12 @@ Look at the left panel first, below 20 Hz. With no filter:
 
 Now the right panel, with an 18 Hz, 24 dB/oct high-pass:
 - **Ported:** 18.4 mm at 17 Hz.
-- **PR:** 19.7 mm at 18.5 Hz.
+- **PR:** 19.8 mm at 18.5 Hz.
 - **Sealed:** 17.0 mm at 25 Hz.
 
 That's a big improvement, but none of them is under Xmax. At 350 W this driver is excursion-limited almost everywhere from 15 to 45 Hz, in every box. The filter stops the ported cone flapping below tuning; it doesn't give the driver more travel. You get the rest back by running less power (the Max SPL chart says how much at each frequency) or a filter set higher ([subsonic filters](/guides/subsonic-filter/) works through that).
 
-The passive radiators move too: 20.4 mm at 21 Hz with the filter, 23.1 mm without, against their 24 mm Xmax. Check **PR excursion** whenever you push a PR box.
+The passive radiators move too: 21.5 mm at 22 Hz with the filter, 24.2 mm without, just past their 24 mm Xmax. Check **PR excursion** whenever you push a PR box.
 
 > **Common trap: "sealed boxes don't need a subsonic filter."** The trapped air protects a sealed cone from flapping, but not from too much power. This one is past Xmax with or without a filter at 350 W.
 

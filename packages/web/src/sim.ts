@@ -13,6 +13,7 @@ import {
   simulate,
   transitionFrequency,
   bankResistance,
+  voltsPerRootWatt,
   DEFAULT_END_CORRECTION,
   solveTs,
   type DriverInput,
@@ -398,6 +399,7 @@ export function simOptionsOf(s: AppState) {
     splFrom: s.settings.lineSpl === "power" ? ("power" as const) : undefined,
     portModel: s.settings.portModel === "pipe" ? ("pipe" as const) : undefined,
     leakage: s.settings.leakage === "absorbed" ? ("absorbed" as const) : undefined,
+    driveModel: s.settings.driveModel,
     coneLoad: s.settings.coneLoad === "piston" ? ("piston" as const) : undefined,
     coilTemp_C: s.settings.coilTemp_C > 20 ? s.settings.coilTemp_C : undefined,
     thermalLimit: s.settings.thermalLimit === "real" ? ("real" as const) : undefined,
@@ -734,7 +736,9 @@ export function switchDrive(s: AppState, to: "watts" | "volts"): Pick<AppState, 
   if (s.drive === to) return { drive: to, power: s.power, volts: s.volts };
   const solved = solveDriver(s);
   if (solved.missing.length > 0) return { drive: to, power: s.power, volts: s.volts };
-  const r = bankResistance(driverInputOf(s, solved), { drivers: s.drivers, wiring: s.wiring, isobaric: s.isobaric ? { coils: s.isoCoils } : null });
+  // Volts² per watt as the simulation turns watts into volts (Settings → Watts).
+  const o = simOptionsOf(s);
+  const r = voltsPerRootWatt(driverInputOf(s, solved), { drivers: o.drivers, wiring: o.wiring, isobaric: o.isobaric, rg: o.rg, coilTemp_C: o.coilTemp_C, driveModel: o.driveModel, passive: o.passive }) ** 2;
   if (!(r > 0)) return { drive: to, power: s.power, volts: s.volts };
   const near = (a: number, b: number) => Math.abs(a - b) <= 0.01 * Math.max(a, b);
   if (to === "volts") {

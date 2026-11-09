@@ -1,6 +1,6 @@
 import type { HighPass } from "./filters.ts";
-import type { TsValues } from "./tsSolver.ts";
-import { STANDARD_AIR } from "./constants.ts";
+import { solveTs, type TsValues } from "./tsSolver.ts";
+import { STANDARD_AIR, WINISD_AIR, type Air } from "./constants.ts";
 
 /**
  * WinISD driver files (.wdr): an INI file with a [Driver] section, values in
@@ -110,9 +110,14 @@ export function winisdNumber(v: number | undefined): string {
   return x.toLocaleString("en-US", { useGrouping: false, maximumSignificantDigits: 12, maximumFractionDigits: 20 });
 }
 
+const definedOnly = (t: TsValues): TsValues => Object.fromEntries(Object.entries(t).filter(([, v]) => v !== undefined && Number.isFinite(v))) as TsValues;
+
 /** Write a .wdr file WinISD can open (dot decimals, SI units). */
-export function writeWdr(d: WdrExport): string {
-  const t = d.ts;
+export function writeWdr(d: WdrExport, air: Air = WINISD_AIR): string {
+  // The full record (Bl, Mms, Cms, Rms worked out from the rest where missing): with only Fs, Qes,
+  // Qms and Vas, WinISD fills its own values in and its impedance and isobaric curves differ
+  // (found in the 9 Nov 2026 run).
+  const t: TsValues = { ...d.ts, ...solveTs(d.ts, 0.03, air).values, ...definedOnly(d.ts) };
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
   const n = winisdNumber;
   const qts = t.qts ?? (t.qms !== undefined && t.qes !== undefined ? (t.qms * t.qes) / (t.qms + t.qes) : undefined);
@@ -131,6 +136,8 @@ export function writeWdr(d: WdrExport): string {
     ["Re", n(t.re)],
     ["Le", n(d.le_mh !== undefined ? d.le_mh / 1000 : undefined)],
     ["fLe", "1000"],
+    // No lossy-inductance correction: Le is a plain inductor, as the app has it.
+    ["KLe", "0"],
     ["BL", n(t.bl)],
     ["Xmax", n(d.xmax_mm !== undefined ? d.xmax_mm / 1000 : undefined)],
     ["Cms", n(t.cms_mm_per_n !== undefined ? t.cms_mm_per_n / 1000 : undefined)],
@@ -189,13 +196,17 @@ export interface WprProject {
   rg: number;
   /** Number of drivers (Box Nd). WinISD wires them in parallel. */
   drivers: number;
-  /** Isobaric (Iso-Barik) loading; not supported yet. */
+  /** Isobaric (Iso-Barik) loading: the pair's coils in series. */
   isobaric: boolean;
   /** Input power (W). */
   power: number;
   /** WinISD's "voice coil inductance" simulator option (VCInd); 0 = Le not simulated. */
   simulateLe: boolean;
   air?: { rho: number; c: number };
+  /** Listening distance (m), Box d. */
+  distance_m: number;
+  /** Voice-coil temperature rise (°C), Box dTVC; WinISD raises Re by alfaVC (0.39 %/°C) per degree. */
+  coilTempRise_C: number;
   /**
    * [Filters]. Only a Butterworth high-pass is recognised so far (filterNtype=1,
    * params "0;1;order;fc;Q"); anything else is counted in `unsupportedFilters`.
@@ -322,6 +333,8 @@ export function parseWpr(text: string): WprProject {
     power: n0(s.get("signalsource"), "P") || 1,
     simulateLe: n0(s.get("simulatoroptions"), "VCInd") !== 0,
     air: rho > 0 && c > 0 ? { rho, c } : undefined,
+    distance_m: n0(box, "d") || 1,
+    coilTempRise_C: n0(box, "dTVC"),
     ...parseFilters(s.get("filters")),
   };
 }
@@ -409,7 +422,7 @@ export function writeWpr(p: WprExport): string {
     b.type === "vented" ? b.port.fb : b.type === "passive-radiator" ? b.fb : b.type === "bandpass" ? (b.rear.port?.fb ?? closedFr) : closedFr;
   const portArea = (v?: WprPortOut) => (v ? v.count * Math.PI * (v.diameter_cm / 200) ** 2 : 0);
   // The [Driver] block, with the air WinISD keeps there.
-  const driver = writeWdr(p.driver).replace(/\r\n$/, "") + `\r\nc=${n(p.air.c)}\r\nroo=${n(p.air.rho)}\r\n`;
+  const driver = writeWdr(p.driver, p.air).replace(/\r\n$/, "") + `\r\nc=${n(p.air.c)}\r\nroo=${n(p.air.rho)}\r\n`;
   const rgb = /^#([0-9a-f]{6})$/i.exec(p.color ?? "")?.[1];
   // WinISD stores colours as Windows COLORREF (0x00BBGGRR).
   const colorref = rgb ? parseInt(rgb.slice(4, 6) + rgb.slice(2, 4) + rgb.slice(0, 2), 16) : 8388608;
