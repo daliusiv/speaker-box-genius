@@ -148,11 +148,11 @@ const highPass = (order: number, freq: number): AppState["highPass"] => ({ ...DE
 /**
  * The sealed / ported / PR guide: a Dayton Audio RSS265HF-4 10″ at its 350 W rating, behind a
  * 24 dB/oct high-pass at 18 Hz (or none), in the boxes the presets give (tested against them):
- * sealed 37.3 L (Qtc 0.707); ported 86.4 L at 22.3 Hz (QB3, as WinISD sizes it) with a 10 cm
+ * sealed 39.8 L (Qtc 0.707, as WinISD sizes it); ported 86.4 L at 22.3 Hz (QB3, as WinISD sizes it) with a 10 cm
  * flared tube, 50.5 cm long (quiet at 350 W; the straight port Size all picks for a cube chuffs);
  * passive radiators, two RSS265-PR in the same 86.4 L with two of their 75 g disks each.
  */
-export const BOX_TYPES = { sealed_l: 37.3, vented_l: 86.4, fb: 22.3, prMass_g: 150 };
+export const BOX_TYPES = { sealed_l: 39.8, vented_l: 86.4, fb: 22.3, prMass_g: 150 };
 function boxTypesExample(filter: boolean) {
   return (): AppState => {
     const s = withDriver({ ...DEFAULT_STATE, power: 350, highPass: { ...highPass(4, 18), on: filter } }, "dayton-audio/rss265hf-4");
@@ -230,11 +230,11 @@ function compareExample(): AppState {
 /**
  * T/S parameters guide: the Dayton DSA215-8 (Qts 0.33, EBP 88) with the RSS210HF-4 (Qts 0.57,
  * EBP 43) as the comparison driver, in the DSA215-8's own boxes as Size all gives them (fixed
- * here; the test checks the presets still give them): sealed 10.4 L (Qtc 0.707) and ported
+ * here; the test checks the presets still give them): sealed 10.7 L (Qtc 0.707) and ported
  * 18 L at 41.7 Hz (QB3, as WinISD sizes it) with a 5 cm port flared 0.8 cm. Driven at 21.7 V, the DSA215-8's
  * rated 80 W into its 5.9 Ω coil, behind a 12 dB/oct high-pass at 30 Hz.
  */
-export const TS_EX = { volts: 21.7, sealed_l: 10.4, vented_l: 18, fb: 41.7, port_cm: 5, flare_cm: 0.8 };
+export const TS_EX = { volts: 21.7, sealed_l: 10.7, vented_l: 18, fb: 41.7, port_cm: 5, flare_cm: 0.8 };
 function tsExample(): AppState {
   const s = withDriver({ ...DEFAULT_STATE, drive: "volts", volts: TS_EX.volts, highPass: highPass(2, 30) }, "dayton-audio/dsa215-8");
   const v = byKind(s, "vented") as Vented;
@@ -284,7 +284,7 @@ function lossesExample(ql: number) {
 
 /**
  * Linkwitz Transform: an RSS265HF-4 in 20 L sealed, with an LT from its own fc and Qtc to
- * 25 Hz at Q 0.707, next to the same box without EQ and the 37 L Qtc 0.707 box; 40 W behind
+ * 25 Hz at Q 0.707, next to the same box without EQ and the 37 L textbook Qtc 0.707 box; 40 W behind
  * a 24 dB/oct high-pass at 18 Hz.
  */
 function ltExample(): AppState {
@@ -302,7 +302,7 @@ function ltExample(): AppState {
   };
 }
 
-/** Isobaric: an RSS265HF-4 single in its Qtc 0.707 box (37.3 L), or an isobaric pair (coils in parallel) in half of it, and in the full box. */
+/** Isobaric: an RSS265HF-4 single in its textbook Qtc 0.707 box (37.3 L), or an isobaric pair (coils in parallel) in half of it, and in the full box. */
 function isoExample(pair: boolean) {
   return (): AppState => {
     const s = withDriver({ ...DEFAULT_STATE, power: 100, highPass: highPass(4, 18) }, "dayton-audio/rss265hf-4");
@@ -349,7 +349,7 @@ function stuffingSealed(losses: boolean) {
       designs: [
         { ...sealed, id: "d1", name: "18 L empty", vb_l: 18 },
         { ...sealed, id: "d2", name: "18 L stuffed (acts as 22.5 L)", vb_l: 18, stuffing: custom(18, 22.5, 100) },
-        { ...sealed, id: "d3", name: "37.3 L empty (Qtc 0.707)", vb_l: 37.3 },
+        { ...sealed, id: "d3", name: "37.3 L empty (textbook Qtc 0.707)", vb_l: 37.3 },
       ],
     };
   };
@@ -390,7 +390,7 @@ function qtcExample(): AppState {
 
 /**
  * The group delay guide: a Dayton Audio RSS315HF-4 12″ sub at 50 W in three boxes: sealed for
- * Qtc 0.707 (36.3 L), a small ported box tuned high (50 L at 42 Hz, peaked) and its low-tuned
+ * Qtc 0.707 (38.9 L), a small ported box tuned high (50 L at 42 Hz, peaked) and its low-tuned
  * Keele alignment (83.5 L at 23.8 Hz), both with a 10 cm port. `subsonic` adds the 18 Hz
  * 24 dB/oct high-pass filter a low-tuned box needs.
  */
@@ -660,7 +660,7 @@ function ampExample(kind: "one" | "parallel" | "series" | "bridged") {
  * box ("Open with ported too": the port it picks, 5 cm flared 1.5 cm, is all that fits) and its
  * sealed box. Fixed here; guideNumbers checks the assistant still gives them.
  */
-export const ASSISTANT_EX = { power: 300, pr_l: 43.5, fb: 23, prMass_g: 723, prCount: 2, sealed_l: 23, port: { diameter_cm: 5, flare_cm: 1.5, length_cm: 23.8 } };
+export const ASSISTANT_EX = { power: 300, pr_l: 43.5, fb: 23, prMass_g: 723, prCount: 2, sealed_l: 23.6, port: { diameter_cm: 5, flare_cm: 1.5, length_cm: 23.8 } };
 function assistantExample(): AppState {
   const s = withDriver({ ...DEFAULT_STATE, power: ASSISTANT_EX.power, highPass: { ...DEFAULT_STATE.highPass, on: false } }, "dayton-audio/rss315ho-44");
   const pr = byKind(DEFAULT_STATE, "pr") as Extract<DesignState, { kind: "pr" }>;

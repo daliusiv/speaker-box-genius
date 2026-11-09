@@ -1,0 +1,39 @@
+{
+  "source": "WinISD 0.7.0.950, read from its panels on 9 Nov 2026 (laptop, computer use). Air: 20 °C, 101325 Pa, 30 % RH (c 343.68 m/s, ρ 1.20095 kg/m³).",
+  "sealed": {
+    "note": "Closed-box wizard. Test drivers Fs 30 Hz, Qms 5, Vas 50 L, Re 6 Ω; Vb as WinISD shows it (two decimals).",
+    "cases": [
+      { "qts": 0.2, "qtc": 0.707, "vb": 4.48 },
+      { "qts": 0.4, "qtc": 0.577, "vb": 48.31 },
+      { "qts": 0.4, "qtc": 0.707, "vb": 24.32 },
+      { "qts": 0.4, "qtc": 1.0, "vb": 9.78 },
+      { "qts": 0.6, "qtc": 0.8, "vb": 66.85 }
+    ]
+  },
+  "qtc": {
+    "note": "Box panel, Fs 30 Hz, Qms 5, Qts 0.40, Vas 50 L, Re 6 Ω, Sd 220 cm², Rg 0.1 Ω, leak (Ql) off; read after editing a field (WinISD shows stale values until then).",
+    "cases": [
+      { "vb": 24.32, "qa": 100, "qtc": 0.705, "fsc": 52.44 },
+      { "vb": 24.32, "qa": null, "qtc": 0.71, "fsc": 52.44 },
+      { "vb": 48.31, "qa": 100, "qtc": 0.576, "fsc": 42.8 },
+      { "vb": 48.31, "qa": null, "qtc": 0.579, "fsc": 42.8 }
+    ]
+  },
+  "driverEditor": {
+    "note": "Driver editor, 'auto calculate unknowns' from Fs, Qms, Qes, Vas, Re, Sd (database values).",
+    "cases": [
+      { "driver": "dayton-audio/rss315hf-4", "mms_g": 193.3, "cms_mm_per_n": 0.2238, "rms": 10.38425, "bl": 14.22838, "n0_pct": 0.2576, "ebp": 53.78 },
+      { "driver": "dayton-audio/rs180-8", "mms_g": 18.0, "cms_mm_per_n": 1.1061, "rms": 3.30354, "bl": 7.83674, "n0_pct": 0.2571, "ebp": 85.0 },
+      { "driver": "sb-acoustics/sb42fhcl75-6", "mms_g": 166.0, "cms_mm_per_n": 0.4508, "rms": 2.59305, "bl": 16.60831, "n0_pct": 0.8746, "ebp": 57.5 },
+      { "driver": "bc-speakers/18ds115-8ohm", "mms_g": 347.9, "cms_mm_per_n": 0.0809, "rms": 15.25234, "bl": 39.51644, "n0_pct": 2.1006, "ebp": 142.86 }
+    ]
+  },
+  "prTuning": {
+    "note": "Passive radiator box Fh, Dayton RSS315-PR (Mms 300 g, Sd 506.7 cm², Vas 78.9 L as WinISD reads it), recalculated after editing the volume.",
+    "cases": [
+      { "vb": 50, "count": 1, "added_g": 32.94, "fb": 30.09 },
+      { "vb": 30, "count": 2, "added_g": 868.24, "fb": 25.03 },
+      { "vb": 80, "count": 1, "added_g": 276.13, "fb": 20.08 }
+    ]
+  }
+}

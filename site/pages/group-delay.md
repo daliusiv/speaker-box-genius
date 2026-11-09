@@ -17,7 +17,7 @@ Every week someone on r/BudgetAudiophile, r/hometheater or r/CarAV says they onl
 
 - **A woofer isn't slow because its cone is heavy.** How quickly a speaker responds is set by its frequency response: its bandwidth and the shape of its roll-off [4].
 - **Ported boxes do have more group delay than sealed ones,** but it's concentrated around the port tuning. Where that lands decides everything.
-- **A ported box tuned low** (here 23.8 Hz) has its delay peak at about 22 Hz, below most music. From 40 Hz up it's within about 1.6 ms of the sealed box.
+- **A ported box tuned low** (here 23.8 Hz) has its delay peak at about 22 Hz, below most music. From 40 Hz up it's within about 1.7 ms of the sealed box.
 - **A ported box tuned high** (here 42 Hz) puts a 15–18 ms delay peak, a +5 dB response peak and about 20 ms of extra ringing right where kick drums and bass lines live. That's the "boomy" ported box people remember.
 - **Whether box-sized delays are audible is uncertain.** The one listening study aimed at ported-box bass put the average threshold at about 7 ms [9]; the room usually rings for far longer than any box [13].
 
@@ -42,7 +42,7 @@ Milliseconds alone are misleading in the bass: one cycle at 40 Hz lasts 25 ms. S
 
 A **Dayton Audio RSS315HF-4** 12-inch subwoofer (Fs 24.2 Hz, Qts 0.39, Vas 84 L) in:
 
-1. **Sealed, Qtc 0.707:** 36.3 L.
+1. **Sealed, Qtc 0.707:** 38.9 L.
 2. **Ported, tuned high:** 50 L at 42 Hz, the kind of small, punchy box often built for cars.
 3. **Ported, tuned low:** Keele's flat alignment for this driver, 83.5 L at 23.8 Hz.
 
@@ -50,23 +50,23 @@ A **Dayton Audio RSS315HF-4** 12-inch subwoofer (Fs 24.2 Hz, Qts 0.39, Vas 84 L)
 
 | | Sealed | Ported, tuned high | Ported, tuned low |
 |---|---|---|---|
-| Box | 36.3 L | 50 L, 42 Hz | 83.5 L, 23.8 Hz |
-| F3 | 46.4 Hz | 35.2 Hz | 23.3 Hz |
-| Response peak | none | **+5.4 dB at 51 Hz** | none |
-| Group delay at 25 Hz | 6.0 ms | 9.4 ms | 25.2 ms |
-| at 30 Hz | 6.0 ms | 10.0 ms | 15.5 ms |
-| at 40 Hz | 5.5 ms (0.22 cycle) | **15.4 ms (0.62 cycle)** | 7.1 ms (0.28 cycle) |
-| at 50 Hz | 4.7 ms | **15.1 ms** | 4.5 ms |
-| at 60 Hz | 3.8 ms | 7.5 ms | 3.2 ms |
+| Box | 38.9 L | 50 L, 42 Hz | 83.5 L, 23.8 Hz |
+| F3 | 45.2 Hz | 35.1 Hz | 23.3 Hz |
+| Response peak | none | **+5.5 dB at 51 Hz** | none |
+| Group delay at 25 Hz | 6.2 ms | 9.5 ms | 24.7 ms |
+| at 30 Hz | 6.1 ms | 10.0 ms | 15.5 ms |
+| at 40 Hz | 5.6 ms (0.22 cycle) | **15.1 ms (0.60 cycle)** | 7.3 ms (0.29 cycle) |
+| at 50 Hz | 4.7 ms | **15.2 ms** | 4.6 ms |
+| at 60 Hz | 3.7 ms | 7.7 ms | 3.2 ms |
 | at 80 Hz | 2.4 ms | 2.9 ms | 2.0 ms |
-| Peak group delay | about 6–7 ms, rising slowly below 20 Hz | **17.6 ms at 45 Hz** | **29.0 ms at 21.6 Hz** |
+| Peak group delay | about 6–7 ms, rising slowly below 20 Hz | **17.4 ms at 45 Hz** | **28.6 ms at 21.6 Hz** |
 
 ![Group delay of the sealed box (blue), the ported box tuned high (orange) and the ported box tuned low (light orange).](img/group-delay.png)
 
 What it shows:
 
-- **The low-tuned box has the biggest peak of the three,** 29 ms, but at 22 Hz. From 40 Hz up it's within 1.6 ms of the sealed box, and above 45 Hz it's slightly *lower*, because it's flat there while the sealed box is already rolling off.
-- **The high-tuned box puts its peak in the middle of the bass:** 15–18 ms from 40 to 50 Hz, where a kick drum's weight sits (roughly 40–100 Hz [14]). It also has a +5.4 dB hump at 51 Hz. That combination is the "one-note" ported box.
+- **The low-tuned box has the biggest peak of the three,** 29 ms, but at 22 Hz. From 40 Hz up it's within 1.7 ms of the sealed box, and above 45 Hz it's slightly *lower*, because it's flat there while the sealed box is already rolling off.
+- **The high-tuned box puts its peak in the middle of the bass:** 15–18 ms from 40 to 50 Hz, where a kick drum's weight sits (roughly 40–100 Hz [14]). It also has a +5.5 dB hump at 51 Hz. That combination is the "one-note" ported box.
 - **Sealed is lowest below 40 Hz,** as you'd expect: it rolls off earliest and most gently.
 
 You'll see posts claiming a badly tuned ported box reaches 25 ms or more on the kick drum. For this driver it's 15–18 ms (about two thirds of a cycle); a different driver or a smaller box can reach more, and a subsonic filter adds a few ms more (see below).
@@ -114,9 +114,9 @@ That's also why the same sub can sound "fast" in one room and "boomy" in another
 
 Real systems rarely use a bare box:
 
-- **A low-tuned ported box needs a subsonic filter** to keep the cone from flapping below tuning (see the [subsonic filter guide](/guides/subsonic-filter/)). With an 18 Hz, 24 dB/octave filter, the low-tuned box's delay is 12.3 ms at 40 Hz and 7.7 ms at 50 Hz, and its peak moves to 57.8 ms at 17.8 Hz.
-- **A sealed sub often gets a filter or EQ too.** With the same filter, the sealed box is at 10.7 ms at 40 Hz. A sealed box equalised for deeper bass gets some of a ported box's group delay back [12]; see the [Linkwitz Transform guide](/guides/linkwitz-transform/).
-- **The high-tuned box with the filter** is at 20.5 ms at 40 Hz.
+- **A low-tuned ported box needs a subsonic filter** to keep the cone from flapping below tuning (see the [subsonic filter guide](/guides/subsonic-filter/)). With an 18 Hz, 24 dB/octave filter, the low-tuned box's delay is 12.5 ms at 40 Hz and 7.7 ms at 50 Hz, and its peak moves to 58.1 ms at 17.6 Hz.
+- **A sealed sub often gets a filter or EQ too.** With the same filter, the sealed box is at 10.8 ms at 40 Hz. A sealed box equalised for deeper bass gets some of a ported box's group delay back [12]; see the [Linkwitz Transform guide](/guides/linkwitz-transform/).
+- **The high-tuned box with the filter** is at 20.3 ms at 40 Hz.
 
 [[Open the three boxes with an 18 Hz subsonic filter|group-delay-subsonic]]
 
@@ -124,11 +124,11 @@ Real systems rarely use a bare box:
 
 The low-tuned box isn't free:
 
-- **Size.** It's 83.5 L, 2.3 times the sealed box, with a 42 cm port.
+- **Size.** It's 83.5 L, 2.1 times the sealed box, with a 42 cm port.
 - **Excursion below tuning.** Without a subsonic filter, the cone unloads below 24 Hz.
 - **Port noise.** A low tuning needs a big port to stay quiet; see the [port chuffing guide](/guides/port-chuffing/).
 
-In return it plays about an octave deeper than the sealed box (F3 23 Hz against 46 Hz) at the same power. A sealed box gets some of that back from room or cabin gain (see the [Qtc guide](/guides/sealed-qtc/) and the [car subwoofer guide](/guides/car-subwoofer/)) or from EQ, at the cost of excursion and amplifier power.
+In return it plays about an octave deeper than the sealed box (F3 23 Hz against 45 Hz) at the same power. A sealed box gets some of that back from room or cabin gain (see the [Qtc guide](/guides/sealed-qtc/) and the [car subwoofer guide](/guides/car-subwoofer/)) or from EQ, at the cost of excursion and amplifier power.
 
 The box tuned high is the one to avoid if you want tight bass: if you need a small ported box, a lower tuning with a smaller peak, or a sealed box, will sound tighter. The same reasoning applies to [passive radiator boxes](/guides/passive-radiator-box/), which behave like ported boxes here. Stuffing a ported box also damps its tuning peak a little; see the [box stuffing guide](/guides/box-stuffing/).
 
@@ -145,7 +145,7 @@ The box tuned high is the one to avoid if you want tight bass: if you need a sma
 
 | Claim | Verdict |
 |---|---|
-| "Ported boxes are slow and muddy" | Only when tuned high with a peak. A low-tuned box is within about 1.6 ms of sealed from 40 Hz up. |
+| "Ported boxes are slow and muddy" | Only when tuned high with a peak. A low-tuned box is within about 1.7 ms of sealed from 40 Hz up. |
 | "Sealed boxes have faster transients" | Sealed has the lowest group delay and the cleanest step response, but from 40 Hz up the difference from a low-tuned ported box is small, and below the thresholds listening tests have found [9]. |
 | "Heavy cones are slow" | No: added mass lowered sensitivity but didn't slow the impulse; bandwidth did [4]. |
 | "Group delay is inaudible in the bass" | Probably for well-designed boxes; the one bass study found an average threshold of about 7 ms [9]. A box tuned high can exceed it. |

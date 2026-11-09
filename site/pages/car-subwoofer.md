@@ -17,7 +17,7 @@ A sub that sounds thin in a living room can shake a car, because the cabin itsel
 
 | If you want… | Build | Why (from the numbers below) |
 |---|---|---|
-| Flat, deep bass from the smallest box | **Sealed**, Qtc 0.7–0.8 | The cabin fills in its roll-off: in-car F3 22.5 Hz from a 28 L box, within 3.1 dB from 30 to 80 Hz |
+| Flat, deep bass from the smallest box | **Sealed**, Qtc 0.7–0.8 | The cabin fills in its roll-off: in-car F3 22.4 Hz from a 28 L box, within 3.2 dB from 30 to 80 Hz |
 | The most output for the watts | **Ported**, tuned 28–33 Hz | 5–7 dB louder at 30–40 Hz, and 6–9 dB more maximum output there |
 | Loud *and* deep | **Ported, tuned low** (high 20s) | Most output at 25 Hz, the smallest hump, the least group delay at 40 Hz |
 | Your sub to survive full power | Either, **with a subsonic filter** | The small sealed box is the one past Xmax here, not the ported ones |
@@ -48,35 +48,35 @@ A **Dayton Audio RSS265HF-4** 10″ sub (Fs 25.6 Hz, Qts 0.45, Vas 54 L, Xmax 12
 
 Both ported boxes use the same 5 × 30 cm slot (150 cm²), so the only difference between them is the tuning.
 
-![In the car: the sealed box (blue) is the flattest; the ported boxes (dark orange at 33 Hz, light orange at 28 Hz) sit 5–7 dB higher at 30–40 Hz with a hump. The dots mark each box's F3 in the car: 22.5, 21.7 and 20.3 Hz.](img/car-spl.png)
+![In the car: the sealed box (blue) is the flattest; the ported boxes (dark orange at 33 Hz, light orange at 28 Hz) sit 5–7 dB higher at 30–40 Hz with a hump. The dots mark each box's F3 in the car: 22.4, 21.6 and 20.2 Hz.](img/car-spl.png)
 
 This is the app's response chart with cabin gain on. The dots on the −3 dB line are the F3 *in the car*: all three boxes reach the low 20s. What separates them is the shape above that. The blue sealed curve peaks only about 5 dB above 0 dB. The two orange curves peak 11–12 dB above it, around 34–37 Hz.
 
 | In the car, 350 W | Sealed 28 L | Ported 45 L, 33 Hz | Ported 45 L, 28 Hz |
 |---|---|---|---|
-| F3 of the box (as WinISD gives it) | 43.1 Hz | 30.0 Hz | 28.8 Hz |
-| F3 in the car | **22.5 Hz** | 21.7 Hz | 20.3 Hz |
-| 25 Hz | 110.2 dB | 113.7 dB | **116.6 dB** |
-| 30 Hz | 113.8 dB | 119.8 dB | **120.8 dB** |
-| 40 Hz | 115.2 dB | **122.2 dB** | 120.4 dB |
-| 60 Hz | 113.6 dB | 116.6 dB | 115.5 dB |
-| 80 Hz | 112.1 dB | 113.4 dB | 112.9 dB |
-| Peak above the 80 Hz level | **+3.1 dB** | +9.1 dB (at 37 Hz) | +8.5 dB (at 34 Hz) |
-| Peak cone travel (Xmax 12.3 mm) | **13.6 mm** at 34 Hz | 11.3 mm at 24 Hz | 12.3 mm at 41 Hz |
-| Peak port air speed | — | 14.8 m/s | 11.3 m/s |
+| F3 of the box (as WinISD gives it) | 42.4 Hz | 29.9 Hz | 28.8 Hz |
+| F3 in the car | **22.4 Hz** | 21.6 Hz | 20.2 Hz |
+| 25 Hz | 110.1 dB | 113.6 dB | **116.4 dB** |
+| 30 Hz | 113.7 dB | 119.6 dB | **120.6 dB** |
+| 40 Hz | 115.1 dB | **122.1 dB** | 120.4 dB |
+| 60 Hz | 113.5 dB | 116.5 dB | 115.5 dB |
+| 80 Hz | 111.9 dB | 113.2 dB | 112.7 dB |
+| Peak above the 80 Hz level | **+3.2 dB** | +9.1 dB (at 37 Hz) | +8.5 dB (at 34 Hz) |
+| Peak cone travel (Xmax 12.3 mm) | **13.5 mm** at 34 Hz | 11.2 mm at 24 Hz | 12.2 mm at 41 Hz |
+| Peak port air speed | — | 14.4 m/s | 11.0 m/s |
 | Port length (5 × 30 cm slot) | — | 81.2 cm | 116.7 cm |
 
 Now take the cabin away. Same boxes, same 350 W, same filter, out of the car:
 
-![Out of the car: the sealed box's F3 is 43.1 Hz and it is 15 dB down at 25 Hz; the ported boxes reach 30.0 and 28.8 Hz and are nearly flat above that.](img/car-out-of-car.png)
+![Out of the car: the sealed box's F3 is 42.4 Hz and it is 14 dB down at 25 Hz; the ported boxes reach 29.9 and 28.8 Hz and are nearly flat above that.](img/car-out-of-car.png)
 
 | Out of the car, 350 W | Sealed 28 L | Ported 45 L, 33 Hz | Ported 45 L, 28 Hz |
 |---|---|---|---|
-| 25 Hz | 95.4 dB | 98.9 dB | 101.8 dB |
-| 30 Hz | 100.9 dB | 106.9 dB | 107.8 dB |
-| 40 Hz | 105.9 dB | 112.9 dB | 111.2 dB |
-| 80 Hz | 110.2 dB | 111.6 dB | 111.0 dB |
-| Peak above the 80 Hz level | +0.2 dB | +1.6 dB | +0.4 dB |
+| 25 Hz | 95.3 dB | 98.8 dB | 101.6 dB |
+| 30 Hz | 100.8 dB | 106.7 dB | 107.6 dB |
+| 40 Hz | 105.9 dB | 112.8 dB | 111.1 dB |
+| 80 Hz | 110.1 dB | 111.4 dB | 110.9 dB |
+| Peak above the 80 Hz level | +0.2 dB | +1.7 dB | +0.5 dB |
 
 Out of the car the ported boxes are the flat ones and the sealed box is the thin one. In the car it flips. The boxes didn't change; the room did. That's the most useful thing to take from this guide: **always design a car sub with cabin gain switched on**, or you'll pick the box that looks best in a living room.
 
@@ -86,31 +86,31 @@ Out of the car the ported boxes are the flat ones and the sealed box is the thin
 
 Cabin gain changes what you *hear*. It doesn't change what the cone *does*: the excursion and port speed are exactly the same in the car and out of it (the app's test suite checks this). So the cabin can't save a box that's past its limits.
 
-![Cone excursion at 350 W: the sealed box (blue) rises above the 12.3 mm Xmax line between about 28 and 45 Hz, peaking at 13.6 mm at 34 Hz. The 33 Hz ported box (dark orange) stays under, with its dip at the tuning; the 28 Hz box (light orange) just touches Xmax at 41 Hz.](img/car-excursion.png)
+![Cone excursion at 350 W: the sealed box (blue) rises above the 12.3 mm Xmax line between about 28 and 45 Hz, peaking at 13.5 mm at 34 Hz. The 33 Hz ported box (dark orange) stays under, with its dip at the tuning; the 28 Hz box (light orange) just touches Xmax at 41 Hz.](img/car-excursion.png)
 
-On the excursion chart the blue sealed curve is the only one that crosses the red Xmax line, peaking at **13.6 mm** at 34 Hz, right where the cabin gain makes it sound strongest. It reaches Xmax at about **284 W**. The ported boxes have their dips at the tuning frequency (the port is doing the work there) and stay under, with the 28 Hz box exactly at 12.3 mm at 41 Hz.
+On the excursion chart the blue sealed curve is the only one that crosses the red Xmax line, peaking at **13.5 mm** at 34 Hz, right where the cabin gain makes it sound strongest. It reaches Xmax at about **289 W**. The ported boxes have their dips at the tuning frequency (the port is doing the work there) and stay under, with the 28 Hz box just under at 12.2 mm at 41 Hz.
 
 ![Maximum SPL in the car, first limit reached: the sealed box (blue) is capped by Xmax (red bar) from 10 to 45 Hz at 112–115 dB; the ported boxes reach 120–122 dB between 28 and 45 Hz, limited by power (grey) there.](img/car-maxspl.png)
 
-The **Max SPL** chart shows the ceiling, cabin gain included. The bars under it say which limit hits first. The sealed box is cone-limited (red) all the way up to 45 Hz and tops out at **112.0 dB at 25 Hz, 113.3 at 30, 114.7 at 40**. More amplifier won't raise that; only more cone area or a bigger box will. The 28 Hz ported box reaches **120.3 dB at 25 Hz and 122.0 at 30**, limited by power, not by the cone.
+The **Max SPL** chart shows the ceiling, cabin gain included. The bars under it say which limit hits first. The sealed box is cone-limited (red) all the way up to 45 Hz and tops out at **112.0 dB at 25 Hz, 113.3 at 30, 114.7 at 40**. More amplifier won't raise that; only more cone area or a bigger box will. The 28 Hz ported box reaches **120.1 dB at 25 Hz and 121.8 at 30**, limited by power, not by the cone.
 
 | Most output in the car (first limit) | Sealed 28 L | Ported 45 L, 33 Hz | Ported 45 L, 28 Hz |
 |---|---|---|---|
-| 25 Hz | 112.0 dB (Xmax) | 114.5 dB (Xmax) | **120.3 dB** (power) |
-| 30 Hz | 113.3 dB (Xmax) | 121.0 dB (power) | **122.0 dB** (power) |
-| 40 Hz | 114.7 dB (Xmax) | **122.3 dB** (power) | 120.5 dB (Xmax) |
+| 25 Hz | 112.0 dB (Xmax) | 114.5 dB (Xmax) | **120.1 dB** (power) |
+| 30 Hz | 113.3 dB (Xmax) | 120.8 dB (power) | **121.8 dB** (power) |
+| 40 Hz | 114.7 dB (Xmax) | **122.2 dB** (power) | 120.5 dB (Xmax) |
 
 ## Forum myths, checked
 
-**"Sealed for sound quality, ported for SPL."** Half true. The ported boxes are louder: 5–7 dB at 30–40 Hz, and 6–9 dB more maximum output. But the sound-quality gap is mostly the 8–9 dB hump, and out of the car the ported boxes are actually the flatter ones (+1.6 and +0.4 dB against the sealed box's 15 dB drop at 25 Hz). The hump comes from stacking cabin gain on a box that's already flat lower down. As one caraudio.com regular put it, a response that's peaky before the transfer function stays peaky after it [6]. You can EQ a hump down; you can't EQ more cone travel into a sealed box that's at Xmax. *Proof: the response chart with Room / cabin gain on and off.*
+**"Sealed for sound quality, ported for SPL."** Half true. The ported boxes are louder: 5–7 dB at 30–40 Hz, and 6–9 dB more maximum output. But the sound-quality gap is mostly the 8–9 dB hump, and out of the car the ported boxes are actually the flatter ones (+1.7 and +0.5 dB against the sealed box's 14 dB drop at 25 Hz). The hump comes from stacking cabin gain on a box that's already flat lower down. As one caraudio.com regular put it, a response that's peaky before the transfer function stays peaky after it [6]. You can EQ a hump down; you can't EQ more cone travel into a sealed box that's at Xmax. *Proof: the response chart with Room / cabin gain on and off.*
 
-**"Ported boxes are boomy."** It's the tuning and the cabin, not the port. Tuning lower, from 33 to 28 Hz, moves the hump down (37 → 34 Hz), makes it smaller (+9.1 → +8.5 dB) and *cuts* the group delay at 40 Hz from 24.2 to 19.4 ms (sealed: 14.6 ms; all three include the subsonic filter's own delay). A small box tuned high is what gives ported boxes their reputation. Builders who measure their cars have tuned ported boxes as low as 26 Hz to get a nearly flat in-car response [7]. *Proof: the response chart, and the Group delay tab.* More in the [group delay guide](/guides/group-delay/).
+**"Ported boxes are boomy."** It's the tuning and the cabin, not the port. Tuning lower, from 33 to 28 Hz, moves the hump down (37 → 34 Hz), makes it smaller (+9.1 → +8.5 dB) and *cuts* the group delay at 40 Hz from 24.3 to 19.6 ms (sealed: 14.8 ms; all three include the subsonic filter's own delay). A small box tuned high is what gives ported boxes their reputation. Builders who measure their cars have tuned ported boxes as low as 26 Hz to get a nearly flat in-car response [7]. *Proof: the response chart, and the Group delay tab.* More in the [group delay guide](/guides/group-delay/).
 
 > **Common trap: "sealed subs handle more power."** The trapped air protects a sealed cone below its resonance, but in its passband the cone moves more than a ported cone near tuning. Here the sealed box is the only one past Xmax at 350 W, at 34 Hz. The trap the other way is real too: below tuning a ported cone is barely held at all. With no subsonic filter at 350 W, both ported boxes reach about **36 mm** at 15 Hz, three times Xmax; the sealed box reaches 16 mm. JBL's manuals list "reduced mechanical power handling below the enclosure's resonance" as a ported trade-off for the same reason [1]. *Proof: the Excursion chart, with the High-pass filter on and off.* See the [subsonic filter guide](/guides/subsonic-filter/).
 
 **"Cabin gain means you don't need to go low."** Cabin gain lifts SPL, not cone travel or port speed, so a sub tuned high still unloads below tuning, and a sealed box still needs the same excursion for the same note. It also doesn't add output that isn't there: the sealed box's 25 Hz *ceiling* is 112.0 dB in the car whatever the amp. *Proof: the Excursion and Port speed charts don't move when you switch the cabin on.*
 
-**"Size a car sealed box for a Qtc of 0.707, like at home."** You can go smaller. Dickason's *Loudspeaker Design Cookbook* suggests a sealed box with Q 0.71 and a resonance around 55 Hz for a typical car's transfer function [3]; this 28 L box has Qtc 0.77 and Fc 43.8 Hz and is still flat in a 2.5 m cabin. Go much higher than Qtc 0.9 and you trade the flat response for a peak around Fc, and the box still needs the same cone travel.
+**"Size a car sealed box for a Qtc of 0.707, like at home."** You can go smaller. Dickason's *Loudspeaker Design Cookbook* suggests a sealed box with Q 0.71 and a resonance around 55 Hz for a typical car's transfer function [3]; this 28 L box has Qtc 0.79 and Fc 43.8 Hz and is still flat in a 2.5 m cabin. Go much higher than Qtc 0.9 and you trade the flat response for a peak around Fc, and the box still needs the same cone travel.
 
 ## Things the simulation doesn't know
 

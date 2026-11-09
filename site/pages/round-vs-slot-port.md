@@ -18,7 +18,7 @@ It's a regular on car-audio and DIY forums. Someone puts the box into a port cal
 - **To a calculator, a slot is just a round port of the same area.** WinISD, Hornresp and this app all give it the end correction of a round tube, by default 0.732 × the diameter of a circle with the same area [1][2][3]. So the same area and tuning give nearly the same length, about 42 cm for the slot and 45 cm for the flared tube here.
 - **A slot built along the box walls doesn't behave like a free tube.** Three of its four walls carry on past its inner end, so more air moves with the port. The port acts longer than it is, and the box tunes lower. No simulator can work out by how much. This app gives a slot a likely tuning range instead (see [Doing it in the app](#doing-it-in-the-app)).
 - **How much lower is uncertain.** Rules of thumb range from adding half the slot's height (about 0.5 Hz here) to the forums' K = 2.227 "shelf vent" figure (4.4 Hz here, from 35 to 30.6 Hz). Builders typically report 3–4 Hz, or a port that ends up 10–15 % shorter than calculated [4][5][6]. Build it to the calculated length, measure, and trim.
-- **A plain slot gets noisy sooner than a flared round port**, mainly because of its sharp edges, not its shape. At this sub's 350 W rating the slot reaches 21.9 m/s, over the 17 m/s line, and loses 1.7 dB to port compression. The flared port's air slows to 11.2 m/s at its mouths and loses 0.7 dB. Rounding the slot's edges closes much of the gap [7][8].
+- **A plain slot gets noisy sooner than a flared round port**, mainly because of its sharp edges, not its shape. At this sub's 350 W rating the slot reaches 21.6 m/s, over the 17 m/s line, and loses 1.7 dB to port compression. The flared port's air slows to 11.0 m/s at its mouths and loses 0.7 dB. Rounding the slot's edges closes much of the gap [7][8].
 - **Every port is also a pipe.** Its first pipe resonance is near the speed of sound ÷ (2 × effective length): about **347 Hz** for both ports here, because the same tuning and area need the same effective length. The 500–700 Hz resonances you see quoted come from shorter ports (a 4″ tube 20 cm long resonates at about 625 Hz). Behind a subwoofer's 80 Hz low-pass filter it's about 50 dB down. In a speaker that plays the midrange, it's a real peak.
 
 ## The setup
@@ -35,7 +35,7 @@ The flared tube is longer than the slot for the same tuning because its flared e
 
 The red port is the orange slot as it may behave when built along the box walls, with the forums' worst-case K. The end correction is one setting for every port, so to show both in one project the extra end correction is entered as extra length: (2.227 − 0.732) × 10.16 cm = 15.2 cm, on a plain tube of the same area, which tunes, moves air and resonates the same in the model. The orange slot's own **Along the walls** note gives the likelier range, 32.5–34.4 Hz.
 
-![The three ports at 350 W. Left: impedance. Both peaks, and the dip between them that marks the tuning, move down about 4 Hz for the slot with K = 2.227 (red), while the round port and the slot as calculated (blue and orange) overlap. Right: port air speed. The slot (orange) peaks at 21.9 m/s, over the 17 m/s line; the flared port (blue), measured at its mouths, peaks at 11.2 m/s.](img/port-shape.png)
+![The three ports at 350 W. Left: impedance. Both peaks, and the dip between them that marks the tuning, move down about 4 Hz for the slot with K = 2.227 (red), while the round port and the slot as calculated (blue and orange) overlap. Right: port air speed. The slot (orange) peaks at 21.6 m/s, over the 17 m/s line; the flared port (blue), measured at its mouths, peaks at 11.0 m/s.](img/port-shape.png)
 
 ## Why a slot along the walls tunes lower
 
@@ -81,8 +81,8 @@ In the app, at 350 W:
 
 | | Air speed | Port compression | Max SPL at 30 / 35 / 40 Hz |
 |---|---|---|---|
-| 4″ round, flared | 11.2 m/s at the flared mouths | −0.7 dB | 105.8 / 109.9 / 112.4 dB (coil rating) |
-| 8:1 slot, sharp-edged | 21.9 m/s | −1.7 dB | 102.3 / 106.3 / 109.8 dB (port speed) |
+| 4″ round, flared | 11.0 m/s at the flared mouths | −0.7 dB | 105.7 / 109.7 / 112.3 dB (coil rating) |
+| 8:1 slot, sharp-edged | 21.6 m/s | −1.7 dB | 102.3 / 106.3 / 109.8 dB (port speed) |
 
 How to read this:
 - **The flared port isn't moving less air.** Its narrow middle runs at about the same speed as the slot. The app judges a flared port at its wider mouths, where the noise starts, so its line sits lower.

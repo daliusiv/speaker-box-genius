@@ -36,34 +36,34 @@ The impedance and sensitivity depend on how the two voice coils are wired, which
 
 ## The worked example
 
-A **Dayton Audio RSS265HF-4** 10″ subwoofer (4 Ω, 350 W) in a sealed box for Qtc 0.707: **37.3 L** for one driver, **18.7 L** for an isobaric pair. Behind a 24 dB/oct high-pass at 18 Hz:
+A **Dayton Audio RSS265HF-4** 10″ subwoofer (4 Ω, 350 W) in its textbook Qtc 0.707 sealed box: **37.3 L** for one driver, **18.7 L** for an isobaric pair. (The app's Qtc 0.707 preset, sized like WinISD's, makes them a little bigger: 39.8 L and 19.9 L.) Behind a 24 dB/oct high-pass at 18 Hz:
 
 | | Single, 37.3 L | Pair (coils parallel), 18.7 L | Pair (coils series), 18.7 L |
 |---|---|---|---|
-| F3 / Qtc | 42.0 Hz / 0.707 | 42.0 Hz / 0.707 | 42.0 Hz / 0.707 |
+| F3 / Qtc | 41.1 Hz / 0.72 | 40.3 Hz / 0.74 | 41.5 Hz / 0.71 |
 | Impedance (lowest above 60 Hz) | 3.6 Ω | **1.8 Ω** | 7.1 Ω |
-| Output at 60 Hz, **10 V** | 98.3 dB | 98.3 dB | **92.3 dB** |
-| Output at 60 Hz, **100 W** | 103.7 dB | **100.7 dB** | **100.7 dB** |
-| Cone excursion at 100 W | 9.0 mm | 6.4 mm | 6.4 mm |
-| **Maximum SPL at 25 / 30 / 40 Hz** | 97.4 / 100.4 / 105.4 dB | **the same** | **the same** |
-| Amplifier needed at 30 Hz to reach it | 26 V, 3.0 A | 26 V, **5.9 A** | **52 V**, 3.0 A |
+| Output at 60 Hz, **10 V** | 98.2 dB | 98.1 dB | **92.2 dB** |
+| Output at 60 Hz, **100 W** | 103.6 dB | **100.5 dB** | **100.7 dB** |
+| Cone excursion at 100 W | 8.9 mm | 6.2 mm | 6.3 mm |
+| **Maximum SPL at 25 / 30 / 40 Hz** | 97.2 / 100.4 / 105.4 dB | **the same** | **the same** |
+| Amplifier needed at 30 Hz to reach it | 26 V, 3.0 A | 27 V, **5.9 A** | **53 V**, 3.0 A |
 
-![The isobaric pair in 18.7 L (blue) has exactly the single driver's response in 37.3 L (F3 42.0 Hz, Qtc 0.707). In the full 37.3 L box (orange) the pair is over-damped (Qtc 0.59): a softer, more gradual corner.](img/iso-spl.png)
+![The isobaric pair in 18.7 L (blue, F3 40.3 Hz) has almost exactly the single driver's response in 37.3 L (F3 40.3 Hz and Qtc 0.74, against 41.1 Hz and 0.72). In the full 37.3 L box (light blue, F3 39.7 Hz) the pair is over-damped (Qtc 0.62): a softer, more gradual corner.](img/iso-spl.png)
 
 ## What the numbers say
 
-**The box really is half the size,** for exactly the same response: F3 42.0 Hz and Qtc 0.707 either way.
+**The box really is half the size,** for almost exactly the same response: F3 41.1 Hz and Qtc 0.72 for one driver, 40.3 Hz and 0.74 for the pair in parallel, 41.5 Hz and 0.71 in series. The small differences come from the 0.1 Ω of amplifier and cable resistance, which weighs more against the parallel pair's halved impedance than against the series pair's doubled one.
 
 **The output per watt is 3 dB lower,** however you wire the coils. You're powering two motors to move one cone's worth of air [1]. At 100 W, the pair plays 3 dB quieter than the single driver.
 
 **The output per volt depends on the wiring:**
 
-- **Coils in parallel:** the same output per volt as one driver, but the impedance **halves** (here to 1.8 Ω), so the amplifier delivers twice the current and twice the power for the same voltage [3]. Check your amplifier is stable into that load.
+- **Coils in parallel:** about the same output per volt as one driver, but the impedance **halves** (here to 1.8 Ω), so the amplifier delivers twice the current and twice the power for the same voltage [3]. Check your amplifier is stable into that load.
 - **Coils in series:** the impedance **doubles** (7.1 Ω), and the output per volt is **6 dB lower** [4]. You need twice the voltage for the same output; into twice the impedance, that's twice the power, the same 3 dB-per-watt penalty.
 
-**The maximum output is the same as one driver** in its full-size box. Only one cone radiates, with the same area and the same Xmax, so it hits the same excursion limit at the same SPL [5]. The pair needs twice the power to get there: at 30 Hz, the same 26 V but twice the current (5.9 A) with the coils in parallel, or twice the voltage (52 V) with them in series. It can also **handle** twice the power, so thermally it has more headroom. Switch the app's **Max SPL** chart to **Volts** or **Amps** to see what your amplifier has to deliver at each frequency.
+**The maximum output is the same as one driver** in its full-size box. Only one cone radiates, with the same area and the same Xmax, so it hits the same excursion limit at the same SPL [5]. The pair needs twice the power to get there: at 30 Hz, about the same voltage (27 V) but twice the current (5.9 A) with the coils in parallel, or twice the voltage (53 V) with them in series. It can also **handle** twice the power, so thermally it has more headroom. Switch the app's **Max SPL** chart to **Volts** or **Amps** to see what your amplifier has to deliver at each frequency.
 
-**The cone moves less at the same power** (6.4 mm instead of 9.0 mm at 100 W), because the power is shared between two motors.
+**The cone moves less at the same power** (6.2–6.3 mm instead of 8.9 mm at 100 W), because the power is shared between two motors.
 
 So, compared with one driver in its full box, an isobaric pair gives you: **half the box**, the **same response**, the **same maximum output**, **3 dB less per watt**, **double the power handling**, and a **lower or higher impedance**, for the price of a second driver.
 
@@ -73,7 +73,7 @@ If you have room for two drivers, compare the pair with two drivers in a normal 
 
 ## Don't put the pair in the old box
 
-A common mistake is to add a second driver isobarically to an existing box. The pair needs half the volume; in the original box it's like a single driver in a box twice its correct size. In the example, the pair in the full 37.3 L has a **Qtc of 0.59**: an over-damped, gently drooping response instead of the flat Qtc 0.707 it was designed for.
+A common mistake is to add a second driver isobarically to an existing box. The pair needs half the volume; in the original box it's like a single driver in a box twice its correct size. In the example, the pair in the full 37.3 L has a **Qtc of 0.62**: an over-damped, gently drooping response instead of the flat one (Qtc about 0.7) it was designed for.
 
 ## Building one
 

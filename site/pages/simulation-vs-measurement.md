@@ -34,13 +34,13 @@ How much does that matter? Take the worked example: a **Dayton Audio DSA215-8** 
 
 | Driver | F3 | Response at 40 Hz |
 |---|---|---|
-| As the datasheet | 50.8 Hz | −6.4 dB |
-| Fs 15 % higher | 64.9 Hz | −8.6 dB |
+| As the datasheet | 50.6 Hz | −6.4 dB |
+| Fs 15 % higher | 64.1 Hz | −8.6 dB |
 | Fs 15 % lower | 41.6 Hz | −3.8 dB |
-| Vas 25 % lower | 43.5 Hz | −4.3 dB |
-| Vas 25 % higher | 56.6 Hz | −8.0 dB |
-| Qes 15 % higher | 49.1 Hz | −6.2 dB |
-| Qes 15 % lower | 55.5 Hz | −6.6 dB |
+| Vas 25 % lower | 43.4 Hz | −4.3 dB |
+| Vas 25 % higher | 56.3 Hz | −8.0 dB |
+| Qes 15 % higher | 48.9 Hz | −6.2 dB |
+| Qes 15 % lower | 54.7 Hz | −6.6 dB |
 
 ![The same box with the datasheet driver (solid) and a sample with Fs 15 % higher (dashed): within tolerance, but with an F3 14 Hz higher.](img/mismatch-spl.png)
 
@@ -92,7 +92,7 @@ Three Hertz of tuning error from volume alone. Stuffing works the other way: fib
 
 Every box leaks a little air (through the driver's dust cap and surround, gaskets and terminal cups), absorbs some energy in its walls and stuffing, and loses some in the port. Small described these as three Q values: leakage QL, absorption QA and port loss QP [7]. A simulation needs a guess for them, and the usual guess (QL = 7 in the classic texts [8], 10 in WinISD and in this app) may not be your box.
 
-For the example box, changing QL from 10 to 5 raises the F3 from 50.8 Hz to 55.3 Hz and costs about 1 dB around the tuning. See [the box losses guide](/guides/box-losses/) for the whole story, including how to measure your box's QL.
+For the example box, changing QL from 10 to 5 raises the F3 from 50.6 Hz to 54.9 Hz and costs about 1 dB around the tuning. See [the box losses guide](/guides/box-losses/) for the whole story, including how to measure your box's QL.
 
 ## 7. Voice-coil heating
 

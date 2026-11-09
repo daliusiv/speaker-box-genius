@@ -1,4 +1,4 @@
-import { portLengthForFb, ventedFb, writeWpr, type WprExport, type WprPortOut } from "@sbg/engine";
+import { passiveRadiatorModel, portLengthForFb, prFb, ventedFb, writeWpr, type WprExport, type WprPortOut } from "@sbg/engine";
 import { airOf, builtVbOf, colorOf, dvcFactors, endCorrectionOf, lossesFor, solveDriver, switchDrive } from "./sim.ts";
 import type { AppState, DesignState, PortFields } from "./state.ts";
 import { stuffFactor } from "./stuffing.ts";
@@ -53,7 +53,13 @@ export function wprFor(s: AppState, d: DesignState): { text: string; notes: stri
   if (d.kind === "vented") box = { type: "vented", vb_l: vb, port: portOut(d, vb) };
   else if (d.kind === "pr") {
     if (d.extra.length > 0) notes.push("only the first group of passive radiators is written (WinISD has one)");
-    box = { type: "passive-radiator", vb_l: vb, fb: d.targetFb, count: d.count, addedMass_g: d.addedMass_g, pr: d.params };
+    // WinISD takes a PR's compliance from its Vas: write the Vas of the compliance the app uses (a
+    // datasheet's Cms and Vas often disagree a little, and the app prefers Cms), and the tuning
+    // that gives, which WinISD shows until it recalculates.
+    const m = passiveRadiatorModel(d.params, 0, air);
+    const vas_l = m.cmp * air.rho * air.c * air.c * m.sd * m.sd * 1000;
+    const fb = prFb(vb, d.params, d.count, d.addedMass_g, air);
+    box = { type: "passive-radiator", vb_l: vb, fb, count: d.count, addedMass_g: d.addedMass_g, pr: { ...d.params, vas_l } };
   } else if (d.kind === "bandpass") {
     const bl = d.losses;
     const front = { vb_l: d.frontVb_l, port: portOut(d.front, d.frontVb_l), losses: bl ? bl.front : losses };

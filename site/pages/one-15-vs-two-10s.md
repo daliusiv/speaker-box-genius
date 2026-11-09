@@ -20,10 +20,10 @@ This guide puts one 15″ and two 10″ from the same Dayton Audio Reference ser
 | | One 15″ | Two 10″ (parallel, 2 Ω) |
 |---|---|---|
 | Below about 40 Hz | **+2.5 dB** (sealed): more displacement | |
-| Above about 43 Hz | | **up to +1.7 dB**: more power handling, more current |
+| Above about 43 Hz | | **up to +1.6 dB**: more power handling, more current |
 | Near a ported box's tuning | same: the port is the limit | same |
-| Sealed box for Qtc 0.707 | 123.5 L | **74.5 L** |
-| On an amplifier not rated for 2 Ω (pair in series, sealed) | **+3.3 to +5.2 dB** | |
+| Sealed box for Qtc 0.707 | 133.3 L | **79.6 L** |
+| On an amplifier not rated for 2 Ω (pair in series, sealed) | **+3.1 to +5.2 dB** | |
 
 ## The drivers
 
@@ -67,11 +67,11 @@ A **24 dB/octave subsonic filter at 18 Hz** protects both. The amplifier is one 
 
 ![Both at 28.3 V in dB SPL: the 15″ solid, the two 10″ dashed; blue the 100 L sealed box, orange the 150 L ported box. The pair is about 2 dB louder at 80 Hz in either box.](img/subs-spl.png)
 
-**At the same voltage, the pair is louder: 113.9 against 111.8 dB at 80 Hz** in the sealed box. That's mostly not efficiency. Per watt they're within 0.4 dB (87.0 and 87.4 dB/W into Re). The 2 Ω pair takes about 458 W from the same 28.3 V, the 15 about 267 W: 2.3 dB more power. In the same box the 15 goes deeper: F3 34.3 Hz (Qtc 0.76) against 41.7 Hz (Qtc 0.65), because its Vas is twice the pair's.
+**At the same voltage, the pair is louder: 113.6 against 111.6 dB at 80 Hz** in the sealed box. That's mostly not efficiency. Per watt they're within 0.2 dB (86.7 and 86.9 dB/W into Re, after the 0.1 Ω of amplifier and cable). The 2 Ω pair takes about 458 W from the same 28.3 V, the 15 about 267 W: 2.3 dB more power. In the same box the 15 goes deeper: F3 33.6 Hz (Qtc 0.77) against 39.8 Hz (Qtc 0.68), because its Vas is twice the pair's.
 
-![Cone excursion at 28.3 V: the 15″ (solid) stays under its 14 mm Xmax in both boxes; the two 10″ (dashed) pass their 12.3 mm, 14.9 mm at 24 Hz sealed and 14.2 mm at 17 Hz ported.](img/subs-excursion.png)
+![Cone excursion at 28.3 V: the 15″ (solid) stays under its 14 mm Xmax in both boxes; the two 10″ (dashed) pass their 12.3 mm, 14.6 mm at 24 Hz sealed and 14.0 mm at 17 Hz ported.](img/subs-excursion.png)
 
-**At the same 28.3 V, the 10s run out of cone first.** On the **Excursion** chart each driver has its own Xmax line ("Xmax 14 · vs 12.3 mm"). The pair reaches 14.9 mm at 24 Hz in the sealed box. The 15 reaches 11.6 mm and has 2.4 mm in hand. The pair's extra current also pushes the shared port harder: 22.0 m/s against 14.9 m/s.
+**At the same 28.3 V, the 10s run out of cone first.** On the **Excursion** chart each driver has its own Xmax line ("Xmax 14 · vs 12.3 mm"). The pair reaches 14.6 mm at 24 Hz in the sealed box. The 15 reaches 11.4 mm and has 2.6 mm in hand. The pair's extra current also pushes the shared port harder: 21.1 m/s against 14.5 m/s.
 
 ## Maximum output, and what stops each one
 
@@ -87,11 +87,11 @@ The **Max SPL** chart lets each go to its first limit, and the four bars under i
 | 25 Hz | 105.7 dB (Xmax) | 103.2 dB (Xmax) | 15″ +2.5 dB |
 | 30 Hz | 108.9 dB (Xmax) | 106.4 dB (Xmax) | 15″ +2.5 dB |
 | 35 Hz | 110.9 dB (amp) | 109.1 dB (Xmax) | 15″ +1.8 dB |
-| 40 Hz | 112.1 dB (amp) | 111.4 dB (Xmax) | 15″ +0.7 dB |
-| 45 Hz | 112.9 dB (amp) | 113.4 dB (power) | 10s +0.5 dB |
-| 50 Hz | 113.4 dB (amp) | 114.1 dB (power) | 10s +0.7 dB |
-| 60 Hz | 113.9 dB (amp) | 115.0 dB (power) | 10s +1.1 dB |
-| 80 Hz | 114.2 dB (amp) | 115.8 dB (power) | **10s +1.6 dB** |
+| 40 Hz | 112.0 dB (amp) | 111.4 dB (Xmax) | 15″ +0.6 dB |
+| 45 Hz | 112.8 dB (amp) | 113.3 dB (power) | 10s +0.5 dB |
+| 50 Hz | 113.2 dB (amp) | 114.0 dB (power) | 10s +0.8 dB |
+| 60 Hz | 113.7 dB (amp) | 114.8 dB (power) | 10s +1.1 dB |
+| 80 Hz | 114.0 dB (amp) | 115.4 dB (power) | **10s +1.4 dB** |
 
 **150 L ported, 22 Hz:**
 
@@ -99,11 +99,11 @@ The **Max SPL** chart lets each go to its first limit, and the four bars under i
 |---|---|---|---|
 | 20 Hz | 106.5 dB (port) | 106.5 dB (port) | same |
 | 25 Hz | 112.3 dB (port) | 112.3 dB (port) | same |
-| 30 Hz | 114.6 dB (amp) | 113.0 dB (Xmax) | **15″ +1.6 dB** |
-| 40 Hz | 115.2 dB (amp) | 114.6 dB (Xmax) | 15″ +0.6 dB |
-| 45 Hz | 115.1 dB (amp) | 115.8 dB (power) | 10s +0.7 dB |
-| 60 Hz | 114.9 dB (amp) | 116.1 dB (power) | 10s +1.2 dB |
-| 80 Hz | 114.6 dB (amp) | 116.3 dB (power) | **10s +1.7 dB** |
+| 30 Hz | 114.5 dB (amp) | 113.0 dB (Xmax) | **15″ +1.5 dB** |
+| 40 Hz | 115.1 dB (amp) | 114.6 dB (Xmax) | 15″ +0.5 dB |
+| 45 Hz | 115.0 dB (amp) | 115.7 dB (power) | 10s +0.7 dB |
+| 60 Hz | 114.7 dB (amp) | 115.9 dB (power) | 10s +1.2 dB |
+| 80 Hz | 114.4 dB (amp) | 115.9 dB (power) | **10s +1.5 dB** |
 
 (1 m, half space.)
 
@@ -113,19 +113,19 @@ The difference chart puts the tables in one picture:
 
 - **Displacement wins the deep bass.** Sealed, the 15 is 2.5 dB ahead from 18 to 31 Hz, the displacement ratio, until the amplifier caps it.
 - **The lines cross at 43 Hz** in both boxes.
-- **The pair's lead peaks at 1.7 dB around 85 Hz.** That's where it reaches the amplifier's 16.6 A and the lead starts to shrink.
-- **Near the tuning the port decides.** From 18 to 27 Hz both are port-limited and identical, because they share the port. A bigger port helps both (see the [port chuffing guide](/guides/port-chuffing/)).
+- **The pair's lead peaks at about 1.6 dB around 93 Hz.** That's where it reaches the amplifier's 16.6 A and the lead starts to shrink.
+- **Near the tuning the port decides.** From 18 to 26 Hz both are port-limited and identical, because they share the port. A bigger port helps both (see the [port chuffing guide](/guides/port-chuffing/)).
 
 ## What the 2 Ω load does to the amplifier
 
-![Amplifier current needed for maximum SPL: the pair (dashed) reaches the amplifier's 16.6 A from about 85 Hz up; the 15″ (solid) peaks near 12 A.](img/subs-amps.png)
+![Amplifier current needed for maximum SPL: the pair (dashed) reaches the amplifier's 16.6 A from about 93 Hz up; the 15″ (solid) peaks near 12 A.](img/subs-amps.png)
 
 An amplifier puts out a voltage; the load decides the current, and so the power [9]. The **Max SPL → Amps** view shows it:
 
-- **The 15 can't use its rating on this amp.** 500 W into its 3 Ω coil needs 38.7 V; the Crown stops at 37.4 V. From 32 Hz up the 15 is amplifier-limited (teal), at about 375 W at 80 Hz, drawing 10.8 A.
-- **The pair reaches its own 700 W rating first** (grey), drawing 15.8 A and 484 W at 80 Hz. It only hits the amp's 16.6 A above about 85 Hz.
+- **The 15 can't use its rating on this amp.** 500 W into its 3 Ω coil needs 38.7 V; the Crown stops at 37.4 V. From 32 Hz up the 15 is amplifier-limited (teal), at about 367 W at 80 Hz, drawing 10.6 A.
+- **The pair reaches its own 700 W rating first** (grey), drawing 15.2 A and 471 W at 80 Hz. It only hits the amp's 16.6 A above about 93 Hz.
 - **Real amplifiers don't double into half the impedance.** An ideal one would give 700 W into 2 Ω; the Crown gives 550 W [8].
-- **Wired in series (8 Ω), the pair loses.** On the same amp it's voltage-limited almost everywhere: 110.3 dB at 80 Hz sealed, **3.9 dB below the 15** and 5.5 dB below the parallel pair. That's the second link above, and the dashed line on the difference chart.
+- **Wired in series (8 Ω), the pair loses.** On the same amp it's voltage-limited almost everywhere: 110.2 dB at 80 Hz sealed, **3.7 dB below the 15** and 5.2 dB below the parallel pair. That's the second link above, and the dashed line on the difference chart.
 
 The same goes for the two coils of one dual voice coil sub: see [DVC wiring](/guides/dvc-wiring/), and the [amplifier matching guide](/guides/amp-matching/) for the voltage and current limits in detail.
 
@@ -135,11 +135,11 @@ The same goes for the two coils of one dual voice coil sub: see [DVC wiring](/gu
 
 **"Two 10s have more cone area than a 15."** No: 713 against 830 cm². Two 10s add up to about one 14-inch driver. *Proof: the driver table; Sd on the Driver tab.*
 
-**"Two 10s have more motor."** No: Bl²/Re 74.6 against 75 [6]. Each 10's Bl is lower; there are just two of them sharing the power. Per watt the two are within 0.4 dB. *Proof: in dB SPL at the same voltage the passbands are 2.7 dB apart: 2.3 dB from the extra watts the 2 Ω load draws, 0.4 dB of efficiency.*
+**"Two 10s have more motor."** No: Bl²/Re 74.6 against 75 [6]. Each 10's Bl is lower; there are just two of them sharing the power. Per watt the two are within 0.2 dB. *Proof: in dB SPL at the same voltage the passbands are 2.5 dB apart: 2.3 dB from the extra watts the 2 Ω load draws, 0.2 dB of efficiency.*
 
-**"Two 10s are faster."** Not in any way that matters below a sub's crossover. The motors are equal, and moving mass per cone area is similar (0.34 against 0.37 g/cm²). How "fast" a sub sounds is its frequency response and group delay, set by the box and the filters, not cone mass (see the [group delay guide](/guides/group-delay/)). In the same box the pair has the lower Qtc, 0.65 against 0.76, so a slightly better-damped roll-off but 7.4 Hz less extension. Put the 15 in its own 123.5 L box and that difference goes. *Proof: Group delay tab.*
+**"Two 10s are faster."** Not in any way that matters below a sub's crossover. The motors are equal, and moving mass per cone area is similar (0.34 against 0.37 g/cm²). How "fast" a sub sounds is its frequency response and group delay, set by the box and the filters, not cone mass (see the [group delay guide](/guides/group-delay/)). In the same box the pair has the lower Qtc, 0.68 against 0.77, so a slightly better-damped roll-off but 6.2 Hz less extension. Put the 15 in its own 133.3 L box and that difference goes. *Proof: Group delay tab.*
 
-**"Two subs at 2 Ω get double the power."** Only from an amplifier rated for 2 Ω, and real ones don't double: 350 W into 4 Ω becomes 550 W into 2 Ω on this Crown [8]. Wire the pair in series for an amp that isn't, and in the sealed box the 15 wins everywhere, by 3.3–5.2 dB. *Proof: Max SPL → Amps; the series link.*
+**"Two subs at 2 Ω get double the power."** Only from an amplifier rated for 2 Ω, and real ones don't double: 350 W into 4 Ω becomes 550 W into 2 Ω on this Crown [8]. Wire the pair in series for an amp that isn't, and in the sealed box the 15 wins everywhere, by 3.1–5.2 dB. *Proof: Max SPL → Amps; the series link.*
 
 ## Choosing
 
@@ -147,7 +147,7 @@ The same goes for the two coils of one dual voice coil sub: see [DVC wiring](/gu
 |---|---|
 | The most output below 40 Hz (movies, organ, EDM sub-bass) | **The 15** |
 | The most output from 45 to 85 Hz (kick drums, upper-bass SPL) | **The two 10s,** on an amplifier rated for 2 Ω |
-| A smaller sealed box at Qtc 0.707 | **The two 10s** (74.5 L against 123.5 L) |
+| A smaller sealed box at Qtc 0.707 | **The two 10s** (79.6 L against 133.3 L) |
 | A shallow mounting depth (car doors, under-seat, slim cabinets) | **The two 10s** (137 mm against 178 mm) |
 | An amplifier that isn't rated for 2 Ω | **The 15**, or two 8 Ω 10s (such as the RSS265HF-8) in parallel for 4 Ω |
 

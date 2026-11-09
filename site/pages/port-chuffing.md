@@ -27,16 +27,16 @@ Here's the catch. The air speed depends on the port's **area**: double the area 
 
 ## The worked example
 
-A **Dayton Audio RSS315HF-4**, a 12″ subwoofer (Xmax 14.3 mm, 400 W), in Keele's flat alignment: **83.5 L tuned to 23.8 Hz** (the textbook box; the app's QB3 preset, sized as WinISD sizes it, gives 75.6 L at 24.4 Hz). It's driven at **300 W** behind a 24 dB/oct high-pass filter at 20 Hz, which keeps the cone at 10.7 mm, within its Xmax. The port options, each cut to length for 23.8 Hz:
+A **Dayton Audio RSS315HF-4**, a 12″ subwoofer (Xmax 14.3 mm, 400 W), in Keele's flat alignment: **83.5 L tuned to 23.8 Hz** (the textbook box; the app's QB3 preset, sized as WinISD sizes it, gives 75.6 L at 24.4 Hz). It's driven at **300 W** behind a 24 dB/oct high-pass filter at 20 Hz, which keeps the cone at 10.6 mm, within its Xmax. The port options, each cut to length for 23.8 Hz:
 
 | Port | Area | Length | Peak air speed |
 |---|---|---|---|
-| 7.5 cm round | 44 cm² | 22 cm | 52.8 m/s: far too fast |
-| 10 cm round | 79 cm² | 42 cm | 29.7 m/s: chuffs |
-| 12.5 cm round | 123 cm² | 68 cm | 19.0 m/s: borderline |
-| 15 cm round | 177 cm² | 101 cm | 13.2 m/s: quiet |
-| 5 × 30 cm slot | 150 cm² | 85 cm | 15.6 m/s: quiet |
-| 10 cm round, flared ends (2.5 cm) | 79 cm² | 46 cm | 13.2 m/s at the flared ends |
+| 7.5 cm round | 44 cm² | 22 cm | 51.5 m/s: far too fast |
+| 10 cm round | 79 cm² | 42 cm | 29.0 m/s: chuffs |
+| 12.5 cm round | 123 cm² | 68 cm | 18.5 m/s: borderline |
+| 15 cm round | 177 cm² | 101 cm | 12.9 m/s: quiet |
+| 5 × 30 cm slot | 150 cm² | 85 cm | 15.2 m/s: quiet |
+| 10 cm round, flared ends (2.5 cm) | 79 cm² | 46 cm | 12.9 m/s at the flared ends |
 
 The box is about 44 cm deep inside. The 10 cm port nearly fits, but chuffs; the quiet ones are two to three times longer than the box is deep.
 
@@ -46,7 +46,7 @@ The box is about 44 cm deep inside. The 10 cm port nearly fits, but chuffs; the 
 
 **Use a slot port.** A slot along one wall of the box uses that wall as one of its sides, and it can run along the wall and turn the corner (an L shape) to get the length. A 5 × 30 cm slot is as quiet as a 15 cm tube here, and much easier to fit. In the app, set the port's shape to a slot. A slot along the walls tends to tune a little lower than calculated, and its sharp edges are noisier than a flared tube's: see [round port vs slot port](/guides/round-vs-slot-port/).
 
-**Flare the ends.** Rounding the port's ends (with a radius of a few centimetres) slows the air where the noise starts, which helps a lot: the app shows the speed at the flared ends, 13.2 m/s here, though the middle of the 10 cm port is still at 29.7 m/s. Flared ports are the best answer when you're only a little over. In the app, set the port's **Flare r** (about a quarter of the diameter is a good start).
+**Flare the ends.** Rounding the port's ends (with a radius of a few centimetres) slows the air where the noise starts, which helps a lot: the app shows the speed at the flared ends, 12.9 m/s here, though the middle of the 10 cm port is still at 29.0 m/s. Flared ports are the best answer when you're only a little over. In the app, set the port's **Flare r** (about a quarter of the diameter is a good start).
 
 The [design assistant](/guides/design-assistant/) works through the same choices for you: for each ported result it tries a plain tube, then a flared tube, then a slot along a wall, each the largest that fits straight, and keeps the first under your chuffing line.
 

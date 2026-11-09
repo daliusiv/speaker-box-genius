@@ -21,19 +21,19 @@ Because it replaces a second-order response with another second-order response, 
 
 ## The worked example
 
-A **Dayton Audio RSS265HF-4** 10″ subwoofer in a **20 L** sealed box: about half the size its Qtc 0.707 box would be (37 L). On its own the 20 L box has fc 49.2 Hz and Qtc 0.87, so it rolls off early with a slight hump. An LT takes it to **fp 25 Hz, Qp 0.707**. All three run at **40 W** behind a 24 dB/oct high-pass filter at 18 Hz:
+A **Dayton Audio RSS265HF-4** 10″ subwoofer in a **20 L** sealed box: about half the size of its textbook Qtc 0.707 box (37 L). On its own the 20 L box has fc 49.2 Hz and Qtc 0.88, so it rolls off early with a slight hump. An LT takes it to **fp 25 Hz, Qp 0.707**. All three run at **40 W** behind a 24 dB/oct high-pass filter at 18 Hz:
 
 | | 20 L + LT | 20 L, no EQ | 37 L, no EQ |
 |---|---|---|---|
-| F3 | **29.0 Hz** | 44.6 Hz | 42.0 Hz |
-| Output at 25 Hz (40 W) | 96.3 dB | 88.1 dB | 90.7 dB |
-| Peak cone excursion (40 W) | 11.7 mm | 4.3 mm | 5.7 mm |
-| **Maximum SPL at 25 Hz** | **97.3 dB** | **97.3 dB** | **97.4 dB** |
-| Amplifier needed at 25 Hz to reach that maximum | 33 V, 6.8 A | 33 V, 6.8 A | 25 V, 3.8 A |
+| F3 | **28.9 Hz** | 44.0 Hz | 41.1 Hz |
+| Output at 25 Hz (40 W) | 95.9 dB | 87.7 dB | 90.4 dB |
+| Peak cone excursion (40 W) | 11.4 mm | 4.3 mm | 5.6 mm |
+| **Maximum SPL at 25 Hz** | **97.1 dB** | **97.1 dB** | **97.2 dB** |
+| Amplifier needed at 25 Hz to reach that maximum | 34 V, 6.9 A | 34 V, 6.9 A | 25 V, 3.9 A |
 
 ![Response at 40 W: the 20 L box with the LT (blue) is flat to about 30 Hz; the same box without EQ (orange) and the 37 L box (green) roll off from the mid 40s.](img/lt-spl.png)
 
-The LT box goes **15 Hz deeper** than the box twice its size. But look at the maximum SPL: **all three boxes reach exactly the same level** at 25 Hz before the cone hits its Xmax (12.3 mm). The LT doesn't make the sub louder, and the small box needs more amplifier power at the bottom than the big one. That's [Hofmann's Iron Law](/guides/hofmann-iron-law/) at work: depth from a small box is paid for in efficiency.
+The LT box goes **12 Hz deeper** than the box twice its size. But look at the maximum SPL: **all three boxes reach the same level** (within 0.1 dB) at 25 Hz before the cone hits its Xmax (12.3 mm). The LT doesn't make the sub louder, and the small box needs more amplifier power at the bottom than the big one. That's [Hofmann's Iron Law](/guides/hofmann-iron-law/) at work: depth from a small box is paid for in efficiency.
 
 ## Why it doesn't raise the maximum output
 
@@ -41,12 +41,12 @@ In a sealed box, the bottom-octave output is limited by how much air the cone ca
 
 So the LT trades amplifier power for box size. To drive the cone to its Xmax at 25 Hz, the amplifier has to deliver:
 
-- for the 37 L box, **25 V and 3.8 A** (about 73 W into the speaker);
-- for the 20 L box, **33 V and 6.8 A** (about 196 W), **with or without the LT**. The same box needs the same voltage to move the cone the same distance.
+- for the 37 L box, **25 V and 3.9 A** (about 76 W into the speaker);
+- for the 20 L box, **34 V and 6.9 A** (about 203 W), **with or without the LT**. The same box needs the same voltage to move the cone the same distance.
 
-In the "watts" that amplifiers and simulators usually quote (V² ÷ Re), that's 335 W for the small box against 187 W for the big one: close to the driver's 350 W rating.
+In the "watts" that amplifiers and simulators usually quote (V² ÷ Re), that's 349 W for the small box against 191 W for the big one: close to the driver's 350 W rating.
 
-What the LT changes is that the extra voltage arrives automatically: its boost is in the signal. In the example, a 40 W setting is 11.8 V, but after the LT (and the high-pass filter) the amplifier is putting out **29 V** at 25 Hz, about 8 dB more, and the cone is at 11.7 mm. So the amplifier must be sized for the boosted bass, not for the passband. The app shows exactly what it needs: switch the **Max SPL** chart to **Volts** or **Amps**.
+What the LT changes is that the extra voltage arrives automatically: its boost is in the signal. In the example, a 40 W setting is 11.8 V, but after the LT (and the high-pass filter) the amplifier is putting out **29 V** at 25 Hz, about 8 dB more, and the cone is at 11.4 mm. So the amplifier must be sized for the boosted bass, not for the passband. The app shows exactly what it needs: switch the **Max SPL** chart to **Volts** or **Amps**.
 
 ## How much boost, and how much power
 
@@ -62,7 +62,7 @@ Every 6 dB of boost needs **four times** the amplifier power and **twice** the c
 
 ## You need a subsonic filter
 
-An LT boosts everything below fp, all the way down, so without a filter, rumble and subsonic content drive the cone far past its Xmax. Always put a **high-pass filter** below fp. In the example, the 24 dB/oct filter at 18 Hz keeps the cone at 11.7 mm at 40 W. See [the subsonic filter guide](/guides/subsonic-filter/).
+An LT boosts everything below fp, all the way down, so without a filter, rumble and subsonic content drive the cone far past its Xmax. Always put a **high-pass filter** below fp. In the example, the 24 dB/oct filter at 18 Hz keeps the cone at 11.4 mm at 40 W. See [the subsonic filter guide](/guides/subsonic-filter/).
 
 ## Choosing f0, Q0, fp and Qp
 

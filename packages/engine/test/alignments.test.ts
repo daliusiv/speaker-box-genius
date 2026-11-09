@@ -15,11 +15,42 @@ test("sealed alignment hits the requested Qtc", () => {
   const d = { fs: 30, qms: 5.2, qes: 0.4, vas_l: 50, re: 3.4, sd_cm2: 330 };
   for (const target of [0.5, 0.577, 0.707]) {
     const vb = sealedVolumeForAlignment(d, target)!;
-    near(simulate(d, { kind: "sealed", vb_l: vb }).summary.qtc!, target, 1e-9);
+    near(simulate(d, { kind: "sealed", vb_l: vb, ...LOSSLESS }).summary.qtc!, target, 1e-9);
   }
   assert.equal(sealedVolumeForAlignment({ ...d, qes: 0.9 }, 0.5), null); // Qts already above 0.5
   // Two drivers need twice the box for the same Qtc
   near(sealedVolumeForAlignment(d, 0.707, 2)!, 2 * sealedVolumeForAlignment(d, 0.707)!, 1e-9);
+});
+
+test("sealed alignment sized like WinISD's closed-box wizard (WinISD 0.7.0.950, 9 Nov 2026)", () => {
+  // Fs 30 Hz, Qms 5, Vas 50 L, Re 6 Ω; WinISD's Vb as it displays it (two decimals).
+  const cases: [number, number, number][] = [
+    [0.2, 0.707, 4.48],
+    [0.4, 0.577, 48.31],
+    [0.4, 0.707, 24.32],
+    [0.4, 1.0, 9.78],
+    [0.6, 0.8, 66.85],
+  ];
+  for (const [q, qtc, vb] of cases) {
+    const d = { fs: 30, qms: 5, qes: 1 / (1 / q - 1 / 5), vas_l: 50, re: 6, style: "winisd" as const };
+    near(sealedVolumeForAlignment(d, qtc)!, vb, 0.006 + vb * 0.0004, `Qts ${q} Qtc ${qtc}`);
+  }
+  // Bigger than the textbook box (Rg and the box's absorption both lower the Q to start from).
+  const d = { fs: 30, qms: 5, qes: 0.4348, vas_l: 50, re: 6 };
+  assert.ok(sealedVolumeForAlignment({ ...d, style: "winisd" }, 0.707)! > sealedVolumeForAlignment(d, 0.707)! * 1.02);
+});
+
+test("sealed Qtc counts Rg and the box's absorption, as WinISD shows it with its leak off", () => {
+  // WinISD 0.7: Fs 30, Qms 5, Qts 0.40, Vas 50 L, Re 6, Rg 0.1, Ql "none".
+  const d = { fs: 30, qms: 5, qes: 1 / (1 / 0.4 - 1 / 5), vas_l: 50, re: 6, sd_cm2: 220 };
+  const air = WINISD_AIR;
+  const q = (vb: number, qa: number) => simulate(d, { kind: "sealed", vb_l: vb, ql: Infinity, qa }, { rg: 0.1, air }).summary;
+  near(q(24.32, 100).qtc!, 0.705, 0.0006, "Qa 100");
+  near(q(24.32, Infinity).qtc!, 0.710, 0.0006, "lossless");
+  near(q(48.31, 100).qtc!, 0.576, 0.0006, "Qa 100");
+  near(q(48.31, Infinity).qtc!, 0.579, 0.0006, "lossless");
+  near(q(24.32, 100).fc!, 52.44, 0.006, "Fsc");
+  near(q(48.31, 100).fc!, 42.8, 0.006, "Fsc");
 });
 
 test("B4: at Qts = 0.383, QB3 is the 4th-order Butterworth (h = 1, α = √2, −3 dB at fs)", () => {

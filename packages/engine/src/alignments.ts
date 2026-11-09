@@ -1,5 +1,6 @@
 import { sealedVolumeForQtc } from "./sealed.ts";
 import { qts as qtsOf } from "./ts.ts";
+import { WINISD_RG } from "./winisdAlignments.ts";
 
 /**
  * Classic box alignments for a driver (or N identical drivers sharing a box,
@@ -33,9 +34,26 @@ export interface VentedAlignment {
   fb: number;
 }
 
-/** Sealed box volume for a target Qtc (0.5 = critically damped, 0.577 = Bessel, 0.707 = Butterworth). */
+/** Box absorption Q WinISD's closed-box wizard allows for (its default Qa). */
+export const WINISD_SEALED_QA = 100;
+
+/**
+ * Sealed box volume for a target Qtc (0.5 = critically damped, 0.577 = Bessel, 0.707 = Butterworth).
+ *
+ * With `style: "winisd"`, sized as WinISD 0.7's closed-box wizard does (measured 9 Nov 2026, within
+ * its display rounding): the driver's Qes includes its 0.1 Ω Rg, and the box's absorption (Qa 100)
+ * is counted: 1/Q = 1/Qes' + 1/Qms + 1/100 and Vb = Vas / ((Qtc / Q)² − 1). That box comes out a
+ * few per cent bigger than the textbook one, which ignores both.
+ */
 export function sealedVolumeForAlignment(d: AlignmentDriver, qtc: number, drivers = 1): number | null {
   try {
+    if (d.style === "winisd") {
+      const re = d.re !== undefined && d.re > 0 ? d.re : null;
+      const qes = re ? (d.qes * (re + WINISD_RG)) / re : d.qes;
+      const q = 1 / (1 / qes + 1 / d.qms + 1 / WINISD_SEALED_QA);
+      const ratio = (qtc / q) ** 2 - 1;
+      return ratio > 0 ? (d.vas_l * drivers) / ratio : null;
+    }
     return sealedVolumeForQtc({ qms: d.qms, qes: d.qes, vas_l: d.vas_l * drivers }, qtc);
   } catch {
     return null;

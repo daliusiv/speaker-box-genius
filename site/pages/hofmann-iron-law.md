@@ -16,9 +16,9 @@ Every bass thread gets to it sooner or later: you can have **deep bass, a small 
 ## The short answer
 
 - **The law:** a woofer system's efficiency is proportional to its box volume times the cube of its cut-off frequency. Go an octave deeper in the same box and you lose 9 dB of efficiency. Halve the box at the same cut-off and you lose 3 dB.
-- **It holds.** The two drivers here differ by 5.9 dB in efficiency, and each in its own flattest ported box (QB3) lands on the same law within 0.3 dB: the PA driver gets 94.9 dB per watt down to 49 Hz from 70 L, the home driver 89.0 dB down to 23 Hz from 168 L.
+- **It holds.** The two drivers here differ by 5.9 dB in efficiency, and each in its own flattest ported box (QB3) lands on the same law within 0.3 dB: the PA driver gets 94.7 dB per watt down to 49 Hz from 70 L, the home driver 88.8 dB down to 23 Hz from 168 L.
 - **The surprise: in the same box, they make the same deep bass per watt.** Below about 40 Hz the two are within about 1 dB of each other at 1 W, in a PA box and in a home box. The PA driver's extra 4–6 dB is all in the upper bass. Turn that down with EQ and it's a home sub. That's the Iron Law too: the extra efficiency was only ever above its cut-off.
-- **It's a law about efficiency, not loudness.** Maximum output is set by power handling, cone displacement and the port. With its rated 1,700 W the PA driver plays up to 6 dB louder above 50 Hz; in a sealed box the home driver's 3.1 L of displacement against 1.7 L makes it up to 4.7 dB louder below 25 Hz.
+- **It's a law about efficiency, not loudness.** Maximum output is set by power handling, cone displacement and the port. With its rated 1,700 W the PA driver plays up to 6 dB louder above 50 Hz; in a sealed box the home driver's 3.1 L of displacement against 1.7 L makes it up to 4.6 dB louder below 25 Hz.
 - **Nothing beats it; you choose where to pay.** EQ, bigger amplifiers, ports, horns and more drivers all move you along it, spending watts, volume or money.
 
 ## Where the law comes from
@@ -69,13 +69,13 @@ Each driver in its own **QB3** box (the flattest ported alignment, as **Presets*
 | | B&C 18SW115 | Dayton SS18-22 |
 |---|---|---|
 | Box | 70.4 L, tuned to 41.1 Hz | 167.9 L, tuned to 22.1 Hz |
-| F3 | 49.3 Hz | 22.9 Hz |
-| Passband level, 1 W | 94.9 dB | 89.0 dB |
-| kη = η₀ / (F3³ × Vb) | 2.22 × 10⁻⁶ | 2.38 × 10⁻⁶ |
+| F3 | 49.0 Hz | 22.9 Hz |
+| Passband level, 1 W | 94.7 dB | 88.8 dB |
+| kη = η₀ / (F3³ × Vb) | 2.26 × 10⁻⁶ | 2.40 × 10⁻⁶ |
 
 The two kη values are within 0.3 dB: two very different drivers, one law. The PA driver is 5.9 dB more efficient, and pays for it with a cut-off more than an octave higher, in less than half the box. (The small difference comes from the alignment's shape at their different Qts.)
 
-In their **Qtc 0.707 sealed** boxes (42 L and 87 L), kη is 0.91 and 0.76 × 10⁻⁶: the ported boxes come out 3.9–5.0 dB ahead of these sealed ones for their size and cut-off, 1–2 dB more than Small's 2.9 dB between the best of each type. (With the textbook lossless QB3 boxes, 63.3 L and 145.6 L, the gap is 3.3–4.4 dB: WinISD's QB3 trades a bigger box for a lower F3, which the law rewards.)
+In their **Qtc 0.707 sealed** boxes (43.5 L and 90 L), kη is 0.92 and 0.77 × 10⁻⁶: the ported boxes come out 3.9–5.0 dB ahead of these sealed ones for their size and cut-off, 1–2 dB more than Small's 2.9 dB between the best of each type. (With the textbook lossless QB3 boxes, 63.3 L and 145.6 L, the gap is 3.3–4.5 dB: WinISD's QB3 trades a bigger box for a lower F3, which the law rewards.)
 
 ## Same box, same bass
 
@@ -85,9 +85,9 @@ Now swap boxes. Each driver goes into its maker's recommended ported box, and th
 
 | SPL at 1 W, 1 m | 25 Hz | 30 Hz | 40 Hz | 100 Hz | 150 Hz |
 |---|---|---|---|---|---|
-| PA box: B&C / Dayton | 81.3 / 80.2 | 87.9 / 86.7 | 93.1 / 93.8 | 94.5 / 90.4 | 95.4 / 89.8 |
-| Home box: B&C / Dayton | 84.8 / 85.4 | 86.3 / 87.1 | 88.3 / 88.5 | 93.8 / 89.7 | 95.1 / 89.5 |
-| Sealed 141.6 L: B&C / Dayton | 79.9 / 80.7 | 82.3 / 82.9 | 85.8 / 85.7 | 93.4 / 89.3 | 94.9 / 89.3 |
+| PA box: B&C / Dayton | 81.2 / 80.1 | 87.8 / 86.6 | 93.0 / 93.7 | 94.5 / 90.3 | 95.3 / 89.6 |
+| Home box: B&C / Dayton | 84.7 / 85.3 | 86.2 / 87.0 | 88.3 / 88.4 | 93.7 / 89.5 | 94.9 / 89.3 |
+| Sealed 141.6 L: B&C / Dayton | 79.9 / 80.7 | 82.3 / 82.9 | 85.8 / 85.7 | 93.3 / 89.1 | 94.8 / 89.1 |
 
 In every box, **the deep bass is the same per watt**, within about 1 dB. Below the system's resonance, a driver's output per watt is set by its motor (Bl²/Re), its cone area and the box, not by how heavy its cone is. These two have nearly the same motor and cone, so they make nearly the same deep bass. The heavy cone only lowers the output above resonance.
 
@@ -103,8 +103,8 @@ The Iron Law is about efficiency at small signals. How loud a sub can play is se
 
 ![Maximum SPL at each driver's power rating. Left: the 141.6 L ported box, where the two are within 0.6 dB from 18 to 40 Hz and the B&C is ahead above. Right: 141.6 L sealed, where the Dayton's longer throw puts it ahead below about 40 Hz.](img/iron-law-maxspl.png)
 
-- **In the ported home box**, from 18 to 40 Hz both are within 0.6 dB: the port does most of the work near its tuning, and at 20 Hz its air speed is the limit for both (112.3 dB). From 50 Hz up the B&C pulls ahead, by 2.8 dB at 60 Hz and 5.3 dB at 100 Hz. That's its 5.9 dB of efficiency and its higher power rating.
-- **Sealed, the cone moves all the air**, and the Dayton's 26 mm of travel counts: **+4.7 dB at 15 Hz, +3.9 dB at 20 Hz** and +2.0 dB at 30 Hz. The B&C hits its Xmax first; the Dayton reaches its power rating first. From about 40 Hz up the B&C is ahead again.
+- **In the ported home box**, from 18 to 40 Hz both are within 0.6 dB: the port does most of the work near its tuning, and at 20 Hz its air speed is the limit for both (112.3 dB). From 50 Hz up the B&C pulls ahead, by 2.9 dB at 60 Hz and 5.4 dB at 100 Hz. That's its 5.9 dB of efficiency and its higher power rating.
+- **Sealed, the cone moves all the air**, and the Dayton's 26 mm of travel counts: **+4.6 dB at 15 Hz, +3.8 dB at 20 Hz** and +2.0 dB at 30 Hz. The B&C hits its Xmax first; the Dayton reaches its power rating first. From about 40 Hz up the B&C is ahead again.
 
 So a PA driver isn't "unable to do deep bass": it does the same deep bass per watt, and with EQ and a big amplifier it can play deep. A long-throw home driver earns its place where the cone has to move a lot of air, in sealed and small boxes deep down. See [one 15″ or two 10″](/guides/one-15-vs-two-10s/) for displacement against power handling in more detail.
 

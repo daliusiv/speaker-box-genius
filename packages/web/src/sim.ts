@@ -596,8 +596,7 @@ export function prPeak(r: SimulationResult, fMin: number, fMax = Infinity): { mm
   if (!r.prGroups) return null;
   let best: { mm: number; xmax: number | null; ratio: number } | null = null;
   for (const g of r.prGroups) {
-    let m = 0;
-    for (let i = 0; i < g.excursionMm.length; i++) if (r.freq[i]! >= fMin && r.freq[i]! < fMax && g.excursionMm[i]! > m) m = g.excursionMm[i]!;
+    const m = peakAbove(g.excursionMm, r.freq, fMin, fMax) ?? 0;
     const ratio = g.xmax_mm ? m / g.xmax_mm : 0;
     if (!best || ratio > best.ratio || (ratio === best.ratio && m > best.mm)) best = { mm: m, xmax: g.xmax_mm, ratio };
   }
@@ -612,7 +611,16 @@ export const LIMIT_NAME: Record<LimitKind, string> = { xmax: "Xmax", pr: "PR Xma
 const peakAbove = (a: Float64Array | null | undefined, freq: Float64Array, fMin: number, fMax = Infinity) => {
   if (!a) return null;
   let m = 0;
-  for (let i = 0; i < a.length; i++) if (freq[i]! >= fMin && freq[i]! < fMax && a[i]! > m) m = a[i]!;
+  for (let i = 0; i < a.length; i++) {
+    if (freq[i]! >= fMin && freq[i]! < fMax && a[i]! > m) m = a[i]!;
+    // The band's lower edge between two points: the value there too (log-f interpolation), so a
+    // coarse grid (the design assistant's) grades the same as the app's fine one, where
+    // excursion climbs fast below a box's tuning.
+    if (i > 0 && freq[i - 1]! < fMin && freq[i]! > fMin && fMin < fMax) {
+      const t = Math.log(fMin / freq[i - 1]!) / Math.log(freq[i]! / freq[i - 1]!);
+      m = Math.max(m, a[i - 1]! + t * (a[i]! - a[i - 1]!));
+    }
+  }
   return m;
 };
 

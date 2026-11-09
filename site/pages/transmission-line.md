@@ -40,12 +40,12 @@ The example uses a **Dayton Audio DSA215-8**, an 8″ woofer (Fs 35 Hz, Qts 0.33
 
 | | Classic TL | Offset TL | MLTL |
 |---|---|---|---|
-| Line length | 167 cm | 225 cm | 86 cm |
-| Volume | 36 L | 71 L | 24 L |
-| Tuning | 34.7 Hz | 35.1 Hz | 40.0 Hz |
-| F3 | 51.6 Hz | 34.6 Hz | 40.4 Hz |
-| Ripple above F3 | 9.6 dB | 14.3 dB | 3.3 dB |
-| Peak cone excursion | 2.9 mm | 4.5 mm | 5.1 mm |
+| Line length | 170 cm | 225 cm | 86 cm |
+| Volume | 37 L | 71 L | 24 L |
+| Tuning | 35.1 Hz | 35.1 Hz | 40.0 Hz |
+| F3 | 50.7 Hz | 34.2 Hz | 40.2 Hz |
+| Ripple above F3 | 10.7 dB | 17.3 dB | 3.7 dB |
+| Peak cone excursion | 3.0 mm | 4.4 mm | 5.1 mm |
 
 ![The three lines: the offset TL (orange) goes deepest, the MLTL (green) is the smoothest, and the classic TL (blue) gives up bass for a small, well-damped line.](img/tl-spl.png)
 
@@ -53,7 +53,7 @@ The offset TL goes deepest but is the biggest box. The MLTL is smaller than even
 
 ## Step 1: length sets the tuning
 
-A line resonates first where it's a quarter of a wavelength long. For this driver's Fs of 35 Hz, that's about **245 cm**. Real lines are shorter than that: a narrowing line and stuffing both lower the tuning, so the classic TL above tunes to 34.7 Hz in **167 cm**.
+A line resonates first where it's a quarter of a wavelength long. For this driver's Fs of 35 Hz, that's about **245 cm**. Real lines are shorter than that: a narrowing line and stuffing both lower the tuning, so the classic TL above tunes to 35.1 Hz in **170 cm**.
 
 There's no need to work this out by hand. Type the tuning you want and press **Set line length** (or **Set port length** for an MLTL): the app scales the line, the driver position and the stuffed section until the simulation tunes where you asked.
 
@@ -63,10 +63,10 @@ The stuffing's job is to damp the line's higher resonances without killing the f
 
 | Stuffing | F3 | Ripple above F3 |
 |---|---|---|
-| None | 31.1 Hz | 40.2 dB |
-| 3 kg/m³ | 31.8 Hz | 14.3 dB |
-| 6 kg/m³ | 32.5 Hz | 14.3 dB |
-| 10 kg/m³ | 33.8 Hz | 12.3 dB |
+| None | 31.1 Hz | 38.7 dB |
+| 3 kg/m³ | 31.4 Hz | 22.0 dB |
+| 6 kg/m³ | 32.2 Hz | 17.3 dB |
+| 10 kg/m³ | 33.8 Hz | 13.6 dB |
 
 An empty line is a mess of peaks and dips. A little stuffing does most of the work; more keeps smoothing it, but costs bass. In the app, stuffing is set per section, in kg/m³ (light polyester fibre is around 4–8 kg/m³). Why fibre slows sound and makes air act springier is explained in the [box stuffing guide](/guides/box-stuffing/). **Best line** searches the driver position and the stuffing for the smoothest response or the deepest bass, then retunes the length.
 

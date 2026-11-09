@@ -16,7 +16,7 @@ Should you upgrade from a 500 W amplifier to a 1,000 or 1,500 W one? On paper, t
 ## The short answer
 
 - **A coil at 120 °C costs about 1–3 dB, and at 180 °C about 1–4 dB,** depending on frequency, for the same amplifier voltage.
-- **The loss isn't even.** It's smallest near the box's impedance peaks and largest at the port tuning and above 80 Hz, so the bass gets a **relative hump of 1.3 dB at 120 °C and 2.3 dB at 180 °C** around 40–45 Hz. Nothing actually gets louder: everything else just drops more.
+- **The loss isn't even.** It's smallest near the box's impedance peaks and largest at the port tuning and above 80 Hz, so the bass gets a **relative hump of 1.5 dB at 120 °C and 2.5 dB at 180 °C** around 40–45 Hz. Nothing actually gets louder: everything else just drops more.
 - **A hot coil doesn't make the cone move more.** At the same voltage it moves less; at the same loudness it moves exactly the same. It won't make you hit Xmax sooner.
 - **Doubling the amplifier's power gives about +1.7 to +2.7 dB** of sustained output once the coil heats, not +3 dB. Short peaks, too brief to heat the coil, still get the full +3 dB.
 
@@ -65,25 +65,25 @@ The example: a **Dayton Audio RSS315HF-4** 12″ in a flat ported box (Keele's a
 
 | Frequency | 20 °C | 120 °C | 180 °C |
 |---|---|---|---|
-| 20 Hz | 102.6 dB | −1.8 dB | −2.7 dB |
-| 25 Hz (near the tuning) | 107.4 dB | **−2.3 dB** | **−3.4 dB** |
-| 30 Hz | 108.5 dB | −1.4 dB | −2.1 dB |
-| 40 Hz (upper impedance peak) | 108.9 dB | **−0.6 dB** | **−0.9 dB** |
-| 50 Hz | 109.1 dB | −0.9 dB | −1.4 dB |
-| 60 Hz | 109.4 dB | −1.4 dB | −2.2 dB |
-| 80 Hz | 109.6 dB | −2.1 dB | −3.2 dB |
-| 100 Hz | 109.8 dB | −2.5 dB | −3.7 dB |
-| 150 Hz | 109.8 dB | **−2.8 dB** | **−4.1 dB** |
+| 20 Hz | 102.4 dB | −1.7 dB | −2.7 dB |
+| 25 Hz (near the tuning) | 107.1 dB | **−2.2 dB** | **−3.4 dB** |
+| 30 Hz | 108.4 dB | −1.4 dB | −2.1 dB |
+| 40 Hz (upper impedance peak) | 108.8 dB | **−0.6 dB** | **−0.9 dB** |
+| 50 Hz | 109.0 dB | −0.9 dB | −1.4 dB |
+| 60 Hz | 109.2 dB | −1.4 dB | −2.2 dB |
+| 80 Hz | 109.5 dB | −2.0 dB | −3.1 dB |
+| 100 Hz | 109.5 dB | −2.4 dB | −3.6 dB |
+| 150 Hz | 109.5 dB | **−2.7 dB** | **−4.0 dB** |
 
 What it shows:
 
-- **The loss follows the impedance.** Where the impedance is high (the peaks at 15 and 40 Hz), the coil's extra resistance is a small part of it, and little is lost. Where the impedance is low (the port tuning, where it falls to 3.9 Ω, and above 80 Hz), the extra resistance is most of it, and the loss approaches the full 2.9 or 4.2 dB.
-- **So the shape changes.** Relative to 150 Hz, the cold box is flat; at 120 °C it has a **+1.3 dB** hump at 43 Hz, and at 180 °C **+2.3 dB** at 42 Hz. That's the "hot sub gets boomy" effect people hear in long sessions.
-- **The hump is the driver's Q rising.** Bl doesn't change, so Qes rises with Re: for this driver from 0.45 to 0.63 at 120 °C and 0.73 at 180 °C, taking Qts from 0.39 to 0.51 and 0.58. A box designed for the cold Qts is now mistuned for the hot one. In a sealed box the same thing raises Qtc: for this driver in its 36 L Qtc 0.707 box, the small response peak grows from 0.3 dB cold to 0.7 dB at 120 °C and 1.2 dB at 180 °C (see the [Qtc guide](/guides/sealed-qtc/)).
+- **The loss follows the impedance.** Where the impedance is high (the peaks at 15 and 40 Hz), the coil's extra resistance is a small part of it, and little is lost. Where the impedance is low (the port tuning, where it falls to 3.9 Ω, and above 80 Hz), the extra resistance is most of it, and the loss approaches the full 2.9 or 4.2 dB (a little less here: the 0.1 Ω of amplifier and cable in Settings doesn't heat up).
+- **So the shape changes.** Relative to 150 Hz, the cold box is flat; at 120 °C it has a **+1.5 dB** hump at 43 Hz, and at 180 °C **+2.5 dB** at 41 Hz. That's the "hot sub gets boomy" effect people hear in long sessions.
+- **The hump is the driver's Q rising.** Bl doesn't change, so Qes rises with Re: for this driver from 0.45 to 0.63 at 120 °C and 0.73 at 180 °C, taking Qts from 0.39 to 0.51 and 0.58. A box designed for the cold Qts is now mistuned for the hot one. In a sealed box the same thing raises Qtc: for this driver in its 38.9 L Qtc 0.707 box, the small response peak grows from 0.5 dB cold to 1.0 dB at 120 °C and 1.5 dB at 180 °C (see the [Qtc guide](/guides/sealed-qtc/)).
 
 ## Does a hot coil make the cone hit Xmax sooner?
 
-No, and this one is often said. At the same voltage, a hot coil drives the cone **less**: the peak above the tuning falls from 8.8 mm (cold) to 8.1 mm (120 °C) and 7.7 mm (180 °C) at 35 Hz, and it's lower at every frequency. Hornresp's Power Compression tool shows the same: displacement falls as the coil heats [9].
+No, and this one is often said. At the same voltage, a hot coil drives the cone **less**: the peak above the tuning falls from 8.7 mm (cold) to 8.0 mm (120 °C) and 7.7 mm (180 °C) at 35 Hz, and it's lower at every frequency. Hornresp's Power Compression tool shows the same: displacement falls as the coil heats [9].
 
 At the same **loudness**, the cone moves exactly as much as it did cold: the box turns cone movement into sound the same way whatever the coil temperature. So if you turn the amplifier up to win back the lost level, the excursion comes back with it, but never more than it would take cold for that level. The Xmax limit on the **Max SPL** chart doesn't move.
 
@@ -132,8 +132,8 @@ The temperature applies to every box in the project, so the example uses one lin
 | Claim | Verdict |
 |---|---|
 | "Twice the amplifier power is +3 dB" | For short peaks, yes. For sustained playing, about +1.6 to +2.7 dB once the coil heats [6][7][8]. |
-| "A hot coil loses 1.5–3 dB" | At 120 °C: 0.6–2.8 dB depending on frequency. At 180 °C: 0.9–4.1 dB. |
-| "A hot coil makes a mid-bass hump" | Yes, relative to the rest: +1.3 dB at 120 °C, +2.3 dB at 180 °C here, from the rising Qts. Absolute output still drops everywhere. |
+| "A hot coil loses 1.5–3 dB" | At 120 °C: 0.6–2.7 dB depending on frequency. At 180 °C: 0.9–4.0 dB. |
+| "A hot coil makes a mid-bass hump" | Yes, relative to the rest: +1.5 dB at 120 °C, +2.5 dB at 180 °C here, from the rising Qts. Absolute output still drops everywhere. |
 | "A hot coil makes the cone unload and pass Xmax sooner" | No: at the same voltage the cone moves less; at the same loudness it moves the same [9]. |
 | "Simulators can't show power compression" | WinISD uses cold values only; Hornresp has a Power Compression tool [9], and this app has **Voice coil °C**. |
 

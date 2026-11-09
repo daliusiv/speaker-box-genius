@@ -183,7 +183,8 @@ export function sizeBandpass(
     const tries: (BandpassFound | null)[] = [];
     for (const qtc of [0.5, 0.6, 0.7, 0.85, 1]) {
       if (qtc < qts * 1.1) continue;
-      const rear = sealedVolumeForAlignment(align, qtc, search.drivers);
+      // A starting point for the search, not a preset: the textbook rear chamber (fc below follows it).
+      const rear = sealedVolumeForAlignment({ ...align, style: "textbook" }, qtc, search.drivers);
       if (rear === null || !(rear > 0.3) || rear > 0.75 * max) continue;
       const fc = (align.fs * qtc) / qts;
       for (const k of [0.3, 0.5, 0.75, 1.1, 1.6]) {

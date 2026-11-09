@@ -21,6 +21,7 @@ differences.
 | `site/validation.ts` | Builds the /validation/ page from `results.json` at deploy |
 | `packages/engine/src/winisdAlignments.ts` | The ported presets as WinISD's wizard sizes them: its QB3, BB4 and C4 curves, measured from WinISD (32 drivers, Qts 0.14–0.76) |
 | `packages/engine/test/fixtures/winisd-alignments.json`, `winisd-alignments.test.ts` | WinISD's own boxes for 19 other drivers, checked on every push and shown on the page ("Ported presets") |
+| `packages/engine/test/fixtures/winisd-parity.json`, `winisd-parity.test.ts` | WinISD's sealed boxes, Qtc and Fsc, driver editor values and PR tunings ("Sealed presets") |
 
 So the page always shows what the tests check, and a change to the engine that moves a result
 has to come with the updated `results.json`.
@@ -33,12 +34,26 @@ amplifier resistance (Rg, 0.1 Ω by default) in series with Re: Qes' = Qes·(Re 
 `winisdAlignments.ts` holds the curves, read from WinISD for synthetic drivers (Fs 30 Hz,
 Qms 5, Vas 50 L, Re 6 Ω, Qts 0.14 to 0.76 in steps of 0.02) and interpolated (monotone cubic).
 Against 19 drivers that aren't in that sweep (Re 3–6.5 Ω, Qts 0.20–0.70) they agree within
-WinISD's two-decimal display. Settings → Vented presets → Textbook gives the lossless
+WinISD's two-decimal display. Settings → Box presets → Textbook gives the lossless
 equations instead (QB3/B4, Keele's alignment above B4, SQB3, C4/SC4, BB4/SBB4).
 
 To add a check: load the driver's `.wdr` in WinISD's new-project wizard, choose Vented and the
 alignment, read Vb and Fb off the Box tab (leave Rg at 0.1 Ω), and add the driver to
 `packages/engine/test/fixtures/winisd-alignments.json`.
+
+## Sealed presets, Qtc, the driver editor and passive radiators
+
+WinISD's closed-box wizard sizes Qtc 0.577 / 0.707 / 0.8 … boxes from a Q that counts its 0.1 Ω
+Rg and the box's absorption: 1/Q = 1/Qes' + 1/Qms + 1/100, Vb = Vas / ((Qtc/Q)² − 1). The app's
+sealed presets do the same (`sealedVolumeForAlignment` with `style: "winisd"`), and the summary's
+Qtc counts Rg and Qa as WinISD's Box panel does with its leak off. (With its default leak,
+WinISD's Qtc and Fsc readouts move in ways its own curves don't show; and the panel shows stale
+values until a field is edited.) The app's Amp + cable setting defaults to WinISD's 0.1 Ω.
+
+`fixtures/winisd-parity.json` and `winisd-parity.test.ts` hold the sealed boxes, Qtc and Fsc, the
+driver editor's Mms, Cms, Rms, Bl, η0 and EBP for four database drivers (with WinISD's air), and
+three passive radiator tunings (WinISD takes a PR's compliance from its Vas; the app's .wpr
+export writes the Vas of the compliance it simulates). The page shows them under "Sealed presets".
 
 ## Adding or updating a case
 

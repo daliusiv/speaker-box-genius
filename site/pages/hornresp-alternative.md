@@ -31,18 +31,18 @@ The line model is a one-dimensional duct, the same approach as Hornresp and Akab
 
 | Design | SPL, mean | Impedance, mean | Cone excursion, mean | Group delay, 95 % | Line load (Za), mean |
 |---|---|---|---|---|---|
-| 01 Straight transmission line | 0.08 dB | 0.14 % | 0.25 % | 0.07 ms | 0.00 dB |
-| 02 Tapered transmission line | 0.04 dB | 0.15 % | 0.28 % | 0.29 ms | 0.02 dB |
-| 03 Offset-driver transmission line | 0.04 dB | 0.13 % | 0.26 % | 0.17 ms | 0.00 dB |
-| 04 TQWT | 0.03 dB | 0.14 % | 0.27 % | 0.26 ms | 0.02 dB |
-| 05 Mass-loaded line | 0.06 dB | 0.16 % | 0.27 % | 0.07 ms | 0.01 dB |
-| 06 Tapped horn | 0.04 dB | 0.08 % | 0.28 % | 0.10 ms | 0.01 dB |
+| 01 Straight transmission line | 0.03 dB | 0.14 % | 0.25 % | 0.06 ms | 0.00 dB |
+| 02 Tapered transmission line | 0.04 dB | 0.14 % | 0.28 % | 0.22 ms | 0.02 dB |
+| 03 Offset-driver transmission line | 0.02 dB | 0.13 % | 0.26 % | 0.09 ms | 0.00 dB |
+| 04 TQWT | 0.03 dB | 0.14 % | 0.27 % | 0.22 ms | 0.02 dB |
+| 05 Mass-loaded line | 0.03 dB | 0.16 % | 0.27 % | 0.07 ms | 0.01 dB |
+| 06 Tapped horn | 0.03 dB | 0.08 % | 0.28 % | 0.10 ms | 0.01 dB |
 | 07 Front-loaded horn | 0.03 dB | 0.18 % | 0.32 % | 0.13 ms | 0.07 dB |
-| 10 Subwoofer in a straight line | 0.05 dB | 0.17 % | 0.24 % | 0.24 ms | 0.01 dB |
-| 11 Subwoofer in a mass-loaded line | 0.04 dB | 0.18 % | 0.26 % | 0.41 ms | 0.01 dB |
-| 12 Subwoofer in a tapped horn | 0.03 dB | 0.06 % | 0.26 % | 0.12 ms | 0.01 dB |
-| 13 Full-range TQWT | 0.03 dB | 0.20 % | 0.35 % | 0.16 ms | 0.02 dB |
-| 14 Full-range tapered line | 0.04 dB | 0.17 % | 0.35 % | 0.31 ms | 0.01 dB |
+| 10 Subwoofer in a straight line | 0.02 dB | 0.17 % | 0.23 % | 0.10 ms | 0.00 dB |
+| 11 Subwoofer in a mass-loaded line | 0.03 dB | 0.18 % | 0.26 % | 0.19 ms | 0.01 dB |
+| 12 Subwoofer in a tapped horn | 0.03 dB | 0.06 % | 0.26 % | 0.16 ms | 0.01 dB |
+| 13 Full-range TQWT | 0.03 dB | 0.20 % | 0.34 % | 0.14 ms | 0.02 dB |
+| 14 Full-range tapered line | 0.04 dB | 0.17 % | 0.35 % | 0.22 ms | 0.01 dB |
 | 15 Mass-loaded line, two drivers | 0.03 dB | 0.21 % | 0.25 % | 0.05 ms | 0.01 dB |
 | 16 Mass-loaded line, voice coil at 120 °C | 0.02 dB | 0.33 % | 0.20 % | 0.09 ms | 0.01 dB |
 | 17 Front horn, 8 L rear and 3 L throat chamber | 0.03 dB | 0.21 % | 0.35 % | 0.13 ms | 0.07 dB |

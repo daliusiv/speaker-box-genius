@@ -441,7 +441,7 @@
      { "what": "tf", "f": 40, "winisd": -12.113, "ours": -12.1068, "diff": 0.00619, "tol": 0.02, "pass": true },
      { "what": "tf", "f": 80.38, "winisd": -2.86, "ours": -2.8451, "diff": 0.01492, "tol": 0.02, "pass": true },
      { "what": "f3", "f": 0, "winisd": 79.03, "ours": 78.9373, "diff": -0.09273, "tol": 0.15, "note": "WinISD's “Fsc” field is the −3 dB frequency", "pass": true },
-     { "what": "qtc", "f": 0, "winisd": 0.709, "ours": 0.7064, "diff": -0.00256, "tol": 0.005, "pass": true }
+     { "what": "qtc", "f": 0, "winisd": 0.709, "ours": 0.7112, "diff": 0.00218, "tol": 0.005, "pass": true }
     ],
     "curves": [
      {
