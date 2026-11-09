@@ -32,7 +32,7 @@ jobs:
           rm leaf.pem inter.crt
           echo "NODE_EXTRA_CA_CERTS=$RUNNER_TEMP/seas-intermediate.pem" >> "$GITHUB_ENV"
       - name: Read seas.no
-        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/seas.ts
+        run: SEAS_DUMP_DIR=seas-dump node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/seas.ts
       - name: Check the database
         continue-on-error: true
         run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts 2>&1 | tee validate.txt
@@ -41,6 +41,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f seas-import-report.md validate.txt drivers/seas passive-radiators/seas 2>/dev/null || true
+          git add -f seas-dump seas-import-report.md validate.txt drivers/seas passive-radiators/seas 2>/dev/null || true
           git commit -m "SEAS trial import result" || echo "nothing to commit"
           git push
