@@ -285,10 +285,10 @@ test("shaped cabinets guide: four shapes sized to the same net volume, their siz
   const { grossVolume, insideLongest_cm, lowestMode_hz } = await import("../packages/engine/src/index.ts");
   const { shapeOf, volumeFor, linkedDesign } = await import("../packages/web/src/sim.ts");
   const want = {
-    "shape-box": { dims: [49.3, 79.7, 30.4], gross: 93.2, net: 83.4, outer: 119, foot: 15.0, long: 76.1, mode: 226 },
-    "shape-tube": { dims: [36.8, 98.5], gross: 90.48, net: 83.5, outer: 97, foot: 10.6, long: 90.9, mode: 189 },
-    "shape-sphere": { dims: [58.7], gross: 90.48, net: 83.5, outer: 106, foot: 27.1, long: 55.7, mode: 409 },
-    "shape-wedge": { dims: [53.2, 53.2, 31.9, 31.9, 63.9], gross: 93.28, net: 83.5, outer: 118, foot: 28.3, long: 60.3, mode: 285 },
+    "shape-box": { dims: [49.3, 79.7, 30.4], gross: 93.2, net: 83.4, outer: 119, foot: 0.15, long: 76.1, mode: 226 },
+    "shape-tube": { dims: [36.8, 98.5], gross: 90.48, net: 83.5, outer: 97, foot: 0.11, long: 90.9, mode: 189 },
+    "shape-sphere": { dims: [58.7], gross: 90.48, net: 83.5, outer: 106, foot: 0.27, long: 55.7, mode: 409 },
+    "shape-wedge": { dims: [53.2, 53.2, 31.9, 31.9, 63.9], gross: 93.28, net: 83.5, outer: 118, foot: 0.28, long: 60.3, mode: 285 },
   } as const;
   for (const [name, w] of Object.entries(want)) {
     const s = EXAMPLES[name]!();
@@ -301,7 +301,7 @@ test("shaped cabinets guide: four shapes sized to the same net volume, their siz
     near(r.net_l, w.net, 0.06, `${name} net`);
     near(grossVolume(sh, 0), w.outer, 0.5, `${name} outside volume`);
     const foot = v.shape === "box" || v.shape === "frustum" ? v.width_cm * v.depth_cm : Math.PI * (v.diameter_cm / 2) ** 2;
-    near(foot / 100, w.foot, 0.05, `${name} footprint`);
+    near(foot / 10000, w.foot, 0.005, `${name} floor space (m²)`);
     near(insideLongest_cm(sh, v.wall_mm), w.long, 0.05, `${name} longest run`);
     near(lowestMode_hz(sh, v.wall_mm, 343.6), w.mode, 0.5, `${name} lowest mode`);
     const d = run(name)[0]!.result.summary;
@@ -328,4 +328,10 @@ test("shaped cabinets guide: four shapes sized to the same net volume, their siz
   near(naive(0), 60, 1e-9, "frustum formula on it");
   near((naive(0.5) / wedge(0.5) - 1) * 100, -1.9, 0.05, "half-deep top");
   near(grossVolume({ kind: "frustum", bottomWidth_cm: 50, bottomDepth_cm: 50, topWidth_cm: 0, topDepth_cm: 0, height_cm: 40 }, 18), 22.0, 0.05, "pyramid inside");
+  // A sloping board is t / cos θ wide across: 45°, and the example's tapered box.
+  near(18 / Math.cos(Math.PI / 4), 25.5, 0.05, "18 mm at 45°");
+  const wv = EXAMPLES["shape-wedge"]!().volume;
+  const slope = Math.atan((wv.width_cm - wv.topWidth_cm) / 2 / wv.height_cm);
+  near((slope * 180) / Math.PI, 9.5, 0.05, "example slope");
+  near(18 / Math.cos(slope), 18.25, 0.005, "18 mm at the example slope");
 });

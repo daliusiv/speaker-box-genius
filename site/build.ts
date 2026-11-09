@@ -88,7 +88,7 @@ function inline(s: string): string {
 }
 
 /**
- * Block Markdown: headings (#–###), paragraphs, - and 1. lists, > notes, | tables |,
+ * Block Markdown: headings (#–###), paragraphs, - and 1. lists (nested by indenting), > notes, | tables |,
  * ``` code blocks, and button lines ([[Label|example]]), already resolved to links.
  */
 export function markdown(md: string): string {
@@ -131,9 +131,16 @@ export function markdown(md: string): string {
       const items: string[] = [];
       while (i < lines.length && (ordered ? /^\d+\. /.test(lines[i]!) : /^[-*] /.test(lines[i]!))) {
         let item = lines[i]!.replace(/^([-*]|\d+\.) /, "");
-        // Continuation lines (indented) belong to the item.
-        for (i++; i < lines.length && /^ {2,}\S/.test(lines[i]!); i++) item += " " + lines[i]!.trim();
-        items.push(`<li>${inline(item)}</li>`);
+        // Continuation lines (indented) belong to the item; an indented list starts a nested
+        // list, which takes every indented line after it.
+        const nested: string[] = [];
+        for (i++; i < lines.length && /^ {2,}\S/.test(lines[i]!); i++) {
+          if (nested.length === 0 && !/^ {2,}([-*]|\d+\.) /.test(lines[i]!)) item += " " + lines[i]!.trim();
+          else nested.push(lines[i]!);
+        }
+        const indent = nested.length ? /^ */.exec(nested[0]!)![0].length : 0;
+        const sub = nested.length ? markdown(nested.map((l) => l.slice(Math.min(indent, /^ */.exec(l)![0].length))).join("\n")) : "";
+        items.push(`<li>${inline(item)}${sub}</li>`);
       }
       out.push(ordered ? `<ol>${items.join("")}</ol>` : `<ul>${items.join("")}</ul>`);
       continue;

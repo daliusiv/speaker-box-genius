@@ -9,16 +9,16 @@ group: start
 
 # Non-rectangular speaker cabinets: cylinders, spheres and tapered boxes
 
-A box simulator only needs one number from your cabinet: the **net internal volume**, the air left after the walls, the driver, the port and the bracing. For a rectangular MDF box that's easy. For a Sonotube sub, a sphere or a tapered wedge, it's where builds go wrong: the tube is sold by its inside diameter, the end caps are thicker than the tube, a sloping wall is thicker than it looks, and the usual frustum formula is wrong for a wedge. This guide works through all of it on one sub, built four ways, and shows what the shape changes and what it doesn't.
+A box simulator only needs one number from your cabinet: the **net internal volume**, the air left after the walls, the driver, the port and the bracing. For a rectangular MDF box that's easy. For a Sonotube, a sphere or a tapered wedge, it's where builds usually go wrong. Sonotube is sold by its inside diameter, its end caps are much thicker than the tube, a sloping wall is wider across than the board is thick, and the usual frustum formula doesn't work on a wedge. This guide works through all of it on one sub built four ways, and shows what the shape changes and what it doesn't.
 
-[[Open the box|shape-box]] [[the Sonotube|shape-tube]] [[the sphere|shape-sphere]] [[the tapered box|shape-wedge]]
+[[Open the box|shape-box]] [[Open the Sonotube|shape-tube]] [[Open the sphere|shape-sphere]] [[Open the tapered box|shape-wedge]]
 
 ## The short answer
 
 - **For the bass, only the net volume matters.** Box, tube, sphere or wedge with the same net volume and port give the same simulated response. The shape matters for how the cabinet is built, how much room it takes and where its internal standing waves fall.
 - **Get the inside right:**
   - **Sonotube** is sold by its **inside** diameter, and the end caps are usually two layers of MDF while the tube wall is about 6 mm. Enter the outside diameter and both thicknesses.
-  - **Tapered walls** are thicker across than square to their face, and the inside of a steep pyramid closes before its top.
+  - **Sloping walls** are wider across than the board is thick (18 mm at 45° takes 25.5 mm), and the inside of a steep pyramid closes before its top.
   - **A wedge** (top and bottom different shapes) needs the prismoidal formula. The common frustum formula is up to 33% low.
 - **Shape moves standing waves; it doesn't remove them.** A sphere's lowest is 32% higher than a box of the same inside length would have; a long tube's is along its length. Non-parallel walls shift and spread them [7][8].
 - **In the app:** **Build → Volume calculator** handles all four shapes, takes off everything inside, sizes the cabinet for a target volume and feeds the result straight into the design.
@@ -31,16 +31,17 @@ The [port chuffing guide](/guides/port-chuffing/)'s sub: a **Dayton Audio RSS315
 
 | | Box | 14″ Sonotube | Sphere | Tapered box |
 |---|---|---|---|---|
-| Outside | 49.3 × 79.7 × 30.4 cm | Ø 36.8 × 98.5 cm | Ø 58.7 cm | 53.2 × 53.2 cm base, 31.9 × 31.9 top, 63.9 tall |
-| Walls | 18 mm MDF, 3% bracing | 6 mm tube, 38 mm end caps | 15 mm shell | 18 mm MDF, 3% bracing |
-| Gross internal | 93.20 L | 90.48 L | 90.48 L | 93.28 L |
-| − driver, port, bracing | 3.01 + 4.02 + 2.80 L | 3.01 + 4.02 L | 3.01 + 4.02 L | 3.01 + 4.02 + 2.80 L |
-| **Net** | **83.4 L** | **83.5 L** | **83.5 L** | **83.5 L** |
-| Takes up (outside volume) | 119 L | 97 L | 106 L | 118 L |
-| Floor space | 15.0 dm² | 10.6 dm² | 27.1 dm² | 28.3 dm² |
-| Longest straight run inside | 76.1 cm | 90.9 cm | 55.7 cm | 60.3 cm |
-| Lowest standing wave | 226 Hz | 189 Hz | 409 Hz | ~285 Hz |
-| Tuning, F3 | 23.8 Hz, 24.5 Hz | 23.8 Hz, 24.5 Hz | 23.8 Hz, 24.5 Hz | 23.8 Hz, 24.5 Hz |
+| Outside (cm) | 49.3 × 79.7 × 30.4 | Ø 36.8, 98.5 long | Ø 58.7 | base 53.2 × 53.2, top 31.9 × 31.9, 63.9 tall |
+| Walls (mm) | 18 MDF, plus 3% bracing | 6 tube, 38 end caps | 15 shell | 18 MDF, plus 3% bracing |
+| Gross internal (L) | 93.20 | 90.48 | 90.48 | 93.28 |
+| − driver + port + bracing (L) | 3.01 + 4.02 + 2.80 | 3.01 + 4.02 | 3.01 + 4.02 | 3.01 + 4.02 + 2.80 |
+| **Net (L)** | **83.4** | **83.5** | **83.5** | **83.5** |
+| Takes up, outside (L) | 119 | 97 | 106 | 118 |
+| Floor space (m²) | 0.15 | 0.11 | 0.27 | 0.28 |
+| Longest straight run inside (cm) | 76.1 | 90.9 | 55.7 | 60.3 |
+| Lowest standing wave (Hz) | 226 | 189 | 409 | ~285 |
+| **Tuning, Fb (Hz)** | **23.8** | **23.8** | **23.8** | **23.8** |
+| **F3, −3 dB (Hz)** | **24.5** | **24.5** | **24.5** | **24.5** |
 
 The driver's displacement (3.01 L) is the app's estimate from its 282 mm cutout and 146 mm depth; the port tube takes 4.02 L with 3 mm walls.
 
@@ -53,10 +54,10 @@ What the table shows:
 
 ### Cylinder (Sonotube)
 
-The inside volume is **π r² L**, with r the *inside* radius and L the length *between the end caps*. Three things trip people up:
+The inside volume is `V = π r² L`, with r the *inside* radius and L the length *between the end caps*. Three things trip people up:
 
 1. **Sonotube is sold by its inside diameter.** A 14″ tube is 14″ (35.6 cm) *inside*, at least [2][3]. The app asks for the outside diameter, so add twice the wall: 35.6 + 2 × 0.6 = 36.8 cm here.
-2. **The end caps aren't the tube wall.** Builders typically use two layers of 18–19 mm MDF for each cap [4][5]; the tube wall is about 6 mm [6]. The calculator now has a separate **End caps** field.
+2. **The end caps aren't the tube wall.** Builders typically use two layers of 18–19 mm MDF for each cap [4][5]; the tube wall is about 6 mm [6]. The calculator has a separate **End caps** field for them.
 3. **Caps inside the tube shorten it.** Measure the outside length from cap to cap; the calculator takes both caps off.
 
 Getting it wrong by one of these is about 7% of the volume on this tube:
@@ -67,7 +68,7 @@ Getting it wrong by one of these is about 7% of the volume on this tube:
 | One thickness (6 mm) for the tube and caps | 89.8 L | 22.9 Hz |
 | The nominal 14″ (35.6 cm) typed as the outside | 77.5 L | 24.7 Hz |
 
-In both wrong cases the tube you build is still 83.5 L and tunes to 23.8 Hz; it's the simulation, and anything you size from it, that's off.
+> **The tube you build doesn't change.** In both wrong cases it's still 83.5 L and tunes to 23.8 Hz. It's the simulation, and anything you size from it, that's off.
 
 A tube needs little or no bracing. The pressure inside pulls the wall in tension around its circumference, where a flat panel would bow [9][10]. The **end caps** are the flat panels in a tube sub, and the place builders report vibration [5].
 
@@ -75,7 +76,7 @@ A tube needs little or no bracing. The pressure inside pulls the wall in tension
 
 ### Sphere
 
-**V = (4/3) π r³**, with r the inside radius: the outside radius less the shell. A sphere has the smoothest edge diffraction of any shape: Olson's 1951 measurements of twelve cabinet shapes found the sphere's response the smoothest [11] (see [baffle step loss](/guides/baffle-step/) for what a flat front panel does instead). Building one is harder:
+`V = (4/3) π r³`, with r the inside radius: the outside radius less the shell. A sphere has the smoothest edge diffraction of any shape: Olson's 1951 measurements of twelve cabinet shapes found the sphere's response the smoothest [11] (see [baffle step loss](/guides/baffle-step/) for what a flat front panel does instead). Building one is harder:
 - **A flat for the driver.** The driver needs a flat mounting ring, which takes a little volume; put it in **Other**.
 - **The port.** The longest straight run is the inside diameter, and a long port has to pass through the middle. Here 45.5 cm of port in a 55.7 cm sphere only just fits; a bigger port or lower tuning won't.
 - **Footprint.** A 58.7 cm ball needs a stand and covers more floor than the box.
@@ -86,12 +87,12 @@ Enter the bottom and top width and depth and the height. Two shortcuts give the 
 
 ![Error of two shortcuts against the exact inside volume, by the size of the top as a percentage of the bottom: taking 18 mm walls off as if they were upright (orange) is up to 19% high for a near-pyramid; the similar-bases frustum formula on a wedge (blue) is up to 33% low.](img/shaped-cabinets-shortcuts.png)
 
-1. **The frustum formula.** V = h/3 (A₁ + A₂ + √(A₁A₂)) is exact only when the top and bottom are similar rectangles, the same shape scaled [13]. A wedge, where only the depth tapers, isn't. The formula that works for any rectangular top and bottom is the **prismoidal formula** [12][13]:
-   - V = h/6 (A₁ + 4M + A₂), where M is the area halfway up.
+1. **The frustum formula.** `V = h/3 (A₁ + A₂ + √(A₁A₂))` is exact only when the top and bottom are similar rectangles, the same shape scaled [13]. A wedge, where only the depth tapers, isn't. The formula that works for any rectangular top and bottom is the **prismoidal formula** [12][13]:
+   - `V = h/6 (A₁ + 4M + A₂)`, where M is the area halfway up.
    - For a wedge 60 × 60 cm at the bottom, 50 cm tall, closing to a 60 cm edge at the top (a floor-monitor shape), the frustum formula gives 60 L; the true volume is 90 L, so the formula is **33% low**. With a top half as deep, it's still 1.9% low.
-2. **Taking the walls off as if they were upright.** A sloping wall 18 mm thick measures more than 18 mm across horizontally, and the inside bottom and top sit 18 mm in from the outside ones, where the outside is already narrower or wider. For gentle tapers the error is small (0.5% on the example's tapered box), but for a steep one it isn't:
+2. **Taking the walls off as if they were upright.** A board leaning at an angle θ is `t / cos θ` wide across: 18 mm MDF at 45° takes 25.5 mm, and at the example's 9.5° slope, 18.25 mm. The inside bottom and top also sit 18 mm in from the outside ones, where the outside is already narrower or wider. For gentle tapers the shortcut's error is small (0.5% on the example's tapered box), but for a steep one it isn't:
    - A 50 × 50 cm, 40 cm tall pyramid in 18 mm MDF: the upright-wall shortcut gives 26.1 L; the true inside is 22.0 L, so the shortcut is **19% high**.
-   - The app used this shortcut until this guide's checks; it now works out the true inside, and stops where a steep pyramid's inside closes before its top.
+   - The app works out the true inside, and stops where a steep pyramid's inside closes before its top.
 
 **One sloped face or two:** a wedge sloped only at the front holds the same as one sloped evenly front and back with the same top and bottom (Cavalieri's principle), and the wall correction differs by a fraction of a millimetre. Enter its depth at the top and the bottom.
 
@@ -101,13 +102,15 @@ Inside any cabinet the air has its own resonances, from about half a wavelength 
 
 | Shape | Lowest standing wave | Here |
 |---|---|---|
-| Box | c / 2L, L the longest inside dimension | 226 Hz (76.1 cm tall) |
-| Cylinder | c / 2L along it, or 1.841 c / (π D) across it [15], whichever is lower | 189 Hz along; 565 Hz across |
-| Sphere | 2.082 c / (π D) [14] | 409 Hz (55.7 cm inside) |
-| Tapered box | about c / 2L for its longest run; the taper moves them | ~285 Hz |
+| Box | `c / 2L`, L the longest inside dimension | 226 Hz (76.1 cm tall) |
+| Cylinder | `c / 2L` along it, or `1.841 c / (π D)` across it [15], whichever is lower | 189 Hz along; 565 Hz across |
+| Sphere | `2.082 c / (π D)` [14] | 409 Hz (55.7 cm inside) |
+| Tapered box | about `c / 2L` for its longest run; the taper moves them | ~285 Hz |
+
+c is the speed of sound (343 m/s at 20 °C), L and D the inside length and diameter in metres.
 
 So:
-- **A sphere's lowest mode is 32% higher** than half a wavelength across its diameter, because the wave has to go round as well as across. The app's port checks used the half-wavelength rule for every shape; they now use the right one for spheres and tubes.
+- **A sphere's lowest mode is 32% higher** than half a wavelength across its diameter, because the wave has to go round as well as across. The app's port checks use each shape's own lowest mode.
 - **A long tube rings along its length.** A sub crossed over at 80–100 Hz is well clear, but a tube used for a midbass isn't.
 - **Non-parallel walls don't remove standing waves.** They change their frequencies and spread them out, which can lower the peaks, but every enclosed space has resonances [7][8]. Damping material on the walls is what lowers them.
 
@@ -117,12 +120,12 @@ The port's own pipe resonance (here 346 Hz) and the cabinet's lowest mode are bo
 
 ![The volume calculator for the Sonotube: 36.8 cm outside, 98.5 cm long, 6 mm wall, 38 mm end caps, the driver and port taken off: 83.45 L net.](img/shaped-cabinets-app.png)
 
-1. **Build → Volume calculator.** Under **Used by**, pick the design; its volume then follows the calculator.
-2. **Shape:** Box, Cylinder (sonotube), Sphere or Truncated pyramid. Enter the **outside** sizes.
-3. **Walls:** the wall thickness; for a tube, the **End caps** too (they follow the wall until you change them).
-4. **Takes up space inside:** the driver's displacement (filled in from the database or estimated), bracing, anything else. The design's own port tubes or passive radiators are taken off automatically; **Port wall** and **Each PR** only show when the design has them.
-5. **Size the box:** enter the **Target** net volume and press **Size the box**. A box can use golden-ratio proportions; a tube keeps its diameter and finds its length.
-6. **Check the port:** on the design, the **Port too long to fit** warning uses the shape's real longest straight run, and **Pipe resonance** gives the cabinet's lowest standing wave.
+1. **Build → Volume calculator → Used by:** pick the design. Its volume now follows the calculator.
+2. **Shape:** pick Box, Cylinder (sonotube), Sphere or Truncated pyramid, then enter the **outside** sizes.
+3. **Walls:** enter the wall thickness. For a tube, also enter **End caps** (it follows the wall until you change it).
+4. **Takes up space inside:** check the driver's displacement (from the database, or estimated), **Bracing** and **Other**. The design's ports or passive radiators are taken off automatically; **Port wall** and **Each PR** only show when it has them.
+5. **Size the box → Target:** enter the net volume you want and press **Size the box**. A box can use golden-ratio proportions; a tube keeps its diameter and finds its length.
+6. **Boxes → the design's port:** **Port too long to fit** uses the shape's longest straight run, and **Pipe resonance** shows the cabinet's lowest standing wave.
 
 The **Cut list** is for rectangular boxes only.
 
@@ -130,12 +133,12 @@ The **Cut list** is for rectangular boxes only.
 
 | Claim | Verdict |
 |---|---|
-| "The shape changes the bass" | Not in the simulation: below the cabinet's first standing wave, only the net volume and the port matter. The four cabinets here all tune to 23.8 Hz with F3 24.5 Hz. |
-| "Sonotube volume is π r² L" | Yes, with the *inside* radius (the tube's nominal size) and the length *between* the end caps. |
-| "A tube needs no bracing" | Mostly: the wall works in tension. The flat end caps are what flex; make them thick [5][9]. |
-| "Frustum volume is h/3 (A₁ + A₂ + √A₁A₂)" | Only when the top and bottom are similar. On a wedge it's up to 33% low; use h/6 (A₁ + 4M + A₂) [12][13]. |
-| "Non-parallel walls eliminate standing waves" | No: they move and spread them [7][8]. |
-| "A sphere is the ideal shape" | It has the smoothest diffraction [11] and the highest lowest mode, but it's the hardest to build, needs a flat for the driver and has the least room for a port. |
+| "The shape changes the bass" | **No.** Not in the simulation: below the cabinet's first standing wave, only the net volume and the port matter. The four cabinets here all tune to 23.8 Hz with F3 24.5 Hz. |
+| "Sonotube volume is `π r² L`" | **Yes,** with the *inside* radius (the tube's nominal size) and the length *between* the end caps. |
+| "A tube needs no bracing" | **Mostly.** The wall works in tension. The flat end caps are what flex; make them thick [5][9]. |
+| "Frustum volume is `h/3 (A₁ + A₂ + √A₁A₂)`" | **Only for similar top and bottom.** On a wedge it's up to 33% low; use `h/6 (A₁ + 4M + A₂)` [12][13]. |
+| "Non-parallel walls eliminate standing waves" | **No.** They move and spread them [7][8]. |
+| "A sphere is the ideal shape" | **For sound, nearly; for building, no.** It has the smoothest diffraction [11] and the highest lowest mode, but it's the hardest to build, needs a flat for the driver and has the least room for a port. |
 
 ## Sources
 
