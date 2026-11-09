@@ -142,11 +142,14 @@ export function solveTs(entered: TsValues, tolerance = 0.03, air: Air = STANDARD
   const K = air.rho * air.c * air.c;
   const si: SiValues = {};
   const source: SolveResult["source"] = {};
+  // Which entered parameters each value was worked out from (an entered value depends on itself).
+  const deps: Partial<Record<TsParam, Set<TsParam>>> = {};
   for (const [k, v] of Object.entries(entered) as [TsParam, number | undefined][]) {
     // Only the parameters this solver knows (a stray key from an old link or a file is ignored).
     if (Object.hasOwn(TS_PARAMS, k) && v !== undefined && Number.isFinite(v) && v > 0) {
       si[k] = toSi(k, v);
       source[k] = "entered";
+      deps[k] = new Set([k]);
     }
   }
 
@@ -162,6 +165,7 @@ export function solveTs(entered: TsValues, tolerance = 0.03, air: Air = STANDARD
       if (Number.isFinite(val) && val > 0) {
         si[t] = val;
         source[t] = "derived";
+        deps[t] = new Set(r.vars.filter((p) => p !== t).flatMap((p) => [...deps[p]!]));
         progress = true;
       }
     }
@@ -175,6 +179,9 @@ export function solveTs(entered: TsValues, tolerance = 0.03, air: Air = STANDARD
     const enteredVars = r.vars.filter((p) => source[p] === "entered");
     if (enteredVars.length < 2 && !r.vars.some((p) => source[p] === "derived")) continue;
     for (const p of enteredVars.filter((x) => !r.check || r.check.includes(x))) {
+      // Solving this relation for p holds the others fixed, which is meaningless when one of them
+      // was itself calculated from p (e.g. Mms from Fs, then Fs back from Qes = 2π·Fs·Mms·Re/Bl²).
+      if (r.vars.some((q) => q !== p && deps[q]!.has(p))) continue;
       const implied = r.solve(si as Required<SiValues>, p, K);
       const actual = si[p]!;
       const diff = Math.abs(actual - implied) / implied;
@@ -198,6 +205,32 @@ export function solveTs(entered: TsValues, tolerance = 0.03, air: Air = STANDARD
   const values: TsValues = {};
   for (const [k, v] of Object.entries(si) as [TsParam, number][]) values[k] = fromSi(k, v);
   return { values, source, conflicts, missing: SIM_REQUIRED.filter((p) => values[p] === undefined) };
+}
+
+export interface ConflictFix {
+  /** The entered values after the fix. */
+  entered: TsValues;
+  /** "clear": p is left to be calculated; "set": p is entered as the implied value. */
+  kind: "clear" | "set";
+}
+
+/**
+ * What "use the calculated value" should do for a conflict. Clearing the
+ * parameter only works when the remaining values still determine it, and
+ * determine it as the value the conflict promised: another relation may fill it
+ * in first (Qes from Qts and Qms rather than from Bl), or nothing may (Fs once
+ * Mms is calculated from it). In those cases the implied value is entered instead,
+ * so the simulation never loses an input and the number shown is the one used.
+ */
+export function fixConflict(entered: TsValues, c: Conflict, tolerance = 0.03, air: Air = STANDARD_AIR): ConflictFix {
+  const before = solveTs(entered, tolerance, air);
+  const without = { ...entered };
+  delete without[c.param];
+  const after = solveTs(without, tolerance, air);
+  const got = after.values[c.param];
+  const sameTarget = got !== undefined && Math.abs(got - c.implied) / c.implied < 0.005;
+  if (sameTarget && after.missing.length <= before.missing.length) return { entered: without, kind: "clear" };
+  return { entered: { ...entered, [c.param]: Number(c.implied.toPrecision(4)) }, kind: "set" };
 }
 
 function fmt(v: number): string {
