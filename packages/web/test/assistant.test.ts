@@ -6,7 +6,7 @@ import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { needsSpace } from "../src/ports.ts";
 import { PORT_LIMIT, lineFoldOf, limitsOf, volumeFor, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { GD_CYCLES, mountsFit, dividerFor, portDisplacement_l, decodeShared, decodeSharedAny, driverFits, encodeShared, encodeSharedShort, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { GD_CYCLES, carCabinOf, mountsFit, dividerFor, portDisplacement_l, decodeShared, decodeSharedAny, driverFits, encodeShared, encodeSharedShort, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -485,4 +485,23 @@ test("fit my space: a bandpass box's chambers share the space with its divider, 
     }
   }
   assert.ok(n > 0, "some bandpass boxes in the space");
+});
+
+test("a car design is tried in the user's own cabin when they set one up, else a typical 2.5 m one", () => {
+  const room = DEFAULT_STATE.roomGain;
+  // Off (or a room): the typical car cabin.
+  assert.deepEqual(carCabinOf({ ...room, mode: "off" }), { ...room, mode: "car", length_cm: 250, slope: 12, max_db: 18 });
+  assert.equal(carCabinOf({ ...room, mode: "room", length_cm: 500, slope: 6, max_db: 10 }).length_cm, 250);
+  // A hatchback's 180 cm cabin, or a curve measured in the car, is kept.
+  const hatch = { ...room, mode: "car" as const, length_cm: 180, slope: 12, max_db: 15 };
+  assert.deepEqual(carCabinOf(hatch), hatch);
+  const curve = { ...room, mode: "curve" as const, curve: { name: "my car", f: [20, 40, 80], v: [14, 8, 0] } };
+  assert.deepEqual(carCabinOf(curve), curve);
+  // A curve chosen but not loaded yet falls back to the typical cabin.
+  assert.equal(carCabinOf({ ...room, mode: "curve" }).mode, "car");
+  // And opening a car result keeps it.
+  const goal = goalFor("car", "balanced");
+  const r = runAll(goal).results.find((x) => x.box === "sealed")!;
+  const s = openResults({ ...DEFAULT_STATE, roomGain: hatch }, loaded(r.driverId), [r], goal);
+  assert.deepEqual(s.roomGain, hatch);
 });
