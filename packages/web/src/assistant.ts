@@ -28,7 +28,7 @@ import {
 import { doubtsXmax, type DbIndex, type LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
 import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
-import { airOf, endCorrectionOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
+import { airOf, endCorrectionOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, limitsOf, checkFromHz, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
 import { portCandidates, portFieldsOf, portSpeedFor, chamberPortFields, needsSpace, type AssistantPort, type PortSpace } from "./ports.ts";
 import { bandRipple, sizeBandpass, type BandpassFound, type BandpassOrder } from "./bandpassSize.ts";
 export { choosePort, portCandidates, portFieldsOf, type AssistantPort } from "./ports.ts";
@@ -808,17 +808,21 @@ export function evaluateDriver(
       return mountsFit([...drivers, ...Array.from({ length: count }, () => pr)], sp);
     };
     const find = (vb: number) =>
-      rankPrResults([...evaluatePrCandidates(drv, prs, { vb_l: vb, targetFb: box.fb, sim: opts, losses, counts: [1, 2, 4], fMin: 15 })].flat()).find(
+      rankPrResults([...evaluatePrCandidates(drv, prs, { vb_l: vb, targetFb: box.fb, sim: opts, losses, counts: [1, 2, 4], fMin: checkFromHz(false) })].flat()).find(
         (x) => x.ok && fitsWith(x.id, x.count),
       );
     let found = find(box.vb);
     if (!found) return;
     // In a space, the PRs take room too: if the box filled it, try again a little smaller.
+    // Shrinking can change which PR (or how many) wins, and so what they displace: repeat until
+    // the pick fits (it used to stop after one try, and a bulkier pick overfilled the space).
     if (sp) {
-      const c0 = prs.find((x) => x.id === found!.id)!;
-      prDispUsed = c0.displacement_l ?? s.volume.prDisp_l;
-      const cap = netIn({ ...(newDesign("pr", []) as PrDesign), count: found.count }, prDispUsed);
-      if (box.vb > cap + 0.05) {
+      for (let k = 0; ; k++) {
+        const c0 = prs.find((x) => x.id === found!.id)!;
+        prDispUsed = c0.displacement_l ?? s.volume.prDisp_l;
+        const cap = netIn({ ...(newDesign("pr", []) as PrDesign), count: found.count }, prDispUsed);
+        if (box.vb <= cap + 0.05) break;
+        if (k === 4) return;
         box.vb = cap;
         found = find(cap);
         if (!found) return;

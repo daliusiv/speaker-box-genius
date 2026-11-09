@@ -519,10 +519,11 @@ test("a PR box with no space given notes when the driver and PRs won't fit the p
   assert.ok(side < 45, `${side}`);
   assert.ok(note, r.notes.join(" | "));
   assert.match(note!, /use My space to check it/);
-  // A small PR on a box with room is not flagged.
-  const small = rows.find((x) => x.id === "dayton-audio/rss265hf-4")!;
-  const [s] = evaluateDriver(DEFAULT_STATE, small, loaded(small.id), goalFor("home", "balanced"), "pr", prs);
-  if (s && s.pr!.count === 1 && s.vb_l > 60) assert.ok(!s.notes.some((n) => n.includes("cube-shaped")), s.notes.join(" | "));
+  // A 12″ driver in a 38 L box with small PRs on the other faces is not flagged.
+  const twelve = rows.find((x) => x.id === "dayton-audio/rss315ho-44")!;
+  const [t] = evaluateDriver(DEFAULT_STATE, twelve, loaded(twelve.id), goalFor("home", "balanced"), "pr", prs);
+  assert.ok(t && t.vb_l < 40);
+  assert.ok(!t.notes.some((n) => n.includes("cube-shaped")), t.notes.join(" | "));
 });
 
 test("a slow-bass note never reads as exactly one cycle when it's over one", () => {

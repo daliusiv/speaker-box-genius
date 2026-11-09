@@ -82,6 +82,7 @@ import {
   switchDrive,
   builtVbOf,
   limitsOf,
+  checkFromHz,
   portLimitOf,
   driveAt,
   deepSplitOf,
@@ -616,6 +617,7 @@ export function App(props: { initial: AppState | null }) {
       dash: d.dash ?? (k === 0 ? undefined : k === 1 ? "6 3" : "2 3"),
       y: g.excursionMm,
       over: g.xmax_mm ?? undefined,
+      deepFloor: checkFromHz(state.highPass.on),
     }));
   });
 
@@ -741,7 +743,7 @@ export function App(props: { initial: AppState | null }) {
       driver: solved.missing.length > 0 ? null : driverInputOf(state, solved),
       sim: simOptionsOf(state),
       losses: { ql: state.settings.losses.ql, qa: state.settings.losses.qa },
-      fMin: state.highPass.on ? 10 : 15,
+      fMin: checkFromHz(state.highPass.on),
       align: alignmentDriver(solved, state),
       drivers: state.drivers,
     }),
@@ -2046,7 +2048,8 @@ export function App(props: { initial: AppState | null }) {
                 ...(() => {
                   const split = deepSplitOf(d.result, state.highPass.on);
                   const xmax = d.compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
-                  return split ? { deepBelow: split, deepOver: DEEP_ALLOW * xmax, deepFloor: DEEP_FLOOR_HZ } : {};
+                  // No glow below where the limits are checked (the same floor for every box).
+                  return split ? { deepBelow: split, deepOver: DEEP_ALLOW * xmax, deepFloor: DEEP_FLOOR_HZ } : { deepFloor: checkFromHz(state.highPass.on) };
                 })(),
               }))}
               zones={(() => {
@@ -2114,6 +2117,7 @@ export function App(props: { initial: AppState | null }) {
                     dash: d.dash,
                     y: d.result.portVelocity,
                     over: portLimitOf(state),
+                    deepFloor: checkFromHz(state.highPass.on),
                   })),
                   ...designs.map((d) => ({
                     label: `${d.label} (rear port)`,
@@ -2121,6 +2125,7 @@ export function App(props: { initial: AppState | null }) {
                     dash: "5 3",
                     y: d.result.rearPortVelocity,
                     over: portLimitOf(state),
+                    deepFloor: checkFromHz(state.highPass.on),
                   })),
                 ].filter((s) => s.y)}
                 limits={[{ value: portLimitOf(state), label: `Chuffing risk ${portLimitOf(state)} m/s`, color: LIMIT_RED }]}
@@ -2456,7 +2461,7 @@ export function App(props: { initial: AppState | null }) {
 /** What the port checks need to know about a design: its simulated peak port speed and the box it sits in. */
 function portContext(state: AppState, designs: Design[], id: string) {
   const r = designs.find((x) => x.design.id === id)?.result;
-  const fMin = state.highPass.on ? 10 : 15;
+  const fMin = checkFromHz(state.highPass.on);
   const peakOf = (a: Float64Array | null | undefined) => {
     if (!r || !a) return null;
     let m = 0;
@@ -2573,7 +2578,7 @@ function Summary({
   // Each box, then the comparison driver in that box.
   designs = designs.filter((d) => !d.compare).flatMap((d) => [d, ...designs.filter((c) => c.compare && c.design.id === d.design.id)]);
   // Without a high-pass filter, a tuned box's deep bass is graded, not failed (limitsOf).
-  const fMin = state.highPass.on ? 10 : 15;
+  const fMin = checkFromHz(state.highPass.on);
   if (narrow) {
     // Phones: folded to one line by default, so the charts start near the top of the screen.
     // Open: name, volume, F3 and what (if anything) is over its limit; the rest one tap away.
@@ -2806,8 +2811,8 @@ function Summary({
           <>Peaks are taken above {fMin} Hz. </>
         ) : (
           <>
-            Peaks are taken above {fMin} Hz, except a ported or PR box's deep bass: below 0.7 × its tuning (down to 20 Hz) the cone may reach 2 × Xmax, shown in
-            amber, before it counts as over, since music has little energy there; below 20 Hz a tuned box isn't checked. Turn on the high-pass filter to model a subsonic filter.{" "}
+            Peaks are taken above {fMin} Hz for every box, since music has little energy below that. A ported or PR box's deep bass (below 0.7 × its tuning)
+            may also reach 2 × Xmax, shown in amber, before it counts as over. Turn on the high-pass filter to model a subsonic filter and check down to 10 Hz.{" "}
           </>
         )}
         Red means over the limit: click it to see the chart.
