@@ -35,7 +35,17 @@ const PATTERNS: Pattern[] = [
  * copied as tab-separated text, and labels with the symbol in brackets.
  */
 export function parseDatasheet(text: string): Partial<Record<DatasheetField, number>> {
+  return readDatasheet(text).values;
+}
+
+/**
+ * The same, and the lines whose number had a unit that couldn't be read (e.g. "Vas 1.32 qt"):
+ * those are left out rather than read as database units, so a volume in some unknown unit
+ * never turns into that many litres.
+ */
+export function readDatasheet(text: string): { values: Partial<Record<DatasheetField, number>>; unread: { field: DatasheetField; text: string }[] } {
   const out: Partial<Record<DatasheetField, number>> = {};
+  const unread: { field: DatasheetField; text: string }[] = [];
   const lines = text
     .split(/\r?\n|;/)
     .map((l) => l.replace(/[•*·|]/g, " ").trim())
@@ -52,13 +62,25 @@ export function parseDatasheet(text: string): Partial<Record<DatasheetField, num
       if (!p || out[p.field] !== undefined) continue;
       const rest = line.slice(lower.match(p.key)![0].length);
       // First number in the rest of the line, with whatever follows as its unit.
-      const m = /([-+]?\d+(?:[.,]\d+)?)\s*([^\s\d:=,;()]*(?:\s?\/\s?[^\s\d]+)?)/.exec(rest.replace(/[:=]/g, " "));
+      const m = /([-+]?\d+(?:[.,]\d+)?)\s*((?:[^\s\d:=,;()]+[23]?)?(?:\s?\/\s?[^\s\d]+)?)/.exec(rest.replace(/[:=]/g, " "));
       if (!m) continue;
-      let v = m[2] ? parseQuantity(`${m[1]} ${m[2]}`, p.q) : null;
+      // The unit, or the unit and the next word ("211.2 sq cm").
+      const next = /^\s*([^\s\d:=,;()]+)/.exec(rest.replace(/[:=]/g, " ").slice(m.index + m[0].length))?.[1];
+      let v = m[2] ? (parseQuantity(`${m[1]} ${m[2]}`, p.q) ?? (next ? parseQuantity(`${m[1]} ${m[2]} ${next}`, p.q) : null)) : null;
       if (v === null) {
         // No usable unit after the number: look for one in brackets before it, e.g. "Vas (ft³) 1.9".
         const hint = /\(([^)]*)\)/.exec(rest.slice(0, m.index));
-        v = (hint && parseQuantity(`${m[1]} ${hint[1]}`, p.q)) ?? parseQuantity(m[1]!, p.q);
+        v = hint ? parseQuantity(`${m[1]} ${hint[1]}`, p.q) : null;
+        // A bare number is in database units, but a number with a unit we can't read isn't:
+        // for anything but plain values (Hz, Ω, T·m, W…) leave it out and say so.
+        if (v === null) {
+          const unitText = m[2]?.trim();
+          if (unitText && p.q !== "plain" && /[a-z³²]/i.test(unitText)) {
+            unread.push({ field: p.field, text: line.trim() });
+            break;
+          }
+          v = parseQuantity(m[1]!, p.q);
+        }
       }
       if (v !== null && v > 0) {
         // Linear coil travel quoted peak-to-peak? Only when explicitly labelled.
@@ -68,5 +90,5 @@ export function parseDatasheet(text: string): Partial<Record<DatasheetField, num
       }
     }
   }
-  return out;
+  return { values: out, unread };
 }

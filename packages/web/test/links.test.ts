@@ -196,3 +196,21 @@ test("the example's ported box has a port that fits and tunes it; older links ke
   const kept = decodeState("s=" + Buffer.from(JSON.stringify(own)).toString("base64url"))!.designs.find((d) => d.kind === "vented")!;
   assert.ok(kept.kind === "vented" && kept.diameter_cm === 12 && kept.length_cm === 25 && kept.flare_cm === 0);
 });
+
+test("a link with odd T/S values opens: unknown keys and bad values are dropped, numeric strings read", async () => {
+  const { encodeState: enc, decodeState: dec } = await import("../src/state.ts");
+  const { runDesigns: run, solveDriver: solve } = await import("../src/sim.ts");
+  const base = DEFAULT_STATE.ts;
+  const cases: [unknown, Record<string, number>][] = [
+    [{ ...base, le_mh: 1 }, base as Record<string, number>],
+    [{ ...base, fs: "30" }, base as Record<string, number>],
+    [{ ...base, qes: -1, qms: "x" }, { fs: 30, vas_l: 50, re: 3.4, sd_cm2: 330 }],
+    ["oops", base as Record<string, number>],
+    [[1, 2], base as Record<string, number>],
+  ];
+  for (const [ts, want] of cases) {
+    const s = dec(enc({ ...DEFAULT_STATE, ts: ts as never }))!;
+    assert.deepEqual(s.ts, want, JSON.stringify(ts));
+    assert.doesNotThrow(() => run(s, solve(s)));
+  }
+});

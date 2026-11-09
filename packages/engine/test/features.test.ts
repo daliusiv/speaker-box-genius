@@ -211,3 +211,27 @@ test("datasheet paste: units in brackets before the value", () => {
   assert.equal(p.fs, 25.6);
   near(p.sd_cm2!, 356.3, 1e-9, "sd");
 });
+
+test("datasheet paste: units with digits or dots convert (ft3, in2, ft.³, sq cm), and an unknown unit is left out, not read as litres", async () => {
+  const { readDatasheet } = await import("../src/datasheet.ts");
+  near(parseDatasheet("Vas 1.9 ft3").vas_l!, 53.8, 0.01, "ft3");
+  near(parseDatasheet("Compliance Equivalent Volume (Vas) 1.32 ft.³").vas_l!, 37.38, 0.01, "Dayton's ft.³");
+  near(parseDatasheet("Vas 100 in3").vas_l!, 1.639, 0.001, "in3");
+  near(parseDatasheet("Sd 33 in2").sd_cm2!, 212.9, 0.1, "in2");
+  assert.equal(parseDatasheet("Sd 211.2 sq cm").sd_cm2, 211.2);
+  assert.equal(parseDatasheet("Le 1.0 mH @ 1 kHz").le_mh, 1);
+  assert.equal(parseDatasheet("Mms 34.6 g.").mms_g, 34.6);
+  // Bare numbers are still database units; plain values keep any unit.
+  assert.equal(parseDatasheet("Vas 37.4").vas_l, 37.4);
+  assert.equal(parseDatasheet("Bl 10.6 T*m").bl, 10.6);
+  const r = readDatasheet("Fs 35 Hz\nVas 37.4 qt");
+  assert.deepEqual(r.values, { fs: 35 });
+  assert.deepEqual(r.unread, [{ field: "vas_l", text: "Vas 37.4 qt" }]);
+});
+
+test("the T/S solver ignores keys it doesn't know instead of throwing", async () => {
+  const { solveTs } = await import("../src/tsSolver.ts");
+  const r = solveTs({ fs: 35, qms: 1.87, qes: 0.4, vas_l: 37.4, re: 5.9, sd_cm2: 211.2, le_mh: 1 } as never);
+  assert.deepEqual(r.missing, []);
+  assert.equal(r.values.qts!.toFixed(3), "0.330");
+});
