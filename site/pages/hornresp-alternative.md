@@ -62,7 +62,7 @@ Each line or horn design has a **Hornresp** section:
 
 ## What it adds
 
-- **A driver database** of about 1,530 drivers, so you don't need to type parameters in, each with [its own page](/drivers/).
+- **A driver database** of about 1,610 drivers, so you don't need to type parameters in, each with [its own page](/drivers/).
 - **Line types side by side:** **Compare types** makes and tunes a classic TL, TQWT, offset TL, MLTL and front horn for your driver, and ranks them by bass extension, size and smoothness.
 - **Tuning by simulation:** **Set line length** scales the whole line until it tunes where you ask; **Best line** searches the driver position and stuffing.
 - **Inside the line:** the cone and mouth contributions on their own, and the pressure and air speed along the line at any frequency.

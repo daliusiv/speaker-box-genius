@@ -1,0 +1,37 @@
+{
+  "brand": "SEAS",
+  "model": "ER15RLY",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 44,
+    "qms": 1.55,
+    "qes": 0.41,
+    "vas_l": 15,
+    "re": 5.6,
+    "sd_cm2": 80,
+    "qts": 0.32,
+    "le_mh": 0.73,
+    "bl": 5.5,
+    "xmax_mm": 5,
+    "pe_w": 60,
+    "mms_g": 8.02
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=91:h1455-08-er15rly&catid=44:utv-prestige-woofers&Itemid=461",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (H1455-08). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/prestige/pdfdatasheet/H1455_ER15RLY_Datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Size 5.25\" from the frame size in the model name (the datasheet doesn't state it). Xmax 5 mm is half the published linear coil travel (10 mm peak to peak). Mms 8.02 g is the published moving mass plus air load (7.6 + 0.42 g)."
+}

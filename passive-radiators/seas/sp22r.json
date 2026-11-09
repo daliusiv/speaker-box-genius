@@ -1,0 +1,29 @@
+{
+  "brand": "SEAS",
+  "model": "SP22R",
+  "type": "passive-radiator",
+  "size_in": 8,
+  "params": {
+    "mms_g": 28.9,
+    "sd_cm2": 230,
+    "xmax_mm": 10,
+    "vas_l": 122,
+    "cms_mm_per_n": 1.61
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=114:h9945-sp22r&catid=54:prestige-passive-radiator&Itemid=465",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (H9945). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/prestige/pdfdatasheet/H9945-SP22R_Datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "The datasheet's table is an image: values read by OCR, check them against the PDF. Size 8\" from the frame size in the model name (the datasheet doesn't state it). Xmax 10 mm is half the published maximum travel (20 mm peak to peak), not a linear limit."
+}

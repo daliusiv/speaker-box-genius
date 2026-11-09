@@ -125,7 +125,7 @@ Any complete set describes the driver, and the rest follows. In Speaker Box Geni
 - **What you type is never changed.** Your values are bold with an orange edge; what the app works out is grey. Type them in any order. Above, six pasted values give Mms 34.99 g and Bl 10.65 T·m, within about 1 % of the datasheet's 34.6 g and 10.6 T·m.
 - **Contradictions are flagged.** If you type more values than needed and they disagree by more than 3 %, the app says which ones and lets you use the calculated value. The simulation always uses Fs, Qms, Qes, Vas, Re and Sd.
 - **Paste the datasheet.** **Driver → Paste datasheet** (or **Driver tools → Paste from datasheet…**) picks the values out of a pasted spec table and converts units: "1.32 ft.³" as Dayton writes it, "1.9 ft3", "35630 mm²", "33 in²". A number with a unit it can't read is left out, and it says which line to type by hand.
-- **Or pick the driver** from the database of about 1,530 drivers. Each also has [its own page](/drivers/) with its parameters and suggested boxes.
+- **Or pick the driver** from the database of about 1,610 drivers. Each also has [its own page](/drivers/) with its parameters and suggested boxes.
 - **Measure your own.** **Driver tools → Measure from an impedance sweep…** fits the T/S parameters to a DATS, REW or ARTA sweep (.zma), and a second sweep with a known added mass gives Vas. A mass that drops Fs by roughly 10–30 % works well [10].
 
 [[Open the worked example|ts-example]]

@@ -669,13 +669,13 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   assert.deepEqual(ported.over, ["port"]);
   assert.equal(ported.safe_w, 61);
   assert.equal(sealed.vb_l, 23.6);
-  assert.equal(ranked.findIndex((r) => r.driverId === "18-sound/18ntlw5000-8ohm" && r.box === "vented") + 1, 7);
-  assert.equal(ranked.indexOf(sealed) + 1, 6);
-  assert.equal(ranked.indexOf(ported) + 1, 528);
+  assert.equal(ranked.findIndex((r) => r.driverId === "18-sound/18ntlw5000-8ohm" && r.box === "vented") + 1, 4);
+  assert.equal(ranked.indexOf(sealed) + 1, 3);
+  assert.equal(ranked.indexOf(ported) + 1, 527);
   assert.equal(sealed.subsonic, undefined);
   // Re-sorted: Deepest and Loudest on the same results; Smallest sizes the boxes again.
   const deep = rankResults(res, { ...goal, priority: "deep" })[0]!;
-  assert.deepEqual([deep.driverId, deep.box, deep.vb_l, Math.round(deep.f3 * 10) / 10, deep.pr?.name, deep.over], ["dayton-audio/rss315hfa-8", "pr", 80, 24.6, "Dayton Audio RSS390-PR", []]);
+  assert.deepEqual([deep.driverId, deep.box, deep.vb_l, Math.round(deep.f3 * 10) / 10, deep.pr?.name, deep.over], ["dayton-audio/rss315ho-44", "pr", 43.5, 25.5, "Dayton Audio RSS315-PR", []]);
   const loud = rankResults(res, { ...goal, priority: "loud" })[0]!;
   assert.deepEqual([loud.driverId, loud.box, loud.vb_l, loud.loud_db, loud.pr?.name], ["18-sound/15ntls3500", "vented", 80, 110.0, undefined]);
   const sgoal = goalFor("home", "small");
@@ -683,11 +683,11 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   let sres = scands.flatMap((r) => evaluateDriver(base, r, loaded(r.id) as never, sgoal));
   sres = [...sres, ...prShortlist(rankResults(sres, sgoal), scands).flatMap((r) => evaluateDriver(base, r, loaded(r.id) as never, sgoal, "pr", db.passiveRadiators.map(prCandidate)))];
   const small = rankResults(sres, sgoal)[0]!;
-  assert.deepEqual([small.driverId, small.box, small.vb_l, small.pr?.name, small.pr?.count, small.pr?.addedMass_g], ["peerless/stw-350f188pr01-04", "pr", 31.7, "SB Acoustics SB29NRX-00", 2, 647]);
+  assert.deepEqual([small.driverId, small.box, small.vb_l, small.pr?.name, small.pr?.count, small.pr?.addedMass_g], ["peerless/stw-350f188pr01-04", "pr", 31.7, "SEAS SL26R", 1, 640]);
   assert.ok(small.notes.some((n) => n.includes("won't all fit")));
   // The counts the guide gives for these defaults.
   const grade = (g: string) => ranked.filter((r) => (g === "over" ? r.over.length > 0 : g === "deep" ? !r.over.length && !!r.deep : !r.over.length && !r.deep)).length;
-  assert.deepEqual([cands.length, ranked.length, grade("ok"), grade("deep"), grade("over")], [733, 1432, 448, 78, 906]);
+  assert.deepEqual([cands.length, ranked.length, grade("ok"), grade("deep"), grade("over")], [756, 1478, 447, 78, 953]);
   // Opening it with ported too, plus the sealed box, gives the example's designs.
   const opened = openResults(DEFAULT_STATE, loaded(top.driverId) as never, [top, ported, sealed], goal);
   const ex = EXAMPLES["assistant-example"]!();

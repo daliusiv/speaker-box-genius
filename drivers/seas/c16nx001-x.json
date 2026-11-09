@@ -1,0 +1,36 @@
+{
+  "brand": "SEAS",
+  "model": "C16NX001/X",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 38,
+    "qms": 4.95,
+    "qes": 0.3,
+    "vas_l": 18,
+    "re": 3.1,
+    "sd_cm2": 94,
+    "qts": 0.29,
+    "le_mh": 0.16,
+    "xmax_mm": 7,
+    "pe_w": 100,
+    "mms_g": 12.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=634:e0121-04_06-c16nx001x&catid=60:seas-excel-coaxial-drivers&Itemid=317",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (E0121-04/06). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/excel/pdfdatasheet/E0121-04_06_C16NX001_X_Datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "The datasheet's table is an image: values read by OCR, check them against the PDF. Size 6.5\" from the frame size in the model name (the datasheet doesn't state it). Xmax 7 mm is half the published linear coil travel (14 mm peak to peak). Published Bl 8 T·m disagrees with Fs, Mms, Re and Qes, so it's left out (the app derives it). Coaxial: the woofer's parameters (the tweeter's are left out)."
+}

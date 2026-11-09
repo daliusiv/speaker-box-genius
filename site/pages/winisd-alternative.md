@@ -31,7 +31,7 @@ Speaker Box Genius is built around those four problems.
 - **Charts for everything you check before you build:** response, cone excursion with an Xmax line, PR excursion, port air speed with a chuffing line, maximum SPL (and what limits it) with the amplifier voltage and current it takes, impedance and group delay.
 - **A T/S editor that never overwrites what you typed**, and that reads parameters pasted straight from a datasheet.
 - **Alignment presets that give WinISD's boxes:** QB3, BB4/SBB4 and C4/SC4 for ported and passive radiator boxes, and Qtc 0.5, 0.577 and 0.707 sealed, are sized the way WinISD's new-project wizard sizes them, checked against WinISD for 19 drivers ([validation](/validation/#winisd-alignments)) and its closed-box wizard ([sealed](/validation/#winisd-sealed)). The amplifier resistance defaults to WinISD's 0.1 Ω, so a box simulates as it does in WinISD. The textbook lossless alignments are a setting away.
-- **A database of about 1,530 drivers and 55 passive radiators**, searchable, with links to each datasheet, and a [page for every driver](/drivers/) with suggested boxes to start from.
+- **A database of about 1,610 drivers and 59 passive radiators**, searchable, with links to each datasheet, and a [page for every driver](/drivers/) with suggested boxes to start from.
 - **Passive radiator tools:** find the best PRs for your driver and box, the added mass for a tuning, and the best tuning for a PR you already have.
 - **A net volume calculator** for boxes, cylinders, spheres and truncated pyramids, minus everything inside them ([how it works for each shape](/guides/shaped-cabinets/)), and a **cut list** for building the box.
 - **Live links:** the whole design lives in the link, so whoever opens it sees exactly what you see and can change it. Share also makes a forum image and ready-to-paste Reddit and diyAudio posts.
@@ -47,7 +47,7 @@ Speaker Box Genius is built around those four problems.
 | Install | Download and install | None (and it works offline once opened) |
 | Price | Free | Free (non-commercial licence) |
 | Box types | Sealed, vented, bandpass, passive radiator | The same, plus transmission lines and horns |
-| Driver data | Typed in, or files you find | Database of ~1,530 drivers, plus your own |
+| Driver data | Typed in, or files you find | Database of ~1,610 drivers, plus your own |
 | Baffle step | Not modelled: the SPL is for an infinite baffle | Optional, with EQ or passive compensation ([how it works](/guides/baffle-step/)) |
 | Sharing a design | Screenshots or project files | A live link, a forum image and forum posts |
 | Your WinISD files | | Opens `.wdr` drivers and `.wpr` projects, and saves any box as a `.wpr` |
