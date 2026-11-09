@@ -28,7 +28,7 @@ import {
 import { doubtsXmax, type DbIndex, type LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
 import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
-import { airOf, endCorrectionOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
+import { airOf, endCorrectionOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, limitsOf, checkFromHz, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
 import { portCandidates, portFieldsOf, portSpeedFor, chamberPortFields, needsSpace, type AssistantPort, type PortSpace } from "./ports.ts";
 import { bandRipple, sizeBandpass, type BandpassFound, type BandpassOrder } from "./bandpassSize.ts";
 export { choosePort, portCandidates, portFieldsOf, type AssistantPort } from "./ports.ts";
@@ -74,6 +74,8 @@ export const LINE_SHORTLIST = 10;
 export const LINE_MAX_CM = 300;
 /** Group delay (in cycles of the frequency, from 0.8 × F3 up) above which a result gets a "slow bass" note: a delay as long as the note's own period. */
 export const GD_CYCLES = 1;
+/** Cycles of group delay as a card shows them, with enough digits that one over GD_CYCLES doesn't read "1.0". */
+export const cyclesText = (c: number) => (c < 1.1 ? c.toFixed(2) : c.toFixed(1));
 /** The tallest cabinet (outside, cm) a line may fold into, and the deepest and widest. */
 export const LINE_FOLD_MAX = { height_cm: 125, depth_cm: 50, width_cm: 45 };
 /** Narrowest a line may get on average, as a share of the cones' area. */
@@ -291,6 +293,8 @@ export interface AssistantResult {
   safe_w?: number;
   /** Past Xmax only in deep bass (below 0.7 × Fb): from where, and the power that keeps it within (W). */
   deep?: { below_hz: number; safe_w: number };
+  /** Past Xmax (cone or PR) only below where limits are checked (checkFromHz), with no subsonic filter: from where, and the power that keeps it within (W). */
+  subsonic?: { below_hz: number; safe_w: number };
   /** Highest point of the relative response above F3 (dB): a hump. */
   peak_db: number;
   /** Relative response at CURVE_FREQS, for a small sketch. */
@@ -628,13 +632,26 @@ export function evaluateDriver(
     // Group delay in the band it plays (from F3 up), in cycles of the frequency: a delay that's
     // long against the note's own period is what makes bass sound slow or boomy.
     let gd: AssistantResult["gd"];
+    let worst = GD_CYCLES;
     for (let i = 0; i < r.freq.length; i++) {
       const f = r.freq[i]!;
       if (f < 0.8 * f3 || f > 200) continue;
       const cycles = (r.groupDelayMs[i]! / 1000) * f;
-      if (cycles > GD_CYCLES && (!gd || cycles > gd.cycles)) gd = { ms: Math.round(r.groupDelayMs[i]!), hz: Math.round(f), cycles: Math.round(cycles * 100) / 100 };
+      // Rounded up for the card, so a result just over one cycle never reads as exactly one.
+      if (cycles > worst) {
+        worst = cycles;
+        gd = { ms: Math.round(r.groupDelayMs[i]!), hz: Math.round(f), cycles: Math.ceil(cycles * 100) / 100 };
+      }
     }
     const watts = (scale: number) => Number((goal.power_w * scale * scale).toPrecision(2));
+    // Below where limits are checked nothing is graded, but the cone (or a PR) can still pass
+    // Xmax there: say so, so "within its limits" isn't read as safe with any signal.
+    const floor = checkFromHz(false, f3);
+    let below = 0;
+    for (let k = 0; k < r.freq.length && r.freq[k]! < floor; k++) {
+      below = Math.max(below, r.excursionMm[k]! / d.xmax_mm!);
+      for (const g of r.prGroups ?? []) if (g.xmax_mm) below = Math.max(below, g.excursionMm[k]! / g.xmax_mm);
+    }
     const spl = at(r.freq, r.spl, goal.loudAt_hz);
     const max = at(r.freq, r.maxSpl, goal.loudAt_hz);
     const i = r.freq.findIndex((f) => f >= goal.loudAt_hz);
@@ -671,6 +688,7 @@ export function evaluateDriver(
       over: lim.over,
       ...(lim.over.length ? { safe_w: watts(lim.safeScale) } : {}),
       ...(lim.deep ? { deep: { below_hz: Math.round(lim.deep.below_hz), safe_w: watts(lim.deep.scale) } } : {}),
+      ...(below > 1 ? { subsonic: { below_hz: Math.round(floor), safe_w: watts(1 / below) } } : {}),
       // A bandpass box's gain isn't a hump: its ripple across the band is.
       peak_db: r1(bandpass ? bandRipple(r, room ? (f: number) => roomGainDb(f, room) : undefined) : peakOf(r)),
       curve: CURVE_FREQS.map((f) => r1(at(r.freq, r.spl, f) - (room ? roomGainDb(f, room) : 0) - relRef)),
@@ -801,23 +819,40 @@ export function evaluateDriver(
       return mountsFit([...drivers, ...Array.from({ length: count }, () => pr)], sp);
     };
     const find = (vb: number) =>
-      rankPrResults([...evaluatePrCandidates(drv, prs, { vb_l: vb, targetFb: box.fb, sim: opts, losses, counts: [1, 2, 4], fMin: 15 })].flat()).find(
+      rankPrResults([...evaluatePrCandidates(drv, prs, { vb_l: vb, targetFb: box.fb, sim: opts, losses, counts: [1, 2, 4], fMin: checkFromHz(false) })].flat()).find(
         (x) => x.ok && fitsWith(x.id, x.count),
       );
     let found = find(box.vb);
     if (!found) return;
     // In a space, the PRs take room too: if the box filled it, try again a little smaller.
+    // Shrinking can change which PR (or how many) wins, and so what they displace: repeat until
+    // the pick fits (it used to stop after one try, and a bulkier pick overfilled the space).
     if (sp) {
-      const c0 = prs.find((x) => x.id === found!.id)!;
-      prDispUsed = c0.displacement_l ?? s.volume.prDisp_l;
-      const cap = netIn({ ...(newDesign("pr", []) as PrDesign), count: found.count }, prDispUsed);
-      if (box.vb > cap + 0.05) {
+      for (let k = 0; ; k++) {
+        const c0 = prs.find((x) => x.id === found!.id)!;
+        prDispUsed = c0.displacement_l ?? s.volume.prDisp_l;
+        const cap = netIn({ ...(newDesign("pr", []) as PrDesign), count: found.count }, prDispUsed);
+        if (box.vb <= cap + 0.05) break;
+        if (k === 4) return;
         box.vb = cap;
         found = find(cap);
         if (!found) return;
       }
     }
     const c = prs.find((x) => x.id === found!.id)!;
+    // No space given: nothing says what shape the box is, so it isn't ruled out, but say when
+    // the driver and PRs won't all go on a cube-shaped box of this volume (a 15″ PR on a tower).
+    const notes = [...box.notes];
+    if (!sp) {
+      const side = Math.cbrt(box.vb * 1000);
+      const od = c.od_cm ?? 1.3 * 2 * Math.sqrt(c.pr.sd_cm2 / Math.PI);
+      const parts = [...drivers, ...Array.from({ length: found.count }, () => ({ d_cm: od, depth_cm: 0 }))];
+      if (!mountsFit(parts, { width_cm: side, height_cm: side, depth_cm: side, wall_mm: 0 })) {
+        notes.push(
+          `The driver and ${found.count > 1 ? `${found.count} PRs` : "PR"} (${Math.round(od)} cm across${found.count > 1 ? " each" : ""}) won't all fit the panels of a cube-shaped ${r1(box.vb)} L box: plan the box around them, or use My space to check it`,
+        );
+      }
+    }
     const base = newDesign("pr", []) as PrDesign;
     const design: PrDesign = {
       ...base,
@@ -829,7 +864,7 @@ export function evaluateDriver(
       targetFb: r1(box.fb),
       extra: [],
     };
-    finish("pr", design, box.vb, box.notes, box.fb, undefined, undefined, undefined, {
+    finish("pr", design, box.vb, notes, box.fb, undefined, undefined, undefined, {
       name: found.name,
       count: found.count,
       addedMass_g: Math.round(found.addedMass_g),

@@ -6,7 +6,7 @@ import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { needsSpace } from "../src/ports.ts";
 import { PORT_LIMIT, lineFoldOf, limitsOf, volumeFor, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { GD_CYCLES, carCabinOf, mountsFit, dividerFor, portDisplacement_l, decodeShared, decodeSharedAny, driverFits, encodeShared, encodeSharedShort, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { GD_CYCLES, carCabinOf, cyclesText, mountsFit, dividerFor, portDisplacement_l, decodeShared, decodeSharedAny, driverFits, encodeShared, encodeSharedShort, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -504,4 +504,44 @@ test("a car design is tried in the user's own cabin when they set one up, else a
   const r = runAll(goal).results.find((x) => x.box === "sealed")!;
   const s = openResults({ ...DEFAULT_STATE, roomGain: hatch }, loaded(r.driverId), [r], goal);
   assert.deepEqual(s.roomGain, hatch);
+});
+
+test("a PR box with no space given notes when the driver and PRs won't fit the panels of a cube-shaped box of its volume", async () => {
+  const { prCandidate } = await import("../../../site/drivers.ts");
+  const prs = db.passiveRadiators.map(prCandidate);
+  const goal = { ...goalFor("home", "balanced"), boxes: ["pr"] as AssistantGoal["boxes"] };
+  const row = rows.find((r) => r.id === "dayton-audio/rss460ho-4")!;
+  const [r] = evaluateDriver(DEFAULT_STATE, row, loaded(row.id), goal, "pr", prs);
+  assert.ok(r, "an 18″ in 80 L gets a PR box");
+  const side = Math.cbrt(r.vb_l * 1000);
+  const note = r.notes.find((n) => n.includes("cube-shaped"));
+  // Every 18″ driver is wider than a face of an 80 L cube (43 cm inside), so it's flagged; and the result stays.
+  assert.ok(side < 45, `${side}`);
+  assert.ok(note, r.notes.join(" | "));
+  assert.match(note!, /use My space to check it/);
+  // A 12″ driver in a 38 L box with small PRs on the other faces is not flagged.
+  const twelve = rows.find((x) => x.id === "dayton-audio/rss315ho-44")!;
+  const [t] = evaluateDriver(DEFAULT_STATE, twelve, loaded(twelve.id), goalFor("home", "balanced"), "pr", prs);
+  assert.ok(t && t.vb_l < 40);
+  assert.ok(!t.notes.some((n) => n.includes("cube-shaped")), t.notes.join(" | "));
+});
+
+test("a slow-bass note never reads as exactly one cycle when it's over one", () => {
+  assert.equal(cyclesText(1.02), "1.02");
+  assert.equal(cyclesText(1.0999), "1.10");
+  assert.equal(cyclesText(1.46), "1.5");
+  assert.ok(Number(cyclesText(GD_CYCLES + 0.01)) > GD_CYCLES);
+});
+
+test("a result within its limits says when its cone passes Xmax below where limits are checked", () => {
+  const row = rows.find((r) => r.id === "dayton-audio/rss315ho-44")!;
+  const goal = goalFor("home", "balanced");
+  const res = evaluateDriver(DEFAULT_STATE, row, loaded(row.id), goal);
+  const ported = res.find((r) => r.box === "vented")!;
+  const sealed = res.find((r) => r.box === "sealed")!;
+  // Ported at 22 Hz: the cone unloads below 20 Hz and passes its 14 mm Xmax.
+  assert.equal(ported.subsonic?.below_hz, 20);
+  assert.ok(ported.subsonic!.safe_w < goal.power_w);
+  // Sealed: the air holds the cone, under Xmax all the way down at 300 W.
+  assert.deepEqual([sealed.over, sealed.subsonic], [[], undefined]);
 });

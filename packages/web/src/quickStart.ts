@@ -1,6 +1,6 @@
 import { findPassiveRadiators, type PrCandidate } from "@sbg/engine";
 import { sizeAllForDriver, ventedAlignmentFor } from "./presets.ts";
-import { alignmentDriver, driverInputOf, simOptionsOf, solveDriver } from "./sim.ts";
+import { alignmentDriver, checkFromHz, driverInputOf, simOptionsOf, solveDriver } from "./sim.ts";
 import type { AppState, DesignState, PrParams } from "./state.ts";
 
 /** A passive radiator from the database, as the PR finder loads them. */
@@ -27,7 +27,7 @@ export function sizeForNewDriver(s: AppState, prs: QuickPr[] | null): { state: A
         targetFb: qb3.fb,
         losses: { ql: s.settings.losses.ql, qa: s.settings.losses.qa },
         sim: simOptionsOf(s),
-        fMin: s.highPass.on ? 10 : 15,
+        fMin: checkFromHz(s.highPass.on),
       }).find((r) => r.ok);
     }
     const pr = best && prs!.find((c) => c.id === best.id);
