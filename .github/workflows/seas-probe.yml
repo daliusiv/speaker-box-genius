@@ -17,6 +17,19 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      # seas.no doesn't send its intermediate certificate. Fetch it from the
+      # address in the server certificate (AIA "CA Issuers") and trust it
+      # alongside the system roots; verification stays on.
+      - name: Complete seas.no's certificate chain
+        run: |
+          echo | openssl s_client -connect www.seas.no:443 -servername www.seas.no 2>/dev/null | openssl x509 > leaf.pem
+          url=$(openssl x509 -in leaf.pem -noout -ext authorityInfoAccess | grep -o 'CA Issuers - URI:.*' | sed 's/CA Issuers - URI://')
+          echo "intermediate: $url"
+          curl -fsSL "$url" -o inter.crt
+          (openssl x509 -inform DER -in inter.crt 2>/dev/null || openssl x509 -in inter.crt) > inter.pem
+          cat /etc/ssl/certs/ca-certificates.crt inter.pem > bundle.pem
+          openssl verify -untrusted inter.pem -CAfile /etc/ssl/certs/ca-certificates.crt leaf.pem
+          echo "SSL_CERT_FILE=$PWD/bundle.pem" >> "$GITHUB_ENV"
       - name: Probe seas.no
         run: python3 .github/probe/seas_probe.py
       - name: Save the snapshot to this branch
