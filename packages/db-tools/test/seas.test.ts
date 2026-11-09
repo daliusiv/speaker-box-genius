@@ -185,3 +185,8 @@ test("OCR'd passive radiator and an unreadable Vas (trial run 4)", () => {
   assert.equal(vas.vas, undefined, "no number to read");
   assert.equal(vas.sd, "342 cm?");
 });
+
+test("entities are decoded once (CodeQL js/double-escaping)", () => {
+  const a = readArticle('<h2 itemprop="name">A &amp;lt; B &amp; C&nbsp;&rdquo;</h2><div itemprop="articleBody"></div>');
+  assert.equal(a.title, "A &lt; B & C ”");
+});

@@ -56,15 +56,23 @@ export const CATEGORIES: Record<number, { name: string; kind: Kind }> = {
   25: { name: "Vintage", kind: "auto" },
 };
 
+const ENTITIES: Record<string, string> = {
+  "&amp;": "&",
+  "&nbsp;": " ",
+  "&rdquo;": "”",
+  "&#8221;": "”",
+  "&Prime;": "”",
+  "&#8243;": "”",
+  "&quot;": '"',
+  "&lt;": "<",
+  "&gt;": ">",
+};
+
+/** Page text: tags out, entities decoded in one pass (so "&amp;lt;" stays "&lt;"). */
 const decode = (s: string) =>
   s
     .replace(/<[^>]+>/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&rdquo;|&#8221;|&Prime;|&#8243;/g, "”")
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
+    .replace(/&(?:amp|nbsp|rdquo|#8221|Prime|#8243|quot|lt|gt);/g, (e) => ENTITIES[e] ?? e)
     .replace(/\s+/g, " ")
     .trim();
 
