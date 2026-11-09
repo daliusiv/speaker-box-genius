@@ -4,7 +4,7 @@ import { abs } from "../src/complex.ts";
 import { highPassResponse } from "../src/filters.ts";
 import { simulate } from "../src/simulate.ts";
 import { estimateDriverDisplacement, grossVolume, netVolume, portTubeDisplacement } from "../src/volume.ts";
-import { solveTs } from "../src/tsSolver.ts";
+import { fixConflict, solveTs } from "../src/tsSolver.ts";
 import { parseQuantity } from "../src/units.ts";
 import { parseDatasheet } from "../src/datasheet.ts";
 
@@ -122,6 +122,25 @@ test("T/S solver reports contradictions instead of overwriting", () => {
   assert.equal(r.values.mms_g, 120);
   assert.equal(r.values.vas_l, 53.8);
   assert.ok(r.conflicts.some((c) => c.param === "mms_g" && c.diff > 0.05 && c.diff < 0.1), JSON.stringify(r.conflicts));
+});
+
+test("Accepting every 'use calculated' never breaks the driver (DSA175-8)", () => {
+  // Published Dayton DSA175-8: Mms 24.2 g disagrees with Fs/Vas/Sd by ~12 %.
+  let ts: Record<string, number> = { fs: 38.36, qms: 1.66, qes: 0.35, vas_l: 18.7, re: 5.8, sd_cm2: 128.7, qts: 0.29, bl: 9.75, mms_g: 24.2 };
+  for (let round = 0; round < 10; round++) {
+    const r = solveTs(ts);
+    assert.deepEqual(r.missing, [], `round ${round}: ${JSON.stringify(ts)}`);
+    // A parameter is never blamed through a value that was calculated from it.
+    if (r.source.mms_g === "derived") assert.ok(!r.conflicts.some((c) => c.param === "fs" && c.relation.startsWith("Qes")));
+    const c = r.conflicts[0];
+    if (!c) return;
+    const fix = fixConflict(ts, c);
+    const after = solveTs(fix.entered);
+    // The value used is the one the warning promised.
+    near(after.values[c.param]!, c.implied, c.implied * 0.005, `${c.param} after fix`);
+    ts = fix.entered as Record<string, number>;
+  }
+  assert.fail("conflicts never settled: " + JSON.stringify(solveTs(ts).conflicts));
 });
 
 test("T/S solver tolerates Qts rounded to two decimals", () => {

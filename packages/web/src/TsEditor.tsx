@@ -2,7 +2,9 @@ import { boxSuits } from "./boxType.ts";
 import { useEffect, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
 import {
+  fixConflict,
   readDatasheet,
+  type Air,
   parseQuantity,
   TS_PARAMS,
   type Quantity,
@@ -70,6 +72,8 @@ export function TsEditor(props: {
   onPastingChange: (open: boolean) => void;
   /** The values as published in the database, while they're untouched (milder checks). */
   published?: TsValues;
+  /** The air the solver used (for the Vas relation when working out a fix). */
+  air?: Air;
 }) {
   const { pasting, onPastingChange: setPasting } = props;
   const [pasteText, setPasteText] = useState("");
@@ -161,15 +165,18 @@ export function TsEditor(props: {
             )}
           </p>
           <ul>
-            {warn.map((c) => (
-              <li key={c.relation + c.param}>
-                {fromDatasheet ? c.message.replace("you entered", "published") : c.message}{" "}
-                <button className="link" onClick={() => setParam(c.param, undefined)}>
-<Sparkle />
-                  Use calculated
-                </button>
-              </li>
-            ))}
+            {warn.map((c) => {
+              const fix = fixConflict(props.entered, c, 0.03, props.air);
+              return (
+                <li key={c.relation + c.param}>
+                  {fromDatasheet ? c.message.replace("you entered", "published") : c.message}{" "}
+                  <button className="link" onClick={() => props.onChange(fix.entered)}>
+                    <Sparkle />
+                    {fix.kind === "clear" ? "Use calculated" : `Use ${fix.entered[c.param]}`}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
