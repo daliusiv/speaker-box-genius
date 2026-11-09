@@ -9,5 +9,14 @@ export default defineConfig({
   build: {
     target: "es2022",
     sourcemap: true,
+    // The manifest tells the site build (site/calculators.ts) which file each calculator's script became.
+    manifest: true,
+    rollupOptions: {
+      input: {
+        // Vite resolves these against the project root (packages/web).
+        main: "index.html",
+        "calc-port-length": "src/calculators/portLength.ts",
+      },
+    },
   },
 });

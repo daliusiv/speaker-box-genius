@@ -13,6 +13,9 @@ A ported box that sounds great quietly can start to huff and whistle when you tu
 
 [[Open the worked example|port-example]]
 
+
+> **Calculator:** the [port length calculator](/calculators/port-length/) gives a port's length for your box and tuning, then its peak air speed with your driver at its rated power.
+
 ## Why ports chuff
 
 Around the box's tuning frequency, most of the bass comes out of the port, and the air in it moves back and forth fast. Past a certain speed the flow stops being smooth: it breaks into turbulence at the port's ends, which you hear as chuffing, and the port starts to lose output (port compression).

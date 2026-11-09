@@ -13,6 +13,9 @@ You cut the port to the calculated length, measured the box's impedance, and the
 
 [[Open the example: the same port in the designed and the built box|port-tuning-example]]
 
+
+> **Calculator:** the [port length calculator](/calculators/port-length/) gives the length for a tuning with WinISD's end corrections, flares and the port's own volume taken off.
+
 ## How a port tunes a box
 
 A port and a box form a Helmholtz resonator: the air in the port is a mass, and the air in the box is a spring. The tuning frequency Fb depends on the box's volume and on the port's **acoustic mass**, which grows with its length and shrinks with its area. Air also moves just beyond each end of the port, so the port behaves as if it were longer than it really is. That extra length is the **end correction**, and it's where many of the surprises come from.

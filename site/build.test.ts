@@ -353,3 +353,40 @@ test("home page: title, canonical, structured data, and its links go to built pa
   assert.ok(links.length >= 10);
   for (const h of links) assert.ok(paths.includes(h), `${h} is not a built page`);
 });
+
+test("port length calculator page: form, live script hook, worked example that matches its text", async () => {
+  const { out, paths } = await built();
+  assert.ok(paths.includes("/calculators/port-length/"));
+  const html = readFileSync(join(out, "calculators/port-length/index.html"), "utf8");
+  assert.match(html, /<title>Port length calculator: [^<]+<\/title>/);
+  assert.match(html, /<form id="pc-form"/);
+  for (const id of ["pc-vb", "pc-fb", "pc-shape", "pc-d", "pc-w", "pc-h", "pc-n", "pc-ends", "pc-sub", "pc-driver", "pc-power", "pc-out", "pc-speed", "pc-open"]) assert.match(html, new RegExp(`id="${id}"`), id);
+  assert.doesNotMatch(html, /\{\{calc:/);
+  // No Vite build in tests: no script tag, and no broken one.
+  assert.doesNotMatch(html, /<script type="module"/);
+  assert.match(readFileSync(join(out, "sitemap-pages.xml"), "utf8"), /\/calculators\/port-length\//);
+
+  // The example's claims, in the page's words.
+  const { portExample } = await import("./calculators.ts");
+  const e = portExample();
+  assert.ok(e.r75.r.fits && !e.r100.r.fits && !e.r150.r.fits && !e.r2x100.r.fits && !e.slot.r.fits);
+  const ratio = e.r75.vp / 17;
+  assert.ok(ratio > 2.75 && ratio < 3.4, `"three times the 17 m/s line": ${ratio.toFixed(2)}`);
+  assert.ok(e.r100.vp > 17, "the 10 cm port isn't quiet");
+  for (const k of ["r150", "r2x100", "slot"] as const) assert.ok(e[k].vp < 17, `${k} is quiet`);
+  const { loadDb } = await import("./drivers.ts");
+  const xmax = loadDb().drivers.find((d) => d.id === "dayton-audio/rss315hf-4")!.data.ts.xmax_mm;
+  assert.equal(xmax, 14.3, "the page names a 14.3 mm Xmax");
+  assert.ok(e.r100.x < xmax, "the cone stays inside Xmax at 250 W");
+  assert.ok(e.slot.r.wallRange!.low < 25 && e.slot.r.wallRange!.high > 25);
+});
+
+test("calculators: the script is found through Vite's manifest", async () => {
+  const { viteScript } = await import("./calculators.ts");
+  const dir = mkdtempSync(join(tmpdir(), "vite-"));
+  assert.equal(viteScript(dir, "src/calculators/portLength.ts"), null);
+  const { mkdirSync, writeFileSync } = await import("node:fs");
+  mkdirSync(join(dir, ".vite"));
+  writeFileSync(join(dir, ".vite/manifest.json"), JSON.stringify({ "src/calculators/portLength.ts": { file: "assets/calc-port-length-abc123.js" } }));
+  assert.equal(viteScript(dir, "src/calculators/portLength.ts"), "/assets/calc-port-length-abc123.js");
+});

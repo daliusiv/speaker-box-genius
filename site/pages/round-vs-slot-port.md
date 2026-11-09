@@ -13,6 +13,9 @@ It's a regular on car-audio and DIY forums. Someone puts the box into a port cal
 
 [[Open the three ports|port-shape]] [[Open them as pipes|port-shape-pipes]]
 
+
+> **Calculator:** the [port length calculator](/calculators/port-length/) works out round and slot ports, including a slot along a wall with its likely tuning range.
+
 ## The short answer
 
 - **To a calculator, a slot is just a round port of the same area.** WinISD, Hornresp and this app all give it the end correction of a round tube, by default 0.732 × the diameter of a circle with the same area [1][2][3]. So the same area and tuning give nearly the same length, about 42 cm for the slot and 45 cm for the flared tube here.
