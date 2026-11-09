@@ -153,3 +153,17 @@ test("found in the first live run: codes without an impedance, borrowed datashee
   assert.equal(sizeFromModel("W22NY001"), 8);
   assert.equal(sizeFromModel("Exotic W8"), undefined);
 });
+
+test("an image-only table read by OCR (one space between columns) gives the same driver", async () => {
+  const { labelCount } = await import("../src/seas.ts");
+  // tesseract --psm 6 on page 1 of the M15CH002 sheet rendered at 300 dpi.
+  const ocr = fixture("m15ch002-ocr");
+  const text = readTable(M15CH002);
+  const read = readTable(ocr);
+  for (const key of ["fs", "re", "le", "bl", "moving", "airLoad", "cms", "sd", "vas", "qms", "qes", "qts", "travel", "pe"] as const)
+    assert.equal(Number.parseFloat(read[key]!), Number.parseFloat(text[key]!), key);
+  assert.equal(labelCount("84,3\n Ø146,0±0,4\n 6 mounting holes Ø5.0"), 0, "a drawing-only text layer");
+  const r = parseDatasheet({ title: "E0043-06S M15CH002", kind: "midrange", ...at, text: ocr, ocr: true }, "2026-11-09");
+  assert.equal(r.driver!.ts.mms_g, 7.13);
+  assert.match(r.driver!.notes!, /read by OCR/);
+});

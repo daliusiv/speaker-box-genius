@@ -10,7 +10,7 @@
  *   node … seas.ts            read seas.no and write drivers/seas/*.json (and passive-radiators/seas/)
  *   node … seas.ts --dry-run  read and report only
  *
- * Needs `pdftotext` (poppler-utils). seas.no serves an incomplete certificate chain:
+ * Needs `pdftotext` and `pdftoppm` (poppler-utils) and `tesseract` (tesseract-ocr), for sheets whose table is an image. seas.no serves an incomplete certificate chain:
  * the workflow fetches the missing intermediate and passes it in NODE_EXTRA_CA_CERTS.
  *
  * Product pages list their specs as an image, so the numbers come from each driver's
@@ -170,6 +170,10 @@ const LABELS = {
   pe: /^Long Term (?:Max\.? )?Power(?: Handling)?\b/i,
 } as const;
 type Label = keyof typeof LABELS;
+const ANY_LABEL = new RegExp(`\\b(?:${Object.values(LABELS).map((r) => r.source.replace(/^\^/, "").replace(/\\b$/, "")).join("|")})\\b`, "gi");
+
+/** How many table labels a text has: a sheet whose table is an image has none. */
+export const labelCount = (text: string) => Object.keys(readTable(text)).length;
 
 /**
  * The values in a datasheet's table. The text is `pdftotext -layout` output: two
@@ -178,7 +182,9 @@ type Label = keyof typeof LABELS;
  */
 export function readTable(text: string): Partial<Record<Label, string>> {
   const out: Partial<Record<Label, string>> = {};
-  for (const line of text.split("\n")) {
+  for (const raw of text.split("\n")) {
+    // OCR output keeps one space between columns: break the line before each label.
+    const line = raw.replace(ANY_LABEL, (m: string, at: number) => (at > 0 ? `  ${m}` : m));
     const cells = line
       .trim()
       .split(/\s{2,}/)
@@ -263,7 +269,7 @@ const cmsOf = (s: string | undefined) => {
 };
 
 export function parseDatasheet(
-  input: { title: string; kind: Kind; url: string; pdf: string; text: string; body?: string },
+  input: { title: string; kind: Kind; url: string; pdf: string; text: string; body?: string; ocr?: boolean },
   retrieved: string,
 ): Parsed {
   const notes: string[] = [];
@@ -271,6 +277,7 @@ export function parseDatasheet(
   const model = name;
   const base = { notes, model };
   if (!model) return { kind: "skip", reason: "no model name", ...base };
+  if (input.ocr) notes.push("The datasheet's table is an image: values read by OCR, check them against the PDF.");
 
   const s = readTable(input.text);
   let size_in = sizeFrom(input.text) ?? (input.body ? sizeFrom(input.body) : undefined);
@@ -446,10 +453,18 @@ async function fetchBuf(url: string): Promise<Buffer> {
   }
 }
 
-function pdfText(pdf: Buffer, dir: string): string {
+/**
+ * The datasheet's text. Many newer SEAS sheets carry the table as a picture, so when
+ * the text layer has no table, render page 1 at 300 dpi and read it with tesseract.
+ */
+function pdfText(pdf: Buffer, dir: string): { text: string; ocr: boolean } {
   const file = join(dir, "sheet.pdf");
   writeFileSync(file, pdf);
-  return execFileSync("pdftotext", ["-layout", "-enc", "UTF-8", file, "-"], { encoding: "utf8", maxBuffer: 16 << 20 });
+  const text = execFileSync("pdftotext", ["-layout", "-enc", "UTF-8", file, "-"], { encoding: "utf8", maxBuffer: 16 << 20 });
+  if (labelCount(text) >= 4) return { text, ocr: false };
+  execFileSync("pdftoppm", ["-r", "300", "-png", "-f", "1", "-l", "1", "-singlefile", file, join(dir, "page")]);
+  const ocr = execFileSync("tesseract", [join(dir, "page.png"), "-", "--psm", "6"], { encoding: "utf8", maxBuffer: 16 << 20, stdio: ["ignore", "pipe", "ignore"] });
+  return { text: ocr, ocr: true };
 }
 
 /** Notes every entry of a kind gets: kept on the entry, left out of the "check these" list. */
@@ -516,10 +531,10 @@ async function main() {
         skipped.push(`${line} — no datasheet link on the page`);
         continue;
       }
-      const text = pdfText(await fetchBuf(art.pdf), tmp);
+      const { text, ocr } = pdfText(await fetchBuf(art.pdf), tmp);
       await sleep(delay);
-      if (dump) writeFileSync(join(dump, `${aid}.txt`), [art.title, url, `chosen: ${art.pdf}`, ...art.pdfs.map((u) => `pdf: ${u}`), "", text].join("\n"));
-      const r = parseDatasheet({ title: art.title, kind, url, pdf: art.pdf, text, body: art.body }, today);
+      if (dump) writeFileSync(join(dump, `${aid}.txt`), [art.title, url, `chosen: ${art.pdf}${ocr ? " (OCR)" : ""}`, ...art.pdfs.map((u) => `pdf: ${u}`), "", text].join("\n"));
+      const r = parseDatasheet({ title: art.title, kind, url, pdf: art.pdf, text, body: art.body, ocr }, today);
       if (r.kind === "skip") skipped.push(`${line} — ${r.reason}`);
       else parsed.push({ r, url, pdf: art.pdf, ...(splitTitle(art.title).code ? { code: splitTitle(art.title).code } : {}) });
     } catch (e) {
