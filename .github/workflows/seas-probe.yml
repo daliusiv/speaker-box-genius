@@ -1,0 +1,28 @@
+name: SEAS probe (one-off, scratch branch only)
+
+# Saves robots.txt and a small sample of seas.no pages and datasheets to this
+# branch so the SEAS importer can be written against the real site. Never merged.
+on:
+  push:
+    branches: [probe/seas]
+    paths: [".github/probe/**", ".github/workflows/seas-probe.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe seas.no
+        run: python3 .github/probe/seas_probe.py
+      - name: Save the snapshot to this branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add probe-out
+          git commit -m "SEAS probe snapshot" || echo "nothing to commit"
+          git push
