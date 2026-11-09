@@ -319,7 +319,7 @@ speaker-box-genius/
 ├─ LICENSE-DATA            # CC BY-NC-SA 4.0 (database, docs)
 ├─ CLA.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md
 ├─ .github/
-│  ├─ workflows/           # ci, deploy-pages, cla, database-submissions, dayton-import, sb-import
+│  ├─ workflows/           # ci, deploy-pages, cla, database-submissions, dayton-import, sb-import, seas-import
 │  ├─ ISSUE_TEMPLATE/      # bug, new-driver, new-passive-radiator, data-correction
 │  ├─ pull_request_template.md
 │  └─ CODEOWNERS

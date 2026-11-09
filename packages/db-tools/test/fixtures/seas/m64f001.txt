@@ -1,0 +1,12 @@
+                                                                                                                                         M64F001
+                                                                                                                                         E0103 -06
+  Nominal Impedance                                                   6 Ohms                                Voice Coil Resistance            4.8 Ohms
+  Recommended Frequency Range                                         350 Hz - 10 kHz                       Voice Coil Inductance            0.13 mH
+  Short Term Power Handling *                                         350 W                                 Force Factor                     6.3 N/A
+  Long Term Power Handling *                                          150 W                                 Free Air Resonance               377 Hz
+  Characteristic Sensitivity (2,83V, 1m)                              92 dB                                 Moving Mass                      3.0 g
+  Voice Coil Diameter                                                 63.7 mm                               Effective Piston Area            41.2 cm 2
+  Voice Coil Height                                                   4.0 mm                                Magnetic Gap Flux Density        1.1 T
+  Air Gap Height                                                      2.6 mm                                Magnet Weight                    70 g
+  Linear Coil Travel (p -p)                                           1.4 mm                                Total Weight                     0.55 kg
+

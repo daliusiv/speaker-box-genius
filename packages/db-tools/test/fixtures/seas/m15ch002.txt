@@ -1,0 +1,17 @@
+                                                                                                                         M15CH002
+ The M15CH002 is a 15cm (5”) cone midrange driver capable of a most neutral, transparent
+    Nominal Impedance                                                 6 Ohms                              Voice Coil Resistance                               4.9 Ohms
+    Recommended Frequency Range                                       60 - 3500 Hz                        Voice Coil Inductance                               0.43 mH
+    Short Term Power Handling *                                       200 W                               Force Factor                                        5.3 N/A
+    Long Term Power Handling *                                        70 W                                Free Air Resonance                                  67 Hz
+    Characteristic Sensitivity (2,83V, 1m)                            88.5 dB                             Moving Mass                                         6.75 g
+    Voice Coil Diameter                                               26 mm                               Air Load Mass In IEC Baffle                         0.38 g
+    Voice Coil Height                                                 12 mm                               Suspension Compliance                               0.8 mm/N
+    Air Gap Height                                                    6 mm                                Suspension Mechanical Resistance                    1.77 Ns/m
+    Linear Coil Travel (p-p)                                          6 mm                                Effective Piston Area                               75 cm2
+    Maximum Coil Travel (p-p)                                         14 mm                               VAS                                                 6 Litres
+    Magnetic Gap Flux Density                                         1.0 T                               QMS                                                 1.7
+    Magnet Weight                                                     0.06 kg                             QES                                                 0.52
+    Total Weight                                                      0.8 kg                              QTS                                                 0.4
+
+
