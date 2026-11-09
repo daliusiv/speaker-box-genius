@@ -3,7 +3,7 @@
   "model": "FU10RB (H1600-08)",
   "type": "full-range",
   "nominal_ohms": 8,
-  "size_in": 6.5,
+  "size_in": 4,
   "ts": {
     "fs": 102,
     "qms": 3.25,
@@ -33,5 +33,5 @@
     }
   ],
   "status": "community",
-  "notes": "Xmax 2 mm is half the published linear coil travel (4 mm peak to peak). Mms 4.19 g is the published moving mass plus air load (4.05 + 0.14 g). Published Vas 1 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 1.3 L from Cms."
+  "notes": "Xmax 2 mm is half the published linear coil travel (4 mm peak to peak). Mms 4.19 g is the published moving mass plus air load (4.05 + 0.14 g). Published Vas 1 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 1.3 L from Cms. Size 4\" from the frame size in the model name (the text's 6.5\" doesn't fit it)."
 }

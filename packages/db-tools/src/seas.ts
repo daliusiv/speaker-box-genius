@@ -234,7 +234,7 @@ export function sizeFrom(text: string): number | undefined {
 }
 
 /** SEAS names carry the frame size in cm (W18EX001, CA26RFX, MCA15RCY); the usual inch size for it. */
-const CM_TO_IN: Record<number, number> = { 10: 4, 11: 4, 12: 4.5, 13: 5, 15: 5.25, 16: 6.5, 17: 6.5, 18: 7, 19: 7, 21: 8, 22: 8, 25: 10, 26: 10, 30: 12 };
+const CM_TO_IN: Record<number, number> = { 8: 3, 10: 4, 11: 4, 12: 4.5, 13: 5, 15: 5.25, 16: 6.5, 17: 6.5, 18: 7, 19: 7, 21: 8, 22: 8, 25: 10, 26: 10, 30: 12 };
 export function sizeFromModel(name: string): number | undefined {
   const cm = Number(name.match(/^[A-Z]{1,4}(\d{2})[A-Z]/i)?.[1]);
   return CM_TO_IN[cm];
@@ -290,6 +290,12 @@ export function parseDatasheet(
 
   const s = readTable(input.text);
   let size_in = sizeFrom(input.text) ?? (input.body ? sizeFrom(input.body) : undefined);
+  // The frame size in the name (FU10RB = 10 cm) beats a stray inch figure in the text.
+  const fromModel = sizeFromModel(name);
+  if (size_in !== undefined && fromModel !== undefined && Math.abs(size_in - fromModel) > 1.5) {
+    notes.push(`Size ${fromModel}" from the frame size in the model name (the text's ${size_in}" doesn't fit it).`);
+    size_in = fromModel;
+  }
   if (size_in === undefined) {
     size_in = sizeFromModel(name);
     if (size_in !== undefined) notes.push(`Size ${size_in}" from the frame size in the model name (the datasheet doesn't state it).`);

@@ -190,3 +190,9 @@ test("entities are decoded once (CodeQL js/double-escaping)", () => {
   const a = readArticle('<h2 itemprop="name">A &amp;lt; B &amp; C&nbsp;&rdquo;</h2><div itemprop="articleBody"></div>');
   assert.equal(a.title, "A &lt; B & C ”");
 });
+
+test("a stray inch figure doesn't beat the frame size in the name (FU10RB came out 6.5\")", () => {
+  const text = M15CH002.replace("15cm (5”)", "6.5 inch");
+  const r = parseDatasheet({ title: "H1600-08 FU10RB", kind: "full-range", ...at, text }, "2026-11-09");
+  assert.equal(r.driver?.size_in ?? r.kind, 4);
+});
