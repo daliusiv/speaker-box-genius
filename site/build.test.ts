@@ -29,6 +29,19 @@ test("markdown: headings, lists, tables, links, figures and notes", () => {
   assert.match(html, /<aside class="note"><p>A note<\/p><\/aside>/);
   assert.doesNotMatch(markdown("a <script>x</script>"), /<script>/);
   assert.match(markdown("# Title\n\nThe intro.\n\nMore."), /<h1>Title<\/h1>\n<p class="lede">The intro.<\/p>\n<p>More.<\/p>/);
+  // Nested lists: an indented list inside an item, in bullet and numbered lists; plain indented
+  // lines still continue the item.
+  assert.equal(markdown("- a\n  - b\n  - c\n    wraps\n- d"), "<ul><li>a<ul><li>b</li><li>c wraps</li></ul></li><li>d</li></ul>");
+  assert.equal(markdown("1. a\n   more\n   - b\n2. c"), "<ol><li>a more<ul><li>b</li></ul></li><li>c</li></ol>");
+  assert.equal(markdown("- a\n  continued"), "<ul><li>a continued</li></ul>");
+});
+
+test("guides: no list item swallows an indented list as text", () => {
+  for (const f of readdirSync(new URL("./pages/", import.meta.url))) {
+    if (!f.endsWith(".md")) continue;
+    const html = markdown(parsePage(readFileSync(new URL(`./pages/${f}`, import.meta.url), "utf8")).body);
+    for (const li of html.match(/<li>.*?<\/li>/g) ?? []) assert.doesNotMatch(li, /\s-\s<strong>|<\/strong>\s-\s/, `${f}: ${li.slice(0, 80)}`);
+  }
 });
 
 test("pages need front matter; unknown examples are an error", () => {
