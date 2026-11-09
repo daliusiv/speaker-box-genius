@@ -98,7 +98,7 @@ Most forum A/B tests swap the wiring and leave the gain alone. Then the comparis
 
 ## What the amplifier gives you at 1 Ω
 
-What decides between 1 Ω and 4 Ω is the amplifier, not the sub. The example uses a Kicker CXA1200.1, a 1 Ω-stable monoblock rated at 600 W into 4 Ω, 1200 W into 2 Ω and 1200 W into 1 Ω [9]. Those ratings fit an amplifier that tops out at 49 V and 34.6 A, which is how the example's **Amp max volts** and **Amp max current** are set.
+What decides between 1 Ω and 4 Ω is the amplifier, not the sub. The example uses a Kicker CXA1200.1, a 1 Ω-stable monoblock rated at 600 W into 4 Ω, 1200 W into 2 Ω and 1200 W into 1 Ω [9]. Those ratings fit an amplifier that tops out at 49 V and 34.6 A, which is how the example's **Amp max volts** and **Amp max current** are set ([matching an amplifier](/guides/amp-matching/) explains reading ratings this way, and what the sub's impedance dips do to it).
 
 - **Wired in series (4.2 Ω),** the amplifier runs out of voltage first, at 49 V: about 570 W (49² / 4.2), below the sub's 800 W.
 - **Wired in parallel (1.05 Ω),** the amplifier could deliver over 1000 W, so the sub's 800 W rating is the limit: 29 V at the amplifier (√(800 × 1.05)).

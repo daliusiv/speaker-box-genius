@@ -91,6 +91,8 @@ What does change is the **amplifier** side: getting the same output from a hot c
 
 ## So what does a bigger amplifier buy?
 
+How much amplifier a sub needs in the first place, in volts and amps rather than watts, is in [matching an amplifier to your subwoofer](/guides/amp-matching/).
+
 Here's a simple steady-state picture. The coil's temperature rise is proportional to the power it actually takes, and a hotter coil takes less power from the same voltage [1][2]. If 500 W of sustained drive (watts at the cold Re, as amplifier ratings count them) heats the coil to 120 °C, then 1,000 W heats it to about 185–190 °C, not 220 °C, because the hotter coil draws less. Using the 120 °C and 180 °C results above (180 °C slightly understates the loss):
 
 | Frequency | Gain from 500 W to 1,000 W, sustained |
