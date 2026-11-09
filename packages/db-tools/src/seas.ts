@@ -76,7 +76,7 @@ export function articleLinks(html: string, catid: number): Map<number, string> {
     const id = href.match(/[?&]id=(\d+)/)?.[1];
     const cat = href.match(/[?&]catid=(\d+)/)?.[1];
     if (!id || Number(cat) !== catid) continue;
-    if (!out.has(Number(id))) out.set(Number(id), new URL(href, SITE).toString());
+    if (!out.has(Number(id))) out.set(Number(id), new URL(href, SITE).toString().replace(/^http:/, "https:"));
   }
   return out;
 }
@@ -87,7 +87,7 @@ export function pageLinks(html: string, catid: number): string[] {
   for (const m of html.matchAll(/href="([^"]*view=category[^"]*)"/g)) {
     const href = m[1]!.replace(/&amp;/g, "&");
     if (href.match(/[?&]id=(\d+)/)?.[1] !== String(catid) || !/[?&](limit)?start=\d+/.test(href)) continue;
-    out.add(new URL(href, SITE).toString());
+    out.add(new URL(href, SITE).toString().replace(/^http:/, "https:"));
   }
   return [...out];
 }
@@ -95,8 +95,28 @@ export function pageLinks(html: string, catid: number): string[] {
 export interface Article {
   title: string;
   catid?: number;
+  /** The datasheet chosen for this product, and every candidate on the page. */
   pdf?: string;
+  pdfs: string[];
   body: string;
+}
+
+const squash = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/**
+ * The product's own datasheet. Some pages also link another product's sheet (the
+ * Extreme L26ROY page links the Exotic F8's first), so prefer a file named after the
+ * model or its SEAS code, then any "datasheet", then the first PDF.
+ */
+export function pickPdf(pdfs: string[], title: string): string | undefined {
+  const { code, name } = splitTitle(title);
+  const file = (u: string) => squash(decodeURI(u.split("/").pop() ?? ""));
+  const keys = [squash(name.split("/")[0]!.replace(/^exotic\s+/i, "exotic")), code ? squash(code.split("-")[0]!) : ""].filter((k) => k.length >= 3);
+  return (
+    pdfs.find((u) => keys.some((k) => file(u).includes(k))) ??
+    pdfs.find((u) => /datasheet|data_sheet/i.test(u)) ??
+    pdfs[0]
+  );
 }
 
 /** Datasheet links to leave alone: Chinese editions, range brochures, papers. */
@@ -109,11 +129,13 @@ export function readArticle(html: string): Article {
   const start = html.indexOf('itemprop="articleBody"');
   const bodyHtml = start >= 0 ? html.slice(start) : html;
   const pdfs = [...bodyHtml.matchAll(/href="([^"]+\.pdf)"/gi)].map((m) => m[1]!.replace(/&amp;/g, "&")).filter((u) => !NOT_A_DATASHEET.test(u));
-  const pdf = pdfs.find((u) => /datasheet|data_sheet/i.test(u)) ?? pdfs[0];
+  const abs = [...new Set(pdfs.map((u) => encodeURI(decodeURI(new URL(u, SITE).toString())).replace(/^http:/, "https:")))];
+  const pdf = pickPdf(abs, title);
   return {
     title,
     ...(catid ? { catid } : {}),
-    ...(pdf ? { pdf: encodeURI(decodeURI(new URL(pdf, SITE).toString())) } : {}),
+    ...(pdf ? { pdf } : {}),
+    pdfs: abs,
     body: decode(bodyHtml.slice(0, 20000)),
   };
 }
@@ -121,7 +143,8 @@ export function readArticle(html: string): Article {
 /** "E0017-08S W18EX001" → code E0017-08S, name W18EX001; "X2-08 EXOTIC W8" → X2-08, Exotic W8. */
 export function splitTitle(title: string): { code?: string; name: string } {
   const t = title.replace(/\s+/g, " ").trim();
-  const m = t.match(/^([A-Z]{1,2}\d{1,5}\s?-\s?\d{2}[A-Z]?)\s+(.+)$/i);
+  // E0017-08S, E0051-04/06, H1480, XM011-04, X2-08
+  const m = t.match(/^([A-Z]{1,2}\d{1,5}(?:\s?-\s?\d{2}(?:\/\d{2})?[A-Z]?)?)\s+([A-Z]{1,4}\d.*|EXOTIC\s.+)$/i);
   const name = (m ? m[2]! : t).replace(/\bEXOTIC\b/, "Exotic").trim();
   return m ? { code: m[1]!.replace(/\s/g, ""), name } : { name };
 }
@@ -177,11 +200,12 @@ export function readTable(text: string): Partial<Record<Label, string>> {
   return out;
 }
 
-/** Nominal size from the description: '15cm (5”)', '8 inch', '6½"'. */
+/** Nominal size from the description: '15cm (5”)', '17 cm (6½”)', 'an 8 inch woofer'. */
 export function sizeFrom(text: string): number | undefined {
   const t = text.replace(/\s+/g, " ");
+  // Only these two forms: a bare 2" elsewhere on a sheet is often the voice coil.
   const paren = t.match(/\d+(?:\.\d+)?\s?cm\s?\(\s?(\d+(?:[.,]\d+)?)(\s?½|\s\d\/\d)?\s?(?:["”″]|''|inch)/i);
-  const inch = t.match(/\b(\d+(?:\.\d+)?)(½)?\s?(?:-\s?)?(?:inch\b|["”″])/i);
+  const inch = t.match(/\b(\d+(?:\.\d+)?)(½)?[\s-]?inch\b/i);
   const m = paren ?? inch;
   if (!m) return undefined;
   let v = Number(m[1]!.replace(",", "."));
@@ -192,6 +216,13 @@ export function sizeFrom(text: string): number | undefined {
     v += a! / b!;
   }
   return v >= 2 && v <= 21 ? v : undefined;
+}
+
+/** SEAS names carry the frame size in cm (W18EX001, CA26RFX, MCA15RCY); the usual inch size for it. */
+const CM_TO_IN: Record<number, number> = { 10: 4, 11: 4, 12: 4.5, 13: 5, 15: 5.25, 16: 6.5, 17: 6.5, 18: 7, 19: 7, 21: 8, 22: 8, 25: 10, 26: 10, 30: 12 };
+export function sizeFromModel(name: string): number | undefined {
+  const cm = Number(name.match(/^[A-Z]{1,4}(\d{2})[A-Z]/i)?.[1]);
+  return CM_TO_IN[cm];
 }
 
 /** "60 - 3500 Hz" → [60, 3500]; "350 Hz - 10 kHz" → [350, 10000]. */
@@ -242,7 +273,11 @@ export function parseDatasheet(
   if (!model) return { kind: "skip", reason: "no model name", ...base };
 
   const s = readTable(input.text);
-  const size_in = sizeFrom(input.text) ?? (input.body ? sizeFrom(input.body) : undefined);
+  let size_in = sizeFrom(input.text) ?? (input.body ? sizeFrom(input.body) : undefined);
+  if (size_in === undefined) {
+    size_in = sizeFromModel(name);
+    if (size_in !== undefined) notes.push(`Size ${size_in}" from the frame size in the model name (the datasheet doesn't state it).`);
+  }
   const sources: Driver["sources"] = [
     { kind: "datasheet", url: input.url, retrieved, note: `SEAS product page${code ? ` (${code})` : ""}. ${PERMISSION_NOTE}` },
     { kind: "datasheet", url: input.pdf, retrieved, note: "SEAS datasheet (PDF)." },
@@ -418,7 +453,7 @@ function pdfText(pdf: Buffer, dir: string): string {
 }
 
 /** Notes every entry of a kind gets: kept on the entry, left out of the "check these" list. */
-const ROUTINE = [/half the published linear (coil )?travel/, /moving mass plus air load/, /^Coaxial:/];
+const ROUTINE = [/half the published linear (coil )?travel/, /moving mass plus air load/, /already agrees with Fs and Cms/, /^Coaxial:/, /from the frame size in the model name/];
 
 async function main() {
   const dry = process.argv.includes("--dry-run");
@@ -460,23 +495,33 @@ async function main() {
   }
   console.log(`${articles.size} product pages\n${perCategory.join("\n")}`);
 
-  const parsed: { r: Parsed; url: string; code?: string }[] = [];
+  const dump = process.env.SEAS_DUMP_DIR;
+  if (dump) mkdirSync(dump, { recursive: true });
+  const only = new Set((process.env.SEAS_ONLY ?? "").split(",").filter(Boolean).map(Number));
+  if (only.size) for (const id of [...articles.keys()]) if (!only.has(id)) articles.delete(id);
+
+  const parsed: { r: Parsed; url: string; code?: string; pdf: string }[] = [];
   const skipped: string[] = [];
-  for (const { url, catid } of articles.values()) {
+  for (const [aid, { url, catid }] of articles) {
     try {
       const art = readArticle((await fetchBuf(url)).toString("utf8"));
       await sleep(delay);
       const kind = CATEGORIES[art.catid ?? catid]?.kind ?? CATEGORIES[catid]!.kind;
       const line = `[${art.title || url}](${url})`;
+      if (!splitTitle(art.title).code) {
+        skipped.push(`${line} — no SEAS product code in the title (an overview page?)`);
+        continue;
+      }
       if (!art.pdf) {
         skipped.push(`${line} — no datasheet link on the page`);
         continue;
       }
       const text = pdfText(await fetchBuf(art.pdf), tmp);
       await sleep(delay);
+      if (dump) writeFileSync(join(dump, `${aid}.txt`), [art.title, url, `chosen: ${art.pdf}`, ...art.pdfs.map((u) => `pdf: ${u}`), "", text].join("\n"));
       const r = parseDatasheet({ title: art.title, kind, url, pdf: art.pdf, text, body: art.body }, today);
       if (r.kind === "skip") skipped.push(`${line} — ${r.reason}`);
-      else parsed.push({ r, url, ...(splitTitle(art.title).code ? { code: splitTitle(art.title).code } : {}) });
+      else parsed.push({ r, url, pdf: art.pdf, ...(splitTitle(art.title).code ? { code: splitTitle(art.title).code } : {}) });
     } catch (e) {
       skipped.push(`${url} — ${(e as Error).message}`);
     }
@@ -487,10 +532,18 @@ async function main() {
   const count = new Map<string, number>();
   for (const { r } of parsed) count.set(r.model, (count.get(r.model) ?? 0) + 1);
 
+  // Two products pointing at one datasheet: neither can be trusted to be its own.
+  const perPdf = new Map<string, number>();
+  for (const { pdf } of parsed) perPdf.set(pdf, (perPdf.get(pdf) ?? 0) + 1);
+
   const written: string[] = [];
   const adjusted: string[] = [];
   const seen = new Set<string>();
-  for (const { r, url, code } of parsed) {
+  for (const { r, url, code, pdf } of parsed) {
+    if ((perPdf.get(pdf) ?? 0) > 1 && !squash(decodeURI(pdf)).includes(squash(r.model.split("/")[0]!))) {
+      skipped.push(`[${r.model}](${url}) — its page links ${pdf}, which another product uses too and isn't named after this one`);
+      continue;
+    }
     const data = r.kind === "driver" ? r.driver! : r.pr!;
     if ((count.get(r.model) ?? 0) > 1 && code) data.model = `${r.model} (${code})`;
     const slug = slugOf(data.model);

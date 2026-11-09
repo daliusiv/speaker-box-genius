@@ -138,3 +138,18 @@ test("robots.txt: the * group applies", () => {
   assert.deepEqual(disallowed(robots), ["/administrator/", "/tmp/"]);
   assert.deepEqual(disallowed("User-agent: SpeakerBoxGenius-importer\nDisallow: /\nUser-agent: *\nDisallow:\n"), ["/"]);
 });
+
+test("found in the first live run: codes without an impedance, borrowed datasheets, voice-coil sizes", async () => {
+  const { pickPdf, sizeFromModel } = await import("../src/seas.ts");
+  assert.deepEqual(splitTitle("H1480 L16RN-SL"), { code: "H1480", name: "L16RN-SL" });
+  assert.deepEqual(splitTitle("E0051-04/06 C16N001/F"), { code: "E0051-04/06", name: "C16N001/F" });
+  assert.equal(splitTitle("Design by SEAS Woofers").code, undefined, "an overview page, not a product");
+  // The Extreme L26ROY page links the Exotic F8's sheet first.
+  const pdfs = ["https://www.seas.no/images/stories/exotic/pdf_datasheet/x1-08_exotic-f8_datasheet.pdf", "https://www.seas.no/images/XM001-04_L26ROY_datasheet.pdf"];
+  assert.equal(pickPdf(pdfs, "XM001-04 L26ROY"), pdfs[1]);
+  assert.equal(pickPdf(pdfs, "X1-08 EXOTIC F8"), pdfs[0]);
+  assert.equal(sizeFrom('The L26RFX/P has a 2" voice coil'), undefined, "a bare inch mark is often the voice coil");
+  assert.equal(sizeFromModel("CA26RFX"), 10);
+  assert.equal(sizeFromModel("W22NY001"), 8);
+  assert.equal(sizeFromModel("Exotic W8"), undefined);
+});
