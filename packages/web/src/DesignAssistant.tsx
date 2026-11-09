@@ -859,7 +859,11 @@ export function DesignAssistant(props: {
                         energy that low; an amp with a subsonic filter removes it.
                       </p>
                     ) : (
-                      <p className="assist-safe">✓ Within its limits at {goal.power_w} W, with or without a subsonic filter.</p>
+                      <p className="assist-safe">
+                        {r.subsonic
+                          ? `✓ Within its limits at ${goal.power_w} W from ${r.subsonic.below_hz} Hz up. Below that the ${r.box === "pr" ? "cone or PRs go" : "cone goes"} past Xmax (within it up to ${r.subsonic.safe_w} W): use a subsonic filter if your music or films go that low.`
+                          : `✓ Within its limits at ${goal.power_w} W, down to 10 Hz.`}
+                      </p>
                     )}
                     {r.space && (
                       <p className="hint assist-note">

@@ -293,6 +293,8 @@ export interface AssistantResult {
   safe_w?: number;
   /** Past Xmax only in deep bass (below 0.7 × Fb): from where, and the power that keeps it within (W). */
   deep?: { below_hz: number; safe_w: number };
+  /** Past Xmax (cone or PR) only below where limits are checked (checkFromHz), with no subsonic filter: from where, and the power that keeps it within (W). */
+  subsonic?: { below_hz: number; safe_w: number };
   /** Highest point of the relative response above F3 (dB): a hump. */
   peak_db: number;
   /** Relative response at CURVE_FREQS, for a small sketch. */
@@ -642,6 +644,14 @@ export function evaluateDriver(
       }
     }
     const watts = (scale: number) => Number((goal.power_w * scale * scale).toPrecision(2));
+    // Below where limits are checked nothing is graded, but the cone (or a PR) can still pass
+    // Xmax there: say so, so "within its limits" isn't read as safe with any signal.
+    const floor = checkFromHz(false, f3);
+    let below = 0;
+    for (let k = 0; k < r.freq.length && r.freq[k]! < floor; k++) {
+      below = Math.max(below, r.excursionMm[k]! / d.xmax_mm!);
+      for (const g of r.prGroups ?? []) if (g.xmax_mm) below = Math.max(below, g.excursionMm[k]! / g.xmax_mm);
+    }
     const spl = at(r.freq, r.spl, goal.loudAt_hz);
     const max = at(r.freq, r.maxSpl, goal.loudAt_hz);
     const i = r.freq.findIndex((f) => f >= goal.loudAt_hz);
@@ -678,6 +688,7 @@ export function evaluateDriver(
       over: lim.over,
       ...(lim.over.length ? { safe_w: watts(lim.safeScale) } : {}),
       ...(lim.deep ? { deep: { below_hz: Math.round(lim.deep.below_hz), safe_w: watts(lim.deep.scale) } } : {}),
+      ...(below > 1 ? { subsonic: { below_hz: Math.round(floor), safe_w: watts(1 / below) } } : {}),
       // A bandpass box's gain isn't a hump: its ripple across the band is.
       peak_db: r1(bandpass ? bandRipple(r, room ? (f: number) => roomGainDb(f, room) : undefined) : peakOf(r)),
       curve: CURVE_FREQS.map((f) => r1(at(r.freq, r.spl, f) - (room ? roomGainDb(f, room) : 0) - relRef)),

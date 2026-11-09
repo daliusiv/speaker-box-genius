@@ -532,3 +532,16 @@ test("a slow-bass note never reads as exactly one cycle when it's over one", () 
   assert.equal(cyclesText(1.46), "1.5");
   assert.ok(Number(cyclesText(GD_CYCLES + 0.01)) > GD_CYCLES);
 });
+
+test("a result within its limits says when its cone passes Xmax below where limits are checked", () => {
+  const row = rows.find((r) => r.id === "dayton-audio/rss315ho-44")!;
+  const goal = goalFor("home", "balanced");
+  const res = evaluateDriver(DEFAULT_STATE, row, loaded(row.id), goal);
+  const ported = res.find((r) => r.box === "vented")!;
+  const sealed = res.find((r) => r.box === "sealed")!;
+  // Ported at 22 Hz: the cone unloads below 20 Hz and passes its 14 mm Xmax.
+  assert.equal(ported.subsonic?.below_hz, 20);
+  assert.ok(ported.subsonic!.safe_w < goal.power_w);
+  // Sealed: the air holds the cone, under Xmax all the way down at 300 W.
+  assert.deepEqual([sealed.over, sealed.subsonic], [[], undefined]);
+});
