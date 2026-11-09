@@ -410,8 +410,11 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
   if (!view || main.length === 0) return main;
   const cmp = runFor(view, solveDriver(view), true);
   // "Box · driver" for both, so every legend says which driver a curve is.
-  const mine = compareShort(s.driverName, s.driverBrand);
-  let theirs = compareShort(view.driverName, view.driverBrand);
+  // With different counts or wiring, say so: "2 × RSS265HF-4", "2 × … in series".
+  const counted = view.drivers !== s.drivers || view.wiring !== s.wiring;
+  const tag = (x: AppState, name: string) => (counted && x.drivers > 1 ? `${x.drivers} × ${name}${x.wiring === "series" ? " in series" : ""}` : name);
+  const mine = tag(s, compareShort(s.driverName, s.driverBrand));
+  let theirs = tag(view, compareShort(view.driverName, view.driverBrand));
   if (theirs === mine) theirs = `${theirs} (compare)`;
   return [
     ...main.map((d) => ({ ...d, label: `${d.design.name} · ${mine}` })),

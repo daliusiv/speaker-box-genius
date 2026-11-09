@@ -265,7 +265,14 @@ export type DriverSlot = Pick<AppState, (typeof DRIVER_KEYS)[number]>;
  * loaded and wired stay the main driver's, so the comparison is like for like.
  */
 export const COMPARE_KEYS = ["driverName", "driverBrand", "nominal_ohms", "ts", "le_mh", "l2_mh", "r2_ohm", "semi", "fdd", "xmax_mm", "pe_w", "dvc"] as const;
-export type CompareDriver = Pick<AppState, (typeof COMPARE_KEYS)[number]>;
+/**
+ * The comparison driver: its own T/S, limits and coil wiring, and optionally its own number of
+ * drivers and how they're wired (one 15″ against two 10″). Without `drivers` it follows the main
+ * driver's count and wiring, so the comparison stays like for like as you change them.
+ */
+export type CompareDriver = Pick<AppState, (typeof COMPARE_KEYS)[number]> & { drivers?: number; wiring?: "parallel" | "series" };
+/** Most drivers a comparison can have (the main driver's field has no upper limit, but links are kept sane). */
+export const COMPARE_MAX_DRIVERS = 16;
 
 export interface AppState {
   v: 4;
@@ -932,6 +939,12 @@ function compareFrom(raw: unknown): CompareDriver | null {
   const slot = driverSlotFrom(raw as Raw, DEFAULT_STATE);
   const out = {} as Record<string, unknown>;
   for (const k of COMPARE_KEYS) out[k] = slot[k];
+  // Its own count (and wiring) only when the link has one: older links follow the main driver.
+  const n = (raw as Raw).drivers;
+  if (typeof n === "number" && Number.isFinite(n) && n >= 1) {
+    out.drivers = Math.min(COMPARE_MAX_DRIVERS, Math.round(n));
+    out.wiring = (raw as Raw).wiring === "series" ? "series" : "parallel";
+  }
   return out as CompareDriver;
 }
 
@@ -1011,8 +1024,14 @@ export function decodeState(hash: string): AppState | null {
 
 /** The state with the comparison driver in place of the main one (same boxes, count and wiring); null without one. */
 export function compareView(s: AppState): AppState | null {
-  return s.compare ? { ...s, ...s.compare } : null;
+  if (!s.compare) return null;
+  const { drivers, wiring, ...driver } = s.compare;
+  return { ...s, ...driver, ...(drivers !== undefined ? { drivers, wiring: wiring ?? s.wiring } : {}) };
 }
+
+/** Whether the comparison has its own number of drivers or wiring (not the main driver's). */
+export const compareOwnCount = (s: AppState): boolean =>
+  !!s.compare && s.compare.drivers !== undefined && (s.compare.drivers !== s.drivers || (s.compare.wiring ?? s.wiring) !== s.wiring);
 
 /** The main driver's own fields, as a comparison driver. */
 export function asCompare(s: AppState): CompareDriver {
@@ -1024,5 +1043,8 @@ export function asCompare(s: AppState): CompareDriver {
 /** The comparison driver becomes the main one, and the main one the comparison. */
 export function swapCompare(s: AppState): AppState {
   if (!s.compare) return s;
-  return { ...s, ...s.compare, compare: asCompare(s) };
+  const view = compareView(s)!;
+  // With its own count, the counts swap too; otherwise both keep following the one count.
+  const own = s.compare.drivers !== undefined;
+  return { ...view, compare: { ...asCompare(s), ...(own ? { drivers: s.drivers, wiring: s.wiring } : {}) } };
 }
