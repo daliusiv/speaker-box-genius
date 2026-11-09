@@ -422,22 +422,24 @@ function groupDelayExample(subsonic: boolean) {
 }
 
 /**
- * The 15″ vs two 10″ guide: a Dayton Audio RSS390HF-4 (one 15″) or two RSS265HF-4 in parallel
- * (2 Ω), in the same two boxes: 100 L sealed and 150 L ported at 22 Hz with a 15 cm port, behind
- * an 18 Hz 24 dB/oct high-pass filter, driven by the same amplifier (one channel of a Crown
- * XLS 1002: 350 W into 4 Ω = 37.4 V, 550 W into 2 Ω = 16.6 A), at 2.83 V.
+ * The 15″ vs two 10″ guide: a Dayton Audio RSS390HF-4 (one 15″) with two RSS265HF-4 as the
+ * comparison (its own count: two, in parallel for 2 Ω, or in series for 8 Ω), in the same two
+ * boxes: 100 L sealed and 150 L ported at 22 Hz with a 15 cm port, behind an 18 Hz 24 dB/oct
+ * high-pass filter, on the same amplifier (one channel of a Crown XLS 1002: 350 W into 4 Ω =
+ * 37.4 V, 550 W into 2 Ω = 16.6 A), at 28.3 V (2.83 V + 20 dB).
  */
 export const SUBS_AMP = { volts: 37.4, amps: 16.6 };
-function subsExample(pair: boolean) {
+export const SUBS_VOLTS = 28.3;
+function subsExample(wiring: "parallel" | "series") {
   return (): AppState => {
-    let s = withDriver({ ...DEFAULT_STATE, drive: "volts", volts: 2.83, highPass: highPass(4, 18) }, pair ? "dayton-audio/rss265hf-4" : "dayton-audio/rss390hf-4");
-    s = { ...s, drivers: pair ? 2 : 1, wiring: "parallel", settings: { ...s.settings, ampVolts: SUBS_AMP.volts, ampAmps: SUBS_AMP.amps } };
-    const who = pair ? "Two 10″" : "One 15″";
+    let s = withDriver({ ...DEFAULT_STATE, drive: "volts", volts: SUBS_VOLTS, highPass: highPass(4, 18) }, "dayton-audio/rss390hf-4");
+    s = { ...s, drivers: 1, wiring: "parallel", settings: { ...s.settings, ampVolts: SUBS_AMP.volts, ampAmps: SUBS_AMP.amps } };
     return {
       ...s,
+      compare: { ...asCompare(withDriver(DEFAULT_STATE, "dayton-audio/rss265hf-4")), drivers: 2, wiring },
       designs: [
-        { ...byKind(DEFAULT_STATE, "sealed"), id: "d1", name: `${who}, 100 L sealed`, vb_l: 100 },
-        { ...ventedWith(byKind(DEFAULT_STATE, "vented") as Vented, `${who}, 150 L ported (22 Hz)`, 150, 22, { shape: "round", diameter_cm: 15 }), id: "d2" },
+        { ...byKind(DEFAULT_STATE, "sealed"), id: "d1", name: "100 L sealed", vb_l: 100 },
+        { ...ventedWith(byKind(DEFAULT_STATE, "vented") as Vented, "150 L ported, 22 Hz", 150, 22, { shape: "round", diameter_cm: 15 }), id: "d2" },
       ],
     };
   };
@@ -682,11 +684,11 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "tl-example": tlExample,
   "qtc-example": qtcExample,
   "group-delay": groupDelayExample(false),
-  "subs-one-15": subsExample(false),
+  "subs-example": subsExample("parallel"),
   "coil-20": compressionExample(20),
   "coil-120": compressionExample(120),
   "coil-180": compressionExample(180),
-  "subs-two-10s": subsExample(true),
+  "subs-series": subsExample("series"),
   "group-delay-subsonic": groupDelayExample(true),
   "mltl-example": mltlExample,
   "dvc-watts": dvcExample("watts"),

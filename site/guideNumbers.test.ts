@@ -79,32 +79,65 @@ test("group delay guide: sizes, F3, response peak and group delay of the three b
   [10.7, 20.5, 12.3].forEach((ms, i) => near(filtered[i]!, ms, 0.2, `subsonic filter: box ${i + 1} at 40 Hz`));
 });
 
-test("one 15 vs two 10s guide: maximum SPL and the limit reached, in both boxes on the same amplifier", () => {
+test("one 15 vs two 10s guide: one project (the pair as the comparison driver), max SPL and limits on the same amplifier, at 28.3 V, and the pair in series", () => {
   const F = [20, 25, 30, 35, 40, 45, 50, 60, 80];
-  const want: Record<string, number[][]> = {
-    "subs-one-15": [
-      [101.8, 105.7, 108.9, 110.9, 112.1, 112.9, 113.4, 113.9, 114.2],
-      [106.5, 112.3, 114.6, 115.1, 115.2, 115.1, 115.1, 114.9, 114.6],
-    ],
-    "subs-two-10s": [
-      [99.3, 103.2, 106.4, 109.1, 111.4, 113.4, 114.1, 115.0, 115.8],
-      [106.5, 112.3, 113.0, 113.5, 114.6, 115.8, 115.9, 116.1, 116.3],
-    ],
-  };
-  for (const [name, rows] of Object.entries(want)) {
-    run(name).forEach((d, i) => {
-      F.forEach((hz, k) => near(at(d.result.freq, d.result.maxSpl, hz), rows[i]![k]!, 0.06, `${d.design.name} max SPL at ${hz} Hz`));
-    });
-  }
-  const limit = (name: string, box: number, hz: number) => {
-    const r = run(name)[box]!.result;
-    return r.limitedBy[r.freq.findIndex((f) => f >= hz)];
-  };
-  assert.equal(limit("subs-one-15", 0, 30), "xmax");
-  assert.equal(limit("subs-one-15", 0, 50), "amp");
-  assert.equal(limit("subs-two-10s", 0, 40), "xmax");
-  assert.equal(limit("subs-two-10s", 0, 50), "thermal");
-  assert.equal(limit("subs-two-10s", 1, 25), "port");
+  const rows = run("subs-example");
+  assert.deepEqual(rows.map((d) => d.label), ["100 L sealed · RSS390HF-4", "150 L ported, 22 Hz · RSS390HF-4", "100 L sealed · 2 × RSS265HF-4", "150 L ported, 22 Hz · 2 × RSS265HF-4"]);
+  const want = [
+    [101.8, 105.7, 108.9, 110.9, 112.1, 112.9, 113.4, 113.9, 114.2],
+    [106.5, 112.3, 114.6, 115.1, 115.2, 115.1, 115.1, 114.9, 114.6],
+    [99.3, 103.2, 106.4, 109.1, 111.4, 113.4, 114.1, 115.0, 115.8],
+    [106.5, 112.3, 113.0, 113.5, 114.6, 115.8, 115.9, 116.1, 116.3],
+  ];
+  rows.forEach((d, i) => F.forEach((hz, k) => near(at(d.result.freq, d.result.maxSpl, hz), want[i]![k]!, 0.06, `${d.label} max SPL at ${hz} Hz`)));
+  const limit = (r: (typeof rows)[number]["result"], hz: number) => r.limitedBy[r.freq.findIndex((f) => f >= hz)];
+  assert.equal(limit(rows[0]!.result, 30), "xmax");
+  assert.equal(limit(rows[0]!.result, 50), "amp");
+  assert.equal(limit(rows[2]!.result, 40), "xmax");
+  assert.equal(limit(rows[2]!.result, 50), "thermal");
+  assert.equal(limit(rows[3]!.result, 25), "port");
+  const peak = (r: (typeof rows)[number]["result"], y: ArrayLike<number>) => { let m = -Infinity; r.freq.forEach((f, i) => { if (f >= 10 && f <= 200) m = Math.max(m, y[i]!); }); return m; };
+  // At 28.3 V: F3, Qtc, level, excursion, port speed.
+  const at28 = [
+    { f3: 34.3, qtc: 0.76, l80: 111.8, x: 11.6 },
+    { f3: 22.4, l80: 112.2, x: 9.9, v: 14.9 },
+    { f3: 41.7, qtc: 0.65, l80: 113.9, x: 14.9 },
+    { f3: 22.0, l80: 114.4, x: 14.2, v: 22.0 },
+  ];
+  rows.forEach((d, i) => {
+    const r = d.result;
+    const w = at28[i]!;
+    near(r.summary.f3!, w.f3, 0.06, `${d.label} F3`);
+    if (w.qtc) near(r.summary.qtc!, w.qtc, 0.006, `${d.label} Qtc`);
+    near(at(r.freq, r.spl, 80), w.l80, 0.06, `${d.label} at 80 Hz, 28.3 V`);
+    near(peak(r, r.excursionMm), w.x, 0.06, `${d.label} excursion`);
+    if (w.v) near(peak(r, r.portVelocity!), w.v, 0.06, `${d.label} port speed`);
+  });
+  // The amplifier at 80 Hz: the 15 at 37.4 V and about 375 W; the pair at about 16 A and 484 W.
+  near(at(rows[0]!.result.freq, rows[0]!.result.ampAtMax.watts, 80), 375, 1, "15 watts at 80 Hz");
+  near(at(rows[2]!.result.freq, rows[2]!.result.ampAtMax.amps, 80), 15.8, 0.06, "pair amps at 80 Hz");
+  near(at(rows[2]!.result.freq, rows[2]!.result.ampAtMax.watts, 80), 484, 1, "pair watts at 80 Hz");
+  // Per watt into Re they're within 0.4 dB: 87.0 and 87.4 dB.
+  near(rows[0]!.result.summary.referenceSpl - 10 * Math.log10(28.3 ** 2 / 3), 87.0, 0.06, "15 per watt");
+  near(rows[2]!.result.summary.referenceSpl - 10 * Math.log10(28.3 ** 2 / 1.75), 87.4, 0.06, "pair per watt");
+  // In series (8 Ω) the pair is amplifier-limited: 110.3 dB at 80 Hz sealed, 3.9 below the 15.
+  const ser = run("subs-series");
+  assert.equal(ser[2]!.label, "100 L sealed · 2 × RSS265HF-4 in series");
+  near(at(ser[2]!.result.freq, ser[2]!.result.maxSpl, 80), 110.3, 0.06, "series pair at 80 Hz");
+  assert.equal(limit(ser[2]!.result, 60), "amp");
+  // Where the lines cross.
+  const f = rows[0]!.result.freq;
+  const cross = f.find((hz, i) => hz > 30 && rows[0]!.result.maxSpl[i]! < rows[2]!.result.maxSpl[i]!)!;
+  near(cross, 42.7, 0.5, "crossover");
+});
+
+test("one 15 vs two 10s guide: the sealed box each wants for Qtc 0.707", async () => {
+  const { sizeAllForDriver } = await import("../packages/web/src/presets.ts");
+  const { withDriver } = await import("./examples.ts");
+  const { DEFAULT_STATE } = await import("../packages/web/src/state.ts");
+  const sealed = (id: string, drivers: number) => sizeAllForDriver({ ...withDriver(DEFAULT_STATE, id), drivers }).state.designs.find((d) => d.kind === "sealed")!.vb_l;
+  assert.equal(sealed("dayton-audio/rss390hf-4", 1), 123.5);
+  assert.equal(sealed("dayton-audio/rss265hf-4", 2), 74.5);
 });
 
 test("power compression guide: loss at the same voltage, the hump and the excursion at 120 and 180 °C", () => {
