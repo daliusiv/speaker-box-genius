@@ -26,7 +26,7 @@ You simulate a bookshelf woofer, the bass looks flat down to 45 Hz, you build it
 
 ## The example
 
-An **SB Acoustics SB17NRX2C35-8**, a popular 6.5″ two-way woofer [7], in its Keele box: **35 L tuned to 33 Hz** with a 5 cm port, at 2.83 V. Its front baffle is **20 × 32 cm**, with the woofer 10 cm from the side and 22 cm from the top (the tweeter above it).
+An **SB Acoustics SB17NRX2C35-8**, a popular 6.5″ two-way woofer [7], in a Keele-alignment box: **35 L tuned to 33 Hz** with a 5 cm port, at 2.83 V. Its front baffle is **20 × 32 cm**, with the woofer 10 cm from the side and 22 cm from the top (the tweeter above it).
 
 ![Left: the bookshelf at 2.83 V on an infinite baffle (grey), free-standing (orange), free-standing with a +3 dB shelf (blue) and with a passive 6 dB network (green). Right: the baffle step alone for 15, 20 and 40 cm wide baffles and a 20 × 100 cm tower.](img/baffle-step.png)
 

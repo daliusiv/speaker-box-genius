@@ -221,9 +221,17 @@ export function alignmentDriver(solved: SolveResult, s: AppState) {
   const v = solved.values;
   if (solved.missing.length > 0) return null;
   // An isobaric pair has the same Fs and Qs with half the Vas.
-  // No Ql: the presets are the textbook (lossless) alignments, as WinISD's, Hornresp's and the
-  // guides' figures are (qb3Alignment can allow for leakage, but the app doesn't ask it to).
-  return { fs: v.fs!, qms: v.qms!, qes: v.qes! * dvcFactors(s).qes, vas_l: v.vas_l! / (s.isobaric ? 2 : 1) };
+  // No Ql: the textbook presets are the lossless alignments. The WinISD-style ones (the default)
+  // come from WinISD's own curves, which need Re (as wired) for its 0.1 Ω amplifier resistance.
+  const dvc = dvcFactors(s);
+  return {
+    fs: v.fs!,
+    qms: v.qms!,
+    qes: v.qes! * dvc.qes,
+    vas_l: v.vas_l! / (s.isobaric ? 2 : 1),
+    ...(v.re && v.re > 0 ? { re: v.re * dvc.re } : {}),
+    style: s.settings.alignments,
+  };
 }
 
 /** The line's pieces for the engine: each section runs from the previous end area to its own. */

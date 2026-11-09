@@ -26,7 +26,7 @@ export interface PrPhysical {
 import { KIND_COLORS, KIND_LABEL, PORT_LIMIT, portOf, portRoom_cm } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { bandpassLossesFrom, NO_LOSS, qText } from "./state.ts";
-import { alignmentHelp, moreVentedFor, prTuning, withPreset, ventedAlignmentFor, ventedPresetPatch, type PortPicker } from "./presets.ts";
+import { alignmentHelp, flatPresetHelp, moreVentedFor, prTuning, withPreset, ventedAlignmentFor, ventedPresetPatch, type PortPicker } from "./presets.ts";
 import { SLOT_WALL_K, slotTuningRange } from "./ports.ts";
 import { PrFinder, type FinderContext } from "./PrFinder.tsx";
 import { StuffingFields, type StuffingFitContext } from "./StuffingFields.tsx";
@@ -35,7 +35,7 @@ import { stuffFactor, stuffable, stuffingEffect, type StuffableKind } from "./st
 /** The preset chip's label: which flat vented alignment this driver gets. */
 const alignLabel = (a: AlignmentDriver | null, drivers: number) => {
   const v = a && ventedAlignmentFor(a, drivers);
-  return v ? v.name : "QB3 / B4";
+  return v ? v.name : a?.style === "textbook" ? "QB3 / B4" : "QB3";
 };
 import type {
   BandpassDesign,
@@ -469,11 +469,11 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext; pickP
         <button
           className="chip"
           disabled={!p.align || p.linked}
-          title="Flat vented alignment: QB3 (B4 at Qts ≈ 0.38) for low-Qts drivers, Keele's alignment for Qts 0.38–0.6"
+          title={flatPresetHelp(p.align, false)}
           onClick={() => {
             const a = p.align && ventedAlignmentFor(p.align, p.drivers);
             if (!a) {
-              setMsg("This driver's Qts is above 0.6: it suits a sealed box better than a vented one.");
+              setMsg("This driver's Qts is above about 0.6: it suits a sealed box better than a vented one.");
               return;
             }
             applyAlignment(a);
@@ -592,11 +592,11 @@ function PrBody(
         <button
           className="chip"
           disabled={!p.align || p.linked}
-          title="Box size and tuning of the flat vented alignment (QB3/B4, or Keele's for Qts 0.38–0.6), reached with added mass"
+          title={flatPresetHelp(p.align, true)}
           onClick={() => {
             const a = p.align && ventedAlignmentFor(p.align, p.drivers);
             if (!a) {
-              setMsg("This driver's Qts is above 0.6: it suits a sealed box better than a vented one.");
+              setMsg("This driver's Qts is above about 0.6: it suits a sealed box better than a vented one.");
               return;
             }
             applyPrAlignment(a);

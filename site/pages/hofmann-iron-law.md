@@ -16,7 +16,7 @@ Every bass thread gets to it sooner or later: you can have **deep bass, a small 
 ## The short answer
 
 - **The law:** a woofer system's efficiency is proportional to its box volume times the cube of its cut-off frequency. Go an octave deeper in the same box and you lose 9 dB of efficiency. Halve the box at the same cut-off and you lose 3 dB.
-- **It holds.** The two drivers here differ by 5.9 dB in efficiency, and each in its own flattest ported box (QB3) lands on the same law within 0.4 dB: the PA driver gets 94.9 dB per watt down to 53 Hz from 63 L, the home driver 89.0 dB down to 25 Hz from 146 L.
+- **It holds.** The two drivers here differ by 5.9 dB in efficiency, and each in its own flattest ported box (QB3) lands on the same law within 0.3 dB: the PA driver gets 94.9 dB per watt down to 49 Hz from 70 L, the home driver 89.0 dB down to 23 Hz from 168 L.
 - **The surprise: in the same box, they make the same deep bass per watt.** Below about 40 Hz the two are within about 1 dB of each other at 1 W, in a PA box and in a home box. The PA driver's extra 4–6 dB is all in the upper bass. Turn that down with EQ and it's a home sub. That's the Iron Law too: the extra efficiency was only ever above its cut-off.
 - **It's a law about efficiency, not loudness.** Maximum output is set by power handling, cone displacement and the port. With its rated 1,700 W the PA driver plays up to 6 dB louder above 50 Hz; in a sealed box the home driver's 3.1 L of displacement against 1.7 L makes it up to 4.7 dB louder below 25 Hz.
 - **Nothing beats it; you choose where to pay.** EQ, bigger amplifiers, ports, horns and more drivers all move you along it, spending watts, volume or money.
@@ -64,18 +64,18 @@ Where the 5.9 dB comes from: the same η₀ can be written as (ρ / 2πc) × (Bl
 
 ## The law, checked
 
-Each driver in its own **QB3** box (the flattest ported alignment, as **Presets** gives it), at 1 W:
+Each driver in its own **QB3** box (the flattest ported alignment, as **Presets** gives it, sized the way WinISD sizes it), at 1 W:
 
 | | B&C 18SW115 | Dayton SS18-22 |
 |---|---|---|
-| Box | 63.3 L, tuned to 39.2 Hz | 145.6 L, tuned to 21.4 Hz |
-| F3 | 53.5 Hz | 25.0 Hz |
+| Box | 70.4 L, tuned to 41.1 Hz | 167.9 L, tuned to 22.1 Hz |
+| F3 | 49.3 Hz | 22.9 Hz |
 | Passband level, 1 W | 94.9 dB | 89.0 dB |
-| kη = η₀ / (F3³ × Vb) | 1.93 × 10⁻⁶ | 2.11 × 10⁻⁶ |
+| kη = η₀ / (F3³ × Vb) | 2.22 × 10⁻⁶ | 2.38 × 10⁻⁶ |
 
-The two kη values are within 0.4 dB: two very different drivers, one law. The PA driver is 5.9 dB more efficient, and pays for it with a cut-off more than an octave higher, in less than half the box. (The small difference comes from the alignment's shape at their different Qts.)
+The two kη values are within 0.3 dB: two very different drivers, one law. The PA driver is 5.9 dB more efficient, and pays for it with a cut-off more than an octave higher, in less than half the box. (The small difference comes from the alignment's shape at their different Qts.)
 
-In their **Qtc 0.707 sealed** boxes (42 L and 87 L), kη is 0.91 and 0.76 × 10⁻⁶: the ported boxes come out 3.3–4.4 dB ahead of these sealed ones for their size and cut-off, a little more than Small's 2.9 dB between the best of each type.
+In their **Qtc 0.707 sealed** boxes (42 L and 87 L), kη is 0.91 and 0.76 × 10⁻⁶: the ported boxes come out 3.9–5.0 dB ahead of these sealed ones for their size and cut-off, 1–2 dB more than Small's 2.9 dB between the best of each type. (With the textbook lossless QB3 boxes, 63.3 L and 145.6 L, the gap is 3.3–4.4 dB: WinISD's QB3 trades a bigger box for a lower F3, which the law rewards.)
 
 ## Same box, same bass
 
@@ -131,7 +131,7 @@ Every trick moves you along the law; none breaks it:
 
 | Claim | Verdict |
 |---|---|
-| "Efficiency, size, extension: pick two" | True. Here kη came out within 0.4 dB for two very different drivers. |
+| "Efficiency, size, extension: pick two" | True. Here kη came out within 0.3 dB for two very different drivers. |
 | "Deep bass takes a bigger box" | Or less efficiency: 9 dB per octave in the same box. |
 | "PA drivers can't do deep bass" | They can, at the same output per watt in the same box, with EQ to flatten their upper bass. What they lack is long throw for sealed and small boxes. |
 | "Home subs are inefficient, so they're worse" | They spend efficiency on flat extension, by design. |
