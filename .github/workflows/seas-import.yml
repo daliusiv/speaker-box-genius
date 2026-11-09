@@ -1,0 +1,58 @@
+name: Import SEAS drivers
+
+# Reads the PDF datasheets linked from SEAS product pages (with SEAS' permission,
+# see docs/data-permissions.md) and opens a pull request with new and updated
+# entries plus a report of anything adjusted or skipped. Run by hand, and once a
+# month so new SEAS drivers turn up without anyone remembering to look.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 3 * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pdftotext
+        run: command -v pdftotext || (sudo apt-get update -q && sudo apt-get install -yq poppler-utils)
+
+      # seas.no doesn't send its intermediate certificate. Fetch it from the address the
+      # site's own certificate names (AIA "CA Issuers"), check the chain, and trust it.
+      - name: Complete seas.no's certificate chain
+        run: |
+          echo | openssl s_client -connect www.seas.no:443 -servername www.seas.no 2>/dev/null | openssl x509 > leaf.pem
+          url=$(openssl x509 -in leaf.pem -noout -ext authorityInfoAccess | grep -o 'CA Issuers - URI:.*' | sed 's/CA Issuers - URI://')
+          curl -fsSL "$url" -o inter.crt
+          (openssl x509 -inform DER -in inter.crt 2>/dev/null || openssl x509 -in inter.crt) > "$RUNNER_TEMP/seas-intermediate.pem"
+          openssl verify -untrusted "$RUNNER_TEMP/seas-intermediate.pem" -CAfile /etc/ssl/certs/ca-certificates.crt leaf.pem
+          rm leaf.pem inter.crt
+          echo "NODE_EXTRA_CA_CERTS=$RUNNER_TEMP/seas-intermediate.pem" >> "$GITHUB_ENV"
+
+      - name: Read seas.no
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/seas.ts
+
+      - name: Check the database
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts
+
+      - name: Open or update the pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: db/seas-import
+          add-paths: |
+            drivers/seas/**
+            passive-radiators/seas/**
+          commit-message: "Database: import SEAS drivers from seas.no datasheets (with permission)"
+          title: "Database: SEAS import"
+          labels: database
+          body-path: seas-import-report.md
