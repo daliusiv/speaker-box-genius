@@ -1,0 +1,57 @@
+E0073-08 W16NX003
+https://www.seas.no/index.php?option=com_content&view=article&id=559:e0073-08s-w16nx003-2&catid=49:excel-woofers&Itemid=359
+chosen: https://www.seas.no/images/stories/excel/pdfdataheet/E0073-08_W16NX003_Datasheet.pdf (OCR)
+pdf: https://www.seas.no/images/stories/excel/pdfdataheet/E0073-08_W16NX003_Datasheet.pdf
+
+EXCEL GRAPHENE EOO, 3-08
+The precision cast, machined and Graphene treated magnesium cone acts as a piston
+through the working frequency band without showing any sign of midrange resonan-
+ces.
+A titanium voice coil former with a long copper clad aluminium winding for excel- ‘SN
+lent force transfer, transient sound reproduction and large linear excursion. A unique
+radial reinforced rubber surround reduces radial resonances and prevents surround
+break up at large excursions. This combination results in very low mechanical dam- = }
+ping for better clarity and brings out the micro details in the music. <<.
+An FEA optimised magnet system with precisely fitted copper parts for excellent li-
+nearity, high powerhandling and low distortion. iq
+The extremely stiff and stable injection moulded metal basket keeps the critical com- me /
+ponents in perfect alignment. Large windows in the basket both above and below the
+spider reduce sound reflection, air flow noise and cavity resonance to a minimum.
+100 100 73.8. +
+a ee
+aE CTI TET
+OI CoS "HL Ups
+$s Aa NO a | |
+ms eaee |) s fii th
+_. 80 fj ne _s — 60 3 de J
+a WT A Ay vah
+z “lA \ i) {
+47 Tt TY a i 50 BS O es
+= A si
+YN + rtf oO 8 o “8
+PN ro
+OI Cy 1
+CoAC NTC ' |
+| TH? |i}
+50 ne 0 6 mounting holes @5.0
+10 100 Frequency [Hz] 1000 10 000 ~~ tqulspaced on 0137
+The frequency responses above show measured free field sound pressure in 0, 30, and 60
+degrees angle using a 10L closed box. Input 2.83 VRMS, microphone distance 0.5m, normali-
+zed to SPL 1m.The dotted line is a calculated response in infinite baffle based on the parameters given for this specific driver.
+The impedance is measured in free air without baffle using a 2V sine signal.
+Nominal Impedance 8 Ohms Voice Coil Resistance 6.4 Ohms
+Recommended Frequency Range 20 - 3000 Hz Voice Coil Inductance 0.12 mH
+Short Term Power Handling * 300 W Force Factor 7.6 N/A
+Long Term Power Handling * 180 W Free Air Resonance 36 Hz
+Characteristic Sensitivity (2,83V, 1m) 85.4 dB Moving Mass 14.2 g
+Voice Coil Diameter 39 mm Suspension Compliance 1.35 mm/N
+Voice Coil Height 20 mm Suspension Mechanical Resistance 0.69 Ns/m
+Air Gap Height 6 mm Effective Piston Area 94 cm?
+Linear Coil Travel (p-p) 14mm VAS 17 Litres
+Maximum Coil Travel (p-p) 22 mm QMS 4.73
+Magnetic Gap Flux Density 1,1 T QES 0.36
+Magnet Weight 0,9 kg QTS 0.34
+Total Weight 2,4 kg
+Jan 201 “IEC 268-5
+an 2019 SEAS reserves the right to change technical data
+RoHS compliant product Wwww.seas.no

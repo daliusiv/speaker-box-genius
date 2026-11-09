@@ -1,0 +1,33 @@
+XM003 SL26R
+https://www.seas.no/index.php?option=com_content&view=article&id=576:extreme-xm003-sl26r&catid=98:extreme-passive-radiators&Itemid=599
+chosen: https://www.seas.no/images/stories/design/pdf_datasheet/XM003-SL26ROY_Datasheet.pdf (OCR)
+pdf: https://www.seas.no/images/stories/exotic/pdf_datasheet/x1-08_exotic-f8_datasheet.pdf
+pdf: https://www.seas.no/images/stories/design/pdf_datasheet/XM003-SL26ROY_Datasheet.pdf
+
+SL26R is a passive radiator intended for use as an alternative to the port in a bass
+reflex cabinet, together with an active woofer of similar size or smaller.
+In many applications the traditional bass reflex port may produce high speed air
+noise or even have poor effect due to a small port area or a large port length. In
+such cases, a passive radiator may bring about an improvement.
+The chart below will show you the mass which has to be added to the cone of the
+passive radiator in order to obtain the desired Helmholtz resonance frequency in a
+given cabinet volume.
+The SL26R is also equipped with an M4 screw to which you can easily attach more j
+added mass for other applications. j
+For optimum performance, the passive radiator should be mounted vertically (with
+horizontal cone axis) This is especially important when a significant additional mass
+is used.
+76,8
+35 7 7 7 7 7 7 7 7 7 7 7 7 r ; 7 =F 10,0
+NEA NSS Ee oe ee ce Ss | | | | | | S|; 8
+iS) ——200g /
+x 20 SQ SS —_ at + a 4;
+20 40 60 80 100 120 140 160 180 200 220 240 260 280 300 320 8 mounting holes 25,5
+with pockets @9,5
+Cabinet size in liters equispaced on 9256
+Free Air Resonance (fp) 18 Hz Suspension compliance (Cyp) 0.29 mm/N
+Maximum Cone Travel (p-p) 56 mm Mechanical resistance (Ryp) 4.08 kg/s
+Moving Mass (Myp) 273 g Effective piston area 342 cm?
+Total Weight 1.2 kg VAS 50 Liters
+Oct 2019 SEAS reserves the right to change technical data
+RoHS compliant product WwWW.Seas.no

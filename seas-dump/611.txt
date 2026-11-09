@@ -1,0 +1,54 @@
+E0115-08 W16NX005
+https://www.seas.no/index.php?option=com_content&view=article&id=611:e0115-08-w16nx005&catid=49&Itemid=246
+chosen: https://www.seas.no/images/E0115-08_W16NX005_datasheet.pdf (OCR)
+pdf: https://www.seas.no/images/E0115-08_W16NX005_datasheet.pdf
+
+Metamodal TPCD cone is the second generation of the TPCD material which is engi-
+neered to have low weight, high stiffness and controlled damping. This is matched to
+an optimised suspension to give a smooth, extended frequency response.
+Titanium voice coil former with a long copper clad aluminium winding for excellent X
+force transfer, transient sound reproduction and large linear excursion. e
+An FEA optimised magnet system with precisely fitted copper parts for superb linea- : \@
+rity, high power handling and low distortion. Le
+The extremely stiff and stable injection moulded metal basket keeps the critical com- /
+ponents in perfect alignment. Large windows in the basket both above and below the
+spider reduce sound reflection, air flow noise and cavity resonance to a minimum.
+This combination results in improved clarity and finely detailed sound reproduction,
+for a more lifelike and realistic listening experience.
+100 100 = 73.8 al
+95 90 |
+a i | |
+— \ 1
+85 fA Nan +70 |
+es NL
+80 : a 60'S yy
+— 5 = V 50 > 6 es
+Qu. “ /\ — z 8 By
+nA 7 40 9° Y ]
+// VJ > \
+Y
+PARI a eli |
+55 ———L 10 / 1
+50 0 ' with pockets 08.5
+10 100 1000 10 000 equispaced on 137
+Frequency [Hz]
+The frequency responses above show measured free field sound pressure in 0, 30, and 60 degrees angle using a 10L closed
+box. Input 2.83 VRMs, microphone distance 0.5m, normalized to SPL 1m. The dotted line is a calculated response in infinite
+baffle based on the parameters given for this specific driver. The impedance is measured in free air without baffle using a 2V
+sine signal.
+Nominal Impedance 8 Ohms Voice Coil Resistance 6.4 Ohms
+Recommended Frequency Range 20- 4000 Hz Voice Coil Inductance 0.45 mH
+Short Term Power Handling * 300 W Force Factor 7,9 N/A
+Long Term Power Handling * 180 W Free Air Resonance 40 Hz
+Characteristic Sensitivity (2,83V, 1m) 87.3 dB Moving Mass 13,4 ¢
+Voice Coil Diameter 39 mm Suspension Compliance 1.19 mm/N
+Voice Coil Height 20 mm Suspension Mechanical Resistance 0.77 Ns/m
+Air Gap Height 6mm Effective Piston Area 104 cm?
+Linear Coil Travel (p-p) 14mm VAS 18 Litres
+Maximum Coil Travel (p-p) 22 mm QMS 4,37
+Magnetic Gap Flux Density 1.1T QES 0.34
+Magnet Weight 0.9 kg QTS 0.32
+Total Weight 2.1 kg
+Jun 2023 *TEC 268-5
+un SEAS reserves the right to change technical data
+RoHS compliant product www.seas.no

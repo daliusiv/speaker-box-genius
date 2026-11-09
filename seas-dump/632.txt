@@ -1,0 +1,52 @@
+XM011-04 L22ROY2
+https://www.seas.no/index.php?option=com_content&view=article&id=632:extreme-04-l22roy2&catid=97:extreme-woofers&Itemid=603
+chosen: https://www.seas.no/images/stories/extreme/pdf_datasheet/L22ROY2_XM011-04_datasheet.pdf (OCR)
+pdf: https://www.seas.no/images/stories/extreme/pdf_datasheet/L22ROY2_XM011-04_datasheet.pdf
+
+The L22ROY2 is a High Fidelity woofer, intended for 3-way systems, closed box and
+transmission line designs. With an extremely stiff aluminium cone, it provides a
+tremendous bass precision.
+A 2” diameter high power titanium voice coil former with a long copper winding for
+excellent force transfer and transient sound reproduction. A large rubber surround
+together with a textile spider allow for the outstanding linear excursion of the coil
+while keeping it well centered at high power. These characteristics result in a very
+low mechanical damping for better clarity bringing up the micro details in music.
+A large FEA optimised magnet system with a very big center hole through the pole ; - i
+piece and precisely fitted copper parts for excellent linearity, high power handling -
+and low distortion. Below the T-shaped pole piece there is a heavy copper ring and
+on top, a thick aluminium ring, they both help to reduce nonlinear and modulation
+distortion. The stiff and stable injection moulded metal basket keeps the critical
+components in perfect alignment. Large windows in the basket both above and
+below the spider reduce sound reflection, air flow noise and cavity resonance.
+100 : oy 50
+95 5 a oe ee ee ae Hy ee ee ee ae ee See j a oe! jot 45 10,5 118,0 J
+85 ne | eee ee Pn \ p35
+m 8 oer pont : | cree : 30 @ -
+sh i” a“ i i OM - = rn . 4 rn
+4 | | itl | a & ee
+Ay | meee a a ow
+~ 70 ' an rt aoe ' 20'S N “8
+/ a | ' 8 mounting holes 5,5
+50 / pj 0 with pockets 29,5
+10 100 1 000 10 000 equispaced on 9210
+Frequency [Hz]
+The frequency responses above show measured free field sound pressure in 0, 30, and 60 degrees angle using a 22L closed
+box. Input 2.83 VRMS, microphone distance 0.5m, normalized to SPL 1m. The dotted line is a calculated response in infinite
+baffle based on the parameters given for this specific driver. The impedance is measured in free air without baffle using a 2V
+sine signal.
+Nominal Impedance 4 Ohms Voice Coil Resistance 3.2 Ohms
+Recommended Frequency Range 20 - 2000 Hz Voice Coil Inductance 0.23 mH
+Short Term Power Handling * 500 W Force Factor 10.5 N/A
+Long Term Power Handling * 250 W Free Air Resonance 27 Hz
+Characteristic Sensitivity (2,83V, 1m) 85 dB Moving Mass 86.5 g
+Voice Coil Diameter 51mm Suspension Compliance 0.4 mm/N
+Voice Coil Height 31mm Suspension Mechanical Resistance 2.9 Ns/m
+Air Gap Height 8 mm Effective Piston Area 221 cm?
+Linear Coil Travel (p-p) 23 mm VAS 28 Litres
+Maximum Coil Travel (p-p) 46 mm QMS 5.10
+Magnetic Gap Flux Density 1.15 T QES 0.42
+Magnet Weight 2.7 Kg QTS 0.39
+Total Weight 6.45 Kg
+Jun 2024 *TEC 268-5
+un SEAS reserves the right to change technical data
+RoHS compliant product www.seas.no

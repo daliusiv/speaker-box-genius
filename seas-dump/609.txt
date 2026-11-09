@@ -1,0 +1,58 @@
+XM007-04 L26ROY3
+https://www.seas.no/index.php?option=com_content&view=article&id=609:extreme-04-l26roy-3&catid=97&itemid=603
+chosen: https://www.seas.no/images/L26ROY3_XM007-04_datasheet.pdf (OCR)
+pdf: https://www.seas.no/images/stories/exotic/pdf_datasheet/x1-08_exotic-f8_datasheet.pdf
+pdf: https://www.seas.no/images/L26ROY3_XM007-04_datasheet.pdf
+
+Extremely stiff and rigid aluminium cone gives tremendous bass precision.
+The cone and the long throw low loss rubber surround show no sign of the familiar
+cone edge resonance and distortion associated with soft cones.
+Lead-out wires symetrically stitched to the spider to avoid resonances. Total
+suspension designed to assure stability for extreme excursions.
+2-layer, extremely long, high temperature voice coil wound on a glass fiber voice
+coil former gives a high power handling capacity.
+Cu-cap around the pole pieces reduce non linear and modulation distortion and
+increase overload margin.
+Extra large magnet system provides high efficiency and low Q.
+Extremely stiff and stable injection moulded metal basket keeps the critical
+components in perfect alignment. Large windows in the basket both above and below
+the spider reduce sound reflection, air flow noise and cavity resonance to a 1423
+10,0
+90 | [\ 40 . \ |
+\
+~ } f=) 2 °°
+— o 8 a 8
+a 70 \ 20 = 8 Qa
+a e |
+65 INN VA —
+PN !
+60 L BAN 10 |
+|
+PN fey
+55 a ot u
+ee :
+50 0 1 L
+10 100 1000 10 000 .
+8 mounting holes 05,5
+Frequency [Hz] with pockets 09,5
+equispaced on g256
+The frequency responses above show measured free field sound pressure in 0, 30, and 60 degrees angle using a 28L closed
+box. Input 2.83 VRMS, microphone distance 0.5m, normalized to SPL 1m.The dotted line is a calculated response in infinite
+baffle based on the parameters given for this specific driver. The impedance is measured in free air without baffle using a 2V
+sine signal.
+Nominal Impedance 4 Ohms Voice Coil Resistance 3.3 Ohms
+Recommended Frequency Range 20 - 1000 Hz Voice Coil Inductance 0.73 mH
+Short Term Power Handling * 500 W Force Factor 12 N/A
+Long Term Power Handling * 250 W Free Air Resonance 25 Hz
+Characteristic Sensitivity (2,83V, 1m) 87.0 dB Moving Mass 118g
+Voice Coil Diameter 56 mm Suspension Compliance 0.34 mm/N
+Voice Coil Height 38 mm Suspension Mechanical Resistance 3.31 Ns/m
+Air Gap Height 10 mm Effective Piston Area 342 cm?
+Linear Coil Travel (p-p) 28 mm VAS 56 Litres
+Maximum Coil Travel (p-p) 56 mm QMS 5.6
+Magnetic Gap Flux Density 1.2 T QES 0.45
+Magnet Weight 2.34 Kg QTS 0.42
+Total Weight 10 kg
+Mar 2023 *TEC 268-5
+ar SEAS reserves the right to change technical data
+RoHS compliant product www.seas.no

@@ -1,0 +1,33 @@
+H9945 SP22R
+https://www.seas.no/index.php?option=com_content&view=article&id=114:h9945-sp22r&catid=54:prestige-passive-radiator&Itemid=465
+chosen: https://www.seas.no/images/stories/prestige/pdfdatasheet/H9945-SP22R_Datasheet.pdf (OCR)
+pdf: https://www.seas.no/images/stories/prestige/pdfdatasheet/H9945-SP22R_Datasheet.pdf
+
+SP22R is a passive radiator intended for use as an alternative to the port in a bass
+reflex cabinet, together with an active woofer of similar size or smaller.
+In many applications, the traditional bass reflex port may produce high speed air
+noise or even have poor effect due to a small port area or a large port length. In
+such cases, a passive radiator may bring about an improvement.
+The chart below will show you the mass which has to be added to the cone of the
+passive radiator in order to obtain the desired Helmholtz resonance frequency in a
+given cabinet volume.
+The passive radiator cone is equipped with an M4 screw to which you can easily
+attach the added mass.
+For optimum performance, the passive radiator should be mounted vertically (with
+horizontal cone axis). This is especially important when a significant additional
+mass is used.
+56.0
+3 eke m 8 WW
+ssf ' : an ae weight in i
+i 3d ses ie Fn eel Rees iagied Rs nal bean ee ee (ieteg Aneel esd el Ie eal eiivetiedes eosin yee tess
+10 20 30 40 SO 60 70 «680069006100 110 120 130 140 150 160 170 180 190 200
+Cabinet size in litres
+6 mounting holes 05.0
+with pockets 28.8
+equispaced on 0209.5
+ree Air Resonance 24 Hz Suspension Compliance (Cy,) 1.61 mm/N
+Maximum Cone Travel (p-p) 20 mm Mechanical Resistance (Rup) 0.876 kg/s
+Moving Mass (Myp) 28.9 g Effective Piston Area 230 cm?
+Total Weight 0.67 kg VAS 122 Litres
+March 2020 SEAS reserves the right to change technical data
+RoHS compliant product www.seas.no

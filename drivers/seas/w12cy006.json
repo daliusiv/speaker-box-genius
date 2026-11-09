@@ -1,0 +1,37 @@
+{
+  "brand": "SEAS",
+  "model": "W12CY006",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 4.5,
+  "ts": {
+    "fs": 72,
+    "qms": 2.2,
+    "qes": 0.49,
+    "vas_l": 2.5,
+    "re": 5.6,
+    "sd_cm2": 50,
+    "qts": 0.4,
+    "le_mh": 0.27,
+    "bl": 5.9,
+    "xmax_mm": 3,
+    "pe_w": 90,
+    "mms_g": 6.9
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=592:e0091-08-w12cy006&catid=49:excel-woofers&Itemid=246",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (E0091-08). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/E0091-08_W12CY006_datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "The datasheet's table is an image: values read by OCR, check them against the PDF. Size 4.5\" from the frame size in the model name (the datasheet doesn't state it). Xmax 3 mm is half the published linear coil travel (6 mm peak to peak). Published Vas 3 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 2.5 L from Cms."
+}

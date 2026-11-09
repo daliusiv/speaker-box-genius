@@ -1,0 +1,38 @@
+H9944 SP18R
+https://www.seas.no/index.php?option=com_content&view=article&id=113:h9944-sp18r&catid=54:prestige-passive-radiator&Itemid=465
+chosen: https://www.seas.no/images/stories/excel/pdfdataheet/H9944-SP18R_Datasheet.pdf (OCR)
+pdf: https://www.seas.no/images/stories/excel/pdfdataheet/H9944-SP18R_Datasheet.pdf
+pdf: https://www.seas.no/images/stories/prestige/pdfdatasheet/h9944_sp18r_datasheet.pdf
+
+SP18R is a passive radiator intended for use as an alternative to the port in a bass
+refl ex cabinet, together with an active woofer of similar size or smaller.
+In many applications the traditional bass refl ex port may produce high speed air
+noise or even have poor effect due to a small port area or a large port length. In
+such cases, a passive radiator may bring about an improvement.
+The chart below will show you the mass which has to be added to the cone of the
+passive radiator in order to obtain the desired Helmholtz resonance frequency in a
+given cabinet volume.
+The passive radiator cone is equipped with an M4 screw to which you can easily
+attach the added mass.
+For optimum performance, the passive radiator should be mounted vertically (with
+horizontal cone axis) This is especially important when a signifi cant additional
+mass is used.
+44.0
+52107
+607.) 5 ! : Hives (itob : i ' ' ' ‘ |
+2 SSR ae 3 zc
+ee Ee ES a ee wcha eben abe cee BB =o "
+VUNSSEDECPEt Eee é :
+= 30 SOE esa ane et Tt : ~ ti
+J NSS ee
+5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100
+Cabinet size in litres
+6 mounting holes 25.0
+with pockets 8.7
+equispaced on 2166
+Free Air Resonance 25 Hz Suspension Compliance (Cy,) 2.02 mm/N
+Maximum Cone Travel (p-p) 19 mm Mechanical Resistance (Rup) 0.317 kg/s
+Moving Mass (My) 20 g Effective Piston Area 130 cm?
+Total Weight 0.38 kg VAS 46 Litres
+March 2020 SEAS reserves the right to change technical data
+RoHS compliant product www.seas.no

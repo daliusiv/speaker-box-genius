@@ -1,0 +1,54 @@
+E0077-08 W22NX001
+https://www.seas.no/index.php?option=com_content&view=article&id=575:e0077-08-w22nx001&catid=49:excel-woofers&Itemid=359
+chosen: https://www.seas.no/images/stories/excel/pdfdatasheet/E0077-08_W22NX001_EN_datasheet.pdf (OCR)
+pdf: https://www.seas.no/images/stories/excel/pdfdatasheet/E0077-08_W22NX001_EN_datasheet.pdf
+
+EXCEL GRAPHENE EOO,s / -O8
+Precision cast, machined and Graphene treated magnesium cone acts as a piston
+throught the audible frequency band without showing any sign of midrange resonan-
+ces.
+Titanium voice coil former with a long copper coil winding for excellent force trans-
+fer, transient sound reproduction and large linear excursion.
+FEA optimised magnet system with precisely fitted copper parts for excellent linearity,
+high power handling and low distortion.
+The extremely stiff and stable injection moulded metal basket keeps the critical com-
+ponents in perfect alignment. Large windows in the basket both above and below the
+spider reduce sound reflection, air flow noise and cavity resonance to a minimum.
+Gold plated terminals mounted on a glassfibre reinforced plate to reduce contact re-
+sistance and improve reliability.
+100 100 93
+fo WT
+Pe Al eee ek ee: a i
+_, 80 A A400 *S | Yi
+aa) a
+2, NA || NAA es :
+= \/ V Vv a 4 i
+7 AWN A g
+70 y ' 40 'o" ©
+A en) A °
+9a AAR ET s y
+8s SS tli
+ieee :
+50 0
+10 100 Frequency [Hz] 1000 10 000
+The frequency responses above show measured free field sound pressure in 0, 30, and 60 degrees angle using a 21L closed 6 mounting holes 05,0
+box. Input 2.83 VRMS, microphone distance 0.5m, normalized to SPL 1m.The dotted line is a calculated response in infinite with pockets 08,8
+baffle based on the parameters given for this specific driver. The impedance is measured in free air without baffle using a 2V equispaced on 0209,5
+sine signal.
+Nominal Impedance 8 Ohms Voice Coil Resistance 6.3 Ohms
+Recommended Frequency Range 20 - 2000Hz Voice Coil Inductance 0.26 mH
+Short Term Power Handling * 500 W Force Factor 8.3 N/A
+Long Term Power Handling * 200 W Free Air Resonance 25 Hz
+Characteristic Sensitivity (2,83V, 1m) 87.3 dB Moving Mass 31.1¢
+Voice Coil Diameter 39 mm Suspension Compliance 1.35 mm/N
+Voice Coil Height 20 mm Suspension Mechanical Resistance 1.15 Ns/m
+Air Gap Height 6mm Effective Piston Area 220 cm?
+Linear Coil Travel (p-p) 14mm VAS 93 Litres
+Maximum Coil Travel (p-p) 20 mm QMS 4.18
+Magnetic Gap Flux Density 1.3 T QES 0.44
+Magnet Weight 0.9 kg QTS 0.39
+Total Weight 2.8 kg
+*TEC 268-5
+Jul 2024 SEAS . ‘
+reserves the right to change technical data
+RoHS compliant product www.seas.no

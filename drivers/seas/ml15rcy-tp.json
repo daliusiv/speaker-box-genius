@@ -1,0 +1,37 @@
+{
+  "brand": "SEAS",
+  "model": "ML15RCY/TP",
+  "type": "midrange",
+  "nominal_ohms": 4,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 48,
+    "qms": 3.53,
+    "qes": 0.35,
+    "vas_l": 10,
+    "re": 3,
+    "sd_cm2": 75,
+    "qts": 0.32,
+    "le_mh": 0.24,
+    "bl": 4.8,
+    "xmax_mm": 3.4,
+    "pe_w": 100,
+    "mms_g": 8.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=636:h2009-04_ml15rcy-tp&catid=46:prestige-midranges&Itemid=240",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (H2009-04). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/prestige/pdfdatasheet/H2009-04_ML15RCY_TP_Datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "The datasheet's table is an image: values read by OCR, check them against the PDF. Size 5.25\" from the frame size in the model name (the datasheet doesn't state it). Xmax 3.4 mm is half the published linear coil travel (6.8 mm peak to peak)."
+}

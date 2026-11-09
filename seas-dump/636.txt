@@ -1,0 +1,46 @@
+H2009-04 ML15RCY/TP
+https://www.seas.no/index.php?option=com_content&view=article&id=636:h2009-04_ml15rcy-tp&catid=46:prestige-midranges&Itemid=240
+chosen: https://www.seas.no/images/stories/prestige/pdfdatasheet/H2009-04_ML15RCY_TP_Datasheet.pdf (OCR)
+pdf: https://www.seas.no/images/stories/prestige/pdfdatasheet/H2009-04_ML15RCY_TP_Datasheet.pdf
+
+PRESTIGE TITAN {2009-04
+ML15RCY/TP is a precision-engineered pure midrange driver featuring an
+anodized aluminium cone. This driver is intended to be used in a closed box in
+multi-way speakers.
+The cone is designed to push the break-up frequency up high, maintaining pis-
+tonic motion within the passband for an exceptionally clean and natural sound. S
+The FEA-optimized magnet system includes a precisely fitted copper sleeve, pro- . 2"
+viding excellent linearity, high power handling, and minimized distortion. A Si ¢)) as
+titanium voice coil former with a short copper winding enhances force transfer, \ “| Ba
+resulting in low mechanical damping and remarkably clean transient response, oS:
+conveying even the finest musical nuances to the listener. ’ i Be
+The inverted rubber surround minimises diffraction for a smooth frequency J
+response without resonances and uncoloured sound. J
+The robust, open-frame basket keeps components critically aligned and opti-
+mizes airflow, supporting the driver’s overall acoustic performance.
+100 — . ee . — = 50 ‘ane 67,5
+0 nes ane ens 0 en a We de i, Oy Hl3o0 y
+W 70 | eee i fff | oe poeta ~O 8 al Ss
+a Ae nae : ff e a on ' a op se ee a 5 J] cs
+6 mounting holes 25.0
+100 1000 10 000 with pockets Z8.5
+Frequency [Hz] equispaced on 136.5
+The frequency responses above show measured free field sound pressure in 0, 30, and 60 degrees angle using a 10L closed
+box. Input 2.83 VRMs, microphone distance 0.5m, normalized to SPL 1m. The dotted line is a calculated response in infinite
+baffle based on the parameters given for this specific driver. The impedance is measured in free air without baffle using a 2V
+Nominal Impedance 4 Ohms Voice Coil Resistance 3.0 Ohms
+Recommended Frequency Range 100 - 5000 Hz Voice Coil Inductance 0.24 mH
+Short Term Power Handling * 200 W Force Factor 4.8 N/A
+Long Term Power Handling * 100 W Free Air Resonance 48 Hz
+Characteristic Sensitivity (2,83V, 1m) 90 dB Moving Mass 8.6¢g
+Voice Coil Diameter 25 mm Suspension Compliance 1.25 mm/N
+Voice Coil Height 9.4mm Suspension Mechanical Resistance 0.74 Ns/m
+Air Gap Height 6mm Effective Piston Area 75 cm?
+Linear Coil Travel (p-p) 6.8 mm VAS 10 Litres
+Maximum Coil Travel (p-p) 20 mm QMS 3.53
+Magnetic Gap Flux Density 1.3 T QES 0.35
+Total Weight 1.4kg QTS 0.32
+“TEC 268-5
+Oct 2024 SEAS . .
+reserves the right to change technical data
+RoHS compliant product www.seas.no

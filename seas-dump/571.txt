@@ -1,0 +1,62 @@
+E0080-04/06 C16NX001/F
+https://www.seas.no/index.php?option=com_content&view=article&id=571:e0080-04_06-c16nx001f&catid=60:seas-excel-coaxial-drivers&Itemid=361
+chosen: https://www.seas.no/images/stories/excel/pdfdataheet/E0080-04_06_C16NX001_F_Datasheet.pdf (OCR)
+pdf: https://www.seas.no/images/stories/excel/pdfdataheet/E0080-04_06_C16NX001_F_Datasheet.pdf
+
+EXCEL GRAPHENE EOO80O-04/06
+The precision cast, machined and Graphene treated magnesium cone acts as a
+piston through the working frequency band without showing any sign of mi-
+drange resonances.
+The woofer has an FEA optimised magnet system with precisely fitted copper
+parts for excellent linearity, high powerhandling and low distortion. A titanium m \* \
+voice coil former with a long copper clad aluminium winding for excellent force as :
+transfer, transient sound reproduction and large linear excursion. This results in oo 1
+very low mechanical damping for better clarity and brings out the micro details |
+in the music. on
+The coaxially arranged tweeter with a precoated fabric dome is fitted with a Tita-
+nium former, has a low resonance frequency and integrates with the cone driver
+to form a point source for excellent sound stage imaging. /
+The extremely stiff and stable injection moulded metal basket designed for
+smooth air-flow, keeps the critical components in perfect alignment and reduce
+sound reflection, air flow noise and cavity resonance to a minimum.
+100 50 7 84,3 “|
+-_ = 5,0£0,2
+AZT |
+90 JOR AST A—A—1- 40 \ 1
+AND AS : |
+oo ANI
+f j
+= ‘ 2
+g | tly | ff | NAV AY EE :
+= 75 : ’ wae \ 5 ¢ a &
+4 f a 3 =a 3
+s IA | fF | "WANE § -
+Y 70 1 20 a iS) is)
+a A |
+65 | Nyy 68
+ey A :
+we Ne |
+55 | eee Ae 4 '
+50 0 il 6 mounting holes 05.0
+10 100 1000 10 000 epee on 0137.0
+Frequency [Hz]
+The frequency responses above show measured free field sound pressure in 0, 30, and 60 degrees angle using a 10L closed
+box. Input 2.83 VRMs, microphone distance 0.5m, normalized to SPL 1m.The dotted line is a calculated response in infinite
+baffle based on the parameters given for this specific driver. The impedance is measured in free air without baffle using a 2V
+sine signal.
+Woofer Tweeter Woofer Tweeter
+Nominal Impedance 4 Ohms 6 Ohms Voice Coil Resistance 3.0 Ohms 4.7 Ohms
+Recommended Frequency Range 20 - 3000 Hz | 2 - 20 kHz Voice Coil Inductance 0.23 mH 0.05 mH
+Short Term Power Handling * 250 W 220 W Force Factor 5.7 N/A 3.2 N/A
+Long Term Power Handling * 150 W 90 W Free Air Resonance 35 Hz 1165 Hz
+Characteristic Sensitivity (2,83V, 1m) 88.5 dB 90 dB Moving Mass 16.2 ¢ 0.4 g
+Voice Coil Diameter 39 mm 26 mm Suspension Compliance 1.26 mm/N -
+Voice Coil Height 20 mm 1.6 mm Suspension Mechanical Resistance 0.74 Ns/m -
+Air Gap Height 6 mm 2mm Effective Piston Area 94 cm? 7 cm?
+Linear Coil Travel (p-p) 14mm 0.4 mm VAS 16 Litres -
+Maximum Coil Travel (p-p) 22 mm = QMS 4.85 =
+Magnetic Gap Flux Density 1,1T 1,2 T QES 0.33 -
+Total Weight 2,4 kg - QTS 0.31 -
+July 2019 *TEC 268-5
+uly SEAS reserves the right to change technical data
+RoHS compliant product www.seas.no
