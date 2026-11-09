@@ -339,20 +339,61 @@ footer {
   line-height: 1.6;
 }
 
-/* Links spaced for fingers, wrapping as needed. */
-.footer-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 1.1rem;
-  margin: 0.6rem 0 0;
+/* Site footer: intro, three link columns, fine print. */
+.site-footer {
+  margin-top: 1.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+}
+
+.site-footer a {
+  text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  text-underline-offset: 2px;
+}
+
+.footer-nav {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 40rem;
+  gap: 1rem;
+  margin: 1.2rem 0;
+}
+
+.footer-nav h3 {
+  margin: 0 0 0.3rem;
+  color: var(--fg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.footer-nav ul {
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.footer-links a,
-.footer-links button.link {
+/* Links spaced for fingers; plain until hovered. */
+.footer-nav a,
+.footer-nav button.link {
   display: inline-block;
   padding: 0.3rem 0;
+  color: var(--muted);
+  font-weight: 400;
+  text-align: left;
+  text-decoration: none;
+}
+
+.footer-nav a:hover,
+.footer-nav button.link:hover {
+  color: var(--accent);
+}
+
+.footer-fine {
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
 }
 
 /* ---- library picker ---- */
@@ -4028,6 +4069,7 @@ dialog.assistant .lib-inner:focus {
 @media (min-width: 760px) {
   .assist-limits {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 40rem;
   }
 }
 
