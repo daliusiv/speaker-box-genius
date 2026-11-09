@@ -980,6 +980,7 @@ export function App(props: { initial: AppState | null }) {
               <TsEditor
                 entered={state.ts}
                 solved={solved}
+                air={airOf(state)}
                 published={driverSource && driverSource.name === state.driverName ? driverSource.ts : undefined}
                 onChange={(ts) => set("ts", ts)}
                 pasting={pasting}
