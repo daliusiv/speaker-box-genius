@@ -1,0 +1,37 @@
+{
+  "brand": "SEAS",
+  "model": "L16RNX (H1488-04)",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 5,
+  "ts": {
+    "fs": 37,
+    "qms": 2.31,
+    "qes": 0.38,
+    "vas_l": 19.9,
+    "re": 3.1,
+    "sd_cm2": 104,
+    "qts": 0.33,
+    "le_mh": 0.32,
+    "bl": 5.4,
+    "xmax_mm": 6,
+    "pe_w": 80,
+    "mms_g": 14.7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=97:h1488-04-l16rnx&catid=44:utv-prestige-woofers&Itemid=461",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (H1488-04). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/prestige/pdfdatasheet/h1488-04_l16rnx_datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax 6 mm is half the published linear coil travel (12 mm peak to peak). Moving mass 14.7 g already agrees with Fs and Cms, so the air load (0.62 g) isn't added. Published Vas 16 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 19.9 L from Cms. Type woofer chosen from the recommended frequency range and size (the series page doesn't say)."
+}

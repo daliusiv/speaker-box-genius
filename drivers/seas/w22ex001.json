@@ -1,0 +1,36 @@
+{
+  "brand": "SEAS",
+  "model": "W22EX001",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 25,
+    "qms": 2.14,
+    "qes": 0.41,
+    "vas_l": 98,
+    "re": 6.1,
+    "sd_cm2": 220,
+    "qts": 0.34,
+    "le_mh": 0.61,
+    "bl": 8.1,
+    "xmax_mm": 5,
+    "pe_w": 120,
+    "mms_g": 28.09
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=360:e0022-08s-w22ex001&catid=49:excel-woofers&Itemid=359",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (E0022-08S). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/excel/pdfdatasheet/e0022_w22ex001_datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax 5 mm is half the published linear coil travel (10 mm peak to peak). Mms 28.09 g is the published moving mass plus air load (26.2 + 1.89 g)."
+}

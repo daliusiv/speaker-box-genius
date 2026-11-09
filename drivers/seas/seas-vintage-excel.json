@@ -1,0 +1,33 @@
+{
+  "brand": "SEAS",
+  "model": "SEAS Vintage Excel",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 4.5,
+  "ts": {
+    "fs": 65,
+    "qms": 1.79,
+    "qes": 0.42,
+    "vas_l": 3.7,
+    "re": 5.7,
+    "sd_cm2": 50,
+    "qts": 0.34,
+    "mms_g": 5.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=498:seas-vintage-excel&catid=25&Itemid=508",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page. SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/vintage/pdfdataheet/e001.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Type woofer chosen from the recommended frequency range and size (the series page doesn't say)."
+}

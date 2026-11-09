@@ -1,0 +1,36 @@
+{
+  "brand": "SEAS",
+  "model": "W15CY001",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "ts": {
+    "fs": 38,
+    "qms": 2.22,
+    "qes": 0.43,
+    "vas_l": 14,
+    "re": 5.5,
+    "sd_cm2": 75,
+    "qts": 0.36,
+    "le_mh": 0.49,
+    "bl": 5.5,
+    "xmax_mm": 4,
+    "pe_w": 70,
+    "mms_g": 9.88
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/index.php?option=com_content&view=article&id=351:e0015-08s-w15cy001&catid=49:excel-woofers&Itemid=359",
+      "retrieved": "2026-11-09",
+      "note": "SEAS product page (E0015-08S). SEAS datasheet values, used with SEAS' permission (9 Nov 2026) under CC BY-NC-SA 4.0, credited to SEAS."
+    },
+    {
+      "kind": "datasheet",
+      "url": "https://www.seas.no/images/stories/excel/pdfdataheet/e0015_w15cy001_datasheet.pdf",
+      "retrieved": "2026-11-09",
+      "note": "SEAS datasheet (PDF)."
+    }
+  ],
+  "status": "community",
+  "notes": "Xmax 4 mm is half the published linear coil travel (8 mm peak to peak). Mms 9.88 g is the published moving mass plus air load (9.5 + 0.38 g)."
+}
