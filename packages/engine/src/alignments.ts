@@ -5,9 +5,10 @@ import { qts as qtsOf } from "./ts.ts";
  * Classic box alignments for a driver (or N identical drivers sharing a box,
  * which act like one driver with N × Vas and the same Qs).
  *
- * Vented alignments use the lossless 4th-order model. Real boxes leak
- * (WinISD assumes Ql = 10), so the simulated response with losses will sit a
- * little lower near Fb than the ideal shape.
+ * Vented alignments use the lossless 4th-order model (or Small's lossy one when QL is given).
+ * Real boxes leak (WinISD assumes Ql = 10), so the simulated response with losses will sit a
+ * little lower near Fb than the ideal shape. WinISD's own wizard sizes boxes differently, from
+ * curves measured in winisdAlignments.ts.
  */
 
 export interface AlignmentDriver {
@@ -20,6 +21,10 @@ export interface AlignmentDriver {
    * Omitted or ∞: a lossless box (Thiele's original tables).
    */
   ql?: number;
+  /** DC resistance of one driver's coil as wired (Ω): WinISD's alignments need it (winisdAlignments.ts). */
+  re?: number;
+  /** Which presets an app asks for: WinISD's curves or the textbook equations (these functions are the textbook ones). */
+  style?: "winisd" | "textbook";
 }
 
 export interface VentedAlignment {

@@ -19,9 +19,26 @@ differences.
 | `packages/engine/validation/report.ts` | Writes [`docs/validation/results.json`](validation/results.json): every value, difference and curve |
 | `packages/engine/test/validation-report.test.ts` | Fails when `results.json` is out of date |
 | `site/validation.ts` | Builds the /validation/ page from `results.json` at deploy |
+| `packages/engine/src/winisdAlignments.ts` | The ported presets as WinISD's wizard sizes them: its QB3, BB4 and C4 curves, measured from WinISD (32 drivers, Qts 0.14–0.76) |
+| `packages/engine/test/fixtures/winisd-alignments.json`, `winisd-alignments.test.ts` | WinISD's own boxes for 19 other drivers, checked on every push and shown on the page ("Ported presets") |
 
 So the page always shows what the tests check, and a change to the engine that moves a result
 has to come with the updated `results.json`.
+
+## The ported presets
+
+WinISD's wizard doesn't size QB3, BB4 or C4 boxes with the textbook equations: each alignment
+is one curve of Vb/Vas and Fb/Fs against the driver's Qts, and that Qts includes WinISD's
+amplifier resistance (Rg, 0.1 Ω by default) in series with Re: Qes' = Qes·(Re + 0.1)/Re.
+`winisdAlignments.ts` holds the curves, read from WinISD for synthetic drivers (Fs 30 Hz,
+Qms 5, Vas 50 L, Re 6 Ω, Qts 0.14 to 0.76 in steps of 0.02) and interpolated (monotone cubic).
+Against 19 drivers that aren't in that sweep (Re 3–6.5 Ω, Qts 0.20–0.70) they agree within
+WinISD's two-decimal display. Settings → Vented presets → Textbook gives the lossless
+equations instead (QB3/B4, Keele's alignment above B4, SQB3, C4/SC4, BB4/SBB4).
+
+To add a check: load the driver's `.wdr` in WinISD's new-project wizard, choose Vented and the
+alignment, read Vb and Fb off the Box tab (leave Rg at 0.1 Ω), and add the driver to
+`packages/engine/test/fixtures/winisd-alignments.json`.
 
 ## Adding or updating a case
 

@@ -1287,7 +1287,7 @@ export function App(props: { initial: AppState | null }) {
                 <Sparkle />
                 Size all boxes for this driver
               </button>
-              <span className="hint">Sealed Qtc 0.707 (for a Qts near 0.707, where that box runs away, twice Vas and a higher Qtc); ported and PR a flat alignment (QB3, or Keele for higher Qts), ported with the simplest port that fits and stays quiet at the driver's rating; bandpass the lowest flat band in its volume. Undo takes it back.</span>
+              <span className="hint">Sealed Qtc 0.707 (for a Qts near 0.707, where that box runs away, twice Vas and a higher Qtc); ported and PR the flat vented preset (QB3, sized like WinISD unless Settings says textbook), ported with the simplest port that fits and stays quiet at the driver's rating; bandpass the lowest flat band in its volume. Undo takes it back.</span>
             </div>
             {sizeReport && (
               <div className="size-report">
@@ -1610,6 +1610,19 @@ export function App(props: { initial: AppState | null }) {
                     { value: "no", text: "Off (WinISD's default)" },
                   ]}
                   onChange={(x) => set("settings", { ...state.settings, inductance: x === "yes" })}
+                />
+              </div>
+
+              <h3 className="set-head">Alignment presets</h3>
+              <div className="fields">
+                <Select<"winisd" | "textbook"> help="How the ported and passive radiator presets (QB3, BB4/SBB4, C4/SC4) size the box. Like WinISD: the boxes WinISD's new-project wizard gives, which allow for a box that leaks a little and for WinISD's 0.1 Ω amplifier resistance. Textbook: Thiele's and Small's lossless equations (QB3 up to B4, Keele's alignment above it, and SQB3); their boxes come out up to about 10 % smaller (C4 much more at high Qts)."
+                  label="Vented presets"
+                  value={state.settings.alignments}
+                  options={[
+                    { value: "winisd", text: "Like WinISD" },
+                    { value: "textbook", text: "Textbook (lossless)" },
+                  ]}
+                  onChange={(alignments) => set("settings", { ...state.settings, alignments })}
                 />
               </div>
 

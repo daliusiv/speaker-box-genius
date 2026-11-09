@@ -17,6 +17,11 @@ const at = (f: Float64Array, y: ArrayLike<number>, x: number) => {
   const t = (x - f[i - 1]!) / (f[i]! - f[i - 1]!);
   return y[i - 1]! + t * (y[i]! - y[i - 1]!);
 };
+/**
+ * These guides were written with the textbook (lossless) vented presets; since the app's default
+ * became WinISD's alignments, their preset checks ask for the textbook ones explicitly.
+ */
+const textbook = <T extends { settings: { alignments: "winisd" | "textbook" } }>(s: T): T => ({ ...s, settings: { ...s.settings, alignments: "textbook" } });
 const near = (a: number, b: number, tol: number, what: string) => assert.ok(Math.abs(a - b) <= tol, `${what}: ${a} (guide says ${b})`);
 
 test("sealed Qtc guide: box sizes, F3, level at 25 Hz and max SPL at 30 Hz", () => {
@@ -248,7 +253,7 @@ test("Hofmann's Iron Law guide: efficiency, the law's constant, same-box SPL at 
   const c = 343.2;
   const k: number[] = [];
   for (const [id, db, vb, fb, f3] of [["bc-speakers/18sw115-8ohm", 94.8, 63.3, 39.2, 53.5], ["dayton-audio/ss18-22", 88.9, 145.6, 21.4, 25.0]] as const) {
-    const s = withDriver({ ...DEFAULT_STATE, power: 1 }, id);
+    const s = withDriver(textbook({ ...DEFAULT_STATE, power: 1 }), id);
     const v = solveDriver(s).values;
     const eta = ((4 * Math.PI ** 2) / c ** 3) * v.fs! ** 3 * (v.vas_l! / 1000) / v.qes!;
     near(112.1 + 10 * Math.log10(eta), db, 0.06, `${id} 1 W efficiency`);
@@ -441,7 +446,7 @@ test("sealed / ported / PR guide: presets, rules of thumb, the three boxes at 35
   const { withDriver, prParams, BOX_TYPES } = await import("./examples.ts");
   const { DEFAULT_STATE } = await import("../packages/web/src/state.ts");
   // The presets still give the example's boxes (so the guide can't drift from the app).
-  let s0 = withDriver({ ...DEFAULT_STATE, power: 350 }, "dayton-audio/rss265hf-4");
+  let s0 = withDriver(textbook({ ...DEFAULT_STATE, power: 350 }), "dayton-audio/rss265hf-4");
   s0 = { ...s0, designs: s0.designs.map((d) => (d.kind === "pr" ? ({ ...d, prName: "Dayton Audio RSS265-PR", params: prParams("dayton-audio/rss265-pr"), count: 2, extra: [] } as typeof d) : d)) };
   const sized = sizeAllForDriver(s0);
   const by = (k: string) => sized.state.designs.find((d) => d.kind === k) as any;
@@ -570,7 +575,7 @@ test("compare drivers guide: RSS265HF-4 vs RSS265HO-4 at 350 W in 30 L sealed an
   const { withDriver } = await import("./examples.ts");
   const { DEFAULT_STATE } = await import("../packages/web/src/state.ts");
   const own = (id: string) => {
-    const s = sizeAllForDriver(withDriver({ ...DEFAULT_STATE, power: 350 }, id)).state;
+    const s = sizeAllForDriver(withDriver(textbook({ ...DEFAULT_STATE, power: 350 }), id)).state;
     return runDesigns(s, solveDriver(s)).filter((d) => d.design.kind === "sealed" || d.design.kind === "vented").map((d) => [d.vb_l, (d.design as { targetFb?: number }).targetFb ?? null, Math.round(d.result.summary.f3! * 10) / 10]);
   };
   assert.deepEqual(own("dayton-audio/rss265hf-4"), [[37.3, null, 42.0], [82.8, 22, 20.3]]);
@@ -607,7 +612,7 @@ test("T/S parameters guide: DSA215-8 vs RSS210HF-4 at 21.7 V in the DSA215-8's o
   const { withDriver } = await import("./examples.ts");
   const { DEFAULT_STATE } = await import("../packages/web/src/state.ts");
   const own = (id: string) => {
-    const s = sizeAllForDriver(withDriver({ ...DEFAULT_STATE, power: 80 }, id)).state;
+    const s = sizeAllForDriver(withDriver(textbook({ ...DEFAULT_STATE, power: 80 }), id)).state;
     return runDesigns(s, solveDriver(s)).filter((d) => d.design.kind === "sealed" || d.design.kind === "vented").map((d) => [d.vb_l, (d.design as { targetFb?: number }).targetFb ?? null]);
   };
   assert.deepEqual(own("dayton-audio/dsa215-8"), [[10.4, null], [16.2, 39.8]]);
@@ -652,8 +657,9 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   };
   const goal = goalFor("home", "balanced");
   const cands = prefilter(rows as never, goal);
-  let res = cands.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id) as never, goal));
-  res = [...res, ...prShortlist(rankResults(res, goal), cands).flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id) as never, goal, "pr", db.passiveRadiators.map(prCandidate)))];
+  const base = textbook(DEFAULT_STATE);
+  let res = cands.flatMap((r) => evaluateDriver(base, r, loaded(r.id) as never, goal));
+  res = [...res, ...prShortlist(rankResults(res, goal), cands).flatMap((r) => evaluateDriver(base, r, loaded(r.id) as never, goal, "pr", db.passiveRadiators.map(prCandidate)))];
   const ranked = rankResults(res, goal);
   const top = ranked[0]!;
   assert.deepEqual([top.driverId, top.box, top.vb_l, top.fb, top.pr?.name, top.pr?.count, top.pr?.addedMass_g, top.over], ["dayton-audio/rss315ho-44", "pr", 38.1, 22.2, "SB Acoustics SB29NRX-00", 4, 350, []]);
@@ -679,8 +685,8 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   assert.ok(loud.notes.some((n) => n.includes("won't all fit")));
   const sgoal = goalFor("home", "small");
   const scands = prefilter(rows as never, sgoal);
-  let sres = scands.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id) as never, sgoal));
-  sres = [...sres, ...prShortlist(rankResults(sres, sgoal), scands).flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id) as never, sgoal, "pr", db.passiveRadiators.map(prCandidate)))];
+  let sres = scands.flatMap((r) => evaluateDriver(base, r, loaded(r.id) as never, sgoal));
+  sres = [...sres, ...prShortlist(rankResults(sres, sgoal), scands).flatMap((r) => evaluateDriver(base, r, loaded(r.id) as never, sgoal, "pr", db.passiveRadiators.map(prCandidate)))];
   const small = rankResults(sres, sgoal)[0]!;
   assert.deepEqual([small.driverId, small.box, small.vb_l, small.pr?.name, small.pr?.count, small.pr?.addedMass_g], ["peerless/stw-350f188pr01-04", "pr", 28.2, "SB Acoustics SB29NRX-00", 4, 1154]);
   assert.ok(small.notes.some((n) => n.includes("won't all fit")));

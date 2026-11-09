@@ -3,8 +3,8 @@
  * sealed, ported and passive radiator boxes worked out from its T/S parameters, their charts,
  * and a link that opens them in the app. Plus /drivers/ and one index per brand.
  *
- * The designs use the app's own one-click presets (sizeAllForDriver: Qtc 0.707, QB3/B4 or
- * Keele), so a page shows what the app would give. On top of that, each page picks a port
+ * The designs use the app's own one-click presets (sizeAllForDriver: Qtc 0.707, and QB3 as
+ * WinISD's wizard sizes it), so a page shows what the app would give. On top of that, each page picks a port
  * that fits the box and the best passive radiator from the database (the PR finder).
  */
 import { RHO, C, TS_PARAMS, estimateDriverDisplacement, evaluatePrCandidates, rankPrResults, type PrCandidate, type TsParam, type TsValues } from "../packages/engine/src/index.ts";
@@ -342,7 +342,7 @@ export function driverContent(p: DriverPage, links: PageLinks, chart: typeof imp
 ${p.rec.ts.pe_w ? `<p class="muted">They open at its ${Math.round(p.rec.ts.pe_w)} W power rating; the app's 1 W button (as WinISD and Hornresp start) is next to it.</p>` : ""}
 ${flagNote}
 <h2 id="boxes">Suggested boxes</h2>
-<p>${suitability(solved.fs!, solved.qes!, solved.qts!)} The boxes use the flattest standard alignments; a smaller box trades some bass extension for size, which you can try in the app. Volumes are net: add the space taken by the driver, port${p.pr ? ", passive radiators" : ""} and bracing (the app's volume calculator does this).</p>
+<p>${suitability(solved.fs!, solved.qes!, solved.qts!)} The boxes use the flattest standard alignments (the ported ones as WinISD sizes them); a smaller box trades some bass extension for size, which you can try in the app. Volumes are net: add the space taken by the driver, port${p.pr ? ", passive radiators" : ""} and bracing (the app's volume calculator does this).</p>
 <div class="table"><table class="cmp"><thead><tr><th>Box</th><th>Volume</th><th>Tuning</th><th>F3</th>${hasMax ? `<th>Max SPL at ${fRef} Hz</th>` : ""}</tr></thead><tbody>${rows}</tbody></table></div>
 ${notes}
 ${key}

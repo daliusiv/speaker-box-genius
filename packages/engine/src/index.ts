@@ -13,6 +13,7 @@ export * from "./units.ts";
 export * from "./datasheet.ts";
 export * from "./wdr.ts";
 export * from "./alignments.ts";
+export * from "./winisdAlignments.ts";
 export * from "./impedance.ts";
 export * from "./roomgain.ts";
 export * from "./prfinder.ts";

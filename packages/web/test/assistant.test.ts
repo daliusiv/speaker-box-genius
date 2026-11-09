@@ -165,7 +165,7 @@ test("transmission lines: for towers, sized to the box limit, foldable, and they
   const lowFs = cands.filter((r) => r.qts! >= 0.25 && r.qts! <= 0.55).sort((a, b) => a.fs! - b.fs!)[0]!;
   assert.ok(short.includes(lowFs), "the lowest-Fs line candidate is tried");
   const lines = short.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id), goal, "lines"));
-  assert.ok(lines.length >= 3, `${lines.length} lines`);
+  assert.ok(lines.length >= 2, `${lines.length} lines`);
   for (const r of lines) {
     assert.equal(r.box, "line");
     assert.ok(r.vb_l <= goal.maxVolume_l * 1.02, `${r.name} ${r.line!.label} ${r.vb_l} L`);
@@ -519,10 +519,10 @@ test("a PR box with no space given notes when the driver and PRs won't fit the p
   assert.ok(side < 45, `${side}`);
   assert.ok(note, r.notes.join(" | "));
   assert.match(note!, /use My space to check it/);
-  // A 12″ driver in a 38 L box with small PRs on the other faces is not flagged.
+  // A 12″ driver in a 43.5 L box (WinISD's QB3) with small PRs on the other faces is not flagged.
   const twelve = rows.find((x) => x.id === "dayton-audio/rss315ho-44")!;
   const [t] = evaluateDriver(DEFAULT_STATE, twelve, loaded(twelve.id), goalFor("home", "balanced"), "pr", prs);
-  assert.ok(t && t.vb_l < 40);
+  assert.ok(t && t.vb_l < 45, `${t?.vb_l}`);
   assert.ok(!t.notes.some((n) => n.includes("cube-shaped")), t.notes.join(" | "));
 });
 

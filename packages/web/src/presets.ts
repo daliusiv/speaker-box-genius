@@ -13,6 +13,9 @@ import {
   type VentedAlignment,
   moreVentedAlignments,
   type ShapedAlignment,
+  winisdBb4Alignment,
+  winisdC4Alignment,
+  winisdQb3Alignment,
 } from "@sbg/engine";
 import { airOf, endCorrectionOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, portOf, portRoom_cm, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
 import type { AppState, BandpassDesign, DesignState, PrDesign, VentedDesign } from "./state.ts";
@@ -50,12 +53,34 @@ export function prTuning(d: PrDesign, vb_l: number, air: Air) {
 
 const r1 = (v: number) => Math.round(v * 10) / 10;
 
-/** The flat vented alignment for this driver: QB3/B4 up to Qts ≈ 0.38, Keele's above it (to Qts 0.6). */
-export const ventedAlignmentFor = (a: AlignmentDriver, drivers: number): VentedAlignment | null =>
-  qb3Alignment(a, drivers) ?? keeleAlignment(a, drivers);
+/** Whether these presets follow WinISD's wizard (the default) or the textbook equations. */
+const asWinisd = (a: AlignmentDriver) => a.style !== "textbook";
 
-/** The other vented alignment families that suit this driver (C4/SC4, BB4/SBB4, SQB3), as preset chips. */
-export const moreVentedFor = (a: AlignmentDriver, drivers: number): ShapedAlignment[] => moreVentedAlignments(a, drivers);
+/**
+ * The flat vented alignment for this driver. As WinISD (default): WinISD's QB3, for Qts up to
+ * about 0.62 (its Qts, with the 0.1 Ω amplifier resistance). Textbook: QB3/B4 up to Qts ≈ 0.38,
+ * Keele's above it (to Qts 0.6).
+ */
+export const ventedAlignmentFor = (a: AlignmentDriver, drivers: number): VentedAlignment | null =>
+  asWinisd(a) ? winisdQb3Alignment(a, drivers) : (qb3Alignment(a, drivers) ?? keeleAlignment(a, drivers));
+
+/**
+ * The other vented alignment families that suit this driver, as preset chips: C4/SC4 and
+ * BB4/SBB4 (as WinISD sizes them, or the textbook ones, which add SQB3 above B4).
+ */
+export const moreVentedFor = (a: AlignmentDriver, drivers: number): ShapedAlignment[] =>
+  asWinisd(a)
+    ? [winisdC4Alignment(a, drivers), winisdBb4Alignment(a, drivers)].filter((x): x is ShapedAlignment => x !== null)
+    : moreVentedAlignments(a, drivers);
+
+/** The flat preset chip's tooltip (PR boxes reach the tuning with added mass). */
+export function flatPresetHelp(a: AlignmentDriver | null, pr: boolean): string {
+  const how = pr ? "Box size and tuning of the flat vented alignment" : "Flat vented alignment";
+  const tail = pr ? ", reached with added mass" : "";
+  return a && !asWinisd(a)
+    ? `${how}: QB3 (B4 at Qts ≈ 0.38) for low-Qts drivers, Keele's alignment for Qts 0.38–0.6${tail} (textbook presets, set in Settings)`
+    : `${how}: QB3 as WinISD's wizard sizes it, for Qts up to about 0.62${tail} (Settings → Alignment presets)`;
+}
 
 /** What a family's preset does, for its chip's tooltip. */
 export function alignmentHelp(a: ShapedAlignment): string {
@@ -65,7 +90,7 @@ export function alignmentHelp(a: ShapedAlignment): string {
     case "SC4":
       return `Sub-Chebyshev: flat, about QB3's size but tuned lower, with a gentler roll-off. ${size}.`;
     case "C4":
-      return `Chebyshev: deeper than the flat preset in a bigger box, with a ${db} ripple above the roll-off. ${size}.`;
+      return `Chebyshev: trades a ${db} ripple above the roll-off for a little more extension. ${size}.`;
     case "SBB4":
       return `Sub-boom box: tuned to Fs, in a box about QB3's size or a little bigger; flat with a gentle roll-off and good transients. ${size}.`;
     case "BB4":
@@ -101,7 +126,7 @@ export function sealedQtc(align: { qms: number; qes: number; vas_l: number }, vb
 
 /**
  * Every design resized for the current driver with the presets on its card: sealed →
- * Qtc 0.707, ported and passive radiator → QB3/B4 (Keele's alignment for higher Qts),
+ * Qtc 0.707, ported and passive radiator → the flat vented preset (ventedAlignmentFor),
  * bandpass → the lowest flat band within its present volume (sizeBandpassDesign). Designs
  * that can't take the preset (driver Qts too high, port or PRs that can't reach the tuning),
  * lines and the design whose volume comes from the volume calculator are left as they are,
@@ -132,7 +157,7 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
       }
       case "vented": {
         if (!qb3) {
-          skipped.push(`${d.name}: the driver's Qts is too high for a flat vented alignment (above 0.6)`);
+          skipped.push(`${d.name}: the driver's Qts is too high for a flat vented alignment (above about 0.6)`);
           return d;
         }
         const best = bestVentedPort(s, d, qb3.vb_l, qb3.fb);
@@ -145,7 +170,7 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
       }
       case "pr": {
         if (!qb3) {
-          skipped.push(`${d.name}: the driver's Qts is too high for a flat vented alignment (above 0.6)`);
+          skipped.push(`${d.name}: the driver's Qts is too high for a flat vented alignment (above about 0.6)`);
           return d;
         }
         const add = prTuning(d, qb3.vb_l, air).massFor(qb3.fb, qb3.vb_l);

@@ -220,6 +220,12 @@ export interface Settings {
    * datasheet figure). 0 = no band.
    */
   prCaution_pct: number;
+  /**
+   * How the vented alignment presets (QB3, BB4/SBB4, C4/SC4) size a box: as WinISD's wizard does
+   * (default; its own curves, which allow for a leaky box and its 0.1 Ω amplifier resistance) or
+   * the textbook lossless equations (Thiele/Small/Bullock; QB3/B4, Keele above B4, SQB3).
+   */
+  alignments: "winisd" | "textbook";
 }
 
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
@@ -504,6 +510,7 @@ export const DEFAULT_STATE: AppState = {
     coilTemp_C: 20,
     portLimit_ms: 17,
     prCaution_pct: 75,
+    alignments: "winisd",
   },
   eq: [],
   measured: [],
@@ -1003,6 +1010,7 @@ export function decodeState(hash: string): AppState | null {
         losses: { ...d.settings.losses, ...raw.settings?.losses },
         endCorrection: endCorrectionFrom(raw.settings?.endCorrection),
         airConditions: airConditionsFrom(raw.settings?.airConditions, d.settings.airConditions),
+        alignments: raw.settings?.alignments === "textbook" ? "textbook" : "winisd",
       },
       eq: Array.isArray(raw.eq)
         ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf", "highshelf"].includes(e.type)).slice(0, 12)

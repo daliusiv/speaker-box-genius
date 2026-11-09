@@ -143,7 +143,10 @@ export function presetFor(id: PresetId, d: LineDesign, driver: DriverInput, alig
     case "otl":
       return { ...base, end: "open", ...twoPart(lq, 1.5 * sd, 1.5 * sd, lq / 3, 6), driverAt_cm: r1(lq / 5), targetFb: r1(driver.fs) };
     case "mltl": {
-      const a = align ? ventedAlignmentFor(align, drivers) : null;
+      // The matching ported box from the textbook flat alignment (QB3/B4, Keele's above B4),
+      // whichever vented presets Settings picks: WinISD has no lines, and the guides' MLTL
+      // figures are built on it.
+      const a = align ? ventedAlignmentFor({ ...align, style: "textbook" }, drivers) : null;
       if (!a) return "This driver's Qts is above 0.6: a mass-loaded line (like a ported box) doesn't suit it. Try a classic TL or TQWT.";
       // Long and slim: about 0.4 of a quarter wave at the tuning, holding about 1.5 × the
       // matching ported box's volume (the line's own losses need more room).
