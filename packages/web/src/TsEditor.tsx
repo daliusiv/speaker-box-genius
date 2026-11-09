@@ -2,7 +2,7 @@ import { boxSuits } from "./boxType.ts";
 import { useEffect, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
 import {
-  parseDatasheet,
+  readDatasheet,
   parseQuantity,
   TS_PARAMS,
   type Quantity,
@@ -86,17 +86,23 @@ export function TsEditor(props: {
   };
 
   const applyPaste = () => {
-    const parsed = parseDatasheet(pasteText);
+    const { values: parsed, unread } = readDatasheet(pasteText);
     const ts: TsValues = {};
     for (const p of ORDER) if (parsed[p] !== undefined) ts[p] = parsed[p];
     const n = Object.keys(ts).length;
+    // A number whose unit couldn't be read is left out (never taken as litres, cm², g…): say which.
+    const skipped = unread.length > 0 ? ` Couldn't read the unit in: ${unread.map((u) => `“${u.text}”`).join(", ")}. Enter ${unread.length > 1 ? "those" : "that one"} by hand.` : "";
     if (n === 0) {
-      setPasteMsg("No parameters recognised. Try one parameter per line, like “Fs 25.6 Hz”.");
+      setPasteMsg(`No parameters recognised. Try one parameter per line, like “Fs 25.6 Hz”.${skipped}`);
       return;
     }
     props.onPaste(ts, { le_mh: parsed.le_mh, xmax_mm: parsed.xmax_mm, pe_w: parsed.pe_w });
-    setPasteMsg("");
     setPasteText("");
+    if (skipped) {
+      setPasteMsg(`Read ${n} parameters.${skipped}`);
+      return;
+    }
+    setPasteMsg("");
     setPasting(false);
   };
 

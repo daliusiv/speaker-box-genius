@@ -143,7 +143,8 @@ export function solveTs(entered: TsValues, tolerance = 0.03, air: Air = STANDARD
   const si: SiValues = {};
   const source: SolveResult["source"] = {};
   for (const [k, v] of Object.entries(entered) as [TsParam, number | undefined][]) {
-    if (v !== undefined && Number.isFinite(v) && v > 0) {
+    // Only the parameters this solver knows (a stray key from an old link or a file is ignored).
+    if (Object.hasOwn(TS_PARAMS, k) && v !== undefined && Number.isFinite(v) && v > 0) {
       si[k] = toSi(k, v);
       source[k] = "entered";
     }

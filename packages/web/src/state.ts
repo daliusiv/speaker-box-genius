@@ -1,4 +1,4 @@
-import { DEFAULT_END_CORRECTION, type EqStage, type HighPassType, type PassiveBranch, type PassiveRadiatorInput, type SemiInductance, type TsValues } from "@sbg/engine";
+import { DEFAULT_END_CORRECTION, TS_PARAMS, type EqStage, type HighPassType, type PassiveBranch, type PassiveRadiatorInput, type SemiInductance, type TsValues } from "@sbg/engine";
 import { stuffable, stuffingFrom, type Stuffing } from "./stuffing.ts";
 
 export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line";
@@ -877,13 +877,27 @@ function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
   return merged;
 }
 
+/**
+ * T/S values from raw (decoded) data: the known parameters with positive numbers (numeric
+ * strings read as numbers); anything else is dropped. Not an object: the default driver's.
+ */
+function tsFrom(raw: unknown, d: TsValues): TsValues {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return d;
+  const out: TsValues = {};
+  for (const [k, v] of Object.entries(raw)) {
+    const n = typeof v === "string" && v.trim() !== "" ? Number(v) : v;
+    if (Object.hasOwn(TS_PARAMS, k) && typeof n === "number" && Number.isFinite(n) && n > 0) out[k as keyof TsValues] = n;
+  }
+  return out;
+}
+
 /** One driver's fields from raw (decoded) data, with defaults for anything missing or malformed. */
 function driverSlotFrom(raw: Raw, d: DriverSlot): DriverSlot {
   return {
     driverName: typeof raw.driverName === "string" ? raw.driverName : d.driverName,
     driverBrand: typeof raw.driverBrand === "string" ? raw.driverBrand : "",
     nominal_ohms: raw.nominal_ohms ?? d.nominal_ohms,
-    ts: raw.ts ?? d.ts,
+    ts: tsFrom(raw.ts, d.ts),
     le_mh: raw.le_mh ?? d.le_mh,
     l2_mh: nonNeg(raw.l2_mh),
     r2_ohm: nonNeg(raw.r2_ohm),
