@@ -630,11 +630,16 @@ export function evaluateDriver(
     // Group delay in the band it plays (from F3 up), in cycles of the frequency: a delay that's
     // long against the note's own period is what makes bass sound slow or boomy.
     let gd: AssistantResult["gd"];
+    let worst = GD_CYCLES;
     for (let i = 0; i < r.freq.length; i++) {
       const f = r.freq[i]!;
       if (f < 0.8 * f3 || f > 200) continue;
       const cycles = (r.groupDelayMs[i]! / 1000) * f;
-      if (cycles > GD_CYCLES && (!gd || cycles > gd.cycles)) gd = { ms: Math.round(r.groupDelayMs[i]!), hz: Math.round(f), cycles: Math.ceil(cycles * 100) / 100 };
+      // Rounded up for the card, so a result just over one cycle never reads as exactly one.
+      if (cycles > worst) {
+        worst = cycles;
+        gd = { ms: Math.round(r.groupDelayMs[i]!), hz: Math.round(f), cycles: Math.ceil(cycles * 100) / 100 };
+      }
     }
     const watts = (scale: number) => Number((goal.power_w * scale * scale).toPrecision(2));
     const spl = at(r.freq, r.spl, goal.loudAt_hz);
