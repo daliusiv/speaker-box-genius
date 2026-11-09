@@ -26,6 +26,7 @@ import { validationLinks } from "./validationLinks.ts";
 import { CHART_STYLE, chart } from "./chart.ts";
 import { cardSvg, findChrome, Rasterizer } from "./og.ts";
 import { CardCache, cardSalt } from "./cardCache.ts";
+import { CALC_STYLE, fillCalc, portExampleValues, portForm, viteScript } from "./calculators.ts";
 import { LastmodStore, sitemapFiles, type SitemapEntry, type SitemapGroup } from "./sitemap.ts";
 import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, loadDb, prCandidate, relatedDrivers, shareLink, type DriverPage, type PageLd } from "./drivers.ts";
 
@@ -206,6 +207,7 @@ a{color:var(--accent)}
 @media (max-width:400px){.top{padding:.9rem .8rem;gap:.5rem}.nav{gap:.65rem;font-size:.95rem}.nav .button{padding:.4rem .65rem}}
 @media (max-width:440px){.nav .opt{display:none}}
 @media (max-width:359px){.nav .wide:not([aria-current]){display:none}}
+@media (max-width:520px){.nav .wider{display:none}}
 .button{display:inline-block;padding:.55rem 1rem;border-radius:.6rem;background:var(--accent);color:#12141c;font-weight:650;text-decoration:none;white-space:nowrap}
 main{max-width:46rem;margin:0 auto;padding:.5rem 1.1rem 3rem}
 h1{font-size:2.1rem;line-height:1.15;margin:1rem 0 .6rem;letter-spacing:-.01em}
@@ -258,10 +260,12 @@ const NAV = [
   { href: "/drivers/", label: "Drivers", match: (p: string) => p.startsWith("/drivers/") },
   { href: "/guides/", label: "Guides", match: (p: string) => p.startsWith("/guides/") || p.endsWith("-alternative/") },
   // Left out of the top bar on narrow phones (it's in the footer).
+  // Left out below 520 px, even on its own page (it's in the footer and linked from the port guides).
+  { href: "/calculators/port-length/", label: "Port calculator", match: (p: string) => p.startsWith("/calculators/"), cls: "wider" },
   { href: "/validation/", label: "Validation", match: (p: string) => p === "/validation/", wide: true },
 ];
 
-export function layout(o: { title: string; description: string; path: string; image?: string; imagePath?: string; content: string; guides: Page[]; style?: string; ld?: PageLd }): string {
+export function layout(o: { title: string; description: string; path: string; image?: string; imagePath?: string; content: string; guides: Page[]; style?: string; ld?: PageLd; scripts?: string[] }): string {
   const url = `${SITE}${o.path}`;
   const image = `${SITE}${o.imagePath ?? (o.image ? `/guides/img/${o.image}` : "/og-image.png")}`;
   const ld = {
@@ -314,14 +318,14 @@ ${GOATCOUNTER}
 <body>
 <header class="top">
 <a class="brand" href="/"><img src="/icons/icon-192.png" alt=""><span>Speaker Box Genius</span></a>
-<nav class="nav">${NAV.map((n) => `<a href="${n.href}"${"wide" in n ? ' class="wide"' : ""}${n.match(o.path) ? ' aria-current="page"' : ""}>${n.label}</a>`).join("")}<a class="button" href="/">Open<span class="opt"> the</span> app</a></nav>
+<nav class="nav">${NAV.map((n) => `<a href="${n.href}"${"wide" in n ? ' class="wide"' : "cls" in n ? ` class="${n.cls}"` : ""}${n.match(o.path) ? ' aria-current="page"' : ""}>${n.label}</a>`).join("")}<a class="button" href="/">Open<span class="opt"> the</span> app</a></nav>
 </header>
 <main>
 ${o.content}
 </main>
 <footer>
-<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
-</footer>
+<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/calculators/port-length/">Port length calculator</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
+</footer>${(o.scripts ?? []).map((src) => `\n<script type="module" src="${src}"></script>`).join("")}
 </body>
 </html>
 `;
@@ -515,6 +519,24 @@ export async function build(outDir: string): Promise<string[]> {
       guides,
     }),
   );
+
+  // Calculators (site/calculators.ts): the page text here, the live part from the app's build.
+  {
+    const script = viteScript(outDir, "src/calculators/portLength.ts");
+    const md = fillCalc(readFileSync(join(HERE, "calculators", "port-length.md"), "utf8"), portExampleValues());
+    write(
+      "/calculators/port-length/",
+      layout({
+        title: "Port length calculator: round and slot ports, with air speed",
+        description: "Work out a speaker port's length for any box and tuning, round or slot, with flares, end corrections and the port's own volume. Then check its air speed with your driver.",
+        path: "/calculators/port-length/",
+        content: `<h1>Port length calculator</h1>\n<p class="lede">The length of a round or slot port for your box and tuning, worked out with the simulator's own port model. Pick your driver to see whether the port will chuff.</p>\n${portForm()}\n${markdown(md)}`,
+        guides,
+        style: CALC_STYLE,
+        ...(script ? { scripts: [script] } : {}),
+      }),
+    );
+  }
 
   await buildDriverPages(write, guides, outDir);
 
