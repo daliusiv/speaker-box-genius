@@ -507,3 +507,39 @@ test("car subwoofer guide: three boxes at the RSS265HF-4's rated 350 W, in the c
   // The sealed box reaches Xmax (12.3 mm) at about 284 W; the ported 33 Hz box only past 400 W.
   near(350 * (12.3 / peak(car[0]!.result.freq, car[0]!.result.excursionMm, 10, 200)[0]) ** 2, 284, 1, "sealed watts at Xmax");
 });
+
+test("compare drivers guide: RSS265HF-4 vs RSS265HO-4 at 350 W in 30 L sealed and 50 L ported at 26 Hz, and the boxes the app sizes for each", async () => {
+  const peak = (f: Float64Array, y: ArrayLike<number>) => { let m = -Infinity; f.forEach((q, i) => { if (q >= 10 && q <= 300) m = Math.max(m, y[i]!); }); return m; };
+  const rows = run("compare-example");
+  assert.deepEqual(rows.map((d) => d.label), ["Sealed 30 L · RSS265HF-4", "Ported 50 L, 26 Hz · RSS265HF-4", "Sealed 30 L · RSS265HO-4", "Ported 50 L, 26 Hz · RSS265HO-4"]);
+  const want = [
+    { f3: 42.6, ref: 109.8, spl: [98.1, 102.0, 106.1, 109.3], max: [97.2, 100.4, 105.4], v30: 28.0, x: 14.8 },
+    { f3: 26.4, ref: 109.8, spl: [105.4, 109.0, 110.7, 110.9], max: [106.8, 109.3, 110.1], v30: 35.0, x: 13.2, port: 10.6, len: 67.4 },
+    { f3: 55.4, ref: 109.2, spl: [96.8, 100.0, 103.4, 106.7], max: [97.0, 100.2, 105.3], v30: 34.5, x: 12.2 },
+    { f3: 24.3, ref: 109.2, spl: [107.2, 109.1, 108.0, 108.4], max: [109.6, 111.7, 110.0], v30: 45.3, x: 10.7, port: 13.1, len: 67.4 },
+  ];
+  rows.forEach((d, i) => {
+    const r = d.result;
+    const w = want[i]!;
+    near(r.summary.f3!, w.f3, 0.06, `${d.label} F3`);
+    near(r.summary.referenceSpl, w.ref, 0.06, `${d.label} passband level`);
+    [25, 30, 40, 60].forEach((f, j) => near(at(r.freq, r.spl, f), w.spl[j]!, 0.06, `${d.label} at ${f} Hz`));
+    [25, 30, 40].forEach((f, j) => near(at(r.freq, r.maxSpl, f), w.max[j]!, 0.06, `${d.label} max SPL at ${f} Hz`));
+    near(at(r.freq, r.ampAtMax.volts, 30), w.v30, 0.06, `${d.label} volts for max SPL at 30 Hz`);
+    near(peak(r.freq, r.excursionMm), w.x, 0.06, `${d.label} peak excursion`);
+    if (w.port) near(peak(r.freq, r.portVelocity!), w.port, 0.06, `${d.label} port speed`);
+    if (w.len) near((d.design as { length_cm: number }).length_cm, w.len, 0.06, `${d.label} port length`);
+  });
+  near(rows[0]!.result.summary.qtc!, 0.76, 0.006, "HF Qtc");
+  near(rows[2]!.result.summary.qtc!, 0.5, 0.006, "HO Qtc");
+  // Size all for each driver: the boxes each one wants.
+  const { sizeAllForDriver } = await import("../packages/web/src/presets.ts");
+  const { withDriver } = await import("./examples.ts");
+  const { DEFAULT_STATE } = await import("../packages/web/src/state.ts");
+  const own = (id: string) => {
+    const s = sizeAllForDriver(withDriver({ ...DEFAULT_STATE, power: 350 }, id)).state;
+    return runDesigns(s, solveDriver(s)).filter((d) => d.design.kind === "sealed" || d.design.kind === "vented").map((d) => [d.vb_l, (d.design as { targetFb?: number }).targetFb ?? null, Math.round(d.result.summary.f3! * 10) / 10]);
+  };
+  assert.deepEqual(own("dayton-audio/rss265hf-4"), [[37.3, null, 42.0], [82.8, 22, 20.3]]);
+  assert.deepEqual(own("dayton-audio/rss265ho-4"), [[9.9, null, 56.3], [16.1, 28.6, 35.5]]);
+});

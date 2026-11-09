@@ -213,18 +213,21 @@ function carExample(cabin: boolean) {
 
 /**
  * Comparing drivers: the RSS265HF-4 with the RSS265HO-4 as the comparison driver, in a 30 L
- * sealed box and a 40 L ported box tuned to 30 Hz, at 150 W behind a 24 dB/oct high-pass at 20 Hz.
+ * sealed box and a 50 L ported box tuned to 26 Hz (4″ port flared 2.5 cm at both ends), from
+ * the same amplifier: 350 W (35 V into these 3.5 Ω coils, the HF's rating) behind a 22 Hz
+ * 24 dB/oct high-pass filter.
  */
+export const COMPARE = { power: 350, hp: 22, sealed_l: 30, vented_l: 50, fb: 26 };
 function compareExample(): AppState {
-  const s = withDriver({ ...DEFAULT_STATE, power: 150, highPass: highPass(4, 20) }, "dayton-audio/rss265hf-4");
+  const s = withDriver({ ...DEFAULT_STATE, power: COMPARE.power, highPass: highPass(4, COMPARE.hp) }, "dayton-audio/rss265hf-4");
   const sealed = byKind(s, "sealed") as Extract<DesignState, { kind: "sealed" }>;
   const v = byKind(s, "vented") as Vented;
   return {
     ...s,
     compare: asCompare(withDriver(DEFAULT_STATE, "dayton-audio/rss265ho-4")),
     designs: [
-      { ...sealed, id: "d1", name: "Sealed 30 L", vb_l: 30 },
-      { ...ventedWith(v, "Ported 40 L", 40, 30, { shape: "slot", width_cm: 5, height_cm: 30 }), id: "d2" },
+      { ...sealed, id: "d1", name: `Sealed ${COMPARE.sealed_l} L`, vb_l: COMPARE.sealed_l },
+      { ...ventedWith(v, `Ported ${COMPARE.vented_l} L, ${COMPARE.fb} Hz`, COMPARE.vented_l, COMPARE.fb, { shape: "round", diameter_cm: 10.16, flare_cm: 2.5 }), id: "d2" },
     ],
   };
 }
