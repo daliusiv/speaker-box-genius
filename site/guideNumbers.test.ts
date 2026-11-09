@@ -467,3 +467,43 @@ test("sealed / ported / PR guide: presets, rules of thumb, the three boxes at 35
     near(r.summary.fb!, fb!, 0.05, `fb with ${m} g`); near(r.summary.f3!, f3!, 0.05, `F3 with ${m} g`);
   }
 });
+
+test("car subwoofer guide: three boxes at the RSS265HF-4's rated 350 W, in the car and out of it", () => {
+  const peak = (f: Float64Array, y: ArrayLike<number>, lo: number, hi: number) => {
+    let m = -Infinity, mf = 0;
+    f.forEach((q, i) => { if (q >= lo && q <= hi && y[i]! > m) { m = y[i]!; mf = q; } });
+    return [m, mf] as const;
+  };
+  const car = run("car-example");
+  const out = run("car-nocabin");
+  const want = [
+    { f3: 43.1, car: 22.5, spl: [110.2, 113.8, 115.2, 113.6, 112.1], hump: 3.1, max: [112.0, 113.3, 114.7], x: 13.6, out: [95.4, 100.9, 105.9, 109.4, 110.2] },
+    { f3: 30.0, car: 21.7, spl: [113.7, 119.8, 122.2, 116.6, 113.4], hump: 9.1, max: [114.5, 121.0, 122.3], x: 11.3, v: 14.8, port: 81.2, out: [98.9, 106.9, 112.9, 112.4, 111.6] },
+    { f3: 28.8, car: 20.3, spl: [116.6, 120.8, 120.4, 115.5, 112.9], hump: 8.5, max: [120.3, 122.0, 120.5], x: 12.3, v: 11.3, port: 116.7, out: [101.8, 107.8, 111.2, 111.3, 111.0] },
+  ];
+  car.forEach((d, i) => {
+    const r = d.result;
+    const w = want[i]!;
+    const n = d.design.name;
+    near(r.summary.f3!, w.f3, 0.06, `${n} box F3`);
+    near(d.f3Room!, w.car, 0.06, `${n} F3 in the car`);
+    [25, 30, 40, 60, 80].forEach((f, j) => near(at(r.freq, r.spl, f), w.spl[j]!, 0.06, `${n} in the car at ${f} Hz`));
+    near(peak(r.freq, r.spl, 15, 200)[0] - at(r.freq, r.spl, 80), w.hump, 0.06, `${n} peak over 80 Hz`);
+    [25, 30, 40].forEach((f, j) => near(at(r.freq, r.maxSpl, f), w.max[j]!, 0.06, `${n} max SPL at ${f} Hz`));
+    near(peak(r.freq, r.excursionMm, 10, 200)[0], w.x, 0.06, `${n} peak excursion`);
+    if (w.v) near(peak(r.freq, r.portVelocity!, 10, 200)[0], w.v, 0.06, `${n} port speed`);
+    if (w.port) near((d.design as { length_cm: number }).length_cm, w.port, 0.06, `${n} port length`);
+    // Out of the car: the same boxes, the same cone and port, no cabin gain.
+    const o = out[i]!.result;
+    [25, 30, 40, 60, 80].forEach((f, j) => near(at(o.freq, o.spl, f), w.out[j]!, 0.06, `${n} out of the car at ${f} Hz`));
+    near(peak(o.freq, o.excursionMm, 10, 200)[0], w.x, 0.06, `${n} excursion out of the car`);
+    if (w.v) near(peak(o.freq, o.portVelocity!, 10, 200)[0], w.v, 0.06, `${n} port speed out of the car`);
+  });
+  // No subsonic filter: the ported cones reach about 36 mm at 15 Hz, the sealed one 16 mm.
+  const s0 = EXAMPLES["car-example"]!();
+  const s = { ...s0, highPass: { ...s0.highPass, on: false } };
+  const bare = runDesigns(s, solveDriver(s));
+  [16.2, 36.1, 36.4].forEach((x, i) => near(at(bare[i]!.result.freq, bare[i]!.result.excursionMm, 15), x, 0.15, `${bare[i]!.design.name} at 15 Hz, no filter`));
+  // The sealed box reaches Xmax (12.3 mm) at about 284 W; the ported 33 Hz box only past 400 W.
+  near(350 * (12.3 / peak(car[0]!.result.freq, car[0]!.result.excursionMm, 10, 200)[0]) ** 2, 284, 1, "sealed watts at Xmax");
+});
