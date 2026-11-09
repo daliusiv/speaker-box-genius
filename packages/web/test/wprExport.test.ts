@@ -43,3 +43,18 @@ test("volts become WinISD's watts into Re, and custom air keeps its conditions",
   assert.match(out.text, /\r\np=98000\r\n/);
   assert.match(out.text, /\r\nphi=0\.4\r\n/);
 });
+
+test("WinISD gets the driver's full record and a plain Le, and no series 6th-order bandpass", async () => {
+  const { newDesign } = await import("../src/state.ts");
+  const s: AppState = { ...DEFAULT_STATE };
+  const out = wprFor(s, byKind(s, "sealed"));
+  assert.ok(typeof out !== "string");
+  // Bl, Mms, Cms and Rms written (WinISD fills in its own otherwise), and no lossy-Le correction.
+  for (const k of ["BL", "Mms", "Cms", "Rms"]) assert.ok(Number(out.text.match(new RegExp(`^${k}=(.*)$`, "m"))?.[1]) > 0, k);
+  assert.match(out.text, /^KLe=0\r?$/m);
+  const bp = newDesign("bandpass", s.designs) as Extract<DesignState, { kind: "bandpass" }>;
+  assert.ok(typeof wprFor(s, { ...bp, order: "6p" }) !== "string");
+  const series = wprFor(s, { ...bp, order: "6s" });
+  assert.equal(typeof series, "string");
+  assert.match(series as string, /ported into the front/);
+});

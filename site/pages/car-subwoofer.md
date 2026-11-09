@@ -88,7 +88,7 @@ Cabin gain changes what you *hear*. It doesn't change what the cone *does*: the 
 
 ![Cone excursion at 350 W: the sealed box (blue) rises above the 12.3 mm Xmax line between about 28 and 45 Hz, peaking at 13.5 mm at 34 Hz. The 33 Hz ported box (dark orange) stays under, with its dip at the tuning; the 28 Hz box (light orange) just touches Xmax at 41 Hz.](img/car-excursion.png)
 
-On the excursion chart the blue sealed curve is the only one that crosses the red Xmax line, peaking at **13.5 mm** at 34 Hz, right where the cabin gain makes it sound strongest. It reaches Xmax at about **289 W**. The ported boxes have their dips at the tuning frequency (the port is doing the work there) and stay under, with the 28 Hz box just under at 12.2 mm at 41 Hz.
+On the excursion chart the blue sealed curve is the only one that crosses the red Xmax line, peaking at **13.5 mm** at 34 Hz, right where the cabin gain makes it sound strongest. It reaches Xmax at about **290 W**. The ported boxes have their dips at the tuning frequency (the port is doing the work there) and stay under, with the 28 Hz box just under at 12.2 mm at 41 Hz.
 
 ![Maximum SPL in the car, first limit reached: the sealed box (blue) is capped by Xmax (red bar) from 10 to 45 Hz at 112–115 dB; the ported boxes reach 120–122 dB between 28 and 45 Hz, limited by power (grey) there.](img/car-maxspl.png)
 

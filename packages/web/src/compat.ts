@@ -6,21 +6,21 @@ import type { Settings } from "./state.ts";
  * aren't conventions (they describe your build), so presets leave them alone. Hornresp's
  * values are the ones the validation against its exports uses (packages/engine/validation).
  */
-export type CompatKey = "air" | "inductance" | "thermalLimit" | "leakage" | "coneLoad" | "portModel" | "portCompression" | "lineSpl";
+export type CompatKey = "air" | "inductance" | "thermalLimit" | "driveModel" | "leakage" | "coneLoad" | "portModel" | "portCompression" | "lineSpl";
 export type CompatPreset = "default" | "winisd" | "hornresp";
 
 export const COMPAT: Record<CompatPreset, { label: string; values: Pick<Settings, CompatKey> }> = {
   default: {
     label: "Default",
-    values: { air: "standard", inductance: true, thermalLimit: "nominal", leakage: "radiates", coneLoad: "mass", portModel: "lumped", portCompression: false, lineSpl: "on-axis" },
+    values: { air: "standard", inductance: true, thermalLimit: "nominal", driveModel: "circuit", leakage: "radiates", coneLoad: "mass", portModel: "lumped", portCompression: false, lineSpl: "on-axis" },
   },
   winisd: {
     label: "WinISD",
-    values: { air: "winisd", inductance: false, thermalLimit: "nominal", leakage: "radiates", coneLoad: "mass", portModel: "lumped", portCompression: false, lineSpl: "on-axis" },
+    values: { air: "winisd", inductance: false, thermalLimit: "nominal", driveModel: "winisd", leakage: "radiates", coneLoad: "mass", portModel: "lumped", portCompression: false, lineSpl: "on-axis" },
   },
   hornresp: {
     label: "Hornresp",
-    values: { air: "hornresp", inductance: true, thermalLimit: "real", leakage: "absorbed", coneLoad: "piston", portModel: "pipe", portCompression: false, lineSpl: "power" },
+    values: { air: "hornresp", inductance: true, thermalLimit: "real", driveModel: "circuit", leakage: "absorbed", coneLoad: "piston", portModel: "pipe", portCompression: false, lineSpl: "power" },
   },
 };
 
@@ -40,6 +40,7 @@ export const COMPAT_NAMES: Record<CompatKey, string> = {
   air: "Air",
   inductance: "Coil inductance",
   thermalLimit: "Power rating vs",
+  driveModel: "Watts",
   leakage: "Leaked air",
   coneLoad: "Cone air load",
   portModel: "Ports",

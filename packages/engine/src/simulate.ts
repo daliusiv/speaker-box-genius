@@ -178,6 +178,34 @@ export interface SimulationOptions {
    * Approximate; off by default so results stay comparable with WinISD.
    */
   portCompression?: boolean;
+  /**
+   * How the amplifier drives the coil. "winisd" does what WinISD 0.7 does (measured
+   * 9 Nov 2026 against about 1,300 of its readouts):
+   * - the source resistance Rg is folded into the driver (Qes·(Re+Rg)/Re, Le·Re/(Re+Rg)) rather
+   *   than put in the circuit, while the impedance curve shows the real driver;
+   * - watts become volts with the hot coil's Re (V = √(P·Re_hot)), and the watts are what the
+   *   coil takes;
+   * - an isobaric pair (series coils) is driven at √(P·Re) of one driver.
+   * (WinISD plots one driver's impedance, per coil; the impedance here is always what the amplifier sees.)
+   * "circuit" (default) keeps Rg as a resistor in series with the coil and turns watts into volts
+   * with the cold Re, as an amplifier's rating would (Hornresp's way). A drive in volts is always
+   * the amplifier's volts.
+   */
+  driveModel?: "winisd" | "circuit";
+}
+
+/** The driver with a source resistance folded in, as WinISD does: Bl²/Re → Bl²/(Re+Rg), inductances × Re/(Re+Rg). */
+function foldSourceResistance(d: ReturnType<typeof driverModel>, rg: number): ReturnType<typeof driverModel> {
+  if (!(rg > 0)) return d;
+  const k = d.re / (d.re + rg);
+  return {
+    ...d,
+    bl: d.bl * Math.sqrt(k),
+    le: d.le * k,
+    l2: d.l2 * k,
+    r2: d.r2 * k,
+    semi: d.semi && { leb: d.semi.leb * k, le: d.semi.le * k, ke: d.semi.ke * k, rss: d.semi.rss * k },
+  };
 }
 
 /** The single equivalent driver of an isobaric pair. */
@@ -293,15 +321,35 @@ export function bankResistance(driverIn: DriverInput, opts: Pick<SimulationOptio
   return (opts.wiring ?? "parallel") === "parallel" ? re / n : re * n;
 }
 
+/**
+ * The amplifier voltage (RMS, at its terminals, before Rg) that `power` watts stand for, per √W:
+ * drive the same design with convention "volts" at √P times this and the results are the same.
+ * With the WinISD drive model the watts go into the coil and Rg together (hot coil, one driver's
+ * Re for an isobaric pair); with the circuit model they set the volts from the cold Re.
+ */
+export function voltsPerRootWatt(driverIn: DriverInput, opts: Pick<SimulationOptions, "isobaric" | "drivers" | "wiring" | "rg" | "coilTemp_C" | "driveModel" | "passive"> = {}): number {
+  const base = driverModel(driverIn);
+  const cold = opts.isobaric ? isobaricPair(base, opts.isobaric.coils) : base;
+  const n = opts.drivers ?? 1;
+  const bank = (re: number) => ((opts.wiring ?? "parallel") === "parallel" ? re / n : re * n);
+  if (opts.driveModel !== "winisd") return Math.sqrt(bank(cold.re));
+  const heat = coilHeatFactor(opts.coilTemp_C);
+  const reVolts = bank((opts.isobaric?.coils === "series" ? base.re : cold.re) * heat);
+  const rg = passiveActive(opts.passive) ? 0 : (opts.rg ?? 0);
+  const hotBank = bank(cold.re * heat);
+  return Math.sqrt((reVolts * (hotBank + rg)) / hotBank);
+}
+
 export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: SimulationOptions = {}): SimulationResult {
   const air = opts.air ?? STANDARD_AIR;
   const base = driverModel(driverIn, air);
   const cold = opts.isobaric ? isobaricPair(base, opts.isobaric.coils) : base;
   // A hot voice coil: Re rises, Bl doesn't, so Qes rises and the same voltage drives less current.
   const heat = coilHeatFactor(opts.coilTemp_C);
-  const d = heat === 1 ? cold : { ...cold, re: cold.re * heat };
+  const hot = heat === 1 ? cold : { ...cold, re: cold.re * heat };
   const n = opts.drivers ?? 1;
   const wiring = opts.wiring ?? "parallel";
+  const winisd = opts.driveModel === "winisd";
   const power = opts.power ?? 1;
   const r = opts.distance_m ?? 1;
   const space = opts.space === "full" ? 4 : 2;
@@ -309,23 +357,37 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
 
   // Voltage at the terminals of the whole driver bank, and per driver.
   // Watts are turned into volts with the datasheet (cold) Re, as an amplifier's rating would be.
+  // WinISD instead uses the hot coil's Re, and one driver's Re for an isobaric pair with its coils in series.
   const reTotal = wiring === "parallel" ? cold.re / n : cold.re * n;
+  const reVolts = winisd ? (opts.isobaric?.coils === "series" ? base.re : cold.re) * heat : cold.re;
+  const reVoltsTotal = wiring === "parallel" ? reVolts / n : reVolts * n;
   const nominalTotal =
     opts.nominalOhms !== undefined ? (wiring === "parallel" ? opts.nominalOhms / n : opts.nominalOhms * n) : reTotal;
   const volts =
     opts.convention === "volts"
       ? power
-      : Math.sqrt(power * (opts.convention === "nominal" ? nominalTotal : reTotal));
+      : Math.sqrt(power * (opts.convention === "nominal" ? nominalTotal : reVoltsTotal));
   const vDriver = wiring === "parallel" ? volts : volts / n;
   // Power the limits are scaled from, in watts as the thermal limit counts them. In "volts"
   // mode the input is a voltage, so take the power it puts into the coils (V²/Re); every limit
   // below is then "how far the drive can rise", and SPL and excursion follow from that.
   // A hot coil takes less power from the same voltage (V²/Re): the thermal limit counts that.
-  const pNow = (opts.convention === "volts" ? (volts * volts) / reTotal : power) / heat;
+  // WinISD counts its watts as the drive setting (V²/Re as above): the limits are then in those
+  // watts, and the coil's own rating is scaled to them by the power it really takes (V²/Re_hot).
+  const pCoil = (volts * volts) / (reTotal * heat);
+  const wattsIn = winisd && (opts.convention ?? "re") === "re";
+  const pNow = wattsIn ? power : (opts.convention === "volts" ? (volts * volts) / reTotal : power) / heat;
+  const thermalScale = wattsIn ? power / pCoil : 1;
   // A source resistance shared by N parallel drivers looks like N·Rg to each one (Rg/N in series).
   const rgTotal = opts.rg ?? 0;
   const rgDriver = wiring === "parallel" ? rgTotal * n : rgTotal / n;
   const net = passiveActive(opts.passive) ? opts.passive : null;
+  // WinISD folds Rg into the driver (see driveModel); the impedance curve keeps the real driver.
+  // (Equivalent to keeping Rg in the circuit and driving it with √(P·(Re+Rg)): WinISD's watts go into coil and Rg.)
+  // Only for watts: a set voltage, or passive parts in front of the coil, keep the real circuit.
+  const fold = wattsIn && !net && rgDriver > 0;
+  const d = fold ? foldSourceResistance(hot, rgDriver) : hot;
+  const rgCircuit = fold ? 0 : rgDriver;
   // Per driver, a source shared by the bank: N parallel drivers each see N × its impedance.
   const perDriverZ = (z: Complex) => (wiring === "parallel" ? scale(z, n) : scale(z, 1 / n));
 
@@ -436,8 +498,22 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   }
 
   const wRef = 2 * Math.PI * fRef;
-  const ral = Number.isFinite(ql) ? ql / (wRef * cab) : Infinity;
-  const rab = Number.isFinite(qa) ? 1 / (qa * wRef * cab) : 0;
+  // The loss Qs are WinISD's (measured 9 Nov 2026): each at the box's tuning, against the box's
+  // compliance, except where WinISD takes the box in series with the part that resonates with it:
+  // a sealed box's absorption (Qa) against box + driver suspension, and both Qs of a PR box
+  // against box + PR suspensions.
+  let cLeak = cab;
+  let cAbs = cab;
+  if (single?.kind === "sealed") {
+    const cas = n * d.cms * d.sd * d.sd;
+    cAbs = (cab * cas) / (cab + cas);
+  } else if (single?.kind === "passive-radiator" && prModels) {
+    let cap = 0;
+    for (const g of prModels) cap += g.count * g.m.cmp * g.m.sd * g.m.sd;
+    cLeak = cAbs = (cab * cap) / (cab + cap);
+  }
+  const ral = Number.isFinite(ql) ? ql / (wRef * cLeak) : Infinity;
+  const rab = Number.isFinite(qa) ? 1 / (qa * wRef * cAbs) : 0;
 
   // Whether the cone's front faces the room (everything but horns that radiate only from the mouth).
   const frontOut = !(line && line.mouthOnly);
@@ -480,7 +556,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const zvc = voiceCoilImpedance(d, w);
     // Through a passive network the bank sees a Thévenin source: a voltage and an impedance per frequency.
     const th = net ? passiveThevenin(net, w, rgTotal) : null;
-    const ze = add(zvc, th ? perDriverZ(th.z) : cx(rgDriver));
+    const ze = add(zvc, th ? perDriverZ(th.z) : cx(rgCircuit));
     let filter = opts.highPass ? highPassResponse(opts.highPass, f) : cx(1);
     if (opts.eq && opts.eq.length > 0) filter = mul(filter, eqResponse(opts.eq, f));
     const filterGain2 = filter.re * filter.re + filter.im * filter.im;
@@ -671,14 +747,15 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     // room pushes out −ud: turn the phase round so a positive voltage gives a positive pressure
     // in front (the cone moving out), as a real driver wired + to + does. A front horn's or
     // tapped horn's flow is counted into the horn, which is already the way out.
-    unwrapped[i] = arg(p) + (frontOut ? Math.PI : 0);
+    // A bandpass box's cone faces into its front chamber, not the room: its sound is the ports' (as WinISD has it).
+    unwrapped[i] = arg(p) + (frontOut && !bp ? Math.PI : 0);
 
     // Excursion (peak, one way) = √2·|U|/(Sd·ω)
     const x = (Math.SQRT2 * abs(ui)) / (d.sd * w);
     out.x[i] = x * 1000;
 
     // Electrical input impedance of the whole bank
-    const zDriver = add(zvc, div(cx((d.bl * d.bl) / sd2), zMech));
+    const zDriver = fold ? add(voiceCoilImpedance(hot, w), div(cx((hot.bl * hot.bl) / sd2), zMech)) : add(zvc, div(cx((d.bl * d.bl) / sd2), zMech));
     const zBank = wiring === "parallel" ? scale(zDriver, 1 / n) : scale(zDriver, n);
     // What the amplifier sees: the bank, through the passive network if there is one.
     const zIn = net ? passiveInputImpedance(net, w, zBank) : zBank;
@@ -699,7 +776,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       } else {
         // Thermal: the filter (and any passive parts) reduce the voltage reaching the coil at this frequency.
         const gNet = net ? abs(passiveBankGain(net, w, zBank, 0)) ** 2 : 1;
-        limits.push(["thermal", (d.pe * n) / Math.max(filterGain2 * gNet, 1e-12)]);
+        limits.push(["thermal", (d.pe * n * thermalScale) / Math.max(filterGain2 * gNet, 1e-12)]);
       }
     }
     if (opts.amp?.volts && vAmpNow > 0) limits.push(["amp", pNow * (opts.amp.volts / vAmpNow) ** 2]);
@@ -750,7 +827,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   // Through a passive network: its resistive part (coils as wires, capacitors left out), as a plain resistance would.
   const thRef = net ? passiveThevenin(net, 1, rgTotal, true) : null;
   const vRef = thRef ? vDriver * thRef.v.re : vDriver;
-  const rRef = thRef ? perDriverZ(thRef.z).re : rgDriver;
+  const rRef = thRef ? perDriverZ(thRef.z).re : rgCircuit;
   const pRef = (air.rho * n * vRef * d.bl * d.sd) / ((d.re + rRef) * mLow * space * Math.PI * r);
   summary.referenceSpl = 20 * Math.log10(pRef / 2e-5);
   summary.f3 = crossing(freq, out.spl, summary.referenceSpl - 3);

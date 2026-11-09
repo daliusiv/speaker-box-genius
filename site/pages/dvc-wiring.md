@@ -66,14 +66,14 @@ and part of the amplifier's output warms the wire instead of the coil [3]. With 
 
 A small correction to the forum version of this: 0.15 Ω takes 12.5 % of the power at 1 Ω and raises Qes by 14 %, not 13 % of both. The share is 0.15 / (1.05 + 0.15); the rise is 0.15 / 1.05.
 
-![The UMII12-22 in a 28.3 L sealed box at 300 W either way: SPL (the series and no-resistance curves overlap), the impedance the amplifier sees (4.2–16.4 Ω in series, 1.06–4.1 Ω in parallel), and what the 0.15 Ω costs each wiring in the sealed box and the 70.8 L ported box.](img/dvc-wiring.png)
+![The UMII12-22 in a 28.3 L sealed box at 300 W either way: SPL (the series and no-resistance curves overlap), the impedance the amplifier sees (4.2–16.3 Ω in series, 1.06–4.07 Ω in parallel), and what the 0.15 Ω costs each wiring in the sealed box and the 70.8 L ported box.](img/dvc-wiring.png)
 
 What the chart shows:
 
 - **Grey, no resistance:** series and parallel give exactly the same curve at the same power. It's hidden under the blue one.
 - **Blue, series with 0.15 Ω:** 0.1–0.3 dB less, almost the same shape.
 - **Orange, parallel with 0.15 Ω:** about 1 dB less where the impedance is near Re (up top, and at the port tuning in the ported box), but only 0.3 dB less at the impedance peak. A loss that is smaller at resonance is a small bass bump: the rise in Q.
-- **The impedance** has the same shape both ways, a quarter of the size in parallel. Note that a "1 Ω" load is only 1 Ω near Re: 4.1 Ω at the sealed box's resonance (52.7 Hz).
+- **The impedance** has the same shape both ways, a quarter of the size in parallel. Note that a "1 Ω" load is only 1 Ω near Re: 4.07 Ω at the sealed box's resonance (52.7 Hz).
 
 How much does a Qtc of 1.07 instead of 0.99 matter? Dick Pierce worked through it for a 0.707 sealed box. A damping factor of 10 at the coil raises its Qtc to 0.77 and adds about a tenth of a dB of peak. The decay after a note stops lengthens by a few milliseconds, nothing like the "overhang" forums describe [5]. Here the half-dB bump is measurable and in the bass. A [DSP](/guides/linkwitz-transform/) or a slightly bigger box takes it out. It isn't the difference between "tight" and "boomy".
 

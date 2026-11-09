@@ -32,11 +32,11 @@ The **Dayton Audio RSS265HF-4** and **RSS265HO-4** [1][2] look like twins: same 
 
 Before comparing them in the same box, it's worth seeing the boxes each one asks for. **Boxes → Size all** gives a sealed box for Qtc 0.707 and a flat ported alignment (QB3, the box WinISD's wizard gives):
 
-![Each driver in the boxes the app sizes for it, at 350 W. The HF wants a 39.8 L sealed box (F3 41.0 Hz) or an 86.4 L ported box at 22.3 Hz (F3 20.2 Hz); the HO wants a 10.6 L sealed box (F3 54.8 Hz) or a 19.0 L ported box at 29.5 Hz (F3 31.6 Hz).](img/compare-own-boxes.png)
+![Each driver in the boxes the app sizes for it, at 350 W. The HF wants a 39.8 L sealed box (F3 41.1 Hz) or an 86.4 L ported box at 22.3 Hz (F3 20.2 Hz); the HO wants a 10.6 L sealed box (F3 54.9 Hz) or a 19.0 L ported box at 29.5 Hz (F3 31.6 Hz).](img/compare-own-boxes.png)
 
 | Box the app sizes | HF: volume, F3 | HO: volume, F3 | Dayton's own (BassBox) [1][2] |
 |---|---|---|---|
-| Sealed, Qtc 0.707 | 39.8 L, 41.0 Hz | 10.6 L, 54.8 Hz | HF 25.5 L, 45 Hz · HO 8.5 L, 60 Hz |
+| Sealed, Qtc 0.707 | 39.8 L, 41.1 Hz | 10.6 L, 54.9 Hz | HF 25.5 L, 45 Hz · HO 8.5 L, 60 Hz |
 | Ported, flat (QB3) | 86.4 L at 22.3 Hz, 20.2 Hz | 19.0 L at 29.5 Hz, 31.6 Hz | HF 42.5 L, 27 Hz · HO 14.2 L, 36 Hz |
 
 The strong motor and low Vas let the HO work in a tiny box, but a tiny box costs depth: even ported, its "own" box only reaches 31.6 Hz. The HF wants big boxes and goes much deeper in them. Dayton's published BassBox boxes point the same way, a little smaller than the app's Qtc 0.707 choice [1][2].
@@ -58,16 +58,16 @@ This is the response chart in **dB SPL** mode. Above 100 Hz all four curves sit 
 
 | At 350 W | HF, sealed 30 L | HO, sealed 30 L | HF, ported 50 L | HO, ported 50 L |
 |---|---|---|---|---|
-| F3 | **41.8 Hz** | 54.0 Hz | 26.4 Hz | **24.2 Hz** |
+| F3 | **41.9 Hz** | 54.3 Hz | 26.4 Hz | **24.2 Hz** |
 | Qtc / Fc | 0.77 / 42.8 Hz | 0.51 / 37.9 Hz | — | — |
 | 25 Hz | 98.0 dB | 96.7 dB | 105.2 dB | **107.1 dB** |
-| 30 Hz | **101.9 dB** | 100.0 dB | 108.8 dB | 109.0 dB |
+| 30 Hz | **101.9 dB** | 99.9 dB | 108.8 dB | 109.0 dB |
 | 40 Hz | **106.1 dB** | 103.3 dB | **110.7 dB** | 108.0 dB |
-| 60 Hz | **109.3 dB** | 106.6 dB | **110.8 dB** | 108.3 dB |
+| 60 Hz | **109.2 dB** | 106.6 dB | **110.8 dB** | 108.3 dB |
 | Peak cone travel (Xmax 12.3 mm) | 14.6 mm at 30 Hz | **12.1 mm** at 27 Hz | 13.1 mm at 38 Hz | **10.6 mm** at 21 Hz |
 | Peak port air speed | — | — | 10.3 m/s | 12.8 m/s |
 
-**In the sealed box the HF wins:** F3 41.8 Hz against 54.0 Hz, and 1.9–2.8 dB louder from 30 to 60 Hz. The HO's motor over-damps it in 30 L (Qtc 0.51), so its output starts falling away below about 100 Hz.
+**In the sealed box the HF wins:** F3 41.9 Hz against 54.3 Hz, and 1.9–2.7 dB louder from 30 to 60 Hz. The HO's motor over-damps it in 30 L (Qtc 0.51), so its output starts falling away below about 100 Hz.
 
 **In the ported box it's close, and it depends on where you listen.** The HO goes a little deeper (F3 24.2 Hz against 26.4 Hz) and is 1.9 dB louder at 25 Hz. The HF is 2.5–2.7 dB louder from 40 to 60 Hz.
 
@@ -98,7 +98,7 @@ In the 30 L sealed box the two have **the same ceiling** within 0.2 dB, because 
 
 ## Forum myths, checked
 
-**"The HF is for ported, the HO is for sealed."** A diyAudio poster put it that way about these two drivers, and the next reply said it's the other way around [3]. The reply is right. In the 30 L sealed box the HO's F3 is 54.0 Hz against the HF's 41.8, because its low Qts over-damps it (Qtc 0.51). The HO's "sealed box" is 8.5–10.6 L with an F3 of 55–60 Hz, by the app's sizing and by Dayton's own [2]: fine for a car, too shallow for most home subs. *Proof: the response chart, sealed curves.*
+**"The HF is for ported, the HO is for sealed."** A diyAudio poster put it that way about these two drivers, and the next reply said it's the other way around [3]. The reply is right. In the 30 L sealed box the HO's F3 is 54.3 Hz against the HF's 41.9, because its low Qts over-damps it (Qtc 0.51). The HO's "sealed box" is 8.5–10.6 L with an F3 of 55–60 Hz, by the app's sizing and by Dayton's own [2]: fine for a car, too shallow for most home subs. *Proof: the response chart, sealed curves.*
 
 **"The HF's Qts is too high for a port; it'll be boomy."** An Audioholics reply said exactly this about the HF [4]. In the 50 L box at 26 Hz its response stays between −0.8 and +1.3 dB of its passband from 30 Hz up, with no hump, and its flat alignment (86.4 L at 22.3 Hz) reaches 20.2 Hz. A Qts of 0.45 asks for a *bigger* ported box, not a different box type. *Proof: the response chart, ported curves; Boxes → Size all.*
 

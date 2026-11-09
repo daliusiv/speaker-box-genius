@@ -1574,6 +1574,15 @@ export function App(props: { initial: AppState | null }) {
                   min={0}
                   onChange={(rg) => set("settings", { ...state.settings, rg })}
                 />
+                <Select<"winisd" | "circuit"> help="What the power setting means. Like WinISD: the watts go into the coil and the amp + cable resistance together, and a hot coil (Settings → coil temperature) takes the same watts. Like Hornresp: the watts set the amplifier's volts from the cold Re, and the amp + cable resistance takes its share of them. They differ by a few hundredths of a dB with 0.1 Ω, and by the coil's heating when it's hot. A drive set in volts is always the amplifier's volts."
+                  label="Watts"
+                  value={state.settings.driveModel}
+                  options={[
+                    { value: "winisd", text: "Into coil + cable (like WinISD)" },
+                    { value: "circuit", text: "Amp volts from cold Re (like Hornresp)" },
+                  ]}
+                  onChange={(driveModel) => set("settings", { ...state.settings, driveModel })}
+                />
                 <Select<"nominal" | "real"> help="What the driver's power rating (Pe) is held against on the Max SPL chart. V²/Re is WinISD's way. Real power counts what the driver actually takes, which is less wherever its impedance rises above Re (around resonance and up high), so it allows more voltage there, as Hornresp does."
                   label="Power rating vs"
                   value={state.settings.thermalLimit}

@@ -106,8 +106,8 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
       fdd: undefined,
       xmax_mm: d.xmax_mm ?? s.xmax_mm,
       pe_w: d.pe_w ?? s.pe_w,
-      // WinISD drives isobaric pairs at V = √(P·Re/N), which is only half of P in the coils.
-      power: Number((p.isobaric ? p.power / 2 : p.power).toFixed(2)),
+      // With the WinISD drive model (set below) the watts mean the same as WinISD's, isobaric pairs included.
+      power: Number(p.power.toFixed(2)),
       drive: "watts",
       drivers: p.drivers,
       wiring: "parallel",
@@ -124,6 +124,7 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
         air: "winisd",
         // WinISD's models: leaked air is heard, the cone's air is a fixed mass.
         leakage: "radiates",
+        driveModel: "winisd",
         coneLoad: "mass",
         endCorrection: ec,
         // Isobaric pairs have two coils in series, each with WinISD's Rg.
@@ -155,7 +156,7 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
       ? ` ${p.drivers} drivers in parallel; WinISD's Rg of ${p.rg} Ω per driver becomes ${Number((p.rg / p.drivers).toPrecision(6))} Ω shared. WinISD's impedance graph shows one driver, ours shows what the amplifier sees.`
       : "";
   const isoNote = p.isobaric
-    ? ` Isobaric: ${p.drivers} pair${p.drivers > 1 ? "s" : ""} with series-wired coils, like WinISD. WinISD's ${Number(p.power.toFixed(2))} W only puts half that into the coils, so the power here is ${Number((p.power / 2).toFixed(2))} W for the same results.`
+    ? ` Isobaric: ${p.drivers} pair${p.drivers > 1 ? "s" : ""} with series-wired coils, driven like WinISD (its watts set the volts from one driver's Re, so the coils take about half of them).`
     : "";
   const filterNote = p.highPass
     ? ` High-pass filter imported (Butterworth, order ${p.highPass.order}, ${p.highPass.freq} Hz).`

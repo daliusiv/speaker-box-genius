@@ -39,19 +39,19 @@ A **Dayton Audio RSS265HO-4**, a 10″ subwoofer with Fs 26.9 Hz, Qts 0.36, Vas 
 |---|---|---|---|---|---|
 | Box (net) | **32.9 L** | 19.3 L | **10.6 L** | 5.7 L | **3.6 L** |
 | fc | 37.0 Hz | 42.7 Hz | 52.3 Hz | 66.8 Hz | 81.4 Hz |
-| F3 | 58.6 Hz | 56.3 Hz | **55.4 Hz** | 59.1 Hz | 65.6 Hz |
+| F3 | 58.9 Hz | 56.5 Hz | **55.5 Hz** | 59.1 Hz | 65.7 Hz |
 | Peak above the passband | none | none | none | 0.5 dB | 1.4 dB |
 | Level at 40 Hz | −5.6 dB | −5.8 dB | −6.6 dB | −9.1 dB | −12.1 dB |
 | Level at 25 Hz | **−10.5 dB** | −11.6 dB | **−13.9 dB** | −17.5 dB | **−20.8 dB** |
-| Group delay at 40 Hz | 4.3 ms | 4.8 ms | 5.0 ms | 4.0 ms | 2.8 ms |
+| Group delay at 40 Hz | 4.2 ms | 4.8 ms | 5.0 ms | 4.0 ms | 2.8 ms |
 | Max SPL at 30 Hz | 100.2 dB | 100.2 dB | 100.2 dB | 97.0 dB | 93.8 dB |
-| …limited by | Xmax, at 326 W | Xmax, at 383 W | Xmax, at 576 W | the 600 W rating | the 600 W rating |
+| …limited by | Xmax, at 327 W | Xmax, at 384 W | Xmax, at 577 W | the 600 W rating | the 600 W rating |
 
 Three things stand out.
 
 **F3 hardly moves.** From Qtc 0.5 to 0.9 the box shrinks from 33 L to 5.7 L, yet the F3 stays between 56 and 59 Hz. The F3 alone hides the difference: the low-Q boxes start rolling off earlier but fall more gently, so an octave further down they're far louder. At 25 Hz the Qtc 0.5 box is 3.4 dB ahead of the Qtc 0.707 box and 10.3 dB ahead of the Qtc 1.1 box.
 
-**Maximum output is set by the cone, not the box.** At 30 Hz the three bigger boxes all reach the same 100.2 dB, where the cone hits its Xmax. The smaller of them needs almost twice the power to get there (576 W against 326 W). The two smallest boxes run out of the driver's 600 W rating first, a few dB short. A small box doesn't lower the ceiling; it makes the amplifier and the voice coil work harder to reach it. The same holds for EQ: see the [Linkwitz Transform guide](/guides/linkwitz-transform/).
+**Maximum output is set by the cone, not the box.** At 30 Hz the three bigger boxes all reach the same 100.2 dB, where the cone hits its Xmax. The smaller of them needs almost twice the power to get there (577 W against 327 W). The two smallest boxes run out of the driver's 600 W rating first, a few dB short. A small box doesn't lower the ceiling; it makes the amplifier and the voice coil work harder to reach it. The same holds for EQ: see the [Linkwitz Transform guide](/guides/linkwitz-transform/).
 
 **Above 0.707 a peak appears.** Small at 0.9 (0.5 dB), clearer at 1.1 (1.4 dB in this simulation, with the default box losses taking a little off the textbook value), and the deep bass falls away fast.
 
