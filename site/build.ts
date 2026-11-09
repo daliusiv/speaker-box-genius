@@ -13,7 +13,8 @@
  *   [[Open this design|pr-example]]   a button opening that example in the app
  *
  * Also writes a /guides/ index, the /validation/ page (site/validation.ts, from
- * docs/validation/results.json), sitemap.xml and robots.txt, and copies site/img to /guides/img/.
+ * docs/validation/results.json), the sitemaps (site/sitemap.ts) and robots.txt, and copies
+ * site/img to /guides/img/.
  */
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -25,6 +26,7 @@ import { validationLinks } from "./validationLinks.ts";
 import { CHART_STYLE, chart } from "./chart.ts";
 import { cardSvg, findChrome, Rasterizer } from "./og.ts";
 import { CardCache, cardSalt } from "./cardCache.ts";
+import { LastmodStore, sitemapFiles, type SitemapEntry, type SitemapGroup } from "./sitemap.ts";
 import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, loadDb, prCandidate, relatedDrivers, shareLink, type DriverPage, type PageLd } from "./drivers.ts";
 
 export const SITE = "https://speakerboxgenius.com";
@@ -449,11 +451,17 @@ export async function build(outDir: string): Promise<string[]> {
   const guides = pages.map((p) => p.page).sort((a, b) => a.order - b.order);
   const links = await exampleLinks(SITE);
   const written: string[] = [];
+  const today = process.env.SBG_BUILD_DATE ?? new Date().toISOString().slice(0, 10);
+  const lastmods = new LastmodStore(process.env.SBG_LASTMOD_STATE ?? join(HERE, "..", ".cache", "sitemap", "lastmod.json"), today);
+  const guidePaths = new Set(["/guides/", ...guides.map((g) => g.path)]);
+  const groupOf = (path: string): SitemapGroup => (path.startsWith("/drivers/") ? "drivers" : guidePaths.has(path) ? "guides" : "pages");
+  const entries: SitemapEntry[] = [];
   const write = (path: string, html: string) => {
     const dir = join(outDir, path);
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, "index.html"), html);
     written.push(path);
+    entries.push({ path, group: groupOf(path), lastmod: lastmods.date(path, html) });
   };
 
   for (const { file, page } of pages) {
@@ -516,11 +524,12 @@ export async function build(outDir: string): Promise<string[]> {
     for (const f of readdirSync(imgDir)) copyFileSync(join(imgDir, f), join(outDir, "guides/img", f));
   }
 
-  const urls = ["/", ...written];
-  writeFileSync(
-    join(outDir, "sitemap.xml"),
-    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${SITE}${u}</loc></url>`).join("\n")}\n</urlset>\n`,
-  );
+  // The app's home page isn't built here: dated by the app's index.html when it's there (the deploy builds the app first).
+  const appIndex = join(outDir, "index.html");
+  entries.unshift({ path: "/", group: "pages", lastmod: existsSync(appIndex) ? lastmods.date("/", readFileSync(appIndex, "utf8")) : today });
+  for (const [name, xml] of Object.entries(sitemapFiles(SITE, entries))) writeFileSync(join(outDir, name), xml);
+  lastmods.save();
+  console.log(`Sitemaps: ${entries.length} URLs, ${lastmods.changed} new or changed since the last saved build`);
   writeFileSync(join(outDir, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
   return written;
 }

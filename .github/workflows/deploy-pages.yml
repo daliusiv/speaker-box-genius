@@ -44,7 +44,16 @@ jobs:
           key: share-cards-${{ github.run_id }}
           restore-keys: share-cards-
 
-      - name: Build guide pages, sitemap and robots.txt
+      # Each page's content hash and lastmod date from the last deploy (site/sitemap.ts), so a
+      # sitemap date only moves when that page really changed.
+      - name: Restore sitemap dates
+        uses: actions/cache@v4
+        with:
+          path: .cache/sitemap
+          key: sitemap-lastmod-${{ github.run_id }}
+          restore-keys: sitemap-lastmod-
+
+      - name: Build guide pages, sitemaps and robots.txt
         run: pnpm build:site
 
       - uses: actions/configure-pages@v5
