@@ -60,6 +60,8 @@ export interface Ribbon {
   color: string;
   /** One kind per frequency point; kinds missing from `ribbonKinds` are left blank. */
   kinds: readonly string[];
+  /** A comparison curve's row: an outlined marker, as its curve is dashed. */
+  hollow?: boolean;
 }
 
 export const OVER_RED = "#dc2626";
@@ -746,7 +748,11 @@ export function LogChart({
               return (
                 <g key={r.label}>
                   <title>{r.label}</title>
-                  <rect x={PAD.l - 12 * k} y={y} width={7 * k} height={7 * k} rx={1.5 * k} fill={r.color} />
+                  {r.hollow ? (
+                    <rect x={PAD.l - 11.4 * k} y={y + 0.6 * k} width={5.8 * k} height={5.8 * k} rx={1.2 * k} fill="none" stroke={r.color} strokeWidth={1.2 * k} />
+                  ) : (
+                    <rect x={PAD.l - 12 * k} y={y} width={7 * k} height={7 * k} rx={1.5 * k} fill={r.color} />
+                  )}
                   {runsOf(r.kinds).map((run) => (
                     <rect
                       key={run.from}

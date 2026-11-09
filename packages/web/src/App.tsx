@@ -2179,7 +2179,8 @@ export function App(props: { initial: AppState | null }) {
                   ),
                 };
               })}
-              ribbons={mainDesigns.map((d) => ({ label: d.label, color: d.color, kinds: d.result.limitedBy }))}
+              // Each box's first limit, then the comparison driver's in the same box (outlined marker).
+              ribbons={designs.map((d) => ({ label: d.label, color: d.color, kinds: d.result.limitedBy, ...(d.compare ? { hollow: true } : {}) }))}
               ribbonKinds={LIMIT_KINDS}
               limits={
                 maxMode === "volts" && state.settings.ampVolts > 0
