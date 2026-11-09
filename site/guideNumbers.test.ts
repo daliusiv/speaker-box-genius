@@ -627,3 +627,86 @@ test("T/S parameters guide: DSA215-8 vs RSS210HF-4 at 21.7 V in the DSA215-8's o
   near(perWatt(0, 5.9), eta(35, 37.4, 0.4), 0.2, "DSA215-8 app vs η0");
   near(perWatt(2, 3.1), eta(29.6, 23.7, 0.69), 0.3, "RSS210HF-4 app vs η0");
 });
+
+test("design assistant guide: the home-subwoofer defaults still put the example's driver and PR box first, and it opens to the example's boxes", async () => {
+  const { TS_PARAMS } = await import("../packages/engine/src/index.ts");
+  const { loadDatabase } = await import("../packages/db-tools/src/load.ts");
+  const { prCandidate } = await import("./drivers.ts");
+  const { DEFAULT_STATE } = await import("../packages/web/src/state.ts");
+  const { evaluateDriver, goalFor, openResults, prefilter, prShortlist, rankResults } = await import("../packages/web/src/assistant.ts");
+  const { limitsOf } = await import("../packages/web/src/sim.ts");
+  const db = loadDatabase();
+  const rows = db.drivers.map(({ id, data: d, flags }) => ({
+    id, brand: d.brand, model: d.model, type: d.type, ohms: d.nominal_ohms,
+    coil_ohms: d.voice_coils === 2 ? (d.ts_wiring === "series" ? d.nominal_ohms / 2 : d.nominal_ohms * 2) : undefined,
+    size_in: d.size_in, fs: d.ts.fs, qts: d.ts.qts ?? (d.ts.qms * d.ts.qes) / (d.ts.qms + d.ts.qes), vas_l: d.ts.vas_l, xmax_mm: d.ts.xmax_mm,
+    pe_w: d.ts.pe_w, sd_cm2: d.ts.sd_cm2, flags: flags.length ? flags.map((f) => f.code) : undefined,
+  }));
+  const recs = new Map(db.drivers.map((e) => [e.id, e.data]));
+  const loaded = (id: string) => {
+    const rec = recs.get(id)!;
+    const ts: Record<string, number> = {};
+    for (const k of Object.keys(TS_PARAMS)) { const v = (rec.ts as unknown as Record<string, number | undefined>)[k]; if (typeof v === "number") ts[k] = v; }
+    return { name: `${rec.brand} ${rec.model}`, brand: rec.brand, nominal_ohms: rec.nominal_ohms, ts, le_mh: rec.ts.le_mh, xmax_mm: rec.ts.xmax_mm, pe_w: rec.ts.pe_w,
+      dvcWiring: rec.voice_coils === 2 ? (rec.ts_wiring ?? "parallel") : undefined, cutout_mm: rec.physical?.cutout_mm, depth_mm: rec.physical?.depth_mm };
+  };
+  const goal = goalFor("home", "balanced");
+  const cands = prefilter(rows as never, goal);
+  let res = cands.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id) as never, goal));
+  res = [...res, ...prShortlist(rankResults(res, goal), cands).flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id) as never, goal, "pr", db.passiveRadiators.map(prCandidate)))];
+  const ranked = rankResults(res, goal);
+  const top = ranked[0]!;
+  assert.deepEqual([top.driverId, top.box, top.vb_l, top.fb, top.pr?.name, top.pr?.count, top.pr?.addedMass_g, top.over], ["dayton-audio/rss315ho-44", "pr", 38.1, 22.2, "SB Acoustics SB29NRX-00", 4, 350, []]);
+  near(top.f3, 27.2, 0.06, "PR F3");
+  // Within its limits from 20 Hz up, but its cone and PRs pass Xmax below that: the card says so.
+  assert.deepEqual(top.subsonic, { below_hz: 20, safe_w: 68 });
+  assert.equal(top.pr!.prUse, 0.94);
+  const mine = ranked.filter((r) => r.driverId === top.driverId);
+  const ported = mine.find((r) => r.box === "vented")!;
+  const sealed = mine.find((r) => r.box === "sealed")!;
+  assert.deepEqual(ported.over, ["port"]);
+  assert.equal(ported.safe_w, 25);
+  assert.equal(sealed.vb_l, 23);
+  assert.equal(ranked.findIndex((r) => r.driverId === "18-sound/18ntlw5000-8ohm" && r.box === "vented") + 1, 10);
+  assert.equal(ranked.indexOf(sealed) + 1, 9);
+  assert.equal(ranked.indexOf(ported) + 1, 579);
+  assert.equal(sealed.subsonic, undefined);
+  // Re-sorted: Deepest and Loudest on the same results; Smallest sizes the boxes again.
+  const deep = rankResults(res, { ...goal, priority: "deep" })[0]!;
+  assert.deepEqual([deep.driverId, deep.box, deep.vb_l, Math.round(deep.f3 * 10) / 10, deep.pr?.name, deep.over], ["peerless/stw-350f188pr01-04", "pr", 75.3, 17.8, "Dayton Audio RSS315-PR", []]);
+  const loud = rankResults(res, { ...goal, priority: "loud" })[0]!;
+  assert.deepEqual([loud.driverId, loud.box, loud.vb_l, loud.loud_db, loud.pr?.name], ["peerless/sdf-375f75pr01-04", "pr", 80, 110.6, "Dayton Audio RSS460-PR"]);
+  assert.ok(loud.notes.some((n) => n.includes("won't all fit")));
+  const sgoal = goalFor("home", "small");
+  const scands = prefilter(rows as never, sgoal);
+  let sres = scands.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id) as never, sgoal));
+  sres = [...sres, ...prShortlist(rankResults(sres, sgoal), scands).flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id) as never, sgoal, "pr", db.passiveRadiators.map(prCandidate)))];
+  const small = rankResults(sres, sgoal)[0]!;
+  assert.deepEqual([small.driverId, small.box, small.vb_l, small.pr?.name, small.pr?.count, small.pr?.addedMass_g], ["peerless/stw-350f188pr01-04", "pr", 28.2, "SB Acoustics SB29NRX-00", 4, 1154]);
+  assert.ok(small.notes.some((n) => n.includes("won't all fit")));
+  // The counts the guide gives for these defaults.
+  const grade = (g: string) => ranked.filter((r) => (g === "over" ? r.over.length > 0 : g === "deep" ? !r.over.length && !!r.deep : !r.over.length && !r.deep)).length;
+  assert.deepEqual([cands.length, ranked.length, grade("ok"), grade("deep"), grade("over")], [733, 1431, 456, 67, 908]);
+  // Opening it with ported too, plus the sealed box, gives the example's designs.
+  const opened = openResults(DEFAULT_STATE, loaded(top.driverId) as never, [top, ported, sealed], goal);
+  const ex = EXAMPLES["assistant-example"]!();
+  const strip = (d: object) => { const { id: _i, name: _n, ...x } = d as Record<string, unknown>; return x; };
+  assert.deepEqual(opened.designs.map(strip), ex.designs.map(strip));
+  assert.deepEqual([opened.power, opened.dvc], [ex.power, ex.dvc]);
+  // The example at 300 W.
+  const rows3 = run("assistant-example");
+  const l = rows3.map((d) => limitsOf(d.result, ex.xmax_mm, false));
+  near(l[0]!.x!, 8.76, 0.01, "PR cone");
+  near(l[0]!.xpr!.mm, 10.6, 0.01, "PR travel");
+  near(l[1]!.vp!, 59.6, 0.06, "ported port speed");
+  near(l[2]!.x!, 10.25, 0.01, "sealed cone");
+  [27.2, 26.4, 43.3].forEach((f3, i) => near(rows3[i]!.result.summary.f3!, f3, 0.06, `${rows3[i]!.label} F3`));
+  [106.3, 106.6, 101.0].forEach((db30, i) => near(at(rows3[i]!.result.freq, rows3[i]!.result.spl, 30), db30, 0.06, `${rows3[i]!.label} at 30 Hz`));
+  // The trap: below 20 Hz the PR box's cone passes Xmax; a 24 dB/oct 18 Hz high-pass filter fixes it.
+  near(at(rows3[0]!.result.freq, rows3[0]!.result.excursionMm, 15), 20.4, 0.06, "PR cone at 15 Hz");
+  near(Math.max(...Array.from(rows3[2]!.result.excursionMm)), 11.2, 0.06, "sealed cone, 10 Hz up");
+  const hp = { ...ex, highPass: { on: true, type: "butterworth" as const, order: 4, freq: 18 } };
+  const withHp = runDesigns(hp, solveDriver(hp))[0]!.result;
+  near(at(withHp.freq, withHp.excursionMm, 15), 8.9, 0.06, "PR cone at 15 Hz, filtered");
+  near(withHp.summary.f3!, 27.7, 0.06, "PR F3, filtered");
+});
