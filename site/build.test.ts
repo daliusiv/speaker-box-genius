@@ -98,6 +98,9 @@ test("the example links open the designs the guides describe", async () => {
   assert.equal(cmp?.compare?.driverName, "Dayton Audio RSS265HO-4");
   assert.equal(cmp?.power, 350);
   assert.deepEqual(cmp?.designs.map((d) => d.name), ["Sealed 30 L", "Ported 50 L, 26 Hz"]);
+  const tsx = await decodeStateAny(links["ts-example"]!.split("#")[1]!);
+  assert.equal(tsx?.compare?.driverName, "Dayton Audio RSS210HF-4");
+  assert.equal(tsx?.volts, 21.7);
   const car = await decodeStateAny(links["car-example"]!.split("#")[1]!);
   assert.equal(car?.roomGain.mode, "car");
   assert.equal(car?.power, 350);

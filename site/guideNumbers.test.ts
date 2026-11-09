@@ -543,3 +543,54 @@ test("compare drivers guide: RSS265HF-4 vs RSS265HO-4 at 350 W in 30 L sealed an
   assert.deepEqual(own("dayton-audio/rss265hf-4"), [[37.3, null, 42.0], [82.8, 22, 20.3]]);
   assert.deepEqual(own("dayton-audio/rss265ho-4"), [[9.9, null, 56.3], [16.1, 28.6, 35.5]]);
 });
+
+test("T/S parameters guide: DSA215-8 vs RSS210HF-4 at 21.7 V in the DSA215-8's own boxes, the presets, and the arithmetic in the text", async () => {
+  const peak = (f: Float64Array, y: ArrayLike<number>) => { let m = -Infinity; f.forEach((q, i) => { if (q >= 10 && q <= 400) m = Math.max(m, y[i]!); }); return m; };
+  const rows = run("ts-example");
+  assert.deepEqual(rows.map((d) => d.label), ["Sealed 10.4 L · DSA215-8", "Ported 16.2 L, 39.8 Hz · DSA215-8", "Sealed 10.4 L · RSS210HF-4", "Ported 16.2 L, 39.8 Hz · RSS210HF-4"]);
+  const want = [
+    { f3: 80.3, ref: 107.1, spl: [87.0, 93.6, 100.6], max: [88.7, 93.8], x: 5.6, qtc: 0.71 },
+    { f3: 53.1, ref: 107.1, spl: [91.3, 99.5, 105.2], max: [91.1, 100.0], x: 7.6, port: 16.4, len: 20.2 },
+    { f3: 46.4, ref: 103.4, spl: [90.5, 97.5, 103.7], max: [93.4, 98.4], x: 8.4, qtc: 1.03 },
+    { f3: 37.0, ref: 103.4, spl: [93.7, 102.6, 108.4], max: [92.5, 100.0], x: 9.9, port: 22.9, len: 20.2 },
+  ];
+  rows.forEach((d, i) => {
+    const r = d.result;
+    const w = want[i]!;
+    near(r.summary.f3!, w.f3, 0.06, `${d.label} F3`);
+    near(r.summary.referenceSpl, w.ref, 0.06, `${d.label} passband`);
+    [30, 40, 60].forEach((f, j) => near(at(r.freq, r.spl, f), w.spl[j]!, 0.06, `${d.label} at ${f} Hz`));
+    [30, 40].forEach((f, j) => near(at(r.freq, r.maxSpl, f), w.max[j]!, 0.06, `${d.label} max SPL at ${f} Hz`));
+    near(peak(r.freq, r.excursionMm), w.x, 0.06, `${d.label} peak excursion`);
+    if (w.qtc) near(r.summary.qtc!, w.qtc, 0.006, `${d.label} Qtc`);
+    if (w.port) near(peak(r.freq, r.portVelocity!), w.port, 0.06, `${d.label} port speed`);
+    if (w.len) near((d.design as { length_cm: number }).length_cm, w.len, 0.06, `${d.label} port length`);
+  });
+  // The ported RSS210HF-4 peaks 5 dB above its passband near 58 Hz.
+  const r3 = rows[3]!.result;
+  near(peak(r3.freq, r3.spl) - r3.summary.referenceSpl, 5.0, 0.06, "RSS210HF-4 ported peak");
+  // Size all for each driver: the example's boxes are the DSA215-8's.
+  const { sizeAllForDriver } = await import("../packages/web/src/presets.ts");
+  const { withDriver } = await import("./examples.ts");
+  const { DEFAULT_STATE } = await import("../packages/web/src/state.ts");
+  const own = (id: string) => {
+    const s = sizeAllForDriver(withDriver({ ...DEFAULT_STATE, power: 80 }, id)).state;
+    return runDesigns(s, solveDriver(s)).filter((d) => d.design.kind === "sealed" || d.design.kind === "vented").map((d) => [d.vb_l, (d.design as { targetFb?: number }).targetFb ?? null]);
+  };
+  assert.deepEqual(own("dayton-audio/dsa215-8"), [[10.4, null], [16.2, 39.8]]);
+  assert.deepEqual(own("dayton-audio/rss210hf-4"), [[43.6, null], [70.5, 20.6]]);
+  // The text's arithmetic: Qes from the parts, EBP, amplifier volts, efficiency ratio.
+  near((2 * Math.PI * 35 * 0.0346 * 5.9) / 10.6 ** 2, 0.4, 0.001, "Qes");
+  near(35 / 0.4, 87.5, 1e-9, "EBP");
+  near(Math.sqrt(80 * 5.9), 21.7, 0.05, "volts");
+  near(10 * Math.log10((35 ** 3 * 37.4) / 0.4 / ((29.6 ** 3 * 23.7) / 0.69)), 6.5, 0.05, "efficiency ratio dB");
+  near(10 * Math.log10(5.9 / 3.1), 2.8, 0.05, "same volts into 3.1 vs 5.9 Ω");
+  // The app's passband level per watt (into Re) matches the reference efficiency formula,
+  // 112.0 + 10·log10(9.78e-10 · Vas · Fs³ / Qes) dB at 1 W, 1 m, half space: 88.0 and 81.4 dB.
+  const perWatt = (i: number, re: number) => rows[i]!.result.summary.referenceSpl - 10 * Math.log10(21.7 ** 2 / re);
+  const eta = (fs: number, vas: number, qes: number) => 112.02 + 10 * Math.log10((9.7822e-10 * vas * fs ** 3) / qes);
+  near(eta(35, 37.4, 0.4), 88.0, 0.05, "DSA215-8 from η0");
+  near(eta(29.6, 23.7, 0.69), 81.4, 0.05, "RSS210HF-4 from η0");
+  near(perWatt(0, 5.9), eta(35, 37.4, 0.4), 0.2, "DSA215-8 app vs η0");
+  near(perWatt(2, 3.1), eta(29.6, 23.7, 0.69), 0.3, "RSS210HF-4 app vs η0");
+});

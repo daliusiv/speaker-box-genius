@@ -232,14 +232,24 @@ function compareExample(): AppState {
   };
 }
 
-/** T/S parameters guide: the DSA215-8 in its Qtc 0.707 sealed box and its QB3 ported box (5 cm port). */
+/**
+ * T/S parameters guide: the Dayton DSA215-8 (Qts 0.33, EBP 88) with the RSS210HF-4 (Qts 0.57,
+ * EBP 43) as the comparison driver, in the DSA215-8's own boxes as Size all gives them (fixed
+ * here; the test checks the presets still give them): sealed 10.4 L (Qtc 0.707) and ported
+ * 16.2 L at 39.8 Hz (QB3) with a 5 cm port flared 0.8 cm. Driven at 21.7 V, the DSA215-8's
+ * rated 80 W into its 5.9 Ω coil, behind a 12 dB/oct high-pass at 30 Hz.
+ */
+export const TS_EX = { volts: 21.7, sealed_l: 10.4, vented_l: 16.2, fb: 39.8, port_cm: 5, flare_cm: 0.8 };
 function tsExample(): AppState {
-  const s = sizeAllForDriver(withDriver({ ...DEFAULT_STATE, power: 35, highPass: highPass(2, 30) }, "dayton-audio/dsa215-8")).state;
+  const s = withDriver({ ...DEFAULT_STATE, drive: "volts", volts: TS_EX.volts, highPass: highPass(2, 30) }, "dayton-audio/dsa215-8");
+  const v = byKind(s, "vented") as Vented;
   return {
     ...s,
-    designs: s.designs
-      .filter((d) => d.kind === "sealed" || d.kind === "vented")
-      .map((d) => (d.kind === "vented" ? { ...ventedWith(d, "Ported", d.vb_l, d.targetFb, { shape: "round", diameter_cm: 5 }), preset: d.preset } : d)),
+    compare: asCompare(withDriver(DEFAULT_STATE, "dayton-audio/rss210hf-4")),
+    designs: [
+      { ...byKind(s, "sealed"), id: "d1", name: `Sealed ${TS_EX.sealed_l} L`, vb_l: TS_EX.sealed_l },
+      { ...ventedWith(v, `Ported ${TS_EX.vented_l} L, ${TS_EX.fb} Hz`, TS_EX.vented_l, TS_EX.fb, { shape: "round", diameter_cm: TS_EX.port_cm, flare_cm: TS_EX.flare_cm }), id: "d2" },
+    ],
   };
 }
 
