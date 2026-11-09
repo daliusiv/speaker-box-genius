@@ -1,7 +1,0 @@
-H9944 SP18R
-https://www.seas.no/index.php?option=com_content&view=article&id=113:h9944-sp18r&catid=54:prestige-passive-radiator&Itemid=465
-chosen: https://www.seas.no/images/stories/excel/pdfdataheet/H9944-SP18R_Datasheet.pdf
-pdf: https://www.seas.no/images/stories/excel/pdfdataheet/H9944-SP18R_Datasheet.pdf
-pdf: https://www.seas.no/images/stories/prestige/pdfdatasheet/h9944_sp18r_datasheet.pdf
-
-

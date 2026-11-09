@@ -1,6 +1,0 @@
-E0121-04/06 C16NX001/X
-https://www.seas.no/index.php?option=com_content&view=article&id=634:e0121-04_06-c16nx001x&catid=60:seas-excel-coaxial-drivers&Itemid=317
-chosen: https://www.seas.no/images/stories/excel/pdfdatasheet/E0121-04_06_C16NX001_X_Datasheet.pdf
-pdf: https://www.seas.no/images/stories/excel/pdfdatasheet/E0121-04_06_C16NX001_X_Datasheet.pdf
-
-
