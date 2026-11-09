@@ -14,6 +14,7 @@ import {
   type SharedResults,
   type SpaceGoal,
   bandpassShortlist,
+  cyclesText,
   lineShortlist,
   prShortlist,
   type PrCandidateWithParams,
@@ -870,7 +871,7 @@ export function DesignAssistant(props: {
                     )}
                     {r.gd && (
                       <p className="assist-note">
-                        Slow bass: group delay reaches {r.gd.ms} ms at {r.gd.hz} Hz, {r.gd.cycles.toFixed(1)} cycles of the note (above about one, the bass starts to sound late
+                        Slow bass: group delay reaches {r.gd.ms} ms at {r.gd.hz} Hz, {cyclesText(r.gd.cycles)} cycles of the note (above about one, the bass starts to sound late
                         or boomy).
                       </p>
                     )}

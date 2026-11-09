@@ -74,6 +74,8 @@ export const LINE_SHORTLIST = 10;
 export const LINE_MAX_CM = 300;
 /** Group delay (in cycles of the frequency, from 0.8 × F3 up) above which a result gets a "slow bass" note: a delay as long as the note's own period. */
 export const GD_CYCLES = 1;
+/** Cycles of group delay as a card shows them, with enough digits that one over GD_CYCLES doesn't read "1.0". */
+export const cyclesText = (c: number) => (c < 1.1 ? c.toFixed(2) : c.toFixed(1));
 /** The tallest cabinet (outside, cm) a line may fold into, and the deepest and widest. */
 export const LINE_FOLD_MAX = { height_cm: 125, depth_cm: 50, width_cm: 45 };
 /** Narrowest a line may get on average, as a share of the cones' area. */
@@ -632,7 +634,7 @@ export function evaluateDriver(
       const f = r.freq[i]!;
       if (f < 0.8 * f3 || f > 200) continue;
       const cycles = (r.groupDelayMs[i]! / 1000) * f;
-      if (cycles > GD_CYCLES && (!gd || cycles > gd.cycles)) gd = { ms: Math.round(r.groupDelayMs[i]!), hz: Math.round(f), cycles: Math.round(cycles * 100) / 100 };
+      if (cycles > GD_CYCLES && (!gd || cycles > gd.cycles)) gd = { ms: Math.round(r.groupDelayMs[i]!), hz: Math.round(f), cycles: Math.ceil(cycles * 100) / 100 };
     }
     const watts = (scale: number) => Number((goal.power_w * scale * scale).toPrecision(2));
     const spl = at(r.freq, r.spl, goal.loudAt_hz);

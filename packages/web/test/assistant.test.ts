@@ -6,7 +6,7 @@ import { DEFAULT_STATE } from "../src/state.ts";
 import type { LoadedDriver } from "../src/library.ts";
 import { needsSpace } from "../src/ports.ts";
 import { PORT_LIMIT, lineFoldOf, limitsOf, volumeFor, portLimitOf, portRoom_cm, runDesigns, solveDriver } from "../src/sim.ts";
-import { GD_CYCLES, carCabinOf, mountsFit, dividerFor, portDisplacement_l, decodeShared, decodeSharedAny, driverFits, encodeShared, encodeSharedShort, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
+import { GD_CYCLES, carCabinOf, cyclesText, mountsFit, dividerFor, portDisplacement_l, decodeShared, decodeSharedAny, driverFits, encodeShared, encodeSharedShort, insideOf, prShortlist, spaceGross_l, LINE_FOLD_MAX, LINE_MAX_CM, LINE_MIN_AREA, bandpassShortlist, evaluateDriver, goalFor, lineShortlist, portCandidates, loadOptions, openResults, prefilter, rankResults, type AssistantGoal, type AssistantResult, type IndexRow } from "../src/assistant.ts";
 
 // The database as the app loads it: index rows, and full records by id.
 const db = loadDatabase();
@@ -523,4 +523,11 @@ test("a PR box with no space given notes when the driver and PRs won't fit the p
   const small = rows.find((x) => x.id === "dayton-audio/rss265hf-4")!;
   const [s] = evaluateDriver(DEFAULT_STATE, small, loaded(small.id), goalFor("home", "balanced"), "pr", prs);
   if (s && s.pr!.count === 1 && s.vb_l > 60) assert.ok(!s.notes.some((n) => n.includes("cube-shaped")), s.notes.join(" | "));
+});
+
+test("a slow-bass note never reads as exactly one cycle when it's over one", () => {
+  assert.equal(cyclesText(1.02), "1.02");
+  assert.equal(cyclesText(1.0999), "1.10");
+  assert.equal(cyclesText(1.46), "1.5");
+  assert.ok(Number(cyclesText(GD_CYCLES + 0.01)) > GD_CYCLES);
 });
