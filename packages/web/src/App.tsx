@@ -2807,7 +2807,7 @@ function Summary({
         ) : (
           <>
             Peaks are taken above {fMin} Hz, except a ported or PR box's deep bass: below 0.7 × its tuning (down to 20 Hz) the cone may reach 2 × Xmax, shown in
-            amber, before it counts as over, since music has little energy there. Turn on the high-pass filter to model a subsonic filter.{" "}
+            amber, before it counts as over, since music has little energy there; below 20 Hz a tuned box isn't checked. Turn on the high-pass filter to model a subsonic filter.{" "}
           </>
         )}
         Red means over the limit: click it to see the chart.

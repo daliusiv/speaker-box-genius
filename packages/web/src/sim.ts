@@ -619,6 +619,13 @@ export const DEEP_SPLIT = 0.7;
 export const DEEP_ALLOW = 2;
 export const DEEP_FLOOR_HZ = 20;
 
+/** A tuned box (ported, PR, line, 6th-order bandpass) with no high-pass filter: its cone runs away below its tuning. */
+function tunedUnfiltered(r: SimulationResult, highPassOn: boolean): boolean {
+  if (highPassOn) return false;
+  if (r.summary.fc !== undefined && r.summary.fb !== undefined && r.summary.fbRear === undefined) return false;
+  return r.summary.fb !== undefined;
+}
+
 /** Where a design's deep-bass zone starts (Hz), or null (sealed, a high-pass filter, a very low tuning). */
 export function deepSplitOf(r: SimulationResult, highPassOn: boolean): number | null {
   // A 4th-order bandpass box's sealed rear chamber holds the cone below its band, as a sealed
@@ -667,7 +674,11 @@ export function portRoom_cm(vb_l: number, clearance_cm: number, internalMax_cm: 
 export function limitsOf(r: SimulationResult, xmax_mm: number, highPassOn: boolean, portLimit = PORT_LIMIT): Limits {
   const fMin = highPassOn ? 10 : 15;
   const split = deepSplitOf(r, highPassOn);
-  const lo = split ?? fMin;
+  // A tuned box so low that its deep-bass zone starts below the floor: nothing between the floor
+  // and the zone to allow for, but below the floor is still no music, as for any tuned box. (It
+  // used to be checked from 15 Hz, so a box tuned to 27 Hz failed on 15–20 Hz excursion that a
+  // box tuned to 30 Hz was never checked for.)
+  const lo = split ?? (tunedUnfiltered(r, highPassOn) ? DEEP_FLOOR_HZ : fMin);
   const x = peakAbove(r.excursionMm, r.freq, lo);
   const xpr = prPeak(r, lo);
   const vpFront = peakAbove(r.portVelocity, r.freq, fMin);
