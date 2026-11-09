@@ -1,41 +1,46 @@
-name: SEAS probe (one-off, scratch branch only)
+name: SEAS trial import (scratch branch only)
 
-# Saves robots.txt and a small sample of seas.no pages and datasheets to this
-# branch so the SEAS importer can be written against the real site. Never merged.
+# Runs the SEAS importer from PR #201 against the live site and saves what it
+# wrote, plus its report, to this branch for review. Never merged.
 on:
   push:
     branches: [probe/seas]
-    paths: [".github/probe/**", ".github/workflows/seas-probe.yml"]
+    paths: ["packages/db-tools/src/seas.ts", ".github/workflows/seas-probe.yml"]
 
 permissions:
   contents: write
 
 jobs:
-  probe:
+  trial:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      # seas.no doesn't send its intermediate certificate. Fetch it from the
-      # address in the server certificate (AIA "CA Issuers") and trust it
-      # alongside the system roots; verification stays on.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install pdftotext
+        run: command -v pdftotext || (sudo apt-get update -q && sudo apt-get install -yq poppler-utils)
       - name: Complete seas.no's certificate chain
         run: |
           echo | openssl s_client -connect www.seas.no:443 -servername www.seas.no 2>/dev/null | openssl x509 > leaf.pem
           url=$(openssl x509 -in leaf.pem -noout -ext authorityInfoAccess | grep -o 'CA Issuers - URI:.*' | sed 's/CA Issuers - URI://')
-          echo "intermediate: $url"
           curl -fsSL "$url" -o inter.crt
-          (openssl x509 -inform DER -in inter.crt 2>/dev/null || openssl x509 -in inter.crt) > inter.pem
-          cat /etc/ssl/certs/ca-certificates.crt inter.pem > bundle.pem
-          openssl verify -untrusted inter.pem -CAfile /etc/ssl/certs/ca-certificates.crt leaf.pem
-          echo "SSL_CERT_FILE=$PWD/bundle.pem" >> "$GITHUB_ENV"
-      - name: Probe seas.no
-        run: python3 .github/probe/seas_probe.py
-      - name: Save the snapshot to this branch
+          (openssl x509 -inform DER -in inter.crt 2>/dev/null || openssl x509 -in inter.crt) > "$RUNNER_TEMP/seas-intermediate.pem"
+          openssl verify -untrusted "$RUNNER_TEMP/seas-intermediate.pem" -CAfile /etc/ssl/certs/ca-certificates.crt leaf.pem
+          rm leaf.pem inter.crt
+          echo "NODE_EXTRA_CA_CERTS=$RUNNER_TEMP/seas-intermediate.pem" >> "$GITHUB_ENV"
+      - name: Read seas.no
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/seas.ts
+      - name: Check the database
+        continue-on-error: true
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts 2>&1 | tee validate.txt
+      - name: Save the result to this branch
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add probe-out
-          git commit -m "SEAS probe snapshot" || echo "nothing to commit"
+          git add -f seas-import-report.md validate.txt drivers/seas passive-radiators/seas 2>/dev/null || true
+          git commit -m "SEAS trial import result" || echo "nothing to commit"
           git push
