@@ -2372,6 +2372,14 @@ export function App(props: { initial: AppState | null }) {
             Small-signal lumped model: no Bl/Cms non-linearity (port compression and a hot voice coil are in Settings). Box losses Ql{" "}
             {qText(state.settings.losses.ql)}, Qa {qText(state.settings.losses.qa)}, Qp {qText(state.settings.losses.qp)}. Free for non-commercial use.
           </p>
+          <p className="footer-about">
+            Speaker Box Genius is a free speaker box simulator for sealed, ported, passive radiator, bandpass and transmission line boxes, checked
+            against WinISD and Hornresp. New to box design? Start with{" "}
+            <a href="/guides/sealed-vs-ported/">sealed, ported or passive radiator</a>,{" "}
+            <a href="/guides/passive-radiator-box/">designing a passive radiator box</a>,{" "}
+            <a href="/guides/port-chuffing/">how big a port should be</a> or{" "}
+            <a href="/guides/car-subwoofer/">car subwoofer boxes</a>. Coming from WinISD? See <a href="/winisd-alternative/">what's the same and what's new</a>.
+          </p>
           <ul className="footer-links">
             <li><a href="/drivers/">Drivers</a></li>
             <li><a href="/guides/">Guides</a></li>

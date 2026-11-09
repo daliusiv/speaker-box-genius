@@ -337,3 +337,19 @@ test("guides index: every guide in a section, cards once, search box, list data;
   assert.doesNotMatch(related, /href="\/guides\/box-stuffing\/"/);
   assert.ok((related.match(/<li>/g) ?? []).length <= 4);
 });
+
+test("home page: title, canonical, structured data, and its links go to built pages", async () => {
+  const { paths } = await built();
+  const index = readFileSync(new URL("../packages/web/index.html", import.meta.url), "utf8");
+  assert.match(index, /<title>Speaker Box Genius: [^<]+<\/title>/);
+  assert.match(index, /<link rel="canonical" href="https:\/\/speakerboxgenius.com\/" \/>/);
+  const desc = /<meta name="description" content="([^"]+)"/.exec(index)?.[1] ?? "";
+  assert.ok(desc.length >= 100 && desc.length <= 170, `description is ${desc.length} characters`);
+  const ld = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(index)![1]!) as { "@graph": { "@type": string }[] };
+  assert.deepEqual(ld["@graph"].map((g) => g["@type"]), ["WebSite", "WebApplication"]);
+  // The loading text (read by crawlers without JavaScript) and the app's footer link to site pages.
+  const app = readFileSync(new URL("../packages/web/src/App.tsx", import.meta.url), "utf8");
+  const links = [...`${index}\n${app}`.matchAll(/href="(\/[a-z0-9/-]*)"/g)].map((m) => m[1]!).filter((h) => h !== "/");
+  assert.ok(links.length >= 10);
+  for (const h of links) assert.ok(paths.includes(h), `${h} is not a built page`);
+});
