@@ -12,6 +12,7 @@ Manufacturers who have given permission for their published data to be used in t
 | 18 Sound | 6 Nov 2026 | Paola Riccò, Eighteen Sound srl (email) | Publish their transducers' details in Speaker Box Genius ("it will be of help in promoting our products"). They are checking whether they can send an Excel file of parameters. The reply doesn't mention CC BY-NC-SA; confirmation asked for. Until their own file is imported, 18 Sound entries stay as they came from driver-base. |
 | Markaudio | 6 Nov 2026 | Thomas, Markaudio (email) | Use the Thiele/Small parameters published on markaudio.com and in their product datasheets, crediting Markaudio as the source with links to the product pages where practical. **Not under Creative Commons:** Markaudio can't release its data under a CC licence, so these entries are an exception in [`LICENSE-DATA`](../LICENSE-DATA) and may not be reused outside Speaker Box Genius without Markaudio's permission. No CSV/Excel exists; values come from their website and datasheets. They asked to be involved in future corrections. |
 | REDCATT | 6 Nov 2026 | Adrian B., REDCATT (email, info@redcatt.net) | Publish the Thiele/Small parameters of REDCATT drivers under CC BY-NC-SA 4.0, credited to REDCATT with a link to each product page. They sent the full parameter set (CSV and JSON, snapshot of 6 Nov 2026) and pointed to their public JSON API (redcatt.net/api/v1/products) for updates. |
+| SEAS | 9 Nov 2026 | SEAS Fabrikker AS (email, mail@seas.no) | Include the Thiele/Small parameters of SEAS drivers in Speaker Box Genius under CC BY-NC-SA 4.0, credited to SEAS with a link to each product page. They have no database or file to share; the values come from the datasheets on seas.no. |
 
 ## Requests pending
 
@@ -19,7 +20,7 @@ Manufacturers who have given permission for their published data to be used in t
 - Parts Express: emailed, no reply yet.
 - Faital Pro, Peerless (Tymphany), Tang Band: emailed 5 Nov 2026 asking for permission and a CSV or Excel export of their T/S data.
 - Kicker, Skar Audio, Sundown Audio, Rockford Fosgate (car audio): emailed 5 Nov 2026.
-- Wavecor, Visaton, SEAS, PRV Audio, Morel, Sica, Eton, Accuton, HiVi, Fountek: emailed 5 Nov 2026. Visaton's and Accuton's website terms require prior written consent, so **nothing from them until they reply**.
+- Wavecor, Visaton, PRV Audio, Morel, Sica, Eton, Accuton, HiVi, Fountek: emailed 5 Nov 2026. Visaton's and Accuton's website terms require prior written consent, so **nothing from them until they reply**.
 - GRS and the US Dynavox range are sold by Parts Express and covered by that request.
 
 ## Not yet contacted
