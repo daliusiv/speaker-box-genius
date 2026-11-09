@@ -27,7 +27,7 @@ Here's the catch. The air speed depends on the port's **area**: double the area 
 
 ## The worked example
 
-A **Dayton Audio RSS315HF-4**, a 12″ subwoofer (Xmax 14.3 mm, 400 W), in its flat alignment: **83.5 L tuned to 23.8 Hz**. It's driven at **300 W** behind a 24 dB/oct high-pass filter at 20 Hz, which keeps the cone at 10.7 mm, within its Xmax. The port options, each cut to length for 23.8 Hz:
+A **Dayton Audio RSS315HF-4**, a 12″ subwoofer (Xmax 14.3 mm, 400 W), in Keele's flat alignment: **83.5 L tuned to 23.8 Hz** (the textbook box; the app's QB3 preset, sized as WinISD sizes it, gives 75.6 L at 24.4 Hz). It's driven at **300 W** behind a 24 dB/oct high-pass filter at 20 Hz, which keeps the cone at 10.7 mm, within its Xmax. The port options, each cut to length for 23.8 Hz:
 
 | Port | Area | Length | Peak air speed |
 |---|---|---|---|

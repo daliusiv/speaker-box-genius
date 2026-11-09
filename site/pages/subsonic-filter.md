@@ -23,7 +23,7 @@ A **sealed box** is much less exposed, because the air in the box keeps holding 
 
 ## The worked example
 
-The 12″ **Dayton Audio RSS315HF-4** from the [port guide](/guides/port-chuffing/), in its flat alignment (83.5 L, tuned to 23.8 Hz, with a 5 × 30 cm slot port), at **300 W**. Its Xmax is **14.3 mm**.
+The 12″ **Dayton Audio RSS315HF-4** from the [port guide](/guides/port-chuffing/), in Keele's flat alignment (83.5 L, tuned to 23.8 Hz, with a 5 × 30 cm slot port), at **300 W**. Its Xmax is **14.3 mm**.
 
 | High-pass filter | Peak cone excursion | F3 | Output at 20 Hz |
 |---|---|---|---|
