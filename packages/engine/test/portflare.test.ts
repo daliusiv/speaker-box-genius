@@ -102,3 +102,12 @@ test("bandpass ports as pipes: same box as air-mass ports in the bass, for paral
     assert.ok(Math.abs(lumped.spl[i300]! - pipe.spl[i300]!) > 0.5, `${rearPortTo}: pipes differ at 300 Hz`);
   }
 });
+
+test("for the same box and tuning, a smaller port area tunes with a shorter port, and a bigger box too", async () => {
+  const { portLengthForFb } = await import("../src/model.ts");
+  // The car guide's 45 L box at 33 Hz with a 5 cm wide slot: 30, 20 and 10 cm tall.
+  const len = (h: number, vb = 45) => portLengthForFb(vb, { shape: "slot", width_cm: 5, height_cm: h, length_cm: 0 }, 33);
+  assert.ok(len(10) < len(20) && len(20) < len(30), `${len(10)} ${len(20)} ${len(30)}`);
+  assert.ok(Math.abs(len(30) - 81.2) < 0.5, `${len(30)}`);
+  assert.ok(len(30, 60) < len(30));
+});

@@ -287,7 +287,7 @@ function PortChecks(props: {
       chip: "Port too long to fit",
       text:
         `The port is ${fmt(v.length_cm, "len")} long, but ${ctx.internalMax_cm ? "this box" : "a cube-shaped box of this volume"} ` +
-        `only has room for about ${fmt(Math.max(0, room), "len")} in a straight line. Use a bent (L-shaped) port, a slot along a wall, or a bigger port area with a shorter length.`,
+        `only has room for about ${fmt(Math.max(0, room), "len")} in a straight line. Use a bent (L-shaped) port or a slot along a wall, or make the box bigger. A smaller port area would also tune shorter, but its air moves faster.`,
       fix: "Length",
     });
   }
