@@ -150,20 +150,32 @@ const highPass = (order: number, freq: number): AppState["highPass"] => ({ ...DE
  * it) as the app's presets size it: sealed Qtc 0.707, ported Keele (6 × 30 cm slot), and two
  * RSS265-PRs in the same box, at 130 W behind a 24 dB/oct high-pass at 18 Hz.
  */
-function boxTypesExample(): AppState {
-  let s = withDriver({ ...DEFAULT_STATE, power: 130, highPass: highPass(4, 18) }, "dayton-audio/rss265hf-4");
-  s = {
-    ...s,
-    designs: s.designs.map((d) =>
-      d.kind === "pr" ? { ...d, name: "Passive radiators", prName: "Dayton Audio RSS265-PR", params: prParams("dayton-audio/rss265-pr"), count: 2, extra: [] } : d,
-    ),
-  };
-  s = sizeAllForDriver(s).state;
-  return {
-    ...s,
-    designs: s.designs.map((d) =>
-      d.kind === "vented" ? { ...ventedWith(d, "Ported", d.vb_l, d.targetFb, { shape: "slot", width_cm: 6, height_cm: 30 }), preset: d.preset } : d,
-    ),
+/**
+ * The sealed / ported / PR guide: a Dayton Audio RSS265HF-4 10″ at its 350 W rating, behind a
+ * 24 dB/oct high-pass at 18 Hz (or none), in the boxes the presets give (tested against them):
+ * sealed 37.3 L (Qtc 0.707); ported 82.8 L at 22 Hz (Keele's alignment) with a 10 cm flared
+ * tube, 54.4 cm long (quiet at 350 W; the straight port Size all picks for a cube chuffs);
+ * passive radiators, two RSS265-PR in the same 82.8 L with two of their 75 g disks each.
+ */
+export const BOX_TYPES = { sealed_l: 37.3, vented_l: 82.8, fb: 22, prMass_g: 150 };
+function boxTypesExample(filter: boolean) {
+  return (): AppState => {
+    const s = withDriver({ ...DEFAULT_STATE, power: 350, highPass: { ...highPass(4, 18), on: filter } }, "dayton-audio/rss265hf-4");
+    const sealed = { ...(byKind(s, "sealed") as Extract<DesignState, { kind: "sealed" }>), id: "d1", name: "Sealed", vb_l: BOX_TYPES.sealed_l, preset: "Qtc 0.707" };
+    const ported = { ...ventedWith(byKind(s, "vented") as Vented, "Ported", BOX_TYPES.vented_l, BOX_TYPES.fb, { shape: "round", diameter_cm: 10, flare_cm: 2.5 }), id: "d2", preset: "Keele" };
+    const pr = {
+      ...(byKind(s, "pr") as Extract<DesignState, { kind: "pr" }>),
+      id: "d3",
+      name: "Passive radiators",
+      vb_l: BOX_TYPES.vented_l,
+      prName: "Dayton Audio RSS265-PR",
+      params: prParams("dayton-audio/rss265-pr"),
+      count: 2,
+      addedMass_g: BOX_TYPES.prMass_g,
+      targetFb: 23.1, // what two disks tune it to (the preset's 186 g gives 22 Hz)
+      extra: [],
+    };
+    return { ...s, designs: [sealed, ported, pr] };
   };
 }
 
@@ -638,7 +650,8 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "lt-example": ltExample,
   "iso-single": isoExample(false),
   "iso-pair": isoExample(true),
-  "box-types-example": boxTypesExample,
+  "box-types-example": boxTypesExample(true),
+  "box-types-nofilter": boxTypesExample(false),
   "subsonic-off": subsonicExample(false),
   "subsonic-on": subsonicExample(true),
   "car-example": carExample,

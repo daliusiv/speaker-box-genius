@@ -401,3 +401,69 @@ test("amplifier matching guide: the amp's limits, the sub's impedance, watts at 
   near(extreme({ freq: bri.freq, amps: bri.ampAtMax.amps }, "amps", 15, 200, 1).v, 11.2, 0.05, "bridged peak current");
   near(extreme({ freq: ser.freq, amps: ser.ampAtMax.amps }, "amps", 15, 200, 1).v, 5.9, 0.05, "series peak current");
 });
+
+test("sealed / ported / PR guide: presets, rules of thumb, the three boxes at 350 W with and without a filter", async () => {
+  const { sizeAllForDriver } = await import("../packages/web/src/presets.ts");
+  const { boxSuits } = await import("../packages/web/src/boxType.ts");
+  const { withDriver, prParams, BOX_TYPES } = await import("./examples.ts");
+  const { DEFAULT_STATE } = await import("../packages/web/src/state.ts");
+  // The presets still give the example's boxes (so the guide can't drift from the app).
+  let s0 = withDriver({ ...DEFAULT_STATE, power: 350 }, "dayton-audio/rss265hf-4");
+  s0 = { ...s0, designs: s0.designs.map((d) => (d.kind === "pr" ? ({ ...d, prName: "Dayton Audio RSS265-PR", params: prParams("dayton-audio/rss265-pr"), count: 2, extra: [] } as typeof d) : d)) };
+  const sized = sizeAllForDriver(s0);
+  const by = (k: string) => sized.state.designs.find((d) => d.kind === k) as any;
+  assert.equal(by("sealed").vb_l, BOX_TYPES.sealed_l); assert.equal(by("sealed").preset, "Qtc 0.707");
+  assert.equal(by("vented").vb_l, BOX_TYPES.vented_l); assert.equal(by("vented").targetFb, BOX_TYPES.fb); assert.equal(by("vented").preset, "Keele");
+  assert.equal(by("pr").addedMass_g, 186);
+  assert.match(sized.changed.join("\n"), /a 7\.5 cm flared port \(still over the chuffing line at its 350 W rating\)/);
+  // Keele's formulas with the app's Qts (from Qes and Qms).
+  const qts = (0.53 * 3.06) / (0.53 + 3.06);
+  near(15 * qts ** 2.87 * 54, 82.8, 0.05, "Keele Vb"); near(0.42 * 25.6 * qts ** -0.9, 22.0, 0.05, "Keele Fb");
+  near(54 / ((0.707 / qts) ** 2 - 1), 37.3, 0.05, "Qtc 0.707: Vas / ((Qtc/Qts)² − 1)");
+  // The rules of thumb for the three drivers in the table.
+  const suits = [boxSuits(29.6, 0.69, 3.25)!, boxSuits(25.6, 0.53, 3.06)!, boxSuits(35, 0.4, 1.87)!];
+  assert.deepEqual(suits.map((b) => [Math.round(b.ebp), Math.round(b.qts * 100) / 100, b.text]), [
+    [43, 0.57, "leans sealed, ported can work too"], [48, 0.45, "leans sealed, ported can work too"], [88, 0.33, "leans ported, sealed can work too"],
+  ]);
+  // The three boxes, filtered (the example) and not.
+  const all = (name: string) => run(name).map((d) => d.result as any);
+  const [se, po, pr] = all("box-types-example");
+  const [se0, po0, pr0] = all("box-types-nofilter");
+  const ix = (r: any, hz: number) => (r.freq as Float64Array).findIndex((f) => f >= hz);
+  const peak = (r: any, k: string, lo = 10, hi = 500) => { let b = { v: -1, f: 0 }; r.freq.forEach((f: number, i: number) => { if (f >= lo && f <= hi && r[k][i] > b.v) b = { v: r[k][i], f }; }); return b; };
+  const dip = (r: any, lo: number, hi: number) => { let b = { v: 1e9, f: 0 }; r.freq.forEach((f: number, i: number) => { if (f >= lo && f <= hi && r.excursionMm[i] < b.v) b = { v: r.excursionMm[i], f }; }); return b; };
+  [[se, 42.0], [po, 21.3], [pr, 24.2], [po0, 20.3], [pr0, 23.5]].forEach(([r, f3], i) => near((r as any).summary.f3, f3 as number, 0.05, `F3 ${i}`));
+  near(po.summary.fb, 22.0, 0.05, "ported Fb"); near(pr.summary.fb, 23.1, 0.05, "PR Fb");
+  const v = run("box-types-example")[1]!.design as any; assert.equal(v.length_cm, 54.4);
+  near(peak(po, "portVelocity").v, 14.6, 0.05, "port speed at 350 W");
+  ([[se, [93.2, 97.4, 100.4, 105.4]], [po, [105.5, 109.0, 107.0, 108.5]], [pr, [95.1, 107.0, 105.5, 107.6]]] as const).forEach(([r, m], k) =>
+    [20, 25, 30, 40].forEach((hz, j) => near(r.maxSpl[ix(r, hz)], m[j]!, 0.05, `max SPL ${k} at ${hz} Hz`)));
+  ([[se, 24.8, 3.8], [po, 34.1, 6.5], [pr, 32.4, 5.4]] as const).forEach(([r, V, A], k) => {
+    near(r.ampAtMax.volts[ix(r, 25)], V, 0.05, `volts ${k}`); near(r.ampAtMax.amps[ix(r, 25)], A, 0.05, `amps ${k}`);
+  });
+  // Cone (and PR) travel at 350 W.
+  ([[se, 16.8, 25.0], [po, 18.0, 17.1], [pr, 20.0, 18.5], [se0, 19.8, 10], [po0, 44.4, 10], [pr0, 36.2, 10]] as const).forEach(([r, x, f], k) => {
+    const p = peak(r, "excursionMm"); near(p.v, x, 0.05, `peak travel ${k}`); near(p.f, f, 0.3, `where ${k}`);
+  });
+  near(peak(pr, "prExcursionMm").v, 20.5, 0.05, "PR travel, filtered"); near(peak(pr0, "prExcursionMm").v, 23.0, 0.05, "PR travel, no filter");
+  near(dip(po, 18, 30).v, 6.2, 0.05, "ported dip"); near(dip(po, 18, 30).f, 22.2, 0.3, "at");
+  near(dip(pr, 18, 30).v, 10.5, 0.05, "PR dip");
+  // Watts each box takes before its first limit (from the 350 W the slider shows).
+  const w = (r: any, hz: number) => 350 * 10 ** ((r.maxSpl[ix(r, hz)] - r.spl[ix(r, hz)]) / 10);
+  ([[se, 187, 282], [po, 355, 274], [pr, 320, 275]] as const).forEach(([r, a, b], k) => { near(w(r, 25), a, 1, `W at 25 Hz ${k}`); near(w(r, 40), b, 1, `W at 40 Hz ${k}`); });
+  // Group delay.
+  ([[se, 22.6, 10.9], [po, 37.9, 11.6], [pr, 44.2, 11.4], [se0, 6.8, 5.8], [po0, 22.1, 6.5], [pr0, 28.4, 6.3]] as const).forEach(([r, a, b], k) => {
+    near(r.groupDelayMs[ix(r, 25)], a, 0.05, `GD 25 ${k}`); near(r.groupDelayMs[ix(r, 40)], b, 0.05, `GD 40 ${k}`);
+  });
+  // Where the sealed box out-plays the others, and the PR's notch.
+  const below = (a: any) => { let f0 = 0; a.freq.forEach((f: number, i: number) => { if (f >= 10 && f <= 30 && a.maxSpl[i] < se.maxSpl[i]) f0 = f; }); return f0; };
+  near(below(po), 15.4, 0.3, "sealed beats ported below"); near(below(pr), 19.5, 0.3, "sealed beats PR below");
+  near(19.6 * Math.sqrt(200 / 350), 14.8, 0.05, "PR resonance with 150 g");
+  // The PR's other tunings: the preset's 186 g, and three disks.
+  for (const [m, fb, f3] of [[186, 22.0, 24.9], [225, 21.0, 28.0]]) {
+    const s = EXAMPLES["box-types-example"]!();
+    const t = { ...s, designs: [{ ...s.designs[2]!, addedMass_g: m } as any] };
+    const r = runDesigns(t, solveDriver(t))[0]!.result;
+    near(r.summary.fb!, fb!, 0.05, `fb with ${m} g`); near(r.summary.f3!, f3!, 0.05, `F3 with ${m} g`);
+  }
+});
