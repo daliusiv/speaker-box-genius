@@ -468,6 +468,16 @@ function at(freq: Float64Array, y: Float64Array, f: number): number {
   return y[y.length - 1]!;
 }
 
+/**
+ * The cabin a car design is tried in: the one the user set up on the Signal tab (their car's
+ * length, or a curve measured in it) if there is one, else a typical 2.5 m car cabin.
+ */
+export function carCabinOf(g: AppState["roomGain"]): AppState["roomGain"] {
+  if (g.mode === "car" && g.length_cm > 0) return g;
+  if (g.mode === "curve" && g.curve && g.curve.f.length >= 2) return g;
+  return { ...g, mode: "car", ...ROOM_PRESETS.car };
+}
+
 /** The state a driver is tried in: the user's settings, the goal's power, drivers, wiring and room. */
 export function trialState(base: AppState, d: LoadedDriver, goal: AssistantGoal, wiring: ReturnType<typeof loadOptions>[number]): AppState {
   const s = withDriver(base, d);
@@ -479,7 +489,7 @@ export function trialState(base: AppState, d: LoadedDriver, goal: AssistantGoal,
     wiring: wiring.wiring,
     isobaric: false,
     dvc: wiring.dvc ? { on: true, entered: d.dvcWiring ?? "parallel", wired: wiring.dvc } : { ...s.dvc, on: false },
-    roomGain: goal.use === "car" ? { ...s.roomGain, mode: "car", ...ROOM_PRESETS.car } : { ...s.roomGain, mode: "off" },
+    roomGain: goal.use === "car" ? carCabinOf(s.roomGain) : { ...s.roomGain, mode: "off" },
     baffle: { ...s.baffle, on: false },
     highPass: { ...s.highPass, on: false },
     passive: { ...s.passive, on: false },

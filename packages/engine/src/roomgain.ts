@@ -45,8 +45,12 @@ export function roomGainDb(f: number, g: RoomGain | RoomGainCurve): number {
   const n = g.slopeDbPerOct / (10 * Math.log10(2));
   const lift = 10 * Math.log10(1 + Math.pow(g.f0 / f, n));
   if (!(g.maxDb > 0)) return 0;
-  // Soft minimum of lift and the ceiling (≈ −3 dB where they cross).
-  return -10 * Math.log10(Math.pow(10, -lift / 10) + Math.pow(10, -g.maxDb / 10));
+  // Soft minimum of lift and the ceiling (≈ −3 dB where they cross). The a·b term keeps it at
+  // exactly 0 dB where there's no lift: without it a 10 dB ceiling took 0.4 dB off everything
+  // well above f0.
+  const a = Math.pow(10, -lift / 10);
+  const b = Math.pow(10, -g.maxDb / 10);
+  return -10 * Math.log10(a + b - a * b);
 }
 
 /** A profile's value at f: linear in log f between points, the end values beyond them. */

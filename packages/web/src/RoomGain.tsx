@@ -57,7 +57,7 @@ export function RoomGainPanel(props: { value: Room; room: RoomGain | RoomGainCur
         {(g.mode === "car" || g.mode === "room") && (
           <>
             <Num help="Longest inside dimension of the room or cabin. Sets where the lift starts." label="Longest inside" q="len" value={g.length_cm} min={1} onChange={(length_cm) => set({ length_cm })} />
-            <Fixed label="Lift starts" unit="Hz" value={props.room && "f0" in props.room ? props.room.f0.toFixed(0) : "–"} title="Transition frequency, c / (2 × longest dimension)" />
+            <Fixed label="Lift starts" unit="Hz" value={props.room && "f0" in props.room ? props.room.f0.toFixed(0) : "–"} title="Transition frequency, c / (2 × longest dimension): the lift is about 3 dB here and grows below it" />
             <Select<"12" | "6"> help="How fast the lift rises below the transition: 12 dB/oct for a sealed space like a car, 6 for a leaky room."
               label="Slope"
               value={String(g.slope) as "12" | "6"}
@@ -82,7 +82,8 @@ export function RoomGainPanel(props: { value: Room; room: RoomGain | RoomGainCur
       {g.mode !== "off" && props.room && (
         <p className="hint">
           Lift: {at(20).toFixed(1)} dB at 20 Hz, {at(30).toFixed(1)} dB at 30 Hz, {at(50).toFixed(1)} dB at 50 Hz. Added
-          to the SPL and maximum SPL charts only; excursion, port speed and the F3 in the summary stay free-space.
+          to the SPL and maximum SPL charts only: excursion and port speed don&rsquo;t change (the cabin boosts what you
+          hear, not what the cone does), and the summary shows each box&rsquo;s own F3 with the F3 in this space next to it (the response chart&rsquo;s F3 dots mark the second).
           {g.mode === "curve"
             ? ` Your curve "${g.curve?.name ?? ""}" (${g.curve?.f.length ?? 0} points); beyond its ends it holds its end values.`
             : " These are starting points: real cabins vary a lot with size, seats and leaks, so measure yours if you can."}

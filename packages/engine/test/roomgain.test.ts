@@ -47,3 +47,15 @@ test("a room-gain profile of your own: its points, straight lines in log f betwe
   near(roomGainDb(500, g), 0, 1e-12, "above the last point");
   assert.equal(roomGainDb(30, { curve: { f: [], v: [] } }), 0);
 });
+
+test("the ceiling never takes level away: 0 dB (not below) far above the transition, for a car or a room", () => {
+  for (const g of [{ f0: 68.6, slopeDbPerOct: 12, maxDb: 18 }, { f0: 34.3, slopeDbPerOct: 6, maxDb: 10 }, { f0: 50, slopeDbPerOct: 12, maxDb: 3 }]) {
+    for (const f of [200, 500, 1000, 5000]) {
+      const v = roomGainDb(f, g);
+      const raw = 10 * Math.log10(1 + (g.f0 / f) ** (g.slopeDbPerOct / (10 * Math.log10(2))));
+      assert.ok(v >= 0 && v <= raw + 1e-9, `${JSON.stringify(g)} at ${f} Hz: ${v} (uncapped ${raw})`);
+    }
+    // Still lifts to within a hair of the ceiling deep down.
+    assert.ok(Math.abs(roomGainDb(1, g) - g.maxDb) < 0.2, `${roomGainDb(1, g)}`);
+  }
+});
