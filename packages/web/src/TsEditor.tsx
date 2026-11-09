@@ -1,3 +1,4 @@
+import { boxSuits } from "./boxType.ts";
 import { useEffect, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
 import {
@@ -119,6 +120,19 @@ export function TsEditor(props: {
         like “1.9 ft³” or “35630 mm²” are converted.
       </p>
 
+      {(() => {
+        // Which box the driver suits by the usual rules of thumb (EBP and Qts), before simulating.
+        const v = solved.values;
+        const b = v.fs && v.qes && v.qms ? boxSuits(v.fs, v.qes, v.qms) : null;
+        return b ? (
+          <p className="hint box-suits">
+            <b>Box type:</b> EBP {b.ebp.toFixed(0)} (Fs/Qes), Qts {b.qts.toFixed(2)}: {b.text}.{" "}
+            <a href="/guides/sealed-vs-ported/" target="_blank" rel="noopener">
+              Sealed, ported or PR?
+            </a>
+          </p>
+        ) : null;
+      })()}
       {solved.missing.length > 0 && (
         <p className="warn">
           Still needed to simulate: {solved.missing.map((p) => TS_PARAMS[p].label).join(", ")} (or enough other
