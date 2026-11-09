@@ -11,6 +11,9 @@ import { cardSvg } from "./og.ts";
 // One build for every test below (it takes a while: a page per driver). Share cards need
 // Chrome and are tested on their own.
 process.env.SBG_CARDS = "0";
+// Sitemap dates: a fixed build date, and the saved state in a temporary folder, not .cache/.
+process.env.SBG_BUILD_DATE = "2026-11-09";
+process.env.SBG_LASTMOD_STATE = join(mkdtempSync(join(tmpdir(), "lastmod-")), "lastmod.json");
 let builtOnce: Promise<{ out: string; paths: string[] }> | null = null;
 const built = () => (builtOnce ??= (async () => {
   const out = mkdtempSync(join(tmpdir(), "site-"));
@@ -76,9 +79,22 @@ test("builds every guide, the index, sitemap and robots.txt, with live example l
   assert.match(pr, /<link rel="canonical" href="https:\/\/speakerboxgenius.com\/guides\/passive-radiator-box\/">/);
   assert.match(pr, /class="button" href="https:\/\/speakerboxgenius.com\/#z=[A-Za-z0-9_-]+"/);
   assert.ok(existsSync(join(out, "guides/img/pr-spl.png")));
-  const sitemap = readFileSync(join(out, "sitemap.xml"), "utf8");
-  assert.match(sitemap, /<loc>https:\/\/speakerboxgenius.com\/<\/loc>/);
-  assert.match(sitemap, /<loc>https:\/\/speakerboxgenius.com\/winisd-alternative\/<\/loc>/);
+  // sitemap.xml is an index of one sitemap per kind of page, so Search Console reports each apart.
+  const index = readFileSync(join(out, "sitemap.xml"), "utf8");
+  assert.match(index, /<sitemapindex /);
+  for (const g of ["pages", "guides", "drivers"]) assert.match(index, new RegExp(`<loc>https://speakerboxgenius.com/sitemap-${g}.xml</loc><lastmod>2026-11-09</lastmod>`));
+  const site = (g: string) => readFileSync(join(out, `sitemap-${g}.xml`), "utf8");
+  assert.match(site("pages"), /<loc>https:\/\/speakerboxgenius.com\/<\/loc><lastmod>2026-11-09<\/lastmod>/);
+  assert.match(site("pages"), /\/about\/</);
+  assert.match(site("guides"), /<loc>https:\/\/speakerboxgenius.com\/winisd-alternative\/<\/loc>/);
+  assert.match(site("guides"), /\/guides\/<\/loc>/);
+  assert.match(site("guides"), /\/guides\/passive-radiator-box\/</);
+  assert.doesNotMatch(site("guides"), /\/drivers\//);
+  assert.doesNotMatch(site("pages"), /\/guides\/|\/drivers\//);
+  // Every built page is in exactly one sitemap.
+  const locs = ["pages", "guides", "drivers"].flatMap((g) => [...site(g).matchAll(/<loc>https:\/\/speakerboxgenius\.com([^<]*)<\/loc>/g)].map((m) => m[1]));
+  assert.equal(locs.length, new Set(locs).size);
+  assert.deepEqual(new Set(locs), new Set(["/", ...paths]));
   assert.match(readFileSync(join(out, "robots.txt"), "utf8"), /Sitemap: https:\/\/speakerboxgenius.com\/sitemap.xml/);
 });
 
@@ -124,7 +140,7 @@ test("the validation page shows every case from results.json, with the top bar",
   for (const c of rep.winisd.cases) assert.match(html, new RegExp(`id="winisd-${c.id}"`));
   for (const c of rep.hornresp.cases) assert.match(html, new RegExp(`id="hornresp-${c.id}"`));
   assert.match(html, /<a href="\/validation\/" class="wide" aria-current="page">Validation<\/a>/);
-  assert.match(readFileSync(join(out, "sitemap.xml"), "utf8"), /speakerboxgenius\.com\/validation\//);
+  assert.match(readFileSync(join(out, "sitemap-pages.xml"), "utf8"), /speakerboxgenius\.com\/validation\//);
   assert.match(readFileSync(join(out, "guides/index.html"), "utf8"), /<a href="\/guides\/" aria-current="page">Guides<\/a>/);
 });
 
@@ -167,7 +183,7 @@ test("driver pages: suggested boxes, charts, share link and brand indexes", asyn
   assert.match(html, /<a href="\/drivers\/" aria-current="page">Drivers<\/a>/);
   assert.doesNotMatch(html, /More guides/);
   assert.match(readFileSync(join(out, "drivers/dayton-audio/index.html"), "utf8"), /href="\/drivers\/dayton-audio\/dsa215-8\/"/);
-  assert.match(readFileSync(join(out, "sitemap.xml"), "utf8"), /\/drivers\/dayton-audio\/dsa215-8\//);
+  assert.match(readFileSync(join(out, "sitemap-drivers.xml"), "utf8"), /\/drivers\/dayton-audio\/dsa215-8\//);
   assert.doesNotMatch(html, /class="note flag"/);
 });
 

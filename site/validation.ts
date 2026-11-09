@@ -445,7 +445,7 @@ export function validationContent(rep: Report, info: BuildInfo): string {
   };
   return `<h1>Validation</h1>
 <p class="lede">Speaker Box Genius is checked against WinISD and Hornresp, the two free simulators most DIY builders know. Every comparison on this page is an automated test that runs on every change to the code, and the page is rebuilt from those results.</p>
-<p class="status"><strong>${w.length} WinISD cases (${checks} values), the full WinISD run (${rep.winisdRun.compared} values) and ${h.length + b.length} Hornresp cases, ${failing ? `${failing} outside tolerance` : "all within tolerance"}.</strong> Built${commit} on ${date}.</p>
+<p class="status"><strong>${w.length} WinISD cases (${checks} values), the full WinISD run (${rep.winisdRun.compared} values) and ${h.length + b.length} Hornresp cases, ${failing ? `${failing} outside tolerance` : "all within tolerance"}.</strong><!--volatile--> Built${commit} on ${date}.<!--/volatile--></p>
 
 <h2 id="summary">Summary</h2>
 <h3>WinISD ${esc(rep.winisd.version.replace(/^WinISD /, ""))}</h3>
