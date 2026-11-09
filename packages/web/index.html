@@ -3,9 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Free browser-based loudspeaker enclosure and passive radiator simulator. A modern WinISD." />
-    <meta property="og:title" content="Speaker Box Genius" />
-    <meta property="og:description" content="Sealed, ported and passive radiator box simulation in your browser. Share live designs with a link." />
+    <meta name="description" content="Design sealed, ported, passive radiator and bandpass speaker boxes in your browser. Free, no install, checked against WinISD, with a driver database and shareable links." />
+    <link rel="canonical" href="https://speakerboxgenius.com/" />
+    <meta property="og:title" content="Speaker Box Genius: free speaker box simulator" />
+    <meta property="og:description" content="Sealed, ported, passive radiator and bandpass box simulation in your browser, checked against WinISD. Share live designs with a link." />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Speaker Box Genius" />
     <meta property="og:url" content="https://speakerboxgenius.com/" />
@@ -20,14 +21,56 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#12141c" />
     <meta name="color-scheme" content="dark" />
-    <title>Speaker Box Genius</title>
+    <title>Speaker Box Genius: free speaker box simulator and WinISD alternative</title>
     <!-- Dark before the stylesheet arrives, so slow in-app browsers don't flash white. -->
-    <style>html{background:#090a0f;color:#e8ebf2;color-scheme:dark}</style>
+    <style>html{background:#090a0f;color:#e8ebf2;color-scheme:dark}.boot{max-width:34rem;margin:20vh auto 0;padding:0 1.25rem;font:16px/1.5 system-ui,sans-serif;color:#9aa3b5}.boot h1{color:#e8ebf2;font-size:1.4rem;margin:0 0 .5rem}.boot a{color:#8ab4ff}</style>
     <!-- Visit counts: no cookies, and never the design (it's after the #). See /privacy/. -->
     <script data-goatcounter="https://speakerboxgenius.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+    <!-- Structured data: what this page is (a free web app) and the site's name in search results. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://speakerboxgenius.com/#website",
+            "name": "Speaker Box Genius",
+            "url": "https://speakerboxgenius.com/"
+          },
+          {
+            "@type": "WebApplication",
+            "name": "Speaker Box Genius",
+            "url": "https://speakerboxgenius.com/",
+            "description": "A free, browser-based loudspeaker enclosure simulator: sealed, ported, passive radiator, bandpass, transmission line and horn boxes, with cone and passive radiator excursion, port air speed and maximum SPL, checked against WinISD and Hornresp.",
+            "applicationCategory": "DesignApplication",
+            "operatingSystem": "Any (runs in a web browser)",
+            "browserRequirements": "Requires JavaScript",
+            "isAccessibleForFree": true,
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" },
+            "featureList": [
+              "Sealed, ported, passive radiator, 4th and 6th order bandpass boxes",
+              "Transmission lines, MLTLs and horns, with Hornresp import and export",
+              "Cone and passive radiator excursion against Xmax, port air speed, maximum SPL",
+              "Driver database with suggested boxes",
+              "Net volume calculator with driver, port and bracing displacement",
+              "WinISD .wdr and .wpr import and export",
+              "Shareable links to live designs"
+            ],
+            "isPartOf": { "@id": "https://speakerboxgenius.com/#website" },
+            "publisher": { "@type": "Organization", "name": "Speaker Box Genius", "url": "https://speakerboxgenius.com/" }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Shown until the app starts (React replaces it), and read by crawlers that don't run JavaScript. -->
+    <div id="root"><div class="boot">
+      <h1>Speaker Box Genius</h1>
+      <p>A free speaker box simulator in your browser: sealed, ported, passive radiator, bandpass and transmission line boxes, with cone and passive radiator excursion, port air speed and maximum SPL. Checked against WinISD and Hornresp. Loading the simulator…</p>
+      <p><a href="/guides/">Box design guides</a> · <a href="/drivers/">Driver box designs</a> · <a href="/winisd-alternative/">WinISD alternative</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a></p>
+      <noscript><p>The simulator needs JavaScript. The guides and driver pages work without it.</p></noscript>
+    </div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
