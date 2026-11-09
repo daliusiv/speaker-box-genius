@@ -83,7 +83,7 @@ export function RoomGainPanel(props: { value: Room; room: RoomGain | RoomGainCur
         <p className="hint">
           Lift: {at(20).toFixed(1)} dB at 20 Hz, {at(30).toFixed(1)} dB at 30 Hz, {at(50).toFixed(1)} dB at 50 Hz. Added
           to the SPL and maximum SPL charts only: excursion and port speed don&rsquo;t change (the cabin boosts what you
-          hear, not what the cone does), and the summary shows each box&rsquo;s own F3 with the F3 in this space next to it.
+          hear, not what the cone does), and the summary shows each box&rsquo;s own F3 with the F3 in this space next to it (the response chart&rsquo;s F3 dots mark the second).
           {g.mode === "curve"
             ? ` Your curve "${g.curve?.name ?? ""}" (${g.curve?.f.length ?? 0} points); beyond its ends it holds its end values.`
             : " These are starting points: real cabins vary a lot with size, seats and leaks, so measure yours if you can."}

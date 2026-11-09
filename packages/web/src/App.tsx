@@ -10,7 +10,6 @@ import {
   parseWdr,
   parseWpr,
   resampleMagnitude,
-  roomGainDb,
   writeWdr,
   type HighPassType,
   type SimulationResult,
@@ -1969,22 +1968,31 @@ export function App(props: { initial: AppState | null }) {
                     points: mainDesigns.flatMap((d) => {
                       const ref = relRefOf(d.result);
                       const rel = d.result.spl.map((v) => v - ref);
-                      // F3 is the box's own, as in the summary: without the baffle step or room/cabin
-                      // gain (not box properties), drawn on the curve as shown.
+                      // With room or cabin gain, the dot is the F3 in that space (the summary's second
+                      // F3), where the curve as drawn crosses −3 dB. Otherwise it's the box's own F3, as
+                      // in the summary: without the baffle step (not a box property), drawn on the curve.
                       const step = baffleDbFor(state, d.result.freq, finderCtx.driver?.sd_cm2);
-                      const room = roomGainOf(state);
-                      const lift = room ? Array.from(d.result.freq, (f: number) => roomGainDb(f, room)) : null;
-                      const own = step || lift ? rel.map((v, i) => v - (step ? step[i]! : 0) - (lift ? lift[i]! : 0)) : rel;
+                      const where = state.roomGain.mode === "car" ? "in the car" : "in the room";
+                      if (d.f3Room !== undefined) {
+                        return (d.f3Room === null ? [] : [d.f3Room]).map((f) => ({
+                          f,
+                          y: valueAt(d.result.freq, rel, f),
+                          color: d.color,
+                          label: `F3 ${where} ${f < 100 ? f.toFixed(1) : f.toFixed(0)}`,
+                          of: d.label,
+                        }));
+                      }
+                      const own = step ? rel.map((v, i) => v - step[i]!) : rel;
                       const pts =
                         d.design.kind === "line"
                           ? lowEdge(d.result.freq, own)
                           : minus3Points(d.result.freq, own, d.design.kind === "bandpass");
                       return pts.map((f) => ({
                         f,
-                        y: step || lift ? valueAt(d.result.freq, rel, f) : -3,
+                        y: step ? valueAt(d.result.freq, rel, f) : -3,
                         color: d.color,
-                        // With room gain the dot sits on the curve above −3 dB: say whose F3 it is.
-                        label: `${lift ? "Box F3" : "F3"} ${f < 100 ? f.toFixed(1) : f.toFixed(0)}`,
+                        // With the baffle step the dot sits on the curve away from −3 dB: say whose F3 it is.
+                        label: `${step ? "Box F3" : "F3"} ${f < 100 ? f.toFixed(1) : f.toFixed(0)}`,
                         of: d.label,
                       }));
                     }),
@@ -2795,7 +2803,7 @@ function Summary({
 function RoomF3({ f3, car }: { f3: number | null; car: boolean }) {
   const where = car ? "in the car" : "in the room";
   return (
-    <span className="room-f3" title={`F3 with the ${car ? "cabin" : "room"} gain (Signal tab). The F3 before it is the box's own, as WinISD gives it, and so are the chart's F3 dots.`}>
+    <span className="room-f3" title={`F3 with the ${car ? "cabin" : "room"} gain (Signal tab), marked by the response chart's F3 dots. The F3 before it is the box's own, as WinISD gives it.`}>
       {f3 === null ? ` · flat to 10 Hz ${where}` : ` · ${f3 < 100 ? f3.toFixed(1) : f3.toFixed(0)} Hz ${where}`}
     </span>
   );
