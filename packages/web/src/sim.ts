@@ -621,12 +621,14 @@ export const DEEP_FLOOR_HZ = 20;
 
 /**
  * Lowest frequency any limit is checked at (Hz): 10 Hz with a high-pass filter (the filter is
- * modelled, so what's below it is real), else DEEP_FLOOR_HZ for every box, sealed included.
- * Below 20 Hz there's little music; checking a sealed box from 15 Hz while a ported box was
- * checked from 20 Hz failed sealed boxes on bass the ported ones were never asked to play.
+ * modelled, so what's below it is real), else DEEP_FLOOR_HZ for every box, sealed included,
+ * or the design's own F3 when that's lower: a box built to play below 20 Hz is checked there.
+ * (A sealed box used to be checked from 15 Hz while ported and PR boxes were checked from
+ * 20 Hz, so sealed boxes failed on bass the others were never asked to play.)
  */
-export function checkFromHz(highPassOn: boolean): number {
-  return highPassOn ? 10 : DEEP_FLOOR_HZ;
+export function checkFromHz(highPassOn: boolean, f3?: number | null): number {
+  if (highPassOn) return 10;
+  return f3 !== undefined && f3 !== null && f3 > 0 ? Math.max(10, Math.min(DEEP_FLOOR_HZ, f3)) : DEEP_FLOOR_HZ;
 }
 
 /** Where a design's deep-bass zone starts (Hz), or null (sealed, a high-pass filter, a very low tuning). */
@@ -671,11 +673,11 @@ export function portRoom_cm(vb_l: number, clearance_cm: number, internalMax_cm: 
 
 /**
  * A design's peaks and which limits they cross: cone Xmax, the passive radiators' Xmax, the
- * port's chuffing line (`portLimit`, in the convention of the result's port speeds). From checkFromHz: 10 Hz with a high-pass filter, else 20 Hz, except
+ * port's chuffing line (`portLimit`, in the convention of the result's port speeds). From checkFromHz: 10 Hz with a high-pass filter, else 20 Hz (or the design's F3, if lower), except
  * a tuned box's deep-bass zone (deepSplitOf), which is graded instead (see DEEP_SPLIT).
  */
 export function limitsOf(r: SimulationResult, xmax_mm: number, highPassOn: boolean, portLimit = PORT_LIMIT): Limits {
-  const fMin = checkFromHz(highPassOn);
+  const fMin = checkFromHz(highPassOn, r.summary.f3);
   const split = deepSplitOf(r, highPassOn);
   const lo = split ?? fMin;
   const x = peakAbove(r.excursionMm, r.freq, lo);

@@ -617,7 +617,7 @@ export function App(props: { initial: AppState | null }) {
       dash: d.dash ?? (k === 0 ? undefined : k === 1 ? "6 3" : "2 3"),
       y: g.excursionMm,
       over: g.xmax_mm ?? undefined,
-      deepFloor: checkFromHz(state.highPass.on),
+      deepFloor: checkFromHz(state.highPass.on, d.result.summary.f3),
     }));
   });
 
@@ -2049,7 +2049,7 @@ export function App(props: { initial: AppState | null }) {
                   const split = deepSplitOf(d.result, state.highPass.on);
                   const xmax = d.compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
                   // No glow below where the limits are checked (the same floor for every box).
-                  return split ? { deepBelow: split, deepOver: DEEP_ALLOW * xmax, deepFloor: DEEP_FLOOR_HZ } : { deepFloor: checkFromHz(state.highPass.on) };
+                  return split ? { deepBelow: split, deepOver: DEEP_ALLOW * xmax, deepFloor: DEEP_FLOOR_HZ } : { deepFloor: checkFromHz(state.highPass.on, d.result.summary.f3) };
                 })(),
               }))}
               zones={(() => {
@@ -2117,7 +2117,7 @@ export function App(props: { initial: AppState | null }) {
                     dash: d.dash,
                     y: d.result.portVelocity,
                     over: portLimitOf(state),
-                    deepFloor: checkFromHz(state.highPass.on),
+                    deepFloor: checkFromHz(state.highPass.on, d.result.summary.f3),
                   })),
                   ...designs.map((d) => ({
                     label: `${d.label} (rear port)`,
@@ -2125,7 +2125,7 @@ export function App(props: { initial: AppState | null }) {
                     dash: "5 3",
                     y: d.result.rearPortVelocity,
                     over: portLimitOf(state),
-                    deepFloor: checkFromHz(state.highPass.on),
+                    deepFloor: checkFromHz(state.highPass.on, d.result.summary.f3),
                   })),
                 ].filter((s) => s.y)}
                 limits={[{ value: portLimitOf(state), label: `Chuffing risk ${portLimitOf(state)} m/s`, color: LIMIT_RED }]}
@@ -2461,7 +2461,7 @@ export function App(props: { initial: AppState | null }) {
 /** What the port checks need to know about a design: its simulated peak port speed and the box it sits in. */
 function portContext(state: AppState, designs: Design[], id: string) {
   const r = designs.find((x) => x.design.id === id)?.result;
-  const fMin = checkFromHz(state.highPass.on);
+  const fMin = checkFromHz(state.highPass.on, r?.summary.f3);
   const peakOf = (a: Float64Array | null | undefined) => {
     if (!r || !a) return null;
     let m = 0;
@@ -2730,7 +2730,7 @@ function Summary({
           </tbody>
         </table>
         <p className="hint">
-          Tap a row for its details. Peaks above {fMin} Hz{state.highPass.on ? "" : "; a ported or PR box's deep bass (below 0.7 × its tuning) is graded, not failed"}.
+          Tap a row for its details. Peaks above {fMin} Hz{state.highPass.on ? "" : " (or a box's F3, if lower)"}{state.highPass.on ? "" : "; a ported or PR box's deep bass (below 0.7 × its tuning) is graded, not failed"}.
         </p>
         </>
         )}
@@ -2811,7 +2811,7 @@ function Summary({
           <>Peaks are taken above {fMin} Hz. </>
         ) : (
           <>
-            Peaks are taken above {fMin} Hz for every box, since music has little energy below that. A ported or PR box's deep bass (below 0.7 × its tuning)
+            Peaks are taken above {fMin} Hz for every box (or above its F3, if that's lower), since music has little energy below that. A ported or PR box's deep bass (below 0.7 × its tuning)
             may also reach 2 × Xmax, shown in amber, before it counts as over. Turn on the high-pass filter to model a subsonic filter and check down to 10 Hz.{" "}
           </>
         )}
