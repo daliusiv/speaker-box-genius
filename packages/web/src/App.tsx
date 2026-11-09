@@ -45,6 +45,7 @@ import { applyOwpr, withOpenisdDriver } from "./owprImport.ts";
 import { applyWpr } from "./wprImport.ts";
 import { flagText, loadDriver, loadIndex, type DbIndex } from "./library.ts";
 import { Card, DriveValue, Num, REPO, Select, useNarrow } from "./components.tsx";
+import { AmpFromRatings } from "./AmpFromRatings.tsx";
 import { DriverBrowser } from "./Library.tsx";
 import { PwaStatus, usePwa } from "./Pwa.tsx";
 import { GettingStarted, LinkNote, useWelcome } from "./Welcome.tsx";
@@ -245,6 +246,22 @@ export function App(props: { initial: AppState | null }) {
       return "spl";
     }
   });
+  // Impedance chart: magnitude or phase.
+  const [zMode, setZMode] = useState<"ohms" | "phase">(() => {
+    try {
+      return localStorage.getItem("sbg.z") === "phase" ? "phase" : "ohms";
+    } catch {
+      return "ohms";
+    }
+  });
+  const chooseZMode = (m: "ohms" | "phase") => {
+    setZMode(m);
+    try {
+      localStorage.setItem("sbg.z", m);
+    } catch {
+      // not remembered
+    }
+  };
   const chooseMaxMode = (m: "spl" | "volts" | "amps") => {
     setMaxMode(m);
     try {
@@ -1215,6 +1232,20 @@ export function App(props: { initial: AppState | null }) {
                 return load ? (
                   <p className="amp-load">
                     Amplifier sees <strong>{ohms(load.nominal)} Ω</strong> nominal <span className="muted">(Re {load.re.toFixed(2)} Ω)</span>
+                    {(() => {
+                      // The lowest it really gets in the boxes: what the amplifier's current has to cope with.
+                      let low: { z: number; f: number; name: string } | null = null;
+                      for (const d of mainDesigns) {
+                        const z = d.result.impedanceOhm;
+                        for (let i = 0; i < z.length; i++) if (z[i]! > 0 && (!low || z[i]! < low.z)) low = { z: z[i]!, f: d.result.freq[i]!, name: d.design.name };
+                      }
+                      return low ? (
+                        <>
+                          , dipping to <strong>{low.z.toFixed(2)} Ω</strong> at {low.f < 100 ? low.f.toFixed(1) : low.f.toFixed(0)} Hz
+                          {mainDesigns.length > 1 ? ` (${low.name})` : ""}
+                        </>
+                      ) : null;
+                    })()}
                   </p>
                 ) : null;
               })()}
@@ -1550,6 +1581,7 @@ export function App(props: { initial: AppState | null }) {
                   min={0}
                   onChange={(ampAmps) => set("settings", { ...state.settings, ampAmps: Math.max(0, ampAmps) })}
                 />
+                <AmpFromRatings onUse={(l) => set("settings", { ...state.settings, ampVolts: l.volts, ampAmps: l.amps })} />
                 <Select<"yes" | "no"> help="Whether the simulation includes the voice-coil inductance (Le, and L2/R2 when given). WinISD leaves it out by default."
                   label="Coil inductance"
                   value={state.settings.inductance ? "yes" : "no"}
@@ -2155,14 +2187,35 @@ export function App(props: { initial: AppState | null }) {
               })}
               ribbons={mainDesigns.map((d) => ({ label: d.label, color: d.color, kinds: d.result.limitedBy }))}
               ribbonKinds={LIMIT_KINDS}
+              limits={
+                maxMode === "volts" && state.settings.ampVolts > 0
+                  ? [{ value: state.settings.ampVolts, label: `Amp max ${state.settings.ampVolts} V`, color: LIMIT_KINDS.amp!.color }]
+                  : maxMode === "amps" && state.settings.ampAmps > 0
+                    ? [{ value: state.settings.ampAmps, label: `Amp max ${state.settings.ampAmps} A`, color: LIMIT_KINDS.amp!.color }]
+                    : undefined
+              }
             />
             <LogChart
               chartId="impedance"
               hidden={chartTab !== "impedance"}
-              title="Impedance"
-              unit="Ω"
+              title={zMode === "phase" ? "Impedance phase" : "Impedance"}
+              unit={zMode === "phase" ? "°" : "Ω"}
               freq={freq}
-              series={[
+              actions={
+                <div className="unit-switch" role="group" aria-label="Show">
+                  <button aria-pressed={zMode === "ohms"} onClick={() => chooseZMode("ohms")} title="How many ohms the amplifier sees at each frequency">
+                    Ω
+                  </button>
+                  <button
+                    aria-pressed={zMode === "phase"}
+                    onClick={() => chooseZMode("phase")}
+                    title="The phase angle between voltage and current: positive is inductive, negative capacitive. Near ±45° the amplifier's output stage works hardest for the power it delivers."
+                  >
+                    Phase
+                  </button>
+                </div>
+              }
+              series={zMode === "phase" ? series((r) => r.impedancePhaseDeg) : [
                 ...series((r) => r.impedanceOhm),
                 ...measuredSeries(state.measured, "impedance", freq, mainDesigns),
                 ...(measurement
@@ -2177,7 +2230,7 @@ export function App(props: { initial: AppState | null }) {
                     ]
                   : []),
               ]}
-              yMin={0}
+              {...(zMode === "phase" ? { yMin: -90, yMax: 90, yStep: 45, limits: [{ value: 0, label: "0° (resistive)", color: "#8e96aa" }], limitStyle: "guide" as const } : { yMin: 0 })}
             />
             {zaDesigns.length > 0 && (
               <LogChart
