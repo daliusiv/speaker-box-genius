@@ -335,3 +335,69 @@ test("shaped cabinets guide: four shapes sized to the same net volume, their siz
   near((slope * 180) / Math.PI, 9.5, 0.05, "example slope");
   near(18 / Math.cos(slope), 18.25, 0.005, "18 mm at the example slope");
 });
+
+test("amplifier matching guide: the amp's limits, the sub's impedance, watts at the rated voltage, and four wirings", async () => {
+  const { ampLimitsFromRatings, ampPowerInto } = await import("../packages/web/src/ampRating.ts");
+  // The Crown XLS 1002 as a voltage and a current limit, per channel and bridged.
+  const ch = ampLimitsFromRatings([{ watts: 350, ohms: 4 }, { watts: 550, ohms: 2 }])!;
+  assert.deepEqual(ch, { volts: 37.4, amps: 16.6 });
+  assert.deepEqual(ampLimitsFromRatings([{ watts: 700, ohms: 8 }, { watts: 1100, ohms: 4 }]), { volts: 74.8, amps: 16.6 });
+  near(ampPowerInto(ch, 8), 175, 0.5, "model into 8 Ω (rated 215 W)");
+  near(Math.sqrt(215 * 8), 41.5, 0.05, "8 Ω rating's voltage");
+  near(ampLimitsFromRatings([{ watts: 525, ohms: 4 }, { watts: 775, ohms: 2 }])!.volts, 45.8, 1e-9, "XLS 1502 volts");
+  // The sub's rating as a voltage, and the amp's 4 Ω watts in the sub's V²/Re terms.
+  near(Math.sqrt(400 * 3.1), 35.2, 0.05, "volts for 400 W into Re");
+  near(37.4 ** 2 / 3.1, 451, 0.5, "350 W @ 4 Ω as V²/Re");
+  near(20 * Math.log10(37.4 / 35.2), 0.53, 0.005, "XLS 1002 headroom");
+  near(20 * Math.log10(45.8 / 35.2), 2.29, 0.005, "XLS 1502 headroom");
+  near((2 * 37.4 ** 2) / 3.1, 902, 1, "clipped to a square wave, V²/Re");
+  const r = (name: string) => run(name)[0]!.result as any;
+  const one = r("amp-one"), par = r("amp-parallel"), ser = r("amp-series"), bri = r("amp-bridged");
+  const ix = (x: any, hz: number) => (x.freq as Float64Array).findIndex((f) => f >= hz);
+  const extreme = (x: any, key: string, lo: number, hi: number, sign: 1 | -1) => {
+    let best = { v: -Infinity, f: 0 };
+    x.freq.forEach((f: number, i: number) => { if (f >= lo && f <= hi && sign * x[key][i] > best.v) best = { v: sign * x[key][i], f }; });
+    return { v: sign * best.v, f: best.f };
+  };
+  // One sub's impedance: dips, peaks, phase.
+  const zmin = extreme(one, "impedanceOhm", 15, 500, -1);
+  near(zmin.v, 3.15, 0.005, "one sub lowest |Z|"); near(zmin.f, 183, 3, "where");
+  near(one.impedanceOhm[ix(one, 23.8)], 3.88, 0.01, "|Z| at the tuning");
+  const lowPk = extreme(one, "impedanceOhm", 10, 20, 1), hiPk = extreme(one, "impedanceOhm", 30, 60, 1);
+  near(lowPk.v, 17.3, 0.05, "lower peak"); near(lowPk.f, 14.6, 0.15, "at");
+  near(hiPk.v, 17.5, 0.05, "upper peak"); near(hiPk.f, 39.5, 0.2, "at");
+  near(one.impedanceOhm[ix(one, 50)], 7.84, 0.01, "|Z| at 50 Hz");
+  near(one.impedancePhaseDeg[ix(one, 50)], -45, 0.5, "phase at 50 Hz");
+  near(3.15 / 4, 0.79, 0.005, "79% of 4 Ω");
+  // Watts at the rated 35.2 V follow the impedance; the SPL doesn't.
+  [[25, 300], [40, 70], [100, 328], [150, 388]].forEach(([hz, w]) => near(one.ampAtMax.watts[ix(one, hz!)], w!, 1, `watts at ${hz} Hz`));
+  near(extreme({ freq: one.freq, w: one.ampAtMax.watts }, "w", 24, 200, 1).v, 393, 1, "most watts 24–200 Hz");
+  near(extreme({ freq: one.freq, w: one.ampAtMax.watts }, "w", 24, 200, -1).v, 70, 1, "fewest watts 24–200 Hz");
+  near(extreme(one, "spl", 30, 200, 1).v - extreme(one, "spl", 30, 200, -1).v, 1.5, 0.05, "SPL spread 30–200 Hz");
+  near(extreme({ freq: one.freq, amps: one.ampAtMax.amps }, "amps", 15, 200, 1).v, 11.2, 0.05, "one sub's peak current");
+  // Two in parallel on one channel: the dips and the current limit.
+  near(extreme(par, "impedanceOhm", 15, 500, -1).v, 1.58, 0.005, "parallel lowest |Z|");
+  near(par.impedanceOhm[ix(par, 23.8)], 1.94, 0.01, "parallel |Z| at the tuning");
+  const lim: number[] = []; par.freq.forEach((f: number, i: number) => { if (par.limitedBy[i] === "amp") lim.push(f); });
+  near(lim[0]!, 22.2, 0.15, "amp-limited from"); near(Math.max(...lim.filter((f) => f < 40)), 26.0, 0.15, "to");
+  near(Math.min(...lim.filter((f) => f > 40)), 75.0, 0.3, "and again from");
+  const unl = (() => { const s = EXAMPLES["amp-parallel"]!(); const t = { ...s, settings: { ...s.settings, ampVolts: 0, ampAmps: 0 } }; return runDesigns(t, solveDriver(t))[0]!.result as any; })();
+  near(unl.ampAtMax.amps[ix(unl, 23.8)], 18.1, 0.05, "current wanted at the tuning");
+  [[23.8, 115.1, 115.8], [25, 116.1, 116.5], [80, 118.2, 118.6], [100, 117.2, 118.8], [150, 116.3, 118.8]].forEach(([hz, a, b]) => {
+    near(par.maxSpl[ix(par, hz!)], a!, 0.05, `parallel max SPL at ${hz} Hz`);
+    near(unl.maxSpl[ix(unl, hz!)], b!, 0.05, `unlimited at ${hz} Hz`);
+  });
+  // The other wirings at 30 Hz, and what limits them.
+  near(one.maxSpl[ix(one, 30)], 111.5, 0.05, "one sub at 30 Hz");
+  near(ser.maxSpl[ix(ser, 30)], 112.0, 0.05, "series, one channel at 30 Hz");
+  near(bri.maxSpl[ix(bri, 30)], 117.5, 0.05, "series, bridged at 30 Hz");
+  near(par.maxSpl[ix(par, 30)], 117.5, 0.05, "parallel at 30 Hz");
+  near(one.maxSpl[ix(one, 100)], 112.7, 0.05, "one sub at 100 Hz");
+  near(ser.maxSpl[ix(ser, 100)], 113.3, 0.05, "series, one channel at 100 Hz");
+  near(bri.maxSpl[ix(bri, 100)], 118.8, 0.05, "series, bridged at 100 Hz");
+  assert.equal(ser.limitedBy[ix(ser, 30)], "amp");
+  assert.equal(bri.limitedBy[ix(bri, 30)], "thermal");
+  assert.ok(!bri.limitedBy.includes("amp"), "bridged never meets the amp's limits");
+  near(extreme({ freq: bri.freq, amps: bri.ampAtMax.amps }, "amps", 15, 200, 1).v, 11.2, 0.05, "bridged peak current");
+  near(extreme({ freq: ser.freq, amps: ser.ampAtMax.amps }, "amps", 15, 200, 1).v, 5.9, 0.05, "series peak current");
+});

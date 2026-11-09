@@ -603,6 +603,29 @@ function shapedExample(kind: keyof typeof SHAPED_START) {
   };
 }
 
+
+/**
+ * The amplifier guide's example: the port guide's sub (an RSS315HF-4 in 83.5 L at 23.8 Hz, 10 cm
+ * flared port, 20 Hz high-pass) on a Crown XLS 1002, modelled as a voltage and a current limit
+ * that reproduce its ratings: 37.4 V and 16.6 A per channel (350 W into 4 Ω, 550 W into 2 Ω),
+ * 74.8 V and 16.6 A bridged (700 W into 8 Ω, 1100 W into 4 Ω). Two subs are one 167 L box with
+ * two drivers and two ports (the same as two 83.5 L boxes). Driven at 35.2 V per driver: the
+ * driver's 400 W rating as V²/Re.
+ */
+export const AMP = { channel: { volts: 37.4, amps: 16.6 }, bridged: { volts: 74.8, amps: 16.6 } };
+function ampExample(kind: "one" | "parallel" | "series" | "bridged") {
+  return (): AppState => {
+    const n = kind === "one" ? 1 : 2;
+    const wiring = kind === "series" || kind === "bridged" ? "series" : "parallel";
+    const s = withDriver({ ...DEFAULT_STATE, drive: "volts", volts: 35.2 * (wiring === "series" ? n : 1), highPass: highPass(4, 20), drivers: n, wiring }, "dayton-audio/rss315hf-4");
+    const one = ventedWith(byKind(s, "vented") as Vented, "", 83.5, 23.8, { shape: "round", diameter_cm: 10, flare_cm: 2.5 });
+    const names = { one: "One sub, one channel", parallel: "Two subs in parallel, one channel", series: "Two subs in series, one channel", bridged: "Two subs in series, bridged" };
+    const box = { ...one, name: names[kind], vb_l: 83.5 * n, count: n, id: "d1" };
+    const amp = kind === "bridged" ? AMP.bridged : AMP.channel;
+    return { ...s, designs: [box], settings: { ...s.settings, ampVolts: amp.volts, ampAmps: amp.amps } };
+  };
+}
+
 export const EXAMPLES: Record<string, () => AppState> = {
   "stuffing-sealed": stuffingSealed(false),
   "stuffing-sealed-losses": stuffingSealed(true),
@@ -637,6 +660,10 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "dvc-watts": dvcExample("watts"),
   "dvc-volts": dvcExample("volts"),
   "port-shape": portShapeExample(false),
+  "amp-one": ampExample("one"),
+  "amp-parallel": ampExample("parallel"),
+  "amp-series": ampExample("series"),
+  "amp-bridged": ampExample("bridged"),
   "shape-box": shapedExample("box"),
   "shape-tube": shapedExample("tube"),
   "shape-sphere": shapedExample("sphere"),
