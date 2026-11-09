@@ -904,7 +904,7 @@ export function App(props: { initial: AppState | null }) {
                 <div
                   className="dp-row"
                   data-help-title="Compare with another driver"
-                  data-help="Shows a second driver in every box as faint dashed curves, with the same number of drivers, wiring and settings. Swap makes it the main driver (to edit it or size boxes for it)."
+                  data-help="Shows a second driver in every box as faint dashed curves, with the same settings and, unless you give it its own (Compare: drivers, below), the same number of drivers and wiring. Swap makes it the main driver (to edit it or size boxes for it)."
                 >
                   <span className="dp-label">
                     Compare
@@ -921,7 +921,8 @@ export function App(props: { initial: AppState | null }) {
                       loadDriver(id).then(
                         (d) => {
                           const { compare, borrowed } = compareWith(latest.current, d);
-                          setStep((s) => ({ ...s, compare }));
+                          // A new comparison driver keeps the count the last one was given.
+                          setStep((s) => ({ ...s, compare: { ...compare, ...(s.compare?.drivers !== undefined ? { drivers: s.compare.drivers, wiring: s.compare.wiring } : {}) } }));
                           notify(compareMessage(d.name, borrowed, flagText(db?.drivers.find((r) => r.id === id))));
                         },
                         () => alert("Couldn't load that driver."),
@@ -1202,6 +1203,35 @@ export function App(props: { initial: AppState | null }) {
                     ]}
                     onChange={(x) => set("wiring", x)}
                   />
+                )}
+                {state.compare && (
+                  <>
+                    <Select<string> help="How many of the comparison driver share each box: the same as the main driver (like for like), or its own number, to compare one 15″ with two 10″."
+                      label="Compare: drivers"
+                      value={state.compare.drivers === undefined ? "same" : String(state.compare.drivers)}
+                      options={[
+                        { value: "same", text: `Same as main (${state.drivers})` },
+                        ...[1, 2, 3, 4, 6, 8].map((n) => ({ value: String(n), text: `${n}` })),
+                        ...(state.compare.drivers !== undefined && ![1, 2, 3, 4, 6, 8].includes(state.compare.drivers) ? [{ value: String(state.compare.drivers), text: String(state.compare.drivers) }] : []),
+                      ]}
+                      onChange={(x) => {
+                        const c = state.compare!;
+                        const { drivers: _d, wiring: _w, ...rest } = c;
+                        set("compare", x === "same" ? rest : { ...rest, drivers: Number(x), wiring: c.wiring ?? state.wiring });
+                      }}
+                    />
+                    {state.compare.drivers !== undefined && state.compare.drivers > 1 && (
+                      <Select<"parallel" | "series"> help="How the comparison drivers are wired to the amplifier: parallel lowers the impedance, series raises it."
+                        label="Compare: wiring"
+                        value={state.compare.wiring ?? state.wiring}
+                        options={[
+                          { value: "parallel", text: "In parallel" },
+                          { value: "series", text: "In series" },
+                        ]}
+                        onChange={(wiring) => set("compare", { ...state.compare!, wiring })}
+                      />
+                    )}
+                  </>
                 )}
               </div>
               {state.dvc.on && solved.missing.length === 0 && (
