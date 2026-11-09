@@ -167,3 +167,21 @@ test("an image-only table read by OCR (one space between columns) gives the same
   assert.equal(r.driver!.ts.mms_g, 7.13);
   assert.match(r.driver!.notes!, /read by OCR/);
 });
+
+test("OCR'd passive radiator and an unreadable Vas (trial run 4)", () => {
+  // OCR lines from the SP18R and L26RO4Y2 datasheets.
+  const sp18r = [
+    "Free Air Resonance 25 Hz Suspension Compliance (Cy,) 2.02 mm/N",
+    "Maximum Cone Travel (p-p) 19 mm Mechanical Resistance (Rup) 0.317 kg/s",
+    "Moving Mass (My) 20 g Effective Piston Area 130 cm?",
+    "Total Weight 0.38 kg VAS 46 Litres",
+  ].join("\n");
+  const pr = parseDatasheet({ title: "H9944 SP18R", kind: "passive-radiator", ...at, text: sp18r, ocr: true }, "2026-11-09");
+  assert.equal(pr.kind, "passive-radiator");
+  assert.deepEqual(pr.pr!.params, { mms_g: 20, sd_cm2: 130, xmax_mm: 9.5, fs: 25, vas_l: 46, cms_mm_per_n: 2.02 });
+  assert.match(pr.pr!.notes!, /maximum travel.*not a linear limit/);
+
+  const vas = readTable("Linear Coil Travel (p-p) 30 mm VAS AO Litres\nAir Gap Height 10 mm Effective Piston Area 342 cm?\nVoice Coil Diameter 56 mm Suspension Compliance 0.24 mm/N");
+  assert.equal(vas.vas, undefined, "no number to read");
+  assert.equal(vas.sd, "342 cm?");
+});

@@ -25,6 +25,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { validateDriver, validatePassiveRadiator, type Driver, type PassiveRadiator } from "../../schema/src/index.ts";
 import { checkConsistency } from "../../engine/src/ts.ts";
+import { C, RHO } from "../../engine/src/constants.ts";
 import { CONSISTENCY_ERROR, REPO_ROOT } from "./load.ts";
 import { dropImplausible, firstNumber, keepExisting, reconcile, slugOf } from "./dayton.ts";
 
@@ -166,7 +167,7 @@ const LABELS = {
   qes: /^QES\b/i,
   qts: /^QTS\b/i,
   travel: /^Linear (?:Coil )?(?:Travel|Excursion)\b/i,
-  maxTravel: /^Max(?:imum|\.)? (?:Coil )?(?:Travel|Excursion)\b/i,
+  maxTravel: /^Max(?:imum|\.)? (?:Coil |Cone )?(?:Travel|Excursion)\b/i,
   pe: /^Long Term (?:Max\.? )?Power(?: Handling)?\b/i,
 } as const;
 type Label = keyof typeof LABELS;
@@ -293,7 +294,12 @@ export function parseDatasheet(
   const fs = firstNumber(s.fs);
   const sd = firstNumber(s.sd);
   const cms = cmsOf(s.cms);
-  const vas = firstNumber(s.vas);
+  let vas = firstNumber(s.vas);
+  // OCR sometimes misreads one figure ("VAS AO Litres" for 40). Vas follows from Cms and Sd.
+  if (vas === undefined && cms !== undefined && sd !== undefined) {
+    vas = round(RHO * C ** 2 * (sd / 1e4) ** 2 * (cms / 1000) * 1000, 1);
+    notes.push(`Vas ${vas} L worked out from Cms and Sd (the datasheet's Vas couldn't be read).`);
+  }
   const moving = firstNumber(s.moving);
   const airLoad = firstNumber(s.airLoad);
   const travel = firstNumber(s.travel);
