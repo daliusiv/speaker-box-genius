@@ -341,6 +341,12 @@ test("WinISD's watts are the amplifier volts voltsPerRootWatt gives: same result
     w.spl.forEach((x, i) => assert.ok(Math.abs(x - v.spl[i]!) < 1e-9, `${JSON.stringify(extra)} SPL at ${w.freq[i]} Hz`));
     w.excursionMm.forEach((x, i) => assert.ok(Math.abs(x / v.excursionMm[i]! - 1) < 1e-9, "excursion"));
     w.impedanceOhm.forEach((x, i) => assert.ok(Math.abs(x / v.impedanceOhm[i]! - 1) < 1e-9, "impedance: the real driver, without Rg"));
+    // The amplifier's volts and amps at max SPL are the real ones either way (where the cone or
+    // port sets the limit; the power rating is counted in each model's own watts).
+    w.ampAtMax.volts.forEach((x, i) => w.limitedBy[i] !== "thermal" && v.limitedBy[i] !== "thermal" && assert.ok(Math.abs(x / v.ampAtMax.volts[i]! - 1) < 1e-9, `${JSON.stringify(extra)} amp volts at ${w.freq[i]} Hz`));
+    w.ampAtMax.amps.forEach((x, i) => w.limitedBy[i] !== "thermal" && v.limitedBy[i] !== "thermal" && assert.ok(Math.abs(x / v.ampAtMax.amps[i]! - 1) < 1e-9, "amp current"));
+    assert.ok(w.limitedBy.some((l) => l !== "thermal"), "some points limited by the cone or port");
+    assert.ok(Math.abs(w.summary.volts / v.summary.volts - 1) < 1e-9, "drive volts");
   }
   // The circuit model: watts set the volts from the cold Re.
   assert.ok(Math.abs(voltsPerRootWatt(D, { rg: 0.5 }) - Math.sqrt(6)) < 1e-12);

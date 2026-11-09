@@ -388,11 +388,13 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const fold = wattsIn && !net && rgDriver > 0;
   const d = fold ? foldSourceResistance(hot, rgDriver) : hot;
   const rgCircuit = fold ? 0 : rgDriver;
+  // The amplifier's real output voltage: the folded driver at `volts` is the real one with Rg at this.
+  const ampVolts = fold ? volts * Math.sqrt((hot.re + rgDriver) / hot.re) : volts;
   // Per driver, a source shared by the bank: N parallel drivers each see N × its impedance.
   const perDriverZ = (z: Complex) => (wiring === "parallel" ? scale(z, n) : scale(z, 1 / n));
 
   // Box elements
-  const summary: SimulationResult["summary"] = { volts, referenceSpl: 0, f3: null, f6: null };
+  const summary: SimulationResult["summary"] = { volts: ampVolts, referenceSpl: 0, f3: null, f6: null };
   const bp = box.kind === "bandpass" ? bandpassNetwork({ ...box, endCorrection: box.endCorrection ?? opts.endCorrection }, d, n, air, summary, opts.portModel === "pipe", opts.leakage === "absorbed") : null;
   const line = box.kind === "line" ? lineNetwork(box, air) : null;
   // A line or horn models the air on the cone's sides explicitly, so the cone carries its bare
@@ -766,7 +768,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const limits: [SimulationResult["limitedBy"][number], number][] = [];
     // The amplifier's output now, through the filter and EQ, into the bank plus the source resistance.
     const zAmpNow = add(zIn, cx(rgTotal));
-    const vAmpNow = volts * Math.sqrt(filterGain2);
+    const vAmpNow = ampVolts * Math.sqrt(filterGain2);
     if (d.pe !== null) {
       if (opts.thermalLimit === "real") {
         // Real power into the bank: |V_bank|² · Re(Z) / |Z|².
@@ -794,7 +796,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     // The amplifier at that limit: the drive voltage scaled up to it, through the filter and EQ,
     // into the bank's impedance plus the shared source resistance.
     if (Number.isFinite(best[1])) {
-      const vAmp = volts * Math.sqrt(best[1] / pNow) * Math.sqrt(filterGain2);
+      const vAmp = ampVolts * Math.sqrt(best[1] / pNow) * Math.sqrt(filterGain2);
       const zAmp = add(zIn, cx(rgTotal));
       const iAmp = vAmp / abs(zAmp);
       out.ampV[i] = vAmp;
