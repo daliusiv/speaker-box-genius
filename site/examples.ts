@@ -658,7 +658,31 @@ function ampExample(kind: "one" | "parallel" | "series" | "bridged") {
   };
 }
 
+/**
+ * The design assistant guide: what the assistant opens for its own home-subwoofer defaults (80 L,
+ * 300 W, 4 Ω, 8–18″, balanced): its first result, a Dayton Audio RSS315HO-44 (coils in series,
+ * 8 Ω) with one RSS315-PR (+431 g) in 38.1 L at 22.2 Hz, opened with the same driver's ported
+ * box ("Open with ported too": the port it picks, 4 cm flared 1 cm, is all that fits) and its
+ * sealed box. Fixed here; guideNumbers checks the assistant still gives them.
+ */
+export const ASSISTANT_EX = { power: 300, pr_l: 38.1, fb: 22.2, prMass_g: 431, sealed_l: 23, port: { diameter_cm: 4, flare_cm: 1, length_cm: 18.4 } };
+function assistantExample(): AppState {
+  const s = withDriver({ ...DEFAULT_STATE, power: ASSISTANT_EX.power, highPass: { ...DEFAULT_STATE.highPass, on: false } }, "dayton-audio/rss315ho-44");
+  const pr = byKind(DEFAULT_STATE, "pr") as Extract<DesignState, { kind: "pr" }>;
+  const v = byKind(DEFAULT_STATE, "vented") as Vented;
+  return {
+    ...s,
+    dvc: { on: true, entered: "series", wired: "series" },
+    designs: [
+      { ...pr, id: "d1", name: "PR RSS315HO-44", vb_l: ASSISTANT_EX.pr_l, prName: "Dayton Audio RSS315-PR", count: 1, addedMass_g: ASSISTANT_EX.prMass_g, targetFb: ASSISTANT_EX.fb, params: prParams("dayton-audio/rss315-pr"), extra: [], preset: "Assistant" },
+      { ...v, id: "d2", name: "Ported RSS315HO-44", vb_l: ASSISTANT_EX.pr_l, shape: "round", ...ASSISTANT_EX.port, count: 1, targetFb: ASSISTANT_EX.fb, preset: "Assistant" },
+      { ...byKind(DEFAULT_STATE, "sealed"), id: "d3", name: "Sealed RSS315HO-44", vb_l: ASSISTANT_EX.sealed_l, preset: "Assistant" },
+    ],
+  };
+}
+
 export const EXAMPLES: Record<string, () => AppState> = {
+  "assistant-example": assistantExample,
   "stuffing-sealed": stuffingSealed(false),
   "stuffing-sealed-losses": stuffingSealed(true),
   "stuffing-ported-empty": stuffingPorted(false),

@@ -627,3 +627,73 @@ test("T/S parameters guide: DSA215-8 vs RSS210HF-4 at 21.7 V in the DSA215-8's o
   near(perWatt(0, 5.9), eta(35, 37.4, 0.4), 0.2, "DSA215-8 app vs η0");
   near(perWatt(2, 3.1), eta(29.6, 23.7, 0.69), 0.3, "RSS210HF-4 app vs η0");
 });
+
+test("design assistant guide: the home-subwoofer defaults still put the example's driver and PR box first, and it opens to the example's boxes", async () => {
+  const { TS_PARAMS } = await import("../packages/engine/src/index.ts");
+  const { loadDatabase } = await import("../packages/db-tools/src/load.ts");
+  const { prCandidate } = await import("./drivers.ts");
+  const { DEFAULT_STATE } = await import("../packages/web/src/state.ts");
+  const { evaluateDriver, goalFor, openResults, prefilter, prShortlist, rankResults } = await import("../packages/web/src/assistant.ts");
+  const { limitsOf } = await import("../packages/web/src/sim.ts");
+  const db = loadDatabase();
+  const rows = db.drivers.map(({ id, data: d, flags }) => ({
+    id, brand: d.brand, model: d.model, type: d.type, ohms: d.nominal_ohms,
+    coil_ohms: d.voice_coils === 2 ? (d.ts_wiring === "series" ? d.nominal_ohms / 2 : d.nominal_ohms * 2) : undefined,
+    size_in: d.size_in, fs: d.ts.fs, qts: d.ts.qts ?? (d.ts.qms * d.ts.qes) / (d.ts.qms + d.ts.qes), vas_l: d.ts.vas_l, xmax_mm: d.ts.xmax_mm,
+    pe_w: d.ts.pe_w, sd_cm2: d.ts.sd_cm2, flags: flags.length ? flags.map((f) => f.code) : undefined,
+  }));
+  const recs = new Map(db.drivers.map((e) => [e.id, e.data]));
+  const loaded = (id: string) => {
+    const rec = recs.get(id)!;
+    const ts: Record<string, number> = {};
+    for (const k of Object.keys(TS_PARAMS)) { const v = (rec.ts as unknown as Record<string, number | undefined>)[k]; if (typeof v === "number") ts[k] = v; }
+    return { name: `${rec.brand} ${rec.model}`, brand: rec.brand, nominal_ohms: rec.nominal_ohms, ts, le_mh: rec.ts.le_mh, xmax_mm: rec.ts.xmax_mm, pe_w: rec.ts.pe_w,
+      dvcWiring: rec.voice_coils === 2 ? (rec.ts_wiring ?? "parallel") : undefined, cutout_mm: rec.physical?.cutout_mm, depth_mm: rec.physical?.depth_mm };
+  };
+  const goal = goalFor("home", "balanced");
+  const cands = prefilter(rows as never, goal);
+  let res = cands.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id) as never, goal));
+  res = [...res, ...prShortlist(rankResults(res, goal), cands).flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id) as never, goal, "pr", db.passiveRadiators.map(prCandidate)))];
+  const ranked = rankResults(res, goal);
+  const top = ranked[0]!;
+  assert.deepEqual([top.driverId, top.box, top.vb_l, top.fb, top.pr?.name, top.pr?.count, top.pr?.addedMass_g, top.over], ["dayton-audio/rss315ho-44", "pr", 38.1, 22.2, "Dayton Audio RSS315-PR", 1, 431, []]);
+  near(top.f3, 30.1, 0.06, "PR F3");
+  const mine = ranked.filter((r) => r.driverId === top.driverId);
+  const ported = mine.find((r) => r.box === "vented")!;
+  const sealed = mine.find((r) => r.box === "sealed")!;
+  assert.deepEqual(ported.over, ["port"]);
+  assert.equal(ported.safe_w, 23);
+  assert.equal(sealed.vb_l, 23);
+  assert.equal(ranked.findIndex((r) => r.driverId === "18-sound/18ntlw5000-8ohm" && r.box === "vented") + 1, 11);
+  assert.equal(ranked.indexOf(sealed) + 1, 8);
+  assert.equal(ranked.indexOf(ported) + 1, 540);
+  // Re-sorted: Deepest and Loudest on the same results; Smallest sizes the boxes again.
+  const deep = rankResults(res, { ...goal, priority: "deep" })[0]!;
+  assert.deepEqual([deep.driverId, deep.box, deep.vb_l, Math.round(deep.f3 * 10) / 10], ["sb-acoustics/sb34swpl76-3-dv", "pr", 76.6, 22.9]);
+  const loud = rankResults(res, { ...goal, priority: "loud" })[0]!;
+  assert.deepEqual([loud.driverId, loud.box, loud.vb_l, loud.loud_db, loud.pr?.name], ["peerless/sdf-375f75pr01-04", "pr", 80, 110.6, "Dayton Audio RSS460-PR"]);
+  assert.ok(loud.notes.some((n) => n.includes("won't all fit")));
+  const sgoal = goalFor("home", "small");
+  const scands = prefilter(rows as never, sgoal);
+  let sres = scands.flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id) as never, sgoal));
+  sres = [...sres, ...prShortlist(rankResults(sres, sgoal), scands).flatMap((r) => evaluateDriver(DEFAULT_STATE, r, loaded(r.id) as never, sgoal, "pr", db.passiveRadiators.map(prCandidate)))];
+  const small = rankResults(sres, sgoal)[0]!;
+  assert.deepEqual([small.driverId, small.box, small.vb_l], ["dayton-audio/umii10-22", "pr", 45.9]);
+  // The counts the guide gives for these defaults.
+  const grade = (g: string) => ranked.filter((r) => (g === "over" ? r.over.length > 0 : g === "deep" ? !r.over.length && !!r.deep : !r.over.length && !r.deep)).length;
+  assert.deepEqual([cands.length, ranked.length, grade("ok"), grade("deep"), grade("over")], [733, 1430, 416, 67, 947]);
+  // Opening it with ported too, plus the sealed box, gives the example's designs.
+  const opened = openResults(DEFAULT_STATE, loaded(top.driverId) as never, [top, ported, sealed], goal);
+  const ex = EXAMPLES["assistant-example"]!();
+  const strip = (d: object) => { const { id: _i, name: _n, ...x } = d as Record<string, unknown>; return x; };
+  assert.deepEqual(opened.designs.map(strip), ex.designs.map(strip));
+  assert.deepEqual([opened.power, opened.dvc], [ex.power, ex.dvc]);
+  // The example at 300 W.
+  const rows3 = run("assistant-example");
+  const l = rows3.map((d) => limitsOf(d.result, ex.xmax_mm, false));
+  near(l[0]!.x!, 8.97, 0.01, "PR cone");
+  near(l[1]!.vp!, 61.7, 0.06, "ported port speed");
+  near(l[2]!.x!, 10.65, 0.01, "sealed cone");
+  [30.1, 26.4, 43.3].forEach((f3, i) => near(rows3[i]!.result.summary.f3!, f3, 0.06, `${rows3[i]!.label} F3`));
+  [105.5, 106.6, 101.0].forEach((db30, i) => near(at(rows3[i]!.result.freq, rows3[i]!.result.spl, 30), db30, 0.06, `${rows3[i]!.label} at 30 Hz`));
+});
