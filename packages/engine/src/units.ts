@@ -48,12 +48,15 @@ const UNITS: Record<Quantity, [RegExp, number][]> = {
  * A bare number is taken to already be in database units. Returns null if unparseable.
  */
 export function parseQuantity(text: string, q: Quantity): number | null {
-  const m = /^\s*([-+]?\d+(?:[.,]\d+)?(?:e[-+]?\d+)?)\s*(.*?)\s*$/i.exec(text);
+  // Trimmed first, then a plain split: no backtracking over long runs of spaces.
+  const m = /^([-+]?\d+(?:[.,]\d+)?(?:e[-+]?\d+)?)(.*)$/is.exec(text.trim());
   if (!m) return null;
   const value = Number(m[1]!.replace(",", "."));
   if (!Number.isFinite(value)) return null;
   // "ft.³" (Dayton's spec sheets), "g.", "mH @ 1 kHz": dots and anything after an "@" don't change the unit.
-  const unit = m[2]!.toLowerCase().replace(/@.*$/, "").replace(/\s+/g, " ").trim();
+  const raw = m[2]!.toLowerCase();
+  const at = raw.indexOf("@");
+  const unit = (at >= 0 ? raw.slice(0, at) : raw).replace(/\s+/g, " ").trim();
   if (unit === "") return value;
   for (const u of [unit, unit.replace(/\.\s?/g, "")]) for (const [re, k] of UNITS[q]) if (re.test(u)) return value * k;
   // Units that don't need conversion (Hz, Ω, ohms, T·m, W, kg/s, dB…) are accepted as-is.
