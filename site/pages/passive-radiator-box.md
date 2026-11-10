@@ -64,6 +64,8 @@ The bigger the PR (or the more of them), the more travel it has to spare and the
 
 ## Step 3: tune it with added mass
 
+> **Calculator:** the [passive radiator calculator](/calculators/passive-radiator/) gives the added mass for any box, tuning and PR from the database, then checks whether the PRs keep up with your driver.
+
 A PR's tuning depends on its moving mass and the box volume. Out of the box, one DS215-PR in 18 L tunes to about 42.8 Hz. **Adding mass** to the cone lowers the tuning: just **4 g** brings it down to the 41.7 Hz target (in a smaller box, or for a lower tuning, it takes a lot more). Most PRs come with a threaded bolt for adding washers.
 
 Keep the added mass reasonable. Past about **1.5 times the PR's own moving mass**, the cone can sag and rock, and the finder flags it; past three times, it's ruled out. If the tuning needs more mass than that, use a PR with a heavier cone, or two PRs (two PRs in the same box need more mass each, because the box air is shared).

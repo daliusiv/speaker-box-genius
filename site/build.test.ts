@@ -381,6 +381,36 @@ test("port length calculator page: form, live script hook, worked example that m
   assert.ok(e.slot.r.wallRange!.low < 25 && e.slot.r.wallRange!.high > 25);
 });
 
+test("passive radiator calculator page: form, worked example that matches its text", async () => {
+  const { out, paths } = await built();
+  assert.ok(paths.includes("/calculators/passive-radiator/"));
+  const html = readFileSync(join(out, "calculators/passive-radiator/index.html"), "utf8");
+  assert.match(html, /<title>Passive radiator calculator: [^<]+<\/title>/);
+  assert.match(html, /<form id="prc-form"/);
+  for (const id of ["prc-vb", "prc-fb", "prc-n", "prc-pr", "prc-mms", "prc-sd", "prc-vas", "prc-xmax", "prc-qms", "prc-max", "prc-driver", "prc-power", "prc-out", "prc-keep", "prc-open"]) assert.match(html, new RegExp(`id="${id}"`), id);
+  assert.doesNotMatch(html, /\{\{calc:/);
+  assert.doesNotMatch(html, /<script type="module"/);
+  assert.match(readFileSync(join(out, "sitemap-pages.xml"), "utf8"), /\/calculators\/passive-radiator\//);
+
+  // The example's claims, in the page's words.
+  const { prExample } = await import("./calculators.ts");
+  const e = prExample();
+  const row = (k: string) => e.rows.find((r) => r.key === k)!;
+  const [rss1, rss2, ds1, ds2, ds4, sb1] = ["rss1", "rss2", "ds1", "ds2", "ds4", "sb1"].map(row);
+  assert.equal(e.s.xmax_mm, 14.3);
+  assert.ok(rss1!.ok && rss1!.c.prUse > 0.75 && rss1!.c.prUse < 1, `one RSS315-PR keeps up, past 75 %: ${rss1!.c.prUse}`);
+  assert.ok(rss2!.ok && rss2!.c.prUse > 0.45 && rss2!.c.prUse < 0.55, `two use about half: ${rss2!.c.prUse}`);
+  assert.ok(rss2!.c.f3! < rss1!.c.f3!, "two go deeper");
+  assert.ok(rss2!.r.addedMass_g > rss1!.r.addedMass_g, "two PRs need more mass each, not half");
+  assert.ok(!ds1!.ok && 1 / ds1!.c.prUse < 0.5, "one DS315-PR runs out with the cone at under half its Xmax");
+  assert.ok(!ds2!.ok && ds2!.c.prUse > 1, "two DS315-PRs still run out first");
+  assert.ok(ds4!.c.prUse < 1 && ds4!.r.massRatio > 3 && !ds4!.ok, "four keep up only with over 3 × mass");
+  assert.equal(e.fewestDs, null, "no number of DS315-PRs up to six passes");
+  assert.ok(sb1!.r.tooLow && sb1!.r.bareFb < 25, "SB34NRX-00 already tunes below 25 Hz");
+  assert.ok(Math.abs(ds2!.c.vdRatio - rss1!.c.vdRatio) < 0.2, "two DS315-PRs have about the displacement ratio of one RSS315-PR");
+  assert.ok(Math.cbrt(e.rows[0]!.i.vb_l * 1000) > 41 && Math.cbrt(e.rows[0]!.i.vb_l * 1000) < 43, "faces about 42 cm across");
+});
+
 test("calculators: the script is found through Vite's manifest", async () => {
   const { viteScript } = await import("./calculators.ts");
   const dir = mkdtempSync(join(tmpdir(), "vite-"));

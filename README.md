@@ -53,7 +53,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 ### Sizing and tuning
 
 - **Alignment presets sized like WinISD's wizard**: Qtc 0.5, 0.577 and 0.707 for sealed boxes; QB3, plus C4/SC4 and BB4/SBB4, for ported and PR boxes, giving the same boxes as WinISD (counting its 0.1 Ω amplifier resistance and the box's losses). Settings → Box presets → Textbook gives the lossless textbook alignments instead (QB3/B4, Keele, SQB3, C4/SC4, BB4/SBB4). One tap sizes every box for the driver (sealed at Qtc 0.707, or twice Vas when Qts is so close to 0.707 that the box would run away) and picks each port: the simplest that fits and stays under the chuffing line at the driver's rated power. A single preset keeps your port when its new length fits the box, and otherwise picks one the same way
-- **Find a passive radiator**: tries every PR in the database (and, optionally, woofers used as PRs) in groups of 1, 2 or 4, tunes each with added mass and ranks them by bass extension and spare travel
+- **Find a passive radiator**: tries every PR in the database (and, optionally, woofers used as PRs) in groups of 1, 2 or 4, tunes each with added mass and ranks them by bass extension and spare travel. Also a stand-alone [passive radiator calculator](https://speakerboxgenius.com/calculators/passive-radiator/): the added mass for any box, tuning and PR, and whether the PRs keep up with your driver
 - **Best PR tuning**: the added mass for the flattest response, the deepest bass or the smallest box for a target F3
 - **Port fit checks**: the port length for a tuning, whether it fits inside the box, round or slot ports, flared ends, your own end correction (K), the likely tuning range of a slot along a wall, and an option to model ports as pipes (with their own resonances). Also a stand-alone [port length calculator](https://speakerboxgenius.com/calculators/port-length/)
 - **Tune a line** by its length (or its port, for a mass-loaded line) to a target frequency
@@ -128,7 +128,7 @@ Merging to `main` builds and deploys to GitHub Pages automatically.
 ## What's next
 
 - More manufacturer data (several brands have given permission)
-- Passive radiator and box volume calculators
+- A box volume calculator page
 - More WinISD checks (slot ports, dual voice coils)
 - CAD export of the build sheet
 

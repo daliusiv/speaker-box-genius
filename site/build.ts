@@ -26,7 +26,7 @@ import { validationLinks } from "./validationLinks.ts";
 import { CHART_STYLE, chart } from "./chart.ts";
 import { cardSvg, findChrome, Rasterizer } from "./og.ts";
 import { CardCache, cardSalt } from "./cardCache.ts";
-import { CALC_STYLE, fillCalc, portExampleValues, portForm, viteScript } from "./calculators.ts";
+import { CALC_STYLE, fillCalc, portExampleValues, portForm, prExampleValues, prForm, viteScript } from "./calculators.ts";
 import { LastmodStore, sitemapFiles, type SitemapEntry, type SitemapGroup } from "./sitemap.ts";
 import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, loadDb, prCandidate, relatedDrivers, shareLink, type DriverPage, type PageLd } from "./drivers.ts";
 
@@ -261,7 +261,7 @@ const NAV = [
   { href: "/guides/", label: "Guides", match: (p: string) => p.startsWith("/guides/") || p.endsWith("-alternative/") },
   // Left out of the top bar on narrow phones (it's in the footer).
   // Left out below 520 px, even on its own page (it's in the footer and linked from the port guides).
-  { href: "/calculators/port-length/", label: "Port calculator", match: (p: string) => p.startsWith("/calculators/"), cls: "wider" },
+  { href: "/calculators/port-length/", label: "Port calculator", match: (p: string) => p.startsWith("/calculators/port-length/"), cls: "wider" },
   { href: "/validation/", label: "Validation", match: (p: string) => p === "/validation/", wide: true },
 ];
 
@@ -324,7 +324,7 @@ ${GOATCOUNTER}
 ${o.content}
 </main>
 <footer>
-<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/calculators/port-length/">Port length calculator</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
+<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/calculators/port-length/">Port length calculator</a> · <a href="/calculators/passive-radiator/">Passive radiator calculator</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
 </footer>${(o.scripts ?? []).map((src) => `\n<script type="module" src="${src}"></script>`).join("")}
 </body>
 </html>
@@ -531,6 +531,22 @@ export async function build(outDir: string): Promise<string[]> {
         description: "Work out a speaker port's length for any box and tuning, round or slot, with flares, end corrections and the port's own volume. Then check its air speed with your driver.",
         path: "/calculators/port-length/",
         content: `<h1>Port length calculator</h1>\n<p class="lede">The length of a round or slot port for your box and tuning, worked out with the simulator's own port model. Pick your driver to see whether the port will chuff.</p>\n${portForm()}\n${markdown(md)}`,
+        guides,
+        style: CALC_STYLE,
+        ...(script ? { scripts: [script] } : {}),
+      }),
+    );
+  }
+  {
+    const script = viteScript(outDir, "src/calculators/passiveRadiator.ts");
+    const md = fillCalc(readFileSync(join(HERE, "calculators", "passive-radiator.md"), "utf8"), prExampleValues());
+    write(
+      "/calculators/passive-radiator/",
+      layout({
+        title: "Passive radiator calculator: added mass, tuning and PR travel",
+        description: "Work out how much mass to add to a passive radiator for any box and tuning, from the PR database or your own values. Then check the PRs keep up with your driver.",
+        path: "/calculators/passive-radiator/",
+        content: `<h1>Passive radiator calculator</h1>\n<p class="lede">The added mass that tunes your box, worked out with the simulator's own PR model. Pick your driver to see whether the PRs run out of travel before the cone does.</p>\n${prForm()}\n${markdown(md)}`,
         guides,
         style: CALC_STYLE,
         ...(script ? { scripts: [script] } : {}),

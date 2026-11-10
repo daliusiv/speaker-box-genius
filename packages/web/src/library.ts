@@ -73,6 +73,7 @@ interface PrRecord {
     vas_l?: number;
     cms_mm_per_n?: number;
     fs?: number;
+    max_added_mass_g?: number;
   };
 }
 
@@ -178,7 +179,7 @@ export async function loadDriver(id: string): Promise<LoadedDriver> {
 
 export async function loadPassiveRadiator(
   id: string,
-): Promise<{ name: string; params: PrParams; displacement_l?: number; cutout_mm?: number }> {
+): Promise<{ name: string; params: PrParams; displacement_l?: number; cutout_mm?: number; maxAdded_g?: number }> {
   const rec = (await loadShard(brandOf(id))).passiveRadiators[id];
   if (!rec) throw new Error(`Passive radiator ${id} not found`);
   const p = rec.params;
@@ -194,6 +195,7 @@ export async function loadPassiveRadiator(
     params: { mms_g: p.mms_g, sd_cm2: p.sd_cm2, xmax_mm: p.xmax_mm, qms: p.qms ?? 10, vas_l: Math.round(vas * 10) / 10 },
     displacement_l: displacementOf(rec.physical),
     cutout_mm: rec.physical?.cutout_mm,
+    ...(p.max_added_mass_g !== undefined ? { maxAdded_g: p.max_added_mass_g } : {}),
   };
 }
 
