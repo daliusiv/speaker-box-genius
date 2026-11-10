@@ -13,9 +13,8 @@ packages/web/public/db/
 # written by the database-submissions workflow on failure
 issue-error.md
 
-# Importer reports
-dayton-import-report.md
-driverbase-import-report.md
+# Importer reports (used as PR descriptions, not committed)
+*-import-report.md
 
 # Share cards kept between site builds (site/cardCache.ts)
 .cache/

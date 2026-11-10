@@ -30,8 +30,8 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **Cone excursion** with an **Xmax redline**, and **passive radiator excursion** with each PR's own Xmax and a shaded caution band below it (75 % of Xmax by default, a rule of thumb)
 - **Port air velocity** with a **chuffing-risk line** (peak or RMS; 17 m/s by default, your own in Settings → Ports, used by every check and the design assistant)
 - **Box pressure**: the peak sound pressure inside the box (both chambers of a bandpass), the load on the cone and the walls; matches Hornresp's diaphragm pressure chart
-- **Maximum SPL**: the loudest each box can play at every frequency, with a band showing what limits it there (Xmax, PR Xmax, port speed or thermal power), and the **amplifier voltage and current** needed to reach it, after the filter and EQ
-- **Impedance**, **group delay**, and **line load (Za)** for lines and horns
+- **Maximum SPL**: the loudest each box can play at every frequency, with a band showing what limits it there (Xmax, PR Xmax, port speed or thermal power), and the **amplifier voltage and current** needed to reach it, after the filter and EQ, against your amplifier's limits (typed in, or worked out from its watt ratings)
+- **Impedance** (magnitude or phase, with the lowest load the amplifier sees), **group delay**, and **line load (Za)** for lines and horns
 - For lines: the **cone and mouth** contributions on their own, and **pressure and air speed along the line** at any frequency, showing where stuffing does the most
 - **Edit on the chart:** drag a ported or PR box's tuning, or an EQ point (frequency, gain; tap it for Q and Remove), on the response chart, with mouse, finger or keyboard; Cancel puts everything back as it was
 - Over-limit parts of a curve glow red; hover or tap for the values of every curve at that frequency, with the **leading curve marked** (highest SPL, lowest excursion, and so on)
@@ -40,11 +40,11 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 ### Drivers
 
-- **A T/S parameter editor that never overwrites what you typed.** Type any set of parameters in any order; the rest are calculated (shown in grey), and contradictions are flagged
+- **A T/S parameter editor that never overwrites what you typed.** Type any set of parameters in any order; the rest are calculated (shown in grey), and contradictions are flagged. A box-type hint (EBP and Qts) says whether the driver leans sealed or ported
 - **Paste straight from a datasheet**: the parameters are picked out of the text, with units like "1.9 ft³" or "35630 mm²" converted
 - **A driver database of about 1,610 drivers from 19 brands**, plus 59 passive radiators, searchable and filterable, with links to each manufacturer's datasheet. Values that look wrong for a driver (an Xmax too large for its cone, say) are marked "check" until someone confirms them against the datasheet, and the design assistant leaves those drivers out
 - **A page for every driver** on the site ([speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/)), with suggested sealed, ported and passive radiator boxes (none over 300 L) at the driver's power rating, their charts, and a link that opens them in the app
-- **Compare with another driver**: a second driver drawn dashed in every box, with **Swap** to make it the main one
+- **Compare with another driver**: a second driver drawn dashed in every box, with its own number of drivers and wiring if you like (one 15″ against two 10″s), and **Swap** to make it the main one
 - **Multiple drivers**: any number, wired in series or parallel, **isobaric** pairs and **dual voice coil** drivers
 - **Measure your own driver** from a free-air impedance sweep (DATS, REW, ARTA and others, as `.zma`, `.txt` or `.csv`), with an added-mass sweep for Vas
 - Voice-coil inductance models (Le, and L2R2 for a closer match to measurements), and a **hot voice coil** setting for power compression
@@ -52,10 +52,10 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 ### Sizing and tuning
 
-- **Alignment presets**: Qtc 0.5, 0.577 and 0.707 for sealed boxes; QB3, B4 and Keele for ported and PR boxes, plus the families that suit the driver's Qts (SC4/C4, SBB4/BB4 and SQB3); one tap sizes every box for the driver (sealed at Qtc 0.707, or twice Vas when Qts is so close to 0.707 that the box would run away) and picks each port: the simplest that fits and stays under the chuffing line at the driver's rated power. A single preset keeps your port when its new length fits the box, and otherwise picks one the same way
+- **Alignment presets sized like WinISD's wizard**: Qtc 0.5, 0.577 and 0.707 for sealed boxes; QB3, plus C4/SC4 and BB4/SBB4, for ported and PR boxes, giving the same boxes as WinISD (counting its 0.1 Ω amplifier resistance and the box's losses). Settings → Box presets → Textbook gives the lossless textbook alignments instead (QB3/B4, Keele, SQB3, C4/SC4, BB4/SBB4). One tap sizes every box for the driver (sealed at Qtc 0.707, or twice Vas when Qts is so close to 0.707 that the box would run away) and picks each port: the simplest that fits and stays under the chuffing line at the driver's rated power. A single preset keeps your port when its new length fits the box, and otherwise picks one the same way
 - **Find a passive radiator**: tries every PR in the database (and, optionally, woofers used as PRs) in groups of 1, 2 or 4, tunes each with added mass and ranks them by bass extension and spare travel
 - **Best PR tuning**: the added mass for the flattest response, the deepest bass or the smallest box for a target F3
-- **Port fit checks**: the port length for a tuning, whether it fits inside the box, round or slot ports, flared ends, and an option to model ports as pipes (with their own resonances)
+- **Port fit checks**: the port length for a tuning, whether it fits inside the box, round or slot ports, flared ends, your own end correction (K), the likely tuning range of a slot along a wall, and an option to model ports as pipes (with their own resonances). Also a stand-alone [port length calculator](https://speakerboxgenius.com/calculators/port-length/)
 - **Tune a line** by its length (or its port, for a mass-loaded line) to a target frequency
 
 ### Signal and room
@@ -68,7 +68,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 ### Volume and build
 
-- **Real-world net volume calculator** for boxes, cylinders, spheres and truncated pyramids, minus the drivers, passive radiators, ports, bracing and crossover board, linked to a design so its volume follows the calculator
+- **Real-world net volume calculator** for boxes, cylinders (with their own end-cap thickness), spheres and truncated pyramids (walls taken square to each sloping face), with the shape's lowest standing wave, minus the drivers, passive radiators, ports, bracing and crossover board, linked to a design so its volume follows the calculator
 - **Build sheet**: panel sizes, cutouts, port and braces, a **cut list laid out on stock sheets**, metric or imperial (to 1/16″), and a print view
 
 ### Sharing and projects
@@ -84,15 +84,15 @@ Everything runs in your browser. There's nothing to install, no account and no s
 ### Settings
 
 - **Metric or imperial** units
-- **WinISD mode** (its air constants, peak or RMS port speed) and **Hornresp mode** (its air constants, SPL from radiated power), for like-for-like comparisons
+- **WinISD** and **Hornresp** presets that set each program's conventions together (air constants, coil inductance, how watts are counted; for Hornresp also the cone's air load, ports as pipes, leaked air and SPL from radiated power), for like-for-like comparisons. Opening a WinISD project sets the WinISD one
 - **Your own air**: temperature, humidity and pressure (for altitude or a hot car), which set the air's density and speed of sound
-- Box losses (Ql, Qa, Qp) and amplifier resistance
+- Box losses (Ql, Qa, Qp), amplifier and cable resistance (0.1 Ω by default, as WinISD), peak or RMS port speed and the chuffing line
 
 ## Accuracy
 
 Results are checked against the established tools, and every comparison runs as an automated test:
 
-- **WinISD**: within 0.01 dB for sealed and ported boxes. Passive radiator boxes match WinISD's tuning; at the tuning peak the response can differ by up to about 0.5 dB, because WinISD damps the radiator differently (explained on the validation page). Also checks for bandpass, isobaric, dual voice coil, parallel drivers, high-pass filters and leakage. See the [validation page](https://speakerboxgenius.com/validation/).
+- **WinISD**: about 0.01 dB for sealed, ported, passive radiator and bandpass boxes, from hand-made cases plus a run of 51 projects written by the app, opened in WinISD and read at six frequencies (about 1,000 values: response, excursion, port speed, impedance, phase and group delay). Also isobaric, dual voice coil, parallel drivers, high-pass filters, losses and the alignment presets (19 drivers). See the [validation page](https://speakerboxgenius.com/validation/).
 - **Hornresp**: transmission lines, tapped horns and front horns, including impedance and the line load (Za); and sealed, ported, passive-radiator and bandpass boxes, with one or two drivers. See the [validation page](https://speakerboxgenius.com/validation/#hornresp) and [`docs/transmission-lines.md`](docs/transmission-lines.md).
 
 The model is small-signal and lumped (one-dimensional for lines). Port compression and a hot voice coil are optional estimates in Settings; Bl and Cms non-linearity aren't modelled.
@@ -110,7 +110,7 @@ There are two ways to help:
 
 ## Development
 
-Requires Node.js 22.6+ and pnpm 10. The repo has four packages: `packages/engine` (the simulation, plain TypeScript), `packages/web` (the React app), `packages/schema` (data formats) and `packages/db-tools` (database checks, bundling and imports), plus `site/` (the guides, validation page and driver pages).
+Requires Node.js 22.6+ and pnpm 10. The repo has four packages: `packages/engine` (the simulation, plain TypeScript), `packages/web` (the React app), `packages/schema` (data formats) and `packages/db-tools` (database checks, bundling and imports), plus `site/` (the guides, calculators, validation page and driver pages).
 
 ```bash
 pnpm install
