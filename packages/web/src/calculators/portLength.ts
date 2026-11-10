@@ -23,7 +23,9 @@ const imperial = () => $<HTMLInputElement>("pc-imperial")?.checked === true;
 const len = (cm: number) => (imperial() ? `${(cm / CM_PER_IN).toFixed(2)}″ (${cm.toFixed(1)} cm)` : `${cm.toFixed(1)} cm (${(cm / CM_PER_IN).toFixed(2)}″)`);
 const vol = (l: number) => (imperial() ? `${(l / L_PER_FT3).toFixed(2)} ft³ (${l.toFixed(1)} L)` : `${l.toFixed(1)} L (${(l / L_PER_FT3).toFixed(2)} ft³)`);
 const area = (cm2: number) => (imperial() ? `${(cm2 / CM_PER_IN ** 2).toFixed(1)} in² (${cm2.toFixed(0)} cm²)` : `${cm2.toFixed(0)} cm² (${(cm2 / CM_PER_IN ** 2).toFixed(1)} in²)`);
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const ENTITY: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+/** Escapes text for HTML content and quoted attribute values, in one pass. */
+const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ENTITY[c]!);
 
 function readInput(): PortCalcInput {
   const toCm = imperial() ? CM_PER_IN : 1;

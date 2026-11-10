@@ -22,7 +22,9 @@ const imperial = () => $<HTMLInputElement>("prc-imperial")?.checked === true;
 const grams = (g: number) => (imperial() ? `${(g / G_PER_OZ).toFixed(1)} oz (${g.toFixed(0)} g)` : `${g.toFixed(0)} g (${(g / G_PER_OZ).toFixed(1)} oz)`);
 const vd = (cm3: number) => (imperial() ? `${(cm3 / 16.387).toFixed(1)} in³ (${cm3.toFixed(0)} cm³)` : `${cm3.toFixed(0)} cm³ (${(cm3 / 16.387).toFixed(1)} in³)`);
 const pct = (x: number) => `${Math.round(x * 100)} %`;
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const ENTITY: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+/** Escapes text for HTML content and quoted attribute values, in one pass. */
+const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ENTITY[c]!);
 
 let index: DbIndex | null = null;
 let driver: LoadedDriver | null = null;
