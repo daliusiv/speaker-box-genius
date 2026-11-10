@@ -16,6 +16,7 @@ export default defineConfig({
         // Vite resolves these against the project root (packages/web).
         main: "index.html",
         "calc-port-length": "src/calculators/portLength.ts",
+        "calc-passive-radiator": "src/calculators/passiveRadiator.ts",
       },
     },
   },

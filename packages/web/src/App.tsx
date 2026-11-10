@@ -2383,6 +2383,7 @@ export function App(props: { initial: AppState | null }) {
                 <li><a href="/guides/">Guides</a></li>
                 <li><a href="/drivers/">Drivers</a></li>
                 <li><a href="/calculators/port-length/">Port calculator</a></li>
+                <li><a href="/calculators/passive-radiator/">PR calculator</a></li>
                 <li><a href="/validation/">Validation</a></li>
               </ul>
             </div>
