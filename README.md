@@ -10,7 +10,7 @@ Design sealed, ported, passive radiator, bandpass and transmission line boxes fo
 
 Everything runs in your browser. There's nothing to install, no account and no server, and it keeps working offline. It works on phones as well as computers.
 
-> 🚧 **Early preview.** It's usable and tested, but still changing quickly. The plan lives in [`docs/build-plan.md`](docs/build-plan.md).
+> 🚧 **Early preview.** It's usable and tested, but still changing quickly. See [What's next](#whats-next).
 
 ## Features
 
@@ -124,6 +124,15 @@ pnpm build         # production build (what GitHub Pages serves)
 `pnpm build` also builds the content pages (`site/`): the guides, the validation page and a page per driver. Each driver page gets a share card drawn with headless Chrome, found at `CHROME_PATH` or the usual install paths; set `SBG_CARDS=0` to skip them (CI does). Cards are kept in `.cache/cards` (or `SBG_CARD_CACHE`) and only redrawn when a driver's card changes.
 
 Merging to `main` builds and deploys to GitHub Pages automatically.
+
+## What's next
+
+- More manufacturer data (several brands have given permission)
+- Passive radiator and box volume calculators
+- More WinISD checks (slot ports, dual voice coils)
+- CAD export of the build sheet
+
+Ideas and requests: [open an issue](../../issues).
 
 ## Licence
 
