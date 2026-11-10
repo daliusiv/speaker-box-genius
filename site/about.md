@@ -30,7 +30,7 @@ That's what keeps the project free while still letting the maintainer say yes to
 
 ## Credits
 
-- **Driver data** from the manufacturers who gave permission (Dayton Audio, SB Acoustics, B&C Speakers, Purifi, Markaudio and REDCATT), and from [driver-base](https://github.com/JonathanDCohen/driver-base) (CC BY 4.0) for other brands. Each entry links to its source; the full list is in [Driver data credits](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/data-sources.md).
+- **Driver data** from the manufacturers who gave permission (Dayton Audio, SB Acoustics, B&C Speakers, Purifi, Markaudio, REDCATT and SEAS), and from [driver-base](https://github.com/JonathanDCohen/driver-base) (CC BY 4.0) for other brands. Each entry links to its source; the full list is in [Driver data credits](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/data-sources.md).
 - **WinISD** (LinearTeam) and **Hornresp** (David McBean) are the references the app is checked against. Speaker Box Genius isn't affiliated with either.
 - **OpenISD** (MIT licence) for its project file format, which the app can open.
 - Not affiliated with or endorsed by any manufacturer. Product names and trademarks belong to their owners.
