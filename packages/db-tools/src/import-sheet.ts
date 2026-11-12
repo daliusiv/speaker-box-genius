@@ -504,6 +504,12 @@ export function existingFiles(dir: string): Map<string, string> {
   return out;
 }
 
+/** A brand under its own terms (`licence` in _brand.json, LICENSE-DATA "Exceptions") keeps saying so on every re-import. */
+export function withOwnTerms(note: string, brand: Brand): string {
+  if (!brand.licence || /not covered by CC BY-NC-SA/i.test(note)) return note;
+  return `${note} Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without ${brand.name}'s permission. See LICENSE-DATA.`;
+}
+
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
   return i >= 0 ? process.argv[i + 1] : undefined;
@@ -554,6 +560,7 @@ function main() {
     dvcWiring: wiring === "series" || wiring === "parallel" ? wiring : undefined,
     decimalComma: process.argv.includes("--decimal-comma") || sheet.decimalComma,
   };
+  opts.note = withOwnTerms(opts.note, brand);
   const results = convertRows(sheet.rows, layout, opts);
 
   const written: string[] = [];

@@ -1,0 +1,52 @@
+{
+  "id": "g-bp4-015",
+  "title": "bp4, peerless/sls-p830667 (Qts 0.75), 28.24 L, rear 10.49 L closed, front 17.75 L 2 × dayton-audio/ds270-pr at 44.2 Hz",
+  "driver": {
+    "fs": 46,
+    "qms": 7.21,
+    "qes": 0.836,
+    "vas_l": 19,
+    "re": 5.6,
+    "sd_cm2": 201,
+    "le_mh": 0.829
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 10.49,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 17.75,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 88.4,
+            "sd_cm2": 353,
+            "cms_mm_per_n": 0.6,
+            "qms": 3.98
+          },
+          "count": 2,
+          "addedMass_g": 146.4
+        }
+      ]
+    },
+    "qicl": 82
+  },
+  "opts": {
+    "rg": 0.5,
+    "coilTemp_C": 149,
+    "power": 10,
+    "space": "full"
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

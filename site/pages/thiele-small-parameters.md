@@ -118,11 +118,11 @@ The **Max SPL** chart lets each driver go to its own limit, and the bars say whi
 
 ## Entering them without mistakes
 
-![The app's T/S editor after pasting six values from Dayton's spec sheet: what you typed is bold with an orange edge (Fs, Qms, Qes, Vas, Re, Sd); what the app works out is grey and dashed (Qts 0.33, Mms 34.99 g, Cms 0.591 mm/N, Bl 10.65 T·m, Rms 4.12 kg/s).](img/ts-editor.png)
+![The app's T/S editor after pasting six values from Dayton's spec sheet: what you typed is bold with a cyan edge (Fs, Qms, Qes, Vas, Re, Sd); what the app works out is grey and dashed (Qts 0.33, Mms 35.00 g, Cms 0.591 mm/N, Bl 10.66 T·m, Rms 4.12 kg/s).](img/ts-editor.png)
 
 Any complete set describes the driver, and the rest follows. In Speaker Box Genius:
 
-- **What you type is never changed.** Your values are bold with an orange edge; what the app works out is grey. Type them in any order. Above, six pasted values give Mms 34.99 g and Bl 10.65 T·m, within about 1 % of the datasheet's 34.6 g and 10.6 T·m.
+- **What you type is never changed.** Your values are bold with a cyan edge; what the app works out is grey. Type them in any order. Above, six pasted values give Mms 35.00 g and Bl 10.66 T·m, within about 1 % of the datasheet's 34.6 g and 10.6 T·m.
 - **Contradictions are flagged.** If you type more values than needed and they disagree by more than 3 %, the app says which ones and lets you use the calculated value. The simulation always uses Fs, Qms, Qes, Vas, Re and Sd.
 - **Paste the datasheet.** **Driver → Paste datasheet** (or **Driver tools → Paste from datasheet…**) picks the values out of a pasted spec table and converts units: "1.32 ft.³" as Dayton writes it, "1.9 ft3", "35630 mm²", "33 in²". A number with a unit it can't read is left out, and it says which line to type by hand.
 - **Or pick the driver** from the database of about 1,610 drivers. Each also has [its own page](/drivers/) with its parameters and suggested boxes.

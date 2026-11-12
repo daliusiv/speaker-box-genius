@@ -1,0 +1,39 @@
+{
+  "id": "g-vented-040",
+  "title": "vented, monacor/msh-116-4ohm (Qts 0.40), 1.541 L, Fb 101.5 Hz",
+  "driver": {
+    "fs": 95,
+    "qms": 2.38,
+    "qes": 0.48,
+    "vas_l": 2.7,
+    "re": 3.2,
+    "sd_cm2": 55,
+    "le_mh": 0.18
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 1.541,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 4.117,
+      "length_cm": 22.54
+    },
+    "ql": 15,
+    "qa": null
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0.5,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

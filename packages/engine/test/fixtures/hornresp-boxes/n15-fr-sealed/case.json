@@ -1,0 +1,23 @@
+{
+  "title": "4-inch full-range, sealed",
+  "text": "3 L",
+  "frontAir": 1,
+  "driver": {
+    "fs": 75,
+    "qms": 3.5,
+    "qes": 0.55,
+    "vas_l": 3.2,
+    "re": 6.2,
+    "sd_cm2": 53,
+    "le_mh": 0.08,
+    "xmax_mm": 3,
+    "pe_w": 25
+  },
+  "input": {
+    "kind": "sealed",
+    "vb_l": 3,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "title": "Ported box with Rg, semi-inductance and FDD",
+  "text": "B2 with Rg 0.8 Ω, the heavy semi-inductance set (B8b) and the heavy FDD set (B13b), all at once; the port's output",
+  "frontAir": 1,
+  "rg": 0.8,
+  "semi": {
+    "leb_mh": 1.36,
+    "le_mh": 3.16,
+    "ke": 0.21,
+    "rss_ohm": 30.6
+  },
+  "fdd": {
+    "rms": 8.0,
+    "ams_mm_per_n": 1.0
+  },
+  "portModel": "pipe",
+  "input": {
+    "kind": "vented",
+    "vb_l": 30,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7,
+      "length_cm": 15
+    },
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

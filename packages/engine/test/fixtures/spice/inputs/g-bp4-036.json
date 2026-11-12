@@ -1,0 +1,46 @@
+{
+  "id": "g-bp4-036",
+  "title": "bp4, celestion/truvox-1525 (Qts 0.76), 93.86 L, rear 33.86 L closed, front 60 L port at 76.1 Hz",
+  "driver": {
+    "fs": 49,
+    "qms": 12.918,
+    "qes": 0.803,
+    "vas_l": 135.4,
+    "re": 6.58,
+    "sd_cm2": 855.3,
+    "le_mh": 0.703
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 33.86,
+      "ql": 13,
+      "qa": 76
+    },
+    "front": {
+      "vb_l": 60,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 15.83,
+        "length_cm": 5.315
+      },
+      "qp": 88,
+      "ql": 26,
+      "qa": 37
+    },
+    "qicl": 199
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

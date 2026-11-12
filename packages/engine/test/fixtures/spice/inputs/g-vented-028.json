@@ -1,0 +1,40 @@
+{
+  "id": "g-vented-028",
+  "title": "vented, celestion/tf0818 (Qts 0.43), 3.541 L, Fb 96.3 Hz",
+  "driver": {
+    "fs": 100,
+    "qms": 3.311,
+    "qes": 0.493,
+    "vas_l": 9.44,
+    "re": 6.72,
+    "sd_cm2": 226.98,
+    "le_mh": 0.75
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 3.541,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 5.573,
+      "length_cm": 18.58
+    },
+    "ql": 23,
+    "qa": null,
+    "qp": 45
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 126,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

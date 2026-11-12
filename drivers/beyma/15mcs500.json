@@ -7,7 +7,7 @@
   "ts": {
     "fs": 46,
     "qms": 7.8,
-    "qes": 0.5,
+    "qes": 0.51,
     "vas_l": 134,
     "re": 5.6,
     "sd_cm2": 880,
@@ -19,14 +19,15 @@
     "pe_w": 500
   },
   "physical": {
+    "cutout_mm": 353,
     "depth_mm": 172
   },
   "sources": [
     {
       "kind": "datasheet",
       "url": "https://www.beyma.com/en/products/c/low-mid-frequency/115MCS508/altavoz-15mcs500-8-oh/",
-      "retrieved": "2026-10-18",
-      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+      "retrieved": "2026-11-10",
+      "note": "Values from Beyma's datasheets (PDFs supplied 10 Nov 2026), used with Beyma's permission (6 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Beyma's permission. See LICENSE-DATA."
     }
   ],
   "status": "community"

@@ -1,0 +1,55 @@
+{
+  "id": "g-chain-038",
+  "title": "chain (vented), monacor/spm-116-8ohm (Qts 0.57), 11.87 L, Fb 79.6 Hz, HP butterworth 3, 1 EQ",
+  "driver": {
+    "fs": 75,
+    "qms": 1.9,
+    "qes": 0.81,
+    "vas_l": 4.5,
+    "re": 7.2,
+    "sd_cm2": 57,
+    "le_mh": 0.4
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 11.87,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 3.897,
+      "length_cm": 2.356
+    },
+    "endCorrection": 0.613,
+    "qp": 26
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "coilTemp_C": 145,
+    "driveModel": "winisd",
+    "power": 1,
+    "highPass": {
+      "type": "butterworth",
+      "order": 3,
+      "freq": 60.27
+    },
+    "eq": [
+      {
+        "type": "highshelf",
+        "freq": 298.6,
+        "gain_db": 2.554,
+        "q": 3.234
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

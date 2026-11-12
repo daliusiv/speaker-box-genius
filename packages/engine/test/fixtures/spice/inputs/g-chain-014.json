@@ -1,0 +1,38 @@
+{
+  "id": "g-chain-014",
+  "title": "chain (sealed), sb-acoustics/sb15mfc30-8 (Qts 0.37), 10.27 L, HP linkwitz-riley 2",
+  "driver": {
+    "fs": 39,
+    "qms": 4.4,
+    "qes": 0.4,
+    "vas_l": 17.7,
+    "re": 5.7,
+    "sd_cm2": 82,
+    "le_mh": 0.14
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 10.27,
+    "ql": 7,
+    "qa": 25
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 75,
+    "power": 1,
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 2,
+      "freq": 32.41
+    }
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

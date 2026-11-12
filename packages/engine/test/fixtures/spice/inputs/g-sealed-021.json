@@ -1,0 +1,33 @@
+{
+  "id": "g-sealed-021",
+  "title": "sealed, seas/cd22rn4x (Qts 0.24), 79.69 L",
+  "driver": {
+    "fs": 20,
+    "qms": 3.28,
+    "qes": 0.26,
+    "vas_l": 108,
+    "re": 6.1,
+    "sd_cm2": 230,
+    "le_mh": 3.47
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 79.69,
+    "ql": 7,
+    "qa": 15
+  },
+  "opts": {
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

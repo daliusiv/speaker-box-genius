@@ -1,0 +1,55 @@
+{
+  "id": "g-chain-044",
+  "title": "chain (vented), 18-sound/15nlw9401-4ohm (Qts 0.25), 110 L, Fb 37.0 Hz, HP butterworth 4, 1 EQ",
+  "driver": {
+    "fs": 40,
+    "qms": 6.14,
+    "qes": 0.26,
+    "vas_l": 114,
+    "re": 2.8,
+    "sd_cm2": 850,
+    "le_mh": 1.23
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 110,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 9.413,
+      "length_cm": 20.82
+    },
+    "portCount": 2,
+    "ql": 21,
+    "qa": 33
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "coilTemp_C": 138,
+    "power": 1,
+    "highPass": {
+      "type": "butterworth",
+      "order": 4,
+      "freq": 32.41
+    },
+    "eq": [
+      {
+        "type": "lowshelf",
+        "freq": 71.65,
+        "gain_db": 4.153,
+        "q": 3.59
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

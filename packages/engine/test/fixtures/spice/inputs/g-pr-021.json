@@ -1,0 +1,41 @@
+{
+  "id": "g-pr-021",
+  "title": "passive-radiator, rcf/lf18x451 (Qts 0.28), 211 L, Fb 34.4 Hz, 4 × dayton-audio/dsa270-pr",
+  "driver": {
+    "fs": 30,
+    "qms": 6.7,
+    "qes": 0.29,
+    "vas_l": 220,
+    "re": 5.4,
+    "sd_cm2": 1200,
+    "le_mh": 1.38
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 211,
+    "pr": {
+      "mms_g": 88.4,
+      "sd_cm2": 353,
+      "cms_mm_per_n": 0.6,
+      "qms": 5.26
+    },
+    "prCount": 4,
+    "addedMass_g": 18.81,
+    "ql": 22,
+    "qa": 106
+  },
+  "opts": {
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

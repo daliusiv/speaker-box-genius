@@ -1,0 +1,40 @@
+{
+  "id": "g-chain-026",
+  "title": "chain (sealed), 18-sound/12mb710 (Qts 0.20), 31.15 L, HP linkwitz-riley 2",
+  "driver": {
+    "fs": 46,
+    "qms": 10.3,
+    "qes": 0.2,
+    "vas_l": 81,
+    "re": 5,
+    "sd_cm2": 531,
+    "le_mh": 0.79
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 31.15,
+    "ql": 10,
+    "qa": null
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "series",
+    "rg": 0.5,
+    "power": 1,
+    "space": "full",
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 2,
+      "freq": 39.71
+    }
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "id": "g-vented-053",
+  "title": "vented, bc-speakers/10hpl64 (Qts 0.31), 14.01 L, Fb 84.1 Hz",
+  "driver": {
+    "fs": 61,
+    "qms": 4.5,
+    "qes": 0.33,
+    "vas_l": 32,
+    "re": 5.4,
+    "sd_cm2": 320,
+    "le_mh": 0.5
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 14.01,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 11.01,
+      "length_cm": 20.57
+    },
+    "ql": 8,
+    "qa": 78,
+    "qp": 54
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0,
+    "coilTemp_C": 66,
+    "driveModel": "winisd",
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

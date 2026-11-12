@@ -47,6 +47,8 @@ export interface Series {
   deepFloor?: number;
   /** A short note per point, shown in the hover readout (e.g. what limits the design there). */
   notes?: readonly string[];
+  /** Per-point text for the chart's own legend columns (Props.columns), by column. */
+  cols?: readonly (readonly string[])[];
   /** Left out when marking the leader (e.g. a measurement, which isn't a box to choose). */
   noRank?: boolean;
 }
@@ -64,7 +66,10 @@ export interface Ribbon {
   hollow?: boolean;
 }
 
-export const OVER_RED = "#dc2626";
+export { OVER_RED } from "./palette.ts";
+import { OVER_RED } from "./palette.ts";
+import { InfoPopover } from "./components.tsx";
+import { ChartLegend, type LegendRow } from "./ChartLegend.tsx";
 
 /** A labelled dot on the plot (e.g. each design's F3). */
 export interface Point {
@@ -105,6 +110,8 @@ export interface Zone {
   color: string;
 }
 
+export type LogChartProps = Props;
+
 interface Props {
   title: string;
   unit: string;
@@ -143,10 +150,25 @@ interface Props {
   handles?: ChartHandle[];
   /** A line under the caption (edit mode's hint and buttons). */
   below?: ReactNode;
+  /** Notes and caveats, behind an (i) button beside the title instead of text under the chart. */
+  info?: ReactNode;
+  /** The chart's own legend columns (each series' `cols`, at the cursor), after Peak. */
+  columns?: string[];
+  /** Heading of the notes column (each series' `notes` at the cursor); default "Note". */
+  noteLabel?: string;
+  /** The legend's peak is taken from here up (a floor below which a peak means little). */
+  peakFrom?: number;
+  /** No Peak column (a chart whose top value says nothing, e.g. a phase). */
+  noPeak?: boolean;
   /** The handle picked (tapped, clicked or focused), or null when the plot itself is tapped. */
   onSelect?: (id: string | null) => void;
   /** The picked handle, drawn ringed. */
   selected?: string | null;
+  /**
+   * Drawn once, not live (a guide page, built ahead of time): sized for this many screen pixels
+   * across instead of measuring itself, no hover hint, and a cursor only where `at` puts it.
+   */
+  still?: { width: number; at?: number };
 }
 
 /** A point on the chart that can be dragged (edit mode): a box's tuning, an EQ point. */
@@ -174,13 +196,13 @@ const W = 640;
 /** Plot height: wide on computers; nearly 4:3 on phones, where the chart is the main thing on screen. */
 const heightOf = (tall: boolean) => (tall ? 470 : 260);
 /**
- * Margins around the plot, grown with the text scale k on narrow screens. Phones ("tall") get
- * lean ones: the unit moves into the values strip, so there's no label row above the plot.
+ * Margins around the plot, grown with the text scale k on narrow screens. The top margin holds
+ * the unit (above the y labels) and the cursor's frequency badge.
  */
 const padOf = (k: number, tall: boolean) =>
   tall
-    ? { l: 34 + 14 * (k - 1), r: 6 + 6 * (k - 1), t: 8 + 6 * (k - 1), b: 20 + 12 * (k - 1) }
-    : { l: 48 + 22 * (k - 1), r: 12 + 16 * (k - 1), t: 22 + 12 * (k - 1), b: 28 + 14 * (k - 1) };
+    ? { l: 34 + 14 * (k - 1), r: 6 + 6 * (k - 1), t: 26 * k, b: 20 + 12 * (k - 1) }
+    : { l: 48 + 22 * (k - 1), r: 12 + 16 * (k - 1), t: 30 + 12 * (k - 1), b: 28 + 14 * (k - 1) };
 const X_TICKS = [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000];
 /** A y label. Phones' lean margin fits about three digits, so thousands become "1.5k". */
 export const tickLabel = (v: number, tall: boolean) =>
@@ -226,21 +248,27 @@ export function LogChart({
   forum,
   handles = [],
   below,
+  info,
+  columns = [],
+  noteLabel = "Note",
+  peakFrom,
+  noPeak = false,
   onSelect,
   selected,
+  still,
 }: Props) {
   const clipId = useId();
   const shared = useContext(Crosshair);
-  const [ownF, setOwnF] = useState<number | null>(null);
+  const [ownF, setOwnF] = useState<number | null>(still?.at ?? null);
   const hoverF = shared ? shared.f : ownF;
   const setHoverF = shared ? shared.set : setOwnF;
   // Text and lines are sized for a 640-unit-wide chart. On a narrow screen the chart is
   // shrunk to fit, so scale them up by k to keep them readable (about 11 px on screen).
   const svgRef = useRef<SVGSVGElement>(null);
-  const [k, setK] = useState(1);
+  const [k, setK] = useState(() => (still ? Math.min(2, Math.max(1, W / still.width)) : 1));
   useEffect(() => {
     const el = svgRef.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
+    if (!el || still || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(([e]) => {
       const w = e?.contentRect.width ?? W;
       setK(w > 0 ? Math.min(2, Math.max(1, W / w)) : 1);
@@ -399,13 +427,42 @@ export function LogChart({
   })();
   const mark = best === "high" ? "▲" : best === "low" ? "▼" : "◆";
   const markTitle = best === "high" ? "Highest here" : best === "low" ? "Lowest here" : "Closest to zero here";
-  const leaderMark = (s: Series) => (
-    <span className="leader" title={leaders.has(s.label) ? markTitle : undefined}>
-      {leaders.has(s.label) ? mark : ""}
-      {leaders.has(s.label) && <span className="sr-only">{markTitle}: </span>}
-    </span>
-  );
   const faded = useContext(ChartEmphasis);
+
+  // Legend rows: value at the cursor, peak (and where), the chart's own columns, then notes.
+  const withUnit = (v: number) => (unit && unit.length <= 4 ? `${v.toFixed(digits)} ${unit}` : v.toFixed(digits));
+  const fHz = (f: number) => `${f.toFixed(f < 100 ? 1 : 0)} Hz`;
+  const hasNotes = visible.some((s) => s.notes);
+  const legendColumns = [...columns, ...(hasNotes ? [noteLabel] : [])];
+  const designLabels = new Set(visible.filter((s) => !s.thin).map((s) => s.label));
+  const legendRows: LegendRow[] = visible.map((s) => {
+    const y = s.y!;
+    let pk = -Infinity;
+    let pkF = NaN;
+    for (let i = 0; i < y.length; i++) {
+      if (peakFrom !== undefined && freq[i]! < peakFrom) continue;
+      if (Number.isFinite(y[i]!) && y[i]! > pk) {
+        pk = y[i]!;
+        pkF = freq[i]!;
+      }
+    }
+    const v = hover === null ? NaN : y[hover]!;
+    const cut = s.label.lastIndexOf(" · ");
+    const parent = s.thin && cut > 0 && designLabels.has(s.label.slice(0, cut)) ? s.label.slice(0, cut) : undefined;
+    return {
+      key: s.label,
+      label: parent ? s.label : shortName(s.label),
+      color: s.color,
+      dash: s.dash,
+      parent,
+      at: Number.isFinite(v) ? withUnit(v) : "–",
+      atOver: s.over !== undefined && Number.isFinite(v) && v > s.over && (s.deepBelow === undefined || freq[hover!]! >= s.deepBelow),
+      lead: leaders.has(s.label) ? { mark, title: markTitle } : undefined,
+      peak: noPeak || !Number.isFinite(pk) ? undefined : { main: withUnit(pk), sub: `@ ${fHz(pkF)}`, over: s.over !== undefined && pk > s.over && (s.deepBelow === undefined || pkF >= s.deepBelow) },
+      cols: [...columns.map((_, ci) => (hover === null ? "" : (s.cols?.[ci]?.[hover] ?? ""))), ...(hasNotes ? [hover === null ? "" : (s.notes?.[hover] ?? "")] : [])],
+      faint: faded.length > 0 && fadedBy(faded, s.label),
+    };
+  });
 
   // Limit strip under the plot: one row per design, then a legend of the kinds shown.
   const ROW = 11 * k;
@@ -429,7 +486,10 @@ export function LogChart({
   return (
     <figure className={`chart${editing ? " editing" : ""}`} hidden={hidden} data-chart={chartId} data-forum={forum ? "" : undefined}>
       <figcaption>
-        {tall && shortTitle && shortTitle !== title ? (
+        <span className="chart-head">
+        {!still && tall && shortTitle && shortTitle !== title && info ? (
+          <span className="chart-title">{shortTitle}</span>
+        ) : !still && tall && shortTitle && shortTitle !== title ? (
           <button type="button" className="chart-title as-text" onClick={() => setFullTitle((v) => !v)} title={title} aria-expanded={fullTitle}>
             {fullTitle ? title : shortTitle}
             <span className="muted" aria-hidden="true">
@@ -439,8 +499,15 @@ export function LogChart({
         ) : (
           <span className="chart-title">{title}</span>
         )}
-        {actions}
-        <span className="chart-hint muted">{editing ? "Drag the handles" : "Hover or tap for values"}</span>
+        {info && (
+          <InfoPopover label={title}>
+            {tall && shortTitle && shortTitle !== title && <p className="info-title">{title}</p>}
+            {info}
+          </InfoPopover>
+        )}
+        </span>
+        {actions && <span className="chart-actions">{actions}</span>}
+        {!still && <span className="chart-hint muted">{editing ? "Drag the handles" : "Hover or tap for values"}</span>}
       </figcaption>
       {below}
       {editing && (
@@ -469,18 +536,36 @@ export function LogChart({
               : { right: `${((PAD.r + 6) / W) * 100}%`, top: `${((PAD.t + 4) / (H + ribbonH)) * 100}%` }
           }
         >
-          <b>{freq[hover]!.toFixed(1)} Hz</b>
-          {visible.map((s) => (
-            <span key={s.label} className={`readout-item${faded.length > 0 && fadedBy(faded, s.label) ? " faint" : ""}`}>
-              <span className="swatch" style={{ background: s.color }} aria-hidden="true" />
-              <span className="tip-label">{shortName(s.label)}</span>
-              {leaderMark(s)}
-              <span className="tip-value">
-                {Number.isFinite(s.y![hover!]!) ? s.y![hover!]!.toFixed(digits) : "–"} {unit}
-                {s.notes?.[hover!] ? ` · ${s.notes[hover!]}` : ""}
-              </span>
-            </span>
-          ))}
+          <table className="tip-table">
+            <thead>
+              <tr>
+                <th scope="col">{legendColumns.length > 0 ? "Enclosure" : ""}</th>
+                <th scope="col" className="legend-at on">
+                  {fHz(freq[hover]!)}
+                </th>
+                {legendColumns.slice(0, 1).map((c) => (
+                  <th scope="col" key={c}>
+                    {c}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {legendRows.map((r) => (
+                <tr key={r.key} className={`${r.parent ? "part" : ""}${r.faint ? " faint" : ""}`}>
+                  <th scope="row">
+                    <span className="legend-swatch" style={{ background: r.color }} aria-hidden="true" />
+                    {r.parent ? r.label.slice(r.label.lastIndexOf(" · ") + 3) : r.label}
+                  </th>
+                  <td className={`legend-val${r.atOver ? " over" : ""}`}>
+                    {r.at}
+                    {r.lead && <span className="lead" title={r.lead.title}> {r.lead.mark}</span>}
+                  </td>
+                  {legendColumns.length > 0 && <td className="legend-note">{r.cols[0] || "–"}</td>}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
       <svg
@@ -545,7 +630,7 @@ export function LogChart({
               x={xOf(f)}
               y={H - 8}
               // At the plot's edges, keep the label inside the chart.
-              textAnchor={tall && xOf(f) > W - PAD.r - 12 * k ? "end" : tall && xOf(f) < PAD.l + 12 * k ? "start" : "middle"}
+              textAnchor={xOf(f) > W - PAD.r - 12 * k ? "end" : xOf(f) < PAD.l + 12 * k ? "start" : "middle"}
               {...fs(11)}
             >
               {f >= 1000 ? `${f / 1000}k` : f}
@@ -561,11 +646,15 @@ export function LogChart({
             </text>
           </g>
         ))}
-        {!tall && (
-          <text className="tick unit-label" x={PAD.l} y={4 + 8 * k} textAnchor="start" {...fs(11)}>
+        {/* Units at the plot's outer corners: the value's above the y labels, Hz beside the first frequency. */}
+        {unit && (
+          <text className="tick unit-label" x={PAD.l - 6} y={PAD.t - 8 * k} textAnchor="end" {...fs(11)}>
             {unit}
           </text>
         )}
+        <text className="tick unit-label" x={PAD.l - 6} y={H - 8} textAnchor="end" {...fs(11)}>
+          Hz
+        </text>
 
         <g clipPath={`url(#${clipId})`}>
           {bands.map((b, bi) => (
@@ -672,7 +761,7 @@ export function LogChart({
             ))}
           {hover !== null && (
             <g className="cursor">
-              <line className="cursor" x1={xOf(freq[hover]!)} x2={xOf(freq[hover]!)} y1={PAD.t} y2={PAD.t + PH} />
+              <line className="cursor" x1={xOf(freq[hover]!)} x2={xOf(freq[hover]!)} y1={PAD.t} y2={PAD.t + PH} {...sw(1)} strokeDasharray={`${4 * k} ${4 * k}`} />
               {visible.map((s) =>
                 Number.isFinite(s.y![hover!]!) ? (
                   <circle
@@ -680,7 +769,7 @@ export function LogChart({
                     className="cursor-dot"
                     cx={xOf(freq[hover!]!)}
                     cy={yOf(s.y![hover!]!)}
-                    r={3.5 * k}
+                    r={4 * k}
                     fill={s.color}
                     {...sw(1.5)}
                   />
@@ -689,6 +778,7 @@ export function LogChart({
             </g>
           )}
         </g>
+        {hover !== null && <CursorBadge x={xOf(freq[hover]!)} top={PAD.t} left={PAD.l} right={W - PAD.r} k={k} label={`${freq[hover]!.toFixed(freq[hover]! < 100 ? 1 : 0)} Hz`} fs={fs} />}
 
         {handles
           .filter((h) => h.f >= fMin && h.f <= fMax)
@@ -784,40 +874,36 @@ export function LogChart({
         )}
       </svg>
       </div>
-      {/* Phones: a legend under the plot, one curve per line, with its value at the tapped frequency.
-          Every curve always has its line, so the chart's height doesn't jump on a tap. */}
-      <div className="chart-strip" role="status">
-        <div className="strip-head">
-          {hover === null ? (
-            <span className="muted">
-              Tap the chart for values{unit ? ` (${unit})` : ""}
-            </span>
-          ) : (
-            <b>
-              {freq[hover]!.toFixed(freq[hover]! < 100 ? 1 : 0)} Hz{unit ? ` · ${unit}` : ""}
-            </b>
-          )}
-        </div>
-        {/* Every curve, parts too (a line's cone and mouth): those sit indented under their design. */}
-        {visible.map((s) => (
-            <div
-              key={s.label}
-              className={`strip-item${s.thin ? " part" : ""}${faded.length > 0 && fadedBy(faded, s.label) ? " faint" : ""}`}
-            >
-              <svg className="strip-line" viewBox="0 0 22 8" aria-hidden="true">
-                <line x1="1" y1="4" x2="21" y2="4" stroke={s.color} strokeWidth="3" strokeDasharray={s.dash} strokeLinecap="round" />
-              </svg>
-              <span className="strip-name" title={s.label}>
-                {/* Under its design, a part needs only its own name ("cone", "mouth"). */}
-                {s.thin && s.label.includes(" · ") ? s.label.slice(s.label.lastIndexOf(" · ") + 3) : shortName(s.label)}
-              </span>
-              {leaderMark(s)}
-              <span className="strip-value">
-                {hover === null ? "" : Number.isFinite(s.y![hover]!) ? s.y![hover]!.toFixed(digits) : "–"}
-              </span>
-            </div>
-          ))}
+      {/* The legend: every curve, its value at the cursor, its peak and the chart's own columns. */}
+      <div role="status" aria-live="off">
+        <ChartLegend atHeading={hover === null ? null : `@ ${fHz(freq[hover]!)}`} peakHeading="Peak" columns={legendColumns} rows={legendRows} />
       </div>
     </figure>
+  );
+}
+
+/**
+ * The cursor's value on the x axis, as a cyan pill pinned to the top of the cursor line,
+ * kept inside the plot's width.
+ */
+export function CursorBadge(p: {
+  x: number;
+  top: number;
+  left: number;
+  right: number;
+  k: number;
+  label: string;
+  fs: (px: number) => object;
+}) {
+  const w = (p.label.length * 6.6 + 14) * p.k;
+  const h = 18 * p.k;
+  const cx = Math.min(p.right - w / 2, Math.max(p.left + w / 2, p.x));
+  return (
+    <g className="cursor-badge" aria-hidden="true">
+      <rect x={cx - w / 2} y={p.top - h - 3 * p.k} width={w} height={h} rx={h / 2} />
+      <text x={cx} y={p.top - 3 * p.k - h / 2 + 4 * p.k} textAnchor="middle" {...p.fs(11)}>
+        {p.label}
+      </text>
+    </g>
   );
 }

@@ -1,0 +1,46 @@
+{
+  "id": "g-chain-030",
+  "title": "chain (vented), bc-speakers/12mh801 (Qts 0.21), 74.73 L, Fb 38.1 Hz, 1 EQ",
+  "driver": {
+    "fs": 53,
+    "qms": 5.6,
+    "qes": 0.22,
+    "vas_l": 76,
+    "re": 5,
+    "sd_cm2": 522,
+    "le_mh": 0.57
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 74.73,
+    "port": {
+      "shape": "slot",
+      "width_cm": 30.49,
+      "height_cm": 3.05,
+      "length_cm": 17.66
+    },
+    "qp": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 1,
+    "eq": [
+      {
+        "type": "lowshelf",
+        "freq": 220.8,
+        "gain_db": -1.385,
+        "q": 1.529
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

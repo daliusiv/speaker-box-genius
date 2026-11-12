@@ -72,7 +72,7 @@ Keep the added mass reasonable. Past about **1.5 times the PR's own moving mass*
 
 The app does the sums: type the target Fb and press **Set added mass**, or use **Best tuning…** for the added mass that gives the flattest response, the deepest bass or the smallest box.
 
-![The worked example: the PR box (orange) next to a ported box of the same size (blue), both behind the 30 Hz high-pass filter. The PR box rolls off a little higher.](img/pr-spl.png)
+![The worked example: the PR box (green) next to a ported box of the same size (orange), both behind the 30 Hz high-pass filter. The PR box rolls off a little higher.](img/pr-spl.png)
 
 ## Step 4: check the excursion at your real power
 

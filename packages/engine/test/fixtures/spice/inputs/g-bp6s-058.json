@@ -1,0 +1,55 @@
+{
+  "id": "g-bp6s-058",
+  "title": "bp6s, dayton-audio/dc130a-8 (Qts 0.40), 12.45 L, rear 5.457 L port at 48.5 Hz, front 6.99 L port at 85.0 Hz",
+  "driver": {
+    "fs": 53.2,
+    "qms": 1.9,
+    "qes": 0.51,
+    "vas_l": 11.8,
+    "re": 5.7,
+    "sd_cm2": 91.6,
+    "le_mh": 0.75
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 5.457,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 4.135,
+        "length_cm": 60.77
+      },
+      "portCount": 2,
+      "ql": 16,
+      "qa": 32
+    },
+    "front": {
+      "vb_l": 6.99,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.423,
+        "length_cm": 9.995
+      },
+      "ql": 23,
+      "qa": 87
+    },
+    "rearPortTo": "front"
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "coilTemp_C": 88,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

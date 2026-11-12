@@ -1,0 +1,54 @@
+{
+  "id": "g-chain-004",
+  "title": "chain (sealed), 18-sound/18nlw9400-4ohm (Qts 0.22), 168.9 L, 3 EQ",
+  "driver": {
+    "fs": 32,
+    "qms": 6.1,
+    "qes": 0.23,
+    "vas_l": 278,
+    "re": 2.6,
+    "sd_cm2": 1225,
+    "le_mh": 1.25
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 168.9,
+    "ql": 3,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83,
+    "space": "full",
+    "eq": [
+      {
+        "type": "lowshelf",
+        "freq": 111.9,
+        "gain_db": -6.199,
+        "q": 0.6603
+      },
+      {
+        "type": "lowshelf",
+        "freq": 72.98,
+        "gain_db": -8.797,
+        "q": 1.988
+      },
+      {
+        "type": "peak",
+        "freq": 134.3,
+        "gain_db": -7.073,
+        "q": 1.792
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

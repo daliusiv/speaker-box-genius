@@ -1,0 +1,50 @@
+{
+  "id": "g-bp6p-034",
+  "title": "bp6p, dayton-audio/pc68-8 (Qts 0.63), 1.21 L, rear 0.6101 L port at 100.9 Hz, front 0.5997 L port at 222.3 Hz",
+  "driver": {
+    "fs": 109,
+    "qms": 2.27,
+    "qes": 0.88,
+    "vas_l": 0.7,
+    "re": 6.8,
+    "sd_cm2": 21.2,
+    "le_mh": 0.47
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.6101,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 1.485,
+        "length_cm": 15.57
+      },
+      "portCount": 2
+    },
+    "front": {
+      "vb_l": 0.5997,
+      "port": {
+        "shape": "slot",
+        "width_cm": 5.822,
+        "height_cm": 0.5828,
+        "length_cm": 1.895
+      },
+      "ql": 16,
+      "qa": 68
+    },
+    "qicl": 184
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

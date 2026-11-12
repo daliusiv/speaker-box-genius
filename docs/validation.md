@@ -1,7 +1,7 @@
 # Validation
 
 Speaker Box Genius is checked against **WinISD 0.7.0.950** (real WinISD project files) and
-**Hornresp 60.60** (Hornresp's own exported results: SPL, impedance, cone excursion, group
+**Hornresp 60.70** (re-run 10 Nov 2026; 60.60 gave identical exports) (Hornresp's own exported results: SPL, impedance, cone excursion, group
 delay and the line's acoustic impedance for lines and horns; SPL, impedance, excursion and the
 port's or passive radiator's own output for sealed, ported, PR and bandpass boxes). Every comparison is an
 automated test, and the results are published at
@@ -88,6 +88,88 @@ the WinISD preset and opening a WinISD project set (the default stays the amplif
   driver's impedance (one coil of an isobaric pair); and WinISD has no series 6th-order bandpass,
   so the app doesn't write one.
 
+## Independent circuit check (SPICE)
+
+WinISD and Hornresp are other programs' versions of the same lumped model. This check builds the
+model again from the textbook equations, as an electrical equivalent circuit, and solves it with
+two solvers that share no code with the engine: [ngspice](https://ngspice.sourceforge.io/) in CI
+and a small standard-library Python solver (`mna.py`) on every test run. Each netlist is a plain
+SPICE file. The same builder writes the app's **Save & Export → LTspice netlist** export: filters and EQ as
+Laplace sources instead of ngspice's `s_xfer` blocks, every inductor with `Rser=0` (LTspice's
+default is 1 mΩ), and a header saying which node is SPL, impedance, excursion and so on. A test
+solves the LTspice text of every filtered case (`mna.py` reads the Laplace expressions too) and
+gets the ngspice text's results, and another exports the app's example boxes and checks them
+against the app.
+
+| Piece | What it is |
+|---|---|
+| `packages/engine/validation/spice/elements.ts` | Element values from the case's inputs (Small's equations), the units table and the conventions ledger: every deliberate choice the engine makes (loss reference frequencies, where Qa and Ql sit, Rg, watts, air) with its source |
+| `packages/engine/validation/spice/netlist.ts` | Case → netlist: coil, motor (a lossless gyrator, Bl/Sd), cone, box, port, and probes for SPL, excursion, port air speed and box pressure |
+| `packages/engine/validation/spice/mna.py` | The Python solver (modified nodal analysis, LU with pivoting, residual check) |
+| `packages/engine/test/fixtures/spice/inputs/*.json` | The cases, with every number resolved (driver, box, options, air); never edited once committed |
+| `packages/engine/test/fixtures/spice/cases/*.cir` | The netlists written from them (`pnpm spice:netlists`) |
+| `packages/engine/test/spice-analytic.test.ts` | The circuit against closed forms first: free-air and sealed resonance, Qtc and the mass-controlled level, box and far-field pressure, Helmholtz tuning, port speed, power balance of the motor, and the polarity of the port's flow |
+| `packages/engine/test/spice.test.ts` | Engine vs the circuit for every case: SPL, phase, group delay, impedance and its phase, excursion, port air speed, box pressure |
+| `packages/engine/test/spice-imports.test.ts` | The builder may take only types from the engine |
+| `.github/workflows/spice.yml` | Every case in ngspice, against `mna.py` (within 1e-6) and the engine |
+
+The builder never imports the engine's model code: a wrong formula on either side shows up as a
+difference. Tolerances: SPL 0.01 dB (95th percentile), impedance, excursion, port speed and box
+pressure 0.1 %, phase 0.1°; in practice the engine and the circuit agree to about 1e-9.
+
+What's covered (439 cases, every one compared on every output):
+
+- **Sealed, ported, passive radiator and bandpass boxes:** 60 generated cases of each kind (bandpass:
+  4th order, 6th order parallel, 6th order series) plus hand-made ones. The generator
+  (`pnpm spice:generate <kind> <count>`) draws database drivers in strata of Qts (0.15–0.8), box size
+  (0.3–4 × Vas) and tuning (0.7–1.4 × Fs; bandpass fronts 0.9–2.5 × Fs), so every corner is
+  covered. It writes the resolved numbers to new input files; committed cases never change.
+- **Passive radiators:** 1, 2 or 4 per box with added mass, some with a second, different PR; also
+  as a bandpass chamber's opening.
+- **Several drivers and isobaric pairs:** the circuit builds every driver as its own coil and cone
+  (an isobaric pair as two real drivers, one behind the other), wired in series or parallel, with
+  one shared Rg. The engine uses one equivalent driver; the two agree.
+- **Flared ports:** v08 and v09 (both ends, one end). The flare's throat-equivalent length and end
+  corrections follow the engine's definition (ledger #28), so these check the circuit around it, not
+  the flare model itself.
+- **Drive and air:** Le and L2R2 coils, Rg, hot coils, both ways of counting watts, 2.83 V, standard,
+  WinISD and thin (835 hPa) air, half and full space, 1 and 2 m.
+- **Signal chain:** 60 generated sealed and ported boxes with a random high-pass (Butterworth 1–4,
+  Linkwitz-Riley 2 and 4), up to three EQ stages (peaking, shelves, Linkwitz Transform) and passive
+  parts (the four-branch ladder, parts in series or parallel). Filters and EQ are s-domain blocks
+  (ngspice's `s_xfer`), built from their textbook definitions; closed-form checks confirm each
+  corner (Butterworth −3 dB, Linkwitz-Riley −6 dB, the Linkwitz Transform's (f0/fp)² bass boost).
+
+Worst difference over all of them (`pnpm spice:summary`): SPL 2e-7 dB, impedance 1e-8, excursion
+2e-8, PR excursion 7e-9, port air speed 8e-7, box pressures 8e-7 (relative). In CI, ngspice and
+`mna.py` agree to about 1e-13.
+
+The /validation/ page shows the worst and mean difference per output, below, around and above
+each box's resonance, and three cases' curves, from `docs/validation/spice.json`
+(`pnpm spice:report`; `spice.test.ts` fails if it's stale). It's kept apart from `results.json`
+because its numbers are rounding-level differences whose last digits can move between Node and
+Python builds, so the test compares it loosely: the same cases and counts, each statistic within
+a factor of two. Not covered: the piston cone air load (its exact radiation impedance
+has no exact circuit), ports as pipes, port compression, and lines and horns, which stay with
+Hornresp.
+
+The bandpass circuits, as acoustic networks (pressure across, volume velocity through). Each
+chamber is its air spring (Cab, with Qa's resistance in series) and its leak (Ql) to the room. The
+cone loop (motor, Ras, Mas, Cas) joins the two chambers, and its positive flow runs from the rear
+chamber into the front one.
+
+| Kind | Rear chamber's opening | Front chamber's opening | Between the chambers | Heard |
+|---|---|---|---|---|
+| 4th order | none | port or PRs, to the room | cone, Qicl | front opening, both leaks |
+| 6th order, parallel | port or PRs, to the room | port or PRs, to the room | cone, Qicl | both openings, both leaks |
+| 6th order, series | port, into the front chamber | port or PRs, to the room | cone, Qicl, rear port | front opening, both leaks |
+
+The cone faces into the front chamber, so it isn't heard directly; nor is any flow between the
+chambers.
+
+To look into one case: `pnpm spice:case <id> [--dump] [--frequency <Hz>] [--ngspice]` prints the
+netlist, engine vs circuit per output, and with `--dump` every node voltage and current.
+
 ## Adding or updating a case
 
 1. **WinISD:** save the project into `packages/engine/test/fixtures/`, read values off WinISD's
@@ -105,10 +187,27 @@ the WinISD preset and opening a WinISD project set (the default stays the amplif
 
    ```bash
    pnpm validation:report   # rewrites docs/validation/results.json
+   pnpm spice:report        # rewrites docs/validation/spice.json (after adding SPICE cases)
    pnpm test                # every comparison, with the other engine tests
    ```
 
 3. Commit the fixture, the code and `results.json`. The page updates on the next deploy.
+
+## Other programs (10 November 2026)
+
+Four more programs, each given the same inputs as the engine. The setups and what came back are
+in `packages/engine/test/fixtures/crosscheck/`, compared by `crosscheck.test.ts`.
+
+| What | Program | Result |
+|---|---|---|
+| DSP filters (Settings → Export to DSP) | REW 5.31.3, Generic EQ: peak, Butterworth high-pass, low and high shelf with Q, Linkwitz transform, saved as 48 kHz coefficients | Coefficients equal to rounding (1e-15); the Linkwitz transform within 2e-9 (prewarped at a slightly different point), 2e-5 dB |
+| T/S fit from an impedance file | REW 5.31.3, Thiele-Small parameters, on three files the engine wrote (plain Le, L2R2 coil, one with ±1 % noise) | Fs, Qms and Qes within 0.3 % of REW and of the true values; the L2R2 file is fitted exactly with the L2R2 coil model |
+| Passive parts | XSim 4: coil + resistance in line, capacitor across, resistor in line, Zobel across, in front of a driver's impedance file | Response within 0.045 dB and 0.16°, impedance within 0.09 % from 6 Hz to 20 kHz (XSim interpolates the files on its own grid) |
+| Volume calculator | FreeCAD 1.0: walled box, cylinder with end caps, sphere, truncated pyramids (gentle and steep), a port tube | Equal (1e-6). A wedge with one vertical face equals the car wedge shape exactly; entered as tapered (all sides) it reads 0.31 % high |
+| Slot ports | WinISD 0.7.0.950's vent panel, rectangular vents of four shapes | Lengths equal to WinISD's 0.01 cm: WinISD treats a slot as a round vent of the same area, as the app does, whatever its aspect ratio. WinISD's "1st port resonance" uses the physical length, without end corrections |
+
+WinISD's voice-coil connection (Parallel/Series) on a two-coil driver changes nothing in its
+simulation: the driver's values are taken as already wired, which is how the app imports them.
 
 ## Not compared with WinISD or Hornresp
 
@@ -151,6 +250,14 @@ The app therefore keeps the T/S values from the fit around the resonance and fit
 the coil. The comparison script is `packages/db-tools/src/le-check.ts`. Dayton's measurement files
 aren't kept in the repository.
 
+### Volume calculator: car wedge (single slope)
+
+WinISD takes a volume, not a shape, and Hornresp has no wedge, so the car wedge is checked against geometry. Its inside is a trapezoidal prism with the sloped panel taking its thickness ÷ sin θ across the horizontal; `wedge.test.ts` and `shapeCrosscheck.test.ts` (cases in `fixtures/crosscheck/shapes.json`) compare the closed form with an independent shoelace sum of the inside polygon (the worked example, 800 × 380 mm, 400/250 mm deep, 18 mm walls: 75.5986 L), check that every panel of the panel table plus the inside fills the outside exactly (butt and mitred, slope front and rear, double baffle), that equal depths give the box, the solver's round trips, the saw angles and a hand-worked motor-clearance case at 60°. FreeCAD 1.1.4 agrees to six decimals on five wedges, three with a double-thickness sloped baffle (`fixtures/crosscheck/wedge_check.py` cuts each wall out of the outside shape as a slab, so no inside formula is shared; readings in `freecad-wedge.json`). The FreeCAD wedge in the cross-checks above (one vertical face, 18 mm walls) equals the wedge shape exactly (it read 0.31 % high as a tapered shape). Other calculators usually take `(W − 2T)(H − 2T)(D_avg − 2T)`: 0.47 % high on the example, more with a double baffle or a steeper slope. The tapered (all sides) shape reads a one-slope wedge about 0.2 % high (it splits the taper between front and back); its own model is unchanged.
+
+### FreeCAD macro export (Build → Cut list → FreeCAD macro)
+
+The macro is generated from the same panel table as the cut list (`packages/engine/src/freecad.ts`) and checks itself when it runs: it builds the air inside as a hidden `Cavity` solid and raises an error if FreeCAD's volume of it differs from the app's inside volume by more than 1 part in 10⁶, and likewise for the panels (before their holes are cut) plus the cavity against the outside volume. A CAD kernel thereby re-measures every design that is exported, not only the fixed cases in `vol.py`. Without FreeCAD in CI, `freecad.test.ts` reads the polygons and extrusions back out of the generated macros for every wedge (slope front and rear, butt and mitred, double baffle) and box, and checks that panels plus cavity equal the outside and the cavity the inside (within 10⁻⁸; coordinates are written to 10⁻⁶ mm), one cylinder per baffle hole starting 1 mm outside the face, and that every macro parses as Python (`ast.parse`, skipped when python3 is missing). Cylinders, spheres and tapered boxes are written as FreeCAD primitives (`makeCylinder`, `makeSphere`, a ruled loft between two rectangles) with the same check against the calculator's gross volume. A box is modelled with the wedge's joinery (the sides cover the outside), not the cut list's; the inside is the same. **Run in FreeCAD 1.1.4 (11 Nov 2026):** nine exported macros (wedge slope front and rear, butt and mitred, double baffle; a box with two driver holes; cylinder; sphere; tapered box) all ran, every self-check passed (worst 1.2 × 10⁻⁹) and every solid is valid; the holes sit on the baffle and nothing is mirrored. Log: `packages/engine/test/fixtures/freecad-run/results.txt` (made by `run_all.py` there).
+
 ### Ports as pipes (Settings → Ports → Pipe)
 
 Not in WinISD, so not part of the WinISD comparison (the default, "Air mass", is what's compared). It is how Hornresp models ports, so the Hornresp box cases use it: the ported box matches within 0.3 % in impedance and 0.02 dB in the port's own output. A port is modelled as a uniform pipe of its throat's area and its effective length (end corrections included, so it tunes the box exactly as the air-mass port), radiating at its outer end: it adds the pipe's resonances at about c / 2L, 2c / 2L, … Checks (`portflare.test.ts`): within 0.35 dB of the air-mass port below 60 Hz (the pipe's air is slightly springy, which the air-mass model leaves out), and the port's air speed peaks within 5 % of c / 2L. Not modelled: the box's own standing waves, which drive the port hardest when they coincide (the port card warns when they do), and wall losses in the port. Bandpass ports are pipes too: those to the outside like a vented box's, and a series box's rear port as a pipe joining the two chambers (`portflare.test.ts`: within 0.5 dB of air-mass ports below 60 Hz).
@@ -171,9 +278,30 @@ Sealed, ported and PR boxes. "Fixed mass (like WinISD)", the default, keeps the 
 
 The peak sound pressure inside the box: the chamber pressure the network solves for, per frequency (both chambers of a bandpass box). Compared with Hornresp's Tools → Diaphragm Pressure → Rear Chamber Side (screenshots, as it can't be exported; `boxpressure-hornresp.test.ts`): the sealed box (B1) within 2 Pa of its 267 Pa in the bass, the ported box (B2) peaking at 342 Pa at 44 Hz against Hornresp's 340 Pa at about 44 Hz. Checks: in the bass a sealed box's pressure is its air spring's, ρc²·Sd·x / V.
 
+### Air distortion (Air distortion chart; limit and box fill in Settings → Air distortion)
+
+The box's air is a spring that stiffens more when squeezed than it softens when stretched (P·Vⁿ = const, n = 1.4 for an empty box, 1.3 / 1.2 / 1.1 for the fill settings). Solved as a 2nd-order perturbation: the box pressure P at f (the linear model's) gives a pressure source n(n+1)/4 · P₀ · (P/ρc²)² at 2f in series with the air spring, which drives the same circuit at 2f with the amplifier silent (its source resistance still damps the cone); HD2 is the radiated 2f over the radiated f, at the frequency of the note that makes it. Ports, passive radiators, pipes, leaks and both chambers of a bandpass box are in the circuit as for the response, so near a ported or PR box's tuning, where the cone barely moves but the box pressure peaks, it isn't the cone's excursion that counts. Neither WinISD nor Hornresp models it. Checks (`airspring.test.ts`): against a direct time-domain solution of the nonlinear equations (sealed and PR boxes, 6 and 7 frequencies, 15–100 Hz) within 1 % (3 % where the air is squeezed by more than 5 %); a sealed box against its closed form (γ+1)·(Sd·x/Vb)·kb/|kt − (2ω)²M + j2ωR| within 0.5 %; HD2 ∝ √power and ∝ n(n+1); at max SPL with the limit counted, HD2 equals the limit; a bandpass box with a transparent front chamber gives its sealed box's. Every other result is the same with or without it (it counts in Max SPL only when set to). Where the cone squeezes the air by more than 10 % of the box the chart calls it a rough estimate (the perturbation reads about 0.7 % high there, and higher harmonics grow), past 20 % outside the model. The driver's own nonlinearity (Bl, suspension) isn't included.
+
+#### Lines and horns: along the path
+
+In a line or horn the air's nonlinearity shows as the wave steepening as it travels (weak-shock theory, first term of Fubini's solution): for a plane wave of peak pressure p₁ over a distance L, p₂/p₁ = β·ω·p₁·L / (2ρc³) with β = (γ+1)/2 = 1.2 (Thuras, Jenkins and O'Neil 1935, eq. 12; Blackstock). With the area changing slowly (a horn), the local pressure carries it: p₂/p₁ at the exit = β·ω/(2ρc³) · ∫ p₁(x) dx along the path, the same assumption as Thuras' horn theory, which for an exponential horn gives their "effective tube length" (eq. 20). The engine takes p₁(x) from the line's own pressure profile at each frequency (`pathHd2`, `line.ts`) from where the sound sets off: the driver (an offset driver's closed stub behind it is left out), a tapped horn's rear tap, a front-loaded horn's throat; through a mass-loaded line's port too. Inside a line the pressure is a standing wave, so it's an estimate; the chart calls it rough above 25 % (σ > 0.5) and outside the model past 50 % (where a shock forms). Unstuffed sections are lossless, as in Hornresp, so in a long narrow line it reads a little high; stuffed sections use β = 1.2 too.
+
+Checks (`airpath.test.ts`, data in `fixtures/thuras1935.json`, read off the paper's figures to about ±0.3 dB):
+
+| Check | Cases | Result |
+|---|---|---|
+| Closed forms: uniform tube, exponential and conical horns; slice size | 4 | within 0.01 % (0.1 % for halved slices) |
+| Thuras Figs. 3–5, 3.8 cm tube: their theory (distance 0.7–6 m, 300–3000 Hz, 100–1000 Pa), with the tube's wall loss (Kirchhoff) applied as their theory does | 15 | within 0.51 dB |
+| Thuras Figs. 3–5: their measurements | 10 | 3.2 dB under on average (2.3–3.8), as the paper reports for its measurements against theory ("about 3 db lower") |
+| Thuras Fig. 7, exponential horn (3.8 cm throat, 78 cm, 200 Hz cutoff, 13 cm feed tube) through the line model, 0.4–14 W at 1 and 2 kHz | 18 | mean 0.00 dB, each within 1.14 dB |
+| Thuras Fig. 8, the same horn at 10 W, 500 Hz–4 kHz (shown, not gated) | 5 | −1.42, +0.16, +0.80, +0.57, −2.13 dB (their own curve bends below theory at 4 kHz) |
+| Engine: HD2 ∝ √power; at max SPL with the limit counted it equals the limit; off changes nothing; an offset driver's stub is left out | — | exact |
+
+
+
 ### Passive parts (Signal tab → Passive parts)
 
-Up to four branches between the amplifier and the drivers, in line, across, in line, across (the layout of Hornresp's passive Filter Wizard), each a resistor, coil and capacitor joined in series or in parallel. The bank sees the network as a Thévenin source per frequency (with the amplifier's resistance), and the impedance chart shows what the amplifier sees. Not yet compared with Hornresp. Checks (`passive.test.ts`): no parts changes nothing; a series resistor acts exactly like the amplifier's resistance; a series coil exactly like adding its inductance to the driver's Le; a capacitor across after it makes 12 dB/octave of 6; a Zobel (R = Re, C = Le / Re²) flattens the impedance up high and leaves the response alone; R ∥ L in line keeps the bass and cuts 6 dB up high; two parallel drivers share the network. The passband reference level (for F3) takes the network's resistance with coils as wires and capacitors left out.
+Up to four branches between the amplifier and the drivers, in line, across, in line, across (the layout of Hornresp's passive Filter Wizard), each a resistor, coil and capacitor joined in series or in parallel. The bank sees the network as a Thévenin source per frequency (with the amplifier's resistance), and the impedance chart shows what the amplifier sees. Compared with XSim 4 (see Other programs above); not yet with Hornresp. Checks (`passive.test.ts`): no parts changes nothing; a series resistor acts exactly like the amplifier's resistance; a series coil exactly like adding its inductance to the driver's Le; a capacitor across after it makes 12 dB/octave of 6; a Zobel (R = Re, C = Le / Re²) flattens the impedance up high and leaves the response alone; R ∥ L in line keeps the bass and cuts 6 dB up high; two parallel drivers share the network. The passband reference level (for F3) takes the network's resistance with coils as wires and capacitors left out.
 
 ### EQ (EQ card: Peaking, Low shelf, High shelf)
 

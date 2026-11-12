@@ -1,0 +1,96 @@
+name: Preview on Cloudflare
+
+# Private dev repo only: builds exactly as deploy-pages.yml does (site/workflows.test.ts checks
+# the steps match), then site/preview.ts removes analytics, blocks indexing and checks
+# Cloudflare's limits, and Wrangler uploads it to a Worker (.github/cloudflare/wrangler.jsonc) named by
+# the repo variable CF_WORKER_NAME. main → the Worker's workers.dev URL; PR n → a preview version with
+# the alias pr-n. The URLs are listed in the run summary; both sit behind Cloudflare Access.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: ${{ github.event.repository.private == true }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          # Add `cache: pnpm` here once pnpm-lock.yaml is committed.
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Validate and bundle driver database
+        run: pnpm validate:db && pnpm build:db
+
+      - name: Build web app
+        run: pnpm --filter @sbg/web build
+
+      # Driver share cards from the last deploy: only changed ones are drawn again (site/cardCache.ts).
+      # A new key each run saves the updated set; restore-keys picks up the latest one.
+      - name: Restore share cards
+        uses: actions/cache@v4
+        with:
+          path: .cache/cards
+          key: share-cards-${{ github.run_id }}
+          restore-keys: share-cards-
+
+      # Each page's content hash and lastmod date from the last deploy (site/sitemap.ts), so a
+      # sitemap date only moves when that page really changed.
+      - name: Restore sitemap dates
+        uses: actions/cache@v4
+        with:
+          path: .cache/sitemap
+          key: sitemap-lastmod-${{ github.run_id }}
+          restore-keys: sitemap-lastmod-
+
+      - name: Build guide pages, sitemaps and robots.txt
+        run: pnpm build:site
+
+      - name: Make it a preview (no analytics, noindex) and check Cloudflare's limits
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning site/preview.ts packages/web/dist
+
+      # main → the Worker's live URL; a PR → a preview version with the alias pr-<n>.
+      # Wrangler 4 straight from npm (wrangler-action's default Wrangler is too old for --preview-alias).
+      - name: Upload to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WORKER: ${{ vars.CF_WORKER_NAME }}
+        run: |
+          if [ -z "$WORKER" ]; then
+            echo "::error::Set the repository variable CF_WORKER_NAME (Settings → Secrets and variables → Actions → Variables)."
+            exit 1
+          fi
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npx --yes wrangler@4 versions upload --config .github/cloudflare/wrangler.jsonc --name "$WORKER" \
+              --preview-alias "pr-${{ github.event.pull_request.number }}" \
+              --message "${{ github.event.pull_request.head.sha }}" | tee /tmp/wrangler.log
+          else
+            npx --yes wrangler@4 deploy --config .github/cloudflare/wrangler.jsonc --name "$WORKER" \
+              --message "${{ github.sha }}" | tee /tmp/wrangler.log
+          fi
+
+      - name: Preview links
+        run: |
+          {
+            echo "### Preview"
+            echo '```'
+            grep -Eo 'https://[^ ]+workers\.dev[^ ]*' /tmp/wrangler.log | sort -u
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

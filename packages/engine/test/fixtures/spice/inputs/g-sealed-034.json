@@ -1,0 +1,36 @@
+{
+  "id": "g-sealed-034",
+  "title": "sealed, bc-speakers/15cl76-4ohm (Qts 0.26), 80.3 L",
+  "driver": {
+    "fs": 42,
+    "qms": 4.7,
+    "qes": 0.27,
+    "vas_l": 140,
+    "re": 3.5,
+    "sd_cm2": 855,
+    "le_mh": 1
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 80.3,
+    "ql": 5,
+    "qa": 118
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "coilTemp_C": 86,
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

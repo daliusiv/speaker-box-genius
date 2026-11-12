@@ -1,0 +1,48 @@
+{
+  "id": "g-bp6p-029",
+  "title": "bp6p, celestion/ntr06-17x (Qts 0.32), 12.54 L, rear 8.357 L port at 52.5 Hz, front 4.179 L port at 128.3 Hz",
+  "driver": {
+    "fs": 60.4,
+    "qms": 7.247,
+    "qes": 0.335,
+    "vas_l": 13.19,
+    "re": 5.36,
+    "sd_cm2": 153.94,
+    "le_mh": 0.28
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 8.357,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.171,
+        "length_cm": 51.75
+      },
+      "portCount": 2
+    },
+    "front": {
+      "vb_l": 4.179,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6.836,
+        "length_cm": 11.26
+      }
+    }
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

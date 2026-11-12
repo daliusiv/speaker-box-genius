@@ -1,0 +1,61 @@
+{
+  "id": "g-chain-023",
+  "title": "chain (sealed), celestion/tf1520 (Qts 0.72), 243.1 L, HP butterworth 4, 3 EQ",
+  "driver": {
+    "fs": 54.9,
+    "qms": 5.165,
+    "qes": 0.84,
+    "vas_l": 133.08896000000001,
+    "re": 5.79,
+    "sd_cm2": 855.3,
+    "le_mh": 0.8
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 243.1,
+    "ql": 10,
+    "qa": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 10,
+    "highPass": {
+      "type": "butterworth",
+      "order": 4,
+      "freq": 30.59
+    },
+    "eq": [
+      {
+        "type": "highshelf",
+        "freq": 91.58,
+        "gain_db": 7.11,
+        "q": 3.642
+      },
+      {
+        "type": "lowshelf",
+        "freq": 250.9,
+        "gain_db": -7.667,
+        "q": 0.8071
+      },
+      {
+        "type": "peak",
+        "freq": 244.1,
+        "gain_db": 1.956,
+        "q": 2.925
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

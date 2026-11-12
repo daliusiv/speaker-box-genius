@@ -1,0 +1,62 @@
+{
+  "id": "g-bp6p-055",
+  "title": "bp6p, hoqs/n185c (Qts 0.21), 97.59 L, rear 62.07 L 4 × dayton-audio/rss265-pr at 17.0 Hz, front 35.51 L 1 × dayton-audio/rss460-pr at 33.1 Hz",
+  "driver": {
+    "fs": 29.5,
+    "qms": 14,
+    "qes": 0.21,
+    "vas_l": 242,
+    "re": 5.7,
+    "sd_cm2": 1225,
+    "le_mh": 1.461
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 62.07,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 200,
+            "sd_cm2": 356.3,
+            "cms_mm_per_n": 0.33,
+            "qms": 4.92
+          },
+          "count": 4,
+          "addedMass_g": 1080
+        }
+      ]
+    },
+    "front": {
+      "vb_l": 35.51,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 500,
+            "sd_cm2": 1164,
+            "cms_mm_per_n": 0.23,
+            "qms": 5.03
+          },
+          "count": 1,
+          "addedMass_g": 851.8
+        }
+      ],
+      "ql": null,
+      "qa": null
+    },
+    "qicl": 121
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

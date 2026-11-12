@@ -1,0 +1,41 @@
+{
+  "id": "g-pr-046",
+  "title": "passive-radiator, sb-acoustics/wo24tx-8 (Qts 0.34), 33.76 L, Fb 21.6 Hz, 2 × purifi/ptt6-5pr-na2-03",
+  "driver": {
+    "fs": 24.5,
+    "qms": 5.67,
+    "qes": 0.36,
+    "vas_l": 88,
+    "re": 5.8,
+    "sd_cm2": 255,
+    "le_mh": 0.56
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 33.76,
+    "pr": {
+      "mms_g": 85,
+      "sd_cm2": 132.7,
+      "cms_mm_per_n": 0.82,
+      "qms": 13.1
+    },
+    "prCount": 2,
+    "addedMass_g": 47.03,
+    "ql": 16,
+    "qa": 68
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "space": "full"
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

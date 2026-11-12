@@ -1,0 +1,57 @@
+{
+  "id": "g-bp6s-023",
+  "title": "bp6s, beyma/12p1000nd (Qts 0.26), 166.5 L, rear 104.4 L port at 27.4 Hz, front 62.12 L port at 52.3 Hz",
+  "driver": {
+    "fs": 47,
+    "qms": 7.9,
+    "qes": 0.27,
+    "vas_l": 49,
+    "re": 5.1,
+    "sd_cm2": 550,
+    "le_mh": 2
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 104.4,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 7.177,
+        "length_cm": 10.47
+      },
+      "ql": 23,
+      "qa": 19
+    },
+    "front": {
+      "vb_l": 62.12,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 9.803,
+        "length_cm": 19.87
+      },
+      "portCount": 2,
+      "ql": 9,
+      "qa": 92
+    },
+    "rearPortTo": "front",
+    "qicl": 131
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.5,
+    "convention": "volts",
+    "power": 2.83,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

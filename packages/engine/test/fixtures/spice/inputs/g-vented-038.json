@@ -1,0 +1,45 @@
+{
+  "id": "g-vented-038",
+  "title": "vented, dayton-audio/nd91-4 (Qts 0.41), 3.53 L, Fb 68.9 Hz",
+  "driver": {
+    "fs": 74,
+    "qms": 4.24,
+    "qes": 0.45,
+    "vas_l": 1.4,
+    "re": 4.3,
+    "sd_cm2": 30.4,
+    "le_mh": 0.83
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 3.53,
+    "port": {
+      "shape": "slot",
+      "width_cm": 2.514,
+      "height_cm": 0.9519,
+      "length_cm": 7.646
+    },
+    "portCount": 2,
+    "endCorrection": 0.613,
+    "ql": 14,
+    "qa": 83,
+    "qp": 103
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.5,
+    "coilTemp_C": 108,
+    "power": 100
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

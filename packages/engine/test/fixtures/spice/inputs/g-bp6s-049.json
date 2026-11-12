@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6s-049",
+  "title": "bp6s, dayton-audio/mx10-22 (Qts 0.46), 41.54 L, rear 23.08 L port at 24.9 Hz, front 18.47 L port at 31.0 Hz",
+  "driver": {
+    "fs": 32.6,
+    "qms": 3.59,
+    "qes": 0.53,
+    "vas_l": 23.8,
+    "re": 4.76,
+    "sd_cm2": 356.7,
+    "le_mh": 4.33
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 23.08,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6.621,
+        "length_cm": 66.69
+      },
+      "qp": 107
+    },
+    "front": {
+      "vb_l": 18.47,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 11.65,
+        "length_cm": 171.2
+      },
+      "ql": 15,
+      "qa": 61
+    },
+    "rearPortTo": "front",
+    "qicl": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "coilTemp_C": 139,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";
 import { decodeStateAny } from "./state.ts";
+import "@fontsource-variable/inter";
 import "./styles.css";
 
 // A short link is compressed, and decompressing is asynchronous: read it before the first

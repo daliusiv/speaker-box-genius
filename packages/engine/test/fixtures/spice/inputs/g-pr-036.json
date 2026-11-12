@@ -1,0 +1,44 @@
+{
+  "id": "g-pr-036",
+  "title": "passive-radiator, bc-speakers/15bg100 (Qts 0.45), 189.3 L, Fb 39.1 Hz, 2 × seas/sp26r",
+  "driver": {
+    "fs": 36,
+    "qms": 5,
+    "qes": 0.49,
+    "vas_l": 83,
+    "re": 5.1,
+    "sd_cm2": 855,
+    "le_mh": 1.6
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 189.3,
+    "pr": {
+      "mms_g": 40,
+      "sd_cm2": 342,
+      "cms_mm_per_n": 0.67
+    },
+    "prCount": 2,
+    "addedMass_g": 13.8,
+    "ql": 21,
+    "qa": 65
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 100,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

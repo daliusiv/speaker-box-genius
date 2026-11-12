@@ -1,0 +1,42 @@
+{
+  "id": "g-bp4-009",
+  "title": "bp4, monacor/tf1225 (Qts 0.37), 40.31 L, rear 22.66 L closed, front 17.65 L port at 119.8 Hz",
+  "driver": {
+    "fs": 55.6,
+    "qms": 3.112,
+    "qes": 0.42,
+    "vas_l": 67.3,
+    "re": 5.08,
+    "sd_cm2": 530.93,
+    "le_mh": 0.86
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 22.66
+    },
+    "front": {
+      "vb_l": 17.65,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 12.97,
+        "length_cm": 6.119
+      },
+      "ql": null,
+      "qa": null
+    }
+  },
+  "opts": {
+    "rg": 0,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

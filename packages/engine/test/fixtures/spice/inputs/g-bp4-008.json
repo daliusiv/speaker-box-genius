@@ -1,0 +1,43 @@
+{
+  "id": "g-bp4-008",
+  "title": "bp4, bc-speakers/12nbx100-8ohm (Qts 0.23), 29.75 L, rear 20.52 L closed, front 9.227 L port at 69.1 Hz",
+  "driver": {
+    "fs": 41,
+    "qms": 3.9,
+    "qes": 0.24,
+    "vas_l": 51,
+    "re": 5.1,
+    "sd_cm2": 531,
+    "le_mh": 1.9
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 20.52,
+      "ql": 24,
+      "qa": 82
+    },
+    "front": {
+      "vb_l": 9.227,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 9.806,
+        "length_cm": 44.11
+      }
+    }
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 90,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

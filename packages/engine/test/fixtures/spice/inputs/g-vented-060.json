@@ -1,0 +1,36 @@
+{
+  "id": "g-vented-060",
+  "title": "vented, 18-sound/12mb720 (Qts 0.20), 111.1 L, Fb 39.4 Hz",
+  "driver": {
+    "fs": 46,
+    "qms": 10.3,
+    "qes": 0.2,
+    "vas_l": 81,
+    "re": 5,
+    "sd_cm2": 531,
+    "le_mh": 0.79
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 111.1,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 14.08,
+      "length_cm": 18.95
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

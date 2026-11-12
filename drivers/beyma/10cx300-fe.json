@@ -13,17 +13,21 @@
     "sd_cm2": 380,
     "qts": 0.38,
     "le_mh": 0.4,
-    "bl": 11.65,
+    "bl": 11.6,
     "mms_g": 35,
     "xmax_mm": 6.7,
     "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 228,
+    "depth_mm": 145
   },
   "sources": [
     {
       "kind": "datasheet",
       "url": "https://www.beyma.com/en/products/c/coaxial/110CX3FE8/altavoz-10cx300-fe-8-oh/",
-      "retrieved": "2026-10-18",
-      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+      "retrieved": "2026-11-10",
+      "note": "Values from Beyma's datasheets (PDFs supplied 10 Nov 2026), used with Beyma's permission (6 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Beyma's permission. See LICENSE-DATA."
     }
   ],
   "status": "community",

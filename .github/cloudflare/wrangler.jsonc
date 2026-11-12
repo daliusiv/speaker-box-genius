@@ -1,0 +1,14 @@
+// Private preview of the dev repo: a Worker that only serves the built site as static assets.
+// Deployed by .github/workflows/preview.yml. The Worker's name comes from the repo variable
+// CF_WORKER_NAME (passed as --name), so no name or URL is kept in the code.
+{
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "preview_urls": true,
+  "assets": {
+    // Relative to this file. site/preview.ts has already turned the build into a preview.
+    "directory": "../../packages/web/dist",
+    // GitHub Pages also serves /guide/ for /guide and /guide/index.html.
+    "html_handling": "auto-trailing-slash"
+  }
+}

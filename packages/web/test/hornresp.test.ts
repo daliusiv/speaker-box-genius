@@ -78,11 +78,15 @@ test("MLTL: the port is a step and a narrow segment, read back as a port", () =>
 });
 
 test("tapped horn and front-loaded horn", () => {
-  const th = roundTrip({ ...base, end: "tapped", driverAt_cm: 0, tapAt_cm: 90 });
+  // The tap where the last section starts (Hornresp takes the front tap where its last segment starts).
+  const th = roundTrip({ ...base, end: "tapped", driverAt_cm: 0, tapAt_cm: 120 });
   assert.match(th.out.text, /TH = 1/);
   assert.equal(th.back.design.end, "tapped");
   assert.equal(th.back.design.driverAt_cm, 0);
-  assert.ok(close(th.back.design.tapAt_cm!, 90));
+  assert.ok(close(th.back.design.tapAt_cm!, 120));
+  // Inside a single-section horn: split there, still one segment after the tap.
+  const one = roundTrip({ ...base, end: "tapped", driverAt_cm: 20, tapAt_cm: 90, sections: [{ length_cm: 200, endArea_cm2: 300, taper: "linear", fill_kgm3: 0 }] });
+  assert.ok(close(one.back.design.tapAt_cm!, 90));
   const horn = roundTrip({
     ...base,
     end: "horn",
@@ -212,7 +216,9 @@ test("semi-inductance coil: written into Hornresp's semi-inductance fields and r
   assert.ok(typeof out !== "string");
   assert.match(out.text, /Leb = 0\.30/);
   assert.match(out.text, /Rss = 30\.00/);
-  assert.ok(out.warnings.some((w) => /double-click Le/.test(w)));
+  // Switched on in the record itself: Hornresp imports it with the model on.
+  assert.match(out.text, /Semi-Inductance Model Flag = 1/);
+  assert.ok(!out.warnings.some((w) => /double-click Le/.test(w)));
   const back = fromHornresp(out.text, base);
   assert.ok(typeof back !== "string");
   assert.deepEqual(back.driver?.semi, semi);
@@ -229,6 +235,15 @@ test("semi-inductance coil: written into Hornresp's semi-inductance fields and r
   const none = fromHornresp(plain.text, base);
   assert.ok(typeof none !== "string");
   assert.equal(none.driver?.semi, undefined);
+  // Values present but the model switched off: Hornresp ignores them, so does the import.
+  const off = fromHornresp(out.text.replace("Semi-Inductance Model Flag = 1", "Semi-Inductance Model Flag = 0"), base);
+  assert.ok(typeof off !== "string");
+  assert.equal(off.driver?.semi, undefined);
+  assert.ok(off.warnings.some((w) => /switched off/.test(w)));
+  // No flag lines at all (an older record or a paste): read as before.
+  const noFlags = fromHornresp(out.text.replace(/Semi-Inductance Model Flag = 1\r?\n/, ""), base);
+  assert.ok(typeof noFlags !== "string");
+  assert.deepEqual(noFlags.driver?.semi, semi);
 });
 
 test("frequency-dependent damping: written into Hornresp's FDD fields (Ams in m/N) and read back", () => {
@@ -236,7 +251,11 @@ test("frequency-dependent damping: written into Hornresp's FDD fields (Ams in m/
   const out = toHornresp(base, { ...driver, fdd }, { eg: 2.83, drivers: 1, name: "x" });
   assert.ok(typeof out !== "string");
   assert.match(out.text, /Ams = 3\.00E-04/);
-  assert.ok(out.warnings.some((w) => /Cms label/.test(w)));
+  assert.match(out.text, /Damping Model Flag = 1/);
+  assert.ok(!out.warnings.some((w) => /Cms label/.test(w)));
+  const off = fromHornresp(out.text.replace("Damping Model Flag = 1", "Damping Model Flag = 0"), base);
+  assert.ok(typeof off !== "string");
+  assert.equal(off.driver?.fdd, undefined);
   const back = fromHornresp(out.text, base);
   assert.ok(typeof back !== "string");
   assert.deepEqual(back.driver?.fdd, fdd);
@@ -283,4 +302,17 @@ test("the amplifier's resistance is written as Rg and read back; other drive set
   assert.deepEqual(plain.warnings, noSim.warnings, "no extra notes");
   const plainBack = fromHornresp(plain.text, base);
   assert.ok(typeof plainBack !== "string" && plainBack.rg === undefined);
+});
+
+test("tapped horn with four segments: the front tap is where the last segment starts (Hornresp 60.70, case 27)", () => {
+  const text = readFileSync(new URL("../../../docs/hornresp-validation/records/27-sub-tapped-2seg.txt", import.meta.url), "latin1");
+  const r = fromHornresp(text, base);
+  assert.ok(typeof r !== "string");
+  assert.equal(r.design.driverAt_cm, 30);
+  assert.equal(r.design.tapAt_cm, 170);
+  // A tap with two sections after it can't be written as Hornresp reads it.
+  const d = { ...base, end: "tapped" as const, closedArea_cm2: 400, driverAt_cm: 30, tapAt_cm: 120, sections: [{ length_cm: 150, endArea_cm2: 900, taper: "linear" as const, fill_kgm3: 0 }, { length_cm: 150, endArea_cm2: 2500, taper: "exponential" as const, fill_kgm3: 0 }] };
+  const out = toHornresp(d, driver, { eg: 2.83, drivers: 1, name: "x" });
+  assert.equal(typeof out, "string");
+  assert.match(out as string, /last segment/);
 });

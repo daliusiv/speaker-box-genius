@@ -1,0 +1,50 @@
+{
+  "id": "g-bp4-048",
+  "title": "bp4, peerless/pls-p830984 (Qts 0.75), 0.5 L, rear 0.1654 L closed, front 0.3346 L port at 234.1 Hz",
+  "driver": {
+    "fs": 110,
+    "qms": 5.46,
+    "qes": 0.87,
+    "vas_l": 0.547,
+    "re": 6.3,
+    "sd_cm2": 21.2,
+    "le_mh": 0.101
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.1654
+    },
+    "front": {
+      "vb_l": 0.3346,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 1.469,
+        "length_cm": 4.388
+      },
+      "portCount": 2,
+      "ql": 10,
+      "qa": 84
+    },
+    "endCorrection": 0.85,
+    "qicl": 46
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "coilTemp_C": 49,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

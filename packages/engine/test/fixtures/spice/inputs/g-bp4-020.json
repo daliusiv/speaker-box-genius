@@ -1,0 +1,48 @@
+{
+  "id": "g-bp4-020",
+  "title": "bp4, monacor/spm-116-8ohm (Qts 0.57), 1.714 L, rear 0.8338 L closed, front 0.8804 L port at 99.8 Hz",
+  "driver": {
+    "fs": 75,
+    "qms": 1.9,
+    "qes": 0.81,
+    "vas_l": 4.5,
+    "re": 7.2,
+    "sd_cm2": 57,
+    "le_mh": 0.4
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.8338,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 0.8804,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 4.261,
+        "length_cm": 44.92
+      },
+      "ql": null,
+      "qa": null
+    },
+    "endCorrection": 0.85,
+    "qicl": 191
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "series",
+    "rg": 0.5,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

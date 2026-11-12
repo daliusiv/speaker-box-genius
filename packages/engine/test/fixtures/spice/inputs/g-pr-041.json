@@ -1,0 +1,40 @@
+{
+  "id": "g-pr-041",
+  "title": "passive-radiator, celestion/tf0815re (Qts 0.53), 7.795 L, Fb 54.7 Hz, 4 × sb-acoustics/sb12pfcr-00",
+  "driver": {
+    "fs": 64.8,
+    "qms": 2.989,
+    "qes": 0.648,
+    "vas_l": 22.13,
+    "re": 6.34,
+    "sd_cm2": 226.98,
+    "le_mh": 0.643
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 7.795,
+    "pr": {
+      "mms_g": 18.8,
+      "sd_cm2": 50,
+      "cms_mm_per_n": 1.2,
+      "qms": 12.5
+    },
+    "prCount": 4,
+    "addedMass_g": 3.693,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

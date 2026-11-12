@@ -1,0 +1,53 @@
+{
+  "id": "g-pr-039",
+  "title": "passive-radiator, seas/t18rex-xfc (Qts 0.25), 40.39 L, Fb 28.4 Hz, 2 × sb-acoustics/sb15sfcr-00 + 1 × seas/sp26r",
+  "driver": {
+    "fs": 30,
+    "qms": 1.64,
+    "qes": 0.29,
+    "vas_l": 42,
+    "re": 6.2,
+    "sd_cm2": 126,
+    "le_mh": 0.7
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 40.39,
+    "pr": {
+      "mms_g": 62,
+      "sd_cm2": 178,
+      "cms_mm_per_n": 0.93,
+      "qms": 2.7
+    },
+    "prCount": 2,
+    "addedMass_g": 29.36,
+    "extraPrs": [
+      {
+        "pr": {
+          "mms_g": 40,
+          "sd_cm2": 342,
+          "cms_mm_per_n": 0.67
+        },
+        "count": 1
+      }
+    ],
+    "ql": 15,
+    "qa": null
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "series",
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

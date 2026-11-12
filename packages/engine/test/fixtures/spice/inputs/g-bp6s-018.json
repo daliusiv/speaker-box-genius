@@ -1,0 +1,56 @@
+{
+  "id": "g-bp6s-018",
+  "title": "bp6s, bc-speakers/12mh32 (Qts 0.19), 41.84 L, rear 16.45 L port at 35.4 Hz, front 25.39 L port at 66.6 Hz",
+  "driver": {
+    "fs": 53,
+    "qms": 7.2,
+    "qes": 0.2,
+    "vas_l": 63,
+    "re": 5.2,
+    "sd_cm2": 522,
+    "le_mh": 0.83
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 16.45,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 9.97,
+        "length_cm": 107.2
+      },
+      "ql": 27,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 25.39,
+      "port": {
+        "shape": "slot",
+        "width_cm": 14.83,
+        "height_cm": 3.278,
+        "length_cm": 6.494
+      },
+      "ql": null,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

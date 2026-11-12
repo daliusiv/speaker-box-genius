@@ -1,0 +1,55 @@
+{
+  "id": "g-bp6s-048",
+  "title": "bp6s, peerless/hds-p830992 (Qts 0.66), 1.208 L, rear 0.8116 L port at 105.9 Hz, front 0.3968 L port at 154.7 Hz",
+  "driver": {
+    "fs": 120,
+    "qms": 2.17,
+    "qes": 0.94,
+    "vas_l": 1.39,
+    "re": 5.2,
+    "sd_cm2": 55.4,
+    "le_mh": 0.23
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.8116,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 1.892,
+        "length_cm": 7.832
+      },
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 0.3968,
+      "port": {
+        "shape": "slot",
+        "width_cm": 8.791,
+        "height_cm": 1.401,
+        "length_cm": 35.78
+      },
+      "ql": null,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "qicl": 124
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 56,
+    "driveModel": "winisd",
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

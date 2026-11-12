@@ -1,0 +1,37 @@
+{
+  "id": "g-vented-015",
+  "title": "vented, seas/l22roy2-xm011-08 (Qts 0.44), 15.36 L, Fb 22.4 Hz",
+  "driver": {
+    "fs": 27,
+    "qms": 4.11,
+    "qes": 0.49,
+    "vas_l": 27,
+    "re": 6.2,
+    "sd_cm2": 221,
+    "le_mh": 0.4
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 15.36,
+    "port": {
+      "shape": "slot",
+      "width_cm": 12.62,
+      "height_cm": 1.985,
+      "length_cm": 92.51
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

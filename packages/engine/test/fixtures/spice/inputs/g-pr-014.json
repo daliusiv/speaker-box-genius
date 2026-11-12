@@ -1,0 +1,41 @@
+{
+  "id": "g-pr-014",
+  "title": "passive-radiator, redcatt/152find-1 (Qts 0.44), 53.63 L, Fb 39.7 Hz, 2 × dayton-audio/ds270-pr",
+  "driver": {
+    "fs": 37,
+    "qms": 10.2,
+    "qes": 0.46,
+    "vas_l": 119,
+    "re": 4.6,
+    "sd_cm2": 804,
+    "le_mh": 0.55
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 53.63,
+    "pr": {
+      "mms_g": 88.4,
+      "sd_cm2": 353,
+      "cms_mm_per_n": 0.6,
+      "qms": 3.98
+    },
+    "prCount": 2,
+    "addedMass_g": 44.06
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

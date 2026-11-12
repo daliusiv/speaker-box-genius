@@ -6,10 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:ssr": "vite build -c vite.ssr.config.ts"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
     "@sbg/engine": "workspace:*",
+    "fflate": "^0.8.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

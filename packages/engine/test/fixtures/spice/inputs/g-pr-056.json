@@ -1,0 +1,38 @@
+{
+  "id": "g-pr-056",
+  "title": "passive-radiator, faital-pro/18xl1800 (Qts 0.40), 103.7 L, Fb 25.3 Hz, 1 × dayton-audio/rss460-pr",
+  "driver": {
+    "fs": 29,
+    "qms": 9.9,
+    "qes": 0.42,
+    "vas_l": 215.5,
+    "re": 5.35,
+    "sd_cm2": 1187,
+    "le_mh": 2.04
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 103.7,
+    "pr": {
+      "mms_g": 500,
+      "sd_cm2": 1164,
+      "cms_mm_per_n": 0.23,
+      "qms": 5.03
+    },
+    "addedMass_g": 404.9
+  },
+  "opts": {
+    "rg": 0.5,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

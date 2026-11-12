@@ -1,0 +1,64 @@
+* g-bp6p-027: bp6p, celestion/truvox-1525 (Qts 0.76), 47.13 L, rear 28.7 L port at 35.5 Hz, front 18.43 L port at 47.9 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 2.83
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 6.58
+Le1 c1a c1b 0.000703
+Hemf1 c1b c1d Vcone1 151.520524992368
+Vi1 c1d 0 0
+Re2 bk c2a 6.58
+Le2 c2a c2b 0.000703
+Hemf2 c2b c2d Vcone2 151.520524992368
+Vi2 c2d 0 0
+Re3 bk c3a 6.58
+Le3 c3a c3b 0.000703
+Hemf3 c3b c3d Vcone3 151.520524992368
+Vi3 c3d 0 0
+Hd1 u1h1 br Vi1 151.520524992368
+Ras11 u1h1 u1r1 216.888889088716
+Lmas11 u1r1 u1m1 9.10031941674923
+Ccas11 u1m1 u1k1 0.00000115928833817496
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 bf 0
+Hd2 u2h1 br Vi2 151.520524992368
+Ras21 u2h1 u2r1 216.888889088716
+Lmas21 u2r1 u2m1 9.10031941674923
+Ccas21 u2m1 u2k1 0.00000115928833817496
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 bf 0
+Hd3 u3h1 br Vi3 151.520524992368
+Ras31 u3h1 u3r1 216.888889088716
+Lmas31 u3r1 u3m1 9.10031941674923
+Ccas31 u3m1 u3k1 0.00000115928833817496
+Rbl_u3k1 u3k1 0 1e+15
+Vcone3 u3k1 bf 0
+Rbl_bf bf 0 1e+15
+Cabf bf 0 1.57796780447301e-7
+Rapf bf fp1 314.52127238596
+Lmapf fp1 fp2 70.0725288799929
+Vportf fp2 0 0
+Fvf 0 vf Vportf 41.3386107169637
+Rvf vf 0 1
+Rbl_br br 0 1e+15
+Rabr br rb1 182.658452736643
+Cabr rb1 0 2.45728030322167e-7
+Rbl_rb1 rb1 0 1e+15
+Ralr br rl1 182658.452736643
+Vleakr rl1 0 0
+Vrapr br rp1 0
+Lmapr rp1 rp2 81.9849712126677
+Vportr rp2 0 0
+Fvr 0 vr Vportr 86.4797550893336
+Rvr vr 0 1
+Ricl br bf 280177.066924803
+Fpo1 0 prs Vportf 1
+Fpo2 0 prs Vleakr 1
+Fpo3 0 prs Vportr 1
+Lrad prs 0 0.154384363389331
+Fx 0 xn Vcone1 11.6918040453642
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vf) V(vr) V(br) V(bf) I(Vin) I(Vcone1) I(Vportf)
+.ac dec 50 5 2000
+.end

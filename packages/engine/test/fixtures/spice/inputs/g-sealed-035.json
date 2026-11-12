@@ -1,0 +1,31 @@
+{
+  "id": "g-sealed-035",
+  "title": "sealed, eminence/beta-12a (Qts 0.46), 43.11 L",
+  "driver": {
+    "fs": 47,
+    "qms": 6,
+    "qes": 0.5,
+    "vas_l": 120.1,
+    "re": 5,
+    "sd_cm2": 538.9,
+    "le_mh": 0.64
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 43.11
+  },
+  "opts": {
+    "rg": 0,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

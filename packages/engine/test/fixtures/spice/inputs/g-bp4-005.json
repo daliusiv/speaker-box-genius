@@ -1,0 +1,50 @@
+{
+  "id": "g-bp4-005",
+  "title": "bp4, celestion/tf0615 (Qts 0.61), 5.636 L, rear 1.734 L closed, front 3.902 L port at 176.2 Hz",
+  "driver": {
+    "fs": 104.7,
+    "qms": 3.949,
+    "qes": 0.719,
+    "vas_l": 6.41,
+    "re": 7.08,
+    "sd_cm2": 153.94,
+    "le_mh": 0.47
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 1.734
+    },
+    "front": {
+      "vb_l": 3.902,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 7.541,
+        "length_cm": 6.372
+      },
+      "qp": 87,
+      "ql": 14,
+      "qa": null
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

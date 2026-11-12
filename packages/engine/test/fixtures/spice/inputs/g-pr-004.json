@@ -1,0 +1,42 @@
+{
+  "id": "g-pr-004",
+  "title": "passive-radiator, faital-pro/10hp1020 (Qts 0.24), 15.54 L, Fb 61.9 Hz, 2 × dayton-audio/rss315-pr",
+  "driver": {
+    "fs": 60,
+    "qms": 6.5,
+    "qes": 0.25,
+    "vas_l": 16.1,
+    "re": 5.5,
+    "sd_cm2": 345,
+    "le_mh": 0.85
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 15.54,
+    "pr": {
+      "mms_g": 300,
+      "sd_cm2": 506.7,
+      "cms_mm_per_n": 0.22,
+      "qms": 4.79
+    },
+    "prCount": 2,
+    "addedMass_g": 40.25,
+    "ql": 15,
+    "qa": 49
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 142,
+    "driveModel": "winisd",
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

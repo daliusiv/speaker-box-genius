@@ -1,0 +1,49 @@
+{
+  "id": "g-chain-020",
+  "title": "chain (sealed), peerless/pls-75f25al02-08 (Qts 0.74), 0.7251 L, HP butterworth 2, passive parts",
+  "driver": {
+    "fs": 100,
+    "qms": 6.71,
+    "qes": 0.836,
+    "vas_l": 1.08,
+    "re": 6.3,
+    "sd_cm2": 28.9,
+    "le_mh": 0.092
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 0.7251
+  },
+  "opts": {
+    "rg": 0.5,
+    "driveModel": "winisd",
+    "power": 1,
+    "distance_m": 2,
+    "highPass": {
+      "type": "butterworth",
+      "order": 2,
+      "freq": 66.92
+    },
+    "passive": {
+      "branches": [
+        {},
+        {
+          "r": 3.028
+        },
+        {},
+        {
+          "l_mH": 1.215
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

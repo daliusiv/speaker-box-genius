@@ -1,0 +1,42 @@
+{
+  "id": "g-pr-010",
+  "title": "passive-radiator, seas/l15rly-p (Qts 0.36), 8.102 L, Fb 31.6 Hz, 4 × dayton-audio/ds90-pr",
+  "driver": {
+    "fs": 44,
+    "qms": 2.1,
+    "qes": 0.43,
+    "vas_l": 12,
+    "re": 5.5,
+    "sd_cm2": 75,
+    "le_mh": 0.84
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 8.102,
+    "pr": {
+      "mms_g": 5.5,
+      "sd_cm2": 31.2,
+      "cms_mm_per_n": 2.55,
+      "qms": 5.9
+    },
+    "prCount": 4,
+    "addedMass_g": 21.68,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "parallel",
+    "rg": 0.5,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

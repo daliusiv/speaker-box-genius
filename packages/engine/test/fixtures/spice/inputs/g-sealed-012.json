@@ -1,0 +1,35 @@
+{
+  "id": "g-sealed-012",
+  "title": "sealed, peerless/gbs-115n25al01-04 (Qts 0.63), 3.086 L",
+  "driver": {
+    "fs": 90,
+    "qms": 3.46,
+    "qes": 0.772,
+    "vas_l": 1.79,
+    "re": 3.3,
+    "sd_cm2": 58.1,
+    "le_mh": 0.344
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 3.086
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "coilTemp_C": 146,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

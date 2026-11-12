@@ -1,0 +1,40 @@
+{
+  "id": "g-chain-027",
+  "title": "chain (vented), monacor/ftx1530-8ohm (Qts 0.28), 88.93 L, Fb 33.0 Hz",
+  "driver": {
+    "fs": 42.5,
+    "qms": 3.809,
+    "qes": 0.297,
+    "vas_l": 172.1,
+    "re": 5.36,
+    "sd_cm2": 855.3,
+    "le_mh": 0.82
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 88.93,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 11.22,
+      "length_cm": 22.85
+    },
+    "qp": 31
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0,
+    "driveModel": "winisd",
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

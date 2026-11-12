@@ -1,0 +1,61 @@
+{
+  "id": "g-bp6s-052",
+  "title": "bp6s, 18-sound/8ntls2000-4ohm (Qts 0.23), 17.46 L, rear 9.903 L port at 27.8 Hz, front 7.557 L 4 × sb-acoustics/sb34nrx2-00 at 50.6 Hz",
+  "driver": {
+    "fs": 43,
+    "qms": 10.4,
+    "qes": 0.24,
+    "vas_l": 30,
+    "re": 3,
+    "sd_cm2": 227,
+    "le_mh": 0.4
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 9.903,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.458,
+        "length_cm": 182
+      },
+      "portCount": 2,
+      "qp": null,
+      "ql": 6,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 7.557,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 294,
+            "sd_cm2": 506,
+            "cms_mm_per_n": 0.44,
+            "qms": 8.62
+          },
+          "count": 4,
+          "addedMass_g": 1296
+        }
+      ],
+      "ql": null,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "qicl": 166
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

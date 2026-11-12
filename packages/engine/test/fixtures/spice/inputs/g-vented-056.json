@@ -1,0 +1,38 @@
+{
+  "id": "g-vented-056",
+  "title": "vented, bc-speakers/15ds100-4ohm (Qts 0.22), 46.35 L, Fb 50.9 Hz",
+  "driver": {
+    "fs": 39,
+    "qms": 8.16,
+    "qes": 0.23,
+    "vas_l": 73,
+    "re": 2.4,
+    "sd_cm2": 855,
+    "le_mh": 2.8
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 46.35,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 16.86,
+      "length_cm": 42.3
+    },
+    "endCorrection": 0.85,
+    "qp": 139
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 123,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

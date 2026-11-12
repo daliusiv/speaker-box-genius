@@ -1,0 +1,64 @@
+{
+  "id": "g-bp6p-022",
+  "title": "bp6p, peerless/pls-75f25al02-08 (Qts 0.74), 0.9413 L, rear 0.591 L port at 60.2 Hz, front 0.3504 L 4 × dayton-audio/nd90-pr at 108.4 Hz",
+  "driver": {
+    "fs": 100,
+    "qms": 6.71,
+    "qes": 0.836,
+    "vas_l": 1.08,
+    "re": 6.3,
+    "sd_cm2": 28.9,
+    "le_mh": 0.092
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.591,
+      "port": {
+        "shape": "slot",
+        "width_cm": 1.487,
+        "height_cm": 0.4935,
+        "length_cm": 19.6
+      },
+      "portCount": 2,
+      "ql": 9,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 0.3504,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 8.1,
+            "sd_cm2": 31.2,
+            "cms_mm_per_n": 1.09,
+            "qms": 6.15
+          },
+          "count": 4,
+          "addedMass_g": 27.83
+        }
+      ],
+      "ql": 21,
+      "qa": 89
+    },
+    "endCorrection": 0.85,
+    "qicl": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "power": 100,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

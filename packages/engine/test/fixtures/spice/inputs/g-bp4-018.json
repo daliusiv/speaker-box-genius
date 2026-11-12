@@ -1,0 +1,47 @@
+{
+  "id": "g-bp4-018",
+  "title": "bp4, 18-sound/12mb600-8ohm (Qts 0.18), 39.76 L, rear 21.3 L closed, front 18.46 L port at 106.9 Hz",
+  "driver": {
+    "fs": 44,
+    "qms": 3.9,
+    "qes": 0.19,
+    "vas_l": 115,
+    "re": 5,
+    "sd_cm2": 531,
+    "le_mh": 1.32
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 21.3,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 18.46,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 11.31,
+        "length_cm": 4.929
+      },
+      "ql": 28,
+      "qa": 49
+    },
+    "endCorrection": 0.85,
+    "qicl": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 77,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

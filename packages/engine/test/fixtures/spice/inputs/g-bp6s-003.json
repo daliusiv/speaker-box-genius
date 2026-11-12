@@ -1,0 +1,53 @@
+{
+  "id": "g-bp6s-003",
+  "title": "bp6s, dayton-audio/ds270-8 (Qts 0.44), 74.7 L, rear 35.28 L port at 25.7 Hz, front 39.43 L port at 33.8 Hz",
+  "driver": {
+    "fs": 31.6,
+    "qms": 2.4,
+    "qes": 0.54,
+    "vas_l": 87.7,
+    "re": 5.4,
+    "sd_cm2": 353,
+    "le_mh": 1.25
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 35.28,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.227,
+        "length_cm": 23.72
+      },
+      "ql": 12,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 39.43,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.837,
+        "length_cm": 13.44
+      },
+      "qp": 26,
+      "ql": 22,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "qicl": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 82,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

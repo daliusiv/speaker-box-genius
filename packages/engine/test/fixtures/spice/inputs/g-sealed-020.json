@@ -1,0 +1,30 @@
+{
+  "id": "g-sealed-020",
+  "title": "sealed, redcatt/5fr (Qts 0.69), 1.68 L",
+  "driver": {
+    "fs": 92,
+    "qms": 11.4,
+    "qes": 0.73,
+    "vas_l": 3.8,
+    "re": 5.6,
+    "sd_cm2": 90,
+    "le_mh": 0.28
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 1.68
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

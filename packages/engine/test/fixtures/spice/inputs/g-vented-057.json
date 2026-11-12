@@ -1,0 +1,38 @@
+{
+  "id": "g-vented-057",
+  "title": "vented, sb-acoustics/sb17nbac35-8 (Qts 0.35), 39.72 L, Fb 24.6 Hz",
+  "driver": {
+    "fs": 31.5,
+    "qms": 4.1,
+    "qes": 0.38,
+    "vas_l": 45,
+    "re": 5.7,
+    "sd_cm2": 118,
+    "le_mh": 0.15
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 39.72,
+    "port": {
+      "shape": "slot",
+      "width_cm": 7.168,
+      "height_cm": 2.28,
+      "length_cm": 16.92
+    },
+    "endCorrection": 0.85,
+    "qp": 113
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 100
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

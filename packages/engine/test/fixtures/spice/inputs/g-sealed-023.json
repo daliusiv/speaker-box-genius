@@ -1,0 +1,33 @@
+{
+  "id": "g-sealed-023",
+  "title": "sealed, markaudio/chr-70 (Qts 0.55), 3.765 L",
+  "driver": {
+    "fs": 65.4,
+    "qms": 2.66,
+    "qes": 0.69,
+    "vas_l": 5.17,
+    "re": 7.2,
+    "sd_cm2": 50.2,
+    "le_mh": 0.0324
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 3.765,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 147,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -53,3 +53,12 @@ test("port calculator: fit, wall-slot range, pipe resonance, and inputs that can
   assert.equal(portCalc({ ...base, diameter_cm: 0 }, AIR), null);
   assert.equal(portCalc({ ...base, vb_l: 2000, fb: 60, diameter_cm: 3 }, AIR), null); // would need a negative length
 });
+
+test("port calculator: WinISD's \"1st port resonance\" is the pipe resonance without end corrections", () => {
+  // WinISD 0.7.0.950, Vents tab: a 30 × 5 cm vent in 60 L at 32.395 Hz, its own air → 61.16 cm, 280.97 Hz.
+  const air = { c: 343.684120962, rho: 1.20095217715 };
+  const r = portCalc({ ...base, vb_l: 60, fb: 32.3950083886, shape: "slot" }, air)!;
+  assert.ok(Math.abs(r.length_cm - 61.16) < 0.006, `${r.length_cm}`);
+  assert.ok(Math.abs(r.pipeNoEnds_hz - 280.97) < 0.03, `${r.pipeNoEnds_hz}`);
+  assert.ok(r.pipe_hz < r.pipeNoEnds_hz);
+});

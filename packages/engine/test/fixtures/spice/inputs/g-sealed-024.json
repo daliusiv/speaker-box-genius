@@ -1,0 +1,33 @@
+{
+  "id": "g-sealed-024",
+  "title": "sealed, peerless/pls-p830986 (Qts 0.80), 0.7333 L",
+  "driver": {
+    "fs": 110,
+    "qms": 5.2,
+    "qes": 0.944,
+    "vas_l": 0.834,
+    "re": 6.2,
+    "sd_cm2": 27.3,
+    "le_mh": 0.121
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 0.7333,
+    "ql": 25,
+    "qa": 30
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 90,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

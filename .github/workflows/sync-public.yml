@@ -1,0 +1,106 @@
+name: Sync with public repo
+
+# Private dev repo only. Nightly (03:00 UTC) or by hand, scripts/sync-public.sh:
+#   1. copies commits merged on the public repo into a dev branch and opens a
+#      "Changes from public" PR in dev (CI and preview run on it);
+#   2. publishes dev main to public main as one "Sync from dev, <date>" commit, but only
+#      when dev main's checks are green and dev already has every public change. CHANGELOG.md's
+#      Unreleased entries are dated on dev main first and become the public commit's description.
+# Needs: secrets PUBLIC_DEPLOY_KEY (write, public repo; on its ruleset's bypass list) and
+# DEV_DEPLOY_KEY (write, this repo), variable PUBLIC_REPO (owner/name).
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: show what would happen, push nothing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  checks: read
+  pull-requests: write
+
+concurrency:
+  group: sync-public
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: ${{ github.event.repository.private == true }}
+    runs-on: ubuntu-latest
+    env:
+      DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || '0' }}
+      INCOMING_BRANCH: sync/from-public
+    steps:
+      # The script comes from the run's own ref (so a branch can be tried with a manual
+      # dry run); what gets synced is always dev main, fetched by the script itself.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Are dev main's checks green?
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(git rev-parse origin/main)
+          bad=$(gh api "repos/${{ github.repository }}/commits/$sha/check-runs?per_page=100" \
+            --jq '[.check_runs[] | select(.name != "sync") | select(.status != "completed" or (.conclusion | IN("success","skipped","neutral") | not))] | length')
+          echo "Checks not green on ${sha:0:7}: $bad"
+          echo "publish_allowed=$([ "$bad" = 0 ] && echo 1 || echo 0)" >> "$GITHUB_OUTPUT"
+
+      - name: Remotes (deploy keys)
+        env:
+          PUBLIC_KEY: ${{ secrets.PUBLIC_DEPLOY_KEY }}
+          DEV_KEY: ${{ secrets.DEV_DEPLOY_KEY }}
+          PUBLIC_REPO: ${{ vars.PUBLIC_REPO }}
+        run: |
+          if [ -z "$PUBLIC_KEY" ] || [ -z "$DEV_KEY" ] || [ -z "$PUBLIC_REPO" ]; then
+            echo "::error::Set secrets PUBLIC_DEPLOY_KEY and DEV_DEPLOY_KEY and variable PUBLIC_REPO."
+            exit 1
+          fi
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$PUBLIC_KEY" > ~/.ssh/public_key
+          printf '%s\n' "$DEV_KEY" > ~/.ssh/dev_key
+          chmod 600 ~/.ssh/public_key ~/.ssh/dev_key
+          ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+          printf 'Host github-public\n  HostName github.com\n  User git\n  IdentityFile ~/.ssh/public_key\n  IdentitiesOnly yes\nHost github-dev\n  HostName github.com\n  User git\n  IdentityFile ~/.ssh/dev_key\n  IdentitiesOnly yes\n' > ~/.ssh/config
+          git remote add dev "git@github-dev:${{ github.repository }}.git"
+          git remote add public "git@github-public:${PUBLIC_REPO}.git"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync
+        id: sync
+        env:
+          PUBLISH_ALLOWED: ${{ steps.gate.outputs.publish_allowed }}
+        run: bash scripts/sync-public.sh
+
+      # A PR opened with GITHUB_TOKEN doesn't start other workflows, so a new PR gets one
+      # empty commit pushed with the dev deploy key: that push starts CI and the preview.
+      - name: Open or update the "Changes from public" PR
+        if: ${{ steps.sync.outputs.incoming == 'true' && env.DRY_RUN == '0' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          open=$(gh pr list --head "$INCOMING_BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$open" ]; then
+            echo "- Updated PR #$open" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          gh pr create --base main --head "$INCOMING_BRANCH" --title "Changes from public" \
+            --body "Commits merged on the public repo since the last sync, copied here (authors kept) by the nightly sync. Merge this to let the next sync publish dev main again."
+          git fetch -q dev "$INCOMING_BRANCH"
+          git checkout -q -B "$INCOMING_BRANCH" "dev/$INCOMING_BRANCH"
+          git commit -q --allow-empty -m "Start checks for the changes from public"
+          git push -q dev "HEAD:refs/heads/$INCOMING_BRANCH"
+          echo "- Opened the \"Changes from public\" PR" >> "$GITHUB_STEP_SUMMARY"

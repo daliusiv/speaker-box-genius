@@ -1,0 +1,33 @@
+{
+  "id": "g-sealed-009",
+  "title": "sealed, beyma/15p80nd (Qts 0.21), 348.2 L",
+  "driver": {
+    "fs": 39,
+    "qms": 5.1,
+    "qes": 0.22,
+    "vas_l": 184,
+    "re": 5.1,
+    "sd_cm2": 880,
+    "le_mh": 0.8
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 348.2
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

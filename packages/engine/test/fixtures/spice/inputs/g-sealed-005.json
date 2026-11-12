@@ -1,0 +1,32 @@
+{
+  "id": "g-sealed-005",
+  "title": "sealed, bc-speakers/15ds115-4ohm (Qts 0.16), 53.1 L",
+  "driver": {
+    "fs": 34,
+    "qms": 4.7,
+    "qes": 0.17,
+    "vas_l": 83,
+    "re": 3.2,
+    "sd_cm2": 855,
+    "le_mh": 3.2
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 53.1,
+    "ql": 23,
+    "qa": 110
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

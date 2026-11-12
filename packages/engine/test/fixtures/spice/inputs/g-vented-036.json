@@ -1,0 +1,37 @@
+{
+  "id": "g-vented-036",
+  "title": "vented, peerless/hds-p830883 (Qts 0.67), 11.55 L, Fb 63.1 Hz",
+  "driver": {
+    "fs": 68,
+    "qms": 2.18,
+    "qes": 0.971,
+    "vas_l": 6.81,
+    "re": 5.9,
+    "sd_cm2": 143,
+    "le_mh": 0.215
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 11.55,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 6.555,
+      "length_cm": 17.18
+    }
+  },
+  "opts": {
+    "rg": 0.5,
+    "coilTemp_C": 96,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

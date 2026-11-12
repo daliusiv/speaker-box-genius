@@ -1,0 +1,37 @@
+{
+  "id": "g-vented-033",
+  "title": "vented, peerless/gbs-115n25al01-04 (Qts 0.63), 1.577 L, Fb 68.9 Hz",
+  "driver": {
+    "fs": 90,
+    "qms": 3.46,
+    "qes": 0.772,
+    "vas_l": 1.79,
+    "re": 3.3,
+    "sd_cm2": 58.1,
+    "le_mh": 0.344
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 1.577,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 4.155,
+      "length_cm": 51.11
+    },
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

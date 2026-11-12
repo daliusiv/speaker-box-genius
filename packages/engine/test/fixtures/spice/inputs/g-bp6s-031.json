@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6s-031",
+  "title": "bp6s, dayton-audio/pcs12-4 (Qts 0.67), 138.4 L, rear 57.42 L port at 26.4 Hz, front 80.99 L port at 57.7 Hz",
+  "driver": {
+    "fs": 30,
+    "qms": 6.4,
+    "qes": 0.75,
+    "vas_l": 88.9,
+    "re": 3.5,
+    "sd_cm2": 487,
+    "le_mh": 2.1
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 57.42,
+      "port": {
+        "shape": "slot",
+        "width_cm": 22.8,
+        "height_cm": 2.4,
+        "length_cm": 34.91
+      }
+    },
+    "front": {
+      "vb_l": 80.99,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 12.9,
+        "length_cm": 5.067
+      },
+      "qp": 145,
+      "ql": 4,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "qicl": null
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0.5,
+    "power": 1,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "g-pr-053",
+  "title": "passive-radiator, faital-pro/12xl1200 (Qts 0.42), 12.23 L, Fb 56.2 Hz, 2 × dayton-audio/dsa315-pr + 1 × dayton-audio/rss265-pr",
+  "driver": {
+    "fs": 50,
+    "qms": 14.8,
+    "qes": 0.43,
+    "vas_l": 25,
+    "re": 5,
+    "sd_cm2": 518,
+    "le_mh": 1.3
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 12.23,
+    "pr": {
+      "mms_g": 142.6,
+      "sd_cm2": 480,
+      "cms_mm_per_n": 0.58,
+      "qms": 6.23
+    },
+    "prCount": 2,
+    "addedMass_g": 300.1,
+    "extraPrs": [
+      {
+        "pr": {
+          "mms_g": 200,
+          "sd_cm2": 356.3,
+          "cms_mm_per_n": 0.33,
+          "qms": 4.92
+        },
+        "count": 1
+      }
+    ],
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

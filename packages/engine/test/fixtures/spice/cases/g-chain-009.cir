@@ -1,0 +1,57 @@
+* g-chain-009: chain (vented), sb-acoustics/sb13pfcr25-4 (Qts 0.29), 25.45 L, Fb 38.3 Hz, HP linkwitz-riley 2
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 src 0 AC 9.79795897113271
+A1 %vd(src 0) %vd(f1 0) xf1
+A2 %vd(f1 0) %vd(amp 0) xf2
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 3.2
+Le1 c1a c1b 0.00056
+Hemf1 c1b c1d Vcone1 609.270106534812
+Vi1 c1d w1 0
+Re2 w1 c2a 3.2
+Le2 c2a c2b 0.00056
+Hemf2 c2b c2d Vcone2 609.270106534812
+Vi2 c2d w2 0
+Re3 w2 c3a 3.2
+Le3 c3a c3b 0.00056
+Hemf3 c3b c3d Vcone3 609.270106534812
+Vi3 c3d 0 0
+Hd1 u1h1 0 Vi1 609.270106534812
+Ras11 u1h1 u1r1 14723.4760452633
+Lmas11 u1r1 u1m1 138.468554078563
+Ccas11 u1m1 u1k1 9.44895439935284e-8
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Hd2 u2h1 0 Vi2 609.270106534812
+Ras21 u2h1 u2r1 14723.4760452633
+Lmas21 u2r1 u2m1 138.468554078563
+Ccas21 u2m1 u2k1 9.44895439935284e-8
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 box 0
+Hd3 u3h1 0 Vi3 609.270106534812
+Ras31 u3h1 u3r1 14723.4760452633
+Lmas31 u3r1 u3m1 138.468554078563
+Ccas31 u3m1 u3k1 9.44895439935284e-8
+Rbl_u3k1 u3k1 0 1e+15
+Vcone3 u3k1 box 0
+Rbl_box box 0 1e+15
+Rap box p1 179.524250729239
+Lmap p1 p2 96.2481537668372
+Vport p2 0 0
+Fvp 0 vn Vport 1121.78104322499
+Rvn vn 0 1
+Cab box 0 1.79459619002634e-7
+Fpc1 0 prs Vcone1 -1
+Fpc2 0 prs Vcone2 -1
+Fpc3 0 prs Vcone3 -1
+Fpp 0 prs Vport 1
+Lrad prs 0 0.191622551482642
+Fx 0 xn Vcone1 114.942528735632
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vn) V(box) I(Vin) I(Vcone1) I(Vport)
+.model xf1 s_xfer(num_coeff=[1 0] den_coeff=[1 224.686706584742])
+.model xf2 s_xfer(num_coeff=[1 0] den_coeff=[1 224.686706584742])
+.ac dec 50 5 2000
+.end

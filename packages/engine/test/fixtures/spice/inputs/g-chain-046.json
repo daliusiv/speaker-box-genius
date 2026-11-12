@@ -1,0 +1,59 @@
+{
+  "id": "g-chain-046",
+  "title": "chain (vented), sb-acoustics/sb12nrxf25-8 (Qts 0.42), 3.936 L, Fb 52.8 Hz, HP linkwitz-riley 4, 2 EQ",
+  "driver": {
+    "fs": 63,
+    "qms": 5.4,
+    "qes": 0.46,
+    "vas_l": 4.2,
+    "re": 6.4,
+    "sd_cm2": 50,
+    "le_mh": 0.34
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 3.936,
+    "port": {
+      "shape": "slot",
+      "width_cm": 6.758,
+      "height_cm": 1.82,
+      "length_cm": 30.17
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 100,
+    "convention": "volts",
+    "power": 2.83,
+    "distance_m": 2,
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 4,
+      "freq": 39.7
+    },
+    "eq": [
+      {
+        "type": "peak",
+        "freq": 292.3,
+        "gain_db": 4.87,
+        "q": 1.904
+      },
+      {
+        "type": "highshelf",
+        "freq": 102.2,
+        "gain_db": 7.703,
+        "q": 1.301
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

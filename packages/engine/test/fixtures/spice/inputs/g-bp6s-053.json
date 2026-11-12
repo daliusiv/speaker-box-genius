@@ -1,0 +1,51 @@
+{
+  "id": "g-bp6s-053",
+  "title": "bp6s, celestion/cf1025c (Qts 0.27), 16.16 L, rear 7.26 L port at 49.3 Hz, front 8.9 L port at 83.1 Hz",
+  "driver": {
+    "fs": 54.8,
+    "qms": 2.338,
+    "qes": 0.299,
+    "vas_l": 38.63,
+    "re": 5.15,
+    "sd_cm2": 346.36,
+    "le_mh": 0.57
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 7.26,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 11.18,
+        "length_cm": 161.5
+      },
+      "ql": 7,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 8.9,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 7.401,
+        "length_cm": 15.96
+      },
+      "ql": 13,
+      "qa": 17
+    },
+    "rearPortTo": "front",
+    "qicl": 144
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 100
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

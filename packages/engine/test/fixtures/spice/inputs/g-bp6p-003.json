@@ -1,0 +1,57 @@
+{
+  "id": "g-bp6p-003",
+  "title": "bp6p, dayton-audio/nd140-8 (Qts 0.68), 4.427 L, rear 2.643 L 1 × purifi/ptt5-25pr-nf2-01 at 38.7 Hz, front 1.784 L port at 57.6 Hz",
+  "driver": {
+    "fs": 56.5,
+    "qms": 5.01,
+    "qes": 0.79,
+    "vas_l": 7.74,
+    "re": 7.8,
+    "sd_cm2": 86.6,
+    "le_mh": 1.44
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 2.643,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 50,
+            "sd_cm2": 84.9,
+            "cms_mm_per_n": 1.28,
+            "qms": 9.9
+          },
+          "count": 1,
+          "addedMass_g": 28.54
+        }
+      ]
+    },
+    "front": {
+      "vb_l": 1.784,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.458,
+        "length_cm": 113.8
+      },
+      "ql": 21,
+      "qa": null
+    },
+    "qicl": 21
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 101,
+    "power": 10,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

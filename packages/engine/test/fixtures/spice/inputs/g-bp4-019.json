@@ -1,0 +1,47 @@
+{
+  "id": "g-bp4-019",
+  "title": "bp4, bc-speakers/14ndl88-8ohm (Qts 0.30), 56 L, rear 30.22 L closed, front 25.78 L port at 57.8 Hz",
+  "driver": {
+    "fs": 45,
+    "qms": 7.8,
+    "qes": 0.31,
+    "vas_l": 102,
+    "re": 5,
+    "sd_cm2": 707,
+    "le_mh": 1.2
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 30.22
+    },
+    "front": {
+      "vb_l": 25.78,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 11.68,
+        "length_cm": 30.79
+      },
+      "ql": null,
+      "qa": null
+    },
+    "endCorrection": 0.613,
+    "qicl": null
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "series",
+    "rg": 0.5,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

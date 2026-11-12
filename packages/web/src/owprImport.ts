@@ -20,7 +20,7 @@ export function withOpenisdDriver(s: AppState, d: OpenisdDriver, fallbackName: s
     xmax_mm: d.xmax_mm ?? s.xmax_mm,
     pe_w: d.pe_w ?? s.pe_w,
     dvc: { ...s.dvc, on: false },
-    volume: { ...s.volume, driverCutout_mm: 0 },
+    volume: { ...s.volume, driverCutout_mm: 0, driverDepth_mm: 0 },
   };
 }
 

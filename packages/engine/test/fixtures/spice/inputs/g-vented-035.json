@@ -1,0 +1,41 @@
+{
+  "id": "g-vented-035",
+  "title": "vented, faital-pro/4fe42 (Qts 0.47), 3.291 L, Fb 96.9 Hz",
+  "driver": {
+    "fs": 110,
+    "qms": 8,
+    "qes": 0.5,
+    "vas_l": 1.9,
+    "re": 5.4,
+    "sd_cm2": 50.9,
+    "le_mh": 0.07
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 3.291,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 2.837,
+      "length_cm": 10.47
+    },
+    "portCount": 2,
+    "endCorrection": 0.613,
+    "ql": null,
+    "qa": null,
+    "qp": 141
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

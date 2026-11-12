@@ -1,0 +1,38 @@
+{
+  "id": "g-pr-037",
+  "title": "passive-radiator, dayton-audio/dc130b-8 (Qts 0.38), 3.921 L, Fb 57.2 Hz, 4 × dayton-audio/nd105-pr",
+  "driver": {
+    "fs": 52.5,
+    "qms": 1.85,
+    "qes": 0.48,
+    "vas_l": 12.4,
+    "re": 5.7,
+    "sd_cm2": 91.6,
+    "le_mh": 0.77
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 3.921,
+    "pr": {
+      "mms_g": 13.9,
+      "sd_cm2": 51.5,
+      "cms_mm_per_n": 0.68,
+      "qms": 5.93
+    },
+    "prCount": 4,
+    "addedMass_g": 27.21
+  },
+  "opts": {
+    "rg": 0,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

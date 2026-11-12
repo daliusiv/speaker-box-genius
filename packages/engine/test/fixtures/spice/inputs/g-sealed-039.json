@@ -1,0 +1,35 @@
+{
+  "id": "g-sealed-039",
+  "title": "sealed, faital-pro/12fe330 (Qts 0.45), 92.47 L",
+  "driver": {
+    "fs": 33,
+    "qms": 7,
+    "qes": 0.48,
+    "vas_l": 146.7,
+    "re": 5.3,
+    "sd_cm2": 579,
+    "le_mh": 1.1
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 92.47
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.5,
+    "coilTemp_C": 115,
+    "driveModel": "winisd",
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

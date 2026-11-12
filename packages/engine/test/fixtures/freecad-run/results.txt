@@ -1,0 +1,78 @@
+FreeCAD 1.1.4
+== 01-wedge-front-butt: OK
+  Cavity: FreeCAD 75.599 L, app 75.599 L, relative error 5.7e-10
+  Pieces + cavity: FreeCAD 98.800 L, app 98.800 L, relative error 0.0e+00
+    side_left      Side                         vol      2.223 L  faces   6  valid True
+    side_right     Side001                      vol      2.223 L  faces   6  valid True
+    top            Top                          vol      3.487 L  faces   6  valid True
+    bottom         Bottom                       vol      5.452 L  faces   6  valid True
+    back           Back                         vol      4.731 L  faces   6  valid True
+    baffle         Baffle (sloped)              vol      3.962 L  faces   7  valid True
+    Cavity         Cavity (air inside)          vol     75.599 L  faces   6  valid True
+== 02-wedge-front-miter: OK
+  Cavity: FreeCAD 75.599 L, app 75.599 L, relative error 5.7e-10
+  Pieces + cavity: FreeCAD 98.800 L, app 98.800 L, relative error 1.5e-16
+    side_left      Side                         vol      2.223 L  faces   6  valid True
+    side_right     Side001                      vol      2.223 L  faces   6  valid True
+    top            Top                          vol      3.230 L  faces   6  valid True
+    bottom         Bottom                       vol      5.195 L  faces   6  valid True
+    back           Back                         vol      4.978 L  faces   6  valid True
+    baffle         Baffle (sloped)              vol      3.856 L  faces   8  valid True
+    Cavity         Cavity (air inside)          vol     75.599 L  faces   6  valid True
+== 03-wedge-rear-butt: OK
+  Cavity: FreeCAD 75.599 L, app 75.599 L, relative error 5.7e-10
+  Pieces + cavity: FreeCAD 98.800 L, app 98.800 L, relative error 0.0e+00
+    side_left      Side                         vol      2.223 L  faces   6  valid True
+    side_right     Side001                      vol      2.223 L  faces   6  valid True
+    top            Top                          vol      3.487 L  faces   6  valid True
+    bottom         Bottom                       vol      5.452 L  faces   6  valid True
+    back           Back (sloped)                vol      5.086 L  faces   6  valid True
+    baffle         Baffle                       vol      3.606 L  faces   7  valid True
+    Cavity         Cavity (air inside)          vol     75.599 L  faces   6  valid True
+== 04-wedge-rear-miter: OK
+  Cavity: FreeCAD 75.599 L, app 75.599 L, relative error 5.7e-10
+  Pieces + cavity: FreeCAD 98.800 L, app 98.800 L, relative error 0.0e+00
+    side_left      Side                         vol      2.223 L  faces   6  valid True
+    side_right     Side001                      vol      2.223 L  faces   6  valid True
+    top            Top                          vol      3.230 L  faces   6  valid True
+    bottom         Bottom                       vol      5.195 L  faces   6  valid True
+    back           Back (sloped)                vol      5.352 L  faces   6  valid True
+    baffle         Baffle                       vol      3.854 L  faces   7  valid True
+    Cavity         Cavity (air inside)          vol     75.599 L  faces   6  valid True
+== 05-wedge-double-baffle: OK
+  Cavity: FreeCAD 70.513 L, app 70.513 L, relative error 1.2e-09
+  Pieces + cavity: FreeCAD 98.800 L, app 98.800 L, relative error 0.0e+00
+    side_left      Side                         vol      2.223 L  faces   6  valid True
+    side_right     Side001                      vol      2.223 L  faces   6  valid True
+    top            Top                          vol      3.487 L  faces   6  valid True
+    bottom         Bottom                       vol      5.452 L  faces   6  valid True
+    back           Back                         vol      4.731 L  faces   6  valid True
+    baffle         Baffle (sloped)              vol      7.923 L  faces   7  valid True
+    Cavity         Cavity (air inside)          vol     70.513 L  faces   6  valid True
+== 06-box-2-drivers: OK
+  Cavity: FreeCAD 53.033 L, app 53.033 L, relative error 0.0e+00
+  Pieces + cavity: FreeCAD 70.000 L, app 70.000 L, relative error 0.0e+00
+    side_left      Side                         vol      2.520 L  faces   6  valid True
+    side_right     Side001                      vol      2.520 L  faces   6  valid True
+    top            Top                          vol      2.923 L  faces   6  valid True
+    bottom         Bottom                       vol      2.923 L  faces   6  valid True
+    back           Back                         vol      3.040 L  faces   6  valid True
+    baffle         Baffle                       vol      2.486 L  faces   8  valid True
+    Cavity         Cavity (air inside)          vol     53.033 L  faces   6  valid True
+== 07-cylinder: OK
+  Cavity: FreeCAD 51.521 L, app 51.521 L, relative error 7.2e-15
+  Wall + cavity: FreeCAD 62.832 L, app 62.832 L, relative error 2.1e-15
+    tube           Tube                         vol      7.314 L  faces   4  valid True
+    cap_bottom     End cap (bottom)             vol      1.999 L  faces   3  valid True
+    cap_top        End cap (top)                vol      1.999 L  faces   3  valid True
+    Cavity         Cavity (air inside)          vol     51.521 L  faces   3  valid True
+== 08-sphere: OK
+  Cavity: FreeCAD 27.833 L, app 27.833 L, relative error 1.4e-14
+  Wall + cavity: FreeCAD 33.510 L, app 33.510 L, relative error 3.7e-15
+    shell          Shell                        vol      5.677 L  faces   2  valid True
+    Cavity         Cavity (air inside)          vol     27.833 L  faces   1  valid True
+== 09-tapered: OK
+  Cavity: FreeCAD 44.247 L, app 44.247 L, relative error 3.2e-09
+  Wall + cavity: FreeCAD 59.625 L, app 59.625 L, relative error 2.5e-16
+    shell          Shell                        vol     15.378 L  faces  12  valid True
+    Cavity         Cavity (air inside)          vol     44.247 L  faces   6  valid True

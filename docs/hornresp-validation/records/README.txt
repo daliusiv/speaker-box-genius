@@ -103,3 +103,45 @@ layout can be matched to your version.
 
 The .json files are the same designs in Speaker Box Genius' own format; Hornresp
 doesn't need them.
+
+Re-run on Hornresp 60.70 (10 Nov 2026)
+======================================
+
+Every earlier export came out identical. File names in the Export dialog are
+limited to 16 characters.
+
+Records with the coil models already on (import, Calculate, export; no
+double-clicking): B8a / B8b / B8c-sealed-semi-*, B13a / B13b-sealed-fdd-*
+("Semi-Inductance Model Flag = 1", "Damping Model Flag = 1") and B10-sealed-rg.
+The filter and EQ fields of a record are NOT applied on import: B12 and B15
+still need Tools > Filter Wizard.
+
+More lines and horns (make-records.ts):
+20-exp-tl, 21-multi-seg-tl, 22-offset-l5, 23-offset-tapered,
+24-sub-mltl-tapered, 25-mltl-big-port (also Output > Horn, and Particle
+Velocity > Horn Mouth read with the cursor), 26-tapped-con,
+27-sub-tapped-2seg, 28-fr-front-horn, 29-sub-front-par, 30-tl-2p, 32-sub-tqwt.
+
+More boxes (Calculate, Yes to masking, File > Export in the Acoustical Power
+window; for ported and PR boxes also Tools > Output > Port / Passive Radiator):
+N1-sealed-full-space, N2-ported-full-space (Ang = 4 x Pi)
+N3-sealed-quarter-space (Ang = 1 x Pi; the app has no quarter space yet)
+N4-pr-dual (two DSA270-PR as one radiator of 706 cm2)
+N5-pr-added-mass (+30 g), N6-pr-lossy (Rmp x5), N7-pr-small-box (20 L)
+N8-sub-sealed, N9-sub-ported (also Particle Velocity > Port Outlet)
+N10-fr-ported, N11-ported-all-coil-models (Rg 0.8 + semi B8b + FDD B13b)
+N12-pr-semi, N13-sealed-2p-rg, N14-ported-2s, N15-fr-sealed
+
+Maximum SPL with the amplifier's current limit: B13b, Tools > Maximum SPL,
+double-click the current limit's Off to turn it On, 2 A (Hornresp rounds the
+field to whole amps), OK, export as hornresp-maxspl-2a.txt.
+
+Air speed: Tools > Particle Velocity (Horn Mouth or Port Outlet) can't be
+exported; click the chart and read Freq / Velocity under it (the arrow keys
+step point by point). The readings are in each case's velocity.json.
+
+Probe 33-sub-tapped-early-tap (27 with the tap at 120 cm, written as four
+segments 30 / 90 / 30 / 150 cm by the old export), run 11 Nov 2026: it matches
+the app's case 27 layout with the tap at 150 cm (0.03 dB, 0.07 % impedance),
+not 120 cm (6.2 dB off). Hornresp takes the front tap where the last segment
+starts; the export refuses a horn with more than one section after its tap.

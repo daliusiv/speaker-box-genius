@@ -1,0 +1,52 @@
+{
+  "id": "g-bp6p-009",
+  "title": "bp6p, faital-pro/12fx600 (Qts 0.24), 136.6 L, rear 83.11 L port at 29.2 Hz, front 53.51 L port at 45.3 Hz",
+  "driver": {
+    "fs": 48,
+    "qms": 6.88,
+    "qes": 0.25,
+    "vas_l": 44.4,
+    "re": 5.3,
+    "sd_cm2": 538,
+    "le_mh": 1.34
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 83.11,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 10.02,
+        "length_cm": 59.17
+      },
+      "portCount": 2,
+      "ql": 14,
+      "qa": 101
+    },
+    "front": {
+      "vb_l": 53.51,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 9.389,
+        "length_cm": 30.92
+      },
+      "portCount": 2,
+      "qp": 59
+    }
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "series",
+    "rg": 0.1,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "id": "g-pr-011",
+  "title": "passive-radiator, dayton-audio/pc68-8 (Qts 0.63), 0.5 L, Fb 121.5 Hz, 4 × dayton-audio/nd65-pr",
+  "driver": {
+    "fs": 109,
+    "qms": 2.27,
+    "qes": 0.88,
+    "vas_l": 0.7,
+    "re": 6.8,
+    "sd_cm2": 21.2,
+    "le_mh": 0.47
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 0.5,
+    "pr": {
+      "mms_g": 3.2,
+      "sd_cm2": 15.6,
+      "cms_mm_per_n": 1.45,
+      "qms": 2.69
+    },
+    "prCount": 4,
+    "addedMass_g": 1.888
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 141,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "g-chain-039",
+  "title": "chain (vented), peerless/pls-75f25al02-08 (Qts 0.74), 2.899 L, Fb 128.7 Hz, HP linkwitz-riley 4, passive parts",
+  "driver": {
+    "fs": 100,
+    "qms": 6.71,
+    "qes": 0.836,
+    "vas_l": 1.08,
+    "re": 6.3,
+    "sd_cm2": 28.9,
+    "le_mh": 0.092
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 2.899,
+    "port": {
+      "shape": "slot",
+      "width_cm": 7.008,
+      "height_cm": 0.9528,
+      "length_cm": 2.027
+    },
+    "ql": 18,
+    "qa": 63,
+    "qp": 87
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 4,
+      "freq": 72.18
+    },
+    "passive": {
+      "branches": [
+        {
+          "l_mH": 7.228,
+          "c_uF": 447.7,
+          "join": "parallel"
+        },
+        {},
+        {
+          "l_mH": 7.156
+        },
+        {
+          "r": 9.347,
+          "l_mH": 4.071,
+          "c_uF": 216.2
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "g-vented-002",
+  "title": "vented, faital-pro/5pr120 (Qts 0.27), 1.296 L, Fb 93.2 Hz",
+  "driver": {
+    "fs": 100,
+    "qms": 8,
+    "qes": 0.28,
+    "vas_l": 4.2,
+    "re": 5,
+    "sd_cm2": 102.2,
+    "le_mh": 0.17
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 1.296,
+    "port": {
+      "shape": "slot",
+      "width_cm": 7.442,
+      "height_cm": 2.314,
+      "length_cm": 43.27
+    },
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

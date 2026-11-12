@@ -1,0 +1,39 @@
+{
+  "id": "g-vented-046",
+  "title": "vented, redcatt/30ff (Qts 0.78), 0.5503 L, Fb 115.9 Hz",
+  "driver": {
+    "fs": 119,
+    "qms": 3.87,
+    "qes": 0.98,
+    "vas_l": 0.81,
+    "re": 5.6,
+    "sd_cm2": 28.27,
+    "le_mh": 0.04
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 0.5503,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 2.268,
+      "length_cm": 14.69
+    },
+    "ql": null,
+    "qa": null,
+    "qp": 105
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 46,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

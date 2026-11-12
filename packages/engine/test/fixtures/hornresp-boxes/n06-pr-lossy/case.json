@@ -1,0 +1,19 @@
+{
+  "title": "Passive radiator, five times the damping",
+  "text": "B3 with Rmp 11.55 N·s/m (Qmp 1.05); the PR's output",
+  "frontAir": 1,
+  "input": {
+    "kind": "passive-radiator",
+    "vb_l": 50,
+    "pr": {
+      "mms_g": 88.16,
+      "sd_cm2": 353,
+      "cms_mm_per_n": 0.596,
+      "qms": 1.053
+    },
+    "addedMass_g": 3.83,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

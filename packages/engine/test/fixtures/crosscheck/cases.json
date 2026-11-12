@@ -1,0 +1,18 @@
+{
+  "rewTs": {
+    "sbg-za": { "truth": { "re": 3.2, "fs": 28, "qms": 4.5, "qes": 0.38, "le_mh": 1.2 }, "rew": { "fs": 28.0, "qms": 4.501, "qes": 0.380 } },
+    "sbg-zb": { "truth": { "re": 5.6, "fs": 45, "qms": 6, "qes": 0.5, "le_mh": 0.4, "l2_mh": 1.0, "r2_ohm": 8 }, "rew": { "fs": 45.0, "qms": 6.000, "qes": 0.500, "le_mh": 0.400 } },
+    "sbg-zc": { "truth": { "re": 6.2, "fs": 72, "qms": 3, "qes": 0.6, "le_mh": 0.25 }, "rew": { "fs": 72.0, "qms": 2.993, "qes": 0.598 } }
+  },
+  "winisdSlot": {
+    "box": { "vb_l": 60, "fb": 32.3950083886, "endCorrection": 0.732 },
+    "air": { "c": 343.684120962, "rho": 1.20095217715 },
+    "lengths_cm": [
+      { "width_cm": 10, "height_cm": 10, "winisd": 39.26 },
+      { "width_cm": 25, "height_cm": 4, "winisd": 39.26 },
+      { "width_cm": 30, "height_cm": 5, "winisd": 61.16 },
+      { "width_cm": 40, "height_cm": 2.5, "winisd": 39.26 }
+    ],
+    "roundCheck": { "diameter_cm": 10, "winisd": 30.0 }
+  }
+}

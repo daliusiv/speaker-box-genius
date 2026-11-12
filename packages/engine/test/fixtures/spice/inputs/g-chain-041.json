@@ -1,0 +1,66 @@
+{
+  "id": "g-chain-041",
+  "title": "chain (sealed), dayton-audio/dc160-8 (Qts 0.34), 9.428 L, HP butterworth 4, 1 EQ, passive parts",
+  "driver": {
+    "fs": 35.7,
+    "qms": 3.46,
+    "qes": 0.38,
+    "vas_l": 17.9,
+    "re": 6.6,
+    "sd_cm2": 134.8,
+    "le_mh": 2.26
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 9.428,
+    "ql": 4,
+    "qa": 63
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.1,
+    "coilTemp_C": 70,
+    "driveModel": "winisd",
+    "power": 100,
+    "highPass": {
+      "type": "butterworth",
+      "order": 4,
+      "freq": 34.43
+    },
+    "eq": [
+      {
+        "type": "peak",
+        "freq": 219.6,
+        "gain_db": -7.351,
+        "q": 3.302
+      }
+    ],
+    "passive": {
+      "branches": [
+        {
+          "r": 9.23
+        },
+        {
+          "r": 8.212,
+          "l_mH": 7.626
+        },
+        {
+          "r": 2.235,
+          "l_mH": 1.837,
+          "join": "parallel"
+        },
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

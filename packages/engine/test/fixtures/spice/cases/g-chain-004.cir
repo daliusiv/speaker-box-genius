@@ -1,0 +1,34 @@
+* g-chain-004: chain (sealed), 18-sound/18nlw9400-4ohm (Qts 0.22), 168.9 L, 3 EQ
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 src 0 AC 2.83
+A1 %vd(src 0) %vd(f1 0) xf1
+A2 %vd(f1 0) %vd(f2 0) xf2
+A3 %vd(f2 0) %vd(amp 0) xf3
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 2.6
+Le1 c1a c1b 0.00125
+Hemf1 c1b c1d Vcone1 169.354194407363
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 169.354194407363
+Ras11 u1h1 u1r1 415.926477148448
+Lmas11 u1r1 u1m1 12.6187563839356
+Ccas11 u1m1 u1k1 0.00000196030546494037
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Cab box 0 0.00000119099134182888
+Ral box l1 7701.80380409221
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.095811275741321
+Fx 0 xn Vcone1 8.16326530612245
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) I(Vin) I(Vcone1) I(Vleak)
+.model xf1 s_xfer(num_coeff=[0.69988228330551 623.456500676038 242141.879890054] den_coeff=[0.69988228330551 890.801947052414 494333.348658898])
+.model xf2 s_xfer(num_coeff=[0.602663653414036 107.914511049817 76369.0617086268] den_coeff=[0.602663653414036 179.062583977798 210265.226225583])
+.model xf3 s_xfer(num_coeff=[1 313.395586229339 712052.084336817] den_coeff=[1 707.526768724376 712052.084336817])
+.ac dec 50 5 2000
+.end

@@ -1,0 +1,67 @@
+{
+  "id": "g-bp6p-001",
+  "title": "bp6p, redcatt/10npm-1 (Qts 0.28), 8.428 L, rear 4.429 L 2 × dayton-audio/rss210-pr at 36.2 Hz, front 4 L 2 × dayton-audio/dsa215-pr at 107.6 Hz",
+  "driver": {
+    "fs": 64,
+    "qms": 7.7,
+    "qes": 0.29,
+    "vas_l": 23,
+    "re": 4.7,
+    "sd_cm2": 363,
+    "le_mh": 0.52
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 4.429,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 110,
+            "sd_cm2": 213,
+            "cms_mm_per_n": 0.61,
+            "qms": 10.7
+          },
+          "count": 2,
+          "addedMass_g": 484.2
+        }
+      ],
+      "ql": 19,
+      "qa": 75
+    },
+    "front": {
+      "vb_l": 4,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 67,
+            "sd_cm2": 211.2,
+            "cms_mm_per_n": 0.58,
+            "qms": 7.66
+          },
+          "count": 2,
+          "addedMass_g": 6.012
+        }
+      ],
+      "ql": 27,
+      "qa": 38
+    }
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0,
+    "coilTemp_C": 113,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "id": "g-sealed-016",
+  "title": "sealed, dayton-audio/nd90-4 (Qts 0.63), 3.055 L",
+  "driver": {
+    "fs": 90.2,
+    "qms": 5.1,
+    "qes": 0.72,
+    "vas_l": 1.06,
+    "re": 3.6,
+    "sd_cm2": 31.2,
+    "le_mh": 0.62
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 3.055,
+    "ql": 28,
+    "qa": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

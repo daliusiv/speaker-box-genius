@@ -1,0 +1,37 @@
+{
+  "id": "g-sealed-018",
+  "title": "sealed, monacor/powerprox18 (Qts 0.38), 58.17 L",
+  "driver": {
+    "fs": 34.8,
+    "qms": 3.147,
+    "qes": 0.431,
+    "vas_l": 189,
+    "re": 5.1,
+    "sd_cm2": 1210,
+    "le_mh": 1.61
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 58.17,
+    "ql": 10,
+    "qa": 65
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

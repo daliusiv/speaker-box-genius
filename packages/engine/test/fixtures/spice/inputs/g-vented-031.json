@@ -1,0 +1,43 @@
+{
+  "id": "g-vented-031",
+  "title": "vented, beyma/6cx200fe (Qts 0.32), 8.008 L, Fb 63.9 Hz",
+  "driver": {
+    "fs": 65,
+    "qms": 5.1,
+    "qes": 0.34,
+    "vas_l": 10.5,
+    "re": 4.9,
+    "sd_cm2": 135,
+    "le_mh": 0.3
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 8.008,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 5.486,
+      "length_cm": 17.59
+    },
+    "ql": 15,
+    "qa": 15,
+    "qp": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.5,
+    "driveModel": "winisd",
+    "power": 10,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

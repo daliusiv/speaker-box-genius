@@ -2,15 +2,19 @@ import { useState } from "react";
 import { Sparkle } from "./Logo.tsx";
 import { Card, Num, Select } from "./components.tsx";
 import { useUnits } from "./units.ts";
-import { dimensionsFor, linkedDesign, volumeFor } from "./sim.ts";
+import { dimensionsFor, linkedDesign, solveWedgeFor, volumeFor, wedgeToVolume } from "./sim.ts";
 import { stuffFactor } from "./stuffing.ts";
 import type { AppState, ShapeKind } from "./state.ts";
+import { WedgeFields } from "./WedgeFields.tsx";
+import { Preview3D } from "./Preview3D.tsx";
 
 const SHAPES: { value: ShapeKind; text: string }[] = [
   { value: "box", text: "Box" },
+  { value: "wedge", text: "Car wedge (single slope)" },
   { value: "cylinder", text: "Cylinder (sonotube)" },
   { value: "sphere", text: "Sphere" },
-  { value: "frustum", text: "Truncated pyramid" },
+  // Was "Truncated pyramid": the id stays "frustum" so older links still open.
+  { value: "frustum", text: "Tapered (all sides)" },
 ];
 
 export function VolumePanel(props: { state: AppState; onChange: (v: AppState["volume"]) => void }) {
@@ -33,8 +37,8 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
   // Find dimensions for a target volume (what the box volume will be in the simulation).
   const [aim, setAim] = useState(() => Math.round(r.net_l * 10) / 10);
   // null = the shape's default (the first option below).
-  const [proportions, setProportions] = useState<"keep" | "golden" | "length" | null>(null);
-  const ratioOptions: { value: "keep" | "golden" | "length"; text: string }[] =
+  const [proportions, setProportions] = useState<Sizing | null>(null);
+  const ratioOptions: { value: Sizing; text: string }[] =
     v.shape === "box"
       ? [
           { value: "keep", text: "Keep the current ones" },
@@ -45,12 +49,38 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
             { value: "length", text: "Keep the diameter (change the length)" },
             { value: "keep", text: "Keep the current proportions" },
           ]
-        : [{ value: "keep", text: "Keep the current ones" }];
+        : v.shape === "wedge"
+          ? [
+              { value: "keep", text: "Keep the proportions (and the slope)" },
+              { value: "width", text: "Solve for the width" },
+              { value: "height", text: "Solve for the height" },
+              { value: "topDepth", text: "Solve for the top depth" },
+              { value: "bottomDepth", text: "Solve for the bottom depth" },
+            ]
+          : [{ value: "keep", text: "Keep the current ones" }];
   // The choice in force for this shape (a tube defaults to keeping its diameter: tubes come in set sizes).
   const ratio = proportions && ratioOptions.some((o) => o.value === proportions) ? proportions : ratioOptions[0]!.value;
   const [found, setFound] = useState("");
+  // 3D take-apart view: off until asked for (it loads its own code).
+  const [show3d, setShow3d] = useState(false);
   const find = (aimAt = aim) => {
-    const dims = dimensionsFor(s, target, aimAt, ratio);
+    if (v.shape === "wedge" && ratio !== "keep" && ratio !== "golden" && ratio !== "length") {
+      const r = solveWedgeFor(s, target, ratio, aimAt);
+      if (!r) {
+        setFound(`No size reaches ${fmt(aimAt, "vol", 1)}: the deductions alone are larger. Lower them or aim higher.`);
+        return;
+      }
+      const next = wedgeToVolume(v, r.ok ? r.dims : r.nearest);
+      const got = volumeFor({ ...s, volume: next }, target).net_l;
+      if (r.ok) {
+        props.onChange(next);
+        setFound(`Done: ${describe(next, fmt)} gives ${fmt(got, "vol", 2)}.`);
+      } else {
+        setFound(`Target not reachable with these locks. Nearest: ${describe(next, fmt)}, ${fmt(got, "vol", 2)}. Solve for another dimension, or keep the proportions.`);
+      }
+      return;
+    }
+    const dims = dimensionsFor(s, target, aimAt, ratio === "golden" || ratio === "length" ? ratio : "keep");
     if (!dims) {
       setFound(`No size reaches ${fmt(aimAt, "vol", 1)}: the deductions alone are larger. Lower them or aim higher.`);
       return;
@@ -84,14 +114,14 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
       )}
       <div className="fields">
         <Select help="Which designs take their box volume from this calculator (their volume field then follows it)." label="Used by" value={target ? v.link : "none"} options={linkOptions} onChange={(x) => set("link", x)} />
-        <Select help="Outside shape of the enclosure: box, cylinder (tube), sphere or tapered box (frustum)." label="Shape" value={v.shape} options={SHAPES} onChange={(x) => set("shape", x)} />
+        <Select help="Outside shape of the enclosure: box, car wedge (one sloped panel), cylinder (tube), sphere or tapered on all sides (frustum)." label="Shape" value={v.shape} options={SHAPES} onChange={(x) => set("shape", x)} />
       </div>
 
       <h3>Size the box</h3>
       <div className="fields">
         <Num help="The net volume you want; Size the box sets the dimensions for it." label="Target" q="vol" value={aim} onChange={setAim} />
-        <Select<"keep" | "golden" | "length"> help={v.shape === "cylinder" ? "Keep the tube's diameter and find its length (tubes come in set sizes), or scale the whole tube." : "Keep the box's current proportions, or use the golden ratio (spreads its internal standing waves)."}
-          label="Ratio"
+        <Select<Sizing> help={v.shape === "cylinder" ? "Keep the tube's diameter and find its length (tubes come in set sizes), or scale the whole tube." : v.shape === "wedge" ? "Scale the whole wedge (the slope stays), or lock the other dimensions and solve for one." : "Keep the box's current proportions, or use the golden ratio (spreads its internal standing waves)."}
+          label={v.shape === "wedge" ? "Solve for" : "Ratio"}
           value={ratio}
           options={ratioOptions}
           onChange={setProportions}
@@ -110,6 +140,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
       {found && <p className="hint">{found}</p>}
 
       <h3>External size</h3>
+      {v.shape === "wedge" && <WedgeFields state={s} onChange={props.onChange} show3d={show3d} onShow3d={setShow3d} />}
       <div className="fields">
         {v.shape === "box" && (
           <>
@@ -132,7 +163,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
             <Num help="Outside width at the bottom of the tapered box." label="Bottom W" q="len" value={v.width_cm} onChange={(x) => set("width_cm", x)} />
             <Num help="Outside depth at the bottom of the tapered box." label="Bottom D" q="len" value={v.depth_cm} onChange={(x) => set("depth_cm", x)} />
             <Num help="Outside width at the top (0 = a point, like a pyramid)." label="Top W" q="len" value={v.topWidth_cm} min={0} onChange={(x) => set("topWidth_cm", x)} />
-            <Num help="Outside depth at the top. A wedge sloped on one face only (say, the front) holds the same: enter its depth at the top and at the bottom." label="Top D" q="len" value={v.topDepth_cm} min={0} onChange={(x) => set("topDepth_cm", x)} />
+            <Num help="Outside depth at the top. For a wedge sloped on one face only (a car wedge), use the Car wedge shape: it is exact." label="Top D" q="len" value={v.topDepth_cm} min={0} onChange={(x) => set("topDepth_cm", x)} />
             <Num help="Outside height of the tapered box." label="Height" q="len" value={v.height_cm} onChange={(x) => set("height_cm", x)} />
           </>
         )}
@@ -141,6 +172,17 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
           <Num help="Thickness of each end cap (often thicker than the tube, e.g. two layers of 18 mm MDF). Taken off both ends. Follows the wall until you change it." label="End caps" q="mm" value={v.capWall_mm ?? v.wall_mm} min={0} onChange={(x) => set("capWall_mm", x)} />
         )}
       </div>
+      {v.shape !== "wedge" && (
+        <>
+          <div className="row">
+            <button type="button" className={`chip${show3d ? " on" : ""}`} aria-pressed={show3d} onClick={() => setShow3d(!show3d)}>
+              3D view
+            </button>
+            <span className="hint">Turn the box round and take it apart, piece by piece.</span>
+          </div>
+          {show3d && <Preview3D state={s} />}
+        </>
+      )}
 
       <h3>Takes up space inside</h3>
       <div className="fields">
@@ -186,6 +228,9 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
   );
 }
 
+/** How Size the box changes the shape: scale it (or, for a box, to the golden ratio; a tube's length only), or solve one wedge dimension. */
+type Sizing = "keep" | "golden" | "length" | "width" | "height" | "topDepth" | "bottomDepth";
+
 /** "40 × 50 × 45 cm box" style summary of the outside size. */
 function describe(v: AppState["volume"], fmt: (x: number, q: "len", digits?: number) => string): string {
   switch (v.shape) {
@@ -195,7 +240,9 @@ function describe(v: AppState["volume"], fmt: (x: number, q: "len", digits?: num
       return `a cylinder ${fmt(v.diameter_cm, "len", 1)} across and ${fmt(v.height_cm, "len", 1)} long`;
     case "sphere":
       return `a sphere ${fmt(v.diameter_cm, "len", 1)} across`;
+    case "wedge":
+      return `a wedge ${fmt(v.width_cm, "len", 1)} wide, ${fmt(v.height_cm, "len", 1)} tall, ${fmt(v.topDepth_cm, "len", 1)} deep at the top and ${fmt(v.depth_cm, "len", 1)} at the bottom`;
     case "frustum":
-      return `a truncated pyramid ${fmt(v.width_cm, "len", 1)} × ${fmt(v.depth_cm, "len", 1)} at the base, ${fmt(v.topWidth_cm, "len", 1)} × ${fmt(v.topDepth_cm, "len", 1)} at the top, ${fmt(v.height_cm, "len", 1)} tall`;
+      return `a tapered box ${fmt(v.width_cm, "len", 1)} × ${fmt(v.depth_cm, "len", 1)} at the base, ${fmt(v.topWidth_cm, "len", 1)} × ${fmt(v.topDepth_cm, "len", 1)} at the top, ${fmt(v.height_cm, "len", 1)} tall`;
   }
 }

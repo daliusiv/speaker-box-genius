@@ -1,0 +1,47 @@
+{
+  "id": "g-bp4-029",
+  "title": "bp4, purifi/ptt4-0m04-nac-04 (Qts 0.28), 18.73 L, rear 11.67 L closed, front 7.063 L port at 49.5 Hz",
+  "driver": {
+    "fs": 48,
+    "qms": 4.2,
+    "qes": 0.3,
+    "vas_l": 5,
+    "re": 3.4,
+    "sd_cm2": 56.7,
+    "le_mh": 0.26
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 11.67,
+      "ql": 25,
+      "qa": 62
+    },
+    "front": {
+      "vb_l": 7.063,
+      "port": {
+        "shape": "slot",
+        "width_cm": 10.11,
+        "height_cm": 1.347,
+        "length_cm": 20.92
+      },
+      "qp": 137
+    },
+    "qicl": 134
+  },
+  "opts": {
+    "rg": 0,
+    "driveModel": "winisd",
+    "power": 10,
+    "space": "full"
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

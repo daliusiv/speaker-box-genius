@@ -1,0 +1,53 @@
+{
+  "id": "g-bp6s-006",
+  "title": "bp6s, monacor/spx-30m-8ohm (Qts 0.71), 3.382 L, rear 1.54 L port at 63.1 Hz, front 1.841 L port at 214.3 Hz",
+  "driver": {
+    "fs": 100,
+    "qms": 3.453,
+    "qes": 0.89,
+    "vas_l": 1.8,
+    "re": 6.4,
+    "sd_cm2": 32,
+    "le_mh": 0.18
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 1.54,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.475,
+        "length_cm": 43.55
+      },
+      "qp": 37
+    },
+    "front": {
+      "vb_l": 1.841,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 2.165,
+        "length_cm": 1.013
+      },
+      "portCount": 2,
+      "ql": 19,
+      "qa": 116
+    },
+    "rearPortTo": "front"
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.5,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

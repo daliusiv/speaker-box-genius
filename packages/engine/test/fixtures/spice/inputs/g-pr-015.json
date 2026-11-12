@@ -1,0 +1,38 @@
+{
+  "id": "g-pr-015",
+  "title": "passive-radiator, dayton-audio/umii15-22 (Qts 0.70), 46.32 L, Fb 32.2 Hz, 1 × dayton-audio/rss460-pr",
+  "driver": {
+    "fs": 29,
+    "qms": 2.34,
+    "qes": 1,
+    "vas_l": 96,
+    "re": 4.2,
+    "sd_cm2": 791,
+    "le_mh": 0.7
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 46.32,
+    "pr": {
+      "mms_g": 500,
+      "sd_cm2": 1164,
+      "cms_mm_per_n": 0.23,
+      "qms": 5.03
+    },
+    "addedMass_g": 439.6
+  },
+  "opts": {
+    "rg": 0,
+    "driveModel": "winisd",
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

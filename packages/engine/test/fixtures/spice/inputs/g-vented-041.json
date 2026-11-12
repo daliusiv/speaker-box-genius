@@ -1,0 +1,36 @@
+{
+  "id": "g-vented-041",
+  "title": "vented, eminence/beta-10a (Qts 0.49), 18.69 L, Fb 70.6 Hz",
+  "driver": {
+    "fs": 53,
+    "qms": 8.14,
+    "qes": 0.52,
+    "vas_l": 60.1,
+    "re": 5.75,
+    "sd_cm2": 344.9,
+    "le_mh": 0.67
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 18.69,
+    "port": {
+      "shape": "slot",
+      "width_cm": 6.598,
+      "height_cm": 3.011,
+      "length_cm": 2.828
+    }
+  },
+  "opts": {
+    "rg": 0,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

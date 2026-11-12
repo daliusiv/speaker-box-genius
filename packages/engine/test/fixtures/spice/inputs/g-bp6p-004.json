@@ -1,0 +1,58 @@
+{
+  "id": "g-bp6p-004",
+  "title": "bp6p, 18-sound/15lw1401-4ohm (Qts 0.26), 99.09 L, rear 55.91 L 1 × dayton-audio/rss390-pr at 31.2 Hz, front 43.19 L port at 72.4 Hz",
+  "driver": {
+    "fs": 39,
+    "qms": 7.21,
+    "qes": 0.27,
+    "vas_l": 127,
+    "re": 3.5,
+    "sd_cm2": 850,
+    "le_mh": 1.02
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 55.91,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 400,
+            "sd_cm2": 829.6,
+            "cms_mm_per_n": 0.22,
+            "qms": 4.07
+          },
+          "count": 1,
+          "addedMass_g": 174.3
+        }
+      ],
+      "ql": 8,
+      "qa": 57
+    },
+    "front": {
+      "vb_l": 43.19,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 16.65,
+        "length_cm": 16.47
+      },
+      "ql": null,
+      "qa": null
+    }
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 112,
+    "driveModel": "winisd",
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,52 @@
+* g-sealed-034: sealed, bc-speakers/15cl76-4ohm (Qts 0.26), 80.3 L
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 1.08012344973464
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 4.40783
+Le1 c1a c1b 0.001
+Hemf1 c1b c1d Vcone1 223.098097567481
+Vi1 c1d 0 0
+Re2 bk c2a 4.40783
+Le2 c2a c2b 0.001
+Hemf2 c2b c2d Vcone2 223.098097567481
+Vi2 c2d 0 0
+Re3 bk c3a 4.40783
+Le3 c3a c3b 0.001
+Hemf3 c3b c3d Vcone3 223.098097567481
+Vi3 c3d 0 0
+Hd1 u1h1 0 Vi1 223.098097567481
+Ras11 u1h1 u1r1 816.93893661531
+Lmas11 u1r1 u1m1 14.5498425914964
+Ccas11 u1m1 u1k1 9.86923266716017e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Hd2 u2h1 0 Vi2 223.098097567481
+Ras21 u2h1 u2r1 816.93893661531
+Lmas21 u2r1 u2m1 14.5498425914964
+Ccas21 u2m1 u2k1 9.86923266716017e-7
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 box 0
+Hd3 u3h1 0 Vi3 223.098097567481
+Ras31 u3h1 u3r1 816.93893661531
+Lmas31 u3r1 u3m1 14.5498425914964
+Ccas31 u3m1 u3k1 9.86923266716017e-7
+Rbl_u3k1 u3k1 0 1e+15
+Vcone3 u3k1 box 0
+Rbl_box box 0 1e+15
+Rab box b1 27.0733295930102
+Cab b1 0 5.66070987980687e-7
+Rbl_b1 b1 0 1e+15
+Ral box l1 13409.4964484268
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpc2 0 prs Vcone2 -1
+Fpc3 0 prs Vcone3 -1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.095568737704945
+Fx 0 xn Vcone1 11.6959064327485
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) I(Vin) I(Vcone1) I(Vleak)
+.ac dec 50 5 2000
+.end

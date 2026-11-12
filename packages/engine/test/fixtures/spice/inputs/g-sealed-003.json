@@ -1,0 +1,34 @@
+{
+  "id": "g-sealed-003",
+  "title": "sealed, dayton-audio/ds270-8 (Qts 0.44), 45.21 L",
+  "driver": {
+    "fs": 31.6,
+    "qms": 2.4,
+    "qes": 0.54,
+    "vas_l": 87.7,
+    "re": 5.4,
+    "sd_cm2": 353,
+    "le_mh": 1.25
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 45.21,
+    "ql": 27,
+    "qa": 91
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

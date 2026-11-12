@@ -1,0 +1,38 @@
+{
+  "id": "g-pr-007",
+  "title": "passive-radiator, dayton-audio/pcs10-4 (Qts 0.64), 115.9 L, Fb 23.2 Hz, 4 × dayton-audio/ds135-pr",
+  "driver": {
+    "fs": 33,
+    "qms": 4.91,
+    "qes": 0.73,
+    "vas_l": 49,
+    "re": 4,
+    "sd_cm2": 328,
+    "le_mh": 1.9
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 115.9,
+    "pr": {
+      "mms_g": 21.8,
+      "sd_cm2": 75.4,
+      "cms_mm_per_n": 1.52,
+      "qms": 3.93
+    },
+    "prCount": 4,
+    "addedMass_g": 22.16
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

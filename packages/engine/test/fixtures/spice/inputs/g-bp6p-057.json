@@ -1,0 +1,58 @@
+{
+  "id": "g-bp6p-057",
+  "title": "bp6p, bc-speakers/15ds115-8ohm (Qts 0.17), 64.26 L, rear 42.08 L port at 30.9 Hz, front 22.17 L port at 52.2 Hz",
+  "driver": {
+    "fs": 33,
+    "qms": 5.2,
+    "qes": 0.18,
+    "vas_l": 94,
+    "re": 4.9,
+    "sd_cm2": 855,
+    "le_mh": 4.5
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 42.08,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 10.75,
+        "length_cm": 125.6
+      },
+      "portCount": 2,
+      "qp": 105,
+      "ql": 17,
+      "qa": 35
+    },
+    "front": {
+      "vb_l": 22.17,
+      "port": {
+        "shape": "slot",
+        "width_cm": 17.24,
+        "height_cm": 3.679,
+        "length_cm": 55.03
+      },
+      "portCount": 2,
+      "qp": null
+    },
+    "endCorrection": 0.85,
+    "qicl": null
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "parallel",
+    "rg": 0,
+    "driveModel": "winisd",
+    "power": 1,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

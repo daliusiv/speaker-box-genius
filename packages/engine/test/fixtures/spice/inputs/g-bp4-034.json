@@ -1,0 +1,45 @@
+{
+  "id": "g-bp4-034",
+  "title": "bp4, sb-acoustics/sb15nbac30-4 (Qts 0.29), 16.76 L, rear 11.71 L closed, front 5.056 L port at 78.7 Hz",
+  "driver": {
+    "fs": 33,
+    "qms": 4.4,
+    "qes": 0.31,
+    "vas_l": 21,
+    "re": 3.1,
+    "sd_cm2": 82,
+    "le_mh": 0.12
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 11.71
+    },
+    "front": {
+      "vb_l": 5.056,
+      "port": {
+        "shape": "slot",
+        "width_cm": 7.205,
+        "height_cm": 1.867,
+        "length_cm": 10.06
+      },
+      "ql": 9,
+      "qa": 76
+    },
+    "qicl": 134
+  },
+  "opts": {
+    "rg": 0.5,
+    "coilTemp_C": 55,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

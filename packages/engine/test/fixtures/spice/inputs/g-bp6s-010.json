@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6s-010",
+  "title": "bp6s, bc-speakers/15ps100 (Qts 0.44), 67.7 L, rear 32.38 L port at 21.5 Hz, front 35.33 L port at 68.5 Hz",
+  "driver": {
+    "fs": 39,
+    "qms": 6,
+    "qes": 0.47,
+    "vas_l": 103,
+    "re": 5.2,
+    "sd_cm2": 855,
+    "le_mh": 2
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 32.38,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 10.03,
+        "length_cm": 149.8
+      },
+      "qp": 63,
+      "ql": 8,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 35.33,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 18.02,
+        "length_cm": 32.73
+      },
+      "ql": 17,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "qicl": 89
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 121,
+    "driveModel": "winisd",
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

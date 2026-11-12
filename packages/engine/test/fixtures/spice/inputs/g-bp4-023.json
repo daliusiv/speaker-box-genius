@@ -1,0 +1,52 @@
+{
+  "id": "g-bp4-023",
+  "title": "bp4, dayton-audio/ds215-8 (Qts 0.31), 36.52 L, rear 21.13 L closed, front 15.4 L 2 × dayton-audio/dsa315-pr at 50.8 Hz",
+  "driver": {
+    "fs": 34.3,
+    "qms": 1.75,
+    "qes": 0.38,
+    "vas_l": 43.1,
+    "re": 5.8,
+    "sd_cm2": 211.2,
+    "le_mh": 1.25
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 21.13,
+      "ql": 26,
+      "qa": 115
+    },
+    "front": {
+      "vb_l": 15.4,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 142.6,
+            "sd_cm2": 480,
+            "cms_mm_per_n": 0.58,
+            "qms": 6.23
+          },
+          "count": 2,
+          "addedMass_g": 217.1
+        }
+      ]
+    },
+    "endCorrection": 0.85,
+    "qicl": 111
+  },
+  "opts": {
+    "rg": 0,
+    "power": 10,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

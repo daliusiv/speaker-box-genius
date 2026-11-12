@@ -1,0 +1,45 @@
+{
+  "id": "g-bp4-033",
+  "title": "bp4, 18-sound/15nlw4500-4ohm (Qts 0.20), 106.6 L, rear 33.32 L closed, front 73.28 L port at 56.7 Hz",
+  "driver": {
+    "fs": 35,
+    "qms": 6.38,
+    "qes": 0.21,
+    "vas_l": 126,
+    "re": 3,
+    "sd_cm2": 881,
+    "le_mh": 1.1
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 33.32,
+      "ql": 4,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 73.28,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 11.56,
+        "length_cm": 6.502
+      },
+      "ql": 21,
+      "qa": 110
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 100
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

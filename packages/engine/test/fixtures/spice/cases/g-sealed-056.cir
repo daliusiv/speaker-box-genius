@@ -1,0 +1,41 @@
+* g-sealed-056: sealed, dayton-audio/pcs10-4 (Qts 0.64), 47.82 L
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 2.83
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 4
+Le1 c1a c1b 0.0019
+Hemf1 c1b c1d Vcone1 250.978904948463
+Vi1 c1d w1 0
+Re2 w1 c2a 4
+Le2 c2a c2b 0.0019
+Hemf2 c2b c2d Vcone2 250.978904948463
+Vi2 c2d 0 0
+Hd1 u1h1 0 Vi1 250.978904948463
+Ras11 u1h1 u1r1 2341.29327048191
+Lmas11 u1r1 u1m1 55.4425887992327
+Ccas11 u1m1 u1k1 4.19535661525651e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Hd2 u2h1 0 Vi2 250.978904948463
+Ras21 u2h1 u2r1 2341.29327048191
+Lmas21 u2r1 u2m1 55.4425887992327
+Ccas21 u2m1 u2k1 4.19535661525651e-7
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 box 0
+Rbl_box box 0 1e+15
+Rab box b1 120.929701811228
+Cab b1 0 4.09432557839931e-7
+Rbl_b1 b1 0 1e+15
+Ral box l1 195622.161853267
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpc2 0 prs Vcone2 -1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.154384363389331
+Fx 0 xn Vcone1 30.4878048780488
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) I(Vin) I(Vcone1) I(Vleak)
+.ac dec 50 5 2000
+.end

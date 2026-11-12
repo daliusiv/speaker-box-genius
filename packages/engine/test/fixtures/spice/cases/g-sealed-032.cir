@@ -1,0 +1,28 @@
+* g-sealed-032: sealed, celestion/tf0615 (Qts 0.61), 21.39 L
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 8.41427358718505
+Vrg amp spk 0
+Vin spk bk 0
+Re1 bk c1a 7.08
+Le1 c1a c1b 0.00047
+Hemf1 c1b c1d Vcone1 575.466989841116
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 575.466989841116
+Ras11 u1h1 u1r1 8516.26823744606
+Lmas11 u1r1 u1m1 51.1222448063341
+Ccas11 u1m1 u1k1 4.51998490297401e-8
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Cab box 0 1.50830697464296e-7
+Ral box l1 221007.348213793
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.191622551482642
+Fx 0 xn Vcone1 64.9603741717552
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) I(Vin) I(Vcone1) I(Vleak)
+.ac dec 50 5 2000
+.end

@@ -16,6 +16,9 @@ concurrency:
 
 jobs:
   build:
+    # Public repo only. The private dev repo can't use Pages on a free plan; it deploys a
+    # preview to Cloudflare instead (preview.yml), with the same build steps.
+    if: ${{ github.event.repository.private != true }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -1,0 +1,41 @@
+{
+  "id": "g-pr-035",
+  "title": "passive-radiator, redcatt/61xr (Qts 0.72), 12.08 L, Fb 60.9 Hz, 4 × sb-acoustics/sb29nrx2-00",
+  "driver": {
+    "fs": 64,
+    "qms": 2.88,
+    "qes": 0.96,
+    "vas_l": 8.6,
+    "re": 3.1,
+    "sd_cm2": 132.7,
+    "le_mh": 0.06
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 12.08,
+    "pr": {
+      "mms_g": 205,
+      "sd_cm2": 312,
+      "cms_mm_per_n": 0.43,
+      "qms": 7.3
+    },
+    "prCount": 4,
+    "addedMass_g": 123.5,
+    "ql": 10,
+    "qa": 69
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 50,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

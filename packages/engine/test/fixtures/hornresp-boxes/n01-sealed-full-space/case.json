@@ -1,0 +1,13 @@
+{
+  "title": "Sealed box, full space",
+  "text": "B1 in full space (Hornresp Ang = 4 x Pi). Hornresp loads the cone's front with about 0.63 of its half-space air in full space (frontAir 0.63, fitted); the app's full space keeps the half-space load (see the notes)",
+  "frontAir": 0.63,
+  "space": "full",
+  "input": {
+    "kind": "sealed",
+    "vb_l": 10.4,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

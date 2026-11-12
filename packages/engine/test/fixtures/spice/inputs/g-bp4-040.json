@@ -1,0 +1,45 @@
+{
+  "id": "g-bp4-040",
+  "title": "bp4, eminence/kappa-pro-10a (Qts 0.20), 129.2 L, rear 84.71 L closed, front 44.51 L port at 46.9 Hz",
+  "driver": {
+    "fs": 46,
+    "qms": 10.1,
+    "qes": 0.2,
+    "vas_l": 52.2,
+    "re": 6.5,
+    "sd_cm2": 344.9,
+    "le_mh": 1.15
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 84.71,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 44.51,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.513,
+        "length_cm": 3.325
+      },
+      "portCount": 2,
+      "qp": null
+    },
+    "qicl": 200
+  },
+  "opts": {
+    "rg": 0,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

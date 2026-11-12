@@ -1,0 +1,36 @@
+{
+  "id": "g-vented-025",
+  "title": "vented, beyma/10nmfs (Qts 0.42), 135.9 L, Fb 26.9 Hz",
+  "driver": {
+    "fs": 35,
+    "qms": 5.9,
+    "qes": 0.45,
+    "vas_l": 45,
+    "re": 5.9,
+    "sd_cm2": 370,
+    "le_mh": 1.49
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 135.9,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 11.84,
+      "length_cm": 26.86
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "rg": 0,
+    "power": 100
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

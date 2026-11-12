@@ -1,0 +1,22 @@
+{
+  "title": "Ported box, two drivers in series",
+  "text": "B7 with the two drivers in series (Hornresp \"Nd = 2S\")",
+  "frontAir": 1,
+  "coneLoad": "piston",
+  "splFrom": "power",
+  "drivers": 2,
+  "wiring": "series",
+  "portModel": "pipe",
+  "input": {
+    "kind": "vented",
+    "vb_l": 30,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7,
+      "length_cm": 15
+    },
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

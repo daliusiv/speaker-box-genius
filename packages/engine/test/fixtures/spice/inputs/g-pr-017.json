@@ -1,0 +1,40 @@
+{
+  "id": "g-pr-017",
+  "title": "passive-radiator, rcf/mb12x351 (Qts 0.26), 105.7 L, Fb 47.1 Hz, 4 × dayton-audio/dsa270-pr",
+  "driver": {
+    "fs": 55,
+    "qms": 5.9,
+    "qes": 0.27,
+    "vas_l": 46,
+    "re": 5.4,
+    "sd_cm2": 500,
+    "le_mh": 0.9
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 105.7,
+    "pr": {
+      "mms_g": 88.4,
+      "sd_cm2": 353,
+      "cms_mm_per_n": 0.6,
+      "qms": 5.26
+    },
+    "prCount": 4,
+    "addedMass_g": 7.099
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

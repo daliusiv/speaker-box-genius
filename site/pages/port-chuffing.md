@@ -43,7 +43,7 @@ A **Dayton Audio RSS315HF-4**, a 12″ subwoofer (Xmax 14.3 mm, 400 W), in Keele
 
 The box is about 44 cm deep inside. The 10 cm port nearly fits, but chuffs; the quiet ones are two to three times longer than the box is deep.
 
-![Port air speed at 300 W: the 10 cm port (blue) is well over the 17 m/s line; the slot (orange) and the flared port (green) stay under it.](img/port-speed.png)
+![Port air speed at 300 W: the 10 cm port (orange) is well over the 17 m/s line; the slot (light orange) and the flared port (dark orange) stay under it.](img/port-speed.png)
 
 ## What to do when the right port won't fit
 

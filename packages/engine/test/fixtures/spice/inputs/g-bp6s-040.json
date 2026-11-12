@@ -1,0 +1,50 @@
+{
+  "id": "g-bp6s-040",
+  "title": "bp6s, faital-pro/5fe125 (Qts 0.48), 4.14 L, rear 2.684 L port at 40.4 Hz, front 1.455 L port at 99.4 Hz",
+  "driver": {
+    "fs": 65,
+    "qms": 7.4,
+    "qes": 0.51,
+    "vas_l": 5.4,
+    "re": 5.4,
+    "sd_cm2": 84,
+    "le_mh": 0.41
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 2.684,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.326,
+        "length_cm": 56.51
+      }
+    },
+    "front": {
+      "vb_l": 1.455,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.632,
+        "length_cm": 40.05
+      },
+      "portCount": 2,
+      "ql": 3,
+      "qa": 12
+    },
+    "rearPortTo": "front",
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "rg": 0,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

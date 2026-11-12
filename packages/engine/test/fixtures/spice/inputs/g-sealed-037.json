@@ -1,0 +1,31 @@
+{
+  "id": "g-sealed-037",
+  "title": "sealed, redcatt/182find (Qts 0.23), 140.6 L",
+  "driver": {
+    "fs": 31,
+    "qms": 8.85,
+    "qes": 0.24,
+    "vas_l": 208.6,
+    "re": 5.5,
+    "sd_cm2": 1257,
+    "le_mh": 4.92
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 140.6
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 82,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

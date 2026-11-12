@@ -1,0 +1,42 @@
+{
+  "id": "g-pr-023",
+  "title": "passive-radiator, eminence/kappa-pro-10lf (Qts 0.28), 111.5 L, Fb 31.6 Hz, 2 × dayton-audio/ds315-pr",
+  "driver": {
+    "fs": 39,
+    "qms": 8.97,
+    "qes": 0.29,
+    "vas_l": 72.97,
+    "re": 5.47,
+    "sd_cm2": 376.9,
+    "le_mh": 0.97
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 111.5,
+    "pr": {
+      "mms_g": 147.1,
+      "sd_cm2": 480,
+      "cms_mm_per_n": 0.5,
+      "qms": 4.27
+    },
+    "prCount": 2,
+    "addedMass_g": 52.45,
+    "ql": 28,
+    "qa": 49
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "id": "g-bp4-003",
+  "title": "bp4, monacor/spx-31m-8ohm (Qts 0.58), 0.614 L, rear 0.3452 L closed, front 0.2688 L port at 229.7 Hz",
+  "driver": {
+    "fs": 110,
+    "qms": 3.707,
+    "qes": 0.69,
+    "vas_l": 1.3,
+    "re": 6.4,
+    "sd_cm2": 32,
+    "le_mh": 0.18
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.3452,
+      "ql": 16,
+      "qa": 92
+    },
+    "front": {
+      "vb_l": 0.2688,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 2.649,
+        "length_cm": 9.918
+      },
+      "qp": 50
+    }
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "space": "full"
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

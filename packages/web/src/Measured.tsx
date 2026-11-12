@@ -5,8 +5,9 @@ import type { Series } from "./LogChart.tsx";
 import type { Design } from "./sim.ts";
 import { MAX_MEASURED, type MeasuredCurve } from "./state.ts";
 
-/** Colours for measured curves: apart from the design palette, drawn dashed. */
-export const MEASURED_COLORS = ["#0ea5e9", "#eab308", "#ec4899", "#84cc16"];
+import { MEASURED_COLORS } from "./palette.ts";
+
+export { MEASURED_COLORS };
 const DASH = "7 3";
 
 export const measuredColor = (all: MeasuredCurve[], id: string) => MEASURED_COLORS[Math.max(0, all.findIndex((m) => m.id === id)) % MEASURED_COLORS.length]!;
@@ -47,36 +48,46 @@ export async function readMeasured(file: File, kind: CurveKind, all: MeasuredCur
   return { id: `m${n}`, name: file.name.replace(/\.[^.]+$/, "").slice(0, 40), kind, on: true, f: c.f, v: c.v, offset_db: 0, matchTo: "" };
 }
 
+/** Level a response to a design (in its usual flat band), or why it can't be. */
+function matchTo(m: MeasuredCurve, designs: Design[], designId: string): MeasuredCurve | string {
+  const d = designs.find((x) => x.design.id === designId);
+  if (!d) return m;
+  const [lo, hi] = matchBand(d);
+  const off = levelMatch(m, d.result.freq, d.result.spl, lo, hi);
+  if (off === null) return `${m.name} doesn't cover ${Math.round(lo)}–${Math.round(hi)} Hz, where ${d.label} is matched: set the level by hand.`;
+  return { ...m, offset_db: off, matchTo: designId };
+}
+
+/** Add a measurement file to the list (a response starts level-matched to the first design); throws with the reason. */
+export async function addMeasured(file: File, kind: CurveKind, all: MeasuredCurve[], designs: Design[]): Promise<{ list: MeasuredCurve[]; message: string }> {
+  let m = await readMeasured(file, kind, all);
+  let note = "";
+  if (kind === "spl" && designs[0]) {
+    // Measurements are rarely calibrated: start level-matched to the first design.
+    const r = matchTo(m, designs, designs[0].design.id);
+    if (typeof r === "string") note = ` ${r}`;
+    else m = r;
+  }
+  return { list: [...all, m], message: `Added ${file.name}.${note}` };
+}
+
 export function MeasuredCard(p: { measured: MeasuredCurve[]; designs: Design[]; onChange: (m: MeasuredCurve[]) => void }) {
   const [msg, setMsg] = useState("");
   const all = p.measured;
   const set = (id: string, patch: Partial<MeasuredCurve>) => p.onChange(all.map((m) => (m.id === id ? { ...m, ...patch } : m)));
 
-  const match = (m: MeasuredCurve, designId: string): MeasuredCurve | string => {
-    const d = p.designs.find((x) => x.design.id === designId);
-    if (!d) return m;
-    const [lo, hi] = matchBand(d);
-    const off = levelMatch(m, d.result.freq, d.result.spl, lo, hi);
-    if (off === null) return `${m.name} doesn't cover ${Math.round(lo)}–${Math.round(hi)} Hz, where ${d.label} is matched: set the level by hand.`;
-    return { ...m, offset_db: off, matchTo: designId };
-  };
+  const match = (m: MeasuredCurve, designId: string) => matchTo(m, p.designs, designId);
 
   const add = async (file: File, kind: CurveKind) => {
     try {
-      let m = await readMeasured(file, kind, all);
-      let note = "";
-      if (kind === "spl" && p.designs[0]) {
-        // Measurements are rarely calibrated: start level-matched to the first design.
-        const r = match(m, p.designs[0].design.id);
-        if (typeof r === "string") note = ` ${r}`;
-        else m = r;
-      }
-      p.onChange([...all, m]);
-      setMsg(`Added ${file.name}.${note}`);
+      const r = await addMeasured(file, kind, all, p.designs);
+      p.onChange(r.list);
+      setMsg(r.message);
     } catch (e) {
       setMsg(`${file.name}: ${(e as Error).message}.`);
     }
   };
+
 
   const picker = (kind: CurveKind, label: string, accept: string) => (
     <label className={`file-button${all.length >= MAX_MEASURED ? " disabled" : ""}`}>

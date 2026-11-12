@@ -1,0 +1,33 @@
+{
+  "id": "g-sealed-050",
+  "title": "sealed, eminence/kappa-pro-10lf (Qts 0.28), 33.46 L",
+  "driver": {
+    "fs": 39,
+    "qms": 8.97,
+    "qes": 0.29,
+    "vas_l": 72.97,
+    "re": 5.47,
+    "sd_cm2": 376.9,
+    "le_mh": 0.97
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 33.46,
+    "ql": 28,
+    "qa": 49
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 77,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

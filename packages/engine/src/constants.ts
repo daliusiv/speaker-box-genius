@@ -12,6 +12,12 @@ export const STANDARD_AIR: Air = { rho: 1.204, c: 343.2 };
 /** The values WinISD writes into its files (and uses by default). */
 export const WINISD_AIR: Air = { rho: 1.20095217714682, c: 343.684120962152 };
 
+/** Ratio of specific heats of air (adiabatic). The models' ρc² is γ·P₀, so P₀ = ρc²/γ. */
+export const AIR_GAMMA = 1.4;
+
+/** Air's coefficient of nonlinearity, β = (γ + 1)/2: how fast a strong wave steepens as it travels. */
+export const AIR_BETA = (AIR_GAMMA + 1) / 2;
+
 /** Air density at 20 °C, sea level (kg/m³). */
 export const RHO = STANDARD_AIR.rho;
 /** Speed of sound at 20 °C (m/s). */

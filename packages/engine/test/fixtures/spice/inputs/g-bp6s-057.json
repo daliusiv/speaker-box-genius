@@ -1,0 +1,55 @@
+{
+  "id": "g-bp6s-057",
+  "title": "bp6s, grs/15ssw-4he (Qts 0.49), 172.6 L, rear 66.23 L port at 19.7 Hz, front 106.4 L 1 × dayton-audio/rss460-pr at 26.5 Hz",
+  "driver": {
+    "fs": 20.7,
+    "qms": 4.27,
+    "qes": 0.55,
+    "vas_l": 196.5,
+    "re": 4.2,
+    "sd_cm2": 819.4,
+    "le_mh": 3.7
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 66.23,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 9.976,
+        "length_cm": 177.7
+      },
+      "portCount": 2
+    },
+    "front": {
+      "vb_l": 106.4,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 500,
+            "sd_cm2": 1164,
+            "cms_mm_per_n": 0.23,
+            "qms": 5.03
+          },
+          "count": 1,
+          "addedMass_g": 192.4
+        }
+      ]
+    },
+    "rearPortTo": "front"
+  },
+  "opts": {
+    "rg": 0,
+    "power": 10,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

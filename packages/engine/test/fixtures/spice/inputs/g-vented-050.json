@@ -1,0 +1,38 @@
+{
+  "id": "g-vented-050",
+  "title": "vented, monacor/spx-32m-8ohm (Qts 0.56), 3.301 L, Fb 144.3 Hz",
+  "driver": {
+    "fs": 110,
+    "qms": 7.66,
+    "qes": 0.6,
+    "vas_l": 1.6,
+    "re": 6.6,
+    "sd_cm2": 32,
+    "le_mh": 0.18
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 3.301,
+    "port": {
+      "shape": "slot",
+      "width_cm": 4.812,
+      "height_cm": 1.828,
+      "length_cm": 1.378
+    },
+    "ql": 19,
+    "qa": 40
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

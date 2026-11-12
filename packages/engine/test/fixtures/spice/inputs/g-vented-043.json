@@ -1,0 +1,38 @@
+{
+  "id": "g-vented-043",
+  "title": "vented, 18-sound/12mb600-4ohm (Qts 0.18), 71.9 L, Fb 47.2 Hz",
+  "driver": {
+    "fs": 46,
+    "qms": 4.89,
+    "qes": 0.19,
+    "vas_l": 86,
+    "re": 2.7,
+    "sd_cm2": 531,
+    "le_mh": 0.45
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 71.9,
+    "port": {
+      "shape": "slot",
+      "width_cm": 11.3,
+      "height_cm": 1.651,
+      "length_cm": 3.533
+    },
+    "portCount": 2
+  },
+  "opts": {
+    "rg": 0,
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

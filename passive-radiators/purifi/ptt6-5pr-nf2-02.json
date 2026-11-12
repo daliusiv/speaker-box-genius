@@ -10,7 +10,8 @@
     "fs": 17,
     "qms": 11,
     "vas_l": 26.2,
-    "cms_mm_per_n": 1.05
+    "cms_mm_per_n": 1.05,
+    "max_added_mass_g": 121
   },
   "sources": [
     {
@@ -21,5 +22,5 @@
     }
   ],
   "status": "community",
-  "notes": "Xmax is the published mechanical limit (Xmech 15 mm); there's no separate linear figure."
+  "notes": "Xmax is the published mechanical limit (Xmech 15 mm); there's no separate linear figure. Maximum added mass from Purifi (email, 11 Nov 2026): total moving mass up to 2–2.5× the PR's own, so added mass up to 1.5× Mms."
 }

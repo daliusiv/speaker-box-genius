@@ -1,0 +1,38 @@
+{
+  "id": "g-vented-042",
+  "title": "vented, dayton-audio/pc83-8 (Qts 0.63), 0.5806 L, Fb 71.7 Hz",
+  "driver": {
+    "fs": 82.1,
+    "qms": 3.68,
+    "qes": 0.76,
+    "vas_l": 1.7,
+    "re": 6.8,
+    "sd_cm2": 30.2,
+    "le_mh": 0.38
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 0.5806,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 1.751,
+      "length_cm": 23.54
+    },
+    "endCorrection": 0.613,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

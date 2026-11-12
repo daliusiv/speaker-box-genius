@@ -1,0 +1,42 @@
+* g-pr-018: passive-radiator, celestion/ftr15-4080f (Qts 0.25), 96.64 L, Fb 26.7 Hz, 1 × dayton-audio/rss460-pr
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 2.83
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 5.67
+Le1 c1a c1b 0.00148
+Hemf1 c1b c1d Vcone1 275.018567463181
+Vi1 c1d 0 0
+Re2 bk c2a 5.67
+Le2 c2a c2b 0.00148
+Hemf2 c2b c2d Vcone1 275.018567463181
+Vi2 c2d 0 0
+Hd1 u1h1 0 Vi1 275.018567463181
+Hd2 u1h2 u1h1 Vi2 275.018567463181
+Ras11 u1h2 u1r1 1275.55005752546
+Lmas11 u1r1 u1m1 15.2524691160689
+Ccas11 u1m1 u1k1 0.00000115009288248839
+Rbl_u1k1 u1k1 0 1e+15
+Ras12 u1k1 u1r2 1275.55005752546
+Lmas12 u1r2 u1m2 15.2524691160689
+Ccas12 u1m2 u1k2 0.00000115009288248839
+Rbl_u1k2 u1k2 0 1e+15
+Vcone1 u1k2 box 0
+Rbl_box box 0 1e+15
+Rpr1 box r1 684.14339502386
+Lpr1 r1 q1 63.4661258133466
+Cpr1 q1 s1 0.0000031162608
+Vpr1 s1 0 0
+Fxp1 0 xp1 Vpr1 8.59106529209622
+Cxp1 xp1 0 1
+Rbl_xp1 xp1 0 1e+15
+Cab box 0 6.81452950114521e-7
+Fpc1 0 prs Vcone1 -1
+Fpr1 0 prs Vpr1 1
+Lrad prs 0 0.191622551482642
+Fx 0 xn Vcone1 11.6918040453642
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) V(xp1) I(Vin) I(Vcone1) I(Vpr1)
+.ac dec 50 5 2000
+.end

@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { wprExportable, wprFor } from "./wprExport.ts";
-import { coilLabel, driveLabel, lineFoldOf, limitsOf, portLimitOf, prGroupLabels, type Design } from "./sim.ts";
+import { lineFoldOf, limitsOf, portLimitOf, type Design } from "./sim.ts";
+import { subtitle } from "./formats/csv.ts";
+import { downloadBlob } from "./formats/download.ts";
+import { safeName } from "./formats/types.ts";
+import { Icon, type IconName } from "./Icon.tsx";
+import { Sheet } from "./Sheet.tsx";
 import { foldShapes } from "./foldShapes.ts";
 import { REPO } from "./components.tsx";
 import { fmtQ } from "./units.ts";
@@ -49,18 +53,6 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
   });
 }
 
-function subtitle(state: AppState): string {
-  const parts = [driveLabel(state) + coilLabel(state)];
-  if (state.isobaric) parts.push(`${state.drivers} isobaric pair${state.drivers > 1 ? "s" : ""}`);
-  else if (state.drivers > 1) parts.push(`${state.drivers} drivers (${state.wiring})`);
-  if (state.highPass.on) parts.push(`${state.highPass.order * 6} dB/oct high-pass at ${state.highPass.freq} Hz`);
-  if (state.passive.on && state.passive.branches.some((b) => (b.r ?? 0) > 0 || (b.l_mH ?? 0) > 0 || (b.c_uF ?? 0) > 0)) parts.push("passive parts");
-  if (state.roomGain.mode === "curve") parts.push(`room curve "${state.roomGain.curve?.name ?? ""}" added`);
-  else if (state.roomGain.mode !== "off") parts.push(`${state.roomGain.mode === "car" ? "cabin" : "room"} gain from ${(34320 / (2 * state.roomGain.length_cm)).toFixed(0)} Hz`);
-  parts.push(`Xmax ${state.xmax_mm} mm`);
-  if (state.compare) parts.push(`compared with ${state.compare.driverName} (dashed)`);
-  return parts.join(" · ");
-}
 
 /** Explains "a → b" volumes when a design is stuffed. */
 const STUFFED_NOTE = "Vb a → b: the net volume as built → the volume its stuffing makes it act as.";
@@ -95,46 +87,6 @@ export function bbcodePost(state: AppState, designs: Design[], url: string): str
     ...(anyStuffed(designs) ? [`[i]${STUFFED_NOTE}[/i]`] : []),
     `[url=${url}]Open the live simulation in Speaker Box Genius[/url]`,
   ].join("\n");
-}
-
-// ---------------------------------------------------------------------------
-// CSV
-// ---------------------------------------------------------------------------
-
-/** Every curve of every design, one row per frequency. Opens in Excel / Sheets / LibreOffice. */
-export function curvesCsv(state: AppState, designs: Design[]): string {
-  if (designs.length === 0) return "";
-  const vel = state.settings.velocity === "rms" ? "RMS" : "peak";
-  const cols: { head: string; data: Float64Array }[] = [];
-  for (const { design: d, label, result: r } of designs) {
-    const add = (what: string, data: Float64Array | null) => data && cols.push({ head: `${label}: ${what}`, data });
-    add("SPL (dB)", r.spl);
-    add("Cone excursion (mm peak)", r.excursionMm);
-    if (r.prGroups && (r.prGroups.length > 1 || d.kind === "bandpass")) {
-      const names = prGroupLabels(d);
-      r.prGroups.forEach((g, k) => add(`PR excursion, ${names[k] ?? `group ${k + 1}`} (mm peak)`, g.excursionMm));
-    } else add("PR excursion (mm peak)", r.prExcursionMm);
-    add(d.kind === "bandpass" ? `Front port velocity (m/s ${vel})` : `Port velocity (m/s ${vel})`, r.portVelocity);
-    add(`Rear port velocity (m/s ${vel})`, r.rearPortVelocity);
-    add("Impedance (ohm)", r.impedanceOhm);
-    add("Impedance phase (deg)", r.impedancePhaseDeg);
-    add("Group delay (ms)", r.groupDelayMs);
-    add("Max SPL (dB)", r.maxSpl);
-    add("Max drive power (W, before filter and EQ)", r.maxPowerW);
-    add("Amp volts at max SPL (V RMS)", r.ampAtMax.volts);
-    add("Amp current at max SPL (A RMS)", r.ampAtMax.amps);
-    add("Amp power at max SPL (W)", r.ampAtMax.watts);
-  }
-  const q = (s: string) => `"${s.replace(/"/g, '""')}"`;
-  const freq = designs[0]!.result.freq;
-  const lines = [
-    `# ${state.driverName}, ${subtitle(state)}, 1 m half space, air: ${state.settings.air === "custom" ? `${state.settings.airConditions.temp_C} °C, ${state.settings.airConditions.humidity_pct} % RH, ${state.settings.airConditions.pressure_hPa} hPa` : state.settings.air}`,
-    ["Frequency (Hz)", ...cols.map((c) => c.head)].map(q).join(","),
-  ];
-  for (let i = 0; i < freq.length; i++) {
-    lines.push([freq[i]!.toFixed(3), ...cols.map((c) => (Number.isFinite(c.data[i]!) ? c.data[i]!.toPrecision(6) : ""))].join(","));
-  }
-  return lines.join("\r\n") + "\r\n";
 }
 
 // ---------------------------------------------------------------------------
@@ -193,8 +145,8 @@ function standaloneSvg(svg: SVGSVGElement, width: number, height: number): strin
   });
   clone.setAttribute("width", String(width));
   clone.setAttribute("height", String(height));
-  clone.querySelector("g.cursor")?.remove();
-  clone.querySelector("line.cursor")?.remove();
+  // The cursor (line, dots and its frequency tag) is the viewer's, not the design's.
+  clone.querySelectorAll("g.cursor, line.cursor, circle.cursor-dot, g.cursor-badge").forEach((el) => el.remove());
   return new XMLSerializer().serializeToString(clone);
 }
 
@@ -223,20 +175,22 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
   const W = 1600;
   const pad = 32;
   const colW = (W - pad * 3) / 2;
-  // Charts drawn on a phone are taller (nearly 4:3); keep their shape.
-  const ratio = Math.min(
-    ...figures.map((f) => {
-      const vb = f.querySelector("svg")?.viewBox.baseVal;
-      return vb && vb.width > 0 ? vb.height / vb.width : 260 / 640;
-    }),
-    470 / 640,
-  );
-  const chartH = Math.round(colW * (Number.isFinite(ratio) ? ratio : 260 / 640));
+  // Each chart keeps its own shape (on a phone, or in a narrow window, they're drawn taller,
+  // nearly 4:3) at the full column width; a row is as tall as its taller chart. Fitting every
+  // chart into the shortest one's height shrank the taller ones to a narrow strip.
+  const chartW = colW - 16;
+  const heightOfChart = (f: HTMLElement) => {
+    const vb = f.querySelector("svg")?.viewBox.baseVal;
+    const r = vb && vb.width > 0 ? vb.height / vb.width : 260 / 640;
+    return Math.round(chartW * Math.min(Number.isFinite(r) ? r : 260 / 640, 470 / 640));
+  };
+  const chartHs = figures.map(heightOfChart);
+  const rowHs = Array.from({ length: Math.ceil(figures.length / 2) }, (_, r) => Math.max(chartHs[2 * r] ?? 0, chartHs[2 * r + 1] ?? 0) + 48);
+  const rowTop = (r: number) => rowHs.slice(0, r).reduce((a, h) => a + h + pad, 0);
   const rows = summaryRows(state, designs);
   const tableTop = 130;
   const rowH = 34;
   const chartsTop = tableTop + rowH * (rows.length + 1) + 30;
-  const chartBlock = chartH + 48;
   // Folded transmission lines and horns: a side view each, in a row under the charts.
   const folds = designs
     .filter((d) => !d.compare)
@@ -249,7 +203,7 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
       }
     })
     .slice(0, 4);
-  const foldsTop = chartsTop + Math.ceil(figures.length / 2) * (chartBlock + pad);
+  const foldsTop = chartsTop + rowTop(rowHs.length);
   const foldBlock = 300;
   const H = foldsTop + (folds.length > 0 ? foldBlock + pad : 0) + 50;
 
@@ -312,19 +266,22 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
     const svg = fig.querySelector("svg");
     if (!svg) continue;
     const x = pad + (i % 2) * (colW + pad);
-    const y = chartsTop + Math.floor(i / 2) * (chartBlock + pad);
+    const row = Math.floor(i / 2);
+    const y = chartsTop + rowTop(row);
+    const chartH = chartHs[i]!;
     g.fillStyle = card;
     g.strokeStyle = border;
     g.lineWidth = 1;
     g.beginPath();
-    g.roundRect(x, y, colW, chartBlock, 12);
+    g.roundRect(x, y, colW, rowHs[row]!, 12);
     g.fill();
     g.stroke();
     g.fillStyle = fg;
     g.font = `600 18px ${font}`;
-    g.fillText(fig.querySelector(".chart-title")?.textContent ?? "", x + 16, y + 30);
-    const img = await loadImage(standaloneSvg(svg, colW - 16, chartH));
-    g.drawImage(img, x + 8, y + 40, colW - 16, chartH);
+    // The on-screen title may carry a chart-switcher arrow: not part of the picture.
+    g.fillText((fig.querySelector(".chart-title")?.textContent ?? "").replace(/\s*▾\s*$/, ""), x + 16, y + 30);
+    const img = await loadImage(standaloneSvg(svg, chartW, chartH));
+    g.drawImage(img, x + 8, y + 40, chartW, chartH);
   }
 
   // Folded lines
@@ -372,132 +329,182 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
 }
 
 // ---------------------------------------------------------------------------
-// Menu
+// Share window
 // ---------------------------------------------------------------------------
 
-export function ShareMenu(props: { state: AppState; designs: Design[]; shareUrl: () => string; notify?: (msg: string) => void }) {
+/** The Share button in the header and its window. */
+export function ShareButton(props: { state: AppState; designs: Design[]; shareUrl: () => string; notify: (msg: string) => void; onExport: () => void }) {
   const [open, setOpen] = useState(false);
-  const [msg, setMsg] = useState("");
-  const ref = useRef<HTMLDivElement>(null);
+  return (
+    <div className="share">
+      <button type="button" className="share-button" onClick={() => setOpen(true)} aria-haspopup="dialog" title="Link, forum posts and image">
+        <Icon name="share" />
+        <span className="share-label">Share</span>
+      </button>
+      <Sheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Share design"
+        className="share-window"
+        footer={
+          <p className="share-foot">
+            Need CSV, WinISD or LTspice files?{" "}
+            <button
+              type="button"
+              className="link"
+              onClick={() => {
+                setOpen(false);
+                props.onExport();
+              }}
+            >
+              Save &amp; Export
+            </button>
+          </p>
+        }
+      >
+        <ShareBody {...props} />
+      </Sheet>
+    </div>
+  );
+}
+
+const canCopyImage = () => typeof ClipboardItem !== "undefined" && typeof navigator.clipboard?.write === "function";
+const touchFirst = () => typeof matchMedia !== "undefined" && matchMedia("(pointer: coarse)").matches;
+
+/** Rendered only while the window is open (Sheet), so the image is made fresh each time. */
+function ShareBody(props: { state: AppState; designs: Design[]; shareUrl: () => string; notify: (msg: string) => void }) {
+  const { state, designs } = props;
+  const [link] = useState(props.shareUrl);
+  const [png, setPng] = useState<Blob | null>(null);
+  const [preview, setPreview] = useState("");
+  const [imgError, setImgError] = useState("");
+  const [done, setDone] = useState("");
+  const timer = useRef(0);
+  const name = safeName(state.driverName);
 
   useEffect(() => {
-    if (!open) return;
-    const close = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    // Escape closes the menu and puts focus back on its button.
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      setOpen(false);
-      ref.current?.querySelector<HTMLButtonElement>("button")?.focus();
-    };
-    addEventListener("mousedown", close);
-    addEventListener("keydown", onKey);
+    if (designs.length === 0) return setImgError("Nothing to show yet.");
+    let live = true;
+    void (async () => {
+      try {
+        // Always the short link: it keeps the QR code small enough to scan from a forum post.
+        const short = location.origin + location.pathname + "#" + (await encodeStateShort(state));
+        const blob = await renderForumImage(state, designs, short);
+        if (live) setPng(blob);
+      } catch (e) {
+        if (live) setImgError(`Couldn't make the image: ${(e as Error).message}`);
+      }
+    })();
     return () => {
-      removeEventListener("mousedown", close);
-      removeEventListener("keydown", onKey);
+      live = false;
+      clearTimeout(timer.current);
     };
-  }, [open]);
+    // Made once per opening, from the design as it was then.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const flash = (m: string) => {
-    setMsg(m);
-    setTimeout(() => setMsg(""), 2500);
+  useEffect(() => {
+    if (!png) return;
+    const url = URL.createObjectURL(png);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [png]);
+
+  /** "✓ Copied" on the button that was pressed, for 2 s. */
+  const flash = (key: string) => {
+    setDone(key);
+    clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setDone(""), 2000);
   };
 
-  const copy = async (text: string, what: string) => {
+  const copy = async (key: string, text: string, what: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      flash(`${what} copied ✓`);
+      flash(key);
     } catch {
-      prompt(`Copy ${what.toLowerCase()}:`, text);
+      prompt(`Copy the ${what}:`, text);
     }
-    setOpen(false);
   };
 
-  const download = async () => {
-    setOpen(false);
-    if (props.designs.length === 0) return flash("Nothing to export yet");
-    flash("Rendering image…");
+  const copyImage = async () => {
+    if (!png) return;
     try {
-      // Always the short link: it keeps the QR code small enough to scan from a forum post.
-      const live = location.origin + location.pathname + "#" + (await encodeStateShort(props.state));
-      const blob = await renderForumImage(props.state, props.designs, live);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${props.state.driverName.replace(/[^\w.-]+/g, " ").trim() || "speaker-box"}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-      flash("Image downloaded ✓");
-    } catch (e) {
-      flash(`Couldn't make the image: ${(e as Error).message}`);
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);
+      flash("img");
+    } catch {
+      props.notify("This browser won't copy images: download the PNG instead.");
     }
   };
 
-  const downloadCsv = () => {
-    setOpen(false);
-    const csv = curvesCsv(props.state, props.designs);
-    if (!csv) return flash("Nothing to export yet");
-    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${props.state.driverName.replace(/[^\w.-]+/g, " ").trim() || "speaker-box"}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    flash("Data downloaded ✓");
+  const nativeShare = async () => {
+    const text = `${state.driverName}: box simulation in Speaker Box Genius`;
+    const file = png ? new File([png], `${name}.png`, { type: "image/png" }) : null;
+    const withFile = file && navigator.canShare?.({ files: [file] }) ? { files: [file] } : {};
+    try {
+      await navigator.share({ title: state.driverName, text, url: link, ...withFile });
+    } catch {
+      /* cancelled */
+    }
   };
 
-  const downloadWpr = (d: AppState["designs"][number]) => {
-    const out = wprFor(props.state, d);
-    if (typeof out === "string") return flash(out);
-    const url = URL.createObjectURL(new Blob([out.text], { type: "text/plain" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${`${props.state.driverName} ${d.name}`.replace(/[^\w.-]+/g, " ").trim() || "speaker-box"}.wpr`;
-    a.click();
-    URL.revokeObjectURL(url);
-    flash("WinISD project downloaded ✓");
-    if (out.notes.length > 0) props.notify?.(`WinISD project saved. Not in it: ${out.notes.join("; ")}.`);
-  };
+  const label = (key: string, icon: IconName, text: string) => (
+    <>
+      <Icon name={done === key ? "check" : icon} />
+      {done === key ? "Copied" : text}
+    </>
+  );
 
   return (
-    <div className="share" ref={ref}>
-      <button onClick={() => setOpen(!open)} aria-expanded={open}>
-        {msg || "Share ▾"}
-      </button>
-      {open && (
-        <div className="share-menu" role="menu">
-          <button role="menuitem" onClick={() => copy(props.shareUrl(), "Link")}>
-            Copy link
-          </button>
-          <button role="menuitem" onClick={() => copy(markdownPost(props.state, props.designs, props.shareUrl()), "Reddit post")}>
-            Copy for Reddit (Markdown)
-          </button>
-          <button role="menuitem" onClick={() => copy(bbcodePost(props.state, props.designs, props.shareUrl()), "diyAudio post")}>
-            Copy for diyAudio (BBCode)
-          </button>
-          <button role="menuitem" onClick={download}>
-            Download image (PNG)
-          </button>
-          <button role="menuitem" onClick={downloadCsv}>
-            Download data (CSV)
-          </button>
-          {/* One WinISD project per box (a .wpr holds one), for the boxes WinISD can open. */}
-          {props.state.designs
-            .filter((d) => d.on && wprExportable(d))
-            .map((d) => (
-              <button key={d.id} role="menuitem" onClick={() => downloadWpr(d)}>
-                Open in WinISD: {d.name} (.wpr)
-              </button>
-            ))}
-          <p className="hint">Post the image and paste the text under it: the text carries the live link.</p>
-          <hr />
-          <a role="menuitem" className="menu-link" href={reportUrl(props.shareUrl())} target="_blank" rel="noopener">
-            Report a problem with this design
-          </a>
-        </div>
+    <>
+      {typeof navigator.share === "function" && touchFirst() && (
+        <button type="button" className="sheet-action share-native" onClick={nativeShare}>
+          <Icon name="share" />
+          Share to an app…
+        </button>
       )}
-    </div>
+
+      <section className="sheet-section">
+        <p className="menu-label">Live link</p>
+        <div className="link-row">
+          <input type="text" readOnly value={link} aria-label="Link to this design" onFocus={(e) => e.currentTarget.select()} />
+          <button type="button" className={done === "link" ? "copied" : ""} onClick={() => copy("link", link, "link")}>
+            {label("link", "link", "Copy link")}
+          </button>
+        </div>
+        <p className="hint">Opens exactly what you see: every driver value, box and setting.</p>
+      </section>
+
+      <section className="sheet-section">
+        <p className="menu-label">Forum image</p>
+        <div className="share-preview">
+          {preview ? <img src={preview} alt="The image to post: summary table, charts and a QR code to the live design" /> : <span className="hint">{imgError || "Drawing the image…"}</span>}
+        </div>
+        <div className="share-grid">
+          <button type="button" className="secondary" disabled={!png} onClick={() => png && downloadBlob(png, `${name}.png`)}>
+            <Icon name="download" />
+            Download PNG
+          </button>
+          {canCopyImage() && (
+            <button type="button" className={`secondary${done === "img" ? " copied" : ""}`} disabled={!png} onClick={copyImage}>
+              {label("img", "image", "Copy image")}
+            </button>
+          )}
+        </div>
+      </section>
+
+      <section className="sheet-section">
+        <p className="menu-label">Copy forum post</p>
+        <div className="share-grid">
+          <button type="button" className={`secondary${done === "md" ? " copied" : ""}`} onClick={() => copy("md", markdownPost(state, designs, link), "Reddit post")}>
+            {label("md", "markdown", "Reddit")}
+          </button>
+          <button type="button" className={`secondary${done === "bb" ? " copied" : ""}`} onClick={() => copy("bb", bbcodePost(state, designs, link), "diyAudio post")}>
+            {label("bb", "bbcode", "diyAudio")}
+          </button>
+        </div>
+        <p className="hint">Post the image, then paste the text under it: the text has the numbers and the live link.</p>
+      </section>
+    </>
   );
 }
 

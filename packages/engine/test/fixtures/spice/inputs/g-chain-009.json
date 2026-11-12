@@ -1,0 +1,46 @@
+{
+  "id": "g-chain-009",
+  "title": "chain (vented), sb-acoustics/sb13pfcr25-4 (Qts 0.29), 25.45 L, Fb 38.3 Hz, HP linkwitz-riley 2",
+  "driver": {
+    "fs": 44,
+    "qms": 2.6,
+    "qes": 0.33,
+    "vas_l": 13.4,
+    "re": 3.2,
+    "sd_cm2": 87,
+    "le_mh": 0.56
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 25.45,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 3.369,
+      "length_cm": 5.061
+    },
+    "endCorrection": 0.613,
+    "ql": null,
+    "qa": null,
+    "qp": 129
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "series",
+    "rg": 0.1,
+    "power": 10,
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 2,
+      "freq": 35.76
+    }
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

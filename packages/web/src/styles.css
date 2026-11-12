@@ -1,20 +1,25 @@
 :root {
-  /* Dark only, cool blue-grey surfaces with the orange brand accent. */
+  /* Dark only: navy-charcoal canvas, elevated cards, cyan for what you can act on. */
   color-scheme: dark;
-  --bg: #090a0f; /* app canvas */
-  --card: #12141c; /* card surface */
-  --well: #0c0e14; /* inputs and other wells */
-  --border: #222634; /* card borders, dividers */
-  --input-border: #343b4f; /* a little stronger, so fields stand out from the card */
-  --grid: #222634;
-  --fg: #e8ebf2; /* cool white */
-  --muted: #8e96aa; /* 6.2:1 on cards */
+  --bg: #11141a; /* app canvas */
+  --card: #1a1e26; /* elevation surface; groups UI without heavy borders */
+  --well: #11141a; /* inputs, segmented tracks */
+  --border: #282d37; /* sliders, inactive tab/pill bounds, unselected options */
+  --input-border: #343b4a; /* a little stronger, so fields stand out from the card */
+  --grid: #282d37;
+  --divider: #262b35; /* table rows */
+  --fg: #e6e9ef;
+  --muted: #8b93a3; /* secondary text, 5.3:1 on cards */
+  --inactive: #6b7280; /* inactive controls, axis ticks (3:1 non-text) */
   --faint: #4b5266; /* disabled controls */
-  --accent: #fb923c;
+  --accent: #4ed7e9; /* interactive only: active tabs, toggles, scrub, focus */
+  --accent-soft: rgb(78 215 233 / 0.15);
+  --on-accent: #0b1220;
+  --accent-fg: #0b1220;
+  --draw: #fb923c; /* diagrams and sketches (the brand orange, as the logo) */
   --over: #f87171;
   --warn: #fbbf24;
-  --on-accent: #090a0f;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: "Inter Variable", Inter, "SF Pro Text", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
   font-size: 15px;
   background: var(--bg);
   color: var(--fg);
@@ -307,8 +312,12 @@ td.over {
 }
 
 .tick {
-  fill: var(--muted);
+  fill: var(--inactive);
   font-size: 11px;
+}
+
+.unit-label {
+  font-weight: 600;
 }
 
 .limit {
@@ -326,8 +335,18 @@ td.over {
 }
 
 .cursor {
-  stroke: var(--muted);
+  stroke: var(--fg);
+  stroke-opacity: 0.6;
   stroke-width: 1;
+}
+
+.cursor-badge rect {
+  fill: var(--accent);
+}
+
+.cursor-badge text {
+  fill: var(--on-accent);
+  font-weight: 700;
 }
 
 .cursor-dot {
@@ -547,9 +566,9 @@ label.lib-filter {
 }
 
 .lib-filter button.chip.on {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-accent);
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  color: var(--accent);
 }
 
 .lib-status {
@@ -1181,13 +1200,18 @@ details.why > summary {
 }
 
 button.chip {
-  padding: 0.2rem 0.6rem;
+  padding: 0.2rem 0.65rem;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 500;
   background: transparent;
-  color: var(--accent);
-  border: 1px solid var(--accent);
+  color: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 999px;
+}
+
+button.chip:hover {
+  color: var(--fg);
+  border-color: var(--input-border);
 }
 
 .port-checks {
@@ -1326,7 +1350,7 @@ a.button-link {
 /* ---- first visit ---- */
 
 .welcome {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  border-color: color-mix(in srgb, var(--draw) 45%, var(--border));
 }
 
 .welcome-head,
@@ -1477,10 +1501,8 @@ button.icon:disabled {
 .panel-tabs {
   display: flex;
   gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
 }
 
 .panel-tabs [role="tab"] {
@@ -1490,24 +1512,39 @@ button.icon:disabled {
   justify-content: center;
   gap: 0.35rem;
   min-width: 0;
-  padding: 0.45rem 0.3rem;
+  min-height: 44px;
+  padding: 0 0.5rem;
   border: 0;
-  border-radius: 7px;
+  border-radius: 0;
   background: none;
-  color: var(--muted);
+  color: var(--inactive);
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
+  transition: color 0.15s, box-shadow 0.15s;
 }
 
 .panel-tabs [role="tab"]:hover {
   color: var(--fg);
-  background: var(--bg);
 }
 
 .panel-tabs [role="tab"].on {
-  background: var(--accent);
-  color: var(--on-accent);
+  color: var(--fg);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.panel-tabs .tab-icon {
+  display: none;
+}
+
+.panel-tabs .tab-icon.tab-gear {
+  display: inline-flex;
+}
+
+.panel-tabs .tab-icon.tab-gear .icon-svg {
+  width: 16px;
+  height: 16px;
 }
 
 .tab-badge {
@@ -1522,8 +1559,8 @@ button.icon:disabled {
 }
 
 .panel-tabs [role="tab"].on .tab-badge {
-  background: rgb(255 255 255 / 0.25);
-  color: inherit;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 @media (min-width: 861px) {
@@ -1548,30 +1585,39 @@ button.icon:disabled {
   }
 }
 
-/* More charts: one at a time under a tab row */
+/* More charts: one at a time under a tab row. One line that scrolls sideways (never wraps),
+   fading at an edge that has more. */
 .chart-tabs {
   margin-bottom: -0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  background: none;
+  --fade-l: 0px;
+  --fade-r: 0px;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
 }
 
-/* Each chart a pill of its own, so the ones not showing still read as buttons. */
-.panel-tabs.chart-tabs {
-  gap: 0.35rem;
-  padding: 0;
-  border: 0;
-  background: none;
+.chart-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.chart-tabs.more-left {
+  --fade-l: 2.5rem;
+}
+
+.chart-tabs.more-right {
+  --fade-r: 3rem;
 }
 
 .chart-tabs [role="tab"] {
-  flex: 0 1 auto;
-  padding-inline: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--card);
-}
-
-.chart-tabs [role="tab"].on {
-  border-color: var(--accent);
+  flex: 0 0 auto;
+  min-height: 48px;
+  padding-inline: 0.8rem;
+  scroll-snap-align: start;
 }
 
 .tab-alert {
@@ -1616,8 +1662,8 @@ figure.chart[hidden] {
     bottom: 0;
     z-index: 40;
     padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--border);
-    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    border-top: 1px solid var(--divider);
+    background: color-mix(in srgb, var(--card) 94%, transparent);
     backdrop-filter: blur(10px);
   }
 
@@ -1626,10 +1672,41 @@ figure.chart[hidden] {
     margin: 0 auto;
   }
 
+  .phone-tabs.panel-tabs {
+    border-bottom: 0;
+    background: none;
+  }
+
   .phone-tabs [role="tab"] {
-    padding: 0.6rem 0.1rem;
-    font-size: 0.8rem;
-    gap: 0.25rem;
+    flex-direction: column;
+    min-height: 52px;
+    padding: 0.3rem 0.1rem;
+    font-size: 0.7rem;
+    gap: 0.2rem;
+    position: relative;
+  }
+
+  .phone-tabs [role="tab"].on {
+    color: var(--accent);
+    box-shadow: none;
+  }
+
+  .phone-tabs .tab-icon,
+  .phone-tabs .tab-icon.tab-gear {
+    display: inline-flex;
+    margin: 0;
+  }
+
+  .phone-tabs .tab-icon .icon-svg {
+    width: 22px;
+    height: 22px;
+    transition: fill-opacity 0.15s;
+  }
+
+  .phone-tabs .tab-badge {
+    position: absolute;
+    top: 2px;
+    left: calc(50% + 6px);
   }
 
   .phone-tabs .tab-badge {
@@ -1820,22 +1897,31 @@ button.check-fix {
 
 .unit-switch {
   display: inline-flex;
+  gap: 2px;
+  padding: 2px;
   border: 1px solid var(--border);
-  border-radius: 7px;
-  overflow: hidden;
+  border-radius: 8px;
+  background: var(--well);
 }
 
 .unit-switch button {
-  padding: 0.15rem 0.5rem;
-  border-radius: 0;
-  background: var(--card);
-  color: var(--muted);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--inactive);
   font-size: 0.8rem;
+  font-weight: 500;
+  transition: color 0.15s, background 0.15s;
+}
+
+.unit-switch button:hover {
+  color: var(--fg);
 }
 
 .unit-switch button[aria-pressed="true"] {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
 }
 
 /* Settings: match a program's conventions in one tap. */
@@ -1939,42 +2025,48 @@ button.check-fix {
   z-index: 2;
   display: grid;
   gap: 0.15rem;
-  max-width: min(22rem, 70%);
-  padding: 0.4rem 0.55rem;
+  max-width: min(26rem, 70%);
+  padding: 0.5rem 0.7rem;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--card) 92%, transparent);
-  box-shadow: 0 4px 14px rgb(0 0 0 / 0.12);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.4);
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
   line-height: 1.3;
   pointer-events: none;
 }
 
-.chart-tip .readout-item {
-  display: grid;
-  grid-template-columns: auto 1fr 0.9rem auto;
-  align-items: center;
-  gap: 0.4rem;
+.tip-table {
+  border-collapse: collapse;
+  font-size: 0.78rem;
 }
 
-.chart-tip .tip-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-.chart-tip .tip-value {
-  font-weight: 600;
+.tip-table th,
+.tip-table td {
+  padding: 0.2rem 0.4rem 0.2rem 0;
+  text-align: left;
   white-space: nowrap;
 }
 
-@media (max-width: 640px) {
-  .chart-tip {
-    font-size: 0.72rem;
-    max-width: 75%;
-  }
+.tip-table thead th {
+  padding-bottom: 0.3rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.tip-table tbody tr {
+  border-top: 1px solid var(--divider);
+}
+
+.tip-table tbody th {
+  font-weight: 500;
+}
+
+.tip-table tr.part th {
+  padding-left: 0.8rem;
+  color: var(--muted);
 }
 
 /* T/S fields: room for the clear button so digits never hide under it */
@@ -2157,13 +2249,13 @@ dialog.finder .lib-inner {
 .finder-use .meter > span {
   display: block;
   height: 100%;
-  background: var(--accent);
+  background: var(--draw);
 }
 
 .finder-best {
   padding: 0.05rem 0.45rem;
   border-radius: 999px;
-  background: var(--accent);
+  background: var(--draw);
   color: var(--on-accent);
   font-size: 0.72rem;
   font-weight: 700;
@@ -2378,8 +2470,8 @@ dialog.finder .lib-inner {
   stroke-dasharray: 20 12;
 }
 .sheet-piece {
-  fill: color-mix(in srgb, var(--accent, #f97316) 18%, transparent);
-  stroke: var(--accent, #f97316);
+  fill: color-mix(in srgb, var(--draw) 18%, transparent);
+  stroke: var(--draw);
   stroke-width: 4;
 }
 .sheet-label {
@@ -2457,7 +2549,7 @@ dialog.finder .lib-inner {
   margin: 0.2rem 0 0.6rem;
 }
 .line-body {
-  fill: color-mix(in srgb, var(--accent) 10%, transparent);
+  fill: color-mix(in srgb, var(--draw) 10%, transparent);
   stroke: var(--fg);
   stroke-width: 1.5;
 }
@@ -2470,12 +2562,12 @@ dialog.finder .lib-inner {
   stroke-width: 1.2;
 }
 .line-port {
-  fill: color-mix(in srgb, var(--accent) 25%, transparent);
+  fill: color-mix(in srgb, var(--draw) 25%, transparent);
   stroke: var(--fg);
   stroke-width: 1.5;
 }
 .line-driver {
-  fill: var(--accent);
+  fill: var(--draw);
 }
 .line-label {
   font-size: 10px;
@@ -2483,11 +2575,11 @@ dialog.finder .lib-inner {
 }
 .line-driver.tap {
   fill: none;
-  stroke: var(--accent);
+  stroke: var(--draw);
   stroke-width: 1.5;
 }
 .line-section {
-  border-left: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-left: 3px solid color-mix(in srgb, var(--draw) 35%, transparent);
   padding: 0.2rem 0 0.1rem 0.6rem;
   margin: 0.5rem 0;
 }
@@ -2541,13 +2633,103 @@ button.add-section {
   opacity: 0.8;
 }
 .fold-mouth {
-  fill: var(--accent);
+  fill: var(--draw);
   opacity: 0.6;
 }
+/* Car wedge side view in the volume calculator */
+.wedge-view {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin: 0.4rem 0;
+}
+.wedge-view > .fields {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.wedge-drawing {
+  width: 17rem;
+  max-width: 100%;
+  height: auto;
+  flex: 0 0 auto;
+}
+.wedge-wall {
+  stroke: var(--muted);
+  stroke-width: 0;
+}
+.wedge-hatch-line {
+  stroke: var(--muted);
+}
+.wedge-hatch-slope-line {
+  stroke: var(--draw);
+  opacity: 0.8;
+}
+.wedge-wall.on {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.wedge-cavity {
+  fill: var(--well);
+  stroke: var(--muted);
+}
+.wedge-outline {
+  fill: none;
+  stroke: var(--fg);
+  opacity: 0.8;
+}
+.wedge-outline.bad {
+  stroke: var(--over);
+}
+.wedge-dim {
+  stroke: var(--muted);
+  fill: var(--muted);
+}
+.wedge-dim text {
+  stroke: none;
+}
+.wedge-dim.on {
+  stroke: var(--accent);
+  fill: var(--accent);
+}
+.wedge-label {
+  fill: var(--muted);
+  letter-spacing: 0.04em;
+}
+.wedge-driver polygon {
+  fill: color-mix(in srgb, var(--fg) 12%, transparent);
+  stroke: var(--fg);
+}
+.wedge-driver line {
+  stroke: var(--fg);
+}
+.wedge-driver.on polygon,
+.wedge-driver.on line {
+  stroke: var(--accent);
+}
+.wedge-driver.bad polygon,
+.wedge-driver.bad line {
+  stroke: var(--over);
+}
+.wedge-driver.bad polygon {
+  fill: color-mix(in srgb, var(--over) 25%, transparent);
+}
+.wedge-issues {
+  list-style: none;
+  padding: 0;
+  margin: 0.4rem 0;
+}
+.wedge-issues li {
+  margin: 0.2rem 0;
+}
+.wedge-issues li.hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
 button.chip.on {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-accent);
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  color: var(--accent);
 }
 .line-compare {
   overflow-x: auto;
@@ -2563,7 +2745,7 @@ button.chip.on {
   font-size: 0.7rem;
   padding: 0 0.35rem;
   border-radius: 0.6rem;
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: color-mix(in srgb, var(--draw) 15%, transparent);
   color: var(--fg);
 }
 .line-tags .tag.bad {
@@ -2655,7 +2837,7 @@ label.file-button.disabled {
   width: auto;
 }
 .fold-chamber {
-  fill: var(--accent);
+  fill: var(--draw);
   opacity: 0.15;
 }
 body.print-build #print-root .fold-chamber {
@@ -2697,7 +2879,7 @@ body.print-build #print-root .fold-chamber {
   fill: color-mix(in srgb, var(--muted) 18%, transparent);
 }
 .profile-port {
-  fill: color-mix(in srgb, var(--accent) 14%, transparent);
+  fill: color-mix(in srgb, var(--draw) 14%, transparent);
 }
 .profile-driver {
   stroke: var(--muted);
@@ -2709,7 +2891,7 @@ body.print-build #print-root .fold-chamber {
 }
 .profile-p {
   fill: none;
-  stroke: var(--accent);
+  stroke: var(--draw);
   stroke-width: 2;
 }
 .profile-v {
@@ -2728,7 +2910,7 @@ body.print-build #print-root .fold-chamber {
   width: min(40rem, calc(100vw - 1.5rem));
   padding: 0.55rem 0.8rem;
   border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid var(--draw);
   border-radius: 10px;
   background: var(--card);
   color: var(--fg);
@@ -2739,7 +2921,7 @@ body.print-build #print-root .fold-chamber {
   animation: help-in 0.12s ease-out;
 }
 .help-dock b {
-  color: var(--accent);
+  color: var(--draw);
 }
 @keyframes help-in {
   from {
@@ -2893,49 +3075,11 @@ button.browse.chosen .caret {
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
-.chart-strip {
-  display: none;
-}
 @media (max-width: 860px) {
   .chart-tip,
   .chart-hint {
     display: none;
   }
-  .chart-strip {
-    display: grid;
-    gap: 0.15rem;
-    padding: 0.4rem 0.1rem 0;
-    font-size: 0.85rem;
-    font-variant-numeric: tabular-nums;
-    line-height: 1.3;
-  }
-  .chart-strip .strip-head {
-    min-height: 1.3em;
-  }
-  .chart-strip .strip-item {
-    display: grid;
-    grid-template-columns: 1.6rem 1fr 0.9rem auto;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .chart-strip .strip-line {
-    width: 1.6rem;
-    height: 0.6rem;
-  }
-  .chart-strip .strip-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .chart-strip .strip-value {
-    min-width: 3.5em;
-    font-weight: 600;
-    text-align: right;
-  }
-  .chart-strip .strip-item.faint {
-    opacity: 0.6;
-  }
-
 }
 
 .dot {
@@ -3114,20 +3258,8 @@ button.as-text {
     padding: 0.2rem 0.5rem;
     font-size: 0.8rem;
   }
-  .chart-strip {
-    padding-inline: 0.4rem;
-  }
 }
 
-/* A line's cone and mouth in the phone legend: indented, smaller and quieter, under their design. */
-.chart-strip .strip-item.part {
-  padding-left: 0.9rem;
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-.chart-strip .strip-item.part .strip-value {
-  font-weight: 500;
-}
 @media (max-width: 860px) {
   .chart figcaption .chip {
     flex: none;
@@ -3866,7 +3998,7 @@ button.assist-tile.assist-demo {
 
 .assist-sketch path {
   fill: none;
-  stroke: var(--accent);
+  stroke: var(--draw);
   stroke-width: 1.6;
 }
 
@@ -4231,12 +4363,8 @@ button.new-btn > span:first-child {
   margin-left: auto;
 }
 
-.tab-gear {
-  margin-right: 0.25rem;
-}
-
-.phone-tabs .tab-gear {
-  display: none;
+.desktop-tabs .tab-gear {
+  margin-right: 0.15rem;
 }
 
 /* The phone summary line: the driver's name gives way (ellipsis) before the boxes and F3. */
@@ -4335,6 +4463,984 @@ button.link svg.sparkle {
 }
 
 .drive-quick button.chip[aria-pressed="true"] {
-  background: var(--accent);
-  color: var(--accent-fg, #111);
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  color: var(--accent);
+}
+
+/* Air distortion chart: each box's peak, under the title. */
+.air-peaks .air-swatch {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  vertical-align: baseline;
+}
+.air-peaks b {
+  color: var(--fg);
+}
+.air-peaks .over b {
+  color: var(--over);
+}
+
+/* ---- Icons and task windows (Sheet.tsx) ---- */
+
+.icon-svg {
+  flex: none;
+  vertical-align: -0.2em;
+}
+
+dialog.sheet {
+  width: min(560px, calc(100vw - 2rem));
+  max-width: none;
+  max-height: min(760px, calc(100dvh - 2rem));
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--fg);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 0.4);
+  overflow: hidden;
+}
+
+dialog.sheet[open] {
+  display: flex;
+}
+
+dialog.sheet::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.sheet-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.8rem 0.8rem 0.6rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sheet-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1rem 1.1rem;
+}
+
+.sheet-foot {
+  padding: 0.7rem 1.1rem;
+  border-top: 1px solid var(--border);
+  background: var(--well);
+}
+
+.sheet-section + .sheet-section {
+  margin-top: 1.1rem;
+}
+
+.sheet .menu-label {
+  margin: 0 0 0.4rem;
+}
+
+@media (max-width: 640px) {
+  /* Full screen on phones: no gaps at the edges, the page doesn't show behind. */
+  dialog.sheet,
+  dialog.sheet.export-window {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    animation: sheet-up 0.2s ease-out;
+  }
+
+  .sheet-inner {
+    height: 100%;
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .sheet-foot {
+    padding-bottom: calc(0.7rem + env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.sheet {
+    animation: none;
+  }
+}
+
+/* ---- Save & Export (ExportWindow.tsx) ---- */
+
+dialog.sheet.export-window {
+  width: min(760px, calc(100vw - 2rem));
+}
+
+.export-grid {
+  display: grid;
+  grid-template-columns: 17rem 1fr;
+  gap: 1.2rem;
+}
+
+.format-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding-right: 1.2rem;
+  border-right: 1px solid var(--border);
+}
+
+.format-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+button.format-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--fg);
+  font-weight: 500;
+  text-align: left;
+}
+
+button.format-item:hover {
+  background: var(--bg);
+}
+
+button.format-item.on {
+  border-color: var(--accent);
+  background: rgb(251 146 60 / 0.08);
+}
+
+button.format-item .icon-svg {
+  color: var(--muted);
+}
+
+.format-name {
+  white-space: nowrap;
+}
+
+button.format-item.on .icon-svg {
+  color: var(--accent);
+}
+
+.format-ext {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.format-pane h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--fg);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.format-pane > .hint {
+  margin-top: 0.3rem;
+}
+
+.format-pane h3 .format-ext {
+  margin-left: 0;
+}
+
+.box-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+/* Not the field-row grid every other label uses: checkbox, name, reason, left to right. */
+.box-pick label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.box-pick input[type="checkbox"] {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.box-pick legend {
+  padding: 0;
+}
+
+.box-pick .menu-note {
+  margin-left: auto;
+  text-align: right;
+}
+
+.box-pick label.disabled {
+  color: var(--faint);
+}
+
+.export-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.export-field select,
+.export-field input {
+  flex: none;
+  width: 100%;
+  max-width: 22rem;
+}
+
+.export-field .hint {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.export-field .menu-label {
+  margin: 0;
+}
+
+.export-error {
+  margin-top: 1rem;
+  color: var(--over);
+}
+
+button.sheet-action {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+}
+
+@media (max-width: 640px) {
+  /* After the wide-screen width above, so phones stay full screen. */
+  dialog.sheet.export-window {
+    width: 100%;
+  }
+
+  .export-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .export-field select,
+  .export-field input {
+    max-width: none;
+  }
+
+  /* The format list becomes a row of pills above the settings. */
+  .format-rail {
+    flex-direction: row;
+    gap: 0.4rem;
+    margin: 0 -1.1rem;
+    padding: 0 1.1rem 0.4rem;
+    border-right: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .format-group {
+    display: contents;
+  }
+
+  .format-group .menu-label {
+    display: none;
+  }
+
+  button.format-item {
+    flex: none;
+    width: auto;
+    border-color: var(--border);
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  button.format-item .format-ext {
+    display: none;
+  }
+}
+
+/* ---- Share (Share.tsx) ---- */
+
+.top .share > button.share-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+@media (max-width: 440px) {
+  .share-button .share-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
+.link-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.link-row input {
+  flex: 1;
+  min-width: 0;
+  color: var(--muted);
+}
+
+.link-row button,
+.share-grid button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.share-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.share-grid button.secondary {
+  border-color: var(--input-border);
+}
+
+button.copied,
+button.secondary.copied {
+  border-color: #4ade80;
+  color: #4ade80;
+}
+
+button.copied:not(.secondary) {
+  background: #4ade80;
+  color: var(--on-accent);
+}
+
+.share-preview {
+  display: grid;
+  place-items: center;
+  min-height: 8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--well);
+  overflow: hidden;
+}
+
+.share-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+button.share-native {
+  margin-bottom: 1.1rem;
+}
+
+.share-foot {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .share-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .share-grid button {
+    white-space: normal;
+  }
+}
+
+/* 3D take-apart view in the volume calculator */
+.box3d {
+  width: 100%;
+  margin: 0.4rem 0;
+}
+.wedge-view.is-3d > .box3d {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+.box3d-stage {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--fg) 5%, var(--well)), var(--well) 70%);
+  overflow: hidden;
+}
+.box3d-canvas {
+  display: block;
+  touch-action: none;
+  cursor: grab;
+}
+.box3d-canvas:active {
+  cursor: grabbing;
+}
+.box3d-canvas:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.box3d-label {
+  margin: 0.3rem 0;
+  min-height: 1.3em;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.box3d-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.9rem;
+}
+.box3d-slider {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.box3d-slider input {
+  width: 9rem;
+  accent-color: var(--accent);
+}
+
+/* ---- Open / Import (OpenWindow.tsx) ---- */
+
+.saved-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.saved-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding-right: 0.4rem;
+}
+
+.saved-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+button.saved-open {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  background: none;
+  color: var(--fg);
+  font-weight: 500;
+  text-align: left;
+}
+
+button.saved-open:hover {
+  color: var(--accent);
+}
+
+.saved-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.saved-more {
+  margin-top: 0.5rem;
+}
+
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 1.4rem 1rem;
+  border: 1.5px dashed var(--input-border);
+  border-radius: 10px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.drop-zone p {
+  margin: 0;
+  color: var(--fg);
+}
+
+.drop-zone .hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.drop-zone .choose-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/* Touch screens: no dragging, so the zone is just a big button and the file types. */
+@media (pointer: coarse) {
+  .drop-only {
+    display: none;
+  }
+
+  .drop-zone {
+    border: none;
+    padding: 0.2rem 0;
+  }
+
+  .drop-zone .choose-file {
+    width: 100%;
+    justify-content: center;
+    min-height: 3rem;
+  }
+}
+
+.drop-zone.over {
+  border-color: var(--accent);
+  background: rgb(251 146 60 / 0.06);
+}
+
+.use-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+button.use-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.7rem 0.9rem;
+  border-color: var(--input-border);
+  text-align: left;
+}
+
+button.use-item:hover {
+  border-color: var(--accent);
+}
+
+.drop-overlay {
+  position: fixed;
+  inset: 0.75rem;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  border: 2px dashed var(--accent);
+  border-radius: 14px;
+  background: rgb(9 10 15 / 0.75);
+  color: var(--fg);
+  font-size: 1.2rem;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* ---- ☰ menu: icons and the about footer ---- */
+
+.app-menu-panel > button,
+.app-menu-panel .menu-link {
+  align-items: center;
+}
+
+.app-menu-panel > button .icon-svg,
+.app-menu-panel .menu-link .icon-svg {
+  color: var(--muted);
+}
+
+.menu-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0;
+  padding: 0.2rem 0.5rem 0.3rem;
+  font-size: 0.8rem;
+}
+
+.menu-footer a {
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.menu-footer a:hover,
+.menu-footer a:focus-visible {
+  color: var(--fg);
+  background: var(--bg);
+}
+
+button.menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (pointer: coarse) {
+  .menu-note.kbd {
+    display: none;
+  }
+}
+
+/* ---- (i) popover beside a chart title: notes and caveats instead of text under the chart ---- */
+/* The popover hangs from the caption's left edge, so it never runs off a phone's screen. */
+.chart figcaption {
+  position: relative;
+}
+
+.info {
+  display: inline-flex;
+}
+
+.info-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.info-button:hover,
+.info-button[aria-expanded="true"] {
+  background: var(--border);
+  color: var(--fg);
+}
+
+.info-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  width: min(24rem, 100%);
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #222731;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.45);
+  color: #c4cad6;
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.info-pop p {
+  margin: 0;
+}
+
+.info-pop p + p {
+  margin-top: 0.5rem;
+}
+
+.info-pop .info-title {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+@media (max-width: 860px) {
+  .info-button {
+    width: 44px;
+    height: 44px;
+    margin: -8px -6px;
+  }
+}
+
+/* Chart caption: title and (i) first; its switches to the right (desktop) or on a row of their own (phones). */
+.chart-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.chart-actions .unit-switch {
+  margin-left: 0;
+}
+
+@media (max-width: 860px) {
+  .chart figcaption {
+    flex-wrap: wrap;
+  }
+
+  .chart figcaption .chart-actions {
+    flex-basis: 100%;
+    flex-wrap: nowrap;
+    margin-left: 0;
+  }
+
+  .chart figcaption .chart-actions .unit-switch {
+    flex: 1 1 auto;
+  }
+
+  .chart figcaption .chart-actions .unit-switch button {
+    flex: 1 1 0;
+    min-height: 40px;
+  }
+}
+
+.chart-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.chart .info-button svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+/* ---- Legend table under every chart ---- */
+.legend-wrap {
+  margin-top: 0.4rem;
+}
+
+.legend {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend th,
+.legend td {
+  padding: 0.35rem 0.5rem 0.35rem 0;
+  text-align: left;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.legend thead th {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.legend thead th:first-child {
+  width: 30%;
+}
+
+.legend .legend-at.on {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.legend tbody tr {
+  border-top: 1px solid var(--divider);
+  height: 2.75rem;
+}
+
+.legend tbody th {
+  font-weight: 500;
+}
+
+.legend-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+}
+
+/* Long names wrap to two lines rather than being cut off. */
+.legend-label {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.legend-swatch {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-right: 0.35rem;
+  border-radius: 2px;
+  vertical-align: -1px;
+}
+
+.legend-name .legend-swatch {
+  margin-right: 0;
+}
+
+.legend-swatch.line {
+  width: 16px;
+  height: 8px;
+  border-radius: 0;
+}
+
+.legend-caret {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: transform 0.15s;
+}
+
+.legend-name[aria-expanded="true"] .legend-caret {
+  transform: rotate(180deg);
+}
+
+.legend-val {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.legend td > .legend-val,
+.legend-sub {
+  display: block;
+}
+
+.legend-sub {
+  color: var(--inactive);
+  font-size: 0.68rem;
+  font-weight: 400;
+}
+
+.legend-note {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.legend .over,
+.legend .over .legend-val,
+.tip-table .over {
+  color: var(--over);
+}
+
+.legend .lead,
+.tip-table .lead {
+  color: var(--muted);
+  font-size: 0.7em;
+}
+
+.legend tr.part th {
+  padding-left: 1.2rem;
+}
+
+.legend tr.part th,
+.legend tr.part td {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.legend tr.faint {
+  opacity: 0.55;
+}
+
+@media (max-width: 860px) {
+  .legend-wrap {
+    padding-inline: 0.4rem;
+  }
+
+  .legend {
+    font-size: 0.82rem;
+  }
+
+  .legend-note {
+    font-size: 0.75rem;
+  }
+
+  /* More than four columns: the table scrolls sideways inside the card, names stay put. */
+  .legend-wrap.wide {
+    overflow-x: auto;
+    -webkit-mask-image: linear-gradient(to right, #000 85%, transparent);
+    mask-image: linear-gradient(to right, #000 85%, transparent);
+  }
+
+  .legend-wrap.wide .legend {
+    min-width: calc(var(--legend-cols) * 5.6rem);
+  }
+
+  .legend-wrap.wide .legend thead th:first-child {
+    width: 7.5rem;
+  }
+
+  .legend-wrap.wide .legend th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--card);
+  }
 }

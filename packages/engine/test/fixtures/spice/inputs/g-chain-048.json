@@ -1,0 +1,45 @@
+{
+  "id": "g-chain-048",
+  "title": "chain (sealed), redcatt/182find (Qts 0.23), 246.1 L, HP butterworth 4, 1 EQ",
+  "driver": {
+    "fs": 31,
+    "qms": 8.85,
+    "qes": 0.24,
+    "vas_l": 208.6,
+    "re": 5.5,
+    "sd_cm2": 1257,
+    "le_mh": 4.92
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 246.1
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 122,
+    "driveModel": "winisd",
+    "power": 10,
+    "highPass": {
+      "type": "butterworth",
+      "order": 4,
+      "freq": 21.23
+    },
+    "eq": [
+      {
+        "type": "peak",
+        "freq": 72.09,
+        "gain_db": 8.172,
+        "q": 0.6842
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "g-bp6p-035",
+  "title": "bp6p, bc-speakers/12cl76 (Qts 0.21), 221 L, rear 141.7 L port at 36.2 Hz, front 79.23 L port at 52.1 Hz",
+  "driver": {
+    "fs": 48,
+    "qms": 4.8,
+    "qes": 0.22,
+    "vas_l": 59,
+    "re": 5.2,
+    "sd_cm2": 522,
+    "le_mh": 1.5
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 141.7,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 13.49,
+        "length_cm": 13.06
+      },
+      "qp": null
+    },
+    "front": {
+      "vb_l": 79.23,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.1,
+        "length_cm": 1.931
+      },
+      "portCount": 2,
+      "qp": 83,
+      "ql": null,
+      "qa": null
+    }
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.1,
+    "coilTemp_C": 70,
+    "driveModel": "winisd",
+    "power": 10,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

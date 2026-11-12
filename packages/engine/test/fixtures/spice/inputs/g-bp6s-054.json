@@ -1,0 +1,55 @@
+{
+  "id": "g-bp6s-054",
+  "title": "bp6s, beyma/10cmv2 (Qts 0.42), 22.51 L, rear 11.63 L port at 48.9 Hz, front 10.88 L port at 94.6 Hz",
+  "driver": {
+    "fs": 52,
+    "qms": 3.8,
+    "qes": 0.47,
+    "vas_l": 44,
+    "re": 5.9,
+    "sd_cm2": 380,
+    "le_mh": 0.8
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 11.63,
+      "port": {
+        "shape": "slot",
+        "width_cm": 12.99,
+        "height_cm": 1.547,
+        "length_cm": 17.87
+      },
+      "ql": 28,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 10.88,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 4.061,
+        "length_cm": 4.958
+      },
+      "portCount": 2,
+      "qp": null,
+      "ql": 26,
+      "qa": 23
+    },
+    "rearPortTo": "front"
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

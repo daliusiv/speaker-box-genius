@@ -1,0 +1,45 @@
+{
+  "id": "g-bp4-014",
+  "title": "bp4, purifi/ptt6-5x04-nfa-06 (Qts 0.29), 31.03 L, rear 17.54 L closed, front 13.49 L port at 43.5 Hz",
+  "driver": {
+    "fs": 30,
+    "qms": 7.3,
+    "qes": 0.3,
+    "vas_l": 25.9,
+    "re": 3.6,
+    "sd_cm2": 132.7,
+    "le_mh": 0.38
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 17.54,
+      "ql": 5,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 13.49,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 4.162,
+        "length_cm": 12.86
+      }
+    },
+    "qicl": null
+  },
+  "opts": {
+    "rg": 0.5,
+    "coilTemp_C": 115,
+    "driveModel": "winisd",
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

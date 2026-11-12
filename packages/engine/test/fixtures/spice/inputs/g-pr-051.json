@@ -1,0 +1,53 @@
+{
+  "id": "g-pr-051",
+  "title": "passive-radiator, dayton-audio/mx12-22 (Qts 0.35), 132.3 L, Fb 22.1 Hz, 2 × dayton-audio/dsa215-pr + 1 × dayton-audio/ds90-pr",
+  "driver": {
+    "fs": 28.8,
+    "qms": 3.25,
+    "qes": 0.39,
+    "vas_l": 45.6,
+    "re": 3.95,
+    "sd_cm2": 514.7,
+    "le_mh": 5.09
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 132.3,
+    "pr": {
+      "mms_g": 67,
+      "sd_cm2": 211.2,
+      "cms_mm_per_n": 0.58,
+      "qms": 7.66
+    },
+    "prCount": 2,
+    "addedMass_g": 72.14,
+    "extraPrs": [
+      {
+        "pr": {
+          "mms_g": 5.5,
+          "sd_cm2": 31.2,
+          "cms_mm_per_n": 2.55,
+          "qms": 5.9
+        },
+        "count": 1
+      }
+    ],
+    "ql": 11,
+    "qa": 37
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 109,
+    "driveModel": "winisd",
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

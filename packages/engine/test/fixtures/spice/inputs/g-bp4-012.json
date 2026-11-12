@@ -1,0 +1,52 @@
+{
+  "id": "g-bp4-012",
+  "title": "bp4, celestion/tf0512he (Qts 0.54), 3.298 L, rear 1.455 L closed, front 1.843 L 2 × sb-acoustics/sb16pfc-00 at 125.2 Hz",
+  "driver": {
+    "fs": 84.7,
+    "qms": 9.225,
+    "qes": 0.569,
+    "vas_l": 3.46,
+    "re": 5.42,
+    "sd_cm2": 78.54,
+    "le_mh": 0.28
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 1.455
+    },
+    "front": {
+      "vb_l": 1.843,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 38,
+            "sd_cm2": 124,
+            "cms_mm_per_n": 1.4,
+            "qms": 4.4
+          },
+          "count": 2,
+          "addedMass_g": 1.411
+        }
+      ]
+    },
+    "qicl": 196
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "coilTemp_C": 86,
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

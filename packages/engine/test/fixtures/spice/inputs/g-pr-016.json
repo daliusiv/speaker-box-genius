@@ -1,0 +1,41 @@
+{
+  "id": "g-pr-016",
+  "title": "passive-radiator, 18-sound/8ntlw2000-8ohm (Qts 0.20), 12.56 L, Fb 50.3 Hz, 2 × sb-acoustics/sb16pfc-00",
+  "driver": {
+    "fs": 71,
+    "qms": 8.1,
+    "qes": 0.21,
+    "vas_l": 13,
+    "re": 5.2,
+    "sd_cm2": 227,
+    "le_mh": 0.63
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 12.56,
+    "pr": {
+      "mms_g": 38,
+      "sd_cm2": 124,
+      "cms_mm_per_n": 1.4,
+      "qms": 4.4
+    },
+    "prCount": 2,
+    "addedMass_g": 3.906
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "g-bp4-041",
+  "title": "bp4, sb-acoustics/sb29swnrx-s75-6 (Qts 0.29), 261.5 L, rear 153.5 L closed, front 108 L port at 30.2 Hz",
+  "driver": {
+    "fs": 20,
+    "qms": 4.5,
+    "qes": 0.31,
+    "vas_l": 66,
+    "re": 4.5,
+    "sd_cm2": 312,
+    "le_mh": 3
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 153.5,
+      "ql": 26,
+      "qa": 106
+    },
+    "front": {
+      "vb_l": 108,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 10.41,
+        "length_cm": 18.66
+      },
+      "ql": 18,
+      "qa": null
+    },
+    "qicl": 52
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 100
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "id": "g-vented-014",
+  "title": "vented, redcatt/10find (Qts 0.40), 10.85 L, Fb 82.2 Hz",
+  "driver": {
+    "fs": 66,
+    "qms": 13.13,
+    "qes": 0.41,
+    "vas_l": 23.5,
+    "re": 5.5,
+    "sd_cm2": 346,
+    "le_mh": 0.68
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 10.85,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7.033,
+      "length_cm": 26.55
+    },
+    "portCount": 2
+  },
+  "opts": {
+    "rg": 0,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

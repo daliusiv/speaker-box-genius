@@ -41,9 +41,11 @@ pnpm dev
 - `packages/schema`: data formats for drivers, passive radiators and URL state.
 - `packages/db-tools`: database validation and bundling scripts.
 - `packages/web`: the app.
-- `site/`: the content pages built next to the app: guides (`site/pages/*.md`), calculators (`site/calculators/`, sums in `packages/web/src/calculators/`), the validation page, and a page per driver (`site/drivers.ts`, share cards in `site/og.ts`). `pnpm build:site` builds them; set `SBG_CARDS=0` to skip the share cards, which need Chrome.
+- `site/`: the content pages built next to the app: guides (`site/pages/*.md`), calculators (`site/calculators/`, sums in `packages/web/src/calculators/`), the validation page, and a page per driver (`site/drivers.ts`, share cards in `site/og.ts`). `pnpm build:site` builds them; set `SBG_CARDS=0` to skip the share cards, which need Chrome. A guide's charts and numbers can come from its example at build instead of screenshots: `![caption](chart:example/excursion)`, `{{num:example/1/f3}}` and `{{color:example/1}}` (see the top of `site/build.ts`), so they stay right when the app or the engine changes.
 
 Keep PRs small and focused. For anything large, open an issue first so we can agree on the approach.
+
+**Changelog:** if your change is something users would notice (a feature, a fix, new driver data), add a line under `## Unreleased` in `CHANGELOG.md`, under `### Added`, `### Changed` or `### Fixed`. Write it for users, not developers, and leave out PR and issue numbers. The entries are dated when the site next updates and appear at [/changelog/](https://speakerboxgenius.com/changelog/).
 
 ## Licence of contributions and the CLA
 

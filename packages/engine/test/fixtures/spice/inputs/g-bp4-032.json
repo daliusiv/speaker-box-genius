@@ -1,0 +1,49 @@
+{
+  "id": "g-bp4-032",
+  "title": "bp4, markaudio/chn-40 (Qts 0.64), 0.5016 L, rear 0.3057 L closed, front 0.1959 L port at 98.2 Hz",
+  "driver": {
+    "fs": 97.4826,
+    "qms": 3.7689,
+    "qes": 0.7752,
+    "vas_l": 1.1523,
+    "re": 6.8,
+    "sd_cm2": 23,
+    "le_mh": 1.0575
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.3057,
+      "ql": 4,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 0.1959,
+      "port": {
+        "shape": "slot",
+        "width_cm": 6.949,
+        "height_cm": 0.8007,
+        "length_cm": 85.88
+      },
+      "ql": 7,
+      "qa": 76
+    },
+    "qicl": 152
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "parallel",
+    "rg": 0,
+    "coilTemp_C": 43,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

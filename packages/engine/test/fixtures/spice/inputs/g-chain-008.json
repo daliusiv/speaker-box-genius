@@ -1,0 +1,53 @@
+{
+  "id": "g-chain-008",
+  "title": "chain (vented), bc-speakers/10plb76 (Qts 0.19), 47.89 L, Fb 60.2 Hz, HP butterworth 1, 1 EQ",
+  "driver": {
+    "fs": 52,
+    "qms": 3.4,
+    "qes": 0.2,
+    "vas_l": 31,
+    "re": 4.8,
+    "sd_cm2": 320,
+    "le_mh": 0.32
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 47.89,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7.918,
+      "length_cm": 1.728
+    },
+    "endCorrection": 0.85,
+    "ql": 17,
+    "qa": 45,
+    "qp": 144
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10,
+    "highPass": {
+      "type": "butterworth",
+      "order": 1,
+      "freq": 38.29
+    },
+    "eq": [
+      {
+        "type": "linkwitz",
+        "f0": 76.66,
+        "q0": 0.6798,
+        "fp": 39.38,
+        "qp": 0.6896
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

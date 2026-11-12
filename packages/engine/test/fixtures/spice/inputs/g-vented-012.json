@@ -1,0 +1,40 @@
+{
+  "id": "g-vented-012",
+  "title": "vented, faital-pro/6fe200 (Qts 0.67), 12.85 L, Fb 94.3 Hz",
+  "driver": {
+    "fs": 120,
+    "qms": 6.2,
+    "qes": 0.75,
+    "vas_l": 3.6,
+    "re": 5.9,
+    "sd_cm2": 131,
+    "le_mh": 0.4
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 12.85,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 3.37,
+      "length_cm": 2.296
+    },
+    "portCount": 2,
+    "ql": 29,
+    "qa": 30,
+    "qp": 26
+  },
+  "opts": {
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "g-bp6p-010",
+  "title": "bp6p, bc-speakers/6ndl38-4ohm (Qts 0.38), 22.24 L, rear 14.39 L port at 46.3 Hz, front 7.845 L port at 108.1 Hz",
+  "driver": {
+    "fs": 69,
+    "qms": 10.05,
+    "qes": 0.4,
+    "vas_l": 7.1,
+    "re": 3.1,
+    "sd_cm2": 132,
+    "le_mh": 0.4
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 14.39,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.314,
+        "length_cm": 5.565
+      },
+      "qp": 82,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 7.845,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 4.423,
+        "length_cm": 1.252
+      },
+      "ql": 20,
+      "qa": 14
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 100,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

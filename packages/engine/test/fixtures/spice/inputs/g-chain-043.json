@@ -1,0 +1,71 @@
+{
+  "id": "g-chain-043",
+  "title": "chain (vented), redcatt/5fr (Qts 0.69), 1.964 L, Fb 73.1 Hz, HP linkwitz-riley 4, 2 EQ, passive parts",
+  "driver": {
+    "fs": 92,
+    "qms": 11.4,
+    "qes": 0.73,
+    "vas_l": 3.8,
+    "re": 5.6,
+    "sd_cm2": 90,
+    "le_mh": 0.28
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 1.964,
+    "port": {
+      "shape": "slot",
+      "width_cm": 3.347,
+      "height_cm": 0.7844,
+      "length_cm": 13.37
+    },
+    "portCount": 2,
+    "endCorrection": 0.85,
+    "ql": null,
+    "qa": null,
+    "qp": 60
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 100,
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 4,
+      "freq": 90.23
+    },
+    "eq": [
+      {
+        "type": "lowshelf",
+        "freq": 90,
+        "gain_db": 6.856,
+        "q": 1.526
+      },
+      {
+        "type": "peak",
+        "freq": 249.4,
+        "gain_db": 8.622,
+        "q": 1.731
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {},
+        {},
+        {
+          "r": 0.508,
+          "join": "parallel"
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

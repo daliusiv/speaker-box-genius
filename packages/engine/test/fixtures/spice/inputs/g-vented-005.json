@@ -1,0 +1,41 @@
+{
+  "id": "g-vented-005",
+  "title": "vented, eminence/kappa-pro-10a (Qts 0.20), 43.72 L, Fb 49.5 Hz",
+  "driver": {
+    "fs": 46,
+    "qms": 10.1,
+    "qes": 0.2,
+    "vas_l": 52.2,
+    "re": 6.5,
+    "sd_cm2": 344.9,
+    "le_mh": 1.15
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 43.72,
+    "port": {
+      "shape": "slot",
+      "width_cm": 11.44,
+      "height_cm": 2.078,
+      "length_cm": 3.247
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "series",
+    "rg": 0,
+    "coilTemp_C": 116,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

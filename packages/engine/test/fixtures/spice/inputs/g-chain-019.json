@@ -1,0 +1,74 @@
+{
+  "id": "g-chain-019",
+  "title": "chain (sealed), celestion/pulse-xl-10-20 (Qts 0.46), 73.88 L, HP butterworth 4, 3 EQ, passive parts",
+  "driver": {
+    "fs": 37.5,
+    "qms": 6.678,
+    "qes": 0.493,
+    "vas_l": 76.92,
+    "re": 5.8,
+    "sd_cm2": 346.4,
+    "le_mh": 1.2
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 73.88
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 100,
+    "space": "full",
+    "highPass": {
+      "type": "butterworth",
+      "order": 4,
+      "freq": 29.56
+    },
+    "eq": [
+      {
+        "type": "linkwitz",
+        "f0": 51.77,
+        "q0": 0.6659,
+        "fp": 23.45,
+        "qp": 0.755
+      },
+      {
+        "type": "peak",
+        "freq": 123.3,
+        "gain_db": -2.457,
+        "q": 2.152
+      },
+      {
+        "type": "peak",
+        "freq": 23.32,
+        "gain_db": 2.046,
+        "q": 0.9113
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {
+          "join": "parallel"
+        },
+        {
+          "r": 8.466,
+          "l_mH": 1.511
+        },
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

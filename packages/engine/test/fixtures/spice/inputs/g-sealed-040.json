@@ -1,0 +1,33 @@
+{
+  "id": "g-sealed-040",
+  "title": "sealed, monacor/spx-30m-8ohm (Qts 0.71), 1.76 L",
+  "driver": {
+    "fs": 100,
+    "qms": 3.453,
+    "qes": 0.89,
+    "vas_l": 1.8,
+    "re": 6.4,
+    "sd_cm2": 32,
+    "le_mh": 0.18
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 1.76,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

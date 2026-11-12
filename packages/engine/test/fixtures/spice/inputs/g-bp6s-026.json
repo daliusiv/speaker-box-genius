@@ -1,0 +1,57 @@
+{
+  "id": "g-bp6s-026",
+  "title": "bp6s, dayton-audio/rss390ho-4 (Qts 0.32), 57.19 L, rear 35.81 L port at 21.0 Hz, front 21.38 L 1 × dayton-audio/rss390-pr at 38.5 Hz",
+  "driver": {
+    "fs": 21.5,
+    "qms": 3.69,
+    "qes": 0.35,
+    "vas_l": 168,
+    "re": 3.2,
+    "sd_cm2": 829.6,
+    "le_mh": 1.79
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 35.81,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 9.881,
+        "length_cm": 140.6
+      },
+      "qp": 116,
+      "ql": 9,
+      "qa": 110
+    },
+    "front": {
+      "vb_l": 21.38,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 400,
+            "sd_cm2": 829.6,
+            "cms_mm_per_n": 0.22,
+            "qms": 4.07
+          },
+          "count": 1,
+          "addedMass_g": 321.9
+        }
+      ]
+    },
+    "rearPortTo": "front",
+    "qicl": 36
+  },
+  "opts": {
+    "rg": 0,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

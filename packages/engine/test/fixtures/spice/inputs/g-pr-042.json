@@ -1,0 +1,38 @@
+{
+  "id": "g-pr-042",
+  "title": "passive-radiator, peerless/pls-p830984 (Qts 0.75), 0.5 L, Fb 120.5 Hz, 1 × dayton-audio/dsa90-pr",
+  "driver": {
+    "fs": 110,
+    "qms": 5.46,
+    "qes": 0.87,
+    "vas_l": 0.547,
+    "re": 6.3,
+    "sd_cm2": 21.2,
+    "le_mh": 0.101
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 0.5,
+    "pr": {
+      "mms_g": 5,
+      "sd_cm2": 31.2,
+      "cms_mm_per_n": 2.55,
+      "qms": 5.72
+    },
+    "addedMass_g": 0.505
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 127,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

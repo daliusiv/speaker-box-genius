@@ -58,3 +58,44 @@ test("WinISD gets the driver's full record and a plain Le, and no series 6th-ord
   assert.equal(typeof series, "string");
   assert.match(series as string, /ported into the front/);
 });
+
+test("a slot port goes to WinISD as its rectangular vent and comes back as a slot", async () => {
+  const { applyWpr } = await import("../src/wprImport.ts");
+  const v = byKind(DEFAULT_STATE, "vented");
+  if (v.kind !== "vented") throw new Error("no vented example");
+  const slotted: DesignState = { ...v, shape: "slot", slotWidth_cm: 30, slotHeight_cm: 5, length_cm: 40, count: 1 };
+  const s: AppState = { ...DEFAULT_STATE, designs: [slotted] };
+  const out = wprFor(s, slotted);
+  assert.ok(typeof out !== "string", String(out));
+  assert.ok(!out.notes.some((n) => /slot/.test(n)), out.notes.join("; "));
+  assert.match(out.text, /\[VentRear\]\r\nNum=1\r\nShape=2\r\n/);
+  assert.match(out.text, /dia1=0\.3\r\ndia2=0\.05\r\ncarea=0\.015\r\n/);
+  const p = parseWpr(out.text);
+  assert.deepEqual(p.port?.slot, { width_cm: 30, height_cm: 5 });
+  const r = runDesigns(s, solveDriver(s))[0]!.result;
+  assert.ok(Math.abs(p.box.fb! - r.summary.fb!) < 0.05, `tuning ${p.box.fb} vs ${r.summary.fb}`);
+  const back = applyWpr({ ...DEFAULT_STATE, designs: [] }, p, "slot.wpr").state.designs.at(-1)!;
+  assert.ok(back.kind === "vented" && back.shape === "slot" && back.slotWidth_cm === 30 && back.slotHeight_cm === 5 && back.length_cm === 40);
+});
+
+test("projects the app exported with slots, re-saved by WinISD 0.7.0.950, open as the same slots", async () => {
+  // Exported by this PR, opened and saved by WinISD (11 Nov 2026): it keeps Shape=2, the sizes, the
+  // count and Fb, and recomputes the length from Fb with its own air (+0.01 cm).
+  const { applyWpr } = await import("../src/wprImport.ts");
+  const { readFileSync } = await import("node:fs");
+  const read = (f: string) => parseWpr(readFileSync(new URL(`../../engine/test/fixtures/winisd-resaved/${f}.wpr`, import.meta.url), "latin1"));
+  const open = (f: string) => applyWpr({ ...DEFAULT_STATE, designs: [] }, read(f), `${f}.wpr`).state.designs.at(-1)!;
+  for (const [f, w, h, n, len, fb] of [["slot-30x5", 30, 5, 1, 40, 38.5788], ["slot-2x25x4", 25, 4, 2, 50, 41.3164]] as const) {
+    const p = read(f);
+    assert.deepEqual(p.port?.slot, { width_cm: w, height_cm: h });
+    assert.equal(p.port?.count, n);
+    assert.ok(Math.abs(p.port!.length_cm - len) < 0.02, `${f} length ${p.port!.length_cm}`);
+    assert.ok(Math.abs(p.box.fb! - fb) < 1e-3);
+    const d = open(f);
+    assert.ok(d.kind === "vented" && d.shape === "slot" && d.slotWidth_cm === w && d.slotHeight_cm === h && d.count === n, f);
+  }
+  const bp = read("bp-slot");
+  assert.deepEqual(bp.bandpass?.front.port?.slot, { width_cm: 20, height_cm: 5 });
+  const d = open("bp-slot");
+  assert.ok(d.kind === "bandpass" && d.front.shape === "slot" && d.front.slotWidth_cm === 20 && d.front.slotHeight_cm === 5, JSON.stringify(d.kind === "bandpass" ? d.front : d));
+});

@@ -1,0 +1,40 @@
+{
+  "id": "g-pr-028",
+  "title": "passive-radiator, seas/w12cy004 (Qts 0.38), 7.608 L, Fb 52.5 Hz, 2 × dayton-audio/ds115-pr",
+  "driver": {
+    "fs": 48,
+    "qms": 6.11,
+    "qes": 0.41,
+    "vas_l": 4.6,
+    "re": 5.5,
+    "sd_cm2": 50,
+    "le_mh": 0.32
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 7.608,
+    "pr": {
+      "mms_g": 13,
+      "sd_cm2": 54.1,
+      "cms_mm_per_n": 2.27,
+      "qms": 3.66
+    },
+    "prCount": 2,
+    "addedMass_g": 1.078
+  },
+  "opts": {
+    "rg": 0,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

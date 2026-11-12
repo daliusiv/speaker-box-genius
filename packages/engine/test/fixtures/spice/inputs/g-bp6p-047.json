@@ -1,0 +1,48 @@
+{
+  "id": "g-bp6p-047",
+  "title": "bp6p, beyma/8cmv2 (Qts 0.51), 7.243 L, rear 3.567 L port at 61.9 Hz, front 3.675 L port at 102.9 Hz",
+  "driver": {
+    "fs": 75,
+    "qms": 7.7,
+    "qes": 0.55,
+    "vas_l": 14.6,
+    "re": 5.1,
+    "sd_cm2": 220,
+    "le_mh": 0.6
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 3.567,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 2.726,
+        "length_cm": 23.45
+      },
+      "portCount": 2
+    },
+    "front": {
+      "vb_l": 3.675,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.523,
+        "length_cm": 14.33
+      },
+      "ql": 13,
+      "qa": 76
+    }
+  },
+  "opts": {
+    "rg": 0,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

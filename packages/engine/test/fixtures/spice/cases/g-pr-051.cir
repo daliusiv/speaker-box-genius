@@ -1,0 +1,46 @@
+* g-pr-051: passive-radiator, dayton-audio/mx12-22 (Qts 0.35), 132.3 L, Fb 22.1 Hz, 2 × dayton-audio/dsa215-pr + 1 × dayton-audio/ds90-pr
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 23.0902392798342
+Vrg amp spk 0
+Vin spk bk 0
+Re1 bk c1a 5.3315915
+Le1 c1a c1b 0.00509
+Hemf1 c1b c1d Vcone1 417.272697080398
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 417.272697080398
+Ras11 u1h1 u1r1 5289.61530315188
+Lmas11 u1r1 u1m1 95.0025129615019
+Ccas11 u1m1 u1k1 3.21455006873217e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Rpr1 box r1 1572.81199107153
+Lpr1 r1 q1 155.967523243802
+Cpr1 q1 s1 5.17423104e-7
+Vpr1 s1 0 0
+Fxp1 0 xp1 Vpr1 23.6742424242424
+Cxp1 xp1 0 1
+Rbl_xp1 xp1 0 1e+15
+Rpr2 box r2 25571.137932731
+Lpr2 r2 q2 565.006574621959
+Cpr2 q2 s2 2.482272e-8
+Vpr2 s2 0 0
+Fxp2 0 xp2 Vpr2 320.51282051282
+Cxp2 xp2 0 1
+Rbl_xp2 xp2 0 1e+15
+Rab box b1 510.277176876141
+Cab b1 0 9.32642487046636e-7
+Rbl_b1 b1 0 1e+15
+Ral box l1 207682.810988589
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpl 0 prs Vleak 1
+Fpr1 0 prs Vpr1 1
+Fpr2 0 prs Vpr2 1
+Lrad prs 0 0.19113747540989
+Fx 0 xn Vcone1 19.4287934719254
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) V(xp1) V(xp2) I(Vin) I(Vcone1) I(Vleak) I(Vpr1) I(Vpr2)
+.ac dec 50 5 2000
+.end

@@ -14,14 +14,15 @@ import { findChrome, Rasterizer } from "./og.ts";
 
 const PUBLIC = join(import.meta.dirname, "..", "packages", "web", "public");
 export const BRAND = {
-  canvas: "#090a0f",
-  card: "#12141c",
-  border: "#222634",
+  canvas: "#11141a",
+  card: "#1a1e26",
+  border: "#282d37",
   cabinet: "#222634",
   dot: "#8e96aa",
-  fg: "#e8ebf2",
-  muted: "#8e96aa",
-  accent: "#fb923c",
+  fg: "#e6e9ef",
+  muted: "#8b93a3",
+  accent: "#4ed7e9",
+  draw: "#fb923c",
   ring: "#f97316",
 };
 const FONT = "Inter, 'Segoe UI', Roboto, 'DejaVu Sans', Arial, sans-serif";

@@ -30,6 +30,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **Cone excursion** with an **Xmax redline**, and **passive radiator excursion** with each PR's own Xmax and a shaded caution band below it (75 % of Xmax by default, a rule of thumb)
 - **Port air velocity** with a **chuffing-risk line** (peak or RMS; 17 m/s by default, your own in Settings → Ports, used by every check and the design assistant)
 - **Box pressure**: the peak sound pressure inside the box (both chambers of a bandpass), the load on the cone and the walls; matches Hornresp's diaphragm pressure chart
+- **Air distortion**: the 2nd harmonic a box's air spring adds when a big cone squeezes a small box (sealed, ported, PR and bandpass), and that builds up along a line or horn as the wave steepens (checked against Thuras 1935), in % or dBc, at the power set or at max SPL, with each box's peak in the summary and your own limit (Settings → Air distortion); it can also count as a Max SPL limit. The air only: the driver's own distortion isn't modelled
 - **Maximum SPL**: the loudest each box can play at every frequency, with a band showing what limits it there (Xmax, PR Xmax, port speed or thermal power), and the **amplifier voltage and current** needed to reach it, after the filter and EQ, against your amplifier's limits (typed in, or worked out from its watt ratings)
 - **Impedance** (magnitude or phase, with the lowest load the amplifier sees), **group delay**, and **line load (Za)** for lines and horns
 - For lines: the **cone and mouth** contributions on their own, and **pressure and air speed along the line** at any frequency, showing where stuffing does the most
@@ -48,7 +49,8 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **Multiple drivers**: any number, wired in series or parallel, **isobaric** pairs and **dual voice coil** drivers
 - **Measure your own driver** from a free-air impedance sweep (DATS, REW, ARTA and others, as `.zma`, `.txt` or `.csv`), with an added-mass sweep for Vas
 - Voice-coil inductance models (Le, and L2R2 for a closer match to measurements), and a **hot voice coil** setting for power compression
-- **Import and export WinISD** `.wdr` drivers and `.wpr` projects (open any sealed, ported, PR or ported bandpass box in WinISD), **import OpenISD** `.owpr` projects and `.owdr` drivers, and send a driver to the database from the app
+- **Import and export WinISD** `.wdr` drivers and `.wpr` projects (open any sealed, ported, PR or ported bandpass box in WinISD; slot ports go both ways as WinISD's rectangular vents), **import OpenISD** `.owpr` projects and `.owdr` drivers, and send a driver to the database from the app
+- **Export an LTspice netlist** of any box: the equivalent circuit the app is tested against, with a header that says what to plot
 
 ### Sizing and tuning
 
@@ -68,16 +70,18 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 ### Volume and build
 
-- **Real-world net volume calculator** for boxes, cylinders (with their own end-cap thickness), spheres and truncated pyramids (walls taken square to each sloping face), with the shape's lowest standing wave, minus the drivers, passive radiators, ports, bracing and crossover board, linked to a design so its volume follows the calculator
-- **Build sheet**: panel sizes, cutouts, port and braces, a **cut list laid out on stock sheets**, metric or imperial (to 1/16″), and a print view
+- **Real-world net volume calculator** for boxes, car wedges (single slope, exact, with a double-baffle option, a side-view drawing, saw angles and a driver-motor clearance check), cylinders (with their own end-cap thickness), spheres and tapered boxes (all sides; walls taken square to each sloping face), with the shape's lowest standing wave, minus the drivers, passive radiators, ports, bracing and crossover board, linked to a design so its volume follows the calculator
+- **3D take-apart view** of every volume-calculator shape (box, car wedge, tube, sphere, tapered box): turn it round, pull it apart piece by piece, tap a panel for its cut size; drawn by a small built-in renderer, loaded only when opened
+- **Build sheet**: panel sizes, cutouts, port and braces, a **cut list laid out on stock sheets**, metric or imperial (to 1/16″), a print view and a **FreeCAD macro** that builds every panel as a solid, with the air inside checked against the app's volume
 
 ### Sharing and projects
 
 - **Shareable links**: the whole simulation lives in the URL, so a link opens exactly what you see
-- **Forum image** with the summary, charts and a **QR code** to the live design, plus ready-to-paste **Reddit (Markdown)** and **diyAudio (BBCode)** posts
-- **CSV export** of every curve
+- **Share** window: copy the link, the **forum image** (download or copy to the clipboard) with the summary, charts and a **QR code** to the live design, plus ready-to-paste **Reddit (Markdown)** and **diyAudio (BBCode)** posts
+- **Save & Export** window (☰ menu): save in the browser, a project file, a CSV of every curve, WinISD projects and drivers, LTspice netlists and DSP filters, with each format's settings in one place; several boxes download as one zip
 - **Hornresp import and export** for transmission lines and horns
-- **Projects** saved in your browser, or as a `.json` file you can keep or send, from the ☰ menu (with **New project**, which starts in the design assistant, in a new tab if the current project is in use)
+- **Projects** saved in your browser, or as a `.sbgenius` project file you can keep or send (older `.json` saves still open; on desktop the installed app opens `.sbgenius` files with a double-click) (with **New project**, which starts in the design assistant, in a new tab if the current project is in use)
+- **Open / Import** window (☰ menu): your latest browser saves, and one drop zone for project, WinISD, OpenISD and measurement files; or drop a file anywhere on the page. An impedance sweep asks whether to measure the driver or show it on the charts
 - Undo and redo, and help on every input field (hover its label, or select the field)
 - Installable as an app on phones and computers
 
@@ -95,7 +99,7 @@ Results are checked against the established tools, and every comparison runs as 
 - **WinISD**: about 0.01 dB for sealed, ported, passive radiator and bandpass boxes, from hand-made cases plus a run of 51 projects written by the app, opened in WinISD and read at six frequencies (about 1,000 values: response, excursion, port speed, impedance, phase and group delay). Also isobaric, dual voice coil, parallel drivers, high-pass filters, losses and the alignment presets (19 drivers). See the [validation page](https://speakerboxgenius.com/validation/).
 - **Hornresp**: transmission lines, tapped horns and front horns, including impedance and the line load (Za); and sealed, ported, passive-radiator and bandpass boxes, with one or two drivers. See the [validation page](https://speakerboxgenius.com/validation/#hornresp) and [`docs/transmission-lines.md`](docs/transmission-lines.md).
 
-The model is small-signal and lumped (one-dimensional for lines). Port compression and a hot voice coil are optional estimates in Settings; Bl and Cms non-linearity aren't modelled.
+The model is small-signal and lumped (one-dimensional for lines). Port compression and a hot voice coil are optional estimates in Settings, and the box air's distortion is estimated on its own chart; Bl and Cms non-linearity aren't modelled.
 
 ## The driver database
 
@@ -129,8 +133,8 @@ Merging to `main` builds and deploys to GitHub Pages automatically.
 
 - More manufacturer data (several brands have given permission)
 - A box volume calculator page
-- More WinISD checks (slot ports, dual voice coils)
-- CAD export of the build sheet
+- More cross-checks against other programs
+- CAD drawings of the build sheet (SVG/DXF)
 
 Ideas and requests: [open an issue](../../issues).
 

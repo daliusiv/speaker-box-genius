@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseWdr, writeWdr } from "../src/wdr.ts";
+import { parseWdr, parseWpr, writeWdr } from "../src/wdr.ts";
 import { solveTs } from "../src/tsSolver.ts";
 import { netVolume, slotPortDisplacement } from "../src/volume.ts";
 
@@ -65,4 +65,13 @@ test("slot ports are deducted with their walls", () => {
     ports: { count: 1, length_cm: 30, wall_mm: 18, slot: { width_cm: 20, height_cm: 5 } },
   });
   assert.equal(r.deductions[0]?.label, "Slot ports (1×)");
+});
+
+test("a project WinISD saved with a rectangular vent reads as a slot of the same tuning", () => {
+  // WinISD 0.7.0.950, Vents tab: a 40 × 2.5 cm vent in 60 L at 32.395 Hz (WinISD gave 39.26 cm).
+  const p = parseWpr(readFileSync(join(import.meta.dirname, "fixtures", "winisd-slot.wpr"), "utf8"));
+  assert.deepEqual(p.port?.slot, { width_cm: 40, height_cm: 2.5 });
+  assert.ok(Math.abs(p.port!.length_cm - 39.2576) < 1e-3);
+  // Tuned as the round vent of the same area: 2·√(100 cm² / π).
+  near(p.port!.diameter_cm, 2 * Math.sqrt(100 / Math.PI), 1e-9);
 });

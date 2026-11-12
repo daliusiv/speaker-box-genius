@@ -1,0 +1,39 @@
+{
+  "id": "g-vented-023",
+  "title": "vented, faital-pro/8fe200 (Qts 0.63), 22.23 L, Fb 61.5 Hz",
+  "driver": {
+    "fs": 80,
+    "qms": 13,
+    "qes": 0.66,
+    "vas_l": 16.1,
+    "re": 5.9,
+    "sd_cm2": 209,
+    "le_mh": 0.44
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 22.23,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7.775,
+      "length_cm": 12.09
+    },
+    "endCorrection": 0.613,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

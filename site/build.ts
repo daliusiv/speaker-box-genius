@@ -7,10 +7,14 @@
  * front-matter block (`---` lines) giving its `title`, `description` and `path`, and
  * optionally `image` (its share card, from site/img) and `order` (its place in lists).
  * The body is Markdown (the subset in `markdown` below); the paragraph under the # title is
- * shown as the page's introduction. Two extras:
+ * shown as the page's introduction. Extras:
  *
  *   {{link:pr-example}}               the share link of an example design (site/examples.ts)
  *   [[Open this design|pr-example]]   a button opening that example in the app
+ *   ![caption](chart:pr-example/excursion)   the app's own chart of that example, drawn at build
+ *                                     (site/guideCharts.ts: response, spl, excursion, maxspl)
+ *   {{num:pr-example/1/f3}}           a number from that example, worked out at build
+ *   {{color:pr-example/1}}            a design's curve colour in words (site/liveNumbers.ts)
  *
  * Also writes a /guides/ index, the /validation/ page (site/validation.ts, from
  * docs/validation/results.json), the sitemaps (site/sitemap.ts) and robots.txt, and copies
@@ -21,9 +25,13 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
 import { exampleLinks } from "./examples.ts";
-import { readReport, validationContent, VALIDATION_STYLE } from "./validation.ts";
+import { readReport, spiceNetlistHref, validationContent, VALIDATION_STYLE } from "./validation.ts";
+import { SHOWCASE } from "../packages/engine/validation/spice-report.ts";
+import { cirPath } from "../packages/engine/validation/spice/fixtures.ts";
 import { validationLinks } from "./validationLinks.ts";
 import { CHART_STYLE, chart } from "./chart.ts";
+import { fillLive } from "./liveNumbers.ts";
+import { guideCharts } from "./guideCharts.ts";
 import { cardSvg, findChrome, Rasterizer } from "./og.ts";
 import { CardCache, cardSalt } from "./cardCache.ts";
 import { CALC_STYLE, fillCalc, portExampleValues, portForm, prExampleValues, prForm, viteScript } from "./calculators.ts";
@@ -94,7 +102,7 @@ function inline(s: string): string {
  * Block Markdown: headings (#–###), paragraphs, - and 1. lists (nested by indenting), > notes, | tables |,
  * ``` code blocks, and button lines ([[Label|example]]), already resolved to links.
  */
-export function markdown(md: string): string {
+export function markdown(md: string, charts?: (src: string) => string): string {
   const lines = md.replace(/\r\n/g, "\n").split("\n");
   const out: string[] = [];
   let i = 0;
@@ -142,7 +150,7 @@ export function markdown(md: string): string {
           else nested.push(lines[i]!);
         }
         const indent = nested.length ? /^ */.exec(nested[0]!)![0].length : 0;
-        const sub = nested.length ? markdown(nested.map((l) => l.slice(Math.min(indent, /^ */.exec(l)![0].length))).join("\n")) : "";
+        const sub = nested.length ? markdown(nested.map((l) => l.slice(Math.min(indent, /^ */.exec(l)![0].length))).join("\n"), charts) : "";
         items.push(`<li>${inline(item)}${sub}</li>`);
       }
       out.push(ordered ? `<ol>${items.join("")}</ol>` : `<ul>${items.join("")}</ul>`);
@@ -173,6 +181,12 @@ export function markdown(md: string): string {
     const text = para.join(" ");
     // A paragraph that is only an image becomes a figure, with its alt text as the caption.
     const img = /^!\[([^\]]+)\]\(([^)\s]+)\)$/.exec(text);
+    // ![caption](chart:example/kind): the app's chart, drawn at build (site/guideCharts.ts).
+    if (img && img[2]!.startsWith("chart:")) {
+      if (!charts) throw new Error(`${img[2]}: charts are only drawn in guide pages`);
+      out.push(`<figure class="guide-chart">${charts(img[2]!)}<figcaption>${inline(img[1]!)}</figcaption></figure>`);
+      continue;
+    }
     out.push(img ? `<figure>${inline(text)}<figcaption>${inline(img[1]!)}</figcaption></figure>` : `<p>${inline(text)}</p>`);
   }
   // The paragraph right under the page title is its introduction.
@@ -191,7 +205,7 @@ export function resolveExamples(body: string, links: Record<string, string>, fil
 }
 
 const STYLE = `
-:root{color-scheme:dark;--bg:#090a0f;--fg:#e8ebf2;--muted:#8e96aa;--accent:#fb923c;--card:#12141c;--border:#222634}
+:root{color-scheme:dark;--bg:#11141a;--fg:#e6e9ef;--muted:#8b93a3;--accent:#4ed7e9;--draw:#fb923c;--card:#1a1e26;--border:#282d37}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{background:var(--bg);color:var(--fg)}
@@ -208,7 +222,7 @@ a{color:var(--accent)}
 @media (max-width:440px){.nav .opt{display:none}}
 @media (max-width:359px){.nav .wide:not([aria-current]){display:none}}
 @media (max-width:520px){.nav .wider{display:none}}
-.button{display:inline-block;padding:.55rem 1rem;border-radius:.6rem;background:var(--accent);color:#12141c;font-weight:650;text-decoration:none;white-space:nowrap}
+.button{display:inline-block;padding:.55rem 1rem;border-radius:.6rem;background:var(--accent);color:#0b1220;font-weight:650;text-decoration:none;white-space:nowrap}
 main{max-width:46rem;margin:0 auto;padding:.5rem 1.1rem 3rem}
 h1{font-size:2.1rem;line-height:1.15;margin:1rem 0 .6rem;letter-spacing:-.01em}
 h2{font-size:1.4rem;line-height:1.25;margin:2.2rem 0 .6rem}
@@ -223,7 +237,7 @@ figure{margin:1.5rem 0}
 figure img{display:block;width:100%;height:auto;border:1px solid var(--border);border-radius:.7rem}
 main img{max-width:100%;height:auto}
 figcaption{margin-top:.4rem;color:var(--muted);font-size:.9rem}
-.note{margin:1.4rem 0;padding:.2rem 1rem;border-left:3px solid var(--accent);border-radius:.4rem;background:var(--card)}
+.note{margin:1.4rem 0;padding:.2rem 1rem;border-left:3px solid var(--draw);border-radius:.4rem;background:var(--card)}
 .table{overflow-x:auto;margin:1.2rem 0}
 table{width:100%;border-collapse:collapse;font-size:.95rem}
 th,td{padding:.45rem .6rem;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
@@ -307,7 +321,7 @@ export function layout(o: { title: string; description: string; path: string; im
 <meta property="og:url" content="${url}">
 <meta property="og:image" content="${image}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#12141c">
+<meta name="theme-color" content="#1a1e26">
 <meta name="color-scheme" content="dark">
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -324,7 +338,7 @@ ${GOATCOUNTER}
 ${o.content}
 </main>
 <footer>
-<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/calculators/port-length/">Port length calculator</a> · <a href="/calculators/passive-radiator/">Passive radiator calculator</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
+<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/calculators/port-length/">Port length calculator</a> · <a href="/calculators/passive-radiator/">Passive radiator calculator</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a> · <a href="/changelog/">Changelog</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
 </footer>${(o.scripts ?? []).map((src) => `\n<script type="module" src="${src}"></script>`).join("")}
 </body>
 </html>
@@ -469,8 +483,10 @@ export async function build(outDir: string): Promise<string[]> {
   };
 
   for (const { file, page } of pages) {
-    const content = markdown(resolveExamples(page.body, links, file)) + relatedGuides(page, guides);
-    write(page.path, layout({ ...page, content, guides }));
+    const body = fillLive(resolveExamples(page.body, links, file), file);
+    const charts = await guideCharts(body, file);
+    const content = markdown(body, charts.draw) + relatedGuides(page, guides);
+    write(page.path, layout({ ...page, content, guides, ...(charts.count ? { style: charts.style } : {}) }));
   }
 
   write(
@@ -489,14 +505,20 @@ export async function build(outDir: string): Promise<string[]> {
   write(
     "/validation/",
     layout({
-      title: "Validation against WinISD and Hornresp",
-      description: "Every WinISD and Hornresp comparison Speaker Box Genius is tested against: the cases, how far apart the results are, and the known differences.",
+      title: "Validation against WinISD, Hornresp and SPICE",
+      description: "Every WinISD, Hornresp and circuit-simulator comparison Speaker Box Genius is tested against: the cases, how far apart the results are, and the known differences.",
       path: "/validation/",
       content: validationContent(report, { commit: buildCommit(), date: new Date(), links: await validationLinks(SITE, { winisd: report.winisd.cases, hornresp: report.hornresp.cases, boxes: report.hornresp.boxes.cases }) }),
       guides,
       style: CHART_STYLE + VALIDATION_STYLE,
     }),
   );
+  // The netlists of the cases drawn on the page, to download.
+  for (const { id } of SHOWCASE) {
+    const dest = join(outDir, spiceNetlistHref(id));
+    mkdirSync(dirname(dest), { recursive: true });
+    copyFileSync(cirPath(id), dest);
+  }
 
   write(
     "/about/",
@@ -505,6 +527,17 @@ export async function build(outDir: string): Promise<string[]> {
       description: "A free speaker box simulator in your browser. What it is, who builds it, the licence in plain words (free for non-commercial use), and credits.",
       path: "/about/",
       content: markdown(readFileSync(join(HERE, "about.md"), "utf8")),
+      guides,
+    }),
+  );
+
+  write(
+    "/changelog/",
+    layout({
+      title: "Changelog",
+      description: "What's new in Speaker Box Genius: new features, fixes and driver data, by date.",
+      path: "/changelog/",
+      content: markdown(readFileSync(join(HERE, "..", "CHANGELOG.md"), "utf8")),
       guides,
     }),
   );

@@ -1,0 +1,42 @@
+{
+  "id": "g-pr-013",
+  "title": "passive-radiator, redcatt/61npm (Qts 0.36), 2.472 L, Fb 72.2 Hz, 1 × sb-acoustics/sb29nrx2-00",
+  "driver": {
+    "fs": 92,
+    "qms": 5.6,
+    "qes": 0.38,
+    "vas_l": 7,
+    "re": 5.2,
+    "sd_cm2": 143.1,
+    "le_mh": 0.37
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 2.472,
+    "pr": {
+      "mms_g": 205,
+      "sd_cm2": 312,
+      "cms_mm_per_n": 0.43,
+      "qms": 7.3
+    },
+    "addedMass_g": 29.77,
+    "ql": 25,
+    "qa": 57
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 100
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

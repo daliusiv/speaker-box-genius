@@ -1,5 +1,5 @@
 import { add, cx, div, mul, scale, sub, type Complex } from "./complex.ts";
-import { STANDARD_AIR, type Air } from "./constants.ts";
+import { AIR_BETA, STANDARD_AIR, type Air } from "./constants.ts";
 import { portArea, portEffectiveLength, portMouthArea, type PortInput } from "./model.ts";
 
 /**
@@ -279,6 +279,11 @@ export interface LineNetwork {
    * cones together), from the closed end (x = 0) to the mouth, then on through a port.
    */
   profile(w: number): ProfilePoint[];
+  /**
+   * Where the sound sets off on its way out (m from the closed end): the driver's rear (an
+   * offset driver's closed stub behind is left out), a tapped horn's rear tap, a horn's throat.
+   */
+  sourceX: number;
   /** Volume velocity leaving the mouth (or port) per unit cone volume velocity into the line. */
   exitPerCone(w: number): Complex;
   /** Volume velocity leaving the mouth for a pressure p at the driver (open lines). */
@@ -311,6 +316,26 @@ export interface ProfilePoint {
   u: Complex;
   /** In the port of a mass-loaded line (beyond the line's mouth). */
   port: boolean;
+}
+
+/**
+ * Air distortion along a line or horn: the 2nd harmonic a strong wave builds up as it travels
+ * (weak-shock / Fubini first term, Thuras, Jenkins & O'Neil 1935; Blackstock). For a plane wave
+ * p₂/p₁ = β·ω·p₁·L / (2ρc³); with the area changing slowly the local pressure carries it, so
+ * p₂/p₁ at the exit = β·ω/(2ρc³) · ∫ p₁(x) dx along the path. `points` from `profile(w)` (per
+ * unit cone volume velocity), `uRms` the cones' rms volume velocity (m³/s). Pressure here is
+ * the standing-wave magnitude, so it's an estimate. Returns the ratio (fraction).
+ */
+export function pathHd2(points: ProfilePoint[], xFrom: number, uRms: number, w: number, air: Air = STANDARD_AIR): number {
+  const pts = points.filter((pt) => pt.x >= xFrom - 1e-9).sort((a, b) => a.x - b.x);
+  let integral = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1]!;
+    const b = pts[i]!;
+    integral += 0.5 * (Math.hypot(a.p.re, a.p.im) + Math.hypot(b.p.re, b.p.im)) * (b.x - a.x);
+  }
+  const peak = Math.SQRT2 * uRms;
+  return (AIR_BETA * w * peak * integral) / (2 * air.rho * air.c ** 3);
 }
 
 export function lineNetwork(line: LineInput, air: Air = STANDARD_AIR): LineNetwork {
@@ -477,6 +502,7 @@ export function lineNetwork(line: LineInput, air: Air = STANDARD_AIR): LineNetwo
       chains(w);
       return mouthFlow(pDriver);
     },
+    sourceX: xr,
     tapped,
     mouthOnly: tapped || !!flh,
     mouthDistance: Math.max(0, (line.mouthDistance_cm ?? 0) / 100),

@@ -1,0 +1,45 @@
+* g-vented-027: vented, purifi/ptt6-5x04-nfa-06 (Qts 0.29), 8.836 L, Fb 21.7 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 1.34164078649987
+Rg amp spk 0.5
+Vin spk bk 0
+Re1 bk c1a 3.6
+Le1 c1a c1b 0.00038
+Hemf1 c1b c1d Vcone1 535.801318593788
+Vi1 c1d 0 0
+Re2 bk c2a 3.6
+Le2 c2a c2b 0.00038
+Hemf2 c2b c2d Vcone1 535.801318593788
+Vi2 c2d 0 0
+Hd1 u1h1 0 Vi1 535.801318593788
+Hd2 u1h2 u1h1 Vi2 535.801318593788
+Ras11 u1h2 u1r1 3277.20380144797
+Lmas11 u1r1 u1m1 126.918574899865
+Ccas11 u1m1 u1k1 2.21754563949273e-7
+Rbl_u1k1 u1k1 0 1e+15
+Ras12 u1k1 u1r2 3277.20380144797
+Lmas12 u1r2 u1m2 126.918574899865
+Ccas12 u1m2 u1k2 2.21754563949273e-7
+Rbl_u1k2 u1k2 0 1e+15
+Vcone1 u1k2 box 0
+Rbl_box box 0 1e+15
+Rap box p1 828.176614344714
+Lmap p1 p2 710.307105847984
+Vport p2 0 0
+Fvp 0 vn Vport 648.202370892587
+Rvn vn 0 1
+Rab box b1 968.966638783315
+Cab b1 0 7.56534103110338e-8
+Rbl_b1 b1 0 1e+15
+Ral box l1 968966.638783315
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpp 0 prs Vport 1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.154384363389331
+Fx 0 xn Vcone1 75.3579502637528
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vn) V(box) I(Vin) I(Vcone1) I(Vport) I(Vleak)
+.ac dec 50 5 2000
+.end

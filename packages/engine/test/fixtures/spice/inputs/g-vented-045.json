@@ -1,0 +1,39 @@
+{
+  "id": "g-vented-045",
+  "title": "vented, faital-pro/10fe400 (Qts 0.47), 30.1 L, Fb 52.1 Hz",
+  "driver": {
+    "fs": 60,
+    "qms": 5.2,
+    "qes": 0.52,
+    "vas_l": 35.3,
+    "re": 5,
+    "sd_cm2": 362,
+    "le_mh": 0.68
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 30.1,
+    "port": {
+      "shape": "slot",
+      "width_cm": 26.74,
+      "height_cm": 3.717,
+      "length_cm": 28.12
+    },
+    "ql": 6,
+    "qa": 33
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 103,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

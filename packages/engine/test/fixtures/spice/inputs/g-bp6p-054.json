@@ -1,0 +1,50 @@
+{
+  "id": "g-bp6p-054",
+  "title": "bp6p, celestion/cf1840h (Qts 0.35), 478.8 L, rear 307 L port at 22.1 Hz, front 171.8 L port at 40.7 Hz",
+  "driver": {
+    "fs": 38.5,
+    "qms": 3.921,
+    "qes": 0.385,
+    "vas_l": 196.7,
+    "re": 3.04,
+    "sd_cm2": 1134.12,
+    "le_mh": 0.95
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 307,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 20.09,
+        "length_cm": 48.29
+      },
+      "ql": 28,
+      "qa": 101
+    },
+    "front": {
+      "vb_l": 171.8,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 11.9,
+        "length_cm": 2.965
+      },
+      "qp": 86
+    },
+    "qicl": 64
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

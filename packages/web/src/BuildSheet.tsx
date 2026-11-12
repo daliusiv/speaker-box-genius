@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { braceVolume, cutList, layoutSheets, piecesOf, type CutList, type Layout } from "@sbg/engine";
+import { braceVolume, cutList, layoutSheets, piecesOf, wedgeCutList, type CutList, type Layout } from "@sbg/engine";
 import { Card, Num, REPO, Select } from "./components.tsx";
-import { lineFoldOf, lineLength, lineSegmentsOf, linkedDesign, prTotal, volumeFor, type Design } from "./sim.ts";
+import { cutoutFromSd, lineFoldOf, lineLength, lineSegmentsOf, linkedDesign, prTotal, volumeFor, wedgeDimsOf, type Design } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { encodeStateShort, type AppState, type DesignState, type LineDesign } from "./state.ts";
 import { qrSvg } from "./qrDraw.ts";
 import { FoldDrawing } from "./LineBody.tsx";
 import { roundGrams, stuffFactor, stuffable, stuffingInstruction } from "./stuffing.ts";
+import { downloadMacro, freecadFor } from "./freecadExport.ts";
 
 const KIND: Record<DesignState["kind"], string> = { sealed: "Sealed", vented: "Ported", pr: "Passive radiator", bandpass: "Bandpass", line: "Transmission line" };
 
-/** Cutout from the cone area when the database doesn't give one: about 1.12 × the effective cone diameter. */
-const cutoutFromSd = (sd_cm2: number) => Math.round(1.12 * 2 * Math.sqrt(sd_cm2 / Math.PI) * 10);
 
 /** "18 1/4" style inches to the nearest 1/16. */
 function inches(mm: number): string {
@@ -28,7 +27,7 @@ function inches(mm: number): string {
 
 /**
  * Build sheet for the box in the volume calculator: panels, holes, port, braces and how it
- * all lays out on stock sheets, with a print view. Box shapes only.
+ * all lays out on stock sheets, with a print view. Boxes and car wedges.
  */
 export function BuildSheet(props: {
   state: AppState;
@@ -48,7 +47,21 @@ export function BuildSheet(props: {
   const lines = s.designs.filter((x): x is LineDesign => x.kind === "line");
   const [what, setWhat] = useState<string>("box");
   const [copied, setCopied] = useState(false);
+  const [macroMsg, setMacroMsg] = useState("");
   const line = lines.find((x) => x.id === what) ?? null;
+  // FreeCAD macro of the calculator's enclosure (not of a folded line).
+  const macroName = d?.name || props.driverName || "Speaker box";
+  const freecad = (cut: CutList | null) => {
+    const m = freecadFor(v, cut, macroName);
+    if (typeof m === "string") return setMacroMsg(m);
+    downloadMacro(m);
+    setMacroMsg("FreeCAD macro downloaded ✓ Run it in FreeCAD (Macro → Macros… → Execute): it builds every panel and checks the inside volume.");
+  };
+  const freecadButton = (cut: CutList | null) => (
+    <button type="button" className="secondary" title="A FreeCAD Python macro that builds the box panel by panel, with the air inside as a solid whose volume it checks against this app's" onClick={() => freecad(cut)}>
+      FreeCAD macro
+    </button>
+  );
 
   // Print just the sheet: a copy goes straight under <body>, everything else is hidden while printing.
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -93,11 +106,15 @@ export function BuildSheet(props: {
       </div>
     ) : null;
 
-  if (!line && v.shape !== "box") {
+  const wedge = !line && v.shape === "wedge";
+  if (!line && v.shape !== "box" && !wedge) {
     return (
       <Card title="Cut list">
         {chooser}
-        <p className="hint">The cut list is for box-shaped enclosures. Choose “Box” as the shape in the volume calculator{lines.length ? ", or pick a transmission line above" : ""}.</p>
+        <p className="hint">The cut list is for boxes and car wedges. Choose “Box” or “Car wedge” as the shape in the volume calculator{lines.length ? ", or pick a transmission line above" : ""}.</p>
+        <p className="hint">A FreeCAD model of this shape (the wall as one solid and the air inside, with its volume checked) is available as a macro.</p>
+        <div className="row">{freecadButton(null)}</div>
+        {macroMsg && <p className="hint">{macroMsg}</p>}
       </Card>
     );
   }
@@ -138,7 +155,27 @@ export function BuildSheet(props: {
       </Card>
     );
   }
-  const c: CutList = fold ? fold.cut : cutList({
+  let wedgeCut: CutList | null = null;
+  if (wedge) {
+    try {
+      wedgeCut = wedgeCutList({
+        ...wedgeDimsOf(v),
+        slope: v.slope,
+        joinery: v.joinery,
+        drivers: driverCutout > 0 ? { count: onBaffle, cutout: driverCutout } : undefined,
+        prs: prCount > 0 ? { count: prCount, cutout: prCutout } : undefined,
+        ports: port,
+      });
+    } catch (e) {
+      return (
+        <Card title="Cut list">
+          {chooser}
+          <p className="warn">This wedge can't be built as entered: {(e as Error).message} Check it in the volume calculator.</p>
+        </Card>
+      );
+    }
+  }
+  const c: CutList = fold ? fold.cut : wedgeCut ? wedgeCut : cutList({
     width: v.width_cm * 10,
     height: v.height_cm * 10,
     depth: v.depth_cm * 10,
@@ -151,15 +188,17 @@ export function BuildSheet(props: {
   const vol = volumeFor(s, d);
   const sim = line ? props.designs.find((x) => x.design.id === line.id) : d ? props.designs.find((x) => x.design.id === d.id) : undefined;
   const outside = fold ? fold.outside : { width: v.width_cm * 10, height: v.height_cm * 10, depth: v.depth_cm * 10 };
+  // A wedge's depth: top and bottom.
+  const depthText = (u: string) => (wedge ? `${len(v.topDepth_cm * 10)}/${len(outside.depth)}${u}` : `${len(outside.depth)}${u}`);
   // The cut list as plain text (Markdown-friendly), for a message, a forum post or a notes app.
   const copyList = () => {
     const u = lenUnit.trim() || "in";
     const lines = [
-      `Cut list${d ? ` for ${d.name}` : line ? ` for ${line.name}` : ""}: outside ${len(outside.width)} × ${len(outside.height)} × ${len(outside.depth)} ${u} (W × H × D), ${len(v.wall_mm)} ${u} walls`,
+      `Cut list${d ? ` for ${d.name}` : line ? ` for ${line.name}` : ""}: outside ${len(outside.width)} × ${len(outside.height)} × ${depthText("")} ${u} (W × H × D${wedge ? " top/bottom" : ""}), ${len(v.wall_mm)} ${u} walls`,
       "",
       `| Part | Qty | Size (${u}) |`,
       "|---|---:|---:|",
-      ...[...c.panels, ...c.braces].map((p) => `| ${p.name} | ${p.qty} | ${len(p.a)} × ${len(p.b)} |`),
+      ...[...c.panels, ...c.braces].map((p) => `| ${p.name}${"note" in p && p.note ? ` (${p.note})` : ""} | ${p.qty} | ${len(p.a)} × ${len(p.b)} |`),
       ...c.holes.map((h) => `- ${h.qty} × ${h.name.toLowerCase()}: ${h.diameter !== undefined ? `⌀ ${len(h.diameter)}` : `${len(h.width!)} × ${len(h.height!)}`} ${u} (${h.where.toLowerCase()})`),
       ...(port && port.length > 0 ? [`- ${port.count} × port ${port.slot ? "channel" : "tube"}, ${len(port.length)} ${u} long`] : []),
     ];
@@ -214,9 +253,13 @@ export function BuildSheet(props: {
           </div>
         )}
         <p className="hint">
-          Outside {len(outside.width)} × {len(outside.height)} × {len(outside.depth)}
-          {lenUnit} (W × H × D), {len(v.wall_mm)}
-          {lenUnit} walls. Front and back cover the full size, top and bottom fit between them, the sides fit inside all four.
+          Outside {len(outside.width)} × {len(outside.height)} × {depthText(lenUnit)} (W × H × D{wedge ? ", top/bottom" : ""}), {len(v.wall_mm)}
+          {lenUnit} walls.{" "}
+          {wedge
+            ? `The sides cover the whole outside; top, bottom, back and baffle fit between them. ${
+                v.joinery === "miter" ? "Mitred corners: sizes are to the long points." : "Butt joints: one bevel setting for every sloped edge."
+              }${v.slopeWall_mm !== null && v.slopeWall_mm !== v.wall_mm ? ` Sloped panel ${len(v.slopeWall_mm)}${lenUnit} thick.` : ""}`
+            : "Front and back cover the full size, top and bottom fit between them, the sides fit inside all four."}
           {fold && fold.runs.length > 1 ? " Dividers run the full inside width, glued between the sides, alternately from the top and the bottom; set each as listed below." : ""}
         </p>
 
@@ -229,10 +272,11 @@ export function BuildSheet(props: {
             </tr>
           </thead>
           <tbody>
-            {[...c.panels.map((p) => ({ ...p, frame: undefined as number | undefined })), ...c.braces].map((p) => (
+            {[...c.panels.map((p) => ({ ...p, frame: undefined as number | undefined })), ...c.braces.map((b) => ({ ...b, note: undefined as string | undefined }))].map((p) => (
               <tr key={p.name}>
                 <td className="cut-name">
                   {p.name}
+                  {p.note && <span className="hint cut-sub">{p.note}</span>}
                   {p.frame !== undefined && (
                     <span className="hint cut-sub">
                       a frame {len(p.frame)}
@@ -395,7 +439,9 @@ export function BuildSheet(props: {
         <button type="button" className="secondary" onClick={copyList}>
           {copied ? "Copied ✓" : "Copy cut list"}
         </button>
+        {!line && freecadButton(c)}
       </div>
+      {!line && macroMsg && <p className="hint">{macroMsg}</p>}
     </Card>
   );
 }

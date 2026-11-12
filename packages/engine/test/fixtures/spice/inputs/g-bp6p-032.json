@@ -1,0 +1,52 @@
+{
+  "id": "g-bp6p-032",
+  "title": "bp6p, dayton-audio/dcs165-4 (Qts 0.34), 21.5 L, rear 9.317 L port at 22.1 Hz, front 12.18 L 1 × seas/sp22r at 39.2 Hz",
+  "driver": {
+    "fs": 35.7,
+    "qms": 6.62,
+    "qes": 0.36,
+    "vas_l": 12.1,
+    "re": 3.4,
+    "sd_cm2": 124.7,
+    "le_mh": 1.43
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 9.317,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.229,
+        "length_cm": 107.8
+      },
+      "portCount": 2
+    },
+    "front": {
+      "vb_l": 12.18,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 28.9,
+            "sd_cm2": 230,
+            "cms_mm_per_n": 1.61
+          },
+          "count": 1,
+          "addedMass_g": 64.72
+        }
+      ]
+    }
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

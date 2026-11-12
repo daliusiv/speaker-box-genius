@@ -1,0 +1,36 @@
+* g-pr-040: passive-radiator, peerless/sds-160f25pr01-08 (Qts 0.58), 15.15 L, Fb 34.4 Hz, 4 × dayton-audio/dsa115-pr
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 8.36660026534076
+Rg amp spk 0.5
+Vin spk bk 0
+Re1 bk c1a 10.35622
+Le1 c1a c1b 0.000803
+Hemf1 c1b c1d Vcone1 425.756964748004
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 425.756964748004
+Ras11 u1h1 u1r1 4737.16301788812
+Lmas11 u1r1 u1m1 58.9017898850793
+Ccas11 u1m1 u1k1 1.86650559617535e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Rpr1 box r1 5572.45072391768
+Lpr1 r1 q1 245.062029991697
+Cpr1 q1 s1 2.65754348e-7
+Vpr1 s1 0 0
+Fxp1 0 xp1 Vpr1 46.2107208872458
+Cxp1 xp1 0 1
+Rbl_xp1 xp1 0 1e+15
+Cab box 0 1.29713576981911e-7
+Ral box l1 1484631.83910182
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpl 0 prs Vleak 1
+Fpr1 0 prs Vpr1 1
+Lrad prs 0 0.154384363389331
+Fx 0 xn Vcone1 70.9219858156028
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) V(xp1) I(Vin) I(Vcone1) I(Vleak) I(Vpr1)
+.ac dec 50 5 2000
+.end

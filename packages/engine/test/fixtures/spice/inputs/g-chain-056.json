@@ -1,0 +1,73 @@
+{
+  "id": "g-chain-056",
+  "title": "chain (vented), sb-acoustics/sb23nbacs45-8 (Qts 0.40), 43.01 L, Fb 34.9 Hz, 3 EQ, passive parts",
+  "driver": {
+    "fs": 25,
+    "qms": 5.54,
+    "qes": 0.43,
+    "vas_l": 93.4,
+    "re": 5.7,
+    "sd_cm2": 216,
+    "le_mh": 0.37
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 43.01,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7.679,
+      "length_cm": 21.32
+    },
+    "ql": 5,
+    "qa": 63,
+    "qp": 77
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.5,
+    "driveModel": "winisd",
+    "power": 1,
+    "eq": [
+      {
+        "type": "linkwitz",
+        "f0": 36.62,
+        "q0": 0.6569,
+        "fp": 24.39,
+        "qp": 0.6989
+      },
+      {
+        "type": "lowshelf",
+        "freq": 25.33,
+        "gain_db": 6.047,
+        "q": 0.5149
+      },
+      {
+        "type": "linkwitz",
+        "f0": 38.71,
+        "q0": 1.014,
+        "fp": 18.83,
+        "qp": 0.642
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {},
+        {},
+        {
+          "r": 2.936
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

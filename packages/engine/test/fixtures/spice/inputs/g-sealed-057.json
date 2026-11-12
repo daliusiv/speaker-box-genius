@@ -1,0 +1,34 @@
+{
+  "id": "g-sealed-057",
+  "title": "sealed, bc-speakers/15sw115-4ohm (Qts 0.22), 144.8 L",
+  "driver": {
+    "fs": 34,
+    "qms": 5.8,
+    "qes": 0.23,
+    "vas_l": 105,
+    "re": 3.2,
+    "sd_cm2": 855,
+    "le_mh": 1.27
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 144.8,
+    "ql": 14,
+    "qa": 19
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 56,
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

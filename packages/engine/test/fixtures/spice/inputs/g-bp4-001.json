@@ -1,0 +1,56 @@
+{
+  "id": "g-bp4-001",
+  "title": "bp4, bc-speakers/15sw115-8ohm (Qts 0.24), 58.53 L, rear 19.56 L closed, front 38.97 L 4 × purifi/ptt10-0pr-na2-01 at 33.7 Hz",
+  "driver": {
+    "fs": 35,
+    "qms": 4.4,
+    "qes": 0.25,
+    "vas_l": 110,
+    "re": 5.2,
+    "sd_cm2": 855,
+    "le_mh": 1.8
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 19.56,
+      "ql": 14,
+      "qa": 95
+    },
+    "front": {
+      "vb_l": 38.97,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 161,
+            "sd_cm2": 360,
+            "cms_mm_per_n": 0.44,
+            "qms": 7.1
+          },
+          "count": 4,
+          "addedMass_g": 309.4
+        }
+      ],
+      "ql": null,
+      "qa": null
+    }
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 1,
+    "space": "full",
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

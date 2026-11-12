@@ -1,0 +1,52 @@
+{
+  "id": "g-bp6p-037",
+  "title": "bp6p, seas/c18en002-a (Qts 0.62), 10.8 L, rear 5.979 L port at 63.0 Hz, front 4.819 L port at 109.2 Hz",
+  "driver": {
+    "fs": 98,
+    "qms": 2.16,
+    "qes": 0.86,
+    "vas_l": 3.7,
+    "re": 6.2,
+    "sd_cm2": 131,
+    "le_mh": 0.62
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 5.979,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.685,
+        "length_cm": 24.54
+      },
+      "portCount": 2
+    },
+    "front": {
+      "vb_l": 4.819,
+      "port": {
+        "shape": "slot",
+        "width_cm": 8.816,
+        "height_cm": 1.296,
+        "length_cm": 3.591
+      },
+      "qp": 20,
+      "ql": 24,
+      "qa": 28
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 100,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

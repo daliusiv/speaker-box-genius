@@ -1,0 +1,31 @@
+{
+  "id": "s05",
+  "title": "Sealed 20 L, DSA215-8 with L2R2 coil",
+  "driver": {
+    "fs": 35,
+    "qms": 1.87,
+    "qes": 0.4,
+    "vas_l": 37.4,
+    "re": 5.9,
+    "sd_cm2": 211.2,
+    "le_mh": 1,
+    "l2_mh": 1.5,
+    "r2_ohm": 8
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 20
+  },
+  "opts": {
+    "rg": 0.3
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

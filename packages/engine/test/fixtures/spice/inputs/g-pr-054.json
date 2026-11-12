@@ -1,0 +1,40 @@
+{
+  "id": "g-pr-054",
+  "title": "passive-radiator, sb-acoustics/mr13p-4 (Qts 0.23), 12.64 L, Fb 37.7 Hz, 2 × dayton-audio/ds135-pr",
+  "driver": {
+    "fs": 41,
+    "qms": 2.8,
+    "qes": 0.25,
+    "vas_l": 19.4,
+    "re": 3.3,
+    "sd_cm2": 70,
+    "le_mh": 0.11
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 12.64,
+    "pr": {
+      "mms_g": 21.8,
+      "sd_cm2": 75.4,
+      "cms_mm_per_n": 1.52,
+      "qms": 3.93
+    },
+    "prCount": 2,
+    "addedMass_g": 12.58,
+    "ql": 11,
+    "qa": 75
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

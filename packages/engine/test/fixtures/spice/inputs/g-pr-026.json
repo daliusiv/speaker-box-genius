@@ -1,0 +1,41 @@
+{
+  "id": "g-pr-026",
+  "title": "passive-radiator, 18-sound/15mb650 (Qts 0.25), 133.7 L, Fb 29.1 Hz, 2 × dayton-audio/dsa315-pr",
+  "driver": {
+    "fs": 40,
+    "qms": 3.95,
+    "qes": 0.27,
+    "vas_l": 210,
+    "re": 5.5,
+    "sd_cm2": 900,
+    "le_mh": 1.36
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 133.7,
+    "pr": {
+      "mms_g": 142.6,
+      "sd_cm2": 480,
+      "cms_mm_per_n": 0.58,
+      "qms": 6.23
+    },
+    "prCount": 2,
+    "addedMass_g": 55.2,
+    "ql": 20,
+    "qa": 50
+  },
+  "opts": {
+    "rg": 0.5,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

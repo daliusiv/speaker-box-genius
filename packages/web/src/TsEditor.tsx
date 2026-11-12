@@ -126,7 +126,7 @@ export function TsEditor(props: {
       </div>
 
       <p className="hint">
-        <b>Bold, orange edge</b> = what you typed (never changed). <span className="derived-sample">Grey, dashed</span> = calculated. Units
+        <b>Bold, cyan edge</b> = what you typed (never changed). <span className="derived-sample">Grey, dashed</span> = calculated. Units
         like “1.9 ft³” or “35630 mm²” are converted.
       </p>
 

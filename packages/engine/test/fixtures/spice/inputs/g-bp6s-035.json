@@ -1,0 +1,59 @@
+{
+  "id": "g-bp6s-035",
+  "title": "bp6s, markaudio/chr-120 (Qts 0.37), 24.03 L, rear 12.14 L port at 30.6 Hz, front 11.89 L port at 84.0 Hz",
+  "driver": {
+    "fs": 34.2417,
+    "qms": 2.3823,
+    "qes": 0.4411,
+    "vas_l": 58.8923,
+    "re": 7.2,
+    "sd_cm2": 147,
+    "le_mh": 0.1272
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 12.14,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 2.902,
+        "length_cm": 32.62
+      },
+      "portCount": 2,
+      "qp": 74,
+      "ql": 5,
+      "qa": 56
+    },
+    "front": {
+      "vb_l": 11.89,
+      "port": {
+        "shape": "slot",
+        "width_cm": 8.271,
+        "height_cm": 1.702,
+        "length_cm": 6.901
+      },
+      "portCount": 2,
+      "ql": 15,
+      "qa": 60
+    },
+    "rearPortTo": "front",
+    "qicl": 169
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

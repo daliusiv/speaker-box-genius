@@ -1,0 +1,53 @@
+{
+  "id": "g-bp6s-016",
+  "title": "bp6s, bc-speakers/12fw76-4ohm (Qts 0.16), 26.86 L, rear 15.6 L port at 46.4 Hz, front 11.26 L port at 114.5 Hz",
+  "driver": {
+    "fs": 54,
+    "qms": 4.2,
+    "qes": 0.17,
+    "vas_l": 48.5,
+    "re": 3.1,
+    "sd_cm2": 522,
+    "le_mh": 1
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 15.6,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.003,
+        "length_cm": 32.1
+      },
+      "portCount": 2,
+      "qp": 142,
+      "ql": 15,
+      "qa": 38
+    },
+    "front": {
+      "vb_l": 11.26,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 10.77,
+        "length_cm": 10.93
+      }
+    },
+    "rearPortTo": "front",
+    "qicl": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

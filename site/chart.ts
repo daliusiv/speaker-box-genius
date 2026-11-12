@@ -94,16 +94,16 @@ export function chart(o: {
 
 export const CHART_STYLE = `
 .chart{display:block;width:100%;height:auto}
-.chart .grid line{stroke:#222634;stroke-width:1}
+.chart .grid line{stroke:#282d37;stroke-width:1}
 .chart .ax text{fill:#8e96aa;font:13px system-ui,sans-serif}
-.chart .line{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linejoin:round}
+.chart .line{fill:none;stroke:var(--draw);stroke-width:1.8;stroke-linejoin:round}
 .chart .ref{fill:none;stroke:#d3d8e2;stroke-opacity:.5;stroke-width:6;stroke-linejoin:round;stroke-linecap:round}
-.chart .pt{fill:#e8ebf2;stroke:#090a0f;stroke-width:1.5}
+.chart .pt{fill:#e6e9ef;stroke:#11141a;stroke-width:1.5}
 .charts{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr))}
 .charts figure{margin:0;padding:.5rem .5rem .3rem;border:1px solid var(--border);border-radius:.7rem;background:var(--card)}
 .charts figcaption{margin:0 0 0 .3rem}
 .key{display:flex;flex-wrap:wrap;gap:1rem;color:var(--muted);font-size:.9rem}
-.key span::before{content:"";display:inline-block;width:1.4rem;height:0;margin:0 .4rem .25rem 0;vertical-align:middle;border-top:2.5px solid var(--accent)}
+.key span::before{content:"";display:inline-block;width:1.4rem;height:0;margin:0 .4rem .25rem 0;vertical-align:middle;border-top:2.5px solid var(--draw)}
 .key .k-ref::before{border-top:6px solid rgba(211,216,226,.5)}
 .key .k-pt::before{width:.6rem;height:.6rem;border:0;border-radius:50%;background:#e8ebf2}
 `;

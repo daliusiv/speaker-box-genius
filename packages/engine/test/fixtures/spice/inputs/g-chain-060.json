@@ -1,0 +1,70 @@
+{
+  "id": "g-chain-060",
+  "title": "chain (vented), beyma/12wrs400 (Qts 0.30), 58.84 L, Fb 31.6 Hz, 3 EQ, passive parts",
+  "driver": {
+    "fs": 42,
+    "qms": 7.7,
+    "qes": 0.31,
+    "vas_l": 91,
+    "re": 5.6,
+    "sd_cm2": 530,
+    "le_mh": 1.3
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 58.84,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 9.279,
+      "length_cm": 28.24
+    }
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "eq": [
+      {
+        "type": "linkwitz",
+        "f0": 62.14,
+        "q0": 1.085,
+        "fp": 41.99,
+        "qp": 0.6143
+      },
+      {
+        "type": "linkwitz",
+        "f0": 63.83,
+        "q0": 1.14,
+        "fp": 22.41,
+        "qp": 0.5685
+      },
+      {
+        "type": "lowshelf",
+        "freq": 247.3,
+        "gain_db": 5.301,
+        "q": 3.984
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {
+          "l_mH": 0.643,
+          "join": "parallel"
+        },
+        {
+          "join": "parallel"
+        },
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

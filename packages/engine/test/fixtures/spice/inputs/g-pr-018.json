@@ -1,0 +1,43 @@
+{
+  "id": "g-pr-018",
+  "title": "passive-radiator, celestion/ftr15-4080f (Qts 0.25), 96.64 L, Fb 26.7 Hz, 1 × dayton-audio/rss460-pr",
+  "driver": {
+    "fs": 38,
+    "qms": 2.855,
+    "qes": 0.273,
+    "vas_l": 163.1,
+    "re": 5.67,
+    "sd_cm2": 855.3,
+    "le_mh": 1.48
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 96.64,
+    "pr": {
+      "mms_g": 500,
+      "sd_cm2": 1164,
+      "cms_mm_per_n": 0.23,
+      "qms": 5.03
+    },
+    "addedMass_g": 359.9,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

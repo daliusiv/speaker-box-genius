@@ -1,0 +1,60 @@
+* g-bp6p-012: bp6p, jensen/10-tornado-classic-100-8ohm (Qts 0.57), 10.41 L, rear 7.118 L 1 × dayton-audio/dsa315-pr at 61.4 Hz, front 3.293 L 4 × dayton-audio/ds175-pr at 95.1 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 3.47850542618522
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 6.05
+Le1 c1a c1b 0.0007
+Hemf1 c1b c1d Vcone1 323.291941871906
+Vi1 c1d m1 0
+Re2 m1 c2a 6.05
+Le2 c2a c2b 0.0007
+Hemf2 c2b c2d Vcone1 323.291941871906
+Vi2 c2d 0 0
+Hd1 u1h1 br Vi1 323.291941871906
+Hd2 u1h2 u1h1 Vi2 323.291941871906
+Ras11 u1h2 u1r1 1074.22489455654
+Lmas11 u1r1 u1m1 20.3543454033718
+Ccas11 u1m1 u1k1 1.83285749532975e-7
+Rbl_u1k1 u1k1 0 1e+15
+Ras12 u1k1 u1r2 1074.22489455654
+Lmas12 u1r2 u1m2 20.3543454033718
+Ccas12 u1m2 u1k2 1.83285749532975e-7
+Rbl_u1k2 u1k2 0 1e+15
+Vcone1 u1k2 bf 0
+Rbl_bf bf 0 1e+15
+Cabf bf 0 2.32138451235418e-8
+Ralf bf fl1 937078.534257422
+Vleakf fl1 0 0
+Rpr1 bf r1 1528.68970989359
+Lpr1 r1 q1 124.292956460789
+Cpr1 q1 s1 7.6192974e-7
+Vpr1 s1 0 0
+Fxp1 0 xp1 Vpr1 19.4250194250194
+Cxp1 xp1 0 1
+Rbl_xp1 xp1 0 1e+15
+Rbl_br br 0 1e+15
+Rabr br rb1 516.502817164692
+Cabr rb1 0 5.01779986606044e-8
+Rbl_rb1 rb1 0 1e+15
+Ralr br rl1 516502.817164692
+Vleakr rl1 0 0
+Rpr2 br r2 1092.38378394543
+Lpr2 r2 q2 138.888888888889
+Cpr2 q2 s2 0.00000133632
+Vpr2 s2 0 0
+Fxp2 0 xp2 Vpr2 20.8333333333333
+Cxp2 xp2 0 1
+Rbl_xp2 xp2 0 1e+15
+Ricl br bf 1201348.66857836
+Fpo1 0 prs Vleakf 1
+Fpo2 0 prs Vpr1 1
+Fpo3 0 prs Vleakr 1
+Fpo4 0 prs Vpr2 1
+Lrad prs 0 0.19113747540989
+Fx 0 xn Vcone1 30.2938503483793
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(br) V(bf) V(xp1) V(xp2) I(Vin) I(Vcone1) I(Vpr1) I(Vpr2)
+.ac dec 50 5 2000
+.end

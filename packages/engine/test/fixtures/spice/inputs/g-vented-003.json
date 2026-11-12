@@ -1,0 +1,38 @@
+{
+  "id": "g-vented-003",
+  "title": "vented, dayton-audio/dma90-8 (Qts 0.57), 0.6307 L, Fb 122.4 Hz",
+  "driver": {
+    "fs": 94.2,
+    "qms": 2.65,
+    "qes": 0.73,
+    "vas_l": 1.7,
+    "re": 7.3,
+    "sd_cm2": 38.5,
+    "le_mh": 0.5
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 0.6307,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 3.791,
+      "length_cm": 32.5
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "parallel",
+    "rg": 0,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

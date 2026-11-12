@@ -1,0 +1,48 @@
+{
+  "id": "g-chain-011",
+  "title": "chain (sealed), jensen/mod-10-70 (Qts 0.69), 21.39 L, HP butterworth 2, passive parts",
+  "driver": {
+    "fs": 99,
+    "qms": 16.28,
+    "qes": 0.72,
+    "vas_l": 19.8,
+    "re": 5,
+    "sd_cm2": 330,
+    "le_mh": 0.52
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 21.39,
+    "ql": 19,
+    "qa": 105
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 111,
+    "power": 1,
+    "highPass": {
+      "type": "butterworth",
+      "order": 2,
+      "freq": 59.48
+    },
+    "passive": {
+      "branches": [
+        {},
+        {},
+        {},
+        {
+          "r": 5.458
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

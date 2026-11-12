@@ -1,0 +1,63 @@
+{
+  "id": "g-chain-010",
+  "title": "chain (vented), redcatt/81find (Qts 0.50), 19.26 L, Fb 72.3 Hz, HP linkwitz-riley 4, 3 EQ",
+  "driver": {
+    "fs": 80,
+    "qms": 8.35,
+    "qes": 0.53,
+    "vas_l": 11.3,
+    "re": 4.7,
+    "sd_cm2": 213.8,
+    "le_mh": 0.44
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 19.26,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 4.193,
+      "length_cm": 1.032
+    },
+    "ql": 10,
+    "qa": 18,
+    "qp": 103
+  },
+  "opts": {
+    "rg": 0,
+    "power": 100,
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 4,
+      "freq": 60.61
+    },
+    "eq": [
+      {
+        "type": "peak",
+        "freq": 203.1,
+        "gain_db": -6.312,
+        "q": 1.736
+      },
+      {
+        "type": "peak",
+        "freq": 168.7,
+        "gain_db": 2.612,
+        "q": 1.293
+      },
+      {
+        "type": "lowshelf",
+        "freq": 276.2,
+        "gain_db": -2.596,
+        "q": 0.6516
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

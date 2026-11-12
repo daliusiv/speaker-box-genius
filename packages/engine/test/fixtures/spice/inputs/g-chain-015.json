@@ -1,0 +1,74 @@
+{
+  "id": "g-chain-015",
+  "title": "chain (vented), rcf/l8s800 (Qts 0.41), 8.681 L, Fb 44.2 Hz, HP butterworth 3, 2 EQ, passive parts",
+  "driver": {
+    "fs": 60,
+    "qms": 4.1,
+    "qes": 0.46,
+    "vas_l": 22,
+    "re": 6.1,
+    "sd_cm2": 200,
+    "le_mh": 0.9
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 8.681,
+    "port": {
+      "shape": "slot",
+      "width_cm": 20.61,
+      "height_cm": 2.513,
+      "length_cm": 85.16
+    },
+    "ql": 16,
+    "qa": 114
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "series",
+    "rg": 0.1,
+    "power": 10,
+    "highPass": {
+      "type": "butterworth",
+      "order": 3,
+      "freq": 57.48
+    },
+    "eq": [
+      {
+        "type": "lowshelf",
+        "freq": 174,
+        "gain_db": 3.852,
+        "q": 0.841
+      },
+      {
+        "type": "lowshelf",
+        "freq": 155.8,
+        "gain_db": 2.892,
+        "q": 2.239
+      }
+    ],
+    "passive": {
+      "branches": [
+        {
+          "r": 2.425,
+          "join": "parallel"
+        },
+        {
+          "l_mH": 4.913
+        },
+        {
+          "l_mH": 6.004
+        },
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

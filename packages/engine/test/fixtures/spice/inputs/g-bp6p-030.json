@@ -1,0 +1,56 @@
+{
+  "id": "g-bp6p-030",
+  "title": "bp6p, monacor/spx-32m-8ohm (Qts 0.56), 1.352 L, rear 0.7977 L port at 97.9 Hz, front 0.5547 L port at 133.2 Hz",
+  "driver": {
+    "fs": 110,
+    "qms": 7.66,
+    "qes": 0.6,
+    "vas_l": 1.6,
+    "re": 6.6,
+    "sd_cm2": 32,
+    "le_mh": 0.18
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.7977,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 1.911,
+        "length_cm": 10.04
+      },
+      "qp": 75,
+      "ql": 8,
+      "qa": 119
+    },
+    "front": {
+      "vb_l": 0.5547,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 2.138,
+        "length_cm": 20.71
+      },
+      "portCount": 2,
+      "ql": 4,
+      "qa": 79
+    },
+    "qicl": null
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0.5,
+    "coilTemp_C": 122,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,76 @@
+* g-bp6s-050: bp6s, dayton-audio/dc250-8 (Qts 0.39), 344.9 L, rear 207.4 L port at 19.3 Hz, front 137.5 L port at 30.3 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 4.06201920231798
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 6.6
+Le1 c1a c1b 0.00263
+Hemf1 c1b c1d Vcone1 361.576232115486
+Vi1 c1d 0 0
+Re2 bk c2a 6.6
+Le2 c2a c2b 0.00263
+Hemf2 c2b c2d Vcone2 361.576232115486
+Vi2 c2d 0 0
+Re3 bk c3a 6.6
+Le3 c3a c3b 0.00263
+Hemf3 c3b c3d Vcone3 361.576232115486
+Vi3 c3d 0 0
+Re4 bk c4a 6.6
+Le4 c4a c4b 0.00263
+Hemf4 c4b c4d Vcone4 361.576232115486
+Vi4 c4d 0 0
+Hd1 u1h1 br Vi1 361.576232115486
+Ras11 u1h1 u1r1 2758.17239727494
+Lmas11 u1r1 u1m1 55.7095018524472
+Ccas11 u1m1 u1k1 7.33351684725892e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 bf 0
+Hd2 u2h1 br Vi2 361.576232115486
+Ras21 u2h1 u2r1 2758.17239727494
+Lmas21 u2r1 u2m1 55.7095018524472
+Ccas21 u2m1 u2k1 7.33351684725892e-7
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 bf 0
+Hd3 u3h1 br Vi3 361.576232115486
+Ras31 u3h1 u3r1 2758.17239727494
+Lmas31 u3r1 u3m1 55.7095018524472
+Ccas31 u3m1 u3k1 7.33351684725892e-7
+Rbl_u3k1 u3k1 0 1e+15
+Vcone3 u3k1 bf 0
+Hd4 u4h1 br Vi4 361.576232115486
+Ras41 u4h1 u4r1 2758.17239727494
+Lmas41 u4r1 u4m1 55.7095018524472
+Ccas41 u4m1 u4k1 7.33351684725892e-7
+Rbl_u4k1 u4k1 0 1e+15
+Vcone4 u4k1 bf 0
+Rbl_bf bf 0 1e+15
+Cabf bf 0 9.69575544709713e-7
+Ralf bf fl1 141056.878862868
+Vleakf fl1 0 0
+Rapf bf fp1 47.1762136665111
+Lmapf fp1 fp2 28.537997599266
+Vportf fp2 0 0
+Fvf 0 vf Vportf 193.896905959444
+Rvf vf 0 1
+Rbl_br br 0 1e+15
+Rabr br rb1 56.369526940493
+Cabr rb1 0 0.0000014624724943476
+Rbl_rb1 rb1 0 1e+15
+Ralr br rl1 56369.526940493
+Vleakr rl1 0 0
+Vrapr br rp1 0
+Lmapr rp1 rp2 46.4704081760263
+Vportr rp2 bf 0
+Fvr 0 vr Vportr 301.086107917089
+Rvr vr 0 1
+Ricl br bf 453222.888320217
+Fpo1 0 prs Vleakf 1
+Fpo2 0 prs Vportf 1
+Fpo3 0 prs Vleakr 1
+Lrad prs 0 0.191622551482642
+Fx 0 xn Vcone1 29.146021568056
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vf) V(vr) V(br) V(bf) I(Vin) I(Vcone1) I(Vportf)
+.ac dec 50 5 2000
+.end

@@ -1,0 +1,39 @@
+{
+  "id": "g-vented-059",
+  "title": "vented, celestion/pulse-xl-15-25 (Qts 0.68), 117.6 L, Fb 51.6 Hz",
+  "driver": {
+    "fs": 39.9,
+    "qms": 12.216,
+    "qes": 0.72,
+    "vas_l": 193.23,
+    "re": 6.66,
+    "sd_cm2": 855.3,
+    "le_mh": 1.14
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 117.6,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 12.18,
+      "length_cm": 3.897
+    },
+    "endCorrection": 0.613,
+    "qp": null
+  },
+  "opts": {
+    "rg": 0,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

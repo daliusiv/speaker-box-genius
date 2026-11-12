@@ -1,0 +1,38 @@
+{
+  "id": "g-vented-039",
+  "title": "vented, 18-sound/15nd930-8ohm (Qts 0.22), 99.73 L, Fb 28.8 Hz",
+  "driver": {
+    "fs": 36,
+    "qms": 5.3,
+    "qes": 0.23,
+    "vas_l": 206,
+    "re": 5.5,
+    "sd_cm2": 850,
+    "le_mh": 1.61
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 99.73,
+    "port": {
+      "shape": "slot",
+      "width_cm": 29.7,
+      "height_cm": 3.548,
+      "length_cm": 31.02
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "rg": 0.5,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

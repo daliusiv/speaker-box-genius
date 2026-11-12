@@ -1,0 +1,38 @@
+{
+  "id": "g-vented-010",
+  "title": "vented, dayton-audio/umii15-22 (Qts 0.70), 135.2 L, Fb 35.1 Hz",
+  "driver": {
+    "fs": 29,
+    "qms": 2.34,
+    "qes": 1,
+    "vas_l": 96,
+    "re": 4.2,
+    "sd_cm2": 791,
+    "le_mh": 0.7
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 135.2,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 5.67,
+      "length_cm": 4.889
+    },
+    "portCount": 2
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 75,
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -47,7 +47,7 @@ The example uses a **Dayton Audio DSA215-8**, an 8″ woofer (Fs 35 Hz, Qts 0.33
 | Ripple above F3 | 10.7 dB | 17.3 dB | 3.7 dB |
 | Peak cone excursion | 3.0 mm | 4.4 mm | 5.1 mm |
 
-![The three lines: the offset TL (orange) goes deepest, the MLTL (green) is the smoothest, and the classic TL (blue) gives up bass for a small, well-damped line.](img/tl-spl.png)
+![The three lines: the offset TL (light pink) goes deepest, the MLTL (dark pink) is the smoothest, and the classic TL (pink) gives up bass for a small, well-damped line.](img/tl-spl.png)
 
 The offset TL goes deepest but is the biggest box. The MLTL is smaller than even the classic TL, and much smoother, because its port does the low-frequency work and the line mostly needs to stay quiet. The [MLTL guide](/guides/mltl/) takes this one further: its port, driver position and stuffing, and why a ported-box calculator gets a tall tower wrong. The classic TL, stuffed for two thirds of its length, is well damped but heavily stuffed lines give up bass.
 

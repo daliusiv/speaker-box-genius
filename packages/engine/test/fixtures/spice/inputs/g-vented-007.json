@@ -1,0 +1,39 @@
+{
+  "id": "g-vented-007",
+  "title": "vented, beyma/18wrs600 (Qts 0.46), 305.9 L, Fb 23.7 Hz",
+  "driver": {
+    "fs": 30,
+    "qms": 13.8,
+    "qes": 0.48,
+    "vas_l": 354,
+    "re": 5.2,
+    "sd_cm2": 1255,
+    "le_mh": 1.3
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 305.9,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 16.3,
+      "length_cm": 22.21
+    },
+    "endCorrection": 0.85,
+    "qp": null
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

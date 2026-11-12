@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6s-042",
+  "title": "bp6s, markaudio/maop-10 (Qts 0.37), 48.77 L, rear 30.64 L port at 21.9 Hz, front 18.14 L port at 69.1 Hz",
+  "driver": {
+    "fs": 39.8664,
+    "qms": 2.0048,
+    "qes": 0.4497,
+    "vas_l": 26.1871,
+    "re": 7.2,
+    "sd_cm2": 90,
+    "le_mh": 0.0681
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 30.64,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.495,
+        "length_cm": 36.28
+      },
+      "portCount": 2,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 18.14,
+      "port": {
+        "shape": "slot",
+        "width_cm": 9.013,
+        "height_cm": 0.9908,
+        "length_cm": 3.684
+      },
+      "portCount": 2,
+      "ql": 14,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "qicl": 47
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

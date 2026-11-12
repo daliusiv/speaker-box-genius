@@ -1,0 +1,49 @@
+{
+  "id": "g-bp4-052",
+  "title": "bp4, peerless/sdf-375f75pr01-04 (Qts 0.42), 318.4 L, rear 156.6 L closed, front 161.8 L port at 31.8 Hz",
+  "driver": {
+    "fs": 26,
+    "qms": 9.31,
+    "qes": 0.436,
+    "vas_l": 91.2,
+    "re": 2.8,
+    "sd_cm2": 771,
+    "le_mh": 1.14
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 156.6,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 161.8,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 12.3,
+        "length_cm": 13.09
+      },
+      "qp": 32,
+      "ql": 15,
+      "qa": 114
+    },
+    "qicl": 162
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 45,
+    "driveModel": "winisd",
+    "power": 10,
+    "space": "full"
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -42,7 +42,7 @@ test("markdown: headings, lists, tables, links, figures and notes", () => {
 test("guides: no list item swallows an indented list as text", () => {
   for (const f of readdirSync(new URL("./pages/", import.meta.url))) {
     if (!f.endsWith(".md")) continue;
-    const html = markdown(parsePage(readFileSync(new URL(`./pages/${f}`, import.meta.url), "utf8")).body);
+    const html = markdown(parsePage(readFileSync(new URL(`./pages/${f}`, import.meta.url), "utf8")).body, () => "");
     for (const li of html.match(/<li>.*?<\/li>/g) ?? []) assert.doesNotMatch(li, /\s-\s<strong>|<\/strong>\s-\s/, `${f}: ${li.slice(0, 80)}`);
   }
 });
@@ -142,6 +142,20 @@ test("the validation page shows every case from results.json, with the top bar",
   assert.match(html, /<a href="\/validation\/" class="wide" aria-current="page">Validation<\/a>/);
   assert.match(readFileSync(join(out, "sitemap-pages.xml"), "utf8"), /speakerboxgenius\.com\/validation\//);
   assert.match(readFileSync(join(out, "guides/index.html"), "utf8"), /<a href="\/guides\/" aria-current="page">Guides<\/a>/);
+});
+
+test("the validation page has the SPICE section, and its netlist links download the case's netlist", async () => {
+  const { out } = await built();
+  const html = readFileSync(join(out, "validation/index.html"), "utf8");
+  const sp = JSON.parse(readFileSync(join(import.meta.dirname, "../docs/validation/spice.json"), "utf8"));
+  assert.match(html, /<h2 id="spice">/);
+  assert.match(html, new RegExp(`${sp.compared} circuit cases`));
+  for (const o of sp.outputs) assert.ok(html.includes(`<td>${o.comparisons}</td>`), o.output);
+  for (const c of sp.showcase) {
+    assert.match(html, new RegExp(`href="/validation/spice/${c.id}\\.cir" download`));
+    const cir = readFileSync(join(out, "validation/spice", `${c.id}.cir`), "utf8");
+    assert.ok(cir.startsWith(`* ${c.id}:`), c.id);
+  }
 });
 
 test("validation cases: in number order, each with its own key, and the same impedance columns in both Hornresp tables", async () => {
@@ -303,6 +317,8 @@ test("every page counts visits the same way, and the privacy page says what that
   // The app counts with the same tag (and never sends the design: it's after the #).
   const app = readFileSync(new URL("../packages/web/index.html", import.meta.url), "utf8");
   assert.ok(app.includes(GOATCOUNTER.replace("></script>", "")), "the app's index.html has the same counter");
+  assert.ok(paths.includes("/changelog/"));
+  assert.match(readFileSync(join(out, "changelog/index.html"), "utf8"), /<h2[^>]*>Unreleased<\/h2>/);
   const privacy = readFileSync(join(out, "privacy/index.html"), "utf8");
   assert.match(privacy, /GoatCounter/);
   assert.match(privacy, /no cookies/i);
@@ -419,4 +435,17 @@ test("calculators: the script is found through Vite's manifest", async () => {
   mkdirSync(join(dir, ".vite"));
   writeFileSync(join(dir, ".vite/manifest.json"), JSON.stringify({ "src/calculators/portLength.ts": { file: "assets/calc-port-length-abc123.js" } }));
   assert.equal(viteScript(dir, "src/calculators/portLength.ts"), "/assets/calc-port-length-abc123.js");
+});
+
+test("the validation page has no duplicate ids", async () => {
+  const { out } = await built();
+  const html = readFileSync(join(out, "validation/index.html"), "utf8");
+  const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]!);
+  const dup = ids.filter((id, i) => ids.indexOf(id) !== i);
+  assert.deepEqual(dup, []);
+  assert.match(html, /<h3>Equivalent circuit \(SPICE\)<\/h3>/);
+  // The full run's "largest difference" lists wrap between figures: no unbreakable run of several.
+  assert.doesNotMatch(html, /class="n">[^<]*;/);
+  // Relative circuit-check differences carry % like their tolerances.
+  assert.match(html, /<a href="#spice">Impedance<\/a><\/td><td>\d+<\/td><td>[^<]*<sup>[^<]*<\/sup>&nbsp;%<\/td><td>0\.1 %/);
 });

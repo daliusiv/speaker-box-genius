@@ -1,0 +1,50 @@
+{
+  "id": "g-bp4-002",
+  "title": "bp4, dayton-audio/rss315hf-4 (Qts 0.39), 29.06 L, rear 15.72 L closed, front 13.35 L port at 34.6 Hz",
+  "driver": {
+    "fs": 24.2,
+    "qms": 2.83,
+    "qes": 0.45,
+    "vas_l": 84.1,
+    "re": 3.1,
+    "sd_cm2": 514.7,
+    "le_mh": 0.96
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 15.72,
+      "ql": 21,
+      "qa": 107
+    },
+    "front": {
+      "vb_l": 13.35,
+      "port": {
+        "shape": "slot",
+        "width_cm": 14.16,
+        "height_cm": 5.784,
+        "length_cm": 144.5
+      },
+      "ql": 10,
+      "qa": 63
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.1,
+    "power": 1,
+    "space": "full",
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

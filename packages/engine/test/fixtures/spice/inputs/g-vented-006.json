@@ -1,0 +1,40 @@
+{
+  "id": "g-vented-006",
+  "title": "vented, sb-acoustics/wo24p-4 (Qts 0.40), 43.98 L, Fb 38.2 Hz",
+  "driver": {
+    "fs": 28,
+    "qms": 6.7,
+    "qes": 0.42,
+    "vas_l": 71,
+    "re": 3.3,
+    "sd_cm2": 255,
+    "le_mh": 0.29
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 43.98,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7.17,
+      "length_cm": 14.42
+    },
+    "endCorrection": 0.613,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0.5,
+    "coilTemp_C": 45,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

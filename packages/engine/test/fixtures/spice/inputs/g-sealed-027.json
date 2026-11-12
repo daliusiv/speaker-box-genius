@@ -1,0 +1,35 @@
+{
+  "id": "g-sealed-027",
+  "title": "sealed, dayton-audio/gf180-8 (Qts 0.50), 16.45 L",
+  "driver": {
+    "fs": 53,
+    "qms": 3.07,
+    "qes": 0.6,
+    "vas_l": 15.5,
+    "re": 8,
+    "sd_cm2": 130.2,
+    "le_mh": 1.9
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 16.45,
+    "ql": 11,
+    "qa": 62
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "series",
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

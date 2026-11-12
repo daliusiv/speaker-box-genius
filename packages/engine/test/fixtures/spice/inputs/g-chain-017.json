@@ -1,0 +1,61 @@
+{
+  "id": "g-chain-017",
+  "title": "chain (sealed), 18-sound/12nd710-8ohm (Qts 0.19), 68.78 L, HP butterworth 2, 1 EQ, passive parts",
+  "driver": {
+    "fs": 52,
+    "qms": 6,
+    "qes": 0.2,
+    "vas_l": 92,
+    "re": 5,
+    "sd_cm2": 530,
+    "le_mh": 1
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 68.78,
+    "ql": 28,
+    "qa": 116
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83,
+    "highPass": {
+      "type": "butterworth",
+      "order": 2,
+      "freq": 49.59
+    },
+    "eq": [
+      {
+        "type": "highshelf",
+        "freq": 43.14,
+        "gain_db": 5.384,
+        "q": 0.9016
+      }
+    ],
+    "passive": {
+      "branches": [
+        {
+          "r": 4.774,
+          "l_mH": 1.67,
+          "c_uF": 102.7
+        },
+        {},
+        {},
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

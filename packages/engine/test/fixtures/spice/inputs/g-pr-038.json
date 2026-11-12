@@ -1,0 +1,43 @@
+{
+  "id": "g-pr-038",
+  "title": "passive-radiator, monacor/spx-32m-8ohm (Qts 0.56), 0.5 L, Fb 144.3 Hz, 2 × dayton-audio/ds135-pr",
+  "driver": {
+    "fs": 110,
+    "qms": 7.66,
+    "qes": 0.6,
+    "vas_l": 1.6,
+    "re": 6.6,
+    "sd_cm2": 32,
+    "le_mh": 0.18
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 0.5,
+    "pr": {
+      "mms_g": 21.8,
+      "sd_cm2": 75.4,
+      "cms_mm_per_n": 1.52,
+      "qms": 3.93
+    },
+    "prCount": 2,
+    "addedMass_g": 18.22,
+    "ql": 19,
+    "qa": 40
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.5,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

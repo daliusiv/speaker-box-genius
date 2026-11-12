@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6p-060",
+  "title": "bp6p, redcatt/8fhw-1 (Qts 0.64), 30.52 L, rear 21.23 L port at 36.8 Hz, front 9.295 L port at 100.8 Hz",
+  "driver": {
+    "fs": 41,
+    "qms": 4.2,
+    "qes": 0.75,
+    "vas_l": 19.6,
+    "re": 4,
+    "sd_cm2": 202.3,
+    "le_mh": 0.72
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 21.23,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6.663,
+        "length_cm": 30.63
+      }
+    },
+    "front": {
+      "vb_l": 9.295,
+      "port": {
+        "shape": "slot",
+        "width_cm": 10.17,
+        "height_cm": 2.136,
+        "length_cm": 2.413
+      },
+      "qp": 105,
+      "ql": 10,
+      "qa": 82
+    },
+    "endCorrection": 0.85,
+    "qicl": 104
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

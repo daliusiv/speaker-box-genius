@@ -1,0 +1,42 @@
+{
+  "id": "g-bp4-004",
+  "title": "bp4, redcatt/182find (Qts 0.23), 129.2 L, rear 81.38 L closed, front 47.83 L port at 41.0 Hz",
+  "driver": {
+    "fs": 31,
+    "qms": 8.85,
+    "qes": 0.24,
+    "vas_l": 208.6,
+    "re": 5.5,
+    "sd_cm2": 1257,
+    "le_mh": 4.92
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 81.38
+    },
+    "front": {
+      "vb_l": 47.83,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 18.54,
+        "length_cm": 84.92
+      }
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

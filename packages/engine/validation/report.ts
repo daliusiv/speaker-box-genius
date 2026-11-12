@@ -11,7 +11,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { simulate } from "../src/simulate.ts";
 import { WINISD_CASES, WINISD_VERSION, QUANTITY, runCase, type Quantity, type Setup } from "./winisd.ts";
-import { OCR_MISREADS, RUN_CASES, RUN_TOL, runRunCase, type RunGraph } from "./winisd-run.ts";
+import { GD_ABS_MS, OCR_MISREADS, RUN_CASES, RUN_TOL, runRunCase, type RunGraph } from "./winisd-run.ts";
 import {
   HORNRESP_BOX_F_MAX,
   HORNRESP_BOX_NOTES,
@@ -146,7 +146,10 @@ export interface WinIsdRunReport {
   /** Readings left out, counted by reason. */
   skipped: Record<string, number>;
   tol: typeof RUN_TOL;
-  cases: { id: string; title: string; compared: number; worst: Partial<Record<RunGraph, number>>; pass: boolean }[];
+  /** A group delay within this many ms passes whatever its percentage (near notches it's tiny). */
+  gdAbsMs: number;
+  /** worst: largest difference per graph (relative for relative graphs); abs: for relative graphs, |ours − WinISD| at that point, in the graph's unit. */
+  cases: { id: string; title: string; compared: number; worst: Partial<Record<RunGraph, number>>; abs: Partial<Record<RunGraph, number>>; pass: boolean }[];
   known: { id: string; graph: RunGraph; f: number; winisd: number; ours: number; note: string }[];
   ocr: { id: string; graph: RunGraph; f: number; note: string }[];
 }
@@ -160,6 +163,7 @@ function winisdRun(): WinIsdRunReport {
     const rows = runRunCase(c);
     readings += rows.length;
     const worst: Partial<Record<RunGraph, number>> = {};
+    const abs: Partial<Record<RunGraph, number>> = {};
     let n = 0;
     for (const r of rows) {
       if (r.skip) {
@@ -168,17 +172,25 @@ function winisdRun(): WinIsdRunReport {
         continue;
       }
       n++;
-      if (r.known) known.push({ id: r.id, graph: r.graph, f: r.f, winisd: r.winisd, ours: Number(r.ours.toPrecision(5)), note: r.known });
-      else worst[r.graph] = Math.max(worst[r.graph] ?? 0, Number(Math.abs(r.diff).toPrecision(3)));
+      // A signed reading whose minus sign the OCR lost is compared with the sign restored: show it that way.
+      const shown = RUN_TOL[r.graph].signed && Math.abs(r.ours + r.winisd) < Math.abs(r.ours - r.winisd) ? -r.winisd : r.winisd;
+      if (r.known) known.push({ id: r.id, graph: r.graph, f: r.f, winisd: shown, ours: Number(r.ours.toPrecision(5)), note: r.known });
+      else {
+        const d = Number(Math.abs(r.diff).toPrecision(3));
+        if (d > (worst[r.graph] ?? -1)) {
+          worst[r.graph] = d;
+          if (RUN_TOL[r.graph].rel) abs[r.graph] = Number(Math.abs(r.ours - shown).toPrecision(2));
+        }
+      }
     }
     compared += n;
-    return { id: c.id, title: c.title, compared: n, worst, pass: rows.every((r) => r.skip || r.pass) };
+    return { id: c.id, title: c.title, compared: n, worst, abs, pass: rows.every((r) => r.skip || r.pass) };
   });
   const ocr = Object.entries(OCR_MISREADS).map(([k, note]) => {
     const [id, graph, f] = k.split("|");
     return { id: id!, graph: graph as RunGraph, f: Number(f), note };
   });
-  return { date: "2026-11-09", readings, compared, skipped, tol: RUN_TOL, cases, known, ocr };
+  return { date: "2026-11-09", readings, compared, skipped, tol: RUN_TOL, gdAbsMs: GD_ABS_MS, cases, known, ocr };
 }
 
 export interface Report {

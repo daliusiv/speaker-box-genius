@@ -8,12 +8,17 @@
  * All lengths in mm.
  */
 
+import { buildWedgePanels, type PanelInput, type SolidPanel } from "./panels.ts";
+import { wedgeAngles, wedgeGeometry, wedgeIssues } from "./wedge.ts";
+
 export interface Panel {
   name: string;
   qty: number;
   /** Longer side first. */
   a: number;
   b: number;
+  /** How to cut its edges, when they are not all square ("front edge bevelled 21.5°…"). */
+  note?: string;
 }
 
 export interface Hole {
@@ -153,6 +158,67 @@ export function cutList(i: CutListInput): CutList {
   const area =
     panels.reduce((s, p) => s + p.qty * p.a * p.b, 0) + braces.reduce((s, b) => s + b.qty * b.a * b.b, 0);
   return { panels, holes, braces, inside, area_m2: area / 1e6, warnings };
+}
+
+/** The cut-list note for a panel's bevelled or mitred edges ("" when all square). */
+export function bevelNote(p: SolidPanel): string {
+  if (!p.bevels?.length) return "";
+  const parts = p.bevels.map((b) => `${b.edge} edge ${b.angle.toFixed(1)}°, long point ${b.longPoint === "outer" ? "outside" : "inside"}`);
+  const par = p.bevels.length === 2 && p.bevels[0]!.longPoint !== p.bevels[1]!.longPoint && Math.abs(p.bevels[0]!.angle - p.bevels[1]!.angle) < 1e-6;
+  return `${parts.join("; ")}${par ? " (parallel: a parallelogram in section)" : ""}; size is the longer face`;
+}
+
+/**
+ * Cut list for a car wedge (one sloped panel), or a box built the same way: the sides cover
+ * the whole outside, the other four panels fit between them. Panels come from the panel table
+ * (buildWedgePanels) with their bevel or miter notes; holes, braces and warnings as for a box
+ * of the same inside, with the baffle's face as long as the sloped panel's (braces are sized
+ * for the mean inside depth).
+ */
+export function wedgeCutList(i: PanelInput & Pick<CutListInput, "drivers" | "prs" | "ports">): CutList {
+  const set = buildWedgePanels(i);
+  const g = wedgeGeometry(i);
+  const T = i.wall;
+  const front = (i.slope ?? "front") === "front";
+  const baffleIn = front ? g.insideSlant : g.insideHeight;
+  const meanDepth = (g.insideTopDepth + g.insideBottomDepth) / 2;
+  const box = cutList({
+    width: i.width,
+    height: baffleIn + 2 * T,
+    depth: meanDepth + 2 * T,
+    wall: T,
+    drivers: i.drivers,
+    prs: i.prs,
+    ports: i.ports,
+  });
+  const panels: Panel[] = [];
+  for (const p of set.panels) {
+    const note = bevelNote(p);
+    const same = panels.find((x) => x.name === p.name && x.a === p.blank.a && x.b === p.blank.b && (x.note ?? "") === note);
+    if (same) same.qty++;
+    else panels.push({ name: p.name, qty: 1, a: p.blank.a, b: p.blank.b, ...(note ? { note } : {}) });
+  }
+  for (const p of panels) if (p.name === "Side" && p.qty > 1) p.name = "Sides";
+  // Slot port walls from the box cut list.
+  panels.push(...box.panels.filter((p) => p.name === "Slot port wall"));
+  const holes = box.holes.map((h) => (h.where === "Front" ? { ...h, where: front ? "Baffle (sloped)" : "Baffle" } : h));
+  const a = wedgeAngles(i);
+  const warnings = [
+    ...wedgeIssues(i, { joinery: i.joinery, slope: i.slope }).filter((x) => x.level !== "info").map((x) => x.message),
+    ...box.warnings.filter((w) => !w.startsWith("The walls are thicker")),
+  ];
+  if ((i.joinery ?? "butt") === "miter" && Math.max(...a.miter.bottom) > 45) {
+    warnings.push(`The bottom miter needs a ${Math.max(...a.miter.bottom).toFixed(1)}° saw tilt: past most saws' 45°.`);
+  }
+  const area = panels.reduce((s, p) => s + p.qty * p.a * p.b, 0) + box.braces.reduce((s, b) => s + b.qty * b.a * b.b, 0);
+  return {
+    panels,
+    holes,
+    braces: box.braces,
+    inside: { width: g.insideWidth, height: g.insideHeight, depth: meanDepth },
+    area_m2: area / 1e6,
+    warnings,
+  };
 }
 
 /** Volume (litres) that window braces take: the frame around each window, at wall thickness. */

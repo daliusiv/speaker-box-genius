@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6s-047",
+  "title": "bp6s, bc-speakers/12sw115-4ohm (Qts 0.25), 32.67 L, rear 20.81 L port at 35.2 Hz, front 11.86 L port at 54.7 Hz",
+  "driver": {
+    "fs": 39,
+    "qms": 9.8,
+    "qes": 0.26,
+    "vas_l": 33,
+    "re": 3.1,
+    "sd_cm2": 522,
+    "le_mh": 1.35
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 20.81,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 8.296,
+        "length_cm": 55.49
+      },
+      "qp": null,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 11.86,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 9.469,
+        "length_cm": 110.3
+      },
+      "portCount": 2
+    },
+    "rearPortTo": "front",
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "coilTemp_C": 131,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

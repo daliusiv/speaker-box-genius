@@ -1,0 +1,65 @@
+{
+  "id": "g-bp6p-050",
+  "title": "bp6p, sb-acoustics/sb26sfcl38-4 (Qts 0.43), 65.83 L, rear 24.48 L 2 × dayton-audio/ds215-pr at 18.8 Hz, front 41.35 L 1 × seas/sp26r at 49.7 Hz",
+  "driver": {
+    "fs": 27.4,
+    "qms": 5.59,
+    "qes": 0.47,
+    "vas_l": 104,
+    "re": 3.3,
+    "sd_cm2": 346,
+    "le_mh": 1
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 24.48,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 68.8,
+            "sd_cm2": 211.2,
+            "cms_mm_per_n": 0.68,
+            "qms": 7.34
+          },
+          "count": 2,
+          "addedMass_g": 405.3
+        }
+      ],
+      "ql": 6,
+      "qa": 27
+    },
+    "front": {
+      "vb_l": 41.35,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 40,
+            "sd_cm2": 342,
+            "cms_mm_per_n": 0.67
+          },
+          "count": 1,
+          "addedMass_g": 16.39
+        }
+      ],
+      "ql": 24,
+      "qa": 63
+    },
+    "qicl": null
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "g-sealed-041",
+  "title": "sealed, hoqs/n123 (Qts 0.16), 144.2 L",
+  "driver": {
+    "fs": 37,
+    "qms": 17.1,
+    "qes": 0.16,
+    "vas_l": 97,
+    "re": 5.8,
+    "sd_cm2": 532,
+    "le_mh": 0.79
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 144.2,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0,
+    "coilTemp_C": 118,
+    "driveModel": "winisd",
+    "power": 10,
+    "space": "full"
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "id": "g-bp6s-008",
+  "title": "bp6s, redcatt/182find (Qts 0.23), 78.65 L, rear 43.07 L port at 26.8 Hz, front 35.58 L 4 × purifi/ptt10-0pr-na2-01 at 53.6 Hz",
+  "driver": {
+    "fs": 31,
+    "qms": 8.85,
+    "qes": 0.24,
+    "vas_l": 208.6,
+    "re": 5.5,
+    "sd_cm2": 1257,
+    "le_mh": 4.92
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 43.07,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 11.48,
+        "length_cm": 191.5
+      },
+      "portCount": 2,
+      "qp": null
+    },
+    "front": {
+      "vb_l": 35.58,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 161,
+            "sd_cm2": 360,
+            "cms_mm_per_n": 0.44,
+            "qms": 7.1
+          },
+          "count": 4,
+          "addedMass_g": 41.52
+        }
+      ],
+      "ql": 26,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "qicl": 137
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

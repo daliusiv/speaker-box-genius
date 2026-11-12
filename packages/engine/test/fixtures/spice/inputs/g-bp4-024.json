@@ -1,0 +1,50 @@
+{
+  "id": "g-bp4-024",
+  "title": "bp4, sb-acoustics/sb12pfcr25-8 (Qts 0.48), 4.271 L, rear 2.276 L closed, front 1.996 L port at 120.0 Hz",
+  "driver": {
+    "fs": 59,
+    "qms": 3.63,
+    "qes": 0.55,
+    "vas_l": 5.3,
+    "re": 6.4,
+    "sd_cm2": 50,
+    "le_mh": 0.36
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 2.276,
+      "ql": 19,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 1.996,
+      "port": {
+        "shape": "slot",
+        "width_cm": 10.61,
+        "height_cm": 1.066,
+        "length_cm": 9.413
+      },
+      "qp": 129,
+      "ql": 14,
+      "qa": 29
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.5,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

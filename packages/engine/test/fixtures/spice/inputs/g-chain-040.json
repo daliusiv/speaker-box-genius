@@ -1,0 +1,64 @@
+{
+  "id": "g-chain-040",
+  "title": "chain (vented), 18-sound/12nmb1000 (Qts 0.19), 29.5 L, Fb 39.3 Hz, HP linkwitz-riley 2, passive parts",
+  "driver": {
+    "fs": 54,
+    "qms": 8.4,
+    "qes": 0.19,
+    "vas_l": 58,
+    "re": 5.5,
+    "sd_cm2": 531,
+    "le_mh": 0.69
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 29.5,
+    "port": {
+      "shape": "slot",
+      "width_cm": 23.16,
+      "height_cm": 2.751,
+      "length_cm": 76.69
+    },
+    "portCount": 2,
+    "ql": 17,
+    "qa": 61,
+    "qp": null
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "coilTemp_C": 41,
+    "convention": "volts",
+    "power": 2.83,
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 2,
+      "freq": 51.8
+    },
+    "passive": {
+      "branches": [
+        {
+          "r": 7.334,
+          "l_mH": 6.942,
+          "c_uF": 113.7
+        },
+        {},
+        {
+          "r": 10.67,
+          "l_mH": 0.3028
+        },
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

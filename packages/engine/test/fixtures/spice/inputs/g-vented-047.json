@@ -1,0 +1,42 @@
+{
+  "id": "g-vented-047",
+  "title": "vented, rcf/l10-568h (Qts 0.38), 54.72 L, Fb 60.4 Hz",
+  "driver": {
+    "fs": 70,
+    "qms": 6,
+    "qes": 0.41,
+    "vas_l": 29,
+    "re": 5.1,
+    "sd_cm2": 400,
+    "le_mh": 0.14
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 54.72,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 11.81,
+      "length_cm": 8.063
+    },
+    "ql": 14,
+    "qa": 39,
+    "qp": 30
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.5,
+    "power": 10,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

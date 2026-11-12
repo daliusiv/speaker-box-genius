@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6p-041",
+  "title": "bp6p, bc-speakers/12ndl76-8ohm (Qts 0.20), 60.66 L, rear 31.51 L port at 41.9 Hz, front 29.15 L port at 111.7 Hz",
+  "driver": {
+    "fs": 50,
+    "qms": 4.2,
+    "qes": 0.21,
+    "vas_l": 73,
+    "re": 5.3,
+    "sd_cm2": 522,
+    "le_mh": 1
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 31.51,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 7.996,
+        "length_cm": 48.56
+      },
+      "portCount": 2,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 29.15,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 12.77,
+        "length_cm": 1.191
+      },
+      "ql": 14,
+      "qa": 40
+    },
+    "qicl": 140
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

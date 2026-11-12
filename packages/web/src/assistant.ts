@@ -28,7 +28,7 @@ import {
 import { doubtsXmax, type DbIndex, type LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
 import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
-import { airOf, endCorrectionOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, limitsOf, checkFromHz, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
+import { airLimitOf, airOf, endCorrectionOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, limitsOf, checkFromHz, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
 import { portCandidates, portFieldsOf, portSpeedFor, chamberPortFields, needsSpace, type AssistantPort, type PortSpace } from "./ports.ts";
 import { bandRipple, sizeBandpass, type BandpassFound, type BandpassOrder } from "./bandpassSize.ts";
 export { choosePort, portCandidates, portFieldsOf, type AssistantPort } from "./ports.ts";
@@ -286,7 +286,7 @@ export interface AssistantResult {
   /** Output at the goal's frequency (dB SPL), at the power given or the first limit, whichever is lower. */
   loud_db: number;
   /** What sets the output there: "power" (the amplifier), or the first limit. */
-  limitedBy: "power" | "thermal" | "xmax" | "port" | "pr-xmax" | "amp" | "none";
+  limitedBy: "power" | "thermal" | "xmax" | "port" | "pr-xmax" | "amp" | "air" | "none";
   /** Limits crossed at the goal's power, as the app grades them (cone Xmax, port speed). */
   over: LimitKind[];
   /** Over a limit: the power that keeps every limit (W). */
@@ -365,6 +365,7 @@ export function withDriver(s: AppState, d: LoadedDriver): AppState {
       ...s.volume,
       ...(d.displacement_l !== undefined ? { driverDisp_l: d.displacement_l } : {}),
       driverCutout_mm: d.cutout_mm ?? 0,
+      driverDepth_mm: d.depth_mm ?? 0,
     },
     // DVC drivers start wired the way their published values were measured.
     dvc: d.dvcWiring ? { on: true, entered: d.dvcWiring, wired: d.dvcWiring } : { ...s.dvc, on: false },
@@ -539,10 +540,11 @@ export function evaluateDriver(
   const al = align; // non-null, for the nested searches
   // The chuffing line from Settings, in peak (the simulation's convention here).
   const vLimit = portLimitOf(s) * (s.settings.velocity === "rms" ? Math.SQRT2 : 1);
+  const aLimit = airLimitOf(s);
   const drv = driverInputOf(s, solved);
   const air = airOf(s);
   const room = roomGainOf(s);
-  const opts = { ...simOptionsOf(s), fMin: 10, fMax: 300, points: 90, highPass: null, passive: null, eq: [] };
+  const opts = { ...simOptionsOf(s, true), fMin: 10, fMax: 300, points: 90, highPass: null, passive: null, eq: [] };
   const losses = s.settings.losses;
 
   const run = (design: DesignState, vb: number) => {
@@ -590,7 +592,7 @@ export function evaluateDriver(
     let best: { design: VentedDesign; port: AssistantPort; v: number } | null = null;
     for (const port of portCandidates(vb, fb, air, useSpace ? portSpace(vb) : null, endCorrectionOf(s))) {
       const design = withPort(vb, fb, port);
-      const l = limitsOf(run(design, vb), d.xmax_mm!, false, vLimit);
+      const l = limitsOf(run(design, vb), d.xmax_mm!, false, vLimit, aLimit);
       const v = portSpeedFor(port, l.vp ?? Infinity);
       if (v <= vLimit) return { design, port };
       if (!best || v < best.v) best = { design, port, v };
@@ -628,7 +630,7 @@ export function evaluateDriver(
     // No roll-off found in range (a tiny box for a high-Fs pro driver, say): nothing to rank on.
     const f3 = r.summary.f3;
     if (f3 === null) return;
-    const lim = limitsOf(r, d.xmax_mm!, false, vLimit);
+    const lim = limitsOf(r, d.xmax_mm!, false, vLimit, aLimit);
     // Group delay in the band it plays (from F3 up), in cycles of the frequency: a delay that's
     // long against the note's own period is what makes bass sound slow or boomy.
     let gd: AssistantResult["gd"];
@@ -718,7 +720,7 @@ export function evaluateDriver(
           ...(room ? { roomDb: (f: number) => roomGainDb(f, room) } : {}),
         },
         (design) => run(design, design.vb_l),
-        (r) => limitsOf(r, d.xmax_mm!, false, vLimit),
+        (r) => limitsOf(r, d.xmax_mm!, false, vLimit, aLimit),
       )[order];
     // In a space: the driver sits in a divider across it (its panel takes room, as do the
     // ports in their chambers); what's left is shared by the two chambers.

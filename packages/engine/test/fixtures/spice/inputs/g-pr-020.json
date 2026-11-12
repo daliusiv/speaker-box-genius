@@ -1,0 +1,39 @@
+{
+  "id": "g-pr-020",
+  "title": "passive-radiator, dayton-audio/ce70pr-4 (Qts 0.63), 0.5 L, Fb 78.9 Hz, 1 × sb-acoustics/sb12pfcr-00",
+  "driver": {
+    "fs": 109,
+    "qms": 3.5,
+    "qes": 0.77,
+    "vas_l": 0.523,
+    "re": 3.13,
+    "sd_cm2": 24.6,
+    "le_mh": 0.31
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 0.5,
+    "pr": {
+      "mms_g": 18.8,
+      "sd_cm2": 50,
+      "cms_mm_per_n": 1.2,
+      "qms": 12.5
+    },
+    "addedMass_g": 13.46,
+    "ql": 15,
+    "qa": 23
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

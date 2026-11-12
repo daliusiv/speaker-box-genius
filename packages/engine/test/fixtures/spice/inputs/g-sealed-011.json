@@ -1,0 +1,32 @@
+{
+  "id": "g-sealed-011",
+  "title": "sealed, eminence/alpha-10a (Qts 0.59), 125.9 L",
+  "driver": {
+    "fs": 50,
+    "qms": 5.21,
+    "qes": 0.66,
+    "vas_l": 82.2,
+    "re": 5.31,
+    "sd_cm2": 355.4,
+    "le_mh": 0.66
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 125.9
+  },
+  "opts": {
+    "rg": 0,
+    "driveModel": "winisd",
+    "power": 10,
+    "space": "full"
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

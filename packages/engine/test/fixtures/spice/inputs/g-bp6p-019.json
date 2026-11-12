@@ -1,0 +1,47 @@
+{
+  "id": "g-bp6p-019",
+  "title": "bp6p, faital-pro/5fe105 (Qts 0.45), 3.27 L, rear 1.418 L port at 37.7 Hz, front 1.851 L port at 95.3 Hz",
+  "driver": {
+    "fs": 65,
+    "qms": 8.2,
+    "qes": 0.48,
+    "vas_l": 5.7,
+    "re": 5.4,
+    "sd_cm2": 84,
+    "le_mh": 0.53
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 1.418,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.401,
+        "length_cm": 131.9
+      }
+    },
+    "front": {
+      "vb_l": 1.851,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.613,
+        "length_cm": 15.56
+      },
+      "qp": 129
+    },
+    "qicl": 77
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "id": "g-pr-049",
+  "title": "passive-radiator, monacor/spm-100-8ohm (Qts 0.67), 2.551 L, Fb 53.9 Hz, 2 × dayton-audio/dsa175-pr",
+  "driver": {
+    "fs": 75,
+    "qms": 1.96,
+    "qes": 1.01,
+    "vas_l": 4,
+    "re": 7.2,
+    "sd_cm2": 57,
+    "le_mh": 0.4
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 2.551,
+    "pr": {
+      "mms_g": 30.7,
+      "sd_cm2": 128.7,
+      "cms_mm_per_n": 1.15,
+      "qms": 4.3
+    },
+    "prCount": 2,
+    "addedMass_g": 137.2
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

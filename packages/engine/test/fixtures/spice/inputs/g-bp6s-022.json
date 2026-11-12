@@ -1,0 +1,51 @@
+{
+  "id": "g-bp6s-022",
+  "title": "bp6s, beyma/12p80fe-v2 (Qts 0.21), 81.72 L, rear 46.37 L port at 45.3 Hz, front 35.35 L port at 84.2 Hz",
+  "driver": {
+    "fs": 48,
+    "qms": 6.5,
+    "qes": 0.22,
+    "vas_l": 61,
+    "re": 5,
+    "sd_cm2": 550,
+    "le_mh": 1.1
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 46.37,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 9.143,
+        "length_cm": 13.98
+      },
+      "qp": null,
+      "ql": 3,
+      "qa": 20
+    },
+    "front": {
+      "vb_l": 35.35,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 12.47,
+        "length_cm": 5.443
+      },
+      "ql": null,
+      "qa": null
+    },
+    "rearPortTo": "front"
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

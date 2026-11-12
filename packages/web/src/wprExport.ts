@@ -17,7 +17,7 @@ export function wprExportable(d: DesignState): boolean {
 /**
  * One design as a WinISD project (.wpr), with the driver and the settings that change its
  * results, and plain-words notes on what WinISD can't hold (filters other than a Butterworth
- * high-pass, EQ, passive parts, baffle step, room gain, slot or flared ports, series wiring).
+ * high-pass, EQ, passive parts, baffle step, room gain, flared ports, series wiring).
  * The volume written is the one simulated (stuffing's extra volume included), so WinISD shows
  * the same response.
  */
@@ -37,12 +37,14 @@ export function wprFor(s: AppState, d: DesignState): { text: string; notes: stri
   if (d.kind !== "line" && stuffFactor(d) !== 1) notes.push("stuffing is written as the extra volume it acts as (WinISD has no stuffing)");
   const ec = endCorrectionOf(s);
   const portOut = (p: PortFields & { flare_cm?: number }, v: number): WprPortOut => {
-    let diameter_cm = p.diameter_cm;
     if (p.shape === "slot") {
-      // WinISD's own slot fields aren't known here: a round port of the same area.
-      diameter_cm = 2 * Math.sqrt((p.slotWidth_cm * p.slotHeight_cm) / Math.PI);
-      notes.push(`a ${p.slotWidth_cm} × ${p.slotHeight_cm} cm slot is written as a ${diameter_cm.toFixed(1)} cm round port of the same area`);
+      // WinISD's rectangular vent (it tunes it as a round vent of the same area, as the app does).
+      const slot = { width_cm: p.slotWidth_cm, height_cm: p.slotHeight_cm };
+      const port = { shape: "slot" as const, ...slot, length_cm: p.length_cm };
+      const diameter_cm = 2 * Math.sqrt((slot.width_cm * slot.height_cm) / Math.PI);
+      return { count: p.count, diameter_cm, slot, length_cm: p.length_cm, endCorrection: ec, fb: ventedFb(v, port, p.count, ec, air) };
     }
+    const diameter_cm = p.diameter_cm;
     const port = { shape: "round" as const, diameter_cm, length_cm: p.length_cm };
     if (p.flare_cm && p.flare_cm > 0) {
       // WinISD's port has no round-overs: a straight port of the same tuning (flares add effective length).

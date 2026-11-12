@@ -1,0 +1,40 @@
+{
+  "id": "g-pr-058",
+  "title": "passive-radiator, dayton-audio/nd65-8 (Qts 0.65), 0.5 L, Fb 84.5 Hz, 1 × dayton-audio/ds90-pr",
+  "driver": {
+    "fs": 102,
+    "qms": 8.23,
+    "qes": 0.71,
+    "vas_l": 0.36,
+    "re": 7.4,
+    "sd_cm2": 16.5,
+    "le_mh": 0.61
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 0.5,
+    "pr": {
+      "mms_g": 5.5,
+      "sd_cm2": 31.2,
+      "cms_mm_per_n": 2.55,
+      "qms": 5.9
+    },
+    "addedMass_g": 5.677,
+    "ql": 12,
+    "qa": 64
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

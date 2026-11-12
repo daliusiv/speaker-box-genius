@@ -1,0 +1,25 @@
+{
+ "source": "Hornresp 60.70 Particle Velocity chart (Horn Mouth), read with the chart cursor (peak m/s at 2.83 V)",
+ "points": [
+  [
+   21.65,
+   2.8258
+  ],
+  [
+   32.77,
+   4.4336
+  ],
+  [
+   44.26,
+   2.1179
+  ],
+  [
+   67.0,
+   0.7167
+  ],
+  [
+   113.74,
+   0.9787
+  ]
+ ]
+}

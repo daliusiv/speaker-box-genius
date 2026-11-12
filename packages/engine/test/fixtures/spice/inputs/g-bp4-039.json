@@ -1,0 +1,46 @@
+{
+  "id": "g-bp4-039",
+  "title": "bp4, monacor/spx-32m-8ohm (Qts 0.56), 2.581 L, rear 1.522 L closed, front 1.059 L port at 185.7 Hz",
+  "driver": {
+    "fs": 110,
+    "qms": 7.66,
+    "qes": 0.6,
+    "vas_l": 1.6,
+    "re": 6.6,
+    "sd_cm2": 32,
+    "le_mh": 0.18
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 1.522,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 1.059,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 2.138,
+        "length_cm": 4.433
+      },
+      "portCount": 2,
+      "ql": null,
+      "qa": null
+    },
+    "qicl": 49
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

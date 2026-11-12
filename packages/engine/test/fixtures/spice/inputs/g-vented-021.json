@@ -1,0 +1,42 @@
+{
+  "id": "g-vented-021",
+  "title": "vented, 18-sound/10mb777 (Qts 0.22), 45.28 L, Fb 48.1 Hz",
+  "driver": {
+    "fs": 58,
+    "qms": 5.5,
+    "qes": 0.23,
+    "vas_l": 33.4,
+    "re": 5.7,
+    "sd_cm2": 350,
+    "le_mh": 1.6
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 45.28,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 5.628,
+      "length_cm": 10.74
+    },
+    "portCount": 2,
+    "endCorrection": 0.613,
+    "qp": 72
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0.5,
+    "driveModel": "winisd",
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

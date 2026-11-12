@@ -160,8 +160,10 @@ export function writeWdr(d: WdrExport, air: Air = WINISD_AIR): string {
 
 export interface WprPort {
   count: number;
-  /** Round ports only (WinISD Shape=1). */
+  /** Round port: its diameter. Slot: the diameter of a round port of the same area, which is how WinISD tunes it. */
   diameter_cm: number;
+  /** A rectangular vent (WinISD Shape=2: dia1 = width, dia2 = height). */
+  slot?: { width_cm: number; height_cm: number };
   length_cm: number;
   endCorrection: number;
 }
@@ -267,10 +269,15 @@ export function parseWpr(text: string): WprProject {
   const bType = n0(box, "BType");
   const vent = s.get("ventrear");
   const vb_l = n0(box, "Vr") * 1000;
-  const ventOf = (sec: Record<string, string> | undefined): WprPort | undefined =>
-    sec && n0(sec, "len") > 0 && n0(sec, "dia1") > 0
-      ? { count: n0(sec, "Num") || 1, diameter_cm: n0(sec, "dia1") * 100, length_cm: n0(sec, "len") * 100, endCorrection: n0(sec, "endcorrection") || 0.732 }
-      : undefined;
+  const ventOf = (sec: Record<string, string> | undefined): WprPort | undefined => {
+    if (!sec || !(n0(sec, "len") > 0 && n0(sec, "dia1") > 0)) return undefined;
+    const port: WprPort = { count: n0(sec, "Num") || 1, diameter_cm: n0(sec, "dia1") * 100, length_cm: n0(sec, "len") * 100, endCorrection: n0(sec, "endcorrection") || 0.732 };
+    if (n0(sec, "Shape") === 2 && n0(sec, "dia2") > 0) {
+      const slot = { width_cm: n0(sec, "dia1") * 100, height_cm: n0(sec, "dia2") * 100 };
+      return { ...port, slot, diameter_cm: 2 * Math.sqrt((slot.width_cm * slot.height_cm) / Math.PI) };
+    }
+    return port;
+  };
   const frontVent = ventOf(s.get("ventfront"));
   const rearVent = ventOf(vent);
   const intraVent = ventOf(s.get("ventintra"));
@@ -320,12 +327,12 @@ export function parseWpr(text: string): WprProject {
     box: { type, bType, vb_l, fb: type === "vented" || type === "passive-radiator" ? n0(box, "Fr") : undefined, ql: n0(box, "Qlr") || 10, qa: n0(box, "Qar") || 100, qp: n0(box, "Qpr") || 100 },
     port:
       type === "vented" && vent
-        ? {
+        ? (rearVent ?? {
             count: n0(vent, "Num") || 1,
             diameter_cm: n0(vent, "dia1") * 100,
             length_cm: n0(vent, "len") * 100,
             endCorrection: n0(vent, "endcorrection") || 0.732,
-          }
+          })
         : undefined,
     rg: n0(s.get("signalsource"), "Rg"),
     drivers: Math.max(1, Math.round(n0(box, "Nd") || 1)),
@@ -339,10 +346,13 @@ export function parseWpr(text: string): WprProject {
   };
 }
 
-/** A WinISD round port as written to a project: count, inside diameter and physical length. */
+/** A WinISD port as written to a project: count, inside diameter (or slot) and physical length. */
 export interface WprPortOut {
   count: number;
+  /** Round port's diameter (ignored for a slot). */
   diameter_cm: number;
+  /** A rectangular vent: written as WinISD's Shape=2, dia1 = width, dia2 = height. */
+  slot?: { width_cm: number; height_cm: number };
   length_cm: number;
   /** End correction WinISD adds (× diameter); 0.732 is its default. */
   endCorrection?: number;
@@ -395,14 +405,15 @@ export function writeWpr(p: WprExport): string {
   const section = (name: string, rows: [string, string | number][]) =>
     `[${name}]\r\n` + rows.map(([k, v]) => `${k}=${typeof v === "number" ? n(v) : v}`).join("\r\n") + "\r\n";
   const vent = (name: string, v?: WprPortOut, vb_l = 0) => {
-    const area = v ? Math.PI * (v.diameter_cm / 200) ** 2 : 0;
+    const slot = v?.slot;
+    const area = slot ? (slot.width_cm * slot.height_cm) / 1e4 : v ? Math.PI * (v.diameter_cm / 200) ** 2 : 0;
     return section(name, [
       ["Num", v?.count ?? 1],
-      ["Shape", 1],
+      ["Shape", slot ? 2 : 1],
       ["Fb", v?.fb ?? 0],
       ["Vb", v ? vb_l / 1000 : 0],
-      ["dia1", v ? v.diameter_cm / 100 : 0.102],
-      ["dia2", v ? v.diameter_cm / 100 : 0.102],
+      ["dia1", slot ? slot.width_cm / 100 : v ? v.diameter_cm / 100 : 0.102],
+      ["dia2", slot ? slot.height_cm / 100 : v ? v.diameter_cm / 100 : 0.102],
       ["carea", area],
       ["len", v ? v.length_cm / 100 : 0],
       ["endcorrection", v?.endCorrection ?? 0.732],
@@ -420,7 +431,7 @@ export function writeWpr(p: WprExport): string {
   const closedFr = (p.driver.ts.fs ?? 0) * Math.sqrt(1 + vasAll / vr);
   const fr =
     b.type === "vented" ? b.port.fb : b.type === "passive-radiator" ? b.fb : b.type === "bandpass" ? (b.rear.port?.fb ?? closedFr) : closedFr;
-  const portArea = (v?: WprPortOut) => (v ? v.count * Math.PI * (v.diameter_cm / 200) ** 2 : 0);
+  const portArea = (v?: WprPortOut) => (v ? v.count * (v.slot ? (v.slot.width_cm * v.slot.height_cm) / 1e4 : Math.PI * (v.diameter_cm / 200) ** 2) : 0);
   // The [Driver] block, with the air WinISD keeps there.
   const driver = writeWdr(p.driver, p.air).replace(/\r\n$/, "") + `\r\nc=${n(p.air.c)}\r\nroo=${n(p.air.rho)}\r\n`;
   const rgb = /^#([0-9a-f]{6})$/i.exec(p.color ?? "")?.[1];

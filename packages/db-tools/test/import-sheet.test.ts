@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { cellValue, convertRows, fieldOf, findLayout, kindOf, unitOf, type Options } from "../src/import-sheet.ts";
+import { cellValue, convertRows, fieldOf, findLayout, kindOf, unitOf, withOwnTerms, type Options } from "../src/import-sheet.ts";
 import { parseCsv, readSheet } from "../src/sheet.ts";
 import { validateDriver } from "../../schema/src/index.ts";
 
@@ -194,4 +194,12 @@ test("a brand can carry its own terms instead of CC BY-NC-SA", async () => {
   const { validateBrand } = await import("../../schema/src/index.ts");
   assert.deepEqual(validateBrand({ name: "Markaudio", licence: "Not covered by CC BY-NC-SA 4.0." }), []);
   assert.ok(validateBrand({ name: "X", licence: 3 }).length > 0);
+});
+
+test("re-importing a brand under its own terms keeps the not-CC line in the note", () => {
+  const own = { name: "Beyma", licence: "Not covered by CC BY-NC-SA 4.0." };
+  const n = withOwnTerms("From the datasheets.", own);
+  assert.match(n, /Not covered by CC BY-NC-SA 4\.0: do not reuse outside Speaker Box Genius without Beyma's permission/);
+  assert.equal(withOwnTerms(n, own), n);
+  assert.equal(withOwnTerms("From the datasheets.", { name: "SEAS" }), "From the datasheets.");
 });

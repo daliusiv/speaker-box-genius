@@ -1,0 +1,79 @@
+{
+  "id": "g-chain-033",
+  "title": "chain (vented), redcatt/61xr (Qts 0.72), 7.543 L, Fb 56.7 Hz, HP butterworth 4, 3 EQ, passive parts",
+  "driver": {
+    "fs": 64,
+    "qms": 2.88,
+    "qes": 0.96,
+    "vas_l": 8.6,
+    "re": 3.1,
+    "sd_cm2": 132.7,
+    "le_mh": 0.06
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 7.543,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 6.858,
+      "length_cm": 40.61
+    },
+    "ql": 23,
+    "qa": null,
+    "qp": 67
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "highPass": {
+      "type": "butterworth",
+      "order": 4,
+      "freq": 44.93
+    },
+    "eq": [
+      {
+        "type": "lowshelf",
+        "freq": 242.7,
+        "gain_db": 6.08,
+        "q": 0.8956
+      },
+      {
+        "type": "linkwitz",
+        "f0": 66.15,
+        "q0": 0.8908,
+        "fp": 47.48,
+        "qp": 0.6363
+      },
+      {
+        "type": "linkwitz",
+        "f0": 102.6,
+        "q0": 1.126,
+        "fp": 51.44,
+        "qp": 0.5901
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {},
+        {
+          "l_mH": 6.613,
+          "join": "parallel"
+        },
+        {
+          "l_mH": 0.9867,
+          "c_uF": 462.4
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

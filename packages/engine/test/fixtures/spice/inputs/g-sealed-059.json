@@ -1,0 +1,33 @@
+{
+  "id": "g-sealed-059",
+  "title": "sealed, eminence/alpha-8a (Qts 0.59), 28.65 L",
+  "driver": {
+    "fs": 73,
+    "qms": 4.6,
+    "qes": 0.68,
+    "vas_l": 17.7,
+    "re": 5.3,
+    "sd_cm2": 210,
+    "le_mh": 0.44
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 28.65,
+    "ql": 4,
+    "qa": 20
+  },
+  "opts": {
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "g-sealed-028",
+  "title": "sealed, faital-pro/3fe25 (Qts 0.66), 1.399 L",
+  "driver": {
+    "fs": 110,
+    "qms": 4.1,
+    "qes": 0.79,
+    "vas_l": 1.3,
+    "re": 6.2,
+    "sd_cm2": 33,
+    "le_mh": 0.07
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 1.399
+  },
+  "opts": {
+    "rg": 0,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

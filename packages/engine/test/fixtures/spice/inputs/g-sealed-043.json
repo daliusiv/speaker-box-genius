@@ -1,0 +1,32 @@
+{
+  "id": "g-sealed-043",
+  "title": "sealed, jensen/smooth-bs-10n-250a (Qts 0.43), 35.27 L",
+  "driver": {
+    "fs": 58,
+    "qms": 6.45,
+    "qes": 0.46,
+    "vas_l": 30.9,
+    "re": 5.1,
+    "sd_cm2": 346.3,
+    "le_mh": 0.84
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 35.27,
+    "ql": 13,
+    "qa": 112
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

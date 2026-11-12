@@ -1,0 +1,31 @@
+{
+  "id": "s06",
+  "title": "Sealed 300 L, UM15-22 (Qts 0.7), WinISD watts, Rg 0.5",
+  "driver": {
+    "fs": 29,
+    "qms": 2.34,
+    "qes": 1,
+    "vas_l": 96,
+    "re": 4.2,
+    "sd_cm2": 791,
+    "le_mh": 0.7
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 300
+  },
+  "opts": {
+    "driveModel": "winisd",
+    "rg": 0.5,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

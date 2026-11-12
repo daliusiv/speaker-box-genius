@@ -1,0 +1,42 @@
+{
+  "id": "g-pr-045",
+  "title": "passive-radiator, bc-speakers/12nw100-4ohm (Qts 0.20), 22.45 L, Fb 48.7 Hz, 2 × dayton-audio/rss390-pr",
+  "driver": {
+    "fs": 44,
+    "qms": 5.8,
+    "qes": 0.21,
+    "vas_l": 43.3,
+    "re": 3.8,
+    "sd_cm2": 531,
+    "le_mh": 1.79
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 22.45,
+    "pr": {
+      "mms_g": 400,
+      "sd_cm2": 829.6,
+      "cms_mm_per_n": 0.22,
+      "qms": 4.07
+    },
+    "prCount": 2,
+    "addedMass_g": 576.1,
+    "ql": 25,
+    "qa": 80
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0.5,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "id": "g-sealed-007",
+  "title": "sealed, faital-pro/12fe300 (Qts 0.51), 60.29 L",
+  "driver": {
+    "fs": 47,
+    "qms": 15.5,
+    "qes": 0.53,
+    "vas_l": 83.7,
+    "re": 5.1,
+    "sd_cm2": 543,
+    "le_mh": 0.8
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 60.29
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0,
+    "convention": "volts",
+    "power": 2.83,
+    "space": "full"
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

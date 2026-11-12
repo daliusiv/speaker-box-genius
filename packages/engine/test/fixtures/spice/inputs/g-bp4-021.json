@@ -1,0 +1,43 @@
+{
+  "id": "g-bp4-021",
+  "title": "bp4, dayton-audio/pc68-4 (Qts 0.64), 0.5 L, rear 0.2738 L closed, front 0.2262 L port at 241.0 Hz",
+  "driver": {
+    "fs": 117.1,
+    "qms": 2.49,
+    "qes": 0.87,
+    "vas_l": 0.7,
+    "re": 3.8,
+    "sd_cm2": 21.2,
+    "le_mh": 0.29
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.2738
+    },
+    "front": {
+      "vb_l": 0.2262,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 1.635,
+        "length_cm": 8.365
+      },
+      "portCount": 2
+    },
+    "qicl": 161
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 59,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "g-bp6p-006",
+  "title": "bp6p, monacor/tf0615 (Qts 0.61), 4.219 L, rear 2.669 L 2 × dayton-audio/ds270-pr at 77.6 Hz, front 1.55 L port at 150.8 Hz",
+  "driver": {
+    "fs": 104.7,
+    "qms": 3.949,
+    "qes": 0.719,
+    "vas_l": 6.4,
+    "re": 7.08,
+    "sd_cm2": 153.94,
+    "le_mh": 0.47
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 2.669,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 88.4,
+            "sd_cm2": 353,
+            "cms_mm_per_n": 0.6,
+            "qms": 3.98
+          },
+          "count": 2,
+          "addedMass_g": 475.3
+        }
+      ],
+      "ql": 10,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 1.55,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.47,
+        "length_cm": 5.056
+      },
+      "qp": null,
+      "ql": null,
+      "qa": null
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "rg": 0.5,
+    "coilTemp_C": 54,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "id": "g-bp6p-049",
+  "title": "bp6p, dayton-audio/ss18-22 (Qts 0.37), 180.1 L, rear 95.9 L 2 × dayton-audio/rss315-pr at 12.9 Hz, front 84.23 L port at 35.6 Hz",
+  "driver": {
+    "fs": 21,
+    "qms": 3.4,
+    "qes": 0.42,
+    "vas_l": 224,
+    "re": 5.4,
+    "sd_cm2": 1188,
+    "le_mh": 2.1
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 95.9,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 300,
+            "sd_cm2": 506.7,
+            "cms_mm_per_n": 0.22,
+            "qms": 4.79
+          },
+          "count": 2,
+          "addedMass_g": 1342
+        }
+      ]
+    },
+    "front": {
+      "vb_l": 84.23,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 17.16,
+        "length_cm": 53.43
+      },
+      "qp": null,
+      "ql": 8,
+      "qa": null
+    },
+    "qicl": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

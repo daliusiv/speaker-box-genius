@@ -1,0 +1,52 @@
+{
+  "id": "g-pr-060",
+  "title": "passive-radiator, dayton-audio/rss210hf-4 (Qts 0.57), 11.68 L, Fb 27.9 Hz, 4 × purifi/ptt6-5pr-nf2-02 + 1 × sb-acoustics/sb29nrx-00",
+  "driver": {
+    "fs": 29.6,
+    "qms": 3.25,
+    "qes": 0.69,
+    "vas_l": 23.7,
+    "re": 3.1,
+    "sd_cm2": 219,
+    "le_mh": 0.7
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 11.68,
+    "pr": {
+      "mms_g": 81,
+      "sd_cm2": 132.7,
+      "cms_mm_per_n": 1.05,
+      "qms": 11
+    },
+    "prCount": 4,
+    "addedMass_g": 228.9,
+    "extraPrs": [
+      {
+        "pr": {
+          "mms_g": 505,
+          "sd_cm2": 312,
+          "cms_mm_per_n": 0.48,
+          "qms": 10.8
+        },
+        "count": 1
+      }
+    ],
+    "ql": 20,
+    "qa": 92
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -400,15 +400,13 @@ export const WINISD_CASES: WinIsdCase[] = [
     setup: (p) => ({ driver: ts(p), box: prBox(p), opts: drive(p) }),
     checks: [
       { what: "prFb", f: 0, winisd: 45.897, tol: 0.001 },
-      { what: "tf", f: 20.09, winisd: -38.84, tol: 0.15 },
-      { what: "tf", f: 40, winisd: -7.79, tol: 0.15 },
-      { what: "tf", f: 61.25, winisd: -0.315, tol: 0.15 },
+      { what: "tf", f: 20.09, winisd: -38.84, tol: 0.02, note: "WinISD shows two decimals here" },
+      { what: "tf", f: 40, winisd: -7.79, tol: 0.01 },
+      { what: "tf", f: 61.25, winisd: -0.315, tol: 0.01 },
     ],
     notes:
-      "Box tuning matches exactly, so radiator mass and stiffness are modelled the same way. The remaining difference is **damping near the tuning frequency**: " +
-      "WinISD shows less loss there than the standard lumped loss model (the same model that matches its ported and sealed boxes to 0.01 dB). " +
-      "Moving the loss reference frequencies, scaling the radiator's Qms and removing individual losses were all tried; none reproduces both WinISD PR boxes, " +
-      "so WinISD evidently treats passive-radiator losses differently internally. Real box leakage varies far more than this (Ql 5–20 is typical).",
+      "Box tuning matches exactly, so radiator mass and stiffness are modelled the same way. Near the tuning the losses count against the box and the radiator's suspension together, " +
+      "as WinISD does (box leakage and absorption with the radiator's compliance in series). Before that was matched (9 November 2026) the peak here differed by up to 0.5 dB.",
   },
   {
     id: "pr-50l",
@@ -418,12 +416,12 @@ export const WINISD_CASES: WinIsdCase[] = [
     setup: (p) => ({ driver: ts(p), box: prBox(p), opts: drive(p) }),
     checks: [
       { what: "prFb", f: 0, winisd: 38.671, tol: 0.001 },
-      { what: "tf", f: 25.33, winisd: -25.974, tol: 0.1 },
-      { what: "tf", f: 40.13, winisd: -1.213, tol: 0.55, note: "the tuning peak: see the known difference" },
+      { what: "tf", f: 25.33, winisd: -25.974, tol: 0.01 },
+      { what: "tf", f: 40.13, winisd: -1.213, tol: 0.01, note: "the tuning peak" },
       { what: "tf", f: 80.13, winisd: -1.741, tol: 0.05, note: "the dip" },
       { what: "tf", f: 120.08, winisd: -1.082, tol: 0.05 },
     ],
-    notes: "Right at the tuning peak WinISD shows less damping than the standard loss model (−1.21 against −1.70 dB): the same passive-radiator damping difference as the 18 L box.",
+    notes: "The high-Q tuning peak and the dip above it match to WinISD's last digit, with the losses counted as for the 18 L box.",
   },
   {
     id: "pr-excursion",
@@ -434,17 +432,17 @@ export const WINISD_CASES: WinIsdCase[] = [
     checks: [
       { what: "xpr", f: 10, winisd: 13.445, tol: 0.01 },
       { what: "xpr", f: 20.16, winisd: 12.134, tol: 0.01 },
-      { what: "xpr", f: 40.5, winisd: 9.274, tol: 0.025 },
+      { what: "xpr", f: 40.5, winisd: 9.274, tol: 0.01 },
       { what: "x", f: 20.03, winisd: 19.373, tol: 0.01 },
       { what: "x", f: 40.5, winisd: 4.646, tol: 0.01 },
-      { what: "x", f: 65.36, winisd: 5.695, tol: 0.015, note: "the bump" },
-      { what: "x", f: 46.11, winisd: 2.183, tol: 0.07, note: "the dip at Fb" },
+      { what: "x", f: 65.36, winisd: 5.695, tol: 0.01, note: "the bump" },
+      { what: "x", f: 46.11, winisd: 2.183, tol: 0.01, note: "the dip at Fb" },
       { what: "xDipF", f: 0, winisd: 46.11, tol: 0.15 },
-      { what: "xBumpF", f: 0, winisd: 65.36, tol: 0.3 },
+      { what: "xBumpF", f: 0, winisd: 65.36, tol: 0.3, note: "a broad bump: its top is hard to place on WinISD's graph" },
     ],
     notes:
-      "Away from the tuning the agreement matches the ported box (0.35–0.5 %). Close to Fb, WinISD's lighter PR damping shows up again: " +
-      "a slightly deeper cone dip and a little more PR travel. The dip and bump frequencies agree within 0.05 Hz.",
+      "Cone and radiator excursion sit a uniform 0.5 % above WinISD, the same as the ported box: this project's driver record isn't self-consistent (see Known differences). " +
+      "The dip at Fb lands within 0.01 Hz; the top of the broad bump above it within 0.2 Hz.",
   },
 ];
 

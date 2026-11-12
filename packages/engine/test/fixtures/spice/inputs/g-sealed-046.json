@@ -1,0 +1,35 @@
+{
+  "id": "g-sealed-046",
+  "title": "sealed, rcf/lf18x451 (Qts 0.28), 834.8 L",
+  "driver": {
+    "fs": 30,
+    "qms": 6.7,
+    "qes": 0.29,
+    "vas_l": 220,
+    "re": 5.4,
+    "sd_cm2": 1200,
+    "le_mh": 1.38
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 834.8,
+    "ql": 22,
+    "qa": 106
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "parallel",
+    "rg": 0,
+    "power": 10,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

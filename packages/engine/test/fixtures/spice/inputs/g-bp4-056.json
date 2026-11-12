@@ -1,0 +1,47 @@
+{
+  "id": "g-bp4-056",
+  "title": "bp4, seas/l26ro4y2 (Qts 0.27), 28.07 L, rear 10.66 L closed, front 17.41 L port at 44.7 Hz",
+  "driver": {
+    "fs": 26,
+    "qms": 3.94,
+    "qes": 0.29,
+    "vas_l": 39.8,
+    "re": 3.5,
+    "sd_cm2": 342,
+    "le_mh": 2.33
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 10.66
+    },
+    "front": {
+      "vb_l": 17.41,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.732,
+        "length_cm": 16.44
+      },
+      "portCount": 2,
+      "ql": null,
+      "qa": null
+    }
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "coilTemp_C": 45,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

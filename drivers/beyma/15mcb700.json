@@ -1,0 +1,34 @@
+{
+  "brand": "Beyma",
+  "model": "15MCB700",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 44,
+    "qms": 5.4,
+    "qes": 0.36,
+    "vas_l": 148,
+    "re": 5.3,
+    "sd_cm2": 880,
+    "qts": 0.34,
+    "le_mh": 0.9,
+    "bl": 20,
+    "mms_g": 96,
+    "xmax_mm": 7,
+    "pe_w": 700
+  },
+  "physical": {
+    "cutout_mm": 349.5,
+    "depth_mm": 177
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/115MCB708/altavoz-15mcb700-8-oh/",
+      "retrieved": "2026-11-10",
+      "note": "Values from Beyma's datasheets (PDFs supplied 10 Nov 2026), used with Beyma's permission (6 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Beyma's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

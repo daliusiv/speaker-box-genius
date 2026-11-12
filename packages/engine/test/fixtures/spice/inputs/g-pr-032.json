@@ -1,0 +1,40 @@
+{
+  "id": "g-pr-032",
+  "title": "passive-radiator, rcf/lf15n451 (Qts 0.18), 86.92 L, Fb 24.6 Hz, 1 × dayton-audio/rss390-pr",
+  "driver": {
+    "fs": 35,
+    "qms": 4.2,
+    "qes": 0.19,
+    "vas_l": 125,
+    "re": 5.1,
+    "sd_cm2": 900,
+    "le_mh": 2.6
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 86.92,
+    "pr": {
+      "mms_g": 400,
+      "sd_cm2": 829.6,
+      "cms_mm_per_n": 0.22,
+      "qms": 4.07
+    },
+    "addedMass_g": 259.8,
+    "ql": 21,
+    "qa": 89
+  },
+  "opts": {
+    "rg": 0.5,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

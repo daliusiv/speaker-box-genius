@@ -1,0 +1,53 @@
+{
+  "id": "g-bp6p-036",
+  "title": "bp6p, sb-acoustics/mw13tx-4 (Qts 0.26), 34.7 L, rear 16.75 L port at 22.4 Hz, front 17.95 L port at 62.8 Hz",
+  "driver": {
+    "fs": 38,
+    "qms": 5.08,
+    "qes": 0.27,
+    "vas_l": 16,
+    "re": 3.8,
+    "sd_cm2": 70,
+    "le_mh": 0.16
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 16.75,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.32,
+        "length_cm": 29.02
+      },
+      "qp": 54,
+      "ql": 8,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 17.95,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.467,
+        "length_cm": 1.53
+      }
+    },
+    "qicl": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 100,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

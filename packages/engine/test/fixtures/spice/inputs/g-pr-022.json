@@ -1,0 +1,41 @@
+{
+  "id": "g-pr-022",
+  "title": "passive-radiator, peerless/hds-p830883 (Qts 0.67), 6.206 L, Fb 67.8 Hz, 2 × seas/sp22r",
+  "driver": {
+    "fs": 68,
+    "qms": 2.18,
+    "qes": 0.971,
+    "vas_l": 6.81,
+    "re": 5.9,
+    "sd_cm2": 143,
+    "le_mh": 0.215
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 6.206,
+    "pr": {
+      "mms_g": 28.9,
+      "sd_cm2": 230,
+      "cms_mm_per_n": 1.61
+    },
+    "prCount": 2,
+    "addedMass_g": 107.9,
+    "ql": 5,
+    "qa": 73
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 132,
+    "driveModel": "winisd",
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

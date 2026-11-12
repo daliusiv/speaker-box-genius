@@ -1,0 +1,48 @@
+{
+  "id": "g-bp4-053",
+  "title": "bp4, faital-pro/12fh510 (Qts 0.24), 46.11 L, rear 22.86 L closed, front 23.24 L port at 85.1 Hz",
+  "driver": {
+    "fs": 45,
+    "qms": 10.9,
+    "qes": 0.25,
+    "vas_l": 81.3,
+    "re": 5.1,
+    "sd_cm2": 533,
+    "le_mh": 0.9
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 22.86,
+      "ql": 28,
+      "qa": 89
+    },
+    "front": {
+      "vb_l": 23.24,
+      "port": {
+        "shape": "slot",
+        "width_cm": 18.23,
+        "height_cm": 5.097,
+        "length_cm": 8.506
+      },
+      "qp": null,
+      "ql": null,
+      "qa": null
+    }
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 125,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "title": "Two passive radiators",
+  "text": "50 L with two DSA270-PR (Hornresp: one radiator of 706 cm², twice the mass, half the compliance); front air 5.41 g per PR; the PRs' output",
+  "frontAir": 1,
+  "input": {
+    "kind": "passive-radiator",
+    "vb_l": 50,
+    "pr": {
+      "mms_g": 88.16,
+      "sd_cm2": 353,
+      "cms_mm_per_n": 0.596,
+      "qms": 5.265
+    },
+    "prCount": 2,
+    "addedMass_g": 5.41,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

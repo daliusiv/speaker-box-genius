@@ -1,0 +1,23 @@
+{
+  "title": "12-inch subwoofer, sealed",
+  "text": "The 12″ subwoofer of the line cases (Le 2.4 mH) in 50 L",
+  "frontAir": 1,
+  "driver": {
+    "fs": 24,
+    "qms": 4.2,
+    "qes": 0.42,
+    "vas_l": 85,
+    "re": 3.4,
+    "sd_cm2": 480,
+    "le_mh": 2.4,
+    "xmax_mm": 14,
+    "pe_w": 400
+  },
+  "input": {
+    "kind": "sealed",
+    "vb_l": 50,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

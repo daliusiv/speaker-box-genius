@@ -1,0 +1,45 @@
+{
+  "id": "g-bp4-007",
+  "title": "bp4, beyma/8wr300 (Qts 0.28), 42.76 L, rear 19.89 L closed, front 22.87 L port at 91.7 Hz",
+  "driver": {
+    "fs": 65,
+    "qms": 5.4,
+    "qes": 0.29,
+    "vas_l": 15,
+    "re": 6,
+    "sd_cm2": 220,
+    "le_mh": 0.9
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 19.89,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 22.87,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 8.692,
+        "length_cm": 3.869
+      },
+      "ql": 24,
+      "qa": 117
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "rg": 0,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

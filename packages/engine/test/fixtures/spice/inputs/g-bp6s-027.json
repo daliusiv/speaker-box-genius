@@ -1,0 +1,53 @@
+{
+  "id": "g-bp6s-027",
+  "title": "bp6s, dayton-audio/ps65lp-4 (Qts 0.24), 14.15 L, rear 6.737 L port at 64.9 Hz, front 7.417 L port at 106.4 Hz",
+  "driver": {
+    "fs": 67.3,
+    "qms": 3.85,
+    "qes": 0.26,
+    "vas_l": 17.3,
+    "re": 3.2,
+    "sd_cm2": 122.7,
+    "le_mh": 0.39
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 6.737,
+      "port": {
+        "shape": "slot",
+        "width_cm": 15.12,
+        "height_cm": 2.409,
+        "length_cm": 35.03
+      }
+    },
+    "front": {
+      "vb_l": 7.417,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.38,
+        "length_cm": 4.954
+      },
+      "ql": 10,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "parallel",
+    "rg": 0.5,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

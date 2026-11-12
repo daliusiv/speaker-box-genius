@@ -1,0 +1,35 @@
+{
+  "id": "g-sealed-033",
+  "title": "sealed, redcatt/181npw (Qts 0.25), 52.49 L",
+  "driver": {
+    "fs": 28,
+    "qms": 15.8,
+    "qes": 0.25,
+    "vas_l": 167.7,
+    "re": 3.2,
+    "sd_cm2": 1225.4,
+    "le_mh": 1.76
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 52.49,
+    "ql": 17,
+    "qa": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

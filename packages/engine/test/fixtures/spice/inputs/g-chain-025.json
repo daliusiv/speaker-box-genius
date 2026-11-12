@@ -1,0 +1,65 @@
+{
+  "id": "g-chain-025",
+  "title": "chain (vented), 18-sound/8mb500-8ohm (Qts 0.43), 82.58 L, Fb 54.1 Hz, HP linkwitz-riley 4, 1 EQ, passive parts",
+  "driver": {
+    "fs": 74,
+    "qms": 2.66,
+    "qes": 0.51,
+    "vas_l": 21.5,
+    "re": 5.1,
+    "sd_cm2": 230,
+    "le_mh": 0.6
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 82.58,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 5.463,
+      "length_cm": 1.926
+    },
+    "portCount": 2
+  },
+  "opts": {
+    "rg": 0.5,
+    "convention": "volts",
+    "power": 2.83,
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 4,
+      "freq": 61.96
+    },
+    "eq": [
+      {
+        "type": "linkwitz",
+        "f0": 75.85,
+        "q0": 0.5553,
+        "fp": 65.47,
+        "qp": 0.6968
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {
+          "r": 10.28
+        },
+        {
+          "join": "parallel"
+        },
+        {
+          "r": 11.95
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

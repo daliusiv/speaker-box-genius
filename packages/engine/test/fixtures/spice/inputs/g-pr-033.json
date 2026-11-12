@@ -1,0 +1,42 @@
+{
+  "id": "g-pr-033",
+  "title": "passive-radiator, redcatt/12xr (Qts 0.68), 70.8 L, Fb 28.9 Hz, 2 × dayton-audio/dsa270-pr",
+  "driver": {
+    "fs": 35,
+    "qms": 10.5,
+    "qes": 0.73,
+    "vas_l": 89.7,
+    "re": 5.7,
+    "sd_cm2": 531,
+    "le_mh": 0.24
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 70.8,
+    "pr": {
+      "mms_g": 88.4,
+      "sd_cm2": 353,
+      "cms_mm_per_n": 0.6,
+      "qms": 5.26
+    },
+    "prCount": 2,
+    "addedMass_g": 113.3
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "series",
+    "rg": 0,
+    "driveModel": "winisd",
+    "power": 10,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

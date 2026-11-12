@@ -1,0 +1,51 @@
+{
+  "id": "g-bp6p-016",
+  "title": "bp6p, 18-sound/12nd930 (Qts 0.21), 130.5 L, rear 48.4 L port at 39.8 Hz, front 82.09 L port at 63.8 Hz",
+  "driver": {
+    "fs": 50,
+    "qms": 5.64,
+    "qes": 0.22,
+    "vas_l": 70,
+    "re": 5.5,
+    "sd_cm2": 531,
+    "le_mh": 1.65
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 48.4,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 9.793,
+        "length_cm": 23.95
+      },
+      "qp": 113,
+      "ql": 25,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 82.09,
+      "port": {
+        "shape": "slot",
+        "width_cm": 23.55,
+        "height_cm": 5.215,
+        "length_cm": 3.548
+      }
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

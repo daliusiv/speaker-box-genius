@@ -1,0 +1,46 @@
+{
+  "id": "g-bp4-050",
+  "title": "bp4, dayton-audio/pa130-8 (Qts 0.51), 5.014 L, rear 2.514 L closed, front 2.499 L port at 159.6 Hz",
+  "driver": {
+    "fs": 83.4,
+    "qms": 3.21,
+    "qes": 0.6,
+    "vas_l": 3.95,
+    "re": 7.1,
+    "sd_cm2": 73.9,
+    "le_mh": 0.71
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 2.514,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 2.499,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 4.419,
+        "length_cm": 3.977
+      },
+      "qp": 47,
+      "ql": null,
+      "qa": null
+    }
+  },
+  "opts": {
+    "rg": 0.5,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

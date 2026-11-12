@@ -1,0 +1,34 @@
+{
+  "brand": "Beyma",
+  "model": "12BR70",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 31,
+    "qms": 4.4,
+    "qes": 0.56,
+    "vas_l": 142,
+    "re": 5.6,
+    "sd_cm2": 540,
+    "qts": 0.5,
+    "le_mh": 0.8,
+    "bl": 12.1,
+    "mms_g": 74,
+    "xmax_mm": 8,
+    "pe_w": 125
+  },
+  "physical": {
+    "cutout_mm": 278,
+    "depth_mm": 134
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.beyma.com/en/products/c/low-mid-frequency/212BR708/altavoz-12br70-8-oh/",
+      "retrieved": "2026-11-10",
+      "note": "Values from Beyma's datasheets (PDFs supplied 10 Nov 2026), used with Beyma's permission (6 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Beyma's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

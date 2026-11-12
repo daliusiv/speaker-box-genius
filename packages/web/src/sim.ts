@@ -26,24 +26,17 @@ import {
   type VolumeResult,
   semiActive,
   transientResponse,
+  solveWedge,
+  type WedgeDims,
+  type WedgeField,
+  type WedgeSolve,
 } from "@sbg/engine";
 import type { AppState, DesignKind, DesignState, LineDesign, PortFields, PrDesign, PrGroupState, Settings } from "./state.ts";
 import { compareView } from "./state.ts";
 import { stuffFactor, stuffable, stuffingEffect } from "./stuffing.ts";
 
-/** One colour per design slot; distinguishable in light and dark mode. */
-/**
- * Each box type has its own colour, whatever else is in the project: sealed blue, ported
- * orange, passive radiators green, bandpass purple, transmission lines pink. A second (third…)
- * design of the same type takes the next shade of its colour.
- */
-export const KIND_COLORS: Record<DesignKind, readonly string[]> = {
-  sealed: ["#3b82f6", "#93c5fd", "#6366f1", "#bfdbfe"],
-  vented: ["#f97316", "#fdba74", "#c2410c", "#ffedd5"],
-  pr: ["#22c55e", "#86efac", "#84cc16", "#bbf7d0"],
-  bandpass: ["#a855f7", "#d8b4fe", "#d946ef", "#e9d5ff"],
-  line: ["#f472b6", "#f9a8d4", "#db2777", "#fbcfe8"],
-};
+export { KIND_COLORS } from "./palette.ts";
+import { KIND_COLORS } from "./palette.ts";
 
 export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators", bandpass: "Bandpass", line: "Transmission line" } as const;
 
@@ -104,6 +97,15 @@ export function shapeOf(v: AppState["volume"]): Shape {
       };
     case "sphere":
       return { kind: "sphere", diameter_cm: v.diameter_cm };
+    case "wedge":
+      return {
+        kind: "wedge",
+        width_cm: v.width_cm,
+        height_cm: v.height_cm,
+        topDepth_cm: v.topDepth_cm,
+        bottomDepth_cm: v.depth_cm,
+        ...(v.slopeWall_mm !== null && v.slopeWall_mm > 0 ? { slopeWall_mm: v.slopeWall_mm } : {}),
+      };
     case "frustum":
       return {
         kind: "frustum",
@@ -192,6 +194,15 @@ export const airOf = (s: AppState): Air =>
 export const PORT_LIMIT = 17;
 /** The chuffing line in use (Settings → Ports), in the displayed convention. */
 export const portLimitOf = (s: Pick<AppState, "settings">): number => (s.settings.portLimit_ms > 0 ? s.settings.portLimit_ms : PORT_LIMIT);
+
+/** Air distortion limit (HD2, %): the default of the setting. */
+export const AIR_LIMIT = 10;
+/** The air distortion limit in use (Settings → Limits), % HD2. */
+export const airLimitOf = (s: Pick<AppState, "settings">): number => (s.settings.airLimit_pct > 0 ? s.settings.airLimit_pct : AIR_LIMIT);
+/** Polytropic exponent of the box air for each fill (1.4 adiabatic, empty; heavy fill tends towards 1.0, isothermal). */
+export const AIR_FILL_N: Record<AppState["settings"]["airFill"], number> = { empty: 1.4, lined: 1.3, filled: 1.2, packed: 1.1 };
+/** Above this compression (ΔV/Vb) the air distortion estimate loosens; above twice it, it's outside the model. */
+export const AIR_COMPRESSION_CAUTION = 0.1;
 
 /**
  * Dual voice coil: factors that turn the entered Re (and Le) and Qes into the values for
@@ -376,8 +387,12 @@ export function driverInputOf(s: AppState, solved: SolveResult): DriverInput {
 /** The port end correction in use (Settings → Ports): K × the equivalent diameter. */
 export const endCorrectionOf = (s: Pick<AppState, "settings">): number => s.settings.endCorrection ?? DEFAULT_END_CORRECTION;
 
-/** How every design is driven and simulated (drive level, wiring, filters, air…), without EQ. */
-export function simOptionsOf(s: AppState) {
+/**
+ * How every design is driven and simulated (drive level, wiring, filters, air…), without EQ.
+ * `search`: for runs over many boxes (assistant, presets, fits), where the box air's distortion
+ * is worked out only if it counts in Max SPL.
+ */
+export function simOptionsOf(s: AppState, search = false) {
   return {
     rg: s.settings.rg,
     endCorrection: endCorrectionOf(s),
@@ -396,6 +411,9 @@ export function simOptionsOf(s: AppState) {
     // The limit is in the displayed convention; the engine works in peak.
     portVelocityLimit: s.settings.velocity === "rms" ? portLimitOf(s) * Math.SQRT2 : portLimitOf(s),
     portCompression: s.settings.portCompression,
+    // Always worked out for boxes (it changes nothing else); counted in Max SPL only when set.
+    airDistortion:
+      search && !s.settings.airInMaxSpl ? null : { threshold: airLimitOf(s) / 100, limit: s.settings.airInMaxSpl, n: AIR_FILL_N[s.settings.airFill] },
     splFrom: s.settings.lineSpl === "power" ? ("power" as const) : undefined,
     portModel: s.settings.portModel === "pipe" ? ("pipe" as const) : undefined,
     leakage: s.settings.leakage === "absorbed" ? ("absorbed" as const) : undefined,
@@ -606,9 +624,9 @@ export function prPeak(r: SimulationResult, fMin: number, fMax = Infinity): { mm
 }
 
 /** A limit a design can go over, and the chart that shows it. */
-export type LimitKind = "xmax" | "pr" | "port";
-export const LIMIT_CHART: Record<LimitKind, "excursion" | "pr" | "port"> = { xmax: "excursion", pr: "pr", port: "port" };
-export const LIMIT_NAME: Record<LimitKind, string> = { xmax: "Xmax", pr: "PR Xmax", port: "Port speed" };
+export type LimitKind = "xmax" | "pr" | "port" | "air";
+export const LIMIT_CHART: Record<LimitKind, "excursion" | "pr" | "port" | "air"> = { xmax: "excursion", pr: "pr", port: "port", air: "air" };
+export const LIMIT_NAME: Record<LimitKind, string> = { xmax: "Xmax", pr: "PR Xmax", port: "Port speed", air: "Air distortion" };
 
 const peakAbove = (a: Float64Array | null | undefined, freq: Float64Array, fMin: number, fMax = Infinity) => {
   if (!a) return null;
@@ -666,6 +684,8 @@ export interface Limits {
   xpr: { mm: number; xmax: number | null; over: boolean } | null;
   /** Peak port air speed (m/s). */
   vp: number | null;
+  /** Peak air distortion (HD2 %), when modelled. */
+  hd2: number | null;
   over: LimitKind[];
   /** Past Xmax only in the deep-bass zone (within DEEP_ALLOW × Xmax): where, how far, and the drive scale that keeps it within. */
   deep: { below_hz: number; x_mm: number; scale: number } | null;
@@ -694,7 +714,8 @@ export function portRoom_cm(vb_l: number, clearance_cm: number, internalMax_cm: 
  * port's chuffing line (`portLimit`, in the convention of the result's port speeds). From checkFromHz: 10 Hz with a high-pass filter, else 20 Hz (or the design's F3, if lower), except
  * a tuned box's deep-bass zone (deepSplitOf), which is graded instead (see DEEP_SPLIT).
  */
-export function limitsOf(r: SimulationResult, xmax_mm: number, highPassOn: boolean, portLimit = PORT_LIMIT): Limits {
+/** `airLimit` (% HD2): the air's distortion (box or line) counts only where a caller passes its limit. */
+export function limitsOf(r: SimulationResult, xmax_mm: number, highPassOn: boolean, portLimit = PORT_LIMIT, airLimit = Infinity): Limits {
   const fMin = checkFromHz(highPassOn, r.summary.f3);
   const split = deepSplitOf(r, highPassOn);
   const lo = split ?? fMin;
@@ -703,6 +724,8 @@ export function limitsOf(r: SimulationResult, xmax_mm: number, highPassOn: boole
   const vpFront = peakAbove(r.portVelocity, r.freq, fMin);
   const vpRear = peakAbove(r.rearPortVelocity, r.freq, fMin);
   const vp = vpFront === null ? vpRear : Math.max(vpFront, vpRear ?? 0);
+  // Air distortion (when modelled): grows with the drive's amplitude, like excursion.
+  const hd2 = peakAbove(r.airHd2, r.freq, fMin);
   const xDeep = split ? peakAbove(r.excursionMm, r.freq, DEEP_FLOOR_HZ, split) : null;
   const prDeep = split ? prPeak(r, DEEP_FLOOR_HZ, split) : null;
   // How far past each limit (1 = at it): the worst sets the safe drive.
@@ -712,18 +735,20 @@ export function limitsOf(r: SimulationResult, xmax_mm: number, highPassOn: boole
     xpr?.xmax ? xpr.mm / xpr.xmax : 0,
     prDeep?.xmax ? prDeep.mm / (DEEP_ALLOW * prDeep.xmax) : 0,
     vp !== null ? vp / portLimit : 0,
+    hd2 !== null ? hd2 / airLimit : 0,
   ];
   const over: LimitKind[] = [];
   if (ratios[0]! > 1 || ratios[1]! > 1) over.push("xmax");
   if (ratios[2]! > 1 || ratios[3]! > 1) over.push("pr");
   if (ratios[4]! > 1) over.push("port");
+  if (ratios[5]! > 1) over.push("air");
   // Deep bass: past Xmax (cone or PR) in the zone, but within the allowance.
   const deepRatio = Math.max(xDeep !== null ? xDeep / xmax_mm : 0, prDeep?.xmax ? prDeep.mm / prDeep.xmax : 0);
   const deep =
     split && deepRatio > 1 && !over.includes("xmax") && !over.includes("pr")
       ? { below_hz: split, x_mm: xDeep ?? 0, scale: 1 / deepRatio }
       : null;
-  return { x, xpr: xpr && { ...xpr, over: ratios[2]! > 1 || ratios[3]! > 1 }, vp, over, deep, safeScale: Math.min(1, 1 / Math.max(...ratios, 1e-9)) };
+  return { x, xpr: xpr && { ...xpr, over: ratios[2]! > 1 || ratios[3]! > 1 }, vp, hd2, over, deep, safeScale: Math.min(1, 1 / Math.max(...ratios, 1e-9)) };
 }
 
 /**
@@ -838,6 +863,51 @@ export function dimensionsFor(
     topWidth_cm: r(out.topWidth_cm),
     topDepth_cm: r(out.topDepth_cm),
   };
+}
+
+/** Cutout (mm) from the cone area when the database doesn't give one: about 1.12 × the effective cone diameter. */
+export const cutoutFromSd = (sd_cm2: number) => Math.round(1.12 * 2 * Math.sqrt(sd_cm2 / Math.PI) * 10);
+
+/** The calculator's car wedge in millimetres (depth_cm is the bottom depth, topDepth_cm the top). */
+export function wedgeDimsOf(v: AppState["volume"]): WedgeDims {
+  return {
+    width: v.width_cm * 10,
+    height: v.height_cm * 10,
+    topDepth: v.topDepth_cm * 10,
+    bottomDepth: v.depth_cm * 10,
+    wall: v.wall_mm,
+    ...(v.slopeWall_mm !== null && v.slopeWall_mm > 0 ? { slopeWall: v.slopeWall_mm } : {}),
+  };
+}
+
+/** Back from millimetres to the calculator's fields. */
+export const wedgeToVolume = (v: AppState["volume"], d: WedgeDims): AppState["volume"] => ({
+  ...v,
+  width_cm: d.width / 10,
+  height_cm: d.height / 10,
+  topDepth_cm: d.topDepth / 10,
+  depth_cm: d.bottomDepth / 10,
+});
+
+/**
+ * Gross inside volume that leaves this net volume after the calculator's deductions (the
+ * fixed ones in litres, bracing as a share of the gross). Null when the deductions alone are more.
+ */
+export function grossForNet(s: AppState, d: DesignState | undefined, net_l: number): number | null {
+  const r = volumeFor(s, d);
+  const bracing = s.volume.bracing_pct > 0 ? s.volume.bracing_pct / 100 : 0;
+  const fixed = r.deductions.filter((x) => !x.label.startsWith("Bracing")).reduce((a, x) => a + x.litres, 0);
+  if (!(bracing < 1) || !(net_l > 0)) return null;
+  return (net_l + fixed) / (1 - bracing);
+}
+
+/** The wedge's one dimension (the rest locked) for a net volume, rounded to 0.1 mm. */
+export function solveWedgeFor(s: AppState, d: DesignState | undefined, field: WedgeField, net_l: number): WedgeSolve | null {
+  const gross = grossForNet(s, d, net_l);
+  if (gross === null) return null;
+  const r = solveWedge(wedgeDimsOf(s.volume), field, gross);
+  const round = (x: WedgeDims): WedgeDims => ({ ...x, [field]: Math.round(x[field] * 10) / 10 });
+  return r.ok ? { ...r, dims: round(r.dims) } : { ...r, nearest: round(r.nearest) };
 }
 
 /** Transmission lines ripple above their tuning: their −3 dB point is the first one coming up from the bottom. */

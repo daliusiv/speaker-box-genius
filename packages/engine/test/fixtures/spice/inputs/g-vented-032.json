@@ -1,0 +1,36 @@
+{
+  "id": "g-vented-032",
+  "title": "vented, seas/c16n001-f (Qts 0.49), 11.8 L, Fb 48.9 Hz",
+  "driver": {
+    "fs": 37,
+    "qms": 3.24,
+    "qes": 0.58,
+    "vas_l": 15,
+    "re": 3.2,
+    "sd_cm2": 94,
+    "le_mh": 0.27
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 11.8,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 4.429,
+      "length_cm": 12.91
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 100
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

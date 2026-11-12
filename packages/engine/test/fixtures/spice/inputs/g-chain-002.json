@@ -1,0 +1,62 @@
+{
+  "id": "g-chain-002",
+  "title": "chain (vented), peerless/hds-p830860 (Qts 0.54), 3.513 L, Fb 86.2 Hz, 1 EQ, passive parts",
+  "driver": {
+    "fs": 72,
+    "qms": 2.08,
+    "qes": 0.725,
+    "vas_l": 6.12,
+    "re": 6,
+    "sd_cm2": 88.3,
+    "le_mh": 0.278
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 3.513,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 4.401,
+      "length_cm": 14.2
+    },
+    "ql": 15,
+    "qa": 49,
+    "qp": 50
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "power": 1,
+    "eq": [
+      {
+        "type": "peak",
+        "freq": 88.96,
+        "gain_db": -1.115,
+        "q": 2.683
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {
+          "r": 6.796
+        },
+        {
+          "r": 5.447
+        },
+        {
+          "r": 5.313
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "g-bp4-059",
+  "title": "bp4, dayton-audio/cfc150-4 (Qts 0.70), 5.842 L, rear 3.144 L closed, front 2.697 L port at 138.3 Hz",
+  "driver": {
+    "fs": 77,
+    "qms": 4.13,
+    "qes": 0.84,
+    "vas_l": 4.18,
+    "re": 3.6,
+    "sd_cm2": 85.1,
+    "le_mh": 0.35
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 3.144
+    },
+    "front": {
+      "vb_l": 2.697,
+      "port": {
+        "shape": "slot",
+        "width_cm": 9.229,
+        "height_cm": 1.176,
+        "length_cm": 3.696
+      },
+      "ql": 20,
+      "qa": null
+    },
+    "qicl": 81
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "id": "g-bp6s-038",
+  "title": "bp6s, celestion/ntr08-2009d (Qts 0.21), 8.228 L, rear 4.12 L port at 63.6 Hz, front 4.108 L port at 162.8 Hz",
+  "driver": {
+    "fs": 71.4,
+    "qms": 2.035,
+    "qes": 0.236,
+    "vas_l": 11.65,
+    "re": 5.5,
+    "sd_cm2": 226.98,
+    "le_mh": 0.48
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 4.12,
+      "port": {
+        "shape": "slot",
+        "width_cm": 13.99,
+        "height_cm": 4.613,
+        "length_cm": 111.6
+      },
+      "ql": 19,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 4.108,
+      "port": {
+        "shape": "slot",
+        "width_cm": 9.52,
+        "height_cm": 2.684,
+        "length_cm": 10.14
+      },
+      "portCount": 2,
+      "ql": 6,
+      "qa": 105
+    },
+    "rearPortTo": "front"
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

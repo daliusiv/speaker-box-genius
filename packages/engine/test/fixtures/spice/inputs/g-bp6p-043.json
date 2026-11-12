@@ -1,0 +1,60 @@
+{
+  "id": "g-bp6p-043",
+  "title": "bp6p, sb-acoustics/sb16pfc25-8 (Qts 0.40), 23.97 L, rear 8.917 L 1 × sb-acoustics/sb20pfc-00 at 24.2 Hz, front 15.05 L port at 52.1 Hz",
+  "driver": {
+    "fs": 38,
+    "qms": 2.5,
+    "qes": 0.48,
+    "vas_l": 27,
+    "re": 5.6,
+    "sd_cm2": 124,
+    "le_mh": 0.77
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 8.917,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 76.7,
+            "sd_cm2": 216,
+            "cms_mm_per_n": 0.83,
+            "qms": 6.8
+          },
+          "count": 1,
+          "addedMass_g": 296.9
+        }
+      ]
+    },
+    "front": {
+      "vb_l": 15.05,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 2.174,
+        "length_cm": 3.843
+      },
+      "portCount": 2,
+      "qp": null,
+      "ql": null,
+      "qa": null
+    }
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 100,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

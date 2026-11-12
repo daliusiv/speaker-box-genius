@@ -1,0 +1,56 @@
+{
+  "id": "g-chain-021",
+  "title": "chain (sealed), rcf/l10-750yk (Qts 0.24), 47.31 L, HP butterworth 3, 2 EQ",
+  "driver": {
+    "fs": 68,
+    "qms": 4.2,
+    "qes": 0.25,
+    "vas_l": 26,
+    "re": 5.1,
+    "sd_cm2": 400,
+    "le_mh": 0.5
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 47.31,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.5,
+    "coilTemp_C": 49,
+    "driveModel": "winisd",
+    "power": 1,
+    "highPass": {
+      "type": "butterworth",
+      "order": 3,
+      "freq": 41.06
+    },
+    "eq": [
+      {
+        "type": "peak",
+        "freq": 129,
+        "gain_db": -3.163,
+        "q": 2.343
+      },
+      {
+        "type": "highshelf",
+        "freq": 274.8,
+        "gain_db": 7.978,
+        "q": 0.722
+      }
+    ]
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

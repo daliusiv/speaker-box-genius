@@ -1,0 +1,26 @@
+{
+  "id": "f01",
+  "title": "Free air, DSA215-8, no Le (analytic only)",
+  "driver": {
+    "fs": 35,
+    "qms": 1.87,
+    "qes": 0.4,
+    "vas_l": 37.4,
+    "re": 5.9,
+    "sd_cm2": 211.2,
+    "le_mh": 0
+  },
+  "box": {
+    "kind": "free-air"
+  },
+  "opts": {},
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

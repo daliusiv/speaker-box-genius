@@ -1,0 +1,36 @@
+{
+  "id": "g-sealed-045",
+  "title": "sealed, sb-acoustics/mr13p-4 (Qts 0.23), 70.72 L",
+  "driver": {
+    "fs": 41,
+    "qms": 2.8,
+    "qes": 0.25,
+    "vas_l": 19.4,
+    "re": 3.3,
+    "sd_cm2": 70,
+    "le_mh": 0.11
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 70.72,
+    "ql": 11,
+    "qa": 107
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0,
+    "coilTemp_C": 136,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

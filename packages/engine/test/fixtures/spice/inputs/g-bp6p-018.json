@@ -1,0 +1,55 @@
+{
+  "id": "g-bp6p-018",
+  "title": "bp6p, sb-acoustics/sb20pfc30-8 (Qts 0.37), 28.43 L, rear 19.68 L port at 29.3 Hz, front 8.759 L port at 36.4 Hz",
+  "driver": {
+    "fs": 34,
+    "qms": 2.66,
+    "qes": 0.43,
+    "vas_l": 66.2,
+    "re": 5.6,
+    "sd_cm2": 216,
+    "le_mh": 0.84
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 19.68,
+      "port": {
+        "shape": "slot",
+        "width_cm": 18.65,
+        "height_cm": 2.345,
+        "length_cm": 72.33
+      },
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 8.759,
+      "port": {
+        "shape": "slot",
+        "width_cm": 17.9,
+        "height_cm": 2.681,
+        "length_cm": 119.4
+      },
+      "qp": 102,
+      "ql": 7,
+      "qa": 78
+    },
+    "endCorrection": 0.85,
+    "qicl": 54
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

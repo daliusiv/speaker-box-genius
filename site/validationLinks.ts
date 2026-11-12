@@ -177,12 +177,14 @@ function boxDesign(input: EnclosureInput, name: string): { design: DesignState; 
 /** A Hornresp box, filter, EQ or stuffed-line case as an app project, from its test input. */
 export function hornrespBoxState(id: string): AppState | null {
   const c = readBoxCase(id);
+  // The app has no full-space setting yet (the engine has): those cases get no link.
+  if (c.space === "full") return null;
   const box = boxDesign(c.input, c.title);
   if (!box) return null;
-  const d = hornrespDriver({ ...HORNRESP_DRIVER }, c.frontAir);
+  const d = hornrespDriver({ ...(c.driver ?? HORNRESP_DRIVER) }, c.frontAir);
   return {
     ...EMPTY,
-    driverName: "Dayton Audio DSA215-8 (Hornresp)",
+    driverName: c.driver ? "Hornresp test driver" : "Dayton Audio DSA215-8 (Hornresp)",
     driverBrand: "",
     ts: { fs: d.fs, qms: d.qms, qes: d.qes, vas_l: d.vas_l, re: d.re, sd_cm2: d.sd_cm2 },
     le_mh: d.le_mh ?? 0,

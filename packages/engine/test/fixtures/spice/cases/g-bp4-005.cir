@@ -1,0 +1,50 @@
+* g-bp4-005: bp4, celestion/tf0615 (Qts 0.61), 5.636 L, rear 1.734 L closed, front 3.902 L port at 176.2 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 2.83
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 7.08
+Le1 c1a c1b 0.00047
+Hemf1 c1b c1d Vcone1 575.466989841116
+Vi1 c1d 0 0
+Re2 bk c2a 7.08
+Le2 c2a c2b 0.00047
+Hemf2 c2b c2d Vcone1 575.466989841116
+Vi2 c2d 0 0
+Hd1 u1h1 br Vi1 575.466989841116
+Hd2 u1h2 u1h1 Vi2 575.466989841116
+Ras11 u1h2 u1r1 8516.26823744606
+Lmas11 u1r1 u1m1 51.1222448063341
+Ccas11 u1m1 u1k1 4.51998490297401e-8
+Rbl_u1k1 u1k1 0 1e+15
+Ras12 u1k1 u1r2 8516.26823744606
+Lmas12 u1r2 u1m2 51.1222448063341
+Ccas12 u1m2 u1k2 4.51998490297401e-8
+Rbl_u1k2 u1k2 0 1e+15
+Vcone1 u1k2 bf 0
+Rbl_bf bf 0 1e+15
+Cabf bf 0 2.75147910942349e-8
+Ralf bf fl1 459488.510556481
+Vleakf fl1 0 0
+Rapf bf fp1 377.248366630937
+Lmapf fp1 fp2 29.6387211776999
+Vportf fp2 0 0
+Fvf 0 vf Vportf 223.899042874537
+Rvf vf 0 1
+Rbl_br br 0 1e+15
+Rabr br rb1 736.631753192356
+Cabr rb1 0 1.22272290511029e-8
+Rbl_rb1 rb1 0 1e+15
+Ralr br rl1 736631.753192356
+Vleakr rl1 0 0
+Ricl br bf 6726148.6539349
+Fpo1 0 prs Vleakf 1
+Fpo2 0 prs Vportf 1
+Fpo3 0 prs Vleakr 1
+Lrad prs 0 0.095811275741321
+Fx 0 xn Vcone1 64.9603741717552
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vf) V(br) V(bf) I(Vin) I(Vcone1) I(Vportf)
+.ac dec 50 5 2000
+.end

@@ -34,6 +34,12 @@ async function readFile(f: File): Promise<string> {
   return new TextDecoder("latin1").decode(await f.arrayBuffer());
 }
 
+/** A free-air sweep file, fitted with the default coil model; throws with the reason. */
+export async function measurementOf(f: File): Promise<Measurement> {
+  const data = parseImpedance(await readFile(f));
+  return { name: f.name, data, fit: fit(data, 0, "lr2") };
+}
+
 const pct = (v: number) => `${(v * 100).toFixed(1)} %`;
 
 /**

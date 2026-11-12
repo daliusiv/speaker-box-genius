@@ -1,0 +1,62 @@
+{
+  "id": "g-chain-053",
+  "title": "chain (sealed), bc-speakers/18rbx100-8ohm (Qts 0.34), 714.1 L, HP butterworth 2, 1 EQ, passive parts",
+  "driver": {
+    "fs": 40,
+    "qms": 7.3,
+    "qes": 0.36,
+    "vas_l": 220,
+    "re": 5.1,
+    "sd_cm2": 1225,
+    "le_mh": 1.5
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 714.1
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 1,
+    "distance_m": 2,
+    "highPass": {
+      "type": "butterworth",
+      "order": 2,
+      "freq": 20.73
+    },
+    "eq": [
+      {
+        "type": "peak",
+        "freq": 266.1,
+        "gain_db": 0.8717,
+        "q": 1.917
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {
+          "r": 7.293,
+          "l_mH": 4.023,
+          "c_uF": 898,
+          "join": "parallel"
+        },
+        {},
+        {
+          "l_mH": 5.587
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

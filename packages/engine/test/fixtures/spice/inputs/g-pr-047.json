@@ -1,0 +1,43 @@
+{
+  "id": "g-pr-047",
+  "title": "passive-radiator, redcatt/61fhm-2 (Qts 0.52), 6.794 L, Fb 46.6 Hz, 4 × dayton-audio/ds175-pr",
+  "driver": {
+    "fs": 44,
+    "qms": 5.27,
+    "qes": 0.58,
+    "vas_l": 14.4,
+    "re": 3.2,
+    "sd_cm2": 132.7,
+    "le_mh": 0.74
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 6.794,
+    "pr": {
+      "mms_g": 36.6,
+      "sd_cm2": 128.7,
+      "cms_mm_per_n": 1.15,
+      "qms": 5.57
+    },
+    "prCount": 4,
+    "addedMass_g": 134.9,
+    "ql": 17,
+    "qa": 61
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

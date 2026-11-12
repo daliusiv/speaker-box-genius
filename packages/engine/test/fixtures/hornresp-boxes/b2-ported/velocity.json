@@ -1,0 +1,29 @@
+{
+ "source": "Hornresp 60.70 Particle Velocity chart (Port Outlet), read with the chart cursor (peak m/s at 2.83 V)",
+ "points": [
+  [
+   21.65,
+   2.237
+  ],
+  [
+   32.77,
+   3.5312
+  ],
+  [
+   44.26,
+   5.0749
+  ],
+  [
+   67.0,
+   1.2512
+  ],
+  [
+   113.74,
+   0.2484
+  ],
+  [
+   242.71,
+   0.0296
+  ]
+ ]
+}

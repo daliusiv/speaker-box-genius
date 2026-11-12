@@ -1,0 +1,38 @@
+{
+  "id": "g-vented-017",
+  "title": "vented, beyma/12p80nd-v2 (Qts 0.19), 61.25 L, Fb 64.4 Hz",
+  "driver": {
+    "fs": 47,
+    "qms": 5.2,
+    "qes": 0.2,
+    "vas_l": 65,
+    "re": 5,
+    "sd_cm2": 550,
+    "le_mh": 0.9
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 61.25,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 10.74,
+      "length_cm": 1.552
+    },
+    "endCorrection": 0.85,
+    "qp": null
+  },
+  "opts": {
+    "rg": 0,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

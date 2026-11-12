@@ -1,0 +1,34 @@
+{
+  "id": "g-sealed-013",
+  "title": "sealed, bc-speakers/12nbx100-4ohm (Qts 0.22), 163.7 L",
+  "driver": {
+    "fs": 40,
+    "qms": 7.05,
+    "qes": 0.23,
+    "vas_l": 46.5,
+    "re": 3.6,
+    "sd_cm2": 531,
+    "le_mh": 1.35
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 163.7
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

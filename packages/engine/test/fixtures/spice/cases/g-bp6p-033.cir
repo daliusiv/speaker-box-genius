@@ -1,0 +1,56 @@
+* g-bp6p-033: bp6p, dayton-audio/pcs8-4 (Qts 0.49), 25.91 L, rear 9.594 L port at 37.8 Hz, front 16.32 L port at 64.4 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 1.30384048104053
+Rg amp spk 0.5
+Vin spk bk 0
+Re1 bk c1a 3.4
+Le1 c1a c1b 0.00155
+Hemf1 c1b c1d Vcone1 394.336226785896
+Vi1 c1d 0 0
+Re2 bk c2a 3.4
+Le2 c2a c2b 0.00155
+Hemf2 c2b c2d Vcone2 394.336226785896
+Vi2 c2d 0 0
+Hd1 u1h1 br Vi1 394.336226785896
+Ras11 u1h1 u1r1 6467.66142774905
+Lmas11 u1r1 u1m1 94.7969008005894
+Ccas11 u1m1 u1k1 1.44513764054845e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 bf 0
+Hd2 u2h1 br Vi2 394.336226785896
+Ras21 u2h1 u2r1 6467.66142774905
+Lmas21 u2r1 u2m1 94.7969008005894
+Ccas21 u2m1 u2k1 1.44513764054845e-7
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 bf 0
+Rbl_bf bf 0 1e+15
+Cabf bf 0 1.15047055091467e-7
+Ralf bf fl1 85899.4793773089
+Vleakf fl1 0 0
+Rapf bf fp1 214.748698443272
+Lmapf fp1 fp2 53.0562544037123
+Vportf fp2 0 0
+Fvf 0 vf Vportf 195.791807522556
+Rvf vf 0 1
+Rbl_br br 0 1e+15
+Rabr br rb1 622.778764413906
+Cabr rb1 0 6.76324415776676e-8
+Rbl_rb1 rb1 0 1e+15
+Ralr br rl1 622778.764413906
+Vleakr rl1 0 0
+Rapr br rp1 622.778764413906
+Lmapr rp1 rp2 262.314716996281
+Vportr rp2 0 0
+Fvr 0 vr Vportr 377.968242372582
+Rvr vr 0 1
+Fpo1 0 prs Vleakf 1
+Fpo2 0 prs Vportf 1
+Fpo3 0 prs Vleakr 1
+Fpo4 0 prs Vportr 1
+Lrad prs 0 0.095568737704945
+Fx 0 xn Vcone1 46.9483568075117
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vf) V(vr) V(br) V(bf) I(Vin) I(Vcone1) I(Vportf)
+.ac dec 50 5 2000
+.end

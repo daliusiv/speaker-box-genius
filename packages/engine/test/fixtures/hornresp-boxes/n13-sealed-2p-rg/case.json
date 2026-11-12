@@ -1,0 +1,17 @@
+{
+  "title": "Two drivers in parallel with 0.5 Ω",
+  "text": "B11 (2P) with Rg 0.5 Ω, shared by both drivers",
+  "frontAir": 1,
+  "coneLoad": "piston",
+  "splFrom": "power",
+  "drivers": 2,
+  "wiring": "parallel",
+  "rg": 0.5,
+  "input": {
+    "kind": "sealed",
+    "vb_l": 10.4,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

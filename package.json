@@ -20,7 +20,13 @@
     "db:import-wdr": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/import-wdr.ts",
     "db:import-driverbase": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/driverbase.ts",
     "db:import-sheet": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/import-sheet.ts",
-    "validation:report": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/report.ts"
+    "validation:report": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/report.ts",
+    "spice:netlists": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/spice/fixtures.ts",
+    "spice:case": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/spice-cli.ts case",
+    "spice:ngspice": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/spice-cli.ts ngspice",
+    "spice:summary": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/spice-cli.ts summary",
+    "spice:report": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/spice-report.ts",
+    "spice:generate": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/spice/cases.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

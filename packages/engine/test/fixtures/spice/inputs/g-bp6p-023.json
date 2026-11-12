@@ -1,0 +1,51 @@
+{
+  "id": "g-bp6p-023",
+  "title": "bp6p, beyma/15qlex1600fe (Qts 0.21), 191.1 L, rear 119 L port at 29.9 Hz, front 72.04 L port at 48.3 Hz",
+  "driver": {
+    "fs": 33,
+    "qms": 6.3,
+    "qes": 0.22,
+    "vas_l": 102,
+    "re": 5.3,
+    "sd_cm2": 880,
+    "le_mh": 3.7
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 119,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 10.53,
+        "length_cm": 42.12
+      },
+      "portCount": 2,
+      "qp": 123,
+      "ql": 9,
+      "qa": 73
+    },
+    "front": {
+      "vb_l": 72.04,
+      "port": {
+        "shape": "slot",
+        "width_cm": 39.81,
+        "height_cm": 5.307,
+        "length_cm": 26.28
+      },
+      "qp": 137
+    }
+  },
+  "opts": {
+    "rg": 0,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

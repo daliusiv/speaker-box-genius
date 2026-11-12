@@ -21,7 +21,7 @@ import { pistonPowerFactor } from "../src/line.ts";
 import type { LineInput } from "../src/line.ts";
 
 export const HORNRESP_DIR = join(import.meta.dirname, "..", "test", "fixtures", "hornresp");
-export const HORNRESP_VERSION = "Hornresp 60.60";
+export const HORNRESP_VERSION = "Hornresp 60.70";
 export const HORNRESP_AIR = { rho: 1.205, c: 344 };
 /** Dayton Audio DSA215-8, the driver in every record without a driver.json. */
 export const HORNRESP_DRIVER = { fs: 35, qms: 1.87, qes: 0.4, vas_l: 37.4, re: 5.9, sd_cm2: 211.2, le_mh: 1, xmax_mm: 5.5, pe_w: 80 };
@@ -66,6 +66,19 @@ export const HORNRESP_TITLES: Record<string, { title: string; text: string }> = 
   "17-front-horn-small-chambers": { title: "Front horn, small chambers", text: "Case 07 with an 8 L rear chamber and a 3 L throat chamber" },
   "18-front-horn-no-throat": { title: "Front horn, no throat chamber", text: "Case 07 with the cone straight into the 110 cm² throat, 20 L rear chamber" },
   "19-sub-front-horn": { title: "Subwoofer front horn, two segments", text: "12″ subwoofer, Con 300 → 900 cm² 60 cm + Exp → 6000 cm² 200 cm, 40 L rear, 2 L throat chamber" },
+  "20-exp-tl": { title: "Exponential transmission line", text: "200 cm, expanding 100 → 600 cm² (Exp), driver at the closed end" },
+  "21-multi-seg-tl": { title: "Three-segment line", text: "Con 150 → 250 cm² 60 cm, Par → 120 cm² 80 cm, Exp → 400 cm² 60 cm" },
+  "22-offset-l5": { title: "Offset line, driver at a fifth", text: "240 cm × 250 cm², driver 48 cm from the closed end" },
+  "23-offset-tapered": { title: "Offset tapered line", text: "200 cm conical, 320 → 100 cm², driver 60 cm from the closed end" },
+  "24-sub-mltl-tapered": { title: "Subwoofer in a tapered mass-loaded line", text: "12″ subwoofer, 180 cm conical 700 → 350 cm², driver 45 cm down, 10 × 20 cm port" },
+  "25-mltl-big-port": { title: "Mass-loaded line, wide short port", text: "Case 05's line with a 10 cm port 5 cm long" },
+  "26-tapped-con": { title: "Conical tapped horn", text: "200 cm, 150 → 900 cm² (Con), taps at 15 and 110 cm" },
+  "27-sub-tapped-2seg": { title: "Subwoofer tapped horn, two segments", text: "12″ subwoofer, Par 400 → 900 cm² 150 cm + Exp → 2500 cm² 150 cm, taps at 30 and 170 cm" },
+  "28-fr-front-horn": { title: "Full-range front horn", text: "4″ full-range, conical 30 → 600 cm² 90 cm, 2 L rear, 0.1 L throat chamber" },
+  "29-sub-front-par": { title: "Subwoofer front horn, Par + Exp", text: "12″ subwoofer, Par 350 → 1200 cm² 100 cm + Exp → 5000 cm² 150 cm, 60 L rear, 0.5 L throat chamber" },
+  "30-tl-2p": { title: "Straight line, two drivers", text: "160 cm × 400 cm², two drivers in parallel at the closed end (Hornresp \"OD = 2P\")" },
+  "32-sub-tqwt": { title: "Subwoofer TQWT", text: "12″ subwoofer, 240 cm conical 80 → 900 cm², driver 80 cm from the closed end" },
+  "33-sub-tapped-early-tap": { title: "Tapped horn, four segments", text: "Case 27 written as Par 30 / 90 / 30 cm + Exp 150 cm (an old export of a tap at 120 cm): Hornresp takes the front tap where the last segment starts, 150 cm" },
   "16-mltl-hot-coil": { title: "Mass-loaded line, voice coil at 120 °C", text: "Case 05 with Hornresp's Power Compression at 120 °C" },
   "15-mltl-2-drivers": { title: "Mass-loaded line, two drivers", text: "Case 05 with two drivers in parallel (Hornresp \"OD = 2P\")" },
 };
@@ -91,7 +104,9 @@ The mouth's output on its own (Hornresp's "Horn" output) is compared where it wa
 
 **Impulse and step response.** Hornresp exports its impulse response (the chart window's Impulse Response) as a WAV: 48 kHz, t = 0 in the middle, scaled to a peak of ±1, the response cut off above 20 kHz. The app's (the chart "Impulse / step") is worked out the same way and matches for the mass-loaded line (05) and the sealed and ported boxes: within 0.02 of the peak RMS over −5 to 200 ms, and the step response (the running sum) within 0.02. Hornresp has no step response; it is taken from each impulse alike. Two things had to agree first. **Polarity:** the app now gives a positive pressure for a positive voltage with the cone facing the room (it had a box's output turned round, which the frequency charts don't show). Hornresp's boxes agree; its offset-driver lines put the line on the cone's front, so the room hears the cone's rear and its output is inverted against the app's: those are compared turned round (phase + 180°, impulse × −1). **High frequencies:** Hornresp's box SPL comes from radiated power (the cone as a piston, like the lines' "From radiated power" setting), which falls up top where a point source doesn't; the engine now does that for boxes too when asked, and the impulse always uses it.
 
-The first seven cases were checked against Hornresp 55.30 first, then against 60.60 with the same results; the five with other drivers (a 12″ subwoofer, a 4″ full-range) came with 60.60.
+The first seven cases were checked against Hornresp 55.30 first, then against 60.60 with the same results; the five with other drivers (a 12″ subwoofer, a 4″ full-range) came with 60.60. **Re-run on Hornresp 60.70 (10 Nov 2026):** every earlier export came out identical to the last digit, and twelve more lines and horns were added (cases 20–32): an exponential and a three-segment (Con + Par + Exp) line, an offset driver at a fifth and in a tapered line, a tapered mass-loaded line and one with a wide short port, a conical and a two-segment tapped horn (and the same horn as four segments, 33, which settles where Hornresp takes the front tap: where the last segment starts), a full-range and a two-segment subwoofer front horn, two drivers in a line, and a subwoofer TQWT. All match as closely as the first cases (SPL within 0.05 dB on average). The subwoofer TQWT (32) has a looser group-delay limit: through its dense comb of resonances above 400 Hz the group delay swings by a millisecond between neighbouring points, while SPL there agrees within 0.07 dB.
+
+**Air speed.** Hornresp's Particle Velocity chart can't be exported, but its cursor reads the value at each frequency. Read at five or six frequencies for three mass-loaded lines' mouths (05, 11, 25) and two ported boxes' ports (B2, N9), it agrees with the app's port air speed within 1 % everywhere and 0.3 % on average.
 
 Stuffed lines are compared with Hornresp's Loudspeaker Wizard (the only place it models segment filling) in the box cases below (S1–S5).`;
 
@@ -138,6 +153,8 @@ export interface HornrespRun {
   maxSpl: MaxSplRun[];
   /** Hornresp's impulse response, where it was exported. */
   impulse?: ImpulseRun;
+  /** Hornresp's port or mouth air speed, where it was read. */
+  velocity?: VelocityRun;
   stats: {
     splMean: number;
     splP95: number;
@@ -160,6 +177,8 @@ export interface HornrespRun {
     mouthP95?: number;
   };
   pass: { spl: boolean; ze: boolean; xd: boolean; gd: boolean; amp: boolean; za?: boolean; mouth?: boolean };
+  /** The limits this case is held to: HORNRESP_TOL, or looser where its tol.json says. */
+  tol: typeof HORNRESP_TOL;
 }
 
 /**
@@ -172,6 +191,8 @@ export interface HornrespRun {
 export interface MaxSplRun {
   file: string;
   ampVolts?: number;
+  /** The amplifier's current limit (A), where hornresp-maxspl-NNa.txt was exported with it. */
+  ampAmps?: number;
   spl: Pair[];
   stats: { splMean: number; splP95: number; einMean: number; pinMean: number };
   pass: boolean;
@@ -189,6 +210,26 @@ export interface ImpulseRun {
   step: [number, number, number][];
   stats: { impulseRms: number; impulseMax: number; stepRms: number };
   pass: boolean;
+}
+
+/** Peak air speed at the port or mouth (Hornresp's Particle Velocity chart, read with its cursor): each point's |relative difference| (%). */
+export const VELOCITY_TOL = { worst: 1.5 };
+
+export interface VelocityRun {
+  points: Pair[];
+  stats: { mean: number; worst: number };
+  pass: boolean;
+}
+
+/** velocity.json: Hornresp's peak particle velocity at a few frequencies, against the app's port (or mouth) air speed. */
+function velocityRun(dir: string, freq: Float64Array, ours: Float64Array | null): VelocityRun | undefined {
+  const file = join(dir, "velocity.json");
+  if (!existsSync(file) || !ours) return undefined;
+  const pts = (JSON.parse(readFileSync(file, "utf8")) as { points: [number, number][] }).points;
+  const points = pts.map(([f, v]) => ({ f, ref: v, ours: interp(freq, ours, f) }));
+  const e = points.map((p) => Math.abs(p.ours / p.ref - 1) * 100);
+  const stats = { mean: mean(e), worst: Math.max(...e) };
+  return { points, stats, pass: stats.worst < VELOCITY_TOL.worst };
 }
 
 export const IMPULSE_TOL = { impulseRms: 0.025, impulseMax: 0.1, stepRms: 0.025 };
@@ -255,12 +296,14 @@ export const MAXSPL_TOL = { splMean: 0.15, splP95: 0.4, einMean: 0.5, pinMean: 1
 function maxSplRuns(dir: string, fMax: number, run: (o: SimulationOptions) => SimulationResult): MaxSplRun[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir)
-    .filter((f) => /^hornresp-maxspl(-\d+v)?\.txt$/.test(f))
+    .filter((f) => /^hornresp-maxspl(-\d+[va])?\.txt$/.test(f))
     .sort()
     .map((file) => {
       const v = /-(\d+)v\.txt$/.exec(file);
+      const a = /-(\d+)a\.txt$/.exec(file);
       const ampVolts = v ? Number(v[1]) : undefined;
-      const r = run({ thermalLimit: "real", portVelocityLimit: Infinity, ...(ampVolts ? { amp: { volts: ampVolts } } : {}) });
+      const ampAmps = a ? Number(a[1]) : undefined;
+      const r = run({ thermalLimit: "real", portVelocityLimit: Infinity, ...(ampVolts ? { amp: { volts: ampVolts } } : {}), ...(ampAmps ? { amp: { amps: ampAmps } } : {}) });
       const rows = readTable(join(dir, file)).filter((x) => x.Freq! <= fMax);
       const spl = rows.map((x) => ({ f: x.Freq!, ref: x.SPL!, ours: interp(r.freq, r.maxSpl, x.Freq!) }));
       const e = spl.map((p) => Math.abs(p.ours - p.ref));
@@ -272,7 +315,7 @@ function maxSplRuns(dir: string, fMax: number, run: (o: SimulationOptions) => Si
       };
       const T = MAXSPL_TOL;
       const pass = stats.splMean < T.splMean && stats.splP95 < T.splP95 && stats.einMean < T.einMean && stats.pinMean < T.pinMean;
-      return { file, ...(ampVolts ? { ampVolts } : {}), spl, stats, pass };
+      return { file, ...(ampVolts ? { ampVolts } : {}), ...(ampAmps ? { ampAmps } : {}), spl, stats, pass };
     });
 }
 
@@ -337,7 +380,8 @@ export function runHornresp(id: string): HornrespRun {
     effMean: mean(effErr),
     effP95: percentile(effErr, 0.95),
   };
-  const T = HORNRESP_TOL;
+  // tol.json: looser limits for one case, with the reason in its "why".
+  const T = { ...HORNRESP_TOL, ...(existsSync(join(dir, "tol.json")) ? (JSON.parse(readFileSync(join(dir, "tol.json"), "utf8")) as Partial<typeof HORNRESP_TOL>) : {}) };
   const pass: HornrespRun["pass"] = {
     spl: stats.splMean < T.splMean && stats.splP95 < T.splP95,
     ze: stats.zeMean < T.zeMean && stats.zeWorst < T.zeWorst && stats.zePhaseMean < T.zePhaseMean,
@@ -369,7 +413,8 @@ export function runHornresp(id: string): HornrespRun {
   }
   const maxSpl = maxSplRuns(dir, HORNRESP_F_MAX, (o) => simulate(driver, input, { ...base, points: 4000, ...o }));
   const impulse = impulseRun(dir, isFlipped(input), (t) => transientResponse(driver, input, { ...base, points: undefined }, t));
-  return { id, input, driver, result: r, spl, ze, xd, gd, za, mouth, maxSpl, ...(impulse ? { impulse } : {}), stats, pass };
+  const velocity = velocityRun(dir, r.freq, r.portVelocity);
+  return { id, input, driver, result: r, spl, ze, xd, gd, za, mouth, maxSpl, ...(impulse ? { impulse } : {}), ...(velocity ? { velocity } : {}), stats, pass, tol: T };
 }
 
 // ---------------------------------------------------------------------------
@@ -421,7 +466,7 @@ What the comparison settles, and the conventions it has to bridge:
 
 **Several identical boxes (B17).** Hornresp's Tools → Multiple Speakers wires copies of the whole speaker in series and parallel (the amplifier load is the impedance × series ÷ parallel) and puts them side by side: two sealed boxes give +6 dB in the deep bass falling to +3 dB up high, as one bigger source. In the app that is one box of twice the volume with twice the drivers, wired the same, with the piston cone load: within 0.03 dB, 0.22 % in impedance and 0.21 % in excursion, in parallel and in series.
 
-**Full space (Ang = 4 × Pi) is not matched.** Hornresp gives the cone about 0.6 of its half-space front air in full space, and with that the impedance agrees (0.2 %), but its SPL stays 0.45 dB and its excursion 5–7 % apart, even at 20 Hz where the air load hardly counts. The app's full space is the same box radiating into twice the space (6 dB less); this one is left as a known difference.
+**Full space (Ang = 4 × Pi).** Hornresp's full space is more than the same box radiating into twice the space: it also lightens the air load on the cone's front and on the port's outer end, as for a source no longer in a baffle. Fitted against a sealed (N1) and a ported box (N2): the cone carries about 0.63 of its half-space front air, and the port's end correction drops from 0.732 to 0.52 × its diameter (the outer end's flanged 0.85·a halved). With those two, both match within 0.02 dB and 0.3 %, and the port's own output within 0.02 dB. The app's full space keeps the half-space loads, which puts the ported box's tuning a few per cent low (up to 1.2 dB in SPL near the tuning); the earlier "0.45 dB / 5–7 %" gap for the sealed box isn't there in the 60.70 re-run with the right front air (0.02 dB, 0.13 %). The cases carry the fitted values so they pin down Hornresp's behaviour; the app's own full space doesn't change yet.
 
 **Lossy Le is not modelled.** Hornresp's Lossy Le (double-click the Le label) first asks whether the driver has high Le and Xmax. Answered No, the results are identical to plain Le for this driver. Answered Yes, the impedance is unchanged but the response and excursion are those of the same driver with Bl about 14 % lower (10.65 → about 9.2 T·m: within 0.02 dB and 0.1 % that way): an empirical correction for long-throw, high-inductance drivers, not a coil model. The app's L2R2 and semi-inductance models change the coil's impedance and the response together, so it has no equivalent; a driver measured with its real Bl needs none.
 
@@ -434,6 +479,10 @@ What the comparison settles, and the conventions it has to bridge:
 **Frequency-dependent damping (B13).** Hornresp's FDD model (double-click the Cms label) takes two values, Rms (N·s/m) and Ams (m/N). Two exports of the sealed box (Rms 2 / Ams 3.0E-04 and Rms 8 / Ams 1.0E-03) pin it down exactly: the suspension becomes Rms + 1/(jω(Cms − j·Ams)), a complex compliance (a loss that's the same fraction Ams/Cms of the stiffness at every frequency, as rubber and foam behave) with its own Rms in place of the one from Qms. That fits Hornresp's motional impedance to 0.0003 % on average. The app has the same model (Driver → Suspension losses → Frequency-dependent): within 0.46 % in impedance and 0.04 dB, as close as the box without it.
 
 **Semi-inductance.** Hornresp's semi-inductance model (Thorborg and Futtrup) is the coil impedance Re' + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)); two sets on the sealed box (B8a: Leb 0.3 mH, Le 1 mH, Ke 0.05 sH, Rss 30 Ω; B8b: Leb 1.36 mH, Le 3.16 mH, Ke 0.21 sH, Rss 30.6 Ω) pin that down exactly. The app has the same model (Driver → Coil model → Semi-inductance): impedance within 0.3 % on average up to 20 kHz, and the SPL the coil takes away up there (compared as the change from the plain B1 box, so the box's own radiation doesn't enter) within 0.03 dB. A third record (B8c) sets Re' to 6.5 Ω against Re 5.9 Ω: Hornresp takes Re' as the coil's resistance everywhere in the circuit and keeps Bl as the T/S give it (from Re), and the app does the same (Re′ in the model's fields); within 0.22 % in impedance.
+
+**Records with their models switched on.** A record imported with "Semi-Inductance Model Flag = 1" or "Damping Model Flag = 1" (and Rg set) comes in with the model on (Le or Cms shown green), and gives exactly what turning it on by hand gave (B8a/B8c, B13a/B13b, B10 re-made that way match the earlier exports to the last digit). The filter and EQ fields in a record are not applied on import: those still need the Filter Wizard.
+
+**More boxes (N1–N15, Hornresp 60.70).** Two passive radiators (as one radiator of twice the area, mass and damping and half the compliance, with the front air of that larger piston, 5.41 g per PR), a PR with 30 g added, a PR with five times the damping, a PR in 20 L, the 12″ subwoofer sealed and ported, the 4″ full-range sealed and ported, the B2 box with Rg, semi-inductance and FDD all at once, a PR box with semi-inductance, two drivers in parallel with Rg, and two drivers in series in the ported box: all within the box limits, most within 0.05 dB and 0.4 %. Maximum SPL with the amplifier's current limited (2 A, on the FDD box) matches as the voltage limit does.
 
 **Power compression.** Hornresp's Tools → Power Compression sets the voice coil's temperature; at 120 °C its Re rises by 39.3 %, copper's 0.393 %/°C, as the app's Settings → Voice coil °C does. The sealed box (B9) and the mass-loaded line (case 16) at 120 °C match as closely as at 20 °C: 0.05 dB and 0.5 % in impedance for the box, 0.02 dB and 0.3 % for the line.
 
@@ -483,6 +532,10 @@ export interface HornrespBoxCase {
   wiring?: "parallel" | "series";
   /** Looser limits where Hornresp's loss model parts from ours (see the notes). */
   tol?: Partial<BoxTol>;
+  /** Another driver than the DSA215 (the same T/S as the line cases' driver.json). */
+  driver?: DriverInput;
+  /** Radiation space: Hornresp's Ang = 4 x Pi is "full". */
+  space?: "half" | "full";
 }
 
 /**
@@ -522,6 +575,8 @@ export interface HornrespBoxRun {
   maxSpl: MaxSplRun[];
   /** Hornresp's impulse response, where it was exported. */
   impulse?: ImpulseRun;
+  /** Hornresp's port air speed, where it was read. */
+  velocity?: VelocityRun;
   stats: {
     splMean?: number; splP95?: number; zeMean: number; zeP95: number; zeWorst: number; zePhaseMean: number; xdMean: number; xdP95: number;
     coneMean?: number; coneP95?: number; ventMean?: number; ventP95?: number;
@@ -539,9 +594,9 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const dir = join(HORNRESP_BOX_DIR, id);
   const c = readBoxCase(id);
   const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
-  const driver = { ...hornrespDriver(HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}), ...(c.fdd ? { fdd: c.fdd } : {}) };
+  const driver = { ...hornrespDriver(c.driver ?? HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}), ...(c.fdd ? { fdd: c.fdd } : {}) };
   const base: SimulationOptions = {
-    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, leakage: c.leakage, coneLoad: c.coneLoad, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom, highPass: c.highPass, eq: c.eq,
+    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, leakage: c.leakage, coneLoad: c.coneLoad, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom, highPass: c.highPass, eq: c.eq, space: c.space,
   };
   const r = simulate(driver, c.input, base);
   const fTop = c.fMax ?? HORNRESP_BOX_F_MAX;
@@ -597,11 +652,12 @@ export function runHornrespBox(id: string): HornrespBoxRun {
     pass.spl = stats.splMean < tol.splMean && stats.splP95 < tol.splP95;
   }
   // Each output alone, from its volume velocity, as power from a baffled piston of its area at
-  // 1 m in half space (how Hornresp works it out).
-  const db = (w: number, u: number, area: number) => 20 * Math.log10((HORNRESP_AIR.rho * w * u * pistonPowerFactor(area, w, HORNRESP_AIR)) / (2 * Math.PI) / 2e-5);
+  // 1 m in half space (how Hornresp works it out), or full space (6 dB less).
+  const spaceK = c.space === "full" ? 4 * Math.PI : 2 * Math.PI;
+  const db = (w: number, u: number, area: number) => 20 * Math.log10((HORNRESP_AIR.rho * w * u * pistonPowerFactor(area, w, HORNRESP_AIR)) / spaceK / 2e-5);
   let cone: Pair[] | undefined;
   if (coneRows) {
-    const sd = driverModel(HORNRESP_DRIVER, HORNRESP_AIR).sd * (c.drivers ?? 1);
+    const sd = driverModel(c.driver ?? HORNRESP_DRIVER, HORNRESP_AIR).sd * (c.drivers ?? 1);
     cone = pair(coneRows, "SPL", Float64Array.from(r.freq, (f, i) => db(2 * Math.PI * f, (2 * Math.PI * f * (r.excursionMm[i]! / 1000) * sd) / Math.SQRT2, sd)));
     stats.coneMean = mean(dbErr(cone));
     stats.coneP95 = percentile(dbErr(cone), 0.95);
@@ -653,5 +709,6 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   }
   const maxSpl = maxSplRuns(dir, HORNRESP_BOX_F_MAX, (o) => simulate(driver, c.input, { ...base, ...o }));
   const impulse = impulseRun(dir, false, (t) => transientResponse(driver, c.input, { ...base, splFrom: "power" }, t));
-  return { id, c, result: r, tol, spl, ze, xd, cone, vent, maxSpl, ...(impulse ? { impulse } : {}), stats, pass };
+  const velocity = velocityRun(dir, r.freq, r.portVelocity);
+  return { id, c, result: r, tol, spl, ze, xd, cone, vent, maxSpl, ...(impulse ? { impulse } : {}), ...(velocity ? { velocity } : {}), stats, pass };
 }

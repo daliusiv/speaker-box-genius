@@ -1,0 +1,34 @@
+* g-vented-028: vented, celestion/tf0818 (Qts 0.43), 3.541 L, Fb 96.3 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 2.83
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 9.5194176
+Le1 c1a c1b 0.00075
+Hemf1 c1b c1d Vcone1 518.082406256046
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 518.082406256046
+Ras11 u1h1 u1r1 5947.2494363271
+Lmas11 u1r1 u1m1 31.3397455605493
+Ccas11 u1m1 u1k1 8.08248294857581e-8
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Rap box p1 1211.49123251992
+Lmap p1 p2 90.1081987152955
+Vport p2 0 0
+Fvp 0 vn Vport 409.951077772137
+Rvn vn 0 1
+Cab box 0 3.03178730094353e-8
+Ral box l1 1253893.42565812
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpp 0 prs Vport 1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.154384363389331
+Fx 0 xn Vcone1 44.0567450876729
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vn) V(box) I(Vin) I(Vcone1) I(Vport) I(Vleak)
+.ac dec 50 5 2000
+.end

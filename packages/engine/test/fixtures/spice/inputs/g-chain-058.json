@@ -1,0 +1,67 @@
+{
+  "id": "g-chain-058",
+  "title": "chain (vented), dayton-audio/ps95-8 (Qts 0.72), 0.5 L, Fb 116.1 Hz, HP butterworth 2, 1 EQ, passive parts",
+  "driver": {
+    "fs": 119.8,
+    "qms": 7.33,
+    "qes": 0.8,
+    "vas_l": 0.94,
+    "re": 7.1,
+    "sd_cm2": 28.3,
+    "le_mh": 0.63
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 0.5,
+    "port": {
+      "shape": "slot",
+      "width_cm": 4.271,
+      "height_cm": 1.124,
+      "length_cm": 19.5
+    }
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 1,
+    "highPass": {
+      "type": "butterworth",
+      "order": 2,
+      "freq": 89.54
+    },
+    "eq": [
+      {
+        "type": "linkwitz",
+        "f0": 149.4,
+        "q0": 0.7187,
+        "fp": 110.5,
+        "qp": 0.5625
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {
+          "r": 11.14,
+          "l_mH": 3.837
+        },
+        {
+          "r": 5.013,
+          "l_mH": 5.896
+        },
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

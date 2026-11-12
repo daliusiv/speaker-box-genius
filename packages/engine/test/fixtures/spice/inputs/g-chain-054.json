@@ -1,0 +1,52 @@
+{
+  "id": "g-chain-054",
+  "title": "chain (vented), redcatt/82fhm (Qts 0.61), 86.41 L, Fb 29.6 Hz, HP linkwitz-riley 2, passive parts",
+  "driver": {
+    "fs": 42,
+    "qms": 3.1,
+    "qes": 0.76,
+    "vas_l": 33.6,
+    "re": 5.7,
+    "sd_cm2": 213.8,
+    "le_mh": 0.47
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 86.41,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 5.999,
+      "length_cm": 17.95
+    },
+    "portCount": 2,
+    "ql": 8,
+    "qa": 41
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 102,
+    "power": 10,
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 2,
+      "freq": 40.8
+    },
+    "passive": {
+      "branches": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

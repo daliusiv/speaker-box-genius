@@ -1,0 +1,57 @@
+{
+  "id": "g-bp6s-041",
+  "title": "bp6s, redcatt/61xr (Qts 0.72), 8.543 L, rear 4.236 L port at 41.7 Hz, front 4.306 L port at 121.0 Hz",
+  "driver": {
+    "fs": 64,
+    "qms": 2.88,
+    "qes": 0.96,
+    "vas_l": 8.6,
+    "re": 3.1,
+    "sd_cm2": 132.7,
+    "le_mh": 0.06
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 4.236,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6.882,
+        "length_cm": 150.2
+      },
+      "ql": 8,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 4.306,
+      "port": {
+        "shape": "slot",
+        "width_cm": 9.096,
+        "height_cm": 2.543,
+        "length_cm": 7.856
+      },
+      "qp": null,
+      "ql": 24,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "endCorrection": 0.613,
+    "qicl": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 61,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

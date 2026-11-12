@@ -1,0 +1,39 @@
+{
+  "id": "g-vented-024",
+  "title": "vented, bc-speakers/15xm800 (Qts 0.25), 352.9 L, Fb 38.3 Hz",
+  "driver": {
+    "fs": 42,
+    "qms": 5.9,
+    "qes": 0.26,
+    "vas_l": 164,
+    "re": 5.1,
+    "sd_cm2": 855,
+    "le_mh": 1.3
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 352.9,
+    "port": {
+      "shape": "slot",
+      "width_cm": 26.25,
+      "height_cm": 3.593,
+      "length_cm": 4.41
+    },
+    "portCount": 2,
+    "endCorrection": 0.613,
+    "qp": 79
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

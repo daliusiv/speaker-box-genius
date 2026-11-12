@@ -274,6 +274,8 @@ function PortChecks(props: {
   const port = portOf(v);
   const leff = portEffectiveLength(port, ec); // m
   const pipe = air.c / (2 * leff);
+  // WinISD's "1st port resonance" uses the physical length (no end corrections), so it reads higher.
+  const pipeWinisd = air.c / (2 * (v.length_cm / 100));
   const notes: CheckNote[] = [];
   const sizeField = v.shape === "round" ? "Port Ø" : "Width";
 
@@ -358,7 +360,7 @@ function PortChecks(props: {
     chip: coincide ? `Pipe resonance ${pipe.toFixed(0)} Hz meets a box mode` : `Pipe resonance ${pipe.toFixed(0)} Hz`,
     text:
       `The port is also a pipe open at both ends; it resonates at about ${pipe.toFixed(0)} Hz (and ${(2 * pipe).toFixed(0)}, ${(3 * pipe).toFixed(0)} Hz…), ` +
-      `letting midrange out of the box as a narrow peak.` +
+      `letting midrange out of the box as a narrow peak. That's from the port's length with its end corrections; WinISD's \u201c1st port resonance\u201d leaves them out and shows about ${pipeWinisd.toFixed(0)} Hz.` +
       (pipe < 300 ? " That's low enough to reach the woofer's working range: cross over well below it, or use a shorter, narrower port." : "") +
       (coincide
         ? ` The box's own lowest standing wave${known ? "" : ` (for a cube ${fmt(cube, "len")} inside)`} is at about ${boxMode.toFixed(0)} Hz, close to it: the box will drive the port hard there. Damping on the walls (and keeping the port's inner end away from the box's middle) helps, or change the port length a little.`

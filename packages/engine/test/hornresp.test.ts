@@ -2,11 +2,12 @@
 // validation/hornresp.ts, shared with the validation report (docs/validation/results.json).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { HORNRESP_TOL as T, IMPULSE_TOL as I, MAXSPL_TOL as M, hornrespBoxIds, hornrespIds, runHornresp, runHornrespBox, type ImpulseRun, type MaxSplRun } from "../validation/hornresp.ts";
+import { IMPULSE_TOL as I, VELOCITY_TOL as V, type VelocityRun, MAXSPL_TOL as M, hornrespBoxIds, hornrespIds, runHornresp, runHornrespBox, type ImpulseRun, type MaxSplRun } from "../validation/hornresp.ts";
 
 for (const id of hornrespIds()) {
   const run = runHornresp(id);
   const s = run.stats;
+  const T = run.tol;
 
   test(`Hornresp ${id}: electrical impedance`, () => {
     assert.ok(s.zeMean < T.zeMean, `mean |Ze| error ${s.zeMean.toFixed(2)} %`);
@@ -87,7 +88,7 @@ for (const id of hornrespBoxIds()) {
 // Maximum SPL (Hornresp's Tools > Maximum SPL), where it was exported.
 function maxSplTests(id: string, runs: MaxSplRun[]) {
   for (const m of runs) {
-    test(`Hornresp ${id}: maximum SPL${m.ampVolts ? ` with the amplifier at ${m.ampVolts} V` : ""}`, () => {
+    test(`Hornresp ${id}: maximum SPL${m.ampVolts ? ` with the amplifier at ${m.ampVolts} V` : ""}${m.ampAmps ? ` with the amplifier at ${m.ampAmps} A` : ""}`, () => {
       assert.ok(m.stats.splMean < M.splMean, `mean difference ${m.stats.splMean.toFixed(3)} dB`);
       assert.ok(m.stats.splP95 < M.splP95, `95th percentile ${m.stats.splP95.toFixed(3)} dB`);
       assert.ok(m.stats.einMean < M.einMean, `mean voltage difference ${m.stats.einMean.toFixed(2)} %`);
@@ -104,13 +105,22 @@ function impulseTests(id: string, ir: ImpulseRun | undefined) {
     assert.ok(ir.stats.stepRms < I.stepRms, `step RMS difference ${ir.stats.stepRms.toFixed(4)}`);
   });
 }
+// Port and mouth air speed (Hornresp's Particle Velocity chart, read with its cursor).
+function velocityTests(id: string, v: VelocityRun | undefined) {
+  if (!v) return;
+  test(`Hornresp ${id}: port / mouth air speed`, () => {
+    assert.ok(v.stats.worst < V.worst, `largest air-speed difference ${v.stats.worst.toFixed(2)} %`);
+  });
+}
 for (const id of hornrespIds()) {
   const r = runHornresp(id);
   maxSplTests(id, r.maxSpl);
   impulseTests(id, r.impulse);
+  velocityTests(id, r.velocity);
 }
 for (const id of hornrespBoxIds()) {
   const r = runHornrespBox(id);
   maxSplTests(`box ${id}`, r.maxSpl);
   impulseTests(`box ${id}`, r.impulse);
+  velocityTests(`box ${id}`, r.velocity);
 }

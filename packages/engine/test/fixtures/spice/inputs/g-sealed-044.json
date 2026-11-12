@@ -1,0 +1,30 @@
+{
+  "id": "g-sealed-044",
+  "title": "sealed, redcatt/61xr (Qts 0.72), 16.83 L",
+  "driver": {
+    "fs": 64,
+    "qms": 2.88,
+    "qes": 0.96,
+    "vas_l": 8.6,
+    "re": 3.1,
+    "sd_cm2": 132.7,
+    "le_mh": 0.06
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 16.83
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

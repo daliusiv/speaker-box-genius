@@ -1,0 +1,47 @@
+* g-pr-016: passive-radiator, 18-sound/8ntlw2000-8ohm (Qts 0.20), 12.56 L, Fb 50.3 Hz, 2 × sb-acoustics/sb16pfc-00
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 1.61245154965971
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 5.2
+Le1 c1a c1b 0.00063
+Hemf1 c1b c1d Vcone1 778.257946516394
+Vi1 c1d 0 0
+Re2 bk c2a 5.2
+Le2 c2a c2b 0.00063
+Hemf2 c2b c2d Vcone1 778.257946516394
+Vi2 c2d 0 0
+Hd1 u1h1 0 Vi1 778.257946516394
+Hd2 u1h2 u1h1 Vi2 778.257946516394
+Ras11 u1h2 u1r1 3019.79915898248
+Lmas11 u1r1 u1m1 54.8308352493544
+Ccas11 u1m1 u1k1 9.16428747664873e-8
+Rbl_u1k1 u1k1 0 1e+15
+Ras12 u1k1 u1r2 3019.79915898248
+Lmas12 u1r2 u1m2 54.8308352493544
+Ccas12 u1m2 u1k2 9.16428747664873e-8
+Rbl_u1k2 u1k2 0 1e+15
+Vcone1 u1k2 box 0
+Rbl_box box 0 1e+15
+Rpr1 box r1 3850.3635554504
+Lpr1 r1 q1 136.270811654527
+Cpr1 q1 s1 4.30528e-7
+Vpr1 s1 0 0
+Fxp1 0 xp1 Vpr1 40.3225806451613
+Cxp1 xp1 0 1
+Rbl_xp1 xp1 0 1e+15
+Rab box b1 430.765407013354
+Cab b1 0 8.8541115928237e-8
+Rbl_b1 b1 0 1e+15
+Ral box l1 430765.407013354
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpl 0 prs Vleak 1
+Fpr1 0 prs Vpr1 1
+Lrad prs 0 0.19113747540989
+Fx 0 xn Vcone1 44.0528634361233
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) V(xp1) I(Vin) I(Vcone1) I(Vleak) I(Vpr1)
+.ac dec 50 5 2000
+.end

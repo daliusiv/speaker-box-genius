@@ -1,0 +1,59 @@
+{
+  "id": "g-bp6s-043",
+  "title": "bp6s, peerless/sls-p830667 (Qts 0.75), 31.57 L, rear 12.47 L port at 30.6 Hz, front 19.11 L 4 × dayton-audio/ds270-pr at 54.5 Hz",
+  "driver": {
+    "fs": 46,
+    "qms": 7.21,
+    "qes": 0.836,
+    "vas_l": 19,
+    "re": 5.6,
+    "sd_cm2": 201,
+    "le_mh": 0.829
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 12.47,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.421,
+        "length_cm": 114.1
+      },
+      "portCount": 2,
+      "ql": 4,
+      "qa": 117
+    },
+    "front": {
+      "vb_l": 19.11,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 88.4,
+            "sd_cm2": 353,
+            "cms_mm_per_n": 0.6,
+            "qms": 3.98
+          },
+          "count": 4,
+          "addedMass_g": 241
+        }
+      ],
+      "ql": 10,
+      "qa": null
+    },
+    "rearPortTo": "front"
+  },
+  "opts": {
+    "rg": 0,
+    "driveModel": "winisd",
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

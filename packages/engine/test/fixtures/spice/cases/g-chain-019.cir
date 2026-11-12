@@ -1,0 +1,53 @@
+* g-chain-019: chain (sealed), celestion/pulse-xl-10-20 (Qts 0.46), 73.88 L, HP butterworth 4, 3 EQ, passive parts
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 src 0 AC 24.0831891575846
+A1 %vd(src 0) %vd(f1 0) xf1
+A2 %vd(f1 0) %vd(f2 0) xf2
+A3 %vd(f2 0) %vd(f3 0) xf3
+A4 %vd(f3 0) %vd(f4 0) xf4
+A5 %vd(f4 0) %vd(amp 0) xf5
+Rg amp spk 0.1
+Vin spk n0 0
+Vx1 n0 n1 0
+Rx3 n1 x3n1 8.466
+Lx3 x3n1 n3 0.001511
+Vx9 n3 bk 0
+Re1 bk c1a 5.8
+Le1 c1a c1b 0.0012
+Hemf1 c1b c1d Vcone1 275.34610026417
+Vi1 c1d m1 0
+Re2 m1 c2a 5.8
+Le2 c2a c2b 0.0012
+Hemf2 c2b c2d Vcone1 275.34610026417
+Vi2 c2d 0 0
+Hd1 u1h1 0 Vi1 275.34610026417
+Hd2 u1h2 u1h1 Vi2 275.34610026417
+Ras11 u1h2 u1r1 965.006793816762
+Lmas11 u1r1 u1m1 27.3505238889777
+Ccas11 u1m1 u1k1 6.58585369072512e-7
+Rbl_u1k1 u1k1 0 1e+15
+Ras12 u1k1 u1r2 965.006793816762
+Lmas12 u1r2 u1m2 27.3505238889777
+Ccas12 u1m2 u1k2 6.58585369072512e-7
+Rbl_u1k2 u1k2 0 1e+15
+Vcone1 u1k2 box 0
+Rbl_box box 0 1e+15
+Rab box b1 158.931706887175
+Cab b1 0 6.3255703415337e-7
+Rbl_b1 b1 0 1e+15
+Ral box l1 54410.8371629052
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.0771921816946654
+Fx 0 xn Vcone1 28.8683602771363
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) I(Vin) I(Vcone1) I(Vleak)
+.model xf1 s_xfer(num_coeff=[1 0 0] den_coeff=[1 142.15232076305 34495.9886408149])
+.model xf2 s_xfer(num_coeff=[1 0 0] den_coeff=[1 343.186060708966 34495.9886408149])
+.model xf3 s_xfer(num_coeff=[1 488.482509915434 105807.405861378] den_coeff=[1 195.153239011075 21709.2805366802])
+.model xf4 s_xfer(num_coeff=[1 312.518461722343 600186.04021311] den_coeff=[1 414.692019741321 600186.04021311])
+.model xf5 s_xfer(num_coeff=[1 180.882705064099 21469.2478098039] den_coeff=[1 142.921328406104 21469.2478098039])
+.ac dec 50 5 2000
+.end

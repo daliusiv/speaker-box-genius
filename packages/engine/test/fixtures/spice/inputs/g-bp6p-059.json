@@ -1,0 +1,50 @@
+{
+  "id": "g-bp6p-059",
+  "title": "bp6p, dayton-audio/rs180p-8 (Qts 0.34), 42.93 L, rear 26.59 L port at 25.9 Hz, front 16.34 L port at 51.3 Hz",
+  "driver": {
+    "fs": 45.8,
+    "qms": 1.49,
+    "qes": 0.44,
+    "vas_l": 22,
+    "re": 6.3,
+    "sd_cm2": 126.7,
+    "le_mh": 0.84
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 26.59,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.836,
+        "length_cm": 41.02
+      }
+    },
+    "front": {
+      "vb_l": 16.34,
+      "port": {
+        "shape": "slot",
+        "width_cm": 10.3,
+        "height_cm": 2.07,
+        "length_cm": 11.62
+      },
+      "qp": 113
+    },
+    "endCorrection": 0.613,
+    "qicl": null
+  },
+  "opts": {
+    "rg": 0.5,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

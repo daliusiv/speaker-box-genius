@@ -1,0 +1,43 @@
+{
+  "id": "g-vented-049",
+  "title": "vented, faital-pro/12fh510 (Qts 0.24), 287.4 L, Fb 39.0 Hz",
+  "driver": {
+    "fs": 45,
+    "qms": 10.9,
+    "qes": 0.25,
+    "vas_l": 81.3,
+    "re": 5.1,
+    "sd_cm2": 533,
+    "le_mh": 0.9
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 287.4,
+    "port": {
+      "shape": "slot",
+      "width_cm": 14.37,
+      "height_cm": 4.397,
+      "length_cm": 2.054
+    },
+    "portCount": 2
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "series",
+    "rg": 0.1,
+    "coilTemp_C": 112,
+    "convention": "volts",
+    "power": 2.83,
+    "space": "full",
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

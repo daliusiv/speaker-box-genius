@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6s-039",
+  "title": "bp6s, celestion/tf1830 (Qts 0.39), 163.7 L, rear 57.09 L port at 28.9 Hz, front 106.6 L port at 38.8 Hz",
+  "driver": {
+    "fs": 35.7,
+    "qms": 4.213,
+    "qes": 0.434,
+    "vas_l": 202.4,
+    "re": 2.58,
+    "sd_cm2": 1134.12,
+    "le_mh": 1.28
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 57.09,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 7.111,
+        "length_cm": 46.41
+      },
+      "portCount": 2,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 106.6,
+      "port": {
+        "shape": "slot",
+        "width_cm": 39.01,
+        "height_cm": 8.416,
+        "length_cm": 49.73
+      },
+      "ql": 30,
+      "qa": 96
+    },
+    "rearPortTo": "front",
+    "endCorrection": 0.613,
+    "qicl": 162
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

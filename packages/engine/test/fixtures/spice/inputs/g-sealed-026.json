@@ -1,0 +1,32 @@
+{
+  "id": "g-sealed-026",
+  "title": "sealed, bc-speakers/15ds100-8ohm (Qts 0.26), 107.6 L",
+  "driver": {
+    "fs": 39,
+    "qms": 7.75,
+    "qes": 0.27,
+    "vas_l": 76,
+    "re": 4.5,
+    "sd_cm2": 855,
+    "le_mh": 4.6
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 107.6,
+    "ql": 8,
+    "qa": 115
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

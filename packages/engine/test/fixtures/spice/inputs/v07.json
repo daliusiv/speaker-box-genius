@@ -1,0 +1,35 @@
+{
+  "id": "v07",
+  "title": "Vented 250 L, UM15-22, 15 cm port, k 0.613",
+  "driver": {
+    "fs": 29,
+    "qms": 2.34,
+    "qes": 1,
+    "vas_l": 96,
+    "re": 4.2,
+    "sd_cm2": 791,
+    "le_mh": 0.7
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 250,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 15,
+      "length_cm": 60
+    }
+  },
+  "opts": {
+    "endCorrection": 0.613,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,7 +1,7 @@
 import { abs, add, arg, cx, div, inv, mul, parallel, scale, sub, type Complex } from "./complex.ts";
 import { passiveActive, passiveBankGain, passiveInputImpedance, passiveThevenin, type PassiveNetwork } from "./passive.ts";
-import { STANDARD_AIR, type Air } from "./constants.ts";
-import { baffledPistonImpedance, lineNetwork, pistonPowerFactor, type LineInput } from "./line.ts";
+import { AIR_GAMMA, STANDARD_AIR, type Air } from "./constants.ts";
+import { baffledPistonImpedance, lineNetwork, pathHd2, pistonPowerFactor, type LineInput } from "./line.ts";
 import { eqResponse, highPassResponse, type EqStage, type HighPass } from "./filters.ts";
 import {
   boxCompliance,
@@ -192,6 +192,15 @@ export interface SimulationOptions {
    * the amplifier's volts.
    */
   driveModel?: "winisd" | "circuit";
+  /**
+   * Air distortion (sealed, vented, PR and bandpass boxes): the air in the box is a spring that
+   * stiffens more when squeezed than it softens when stretched, adding 2nd harmonic. Solved as a
+   * 2nd-order perturbation: the box pressure at f gives a pressure source ∝ P² at 2f, which drives
+   * the same circuit (amplifier silent) at 2f; HD2 is the radiated 2f over the radiated f. `n` is
+   * the air's polytropic exponent for the distortion (1.4 empty box, towards 1.0 with heavy fill;
+   * the linear model is unchanged). `limit` adds `threshold` (fraction, 0.1 = 10 %) to the max-SPL limits.
+   */
+  airDistortion?: { threshold: number; limit: boolean; n?: number } | null;
 }
 
 /** The driver with a source resistance folded in, as WinISD does: Bl²/Re → Bl²/(Re+Rg), inductances × Re/(Re+Rg). */
@@ -274,7 +283,18 @@ export interface SimulationResult {
    */
   ampAtMax: { volts: Float64Array; amps: Float64Array; watts: Float64Array };
   /** Which limit sets maxPower at each frequency. */
-  limitedBy: ("thermal" | "xmax" | "pr-xmax" | "port" | "amp" | "none")[];
+  limitedBy: ("thermal" | "xmax" | "pr-xmax" | "port" | "amp" | "air" | "none")[];
+  /**
+   * With `airDistortion`: the air's own 2nd harmonic (%) against the fundamental at this
+   * frequency, at the input power (airHd2) and at maxPowerW (airHd2AtMax). Boxes: the box air
+   * spring, radiated. Lines and horns: the wave steepening along the path, at the exit. Null when off.
+   */
+  airHd2: Float64Array | null;
+  airHd2AtMax: Float64Array | null;
+  /** Which air distortion model filled airHd2: "spring" (boxes), "path" (lines and horns). */
+  airModel: "spring" | "path" | null;
+  /** With `airDistortion`: peak compression of the box air, ΔV/Vb, at the input power (fraction; bandpass: the larger chamber's). Above 0.1 the estimate loosens. NaN for lines. */
+  airCompression: Float64Array | null;
   summary: {
     volts: number;
     /** Passband SPL of the mass-controlled region (ignores Le). */
@@ -517,6 +537,13 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const ral = Number.isFinite(ql) ? ql / (wRef * cLeak) : Infinity;
   const rab = Number.isFinite(qa) ? 1 / (qa * wRef * cAbs) : 0;
 
+  // Air distortion. Boxes: the air spring, p_nl = airK · S² (peak phasor at 2ω), S = P̂/ρc² the
+  // compression the linear model gives. Lines and horns: the wave steepening along the path (pathHd2).
+  const airOpt = opts.airDistortion ?? null;
+  const airN = Math.min(AIR_GAMMA, Math.max(1, airOpt?.n ?? AIR_GAMMA));
+  const rhoC2 = air.rho * air.c * air.c;
+  const airK = ((airN * (airN + 1)) / 4) * (rhoC2 / AIR_GAMMA);
+
   // Whether the cone's front faces the room (everything but horns that radiate only from the mouth).
   const frontOut = !(line && line.mouthOnly);
   const freq = opts.frequencies ? Float64Array.from(opts.frequencies) : logFrequencies(opts.fMin ?? 10, opts.fMax ?? 500, opts.points ?? 400);
@@ -537,6 +564,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     vport2: bp?.rear ? new Float64Array(N) : null,
     pbox: box.kind !== "line" ? new Float64Array(N) : null,
     pfront: bp ? new Float64Array(N) : null,
+    airHd2: airOpt ? new Float64Array(N) : null,
+    airMax: airOpt ? new Float64Array(N) : null,
+    airC: airOpt ? new Float64Array(N) : null,
     zmag: new Float64Array(N),
     zph: new Float64Array(N),
     pmax: new Float64Array(N),
@@ -550,23 +580,33 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const limitedBy: SimulationResult["limitedBy"] = [];
   const unwrapped = new Float64Array(N);
   const sd2 = d.sd * d.sd;
+  // The cone's side of the circuit (per driver, acoustic units): the coil through its source, and the suspension.
+  const coneSide = (w: number) => {
+    const zvc = voiceCoilImpedance(d, w);
+    // Through a passive network the bank sees a Thévenin source: a voltage and an impedance per frequency.
+    const th = net ? passiveThevenin(net, w, rgTotal) : null;
+    const ze = add(zvc, th ? perDriverZ(th.z) : cx(rgCircuit));
+    const zae = div(cx((d.bl * d.bl) / sd2), ze);
+    const susp = suspensionImpedance(d, w);
+    let zas = cx(susp.re / sd2, (w * boxMms + susp.im) / sd2);
+    if (pistonLoad) zas = add(zas, scale(baffledPistonImpedance(n * d.sd, w, air), n));
+    return { zvc, th, ze, zae, zas };
+  };
+  // All the cones as one passive branch, the amplifier silent: for the air's 2nd harmonic.
+  const conesAt = (w: number) => {
+    const c = coneSide(w);
+    return scale(add(c.zae, c.zas), 1 / n);
+  };
 
   for (let i = 0; i < N; i++) {
     const f = freq[i]!;
     const w = 2 * Math.PI * f;
 
-    const zvc = voiceCoilImpedance(d, w);
-    // Through a passive network the bank sees a Thévenin source: a voltage and an impedance per frequency.
-    const th = net ? passiveThevenin(net, w, rgTotal) : null;
-    const ze = add(zvc, th ? perDriverZ(th.z) : cx(rgCircuit));
+    const { zvc, th, ze, zae, zas } = coneSide(w);
     let filter = opts.highPass ? highPassResponse(opts.highPass, f) : cx(1);
     if (opts.eq && opts.eq.length > 0) filter = mul(filter, eqResponse(opts.eq, f));
     const filterGain2 = filter.re * filter.re + filter.im * filter.im;
     const pg = div(mul(mul(filter, th ? th.v : cx(1)), cx((vDriver * d.bl) / d.sd)), ze);
-    const zae = div(cx((d.bl * d.bl) / sd2), ze);
-    const susp = suspensionImpedance(d, w);
-    let zas = cx(susp.re / sd2, (w * boxMms + susp.im) / sd2);
-    if (pistonLoad) zas = add(zas, scale(baffledPistonImpedance(n * d.sd, w, air), n));
 
     let zLoad: Complex;
     let ui: Complex;
@@ -575,6 +615,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     let xpr = 0;
     let vport = 0;
     let prLimitPower = Infinity;
+    let airHd2Now = NaN;
     if (bp) {
       const unit = bp.solve(w); // chamber pressures for unit total cone volume velocity
       zLoad = sub(unit.pF, unit.pR);
@@ -585,6 +626,13 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       out.pbox![i] = Math.SQRT2 * abs(mul(ud, unit.pR));
       out.pfront![i] = Math.SQRT2 * abs(mul(ud, unit.pF));
       u0 = mul(ud, flows.radiated);
+      if (out.airC) {
+        const sF = scale(mul(ud, unit.pF), Math.SQRT2 / rhoC2);
+        const sR = scale(mul(ud, unit.pR), Math.SQRT2 / rhoC2);
+        const u2 = bp.harmonic(2 * w, conesAt(2 * w), scale(mul(sF, sF), airK), scale(mul(sR, sR), airK));
+        airHd2Now = abs(u0) > 0 ? (100 * 2 * abs(u2)) / (Math.SQRT2 * abs(u0)) : NaN;
+        out.airC[i] = Math.max(abs(sF), abs(sR));
+      }
       if (bp.front && out.vport) {
         // A pipe's air moves fastest at whichever end its standing wave puts the motion.
         const vF = Math.max(abs(mul(ud, flows.frontPortEach)), abs(mul(ud, flows.frontPortOutEach))) * Math.SQRT2 / bp.front.area;
@@ -608,6 +656,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       }
     } else if (line) {
       // Transmission line (or tapped horn): the line loads the cone; the mouth (or port) radiates.
+      const susp = suspensionImpedance(d, w);
       let zasLine = cx(susp.re / sd2, (w * lineMmd + susp.im) / sd2);
       // Several drivers side by side load each other's fronts: together they push one piston
       // of n·Sd, so each sees n × that piston's impedance (√n × one cone's air mass), as Hornresp has it.
@@ -619,6 +668,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         return { zl, zm, u, exit: mul(scale(u, n), line.exitPerCone(w)) };
       };
       let sol = solveLine();
+      let rNlLine = 0;
       if (lineNl > 0) {
         // Port compression in a mass-loaded line's port, as for vented boxes.
         const linearExit = abs(sol.exit);
@@ -632,6 +682,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
           line.setExitLoss(rNl);
           sol = solveLine();
         }
+        rNlLine = rNl;
         line.setExitLoss(0);
         const loss = 20 * Math.log10(linearExit / Math.max(abs(sol.exit), 1e-30));
         if (loss > compression.db) compression = { db: loss, f };
@@ -643,6 +694,13 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       out.zaX![i] = za.im / line.zaRef;
       ui = sol.u;
       const ud = scale(ui, n);
+      if (out.airC) {
+        // Air distortion along the path to the mouth, with the port loss the solution settled on.
+        if (rNlLine > 0) line.setExitLoss(rNlLine);
+        airHd2Now = 100 * pathHd2(line.profile(w), line.sourceX, abs(ud), w, air);
+        if (rNlLine > 0) line.setExitLoss(0);
+        out.airC[i] = NaN; // no box air to squeeze: see airModel
+      }
       // The mouth's sound arrives later when it is farther from the listener.
       const dm = line.mouthDistance;
       const exitAtListener = dm > 0 ? scale(mul(sol.exit, cx(Math.cos((w * dm) / air.c), -Math.sin((w * dm) / air.c))), r / (r + dm)) : sol.exit;
@@ -674,6 +732,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         return { zl, zm, u, pb };
       };
       let sol = solve();
+      let rNlNow = 0;
       if (nlCoef > 0 && ventPortZ && zVent) {
         // Port compression: the loss depends on the flow it limits, so iterate to agreement.
         const linear = abs(scale(div(sol.pb, zAir), -1));
@@ -688,6 +747,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
           zVent = scale(add(zPort, cx(rNl)), 1 / ventCount);
           sol = solve();
         }
+        rNlNow = rNl;
         const loss = 20 * Math.log10(linear / abs(scale(div(sol.pb, zAir), -1)));
         if (loss > compression.db) compression = { db: loss, f };
       }
@@ -716,6 +776,29 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         const vent = sub(u0, cone);
         const ventTotal = prModels ? prModels.reduce((a, g) => a + g.m.sd * g.count, 0) : ventArea * ventCount;
         u0 = add(scale(cone, pistonPowerFactor(n * d.sd, w, air)), ventTotal > 0 ? scale(vent, pistonPowerFactor(ventTotal, w, air)) : vent);
+      }
+
+      if (out.airC) {
+        // The air's 2nd harmonic: a pressure source in series with the air spring, at 2ω, amplifier silent.
+        const s1 = scale(pBox, Math.SQRT2 / rhoC2); // peak compression ΔV/Vb (phasor)
+        const pnl = scale(mul(s1, s1), airK);
+        const w2 = 2 * w;
+        const zd = conesAt(w2);
+        const zAir2 = cx(rab, -1 / (w2 * cab));
+        // Port compression: the loss resistance the fundamental settled on.
+        const zVent2 = ventPortZ && rNlNow > 0 ? scale(add(ventPortZ(w2), cx(rNlNow)), 1 / ventCount) : ventZ ? ventZ(w2) : null;
+        const pNode = mul(div(pnl, zAir2), parallel(zAir2, zLeak, zVent2, zd)!);
+        let u2 = scale(div(sub(pNode, pnl), zAir2), -1);
+        if (opts.leakage === "absorbed" && Number.isFinite(ral)) u2 = sub(u2, scale(pNode, 1 / ral));
+        if (ventPipe && zVent2) u2 = add(u2, mul(div(pNode, zVent2), sub(ventPipe(w2).outPerIn, cx(1))));
+        if (opts.splFrom === "power") {
+          const cone = div(pNode, zd);
+          const vent = sub(u2, cone);
+          const ventTotal = prModels ? prModels.reduce((a, g) => a + g.m.sd * g.count, 0) : ventArea * ventCount;
+          u2 = add(scale(cone, pistonPowerFactor(n * d.sd, w2, air)), ventTotal > 0 ? scale(vent, pistonPowerFactor(ventTotal, w2, air)) : vent);
+        }
+        airHd2Now = abs(u0) > 0 ? (100 * 2 * abs(u2)) / (Math.SQRT2 * abs(u0)) : NaN;
+        out.airC[i] = abs(s1);
       }
 
       if (prModels && out.xprGroups) {
@@ -788,11 +871,15 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       if (Number.isFinite(prLimitPower)) limits.push(["pr-xmax", prLimitPower]);
     } else if (prXmax !== null && xpr > 0) limits.push(["pr-xmax", pNow * (prXmax / xpr) ** 2]);
     if (out.vport && vport > 0) limits.push(["port", pNow * (vLimit / vport) ** 2]);
+    if (out.airHd2) out.airHd2[i] = airHd2Now;
+    // HD2 grows with the drive's amplitude (∝ √power).
+    if (airOpt?.limit && airHd2Now > 0) limits.push(["air", pNow * ((airOpt.threshold * 100) / airHd2Now) ** 2]);
     let best: [SimulationResult["limitedBy"][number], number] = ["none", Infinity];
     for (const l of limits) if (l[1] < best[1]) best = l;
     limitedBy.push(best[0]);
     out.pmax[i] = best[1];
     out.splmax[i] = Number.isFinite(best[1]) ? out.spl[i]! + 10 * Math.log10(best[1] / pNow) : NaN;
+    if (out.airMax) out.airMax[i] = Number.isFinite(best[1]) ? airHd2Now * Math.sqrt(best[1] / pNow) : NaN;
     // The amplifier at that limit: the drive voltage scaled up to it, through the filter and EQ,
     // into the bank's impedance plus the shared source resistance.
     if (Number.isFinite(best[1])) {
@@ -895,6 +982,10 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     maxSpl: out.splmax,
     ampAtMax: { volts: out.ampV, amps: out.ampI, watts: out.ampW },
     limitedBy,
+    airHd2: out.airHd2,
+    airHd2AtMax: out.airMax,
+    airModel: airOpt ? (line ? "path" : "spring") : null,
+    airCompression: out.airC,
     summary,
   };
 }
@@ -1092,6 +1183,29 @@ function bandpassNetwork(
     return { port, portOut: v.port.pipe ? mul(port, v.port.pipe(w).outPerIn) : port, prs: [] as Complex[] };
   };
 
+  /** Nodal admittances of the chambers, their vents and the leak between them (cones not included). */
+  const nodal = (w: number) => {
+    let aF = add(add(yChamber(F, w), inv(zVentTotal(frontVent, w))), yIcl);
+    let aR = add(yChamber(R, w), yIcl);
+    let m = scale(yIcl, -1);
+    if (rearVent) {
+      const between = rearVent.kind === "port" ? rearVent.port.between : undefined;
+      if (series && between) {
+        const y = between(w);
+        const k = rearVent.kind === "port" ? rearVent.port.count : 1;
+        aR = add(aR, scale(y.y11, k));
+        aF = add(aF, scale(y.y22, k));
+        m = add(m, scale(y.y12, k));
+      } else if (series) {
+        const yI = inv(zVentTotal(rearVent, w));
+        aR = add(aR, yI);
+        aF = add(aF, yI);
+        m = sub(m, yI);
+      } else aR = add(aR, inv(zVentTotal(rearVent, w)));
+    }
+    return { aF, aR, m };
+  };
+
   return {
     /** The port of each chamber (null when that chamber has PRs or is closed). */
     front: frontVent.kind === "port" ? frontVent.port : null,
@@ -1102,28 +1216,30 @@ function bandpassNetwork(
     /** Chamber pressures for a unit total cone volume velocity (rear → front). */
     solve(w: number) {
       // Nodal equations, a symmetric 2 × 2: [aF m; m aR] [pF; pR] = [1; −1].
-      let aF = add(add(yChamber(F, w), inv(zVentTotal(frontVent, w))), yIcl);
-      let aR = add(yChamber(R, w), yIcl);
-      let m = scale(yIcl, -1);
-      if (rearVent) {
-        const between = rearVent.kind === "port" ? rearVent.port.between : undefined;
-        if (series && between) {
-          const y = between(w);
-          const k = rearVent.kind === "port" ? rearVent.port.count : 1;
-          aR = add(aR, scale(y.y11, k));
-          aF = add(aF, scale(y.y22, k));
-          m = add(m, scale(y.y12, k));
-        } else if (series) {
-          const yI = inv(zVentTotal(rearVent, w));
-          aR = add(aR, yI);
-          aF = add(aF, yI);
-          m = sub(m, yI);
-        } else aR = add(aR, inv(zVentTotal(rearVent, w)));
-      }
+      const { aF, aR, m } = nodal(w);
       const det = sub(mul(aF, aR), mul(m, m));
       const pF = div(add(aR, m), det);
       const pR = div(scale(add(aF, m), -1), det);
       return { pF, pR };
+    },
+    /**
+     * Air distortion: radiated volume velocity at w from pressure sources pnlF, pnlR in series
+     * with each chamber's air spring, the amplifier silent (zd: all cones as one passive branch
+     * between the chambers).
+     */
+    harmonic(w: number, zd: Complex, pnlF: Complex, pnlR: Complex) {
+      const yd = inv(zd);
+      const e = nodal(w);
+      const aF = add(e.aF, yd);
+      const aR = add(e.aR, yd);
+      const m = sub(e.m, yd);
+      const iF = div(pnlF, zAirOf(F, w));
+      const iR = div(pnlR, zAirOf(R, w));
+      const det = sub(mul(aF, aR), mul(m, m));
+      const pF = div(sub(mul(iF, aR), mul(m, iR)), det);
+      const pR = div(sub(mul(aF, iR), mul(m, iF)), det);
+      // flows() counts each air spring's flow as p / zAir; the sources take their share back.
+      return add(this.flows(w, pF, pR).radiated, add(iF, iR));
     },
     /** Flows (per unit cone volume velocity) given the unit chamber pressures. */
     flows(w: number, pF: Complex, pR: Complex) {

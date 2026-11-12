@@ -1,0 +1,57 @@
+{
+  "id": "g-bp6s-025",
+  "title": "bp6s, eminence/kappa-pro-12a (Qts 0.24), 61.11 L, rear 32.5 L port at 33.2 Hz, front 28.61 L port at 38.0 Hz",
+  "driver": {
+    "fs": 37,
+    "qms": 6.93,
+    "qes": 0.25,
+    "vas_l": 121,
+    "re": 5.46,
+    "sd_cm2": 519.5,
+    "le_mh": 1.22
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 32.5,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 9.855,
+        "length_cm": 57.88
+      },
+      "ql": 17,
+      "qa": 112
+    },
+    "front": {
+      "vb_l": 28.61,
+      "port": {
+        "shape": "slot",
+        "width_cm": 33.31,
+        "height_cm": 3.621,
+        "length_cm": 79.89
+      },
+      "qp": null,
+      "ql": 28,
+      "qa": 100
+    },
+    "rearPortTo": "front",
+    "qicl": 109
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.5,
+    "power": 1,
+    "space": "full"
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

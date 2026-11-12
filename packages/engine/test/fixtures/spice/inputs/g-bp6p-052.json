@@ -1,0 +1,50 @@
+{
+  "id": "g-bp6p-052",
+  "title": "bp6p, celestion/tf0818 (Qts 0.43), 17.35 L, rear 10.37 L port at 59.0 Hz, front 6.984 L port at 103.8 Hz",
+  "driver": {
+    "fs": 100,
+    "qms": 3.311,
+    "qes": 0.493,
+    "vas_l": 9.44,
+    "re": 6.72,
+    "sd_cm2": 226.98,
+    "le_mh": 0.75
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 10.37,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6.347,
+        "length_cm": 21.51
+      },
+      "qp": 39,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 6.984,
+      "port": {
+        "shape": "slot",
+        "width_cm": 24.48,
+        "height_cm": 2.631,
+        "length_cm": 18.89
+      },
+      "qp": null
+    }
+  },
+  "opts": {
+    "rg": 0,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

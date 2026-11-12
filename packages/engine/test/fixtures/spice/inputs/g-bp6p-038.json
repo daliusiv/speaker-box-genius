@@ -1,0 +1,51 @@
+{
+  "id": "g-bp6p-038",
+  "title": "bp6p, bc-speakers/15fw76 (Qts 0.21), 59.59 L, rear 37.64 L port at 25.4 Hz, front 21.95 L port at 58.2 Hz",
+  "driver": {
+    "fs": 40,
+    "qms": 5.1,
+    "qes": 0.22,
+    "vas_l": 138,
+    "re": 5.1,
+    "sd_cm2": 855,
+    "le_mh": 1.4
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 37.64,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 8.813,
+        "length_cm": 69.93
+      },
+      "qp": null,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 21.95,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 12.07,
+        "length_cm": 38.1
+      },
+      "qp": null
+    },
+    "qicl": 42
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 65,
+    "power": 100
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

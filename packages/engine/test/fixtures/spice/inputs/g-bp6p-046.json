@@ -1,0 +1,50 @@
+{
+  "id": "g-bp6p-046",
+  "title": "bp6p, purifi/ptt6-5m04-naa-07 (Qts 0.27), 56.75 L, rear 25.01 L port at 32.3 Hz, front 31.74 L port at 69.4 Hz",
+  "driver": {
+    "fs": 36,
+    "qms": 6.8,
+    "qes": 0.28,
+    "vas_l": 22.7,
+    "re": 3.9,
+    "sd_cm2": 132.7,
+    "le_mh": 0.27
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 25.01,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6.209,
+        "length_cm": 29.37
+      },
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 31.74,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6.585,
+        "length_cm": 1.046
+      },
+      "ql": 8,
+      "qa": null
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "id": "g-bp6s-014",
+  "title": "bp6s, celestion/tf0615 (Qts 0.61), 9.287 L, rear 4.609 L port at 61.8 Hz, front 4.678 L port at 109.6 Hz",
+  "driver": {
+    "fs": 104.7,
+    "qms": 3.949,
+    "qes": 0.719,
+    "vas_l": 6.41,
+    "re": 7.08,
+    "sd_cm2": 153.94,
+    "le_mh": 0.47
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 4.609,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6.155,
+        "length_cm": 45.98
+      },
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 4.678,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.557,
+        "length_cm": 8.804
+      },
+      "qp": 126,
+      "ql": null,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "qicl": 53
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "id": "g-bp6p-026",
+  "title": "bp6p, 18-sound/12nda520 (Qts 0.27), 58.92 L, rear 34.77 L port at 45.8 Hz, front 24.15 L port at 78.0 Hz",
+  "driver": {
+    "fs": 50,
+    "qms": 5.5,
+    "qes": 0.28,
+    "vas_l": 111,
+    "re": 5.2,
+    "sd_cm2": 531,
+    "le_mh": 0.03
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 34.77,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6.416,
+        "length_cm": 8.504
+      },
+      "ql": 15,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 24.15,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 8.617,
+        "length_cm": 17.35
+      },
+      "portCount": 2
+    },
+    "qicl": 106
+  },
+  "opts": {
+    "rg": 0,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

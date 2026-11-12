@@ -1,0 +1,39 @@
+{
+  "id": "g-vented-009",
+  "title": "vented, faital-pro/8rs350 (Qts 0.30), 32.5 L, Fb 30.9 Hz",
+  "driver": {
+    "fs": 42,
+    "qms": 6.9,
+    "qes": 0.31,
+    "vas_l": 23.7,
+    "re": 5.3,
+    "sd_cm2": 226,
+    "le_mh": 0.6
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 32.5,
+    "port": {
+      "shape": "slot",
+      "width_cm": 14.57,
+      "height_cm": 4.045,
+      "length_cm": 50.38
+    },
+    "qp": 121
+  },
+  "opts": {
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

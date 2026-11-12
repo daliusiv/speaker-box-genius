@@ -1,0 +1,37 @@
+{
+  "id": "g-vented-008",
+  "title": "vented, monacor/tf0615 (Qts 0.61), 4.946 L, Fb 106.4 Hz",
+  "driver": {
+    "fs": 104.7,
+    "qms": 3.949,
+    "qes": 0.719,
+    "vas_l": 6.4,
+    "re": 7.08,
+    "sd_cm2": 153.94,
+    "le_mh": 0.47
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 4.946,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 4.999,
+      "length_cm": 6.794
+    }
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 124,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

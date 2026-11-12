@@ -1,0 +1,43 @@
+{
+  "id": "g-chain-035",
+  "title": "chain (vented), dayton-audio/rs125p-8 (Qts 0.44), 7.017 L, Fb 62.4 Hz, HP butterworth 1",
+  "driver": {
+    "fs": 70,
+    "qms": 2.56,
+    "qes": 0.53,
+    "vas_l": 3.98,
+    "re": 6.2,
+    "sd_cm2": 52.8,
+    "le_mh": 0.62
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 7.017,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 1.526,
+      "length_cm": 2.965
+    },
+    "portCount": 2,
+    "ql": 7,
+    "qa": 47
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "highPass": {
+      "type": "butterworth",
+      "order": 1,
+      "freq": 31.37
+    }
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "id": "g-chain-036",
+  "title": "chain (sealed), celestion/bl15-300x-4 (Qts 0.75), 224.3 L, 2 EQ",
+  "driver": {
+    "fs": 48.1,
+    "qms": 2.99,
+    "qes": 1.004,
+    "vas_l": 137.7,
+    "re": 3.15,
+    "sd_cm2": 855.3,
+    "le_mh": 0.45
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 224.3
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.1,
+    "coilTemp_C": 65,
+    "power": 100,
+    "eq": [
+      {
+        "type": "lowshelf",
+        "freq": 218.9,
+        "gain_db": 0.4599,
+        "q": 1.697
+      },
+      {
+        "type": "highshelf",
+        "freq": 226.3,
+        "gain_db": -3.267,
+        "q": 1.002
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

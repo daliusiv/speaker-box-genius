@@ -49,7 +49,7 @@ Speakers on an ordinary stereo amplifier or AV receiver usually have no subsonic
 - Below it, down to 20 Hz, it may reach **2 × Xmax** (the usual margin before damage). Past Xmax there shows in **amber**, with the power that keeps it within, not as a red ⚠.
 - Below 20 Hz there's no music to check.
 
-![A ported 8″ woofer at 50 W with no filter: Xmax is reached only in the shaded deep-bass zone, well under its 2 × Xmax line.](img/deep-bass-zone.png)
+![A ported 8″ woofer (B&C 8NDL51, 20 L at 59.3 Hz) at 55 W with no filter: the cone passes its 7 mm Xmax only in the shaded deep-bass zone, peaking at 7.3 mm, well under the 2 × Xmax line.](img/deep-bass-zone.png)
 
 That's fine for most listening. For bass-heavy music or films at full power, and for subwoofers, fit a filter: with one switched on, the app checks everything from 10 Hz. (The 12″ sub above is tuned so low that its deep-bass zone would start below 20 Hz, so it has none.)
 

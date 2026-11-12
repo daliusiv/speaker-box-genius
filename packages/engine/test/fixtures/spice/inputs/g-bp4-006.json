@@ -1,0 +1,47 @@
+{
+  "id": "g-bp4-006",
+  "title": "bp4, dayton-audio/pc83-8 (Qts 0.63), 2.412 L, rear 0.7935 L closed, front 1.618 L port at 155.9 Hz",
+  "driver": {
+    "fs": 82.1,
+    "qms": 3.68,
+    "qes": 0.76,
+    "vas_l": 1.7,
+    "re": 6.8,
+    "sd_cm2": 30.2,
+    "le_mh": 0.38
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.7935
+    },
+    "front": {
+      "vb_l": 1.618,
+      "port": {
+        "shape": "slot",
+        "width_cm": 4.779,
+        "height_cm": 0.8961,
+        "length_cm": 4.53
+      },
+      "portCount": 2,
+      "qp": 88,
+      "ql": 17,
+      "qa": null
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

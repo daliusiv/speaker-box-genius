@@ -1,0 +1,42 @@
+* g-chain-016: chain (vented), redcatt/155find (Qts 0.74), 60.81 L, Fb 36.6 Hz, 3 EQ
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 src 0 AC 7.87400787401181
+A1 %vd(src 0) %vd(f1 0) xf1
+A2 %vd(f1 0) %vd(f2 0) xf2
+A3 %vd(f2 0) %vd(amp 0) xf3
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 6.2
+Le1 c1a c1b 0.00097
+Hemf1 c1b c1d Vcone1 148.0024310137
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 148.0024310137
+Ras11 u1h1 u1r1 251.449120501488
+Lmas11 u1r1 u1m1 11.1053753037382
+Ccas11 u1m1 u1k1 0.00000142556505395961
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Rap box p1 137.005879896749
+Lmap p1 p2 36.3651923142134
+Vport p2 0 0
+Fvp 0 vn Vport 51.6694888700253
+Rvn vn 0 1
+Rab box b1 83.5735867370169
+Cab b1 0 5.20652317905609e-7
+Rbl_b1 b1 0 1e+15
+Ral box l1 83573.5867370169
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpp 0 prs Vport 1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.154384363389331
+Fx 0 xn Vcone1 11.3507377979569
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vn) V(box) I(Vin) I(Vcone1) I(Vport) I(Vleak)
+.model xf1 s_xfer(num_coeff=[1 563.896276139505 233702.899519874] den_coeff=[1 305.077958604183 45449.3269270867])
+.model xf2 s_xfer(num_coeff=[0.702748617656134 282.283734791589 729814.762687022] den_coeff=[1 336.73313587547 729814.762687022])
+.model xf3 s_xfer(num_coeff=[0.952286220123612 453.667116664257 1818873.77042904] den_coeff=[0.952286220123612 476.397859254299 2005707.3229362])
+.ac dec 50 5 2000
+.end

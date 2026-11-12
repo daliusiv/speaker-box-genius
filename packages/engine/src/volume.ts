@@ -1,3 +1,5 @@
+import { wedgeGeometry } from "./wedge.ts";
+
 /**
  * Real-world enclosure volume: gross internal volume of common shapes, minus
  * everything that takes up space inside, plus an optional fill (stuffing) factor.
@@ -26,7 +28,25 @@ export type Shape =
       topWidth_cm: number;
       topDepth_cm: number;
       height_cm: number;
-    };
+    }
+  /**
+   * Car wedge (single slope): outside width and height, the outside depth at the top (short)
+   * and at the bottom (long); one panel slopes between them. `slopeWall_mm` is the sloped
+   * panel's thickness when it differs from the walls (a double baffle); absent = the wall.
+   * Exact: the sloped panel takes its thickness ÷ sin θ across the horizontal (see wedge.ts).
+   * Whether the front or the back slopes doesn't change the volume.
+   */
+  | { kind: "wedge"; width_cm: number; height_cm: number; topDepth_cm: number; bottomDepth_cm: number; slopeWall_mm?: number };
+
+/** A wedge shape in the millimetres wedge.ts works in. */
+export const wedgeDimsOf = (shape: Extract<Shape, { kind: "wedge" }>, wall_mm: number) => ({
+  width: shape.width_cm * 10,
+  height: shape.height_cm * 10,
+  topDepth: shape.topDepth_cm * 10,
+  bottomDepth: shape.bottomDepth_cm * 10,
+  wall: wall_mm,
+  ...(shape.slopeWall_mm !== undefined ? { slopeWall: shape.slopeWall_mm } : {}),
+});
 
 const pos = (x: number) => Math.max(0, x);
 
@@ -57,6 +77,9 @@ export function grossVolume(shape: Shape, wall_mm = 0): number {
       cm3 = (f.h / 6) * (f.w1 * f.d1 + 4 * mid + f.w2 * f.d2);
       break;
     }
+    case "wedge":
+      cm3 = wedgeGeometry(wedgeDimsOf(shape, wall_mm)).volume_l * 1000;
+      break;
   }
   return cm3 / 1000;
 }
@@ -65,11 +88,12 @@ export function grossVolume(shape: Shape, wall_mm = 0): number {
  * The inside of a tapered box with walls t cm thick (measured square to each face). A sloping
  * wall is thicker across the horizontal than t, by 1/cos of its slope, and the inside top and
  * bottom sit t in from the outside ones, where the outside is already a little narrower (or
- * wider). When the inside closes to a point or edge below the top, it stops there.
+ * wider). When the inside closes to a point or edge below the top, it stops there. All cm:
+ * inside bottom w1 × d1 at height z0, top w2 × d2 at z0 + h, centred over the outside.
  */
-function frustumInside(shape: Extract<Shape, { kind: "frustum" }>, t: number) {
+export function frustumInside(shape: Extract<Shape, { kind: "frustum" }>, t: number) {
   const H = shape.height_cm;
-  if (!(H > 0)) return { w1: 0, d1: 0, w2: 0, d2: 0, h: 0 };
+  if (!(H > 0)) return { w1: 0, d1: 0, w2: 0, d2: 0, h: 0, z0: 0 };
   const sw = (shape.bottomWidth_cm - shape.topWidth_cm) / (2 * H);
   const sd = (shape.bottomDepth_cm - shape.topDepth_cm) / (2 * H);
   const ow = t * Math.hypot(1, sw);
@@ -85,8 +109,8 @@ function frustumInside(shape: Extract<Shape, { kind: "frustum" }>, t: number) {
     else if (s < 0) z0 = Math.max(z0, zero);
     else if (f(0) <= 0) z1 = z0;
   }
-  if (!(z1 > z0)) return { w1: 0, d1: 0, w2: 0, d2: 0, h: 0 };
-  return { w1: pos(w(z0)), d1: pos(d(z0)), w2: pos(w(z1)), d2: pos(d(z1)), h: z1 - z0 };
+  if (!(z1 > z0)) return { w1: 0, d1: 0, w2: 0, d2: 0, h: 0, z0: 0 };
+  return { w1: pos(w(z0)), d1: pos(d(z0)), w2: pos(w(z1)), d2: pos(d(z1)), h: z1 - z0, z0 };
 }
 
 /** The longest straight run inside the shape (cm): how long a straight port can be, at most. */
@@ -103,6 +127,10 @@ export function insideLongest_cm(shape: Shape, wall_mm = 0): number {
       const f = frustumInside(shape, t);
       return Math.max(f.w1, f.d1, f.w2, f.d2, f.h);
     }
+    case "wedge": {
+      const g = wedgeGeometry(wedgeDimsOf(shape, wall_mm));
+      return pos(Math.max(g.insideWidth, g.insideHeight, g.insideBottomDepth, g.insideSlant)) / 10;
+    }
   }
 }
 
@@ -112,7 +140,7 @@ export function insideLongest_cm(shape: Shape, wall_mm = 0): number {
  * lowest is at ka = 2.0816 (the first zero of j1′), 1.32 times higher than half a wavelength
  * across its diameter; a cylinder's across its diameter at ka = 1.8412 (J1′), 1.17 times
  * higher, so its lowest is that or the one along its length, whichever is lower. A tapered
- * box is taken as a box of its longest inside run (its modes shift with the taper).
+ * box or a wedge is taken as a box of its longest inside run (its modes shift with the taper).
  */
 export function lowestMode_hz(shape: Shape, wall_mm = 0, c = 343): number {
   const t = wall_mm / 10;

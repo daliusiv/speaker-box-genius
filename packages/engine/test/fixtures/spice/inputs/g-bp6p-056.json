@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6p-056",
+  "title": "bp6p, faital-pro/8hx150 (Qts 0.41), 6.075 L, rear 3.283 L port at 51.5 Hz, front 2.792 L port at 151.2 Hz",
+  "driver": {
+    "fs": 76,
+    "qms": 9.5,
+    "qes": 0.43,
+    "vas_l": 13,
+    "re": 5.5,
+    "sd_cm2": 217.2,
+    "le_mh": 0.51
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 3.283,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6.258,
+        "length_cm": 101
+      },
+      "qp": 104,
+      "ql": 4,
+      "qa": 38
+    },
+    "front": {
+      "vb_l": 2.792,
+      "port": {
+        "shape": "slot",
+        "width_cm": 14.79,
+        "height_cm": 4.027,
+        "length_cm": 21.53
+      },
+      "qp": null,
+      "ql": 27,
+      "qa": null
+    },
+    "qicl": 87
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 110,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

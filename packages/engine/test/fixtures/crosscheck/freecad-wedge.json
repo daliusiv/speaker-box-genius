@@ -1,0 +1,10 @@
+{
+  "about": "FreeCAD 1.1.4 (11 Nov 2026), wedge_check.py: each wedge's outside shape with every wall cut away as a slab of its thickness (the sloped panel as a slab on the sloped face). No inside formula from the app is used. mm and litres.",
+  "cases": {
+    "car-wedge-800x380": { "dims": [800, 380, 250, 400, 18, 18], "outer_l": 98.8, "inside_l": 75.5986 },
+    "car-wedge-double-baffle": { "dims": [500, 400, 200, 400, 18, 36], "outer_l": 60.0, "inside_l": 40.830739 },
+    "wedge-500x450-18": { "dims": [500, 450, 200, 400, 18, 18], "outer_l": 67.5, "inside_l": 50.38722 },
+    "wedge-500x450-double": { "dims": [500, 450, 200, 400, 18, 36], "outer_l": 67.5, "inside_l": 46.603367 },
+    "wedge-steep-double": { "dims": [400, 300, 120, 450, 15, 30], "outer_l": 34.2, "inside_l": 22.517639 }
+  }
+}

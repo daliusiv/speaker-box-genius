@@ -1,0 +1,42 @@
+{
+  "id": "g-pr-006",
+  "title": "passive-radiator, purifi/ptt6-5m08-nfa-01 (Qts 0.34), 19.12 L, Fb 38.5 Hz, 2 × dayton-audio/ds135-pr",
+  "driver": {
+    "fs": 52,
+    "qms": 4,
+    "qes": 0.37,
+    "vas_l": 13.2,
+    "re": 6.2,
+    "sd_cm2": 132.7,
+    "le_mh": 0.39
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 19.12,
+    "pr": {
+      "mms_g": 21.8,
+      "sd_cm2": 75.4,
+      "cms_mm_per_n": 1.52,
+      "qms": 3.93
+    },
+    "prCount": 2,
+    "addedMass_g": 3.889
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "series",
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

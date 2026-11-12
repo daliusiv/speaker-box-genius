@@ -1,0 +1,36 @@
+* g-chain-042: chain (sealed), dayton-audio/ls10-44 (Qts 0.43), 9.684 L, HP butterworth 3, 1 EQ
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 src 0 AC 2.72029410174709
+A1 %vd(src 0) %vd(f1 0) xf1
+A2 %vd(f1 0) %vd(f2 0) xf2
+A3 %vd(f2 0) %vd(amp 0) xf3
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 7.4
+Le1 c1a c1b 0.00525
+Hemf1 c1b c1d Vcone1 579.982782358986
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 579.982782358986
+Ras11 u1h1 u1r1 4148.48105697847
+Lmas11 u1r1 u1m1 99.1339365214943
+Ccas11 u1m1 u1k1 2.17184922014976e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Rab box b1 1120.07228460383
+Cab b1 0 6.82863241815917e-8
+Rbl_b1 b1 0 1e+15
+Ral box l1 498504.654282973
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.191622551482642
+Fx 0 xn Vcone1 27.292576419214
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) I(Vin) I(Vcone1) I(Vleak)
+.model xf1 s_xfer(num_coeff=[1 0 0] den_coeff=[1 92.8654788401143 8623.99716020371])
+.model xf2 s_xfer(num_coeff=[1 0] den_coeff=[1 92.8654788401143])
+.model xf3 s_xfer(num_coeff=[1.01519623863114 496.527811509648 3308455.12839449] den_coeff=[1 492.797594473016 3308455.12839449])
+.ac dec 50 5 2000
+.end

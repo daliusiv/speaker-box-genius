@@ -1,0 +1,80 @@
+* g-bp6s-046: bp6s, 18-sound/15w930 (Qts 0.22), 159.1 L, rear 78.1 L port at 22.4 Hz, front 81.04 L 2 × dayton-audio/ds315-pr at 36.6 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 2.83
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 5.5
+Le1 c1a c1b 0.00147
+Hemf1 c1b c1d Vcone1 261.088188986871
+Vi1 c1d w1 0
+Re2 w1 c2a 5.5
+Le2 c2a c2b 0.00147
+Hemf2 c2b c2d Vcone2 261.088188986871
+Vi2 c2d w2 0
+Re3 w2 c3a 5.5
+Le3 c3a c3b 0.00147
+Hemf3 c3b c3d Vcone3 261.088188986871
+Vi3 c3d w3 0
+Re4 w3 c4a 5.5
+Le4 c4a c4b 0.00147
+Hemf4 c4b c4d Vcone4 261.088188986871
+Vi4 c4d 0 0
+Hd1 u1h1 br Vi1 261.088188986871
+Ras11 u1h1 u1r1 324.672183858815
+Lmas11 u1r1 u1m1 13.7481983715792
+Ccas11 u1m1 u1k1 0.00000169186845722746
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 bf 0
+Hd2 u2h1 br Vi2 261.088188986871
+Ras21 u2h1 u2r1 324.672183858815
+Lmas21 u2r1 u2m1 13.7481983715792
+Ccas21 u2m1 u2k1 0.00000169186845722746
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 bf 0
+Hd3 u3h1 br Vi3 261.088188986871
+Ras31 u3h1 u3r1 324.672183858815
+Lmas31 u3r1 u3m1 13.7481983715792
+Ccas31 u3m1 u3k1 0.00000169186845722746
+Rbl_u3k1 u3k1 0 1e+15
+Vcone3 u3k1 bf 0
+Hd4 u4h1 br Vi4 261.088188986871
+Ras41 u4h1 u4r1 324.672183858815
+Lmas41 u4r1 u4m1 13.7481983715792
+Ccas41 u4m1 u4k1 0.00000169186845722746
+Rbl_u4k1 u4k1 0 1e+15
+Vcone4 u4k1 bf 0
+Rbl_bf bf 0 1e+15
+Rabf bf fb1 76.198994223724
+Cabf fb1 0 5.71287582390472e-7
+Rbl_fb1 fb1 0 1e+15
+Ralf bf fl1 76198.994223724
+Vleakf fl1 0 0
+Rpr1 bf r1 871.727985867049
+Lpr1 r1 q1 41.3953993055556
+Cpr1 q1 s1 0.000002304
+Vpr1 s1 0 0
+Fxp1 0 xp1 Vpr1 10.4166666666667
+Cxp1 xp1 0 1
+Rbl_xp1 xp1 0 1e+15
+Rbl_br br 0 1e+15
+Rabr br rb1 129.079404400116
+Cabr rb1 0 5.50562193789435e-7
+Rbl_rb1 rb1 0 1e+15
+Ralr br rl1 129079.404400116
+Vleakr rl1 0 0
+Rapr br rp1 129.079404400116
+Lmapr rp1 rp2 91.7318793984392
+Vportr rp2 bf 0
+Fvr 0 vr Vportr 64.4079501149899
+Rvr vr 0 1
+Ricl br bf 285062.177428039
+Fpo1 0 prs Vleakf 1
+Fpo2 0 prs Vpr1 1
+Fpo3 0 prs Vleakr 1
+Lrad prs 0 0.19113747540989
+Fx 0 xn Vcone1 11.7647058823529
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vr) V(br) V(bf) V(xp1) I(Vin) I(Vcone1) I(Vpr1)
+.ac dec 50 5 2000
+.end

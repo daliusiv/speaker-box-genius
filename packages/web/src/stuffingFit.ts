@@ -67,13 +67,13 @@ export function fitStuffing(s: AppState, d: DesignState & { kind: StuffableKind 
   if (!(hi > lo * 2)) return "The measurement doesn't cover enough of the range around the box's resonance.";
 
   const driver = driverInputOf(s, solved);
-  const opts = { ...simOptionsOf(s), fMin: lo, fMax: hi, points: POINTS, highPass: null, eq: [] };
+  const opts = { ...simOptionsOf(s, true), fMin: lo, fMax: hi, points: POINTS, highPass: null, eq: [] };
 
   // A free-air sweep of the driver (its peak at about Fs) can't be fitted to a box, whose peak
   // sits well away from Fs: say so instead of fitting nonsense.
   const fs = driver.fs;
   try {
-    const empty = simulate(driver, enclosureOf(d, built, s.settings.losses, s.volume.wall_mm), { ...simOptionsOf(s), fMin: 5, fMax: 600, points: 240, highPass: null, eq: [] });
+    const empty = simulate(driver, enclosureOf(d, built, s.settings.losses, s.volume.wall_mm), { ...simOptionsOf(s, true), fMin: 5, fMax: 600, points: 240, highPass: null, eq: [] });
     const fBox = mainPeak([...empty.freq], [...empty.impedanceOhm]);
     if (Math.abs(fpk / fs - 1) < 0.1 && fBox !== null && Math.abs(fBox / fs - 1) > 0.15) {
       return (

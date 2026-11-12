@@ -1,0 +1,30 @@
+{
+  "id": "g-sealed-051",
+  "title": "sealed, celestion/tf1525 (Qts 0.49), 81.47 L",
+  "driver": {
+    "fs": 47.6,
+    "qms": 3.835,
+    "qes": 0.565,
+    "vas_l": 148.41,
+    "re": 5.15,
+    "sd_cm2": 855.3,
+    "le_mh": 0.9
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 81.47
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

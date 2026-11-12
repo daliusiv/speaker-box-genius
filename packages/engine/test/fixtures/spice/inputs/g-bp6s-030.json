@@ -1,0 +1,51 @@
+{
+  "id": "g-bp6s-030",
+  "title": "bp6s, dayton-audio/nd65-4 (Qts 0.61), 0.5 L, rear 0.3416 L port at 52.6 Hz, front 0.1584 L port at 117.5 Hz",
+  "driver": {
+    "fs": 89.5,
+    "qms": 5.56,
+    "qes": 0.68,
+    "vas_l": 0.4,
+    "re": 3.5,
+    "sd_cm2": 15.6,
+    "le_mh": 0.44
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.3416,
+      "port": {
+        "shape": "slot",
+        "width_cm": 3.029,
+        "height_cm": 0.3678,
+        "length_cm": 69.71
+      },
+      "portCount": 2
+    },
+    "front": {
+      "vb_l": 0.1584,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 1.202,
+        "length_cm": 14.65
+      },
+      "ql": 12,
+      "qa": 114
+    },
+    "rearPortTo": "front",
+    "qicl": 197
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

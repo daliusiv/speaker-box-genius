@@ -1,0 +1,57 @@
+{
+  "id": "g-bp6p-007",
+  "title": "bp6p, dayton-audio/pc105-4 (Qts 0.51), 4.24 L, rear 1.975 L 4 × dayton-audio/ds135-pr at 60.4 Hz, front 2.264 L port at 106.5 Hz",
+  "driver": {
+    "fs": 81.4,
+    "qms": 2.17,
+    "qes": 0.67,
+    "vas_l": 3.7,
+    "re": 3.3,
+    "sd_cm2": 52.8,
+    "le_mh": 0.32
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 1.975,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 21.8,
+            "sd_cm2": 75.4,
+            "cms_mm_per_n": 1.52,
+            "qms": 3.93
+          },
+          "count": 4,
+          "addedMass_g": 96.36
+        }
+      ]
+    },
+    "front": {
+      "vb_l": 2.264,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.537,
+        "length_cm": 9.287
+      },
+      "qp": null,
+      "ql": 5,
+      "qa": 51
+    },
+    "endCorrection": 0.613,
+    "qicl": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

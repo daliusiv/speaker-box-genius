@@ -1,0 +1,45 @@
+* g-chain-027: chain (vented), monacor/ftx1530-8ohm (Qts 0.28), 88.93 L, Fb 33.0 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 2.31516738055805
+Vrg amp spk 0
+Vin spk bk 0
+Re1 bk c1a 5.36
+Le1 c1a c1b 0.00082
+Hemf1 c1b c1d Vcone1 214.162256663709
+Vi1 c1d m1 0
+Re2 m1 c2a 5.36
+Le2 c2a c2b 0.00082
+Hemf2 c2b c2d Vcone1 214.162256663709
+Vi2 c2d 0 0
+Hd1 u1h1 0 Vi1 214.162256663709
+Hd2 u1h2 u1h1 Vi2 214.162256663709
+Ras11 u1h2 u1r1 667.216159158093
+Lmas11 u1r1 u1m1 9.51718979161422
+Ccas11 u1m1 u1k1 0.0000014735119867054
+Rbl_u1k1 u1k1 0 1e+15
+Ras12 u1k1 u1r2 667.216159158093
+Lmas12 u1r2 u1m2 9.51718979161422
+Ccas12 u1m2 u1k2 0.0000014735119867054
+Rbl_u1k2 u1k2 0 1e+15
+Vcone1 u1k2 box 0
+Rbl_box box 0 1e+15
+Rap box p1 204.081448840788
+Lmap p1 p2 30.4755491710901
+Vport p2 0 0
+Fvp 0 vn Vport 101.140338961744
+Rvn vn 0 1
+Rab box b1 63.2652491406443
+Cab b1 0 7.61414415907677e-7
+Rbl_b1 b1 0 1e+15
+Ral box l1 63265.2491406442
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpp 0 prs Vport 1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.154384363389331
+Fx 0 xn Vcone1 11.6918040453642
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vn) V(box) I(Vin) I(Vcone1) I(Vport) I(Vleak)
+.ac dec 50 5 2000
+.end

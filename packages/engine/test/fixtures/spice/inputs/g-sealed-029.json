@@ -1,0 +1,32 @@
+{
+  "id": "g-sealed-029",
+  "title": "sealed, eminence/kappa-15c (Qts 0.24), 939.4 L",
+  "driver": {
+    "fs": 31,
+    "qms": 10.14,
+    "qes": 0.25,
+    "vas_l": 329.9,
+    "re": 3.68,
+    "sd_cm2": 856.3,
+    "le_mh": 0.88
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 939.4
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

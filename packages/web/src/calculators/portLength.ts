@@ -57,7 +57,7 @@ function resultHtml(i: PortCalcInput, r: PortCalcResult): string {
     ],
     ["Net volume it tunes", vol(r.tunedVb_l) + (i.subtractPort ? `, after ${vol(r.portDisp_l)} for the port${i.count > 1 ? "s" : ""}` : "")],
     ["Effective length (with end corrections)", `${len(r.effective_cm)}, end correction ${r.k}`],
-    ["Pipe resonance", `${r.pipe_hz.toFixed(0)} Hz`],
+    ["Pipe resonance", `${r.pipe_hz.toFixed(0)} Hz, from the effective length (WinISD's \u201c1st port resonance\u201d leaves out the end corrections: ${r.pipeNoEnds_hz.toFixed(0)} Hz)`],
   ];
   const notes: string[] = [];
   notes.push(

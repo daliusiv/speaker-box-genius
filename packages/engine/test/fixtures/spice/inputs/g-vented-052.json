@@ -1,0 +1,37 @@
+{
+  "id": "g-vented-052",
+  "title": "vented, sb-acoustics/wo34hc-4 (Qts 0.24), 79.68 L, Fb 21.8 Hz",
+  "driver": {
+    "fs": 20,
+    "qms": 5.53,
+    "qes": 0.25,
+    "vas_l": 233,
+    "re": 3.5,
+    "sd_cm2": 585,
+    "le_mh": 0.7
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 79.68,
+    "port": {
+      "shape": "slot",
+      "width_cm": 20.26,
+      "height_cm": 4.537,
+      "length_cm": 64.48
+    }
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 1,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

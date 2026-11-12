@@ -1,0 +1,33 @@
+{
+  "id": "g-sealed-053",
+  "title": "sealed, celestion/cf1540f (Qts 0.23), 161.3 L",
+  "driver": {
+    "fs": 29.1,
+    "qms": 6.531,
+    "qes": 0.243,
+    "vas_l": 227.867,
+    "re": 5.53,
+    "sd_cm2": 855.3,
+    "le_mh": 1.74
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 161.3,
+    "ql": 20,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

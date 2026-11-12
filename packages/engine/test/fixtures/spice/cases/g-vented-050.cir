@@ -1,0 +1,36 @@
+* g-vented-050: vented, monacor/spx-32m-8ohm (Qts 0.56), 3.301 L, Fb 144.3 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 8.12403840463596
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 6.6
+Le1 c1a c1b 0.00018
+Hemf1 c1b c1d Vcone1 1187.87953020026
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 1187.87953020026
+Ras11 u1h1 u1r1 16746.4725643104
+Lmas11 u1r1 u1m1 185.600678016319
+Ccas11 u1m1 u1k1 1.12791230481831e-8
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Rap box p1 473.894628014298
+Lmap p1 p2 52.2594034076443
+Vport p2 0 0
+Fvp 0 vn Vport 1136.83697394006
+Rvn vn 0 1
+Rab box b1 1184.73657003575
+Cab b1 0 2.32702407387827e-8
+Rbl_b1 b1 0 1e+15
+Ral box l1 900399.793227167
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpp 0 prs Vport 1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.19113747540989
+Fx 0 xn Vcone1 312.5
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vn) V(box) I(Vin) I(Vcone1) I(Vport) I(Vleak)
+.ac dec 50 5 2000
+.end

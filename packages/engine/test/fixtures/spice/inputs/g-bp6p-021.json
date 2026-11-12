@@ -1,0 +1,59 @@
+{
+  "id": "g-bp6p-021",
+  "title": "bp6p, sb-acoustics/sb12pac25-4 (Qts 0.31), 4.083 L, rear 1.932 L 1 × sb-acoustics/sb12pfcr-00 at 51.7 Hz, front 2.151 L port at 88.3 Hz",
+  "driver": {
+    "fs": 52.5,
+    "qms": 5,
+    "qes": 0.33,
+    "vas_l": 5.3,
+    "re": 3.1,
+    "sd_cm2": 50,
+    "le_mh": 0.25
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 1.932,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 18.8,
+            "sd_cm2": 50,
+            "cms_mm_per_n": 1.2,
+            "qms": 12.5
+          },
+          "count": 1,
+          "addedMass_g": 6.508
+        }
+      ],
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 2.151,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 4.315,
+        "length_cm": 22.94
+      },
+      "qp": 76
+    }
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "g-pr-043",
+  "title": "passive-radiator, bc-speakers/15bg100 (Qts 0.45), 73.08 L, Fb 33.0 Hz, 4 × dayton-audio/rss390-pr + 1 × sb-acoustics/sb20pfc-00",
+  "driver": {
+    "fs": 36,
+    "qms": 5,
+    "qes": 0.49,
+    "vas_l": 83,
+    "re": 5.1,
+    "sd_cm2": 855,
+    "le_mh": 1.6
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 73.08,
+    "pr": {
+      "mms_g": 400,
+      "sd_cm2": 829.6,
+      "cms_mm_per_n": 0.22,
+      "qms": 4.07
+    },
+    "prCount": 4,
+    "addedMass_g": 948.4,
+    "extraPrs": [
+      {
+        "pr": {
+          "mms_g": 76.7,
+          "sd_cm2": 216,
+          "cms_mm_per_n": 0.83,
+          "qms": 6.8
+        },
+        "count": 1
+      }
+    ],
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0.5,
+    "coilTemp_C": 147,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

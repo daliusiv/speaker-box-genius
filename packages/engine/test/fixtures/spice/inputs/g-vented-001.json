@@ -1,0 +1,38 @@
+{
+  "id": "g-vented-001",
+  "title": "vented, bc-speakers/15sw115-8ohm (Qts 0.24), 58.53 L, Fb 26.9 Hz",
+  "driver": {
+    "fs": 35,
+    "qms": 4.4,
+    "qes": 0.25,
+    "vas_l": 110,
+    "re": 5.2,
+    "sd_cm2": 855,
+    "le_mh": 1.8
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 58.53,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 8.19,
+      "length_cm": 31.14
+    }
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

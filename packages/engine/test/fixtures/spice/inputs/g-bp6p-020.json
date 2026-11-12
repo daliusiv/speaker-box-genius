@@ -1,0 +1,58 @@
+{
+  "id": "g-bp6p-020",
+  "title": "bp6p, rcf/mb12n351 (Qts 0.20), 42.38 L, rear 18.97 L 1 × dayton-audio/dsa315-pr at 48.2 Hz, front 23.41 L port at 57.5 Hz",
+  "driver": {
+    "fs": 55,
+    "qms": 4.5,
+    "qes": 0.21,
+    "vas_l": 61,
+    "re": 5.6,
+    "sd_cm2": 500,
+    "le_mh": 1.65
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 18.97,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 142.6,
+            "sd_cm2": 480,
+            "cms_mm_per_n": 0.58,
+            "qms": 6.23
+          },
+          "count": 1,
+          "addedMass_g": 64.41
+        }
+      ],
+      "ql": 23,
+      "qa": 105
+    },
+    "front": {
+      "vb_l": 23.41,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.807,
+        "length_cm": 6.679
+      },
+      "qp": 76
+    },
+    "endCorrection": 0.613,
+    "qicl": 123
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 108,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

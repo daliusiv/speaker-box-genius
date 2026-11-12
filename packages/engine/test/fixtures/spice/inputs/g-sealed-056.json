@@ -1,0 +1,36 @@
+{
+  "id": "g-sealed-056",
+  "title": "sealed, dayton-audio/pcs10-4 (Qts 0.64), 47.82 L",
+  "driver": {
+    "fs": 33,
+    "qms": 4.91,
+    "qes": 0.73,
+    "vas_l": 49,
+    "re": 4,
+    "sd_cm2": 328,
+    "le_mh": 1.9
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 47.82,
+    "ql": 29,
+    "qa": 83
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

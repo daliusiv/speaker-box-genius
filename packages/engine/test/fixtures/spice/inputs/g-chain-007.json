@@ -1,0 +1,45 @@
+{
+  "id": "g-chain-007",
+  "title": "chain (sealed), peerless/pls-p830986 (Qts 0.80), 0.68 L, HP butterworth 4, 1 EQ",
+  "driver": {
+    "fs": 110,
+    "qms": 5.2,
+    "qes": 0.944,
+    "vas_l": 0.834,
+    "re": 6.2,
+    "sd_cm2": 27.3,
+    "le_mh": 0.121
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 0.68
+  },
+  "opts": {
+    "rg": 0.5,
+    "convention": "volts",
+    "power": 2.83,
+    "highPass": {
+      "type": "butterworth",
+      "order": 4,
+      "freq": 108.3
+    },
+    "eq": [
+      {
+        "type": "linkwitz",
+        "f0": 121.4,
+        "q0": 0.9527,
+        "fp": 77.67,
+        "qp": 0.799
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

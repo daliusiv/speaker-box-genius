@@ -1,0 +1,32 @@
+{
+  "id": "v05",
+  "title": "Vented 40 L, DSA215-8, air at 835 hPa, 25 °C, 40 %",
+  "driver": {
+    "fs": 35,
+    "qms": 1.87,
+    "qes": 0.4,
+    "vas_l": 37.4,
+    "re": 5.9,
+    "sd_cm2": 211.2,
+    "le_mh": 1
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 40,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7.5,
+      "length_cm": 20
+    }
+  },
+  "opts": {},
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

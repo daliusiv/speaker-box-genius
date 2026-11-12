@@ -1,0 +1,60 @@
+{
+  "id": "g-chain-028",
+  "title": "chain (vented), faital-pro/5hx140 (Qts 0.41), 1.75 L, Fb 104.6 Hz, HP butterworth 4, 1 EQ, passive parts",
+  "driver": {
+    "fs": 100,
+    "qms": 4.8,
+    "qes": 0.45,
+    "vas_l": 3.4,
+    "re": 5.9,
+    "sd_cm2": 85,
+    "le_mh": 0.29
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 1.75,
+    "port": {
+      "shape": "slot",
+      "width_cm": 8.884,
+      "height_cm": 0.8913,
+      "length_cm": 22.9
+    },
+    "portCount": 2,
+    "qp": 93
+  },
+  "opts": {
+    "rg": 0,
+    "power": 100,
+    "highPass": {
+      "type": "butterworth",
+      "order": 4,
+      "freq": 48.94
+    },
+    "eq": [
+      {
+        "type": "linkwitz",
+        "f0": 125.7,
+        "q0": 0.5165,
+        "fp": 66.67,
+        "qp": 0.7067
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

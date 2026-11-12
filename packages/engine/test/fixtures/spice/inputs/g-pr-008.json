@@ -1,0 +1,42 @@
+{
+  "id": "g-pr-008",
+  "title": "passive-radiator, dayton-audio/e150he-44 (Qts 0.46), 6.978 L, Fb 25.4 Hz, 1 × purifi/ptt8-0pr-na2-01",
+  "driver": {
+    "fs": 35,
+    "qms": 2.93,
+    "qes": 0.54,
+    "vas_l": 16.14,
+    "re": 6.8,
+    "sd_cm2": 136.1,
+    "le_mh": 1.5
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 6.978,
+    "pr": {
+      "mms_g": 132,
+      "sd_cm2": 235.1,
+      "cms_mm_per_n": 0.93,
+      "qms": 9.4
+    },
+    "addedMass_g": 352.4,
+    "ql": 28,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 89,
+    "driveModel": "winisd",
+    "power": 100,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

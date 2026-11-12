@@ -1,0 +1,40 @@
+{
+  "id": "g-pr-029",
+  "title": "passive-radiator, sb-acoustics/sb20pfcs30-7 (Qts 0.66), 82.14 L, Fb 29.3 Hz, 4 × dayton-audio/dsa115-pr",
+  "driver": {
+    "fs": 39,
+    "qms": 4.5,
+    "qes": 0.77,
+    "vas_l": 59.5,
+    "re": 5,
+    "sd_cm2": 222,
+    "le_mh": 0.95
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 82.14,
+    "pr": {
+      "mms_g": 11.7,
+      "sd_cm2": 54.1,
+      "cms_mm_per_n": 2.27,
+      "qms": 3.48
+    },
+    "prCount": 4,
+    "addedMass_g": 6.263
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 41,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

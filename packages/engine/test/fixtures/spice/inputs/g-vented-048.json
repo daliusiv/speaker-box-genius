@@ -1,0 +1,43 @@
+{
+  "id": "g-vented-048",
+  "title": "vented, peerless/sls-p830946 (Qts 0.43), 8.411 L, Fb 45.4 Hz",
+  "driver": {
+    "fs": 47,
+    "qms": 7.42,
+    "qes": 0.454,
+    "vas_l": 6.03,
+    "re": 2.7,
+    "sd_cm2": 124,
+    "le_mh": 0.678
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 8.411,
+    "port": {
+      "shape": "slot",
+      "width_cm": 6.824,
+      "height_cm": 1.427,
+      "length_cm": 30.9
+    },
+    "portCount": 2,
+    "ql": 20,
+    "qa": null,
+    "qp": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,48 @@
+* g-chain-039: chain (vented), peerless/pls-75f25al02-08 (Qts 0.74), 2.899 L, Fb 128.7 Hz, HP linkwitz-riley 4, passive parts
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 src 0 AC 2.50998007960223
+A1 %vd(src 0) %vd(f1 0) xf1
+A2 %vd(f1 0) %vd(amp 0) xf2
+Rg amp spk 0.1
+Vin spk n0 0
+Lx1 n0 n1 0.007228
+Cx1 n0 n1 0.0004477
+Lx3 n1 n3 0.007156
+Rx4 n3 x4n1 9.347
+Lx4 x4n1 x4n2 0.004071
+Cx4 x4n2 0 0.0002162
+Rbl_x4c x4n2 0 1e+15
+Vx9 n3 bk 0
+Re1 bk c1a 6.3
+Le1 c1a c1b 0.000092
+Hemf1 c1b c1d Vcone1 1255.12693067368
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 1255.12693067368
+Ras11 u1h1 u1r1 31154.3363309332
+Lmas11 u1r1 u1m1 332.706400592217
+Ccas11 u1m1 u1k1 7.61340805752356e-9
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Rap box p1 695.601672730361
+Lmap p1 p2 74.8450887809373
+Vport p2 0 0
+Fvp 0 vn Vport 1497.62871459845
+Rvn vn 0 1
+Rab box b1 960.59278615145
+Cab b1 0 2.04363610729267e-8
+Rbl_b1 b1 0 1e+15
+Ral box l1 1089312.21949574
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpp 0 prs Vport 1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.19113747540989
+Fx 0 xn Vcone1 346.020761245675
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vn) V(box) I(Vin) I(Vcone1) I(Vport) I(Vleak)
+.model xf1 s_xfer(num_coeff=[1 0 0] den_coeff=[1 641.374580952542 205680.676546024])
+.model xf2 s_xfer(num_coeff=[1 0 0] den_coeff=[1 641.374580952542 205680.676546024])
+.ac dec 50 5 2000
+.end

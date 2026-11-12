@@ -1,0 +1,58 @@
+{
+  "id": "g-chain-016",
+  "title": "chain (vented), redcatt/155find (Qts 0.74), 60.81 L, Fb 36.6 Hz, 3 EQ",
+  "driver": {
+    "fs": 40,
+    "qms": 11.1,
+    "qes": 0.79,
+    "vas_l": 166.5,
+    "re": 6.2,
+    "sd_cm2": 881,
+    "le_mh": 0.97
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 60.81,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 11.1,
+      "length_cm": 64.43
+    },
+    "portCount": 2,
+    "qp": 61
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10,
+    "eq": [
+      {
+        "type": "linkwitz",
+        "f0": 76.94,
+        "q0": 0.8573,
+        "fp": 33.93,
+        "qp": 0.6988
+      },
+      {
+        "type": "highshelf",
+        "freq": 148.5,
+        "gain_db": -3.064,
+        "q": 2.537
+      },
+      {
+        "type": "lowshelf",
+        "freq": 225.4,
+        "gain_db": -0.8493,
+        "q": 2.901
+      }
+    ]
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

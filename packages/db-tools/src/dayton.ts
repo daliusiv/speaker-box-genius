@@ -433,7 +433,7 @@ export function reconcile(ts: Driver["ts"], cmsMmPerN: number | undefined, notes
  */
 export function keepExisting(
   fresh: Driver | PassiveRadiator,
-  old: { physical?: Driver["physical"]; sources?: Driver["sources"]; status?: string; plausibility_note?: string },
+  old: { physical?: Driver["physical"]; sources?: Driver["sources"]; status?: string; plausibility_note?: string; notes?: string },
 ) {
   const disp = old.physical?.displacement_l;
   if (disp !== undefined && fresh.physical?.displacement_l === undefined) fresh.physical = { ...fresh.physical, displacement_l: disp };
@@ -442,7 +442,13 @@ export function keepExisting(
   if (old.status === "verified") fresh.status = "verified";
   // A reviewer's note that a flagged value is right (plausibility.ts) survives re-imports.
   if (old.plausibility_note && !fresh.plausibility_note) fresh.plausibility_note = old.plausibility_note;
+  // Descriptive notes ("Coaxial driver; values are for the woofer section.") aren't in sheets; keep them.
+  const info = old.notes?.match(DESCRIPTIVE_NOTE)?.[0];
+  if (info && !fresh.notes?.includes(info)) fresh.notes = fresh.notes ? `${info} ${fresh.notes}` : info;
 }
+
+/** A leading sentence that describes the driver rather than an import change. */
+export const DESCRIPTIVE_NOTE = /^(?:Coaxial driver|Guitar\/bass speaker)[^.]*\./;
 
 const UA = "SpeakerBoxGenius-importer/1.0 (+https://github.com/daliusiv/speaker-box-genius; with Dayton Audio's permission)";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

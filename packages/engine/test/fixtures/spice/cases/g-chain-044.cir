@@ -1,0 +1,51 @@
+* g-chain-044: chain (vented), 18-sound/15nlw9401-4ohm (Qts 0.25), 110 L, Fb 37.0 Hz, HP butterworth 4, 1 EQ
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 src 0 AC 1.18321595661992
+A1 %vd(src 0) %vd(f1 0) xf1
+A2 %vd(f1 0) %vd(f2 0) xf2
+A3 %vd(f2 0) %vd(amp 0) xf3
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 4.098472
+Le1 c1a c1b 0.00123
+Hemf1 c1b c1d Vcone1 230.909770810529
+Vi1 c1d 0 0
+Re2 bk c2a 4.098472
+Le2 c2a c2b 0.00123
+Hemf2 c2b c2d Vcone1 230.909770810529
+Vi2 c2d 0 0
+Hd1 u1h1 0 Vi1 230.909770810529
+Hd2 u1h2 u1h1 Vi2 230.909770810529
+Ras11 u1h2 u1r1 806.364808428364
+Lmas11 u1r1 u1m1 19.699721087697
+Ccas11 u1m1 u1k1 8.03637517183043e-7
+Rbl_u1k1 u1k1 0 1e+15
+Ras12 u1k1 u1r2 806.364808428364
+Lmas12 u1r2 u1m2 19.699721087697
+Ccas12 u1m2 u1k2 8.03637517183043e-7
+Rbl_u1k2 u1k2 0 1e+15
+Vcone1 u1k2 box 0
+Rbl_box box 0 1e+15
+Rap box p1 55.5292209233953
+Lmap p1 p2 23.9106398364187
+Vport p2 0 0
+Fvp 0 vn Vport 71.8495422473734
+Rvn vn 0 1
+Rab box b1 168.270366434531
+Cab b1 0 7.75439709562585e-7
+Rbl_b1 b1 0 1e+15
+Ral box l1 116611.36393913
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpp 0 prs Vport 1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.19113747540989
+Fx 0 xn Vcone1 11.7647058823529
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vn) V(box) I(Vin) I(Vcone1) I(Vport) I(Vleak)
+.model xf1 s_xfer(num_coeff=[1 0 0] den_coeff=[1 155.857805004413 41468.4496267996])
+.model xf2 s_xfer(num_coeff=[1 0 0] den_coeff=[1 376.274026643356 41468.4496267996])
+.model xf3 s_xfer(num_coeff=[1.27006222747266 179.489527588945 326920.478708391] den_coeff=[1.27006222747266 141.323412118253 202671.240719886])
+.ac dec 50 5 2000
+.end

@@ -1,0 +1,35 @@
+{
+  "id": "v06",
+  "title": "Vented 6 L, TCP115-4, tiny port, Ql 3",
+  "driver": {
+    "fs": 53.8,
+    "qms": 3.14,
+    "qes": 0.4,
+    "vas_l": 3.1,
+    "re": 3.2,
+    "sd_cm2": 50.3,
+    "le_mh": 0.97
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 6,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 2.5,
+      "length_cm": 8
+    },
+    "ql": 3
+  },
+  "opts": {
+    "rg": 0.1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

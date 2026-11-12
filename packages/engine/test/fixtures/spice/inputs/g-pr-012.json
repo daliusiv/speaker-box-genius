@@ -1,0 +1,43 @@
+{
+  "id": "g-pr-012",
+  "title": "passive-radiator, peerless/sls-p830669 (Qts 0.63), 121 L, Fb 29.5 Hz, 4 × dayton-audio/rss390-pr",
+  "driver": {
+    "fs": 34,
+    "qms": 9.98,
+    "qes": 0.678,
+    "vas_l": 107,
+    "re": 5.6,
+    "sd_cm2": 523,
+    "le_mh": 1.12
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 121,
+    "pr": {
+      "mms_g": 400,
+      "sd_cm2": 829.6,
+      "cms_mm_per_n": 0.22,
+      "qms": 4.07
+    },
+    "prCount": 4,
+    "addedMass_g": 672.3,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

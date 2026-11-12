@@ -1,0 +1,52 @@
+{
+  "id": "g-bp6s-020",
+  "title": "bp6s, dayton-audio/nd91-8 (Qts 0.47), 1.298 L, rear 0.8279 L port at 52.7 Hz, front 0.4701 L port at 150.1 Hz",
+  "driver": {
+    "fs": 70.7,
+    "qms": 4.29,
+    "qes": 0.53,
+    "vas_l": 1.53,
+    "re": 7.8,
+    "sd_cm2": 30.4,
+    "le_mh": 1.24
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.8279,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 1.5,
+        "length_cm": 44.81
+      },
+      "portCount": 2
+    },
+    "front": {
+      "vb_l": 0.4701,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 2.14,
+        "length_cm": 18.69
+      },
+      "portCount": 2,
+      "qp": null
+    },
+    "rearPortTo": "front",
+    "qicl": 98
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 125,
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

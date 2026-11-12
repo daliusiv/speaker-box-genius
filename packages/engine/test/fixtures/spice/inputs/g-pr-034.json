@@ -1,0 +1,45 @@
+{
+  "id": "g-pr-034",
+  "title": "passive-radiator, dayton-audio/dcs205-4 (Qts 0.38), 29.37 L, Fb 40.9 Hz, 2 × sb-acoustics/sb20pfc-00",
+  "driver": {
+    "fs": 32.3,
+    "qms": 6.28,
+    "qes": 0.4,
+    "vas_l": 27,
+    "re": 3.9,
+    "sd_cm2": 213.8,
+    "le_mh": 1.78
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 29.37,
+    "pr": {
+      "mms_g": 76.7,
+      "sd_cm2": 216,
+      "cms_mm_per_n": 0.83,
+      "qms": 6.8
+    },
+    "prCount": 2,
+    "addedMass_g": 9.902,
+    "ql": 13,
+    "qa": 11
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.5,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

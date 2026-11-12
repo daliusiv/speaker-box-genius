@@ -32,7 +32,7 @@ export const ATTRIBUTION =
  * records for them are skipped: the brand stays one source. Names as driver-base and our
  * _brand.json files spell them (driverbase.test.ts checks every direct brand folder is here).
  */
-export const DIRECT_BRANDS = new Set(["Dayton Audio", "SB Acoustics", "B&C Speakers", "Purifi", "Markaudio", "Mark Audio", "REDCATT", "SEAS"]);
+export const DIRECT_BRANDS = new Set(["Dayton Audio", "SB Acoustics", "B&C Speakers", "Purifi", "Markaudio", "Mark Audio", "REDCATT", "SEAS", "Beyma"]);
 
 /** driver-base manufacturer name → our brand folder and _brand.json. */
 export const BRANDS: Record<string, { slug: string; brand: Brand }> = {

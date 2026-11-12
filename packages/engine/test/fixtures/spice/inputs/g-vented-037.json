@@ -1,0 +1,40 @@
+{
+  "id": "g-vented-037",
+  "title": "vented, 18-sound/18lw2600-8ohm (Qts 0.29), 499.1 L, Fb 25.9 Hz",
+  "driver": {
+    "fs": 31,
+    "qms": 11.7,
+    "qes": 0.3,
+    "vas_l": 187,
+    "re": 4.9,
+    "sd_cm2": 1225,
+    "le_mh": 3.42
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 499.1,
+    "port": {
+      "shape": "slot",
+      "width_cm": 50.32,
+      "height_cm": 7.268,
+      "length_cm": 16.95
+    }
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 10,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

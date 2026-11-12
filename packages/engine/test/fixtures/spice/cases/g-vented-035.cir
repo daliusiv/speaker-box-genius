@@ -1,0 +1,31 @@
+* g-vented-035: vented, faital-pro/4fe42 (Qts 0.47), 3.291 L, Fb 96.9 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 2.32379000772445
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 5.4
+Le1 c1a c1b 0.00007
+Hemf1 c1b c1d Vcone1 1079.96411036891
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 1079.96411036891
+Ras11 u1h1 u1r1 13499.1027741309
+Lmas11 u1r1 u1m1 156.250831549705
+Ccas11 u1m1 u1k1 1.33977711632615e-8
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Rap box p1 502.010644029366
+Lmap p1 p2 116.270867652535
+Vport p2 0 0
+Fvp 0 vn Vport 790.972621800945
+Rvn vn 0 1
+Cab box 0 2.32063499464703e-8
+Fpc1 0 prs Vcone1 -1
+Fpp 0 prs Vport 1
+Lrad prs 0 0.095811275741321
+Fx 0 xn Vcone1 196.463654223969
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vn) V(box) I(Vin) I(Vcone1) I(Vport)
+.ac dec 50 5 2000
+.end

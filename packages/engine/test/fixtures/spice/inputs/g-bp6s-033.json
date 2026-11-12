@@ -1,0 +1,58 @@
+{
+  "id": "g-bp6s-033",
+  "title": "bp6s, faital-pro/3fe25 (Qts 0.66), 3.314 L, rear 1.036 L port at 64.7 Hz, front 2.277 L port at 121.4 Hz",
+  "driver": {
+    "fs": 110,
+    "qms": 4.1,
+    "qes": 0.79,
+    "vas_l": 1.3,
+    "re": 6.2,
+    "sd_cm2": 33,
+    "le_mh": 0.07
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 1.036,
+      "port": {
+        "shape": "slot",
+        "width_cm": 3.444,
+        "height_cm": 0.8376,
+        "length_cm": 39.2
+      },
+      "portCount": 2,
+      "ql": 21,
+      "qa": 59
+    },
+    "front": {
+      "vb_l": 2.277,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 1.191,
+        "length_cm": 1.151
+      },
+      "portCount": 2,
+      "ql": 5,
+      "qa": 64
+    },
+    "rearPortTo": "front",
+    "qicl": 73
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83,
+    "space": "full"
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

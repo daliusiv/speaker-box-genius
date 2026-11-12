@@ -1,0 +1,37 @@
+{
+  "id": "g-vented-022",
+  "title": "vented, bc-speakers/15nbx100-4ohm (Qts 0.28), 181.9 L, Fb 39.0 Hz",
+  "driver": {
+    "fs": 37,
+    "qms": 4.77,
+    "qes": 0.3,
+    "vas_l": 109.6,
+    "re": 3.6,
+    "sd_cm2": 855,
+    "le_mh": 1.58
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 181.9,
+    "port": {
+      "shape": "slot",
+      "width_cm": 15.57,
+      "height_cm": 5.54,
+      "length_cm": 1.623
+    },
+    "qp": 139
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

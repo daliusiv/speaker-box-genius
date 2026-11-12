@@ -1,0 +1,66 @@
+{
+  "id": "g-chain-034",
+  "title": "chain (sealed), redcatt/121npm (Qts 0.16), 83.92 L, HP butterworth 2, 1 EQ, passive parts",
+  "driver": {
+    "fs": 50,
+    "qms": 7.51,
+    "qes": 0.16,
+    "vas_l": 59.2,
+    "re": 6,
+    "sd_cm2": 531,
+    "le_mh": 0.51
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 83.92,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83,
+    "space": "full",
+    "highPass": {
+      "type": "butterworth",
+      "order": 2,
+      "freq": 40.8
+    },
+    "eq": [
+      {
+        "type": "lowshelf",
+        "freq": 259.5,
+        "gain_db": -6.667,
+        "q": 0.5928
+      }
+    ],
+    "passive": {
+      "branches": [
+        {
+          "l_mH": 4.938,
+          "join": "parallel"
+        },
+        {
+          "r": 9.727,
+          "c_uF": 514.3
+        },
+        {},
+        {
+          "join": "parallel"
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,5 +1,6 @@
 {
   "name": "Beyma",
   "website": "https://www.beyma.com",
-  "country": "ES"
+  "country": "ES",
+  "licence": "Not covered by CC BY-NC-SA 4.0. Values from Beyma's datasheets, used in Speaker Box Genius with Beyma's permission (6 Nov 2026). Do not reuse outside Speaker Box Genius without Beyma's permission."
 }

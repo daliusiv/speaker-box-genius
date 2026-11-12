@@ -1,0 +1,57 @@
+{
+  "id": "g-bp6p-025",
+  "title": "bp6p, faital-pro/10fh530 (Qts 0.25), 12.2 L, rear 5.663 L port at 57.8 Hz, front 6.538 L 1 × seas/sp26r at 55.3 Hz",
+  "driver": {
+    "fs": 60,
+    "qms": 12.4,
+    "qes": 0.25,
+    "vas_l": 23.5,
+    "re": 5.1,
+    "sd_cm2": 347,
+    "le_mh": 0.8
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 5.663,
+      "port": {
+        "shape": "slot",
+        "width_cm": 20.76,
+        "height_cm": 2.466,
+        "length_cm": 74.92
+      },
+      "ql": 21,
+      "qa": 89
+    },
+    "front": {
+      "vb_l": 6.538,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 40,
+            "sd_cm2": 342,
+            "cms_mm_per_n": 0.67
+          },
+          "count": 1,
+          "addedMass_g": 182.3
+        }
+      ],
+      "ql": null,
+      "qa": null
+    },
+    "qicl": 26
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

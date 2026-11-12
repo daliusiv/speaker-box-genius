@@ -1,0 +1,43 @@
+{
+  "id": "g-pr-005",
+  "title": "passive-radiator, monacor/tf0615 (Qts 0.61), 3.848 L, Fb 105.9 Hz, 2 × seas/sp18r",
+  "driver": {
+    "fs": 104.7,
+    "qms": 3.949,
+    "qes": 0.719,
+    "vas_l": 6.4,
+    "re": 7.08,
+    "sd_cm2": 153.94,
+    "le_mh": 0.47
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 3.848,
+    "pr": {
+      "mms_g": 20,
+      "sd_cm2": 130,
+      "cms_mm_per_n": 2.02
+    },
+    "prCount": 2,
+    "addedMass_g": 9.233,
+    "ql": 15,
+    "qa": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.5,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

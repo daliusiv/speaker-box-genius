@@ -1,0 +1,60 @@
+{
+  "id": "g-chain-050",
+  "title": "chain (vented), faital-pro/18xl1800 (Qts 0.40), 255.9 L, Fb 27.7 Hz, HP butterworth 2, passive parts",
+  "driver": {
+    "fs": 29,
+    "qms": 9.9,
+    "qes": 0.42,
+    "vas_l": 215.5,
+    "re": 5.35,
+    "sd_cm2": 1187,
+    "le_mh": 2.04
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 255.9,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 9.907,
+      "length_cm": 16.28
+    },
+    "portCount": 2
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "power": 10,
+    "highPass": {
+      "type": "butterworth",
+      "order": 2,
+      "freq": 27.48
+    },
+    "passive": {
+      "branches": [
+        {
+          "r": 6.039,
+          "c_uF": 828.2,
+          "join": "parallel"
+        },
+        {
+          "l_mH": 1.621
+        },
+        {
+          "l_mH": 7.401
+        },
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "id": "g-sealed-042",
+  "title": "sealed, rcf/cx10g251 (Qts 0.28), 34.15 L",
+  "driver": {
+    "fs": 72,
+    "qms": 5,
+    "qes": 0.3,
+    "vas_l": 33,
+    "re": 5.2,
+    "sd_cm2": 400,
+    "le_mh": 0.5
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 34.15,
+    "ql": 13,
+    "qa": 80
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

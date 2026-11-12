@@ -1,0 +1,51 @@
+{
+  "id": "g-bp6s-051",
+  "title": "bp6s, sb-acoustics/sb15sfcr39-8 (Qts 0.42), 97.08 L, rear 54.07 L port at 22.3 Hz, front 43.01 L port at 47.3 Hz",
+  "driver": {
+    "fs": 32,
+    "qms": 7.11,
+    "qes": 0.45,
+    "vas_l": 48.3,
+    "re": 6.2,
+    "sd_cm2": 178,
+    "le_mh": 1.3
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 54.07,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.179,
+        "length_cm": 15.28
+      },
+      "portCount": 2
+    },
+    "front": {
+      "vb_l": 43.01,
+      "port": {
+        "shape": "slot",
+        "width_cm": 13.36,
+        "height_cm": 3.961,
+        "length_cm": 10.38
+      },
+      "ql": 9,
+      "qa": 49
+    },
+    "rearPortTo": "front"
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 59,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

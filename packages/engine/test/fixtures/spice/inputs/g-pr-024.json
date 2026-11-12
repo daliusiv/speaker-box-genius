@@ -1,0 +1,40 @@
+{
+  "id": "g-pr-024",
+  "title": "passive-radiator, bc-speakers/12ndl76-8ohm (Qts 0.20), 32.81 L, Fb 46.0 Hz, 2 × dayton-audio/rss390-pr",
+  "driver": {
+    "fs": 50,
+    "qms": 4.2,
+    "qes": 0.21,
+    "vas_l": 73,
+    "re": 5.3,
+    "sd_cm2": 522,
+    "le_mh": 1
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 32.81,
+    "pr": {
+      "mms_g": 400,
+      "sd_cm2": 829.6,
+      "cms_mm_per_n": 0.22,
+      "qms": 4.07
+    },
+    "prCount": 2,
+    "addedMass_g": 366.3,
+    "ql": 15,
+    "qa": 95
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

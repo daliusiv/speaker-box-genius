@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { REPO } from "./components.tsx";
-import { useProjects } from "./Projects.tsx";
-import type { AppState } from "./state.ts";
+import { Icon } from "./Icon.tsx";
 
-/** Saved projects shown before "All saved…". */
-const RECENT = 5;
+/** "Ctrl+S" or "⌘S", for the menu's shortcut hints. */
+export const shortcut = (key: string) =>
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? `⌘${key}` : `Ctrl+${key}`;
 
 /** iPhone and iPad Safari have no install prompt: installing is Share → Add to Home Screen. */
 const isIos = () =>
@@ -15,15 +15,13 @@ const isStandalone = () =>
   (window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true);
 
 /**
- * The ☰ menu: everything that isn't Share or the controls. Most-used first: the project (new,
- * save, open), the app (install, tips), the rest of the site, and about. A dropdown on wide
+ * The ☰ menu: everything that isn't Share or the controls. The project (new, open, save: the
+ * windows do the rest), the rest of the site, the app, and a footer of about-links, short
+ * enough never to scroll. A dropdown on wide
  * screens, a panel from the right on phones (CSS). Esc or a click outside closes it; arrow
  * keys move between items; focus goes into it on opening and back to the button on closing.
  */
 export function AppMenu(props: {
-  state: AppState;
-  onOpen: (s: AppState) => void;
-  notify: (m: string) => void;
   /** Set while the browser offers to install the app. */
   install: (() => Promise<void>) | null;
   showTips: () => void;
@@ -31,18 +29,19 @@ export function AppMenu(props: {
   onAssistant: () => void;
   /** The current design's link, for "Report a problem". */
   reportUrl: () => string;
+  /** Open the Save & Export window. */
+  onExport: () => void;
+  /** Open the Open / Import window. */
+  onImport: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [allSaved, setAllSaved] = useState(false);
   const [iosHelp, setIosHelp] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
-  const p = useProjects(props);
 
   const close = (focusButton = true) => {
     setOpen(false);
-    setAllSaved(false);
     setIosHelp(false);
     if (focusButton) button.current?.focus();
   };
@@ -54,7 +53,6 @@ export function AppMenu(props: {
 
   useEffect(() => {
     if (!open) return;
-    p.refresh();
     panel.current?.querySelector<HTMLElement>("[role=menuitem]")?.focus();
     const outside = (e: PointerEvent) => {
       if (root.current && !root.current.contains(e.target as Node)) close(false);
@@ -79,7 +77,6 @@ export function AppMenu(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const shown = allSaved ? p.saved : p.saved.slice(0, RECENT);
   const canInstall = props.install !== null;
   const iosInstall = !canInstall && isIos() && !isStandalone();
 
@@ -95,9 +92,8 @@ export function AppMenu(props: {
         title="Projects, install, guides and more"
         onClick={() => (open ? close() : setOpen(true))}
       >
-        ☰
+        <Icon name="menu" size={20} />
       </button>
-      {p.fileInputElement}
       {open && (
         <>
           <div className="app-menu-backdrop" aria-hidden="true" onClick={() => close(false)} />
@@ -112,86 +108,78 @@ export function AppMenu(props: {
             <p className="menu-label">Project</p>
             {/* A new project starts in the design assistant: in this tab while the example is untouched, else a new tab. */}
             <button role="menuitem" onClick={act(props.onAssistant)}>
-              New project… <span className="menu-note">design assistant</span>
+              <Icon name="plus" />
+              New project… <span className="menu-note">assistant</span>
             </button>
-            <button role="menuitem" onClick={act(p.save)}>
-              Save in this browser…
+            <button role="menuitem" onClick={act(props.onImport)}>
+              <Icon name="open" />
+              Open / Import… <span className="menu-note kbd">{shortcut("O")}</span>
             </button>
-            {shown.map((x) => (
-              <div key={x.name} className="saved-row">
-                <button role="menuitem" onClick={act(() => p.openSaved(x))} title={`Saved ${new Date(x.savedAt).toLocaleString()}`}>
-                  {x.name}
-                </button>
-                <button className="icon" aria-label={`Delete ${x.name}`} title="Delete" onClick={() => p.remove(x)}>
-                  ✕
-                </button>
-              </div>
-            ))}
-            {!allSaved && p.saved.length > RECENT && (
-              <button role="menuitem" className="menu-more" onClick={() => setAllSaved(true)}>
-                All saved ({p.saved.length})…
-              </button>
-            )}
-            <button role="menuitem" onClick={act(p.download)}>
-              Save project file (.json)
-            </button>
-            <button role="menuitem" onClick={act(p.openFile)}>
-              Open project file…
-            </button>
-
-            <hr />
-            <p className="menu-label">App</p>
-            {canInstall && (
-              <button role="menuitem" onClick={act(() => void props.install?.())}>
-                Install app <span className="menu-note">works offline</span>
-              </button>
-            )}
-            {iosInstall && (
-              <button role="menuitem" aria-expanded={iosHelp} onClick={() => setIosHelp(!iosHelp)}>
-                Install app <span className="menu-note">how</span>
-              </button>
-            )}
-            {iosHelp && <p className="hint">In Safari, tap Share (the square with an arrow), then “Add to Home Screen”. It then opens like an app and works offline.</p>}
-            <button role="menuitem" onClick={act(props.showTips)}>
-              Getting started tips
+            <button role="menuitem" onClick={act(props.onExport)}>
+              <Icon name="save" />
+              Save / Export… <span className="menu-note kbd">{shortcut("S")}</span>
             </button>
 
             <hr />
             <p className="menu-label">Explore</p>
             <a role="menuitem" className="menu-link" href="/drivers/">
-              Drivers
+              <Icon name="speaker" />
+              Drivers database
             </a>
             <a role="menuitem" className="menu-link" href="/guides/">
+              <Icon name="book" />
               Guides
             </a>
             <a role="menuitem" className="menu-link" href="/validation/">
+              <Icon name="verified" />
               Validation
             </a>
 
             <hr />
-            <p className="menu-label">About</p>
+            <p className="menu-label">App</p>
+            {canInstall && (
+              <button role="menuitem" onClick={act(() => void props.install?.())}>
+                <Icon name="install" />
+                Install app <span className="menu-note">works offline</span>
+              </button>
+            )}
+            {iosInstall && (
+              <button role="menuitem" aria-expanded={iosHelp} onClick={() => setIosHelp(!iosHelp)}>
+                <Icon name="install" />
+                Install app <span className="menu-note">how</span>
+              </button>
+            )}
+            {iosHelp && <p className="hint">In Safari, tap Share (the square with an arrow), then “Add to Home Screen”. It then opens like an app and works offline.</p>}
+            <button role="menuitem" onClick={act(props.showTips)}>
+              <Icon name="tip" />
+              Getting started tips
+            </button>
             <a role="menuitem" className="menu-link" href={props.reportUrl()} target="_blank" rel="noopener" onClick={() => close(false)}>
+              <Icon name="bug" />
               Report a problem
             </a>
-            <a role="menuitem" className="menu-link" href={REPO} target="_blank" rel="noopener" onClick={() => close(false)}>
-              GitHub
-            </a>
-            <a role="menuitem" className="menu-link" href={`${REPO}/blob/main/docs/build-plan.md`} target="_blank" rel="noopener" onClick={() => close(false)}>
-              Roadmap
-            </a>
-            <a role="menuitem" className="menu-link" href={`${REPO}/blob/main/LICENSE`} target="_blank" rel="noopener" onClick={() => close(false)}>
-              Licence
-            </a>
-            <a role="menuitem" className="menu-link" href="/about/">
-              About
-            </a>
-            <a role="menuitem" className="menu-link" href="/privacy/">
-              Privacy
-            </a>
-            <a role="menuitem" className="menu-link" href={`${REPO}/blob/main/docs/data-sources.md`} target="_blank" rel="noopener" onClick={() => close(false)}>
-              Driver data credits
-            </a>
-            <p className="hint">Browser saves stay on this device. Project files and share links work anywhere.</p>
+
+            <hr />
+            <nav className="menu-footer" aria-label="About">
+              <a role="menuitem" href={REPO} target="_blank" rel="noopener" onClick={() => close(false)}>
+                GitHub
+              </a>
+              <a role="menuitem" href={`${REPO}#whats-next`} target="_blank" rel="noopener" onClick={() => close(false)}>
+                Roadmap
+              </a>
+              <a role="menuitem" href="/about/">
+                About
+              </a>
+              <a role="menuitem" href="/privacy/">
+                Privacy
+              </a>
+              <a role="menuitem" href={`${REPO}/blob/main/LICENSE`} target="_blank" rel="noopener" onClick={() => close(false)}>
+                Licence
+              </a>
+              <a role="menuitem" href={`${REPO}/blob/main/docs/data-sources.md`} target="_blank" rel="noopener" onClick={() => close(false)}>
+                Credits
+              </a>
+            </nav>
           </div>
         </>
       )}

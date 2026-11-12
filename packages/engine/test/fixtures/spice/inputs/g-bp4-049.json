@@ -1,0 +1,45 @@
+{
+  "id": "g-bp4-049",
+  "title": "bp4, bc-speakers/15nw100-4ohm (Qts 0.22), 141.5 L, rear 97.77 L closed, front 43.72 L port at 38.0 Hz",
+  "driver": {
+    "fs": 34,
+    "qms": 5.41,
+    "qes": 0.23,
+    "vas_l": 126.1,
+    "re": 3.7,
+    "sd_cm2": 855,
+    "le_mh": 1.74
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 97.77,
+      "ql": 17,
+      "qa": 82
+    },
+    "front": {
+      "vb_l": 43.72,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 13.95,
+        "length_cm": 61.95
+      },
+      "ql": 12,
+      "qa": null
+    }
+  },
+  "opts": {
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

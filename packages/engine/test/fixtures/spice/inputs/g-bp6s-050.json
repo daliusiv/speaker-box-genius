@@ -1,0 +1,55 @@
+{
+  "id": "g-bp6s-050",
+  "title": "bp6s, dayton-audio/dc250-8 (Qts 0.39), 344.9 L, rear 207.4 L port at 19.3 Hz, front 137.5 L port at 30.3 Hz",
+  "driver": {
+    "fs": 24.9,
+    "qms": 3.16,
+    "qes": 0.44,
+    "vas_l": 104,
+    "re": 6.6,
+    "sd_cm2": 343.1,
+    "le_mh": 2.63
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 207.4,
+      "port": {
+        "shape": "slot",
+        "width_cm": 15.09,
+        "height_cm": 2.201,
+        "length_cm": 8.059
+      },
+      "qp": null
+    },
+    "front": {
+      "vb_l": 137.5,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.73,
+        "length_cm": 8.03
+      },
+      "portCount": 2,
+      "qp": 115,
+      "ql": 26,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "qicl": 52
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

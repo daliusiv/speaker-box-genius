@@ -1,0 +1,65 @@
+{
+  "id": "g-bp6p-012",
+  "title": "bp6p, jensen/10-tornado-classic-100-8ohm (Qts 0.57), 10.41 L, rear 7.118 L 1 × dayton-audio/dsa315-pr at 61.4 Hz, front 3.293 L 4 × dayton-audio/ds175-pr at 95.1 Hz",
+  "driver": {
+    "fs": 82.4,
+    "qms": 9.81,
+    "qes": 0.61,
+    "vas_l": 26,
+    "re": 6.05,
+    "sd_cm2": 330.1,
+    "le_mh": 0.7
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 7.118,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 142.6,
+            "sd_cm2": 480,
+            "cms_mm_per_n": 0.58,
+            "qms": 6.23
+          },
+          "count": 1,
+          "addedMass_g": 177.4
+        }
+      ]
+    },
+    "front": {
+      "vb_l": 3.293,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 36.6,
+            "sd_cm2": 128.7,
+            "cms_mm_per_n": 1.15,
+            "qms": 5.57
+          },
+          "count": 4,
+          "addedMass_g": 45.75
+        }
+      ],
+      "ql": 13,
+      "qa": null
+    },
+    "qicl": 57
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

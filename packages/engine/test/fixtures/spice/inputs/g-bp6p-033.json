@@ -1,0 +1,53 @@
+{
+  "id": "g-bp6p-033",
+  "title": "bp6p, dayton-audio/pcs8-4 (Qts 0.49), 25.91 L, rear 9.594 L port at 37.8 Hz, front 16.32 L port at 64.4 Hz",
+  "driver": {
+    "fs": 43,
+    "qms": 3.96,
+    "qes": 0.56,
+    "vas_l": 20.5,
+    "re": 3.4,
+    "sd_cm2": 213,
+    "le_mh": 1.55
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 9.594,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.804,
+        "length_cm": 53.54
+      }
+    },
+    "front": {
+      "vb_l": 16.32,
+      "port": {
+        "shape": "slot",
+        "width_cm": 14.77,
+        "height_cm": 1.729,
+        "length_cm": 18.39
+      },
+      "portCount": 2,
+      "ql": 4,
+      "qa": null
+    },
+    "qicl": null
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0.5,
+    "power": 1,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

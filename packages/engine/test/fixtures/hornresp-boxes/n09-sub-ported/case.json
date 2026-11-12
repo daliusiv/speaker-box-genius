@@ -1,0 +1,29 @@
+{
+  "title": "12-inch subwoofer, ported",
+  "text": "100 L, 10 cm port 30 cm long; the port's output",
+  "frontAir": 1,
+  "driver": {
+    "fs": 24,
+    "qms": 4.2,
+    "qes": 0.42,
+    "vas_l": 85,
+    "re": 3.4,
+    "sd_cm2": 480,
+    "le_mh": 2.4,
+    "xmax_mm": 14,
+    "pe_w": 400
+  },
+  "portModel": "pipe",
+  "input": {
+    "kind": "vented",
+    "vb_l": 100,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 10,
+      "length_cm": 30
+    },
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

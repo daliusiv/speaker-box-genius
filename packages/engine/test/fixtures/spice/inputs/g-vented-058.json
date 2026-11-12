@@ -1,0 +1,40 @@
+{
+  "id": "g-vented-058",
+  "title": "vented, monacor/sph-8m (Qts 0.41), 33.73 L, Fb 38.3 Hz",
+  "driver": {
+    "fs": 35,
+    "qms": 2.26,
+    "qes": 0.5,
+    "vas_l": 44,
+    "re": 6.5,
+    "sd_cm2": 240,
+    "le_mh": 0.78
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 33.73,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 6.899,
+      "length_cm": 17.52
+    },
+    "ql": 14,
+    "qa": 27
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "series",
+    "rg": 0.5,
+    "coilTemp_C": 76,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

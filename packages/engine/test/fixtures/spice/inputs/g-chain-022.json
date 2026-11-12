@@ -1,0 +1,60 @@
+{
+  "id": "g-chain-022",
+  "title": "chain (sealed), purifi/ptt4-0m04-nac-04 (Qts 0.28), 9.367 L, 1 EQ, passive parts",
+  "driver": {
+    "fs": 48,
+    "qms": 4.2,
+    "qes": 0.3,
+    "vas_l": 5,
+    "re": 3.4,
+    "sd_cm2": 56.7,
+    "le_mh": 0.26
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 9.367,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0,
+    "driveModel": "winisd",
+    "power": 100,
+    "eq": [
+      {
+        "type": "lowshelf",
+        "freq": 79.09,
+        "gain_db": 2.374,
+        "q": 3.265
+      }
+    ],
+    "passive": {
+      "branches": [
+        {
+          "l_mH": 6.753,
+          "join": "parallel"
+        },
+        {
+          "l_mH": 5.299
+        },
+        {
+          "r": 1.789
+        },
+        {
+          "c_uF": 863
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

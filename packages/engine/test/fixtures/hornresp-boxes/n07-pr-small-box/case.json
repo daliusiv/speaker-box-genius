@@ -1,0 +1,19 @@
+{
+  "title": "Passive radiator in 20 L",
+  "text": "The DSA270-PR in a 20 L box; the PR's output",
+  "frontAir": 1,
+  "input": {
+    "kind": "passive-radiator",
+    "vb_l": 20,
+    "pr": {
+      "mms_g": 88.16,
+      "sd_cm2": 353,
+      "cms_mm_per_n": 0.596,
+      "qms": 5.265
+    },
+    "addedMass_g": 3.83,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

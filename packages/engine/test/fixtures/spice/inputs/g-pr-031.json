@@ -1,0 +1,41 @@
+{
+  "id": "g-pr-031",
+  "title": "passive-radiator, dayton-audio/umii12-22 (Qts 0.56), 21.03 L, Fb 32.8 Hz, 4 × sb-acoustics/sb29nrx2-00",
+  "driver": {
+    "fs": 31,
+    "qms": 2.75,
+    "qes": 0.71,
+    "vas_l": 53,
+    "re": 4.2,
+    "sd_cm2": 528,
+    "le_mh": 0.66
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 21.03,
+    "pr": {
+      "mms_g": 205,
+      "sd_cm2": 312,
+      "cms_mm_per_n": 0.43,
+      "qms": 7.3
+    },
+    "prCount": 4,
+    "addedMass_g": 359.3,
+    "ql": 10,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "space": "full"
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

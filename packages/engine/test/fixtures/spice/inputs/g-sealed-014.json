@@ -1,0 +1,30 @@
+{
+  "id": "g-sealed-014",
+  "title": "sealed, 18-sound/12ncx750h (Qts 0.30), 128.1 L",
+  "driver": {
+    "fs": 58,
+    "qms": 6.42,
+    "qes": 0.31,
+    "vas_l": 63,
+    "re": 5.4,
+    "sd_cm2": 531,
+    "le_mh": 0.62
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 128.1
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

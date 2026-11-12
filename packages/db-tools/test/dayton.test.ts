@@ -218,6 +218,15 @@ test("re-import keeps displacement, submissions and verified status, drops deale
   assert.ok(!fresh.sources.some((x) => x.url?.includes("soundimports")));
 });
 
+test("re-import keeps a descriptive coaxial note, not old change notes", () => {
+  const fresh = parseProduct(fx("rss315hf-4.html"), URL, "2026-11-03").driver!;
+  delete fresh.notes;
+  keepExisting(fresh, { notes: "Coaxial driver; values are for the woofer section. Vas recalculated from Cms." });
+  assert.equal(fresh.notes, "Coaxial driver; values are for the woofer section.");
+  keepExisting(fresh, { notes: "Coaxial driver; values are for the woofer section." });
+  assert.equal(fresh.notes, "Coaxial driver; values are for the woofer section.");
+});
+
 test("midranges are imported as midrange; woofer/midrange stays a woofer", () => {
   const mid = parseProduct(page("x", MX12.map(([k, v]): [string, string] => (k === "Speaker Type" ? [k, "Midrange"] : [k, v]))), URL, "d");
   assert.equal(mid.kind, "driver");

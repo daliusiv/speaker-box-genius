@@ -1,0 +1,60 @@
+{
+  "id": "g-chain-055",
+  "title": "chain (vented), bc-speakers/10fw64 (Qts 0.23), 10.27 L, Fb 60.3 Hz, HP linkwitz-riley 2, 1 EQ, passive parts",
+  "driver": {
+    "fs": 63,
+    "qms": 3.4,
+    "qes": 0.25,
+    "vas_l": 27,
+    "re": 5,
+    "sd_cm2": 320,
+    "le_mh": 0.9
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 10.27,
+    "port": {
+      "shape": "slot",
+      "width_cm": 11.03,
+      "height_cm": 1.748,
+      "length_cm": 11.77
+    },
+    "ql": 9,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0,
+    "power": 10,
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 2,
+      "freq": 58.83
+    },
+    "eq": [
+      {
+        "type": "linkwitz",
+        "f0": 97.63,
+        "q0": 0.9466,
+        "fp": 45.67,
+        "qp": 0.5452
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {},
+        {},
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

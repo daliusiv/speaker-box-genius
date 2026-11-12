@@ -3,6 +3,7 @@ import { MAX_DESIGNS, newDesign, type AppState, type DesignState } from "./state
 
 type WprProject = ReturnType<typeof parseWpr>;
 type WprChamberLosses = { ql: number; qa: number; qp: number };
+type WprPort = NonNullable<WprProject["port"]>;
 const lossesOf = (c: WprChamberLosses) => ({ ql: c.ql, qa: c.qa, qp: c.qp });
 
 /** Does a bandpass project keep losses of its own (chambers differ, or the leak between them isn't WinISD's default)? */
@@ -16,6 +17,13 @@ export function bandpassOwnLosses(b: { front: WprChamberLosses; rear: WprChamber
  * design. Used by the app's import and by the validation page's "Open in app" links, so both
  * open the same thing. Returns the state and the message the app shows.
  */
+/** A WinISD vent's shape as the app's port fields: round, or a slot with its width and height. */
+function portShape(w: WprPort, base: { slotWidth_cm: number; slotHeight_cm: number; diameter_cm: number }) {
+  return w.slot
+    ? { shape: "slot" as const, slotWidth_cm: Number(w.slot.width_cm.toFixed(3)), slotHeight_cm: Number(w.slot.height_cm.toFixed(3)), diameter_cm: base.diameter_cm }
+    : { shape: "round" as const, diameter_cm: Number(w.diameter_cm.toFixed(3)) };
+}
+
 export function applyWpr(s: AppState, p: WprProject, fileName: string): { state: AppState; message: string } {
   const d = p.driver;
   const base = fileName.replace(/\.wpr$/i, "");
@@ -33,8 +41,7 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
           ...v,
           name: `WinISD: ${base}`,
           vb_l: Number(p.box.vb_l.toFixed(3)),
-          shape: "round",
-          diameter_cm: Number(p.port.diameter_cm.toFixed(3)),
+          ...portShape(p.port, v),
           length_cm: Number(p.port.length_cm.toFixed(3)),
           count: p.port.count,
           // WinISD's ports are straight (the new-box default is flared).
@@ -67,10 +74,9 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
       const bd = newDesign("bandpass", s.designs);
       if (bd.kind === "bandpass") {
         const b = p.bandpass;
-        const portFrom = (w: { count: number; diameter_cm: number; length_cm: number }, fb: number | undefined, base: typeof bd.front) => ({
+        const portFrom = (w: WprPort, fb: number | undefined, base: typeof bd.front) => ({
           ...base,
-          shape: "round" as const,
-          diameter_cm: Number(w.diameter_cm.toFixed(3)),
+          ...portShape(w, base),
           length_cm: Number(w.length_cm.toFixed(3)),
           count: w.count,
           targetFb: Number((fb ?? base.targetFb).toFixed(2)),
@@ -140,6 +146,7 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
       ...s.volume,
       ...(d.displacement_l !== undefined ? { driverDisp_l: Math.round(d.displacement_l * 100) / 100 } : {}),
       driverCutout_mm: 0,
+      driverDepth_mm: 0,
     },
     };
   })();

@@ -1,0 +1,43 @@
+{
+  "id": "b01",
+  "title": "Bandpass 4th order, DSA215-8, lossless, no Le, no inter-chamber leak",
+  "driver": {
+    "fs": 35,
+    "qms": 1.87,
+    "qes": 0.4,
+    "vas_l": 37.4,
+    "re": 5.9,
+    "sd_cm2": 211.2,
+    "le_mh": 0
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 20,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 15,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 7,
+        "length_cm": 15
+      },
+      "ql": null,
+      "qa": null,
+      "qp": null
+    },
+    "qicl": null
+  },
+  "opts": {},
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

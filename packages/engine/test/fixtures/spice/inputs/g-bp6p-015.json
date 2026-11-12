@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6p-015",
+  "title": "bp6p, eminence/beta-12a (Qts 0.46), 113.9 L, rear 73.65 L port at 40.4 Hz, front 40.3 L port at 64.4 Hz",
+  "driver": {
+    "fs": 47,
+    "qms": 6,
+    "qes": 0.5,
+    "vas_l": 120.1,
+    "re": 5,
+    "sd_cm2": 538.9,
+    "le_mh": 0.64
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 73.65,
+      "port": {
+        "shape": "slot",
+        "width_cm": 31.24,
+        "height_cm": 3.409,
+        "length_cm": 18.44
+      },
+      "qp": 33,
+      "ql": 26,
+      "qa": 57
+    },
+    "front": {
+      "vb_l": 40.3,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 13.16,
+        "length_cm": 15.16
+      },
+      "qp": 60
+    },
+    "qicl": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.5,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -57,18 +57,18 @@ export function cardSvg(o: { title: string; subtitle: string; rows: { color: str
     .map((r, i) => `<rect x="60" y="${352 + i * 62}" width="22" height="22" rx="5" fill="${r.color}"/><text x="98" y="${371 + i * 62}" class="row">${esc(r.text)}</text>`)
     .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${CARD_W}" height="${CARD_H}" viewBox="0 0 ${CARD_W} ${CARD_H}">
-<style>text{font-family:${FONT};fill:#e8ebf2}.sub{fill:#8e96aa;font-size:30px}.row{font-size:30px;font-weight:600}.ax{fill:#8e96aa;font-size:20px}.brand{font-size:28px;font-weight:700}</style>
-<rect width="100%" height="100%" fill="#090a0f"/>
-<rect x="0" y="0" width="${CARD_W}" height="10" fill="#fb923c"/>
+<style>text{font-family:${FONT};fill:#e6e9ef}.sub{fill:#8e96aa;font-size:30px}.row{font-size:30px;font-weight:600}.ax{fill:#8e96aa;font-size:20px}.brand{font-size:28px;font-weight:700}</style>
+<rect width="100%" height="100%" fill="#11141a"/>
+<rect x="0" y="0" width="${CARD_W}" height="10" fill="#4ed7e9"/>
 <text x="60" y="${110 + (68 - tSize) / 3}" font-size="${tSize}" font-weight="800"${o.title.length > 34 ? ` textLength="1080" lengthAdjust="spacingAndGlyphs"` : ""}>${esc(o.title)}</text>
 <text x="60" y="${170}" class="sub">${esc(o.subtitle)}</text>
 <text x="60" y="300" class="sub">Suggested boxes</text>
 ${rows}
-<rect x="${cx - 20}" y="${cy - 30}" width="${cw + 40}" height="${ch + 80}" rx="18" fill="#12141c"/>
-<g stroke="#222634" stroke-width="2">${grid}</g>
+<rect x="${cx - 20}" y="${cy - 30}" width="${cw + 40}" height="${ch + 80}" rx="18" fill="#1a1e26"/>
+<g stroke="#282d37" stroke-width="2">${grid}</g>
 <g class="ax">${labels}</g>
 ${paths}
-<g transform="translate(60 568)"><rect width="40" height="40" rx="9" fill="#12141c"/><circle cx="20" cy="24" r="10" fill="none" stroke="#fb923c" stroke-width="4"/><circle cx="20" cy="9" r="3" fill="#8e96aa"/><text x="56" y="30" class="brand">Speaker Box Genius</text></g>
+<g transform="translate(60 568)"><rect width="40" height="40" rx="9" fill="#1a1e26"/><circle cx="20" cy="24" r="10" fill="none" stroke="#fb923c" stroke-width="4"/><circle cx="20" cy="9" r="3" fill="#8e96aa"/><text x="56" y="30" class="brand">Speaker Box Genius</text></g>
 <text x="${CARD_W - 60}" y="598" text-anchor="end" class="sub" font-size="26">speakerboxgenius.com</text>
 </svg>`;
 }

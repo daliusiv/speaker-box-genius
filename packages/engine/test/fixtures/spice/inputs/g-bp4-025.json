@@ -1,0 +1,48 @@
+{
+  "id": "g-bp4-025",
+  "title": "bp4, peerless/pls-p830986 (Qts 0.80), 0.57 L, rear 0.1893 L closed, front 0.3807 L port at 114.4 Hz",
+  "driver": {
+    "fs": 110,
+    "qms": 5.2,
+    "qes": 0.944,
+    "vas_l": 0.834,
+    "re": 6.2,
+    "sd_cm2": 27.3,
+    "le_mh": 0.121
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.1893,
+      "ql": 20,
+      "qa": 106
+    },
+    "front": {
+      "vb_l": 0.3807,
+      "port": {
+        "shape": "slot",
+        "width_cm": 3.672,
+        "height_cm": 0.4276,
+        "length_cm": 8.583
+      },
+      "qp": 102
+    },
+    "qicl": null
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0,
+    "power": 1,
+    "space": "full"
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

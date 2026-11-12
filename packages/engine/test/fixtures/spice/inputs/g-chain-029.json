@@ -1,0 +1,61 @@
+{
+  "id": "g-chain-029",
+  "title": "chain (sealed), celestion/truvox-1225 (Qts 0.62), 22 L, HP butterworth 3, 1 EQ, passive parts",
+  "driver": {
+    "fs": 60.3,
+    "qms": 7.389,
+    "qes": 0.681,
+    "vas_l": 54.15,
+    "re": 6.38,
+    "sd_cm2": 530.93,
+    "le_mh": 0.68
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 22,
+    "ql": 21,
+    "qa": 29
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "highPass": {
+      "type": "butterworth",
+      "order": 3,
+      "freq": 40.26
+    },
+    "eq": [
+      {
+        "type": "linkwitz",
+        "f0": 84.58,
+        "q0": 0.831,
+        "fp": 34.93,
+        "qp": 0.7927
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {
+          "join": "parallel"
+        },
+        {
+          "r": 7.599,
+          "l_mH": 2.69,
+          "c_uF": 857.9,
+          "join": "parallel"
+        },
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

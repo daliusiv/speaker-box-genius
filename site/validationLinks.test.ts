@@ -68,9 +68,14 @@ test("every Hornresp line and horn opened in the app matches Hornresp (at the re
 
 test("every Hornresp box, filter, EQ and stuffed-line case opened in the app is the comparison's own simulation", () => {
   for (const id of hornrespBoxIds()) {
+    const c = readBoxCase(id);
+    // Full space isn't a setting in the app yet: no link for those cases.
+    if (c.space === "full") {
+      assert.equal(hornrespBoxState(id), null);
+      continue;
+    }
     const s = hornrespBoxState(id);
     assert.ok(s, `${id}: no project`);
-    const c = readBoxCase(id);
     const ref = runHornrespBox(id).result;
     const d = s.designs[0]!;
     // The app's pipeline (sim.ts): its driver, enclosure and options, at the comparison's sweep.

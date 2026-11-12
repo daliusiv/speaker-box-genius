@@ -1,0 +1,43 @@
+{
+  "id": "g-vented-011",
+  "title": "vented, bc-speakers/15nw76-4ohm (Qts 0.20), 556.9 L, Fb 30.0 Hz",
+  "driver": {
+    "fs": 39,
+    "qms": 6.41,
+    "qes": 0.21,
+    "vas_l": 143,
+    "re": 3.1,
+    "sd_cm2": 855,
+    "le_mh": 0.88
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 556.9,
+    "port": {
+      "shape": "slot",
+      "width_cm": 17.2,
+      "height_cm": 3.83,
+      "length_cm": 2.221
+    },
+    "portCount": 2,
+    "endCorrection": 0.613,
+    "ql": 5,
+    "qa": null
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.1,
+    "coilTemp_C": 109,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

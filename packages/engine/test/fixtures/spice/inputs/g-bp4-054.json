@@ -1,0 +1,40 @@
+{
+  "id": "g-bp4-054",
+  "title": "bp4, redcatt/30ff (Qts 0.78), 0.5 L, rear 0.3425 L closed, front 0.1575 L port at 268.6 Hz",
+  "driver": {
+    "fs": 119,
+    "qms": 3.87,
+    "qes": 0.98,
+    "vas_l": 0.81,
+    "re": 5.6,
+    "sd_cm2": 28.27,
+    "le_mh": 0.04
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.3425
+    },
+    "front": {
+      "vb_l": 0.1575,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 2.735,
+        "length_cm": 13.77
+      }
+    }
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

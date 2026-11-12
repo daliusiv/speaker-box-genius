@@ -1,0 +1,63 @@
+* g-sealed-004: sealed, peerless/fsl-1015r02-08 (Qts 0.64), 19.99 L
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 11.5108644332213
+Vrg amp spk 0
+Vin spk bk 0
+Re1 bk c1a 5.3
+Le1 c1a c1b 0.000504
+Hemf1 c1b c1d Vcone1 256.453369545193
+Vi1 c1d 0 0
+Re2 bk c2a 5.3
+Le2 c2a c2b 0.000504
+Hemf2 c2b c2d Vcone2 256.453369545193
+Vi2 c2d 0 0
+Re3 bk c3a 5.3
+Le3 c3a c3b 0.000504
+Hemf3 c3b c3d Vcone3 256.453369545193
+Vi3 c3d 0 0
+Re4 bk c4a 5.3
+Le4 c4a c4b 0.000504
+Hemf4 c4b c4d Vcone4 256.453369545193
+Vi4 c4d 0 0
+Hd1 u1h1 0 Vi1 256.453369545193
+Ras11 u1h1 u1r1 2013.09507077757
+Lmas11 u1r1 u1m1 21.5794803520745
+Ccas11 u1m1 u1k1 2.5385250625127e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Hd2 u2h1 0 Vi2 256.453369545193
+Ras21 u2h1 u2r1 2013.09507077757
+Lmas21 u2r1 u2m1 21.5794803520745
+Ccas21 u2m1 u2k1 2.5385250625127e-7
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 box 0
+Hd3 u3h1 0 Vi3 256.453369545193
+Ras31 u3h1 u3r1 2013.09507077757
+Lmas31 u3r1 u3m1 21.5794803520745
+Ccas31 u3m1 u3k1 2.5385250625127e-7
+Rbl_u3k1 u3k1 0 1e+15
+Vcone3 u3k1 box 0
+Hd4 u4h1 0 Vi4 256.453369545193
+Ras41 u4h1 u4r1 2013.09507077757
+Lmas41 u4r1 u4m1 21.5794803520745
+Ccas41 u4m1 u4k1 2.5385250625127e-7
+Rbl_u4k1 u4k1 0 1e+15
+Vcone4 u4k1 box 0
+Rbl_box box 0 1e+15
+Rab box b1 80.5115533169818
+Cab b1 0 1.40958655554525e-7
+Rbl_b1 b1 0 1e+15
+Ral box l1 168118.374446251
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpc2 0 prs Vcone2 -1
+Fpc3 0 prs Vcone3 -1
+Fpc4 0 prs Vcone4 -1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.191622551482642
+Fx 0 xn Vcone1 27.027027027027
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) I(Vin) I(Vcone1) I(Vleak)
+.ac dec 50 5 2000
+.end

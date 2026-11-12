@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useUnits, type Quantity } from "./units.ts";
 
 export const REPO = "https://github.com/daliusiv/speaker-box-genius";
@@ -189,5 +189,45 @@ export function DriveValue(props: { value: number; unit: string; min: number; ma
         />
       )}
     </b>
+  );
+}
+
+/**
+ * An (i) button beside a title that opens a small popover with the chart's notes and caveats,
+ * in place of help text under the chart. Closes on Escape, a click outside or a second tap.
+ */
+export function InfoPopover(props: { label: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  const id = useId();
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", away);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("pointerdown", away);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [open]);
+  return (
+    <span className="info" ref={ref}>
+      <button type="button" className="info-button" aria-label={`About: ${props.label}`} aria-expanded={open} aria-controls={id} onClick={() => setOpen((v) => !v)}>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 11v5M12 7.5v.5" />
+        </svg>
+      </button>
+      {open && (
+        <div className="info-pop" id={id} role="note">
+          {props.children}
+        </div>
+      )}
+    </span>
   );
 }

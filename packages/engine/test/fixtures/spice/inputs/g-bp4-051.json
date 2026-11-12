@@ -1,0 +1,47 @@
+{
+  "id": "g-bp4-051",
+  "title": "bp4, redcatt/82fhm (Qts 0.61), 41.55 L, rear 25.04 L closed, front 16.51 L port at 49.2 Hz",
+  "driver": {
+    "fs": 42,
+    "qms": 3.1,
+    "qes": 0.76,
+    "vas_l": 33.6,
+    "re": 5.7,
+    "sd_cm2": 213.8,
+    "le_mh": 0.47
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 25.04,
+      "ql": 6,
+      "qa": 105
+    },
+    "front": {
+      "vb_l": 16.51,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 4.732,
+        "length_cm": 9.955
+      },
+      "qp": 97,
+      "ql": 18,
+      "qa": 47
+    }
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

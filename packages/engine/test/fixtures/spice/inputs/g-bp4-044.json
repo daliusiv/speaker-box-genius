@@ -1,0 +1,46 @@
+{
+  "id": "g-bp4-044",
+  "title": "bp4, celestion/ftr18-4080f (Qts 0.31), 121.5 L, rear 76.98 L closed, front 44.51 L port at 76.0 Hz",
+  "driver": {
+    "fs": 32.5,
+    "qms": 4.334,
+    "qes": 0.335,
+    "vas_l": 281.185824,
+    "re": 5.32,
+    "sd_cm2": 1134.12,
+    "le_mh": 1.25
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 76.98,
+      "ql": 16,
+      "qa": 68
+    },
+    "front": {
+      "vb_l": 44.51,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 17.95,
+        "length_cm": 14.1
+      },
+      "ql": 17,
+      "qa": 73
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

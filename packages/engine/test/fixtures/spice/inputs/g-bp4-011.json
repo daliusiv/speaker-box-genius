@@ -1,0 +1,45 @@
+{
+  "id": "g-bp4-011",
+  "title": "bp4, 18-sound/15ncx750h (Qts 0.38), 89.14 L, rear 41.56 L closed, front 47.58 L port at 60.7 Hz",
+  "driver": {
+    "fs": 49,
+    "qms": 6.32,
+    "qes": 0.4,
+    "vas_l": 141,
+    "re": 5.4,
+    "sd_cm2": 881,
+    "le_mh": 0.66
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 41.56
+    },
+    "front": {
+      "vb_l": 47.58,
+      "port": {
+        "shape": "slot",
+        "width_cm": 19.59,
+        "height_cm": 2.664,
+        "length_cm": 1.978
+      },
+      "ql": 7,
+      "qa": 17
+    },
+    "endCorrection": 0.85,
+    "qicl": 116
+  },
+  "opts": {
+    "rg": 0,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

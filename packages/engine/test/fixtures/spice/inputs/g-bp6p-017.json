@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6p-017",
+  "title": "bp6p, sb-acoustics/mw19tx-4 (Qts 0.27), 94.43 L, rear 63.44 L port at 24.7 Hz, front 30.99 L port at 52.6 Hz",
+  "driver": {
+    "fs": 32,
+    "qms": 5.43,
+    "qes": 0.28,
+    "vas_l": 53.2,
+    "re": 3.4,
+    "sd_cm2": 158,
+    "le_mh": 0.14
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 63.44,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6.891,
+        "length_cm": 23.68
+      },
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 30.99,
+      "port": {
+        "shape": "slot",
+        "width_cm": 8.064,
+        "height_cm": 1.249,
+        "length_cm": 4.394
+      },
+      "portCount": 2,
+      "ql": 6,
+      "qa": 63
+    }
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 56,
+    "driveModel": "winisd",
+    "power": 100,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

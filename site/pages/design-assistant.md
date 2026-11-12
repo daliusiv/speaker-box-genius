@@ -32,7 +32,7 @@ Not sure which driver to buy, or which box to put it in? The design assistant as
 
 ## A worked run: the home-subwoofer defaults
 
-Leave everything at **Home subwoofer**'s defaults and the assistant tries **756** of the database's drivers (the rest are outside the size range, aren't woofers, resonate above 60 Hz, lack the parameters or can't be wired to the amplifier's minimum load) and returns **1,478 boxes**. **447** are within their limits at 300 W, **78** more only pass Xmax in deep bass (amber, below), and **953** are over a limit. The top of the list, Balanced:
+Leave everything at **Home subwoofer**'s defaults and the assistant tries **760** of the database's drivers (the rest are outside the size range, aren't woofers, resonate above 60 Hz, lack the parameters or can't be wired to the amplifier's minimum load) and returns **1,486 boxes**. **451** are within their limits at 300 W, **78** more only pass Xmax in deep bass (amber, below), and **957** are over a limit. The top of the list, Balanced:
 
 ![The home-sub results, best first. The Dayton RSS315HO-44 with two RSS315-PR radiators leads: F3 24.9 Hz, 107 dB at 30 Hz, 43.5 L. Each card gives the F3, the output at your frequency, the box, the grade, and where a subsonic filter is needed.](img/assistant-results.png)
 
@@ -42,19 +42,19 @@ The first result is a **Dayton Audio RSS315HO-44** 12″ (its two 4 Ω coils in 
 
 | At 300 W, no filter | PR, 43.5 L | Ported, 43.5 L | Sealed, 23.6 L |
 |---|---|---|---|
-| F3 | 24.9 Hz | **24.1 Hz** | 42.8 Hz |
+| F3 | 24.9 Hz | **24.1 Hz** | 42.9 Hz |
 | Output at 30 Hz | 106.8 dB | **107.4 dB** | 101.0 dB |
 | Peak cone travel, 20 Hz up (Xmax 14 mm) | 9.5 mm | 8.7 mm | 10.3 mm |
 | Peak PR travel, 20 Hz up (26 mm) | 14.0 mm | — | — |
 | Port air speed | — | **37.7 m/s** | — |
 | Grade | ✓ within limits from 20 Hz up | ⚠ port, safe to about 61 W | ✓ within limits down to 10 Hz |
-| Rank in the list | **1st** | 526th | 3rd |
+| Rank in the list | **1st** | 530th | 3rd |
 
-![The example's response: the ported box (orange) reaches 24.1 Hz, the PR box (green) 24.9 Hz, the sealed box (blue) 42.8 Hz.](img/assistant-example-spl.png)
+![The example's response: the ported box (orange) reaches 24.1 Hz, the PR box (green) 24.9 Hz, the sealed box (blue) 42.9 Hz.](img/assistant-example-spl.png)
 
 ![Port air speed in the ported box at 300 W: 37.7 m/s, more than twice the 17 m/s chuffing line.](img/assistant-example-port.png)
 
-The ported box goes only 0.8 Hz deeper than the PR box, and it can't be built to play at 300 W. A 43.5 L box tuned to 23 Hz needs a long port. The biggest that fits straight inside is **5 cm** across (flared, 23.8 cm long), and at 300 W its air moves at **37.7 m/s**. That box is only quiet up to about **61 W**. The PR box has no port to chuff, which is why it ranks first and the ported box 526th. That's the trade a passive radiator makes: a hertz or so of F3 and the cost of two radiators, against a port you can't fit.
+The ported box goes only 0.8 Hz deeper than the PR box, and it can't be built to play at 300 W. A 43.5 L box tuned to 23 Hz needs a long port. The biggest that fits straight inside is **5 cm** across (flared, 23.8 cm long), and at 300 W its air moves at **37.7 m/s**. That box is only quiet up to about **61 W**. The PR box has no port to chuff, which is why it ranks first and the ported box 530th. That's the trade a passive radiator makes: a hertz or so of F3 and the cost of two radiators, against a port you can't fit.
 
 ## How results are graded
 
@@ -69,11 +69,11 @@ Every design is simulated at your power and graded exactly as the app grades it,
 
 ![The example's cone travel at 300 W: within the 14 mm Xmax from 20 Hz up in all three boxes, but below 20 Hz the PR (green) and ported (orange) cones unload and pass it.](img/assistant-example-excursion.png)
 
-> **Common trap: "within its limits" means safe with any signal.** The grade ignores everything below 20 Hz, but your amplifier doesn't. On the excursion chart the PR box's cone reaches **21.0 mm at 15 Hz** (Xmax 14), and the card says it's only safe to 80 W down there. Turn on **Signal → High-pass filter**, 24 dB/oct at 18 Hz, and that drops to **9.1 mm**, for an F3 of 25.5 Hz instead of 24.9. The sealed box doesn't need it: its cone tops out at 11.2 mm, even at 10 Hz. See the [subsonic filter guide](/guides/subsonic-filter/).
+> **Common trap: "within its limits" means safe with any signal.** The grade ignores everything below 20 Hz, but your amplifier doesn't. On the excursion chart the PR box's cone reaches **21.0 mm at 15 Hz** (Xmax 14), and the card says it's only safe to 80 W down there. Turn on **Signal → High-pass filter**, 24 dB/oct at 18 Hz, and that drops to **9.1 mm**, for an F3 of 25.5 Hz instead of 24.9. The sealed box doesn't need it: its cone tops out at 11.3 mm, even at 10 Hz. See the [subsonic filter guide](/guides/subsonic-filter/).
 
 On a box tuned higher, the deep-bass zone is shaded on the excursion chart, with its own 2 × Xmax line:
 
-![A tuned box's deep-bass zone, shaded below 0.7 × its tuning, with the 2 × Xmax line.](img/deep-bass-zone.png)
+![A tuned box's deep-bass zone, shaded below 0.7 × its tuning (here 41.6 Hz for a 59.3 Hz box), with the 2 × Xmax line. The cone passes Xmax only inside it, so the box is graded deep bass, not over.](img/deep-bass-zone.png)
 
 ## How results are ranked
 
@@ -128,7 +128,7 @@ When filling the space reaches at least 3 % lower F3 than the flat alignment, a 
 
 **"Within its limits means I don't need a subsonic filter."** The grade stops at 20 Hz. Below that the example's PR box reaches 21.0 mm at 15 Hz, past its 14 mm Xmax, and its card says so. *Proof: the card's "from 20 Hz up" line, the excursion chart, then Signal → High-pass filter.*
 
-**"Bigger power, louder results."** Only until a limit: at the default 300 W, 953 of the 1,478 home-sub boxes are over one. The card always says what sets its output (the amplifier, the cone, the port) and the power that keeps it within. *Proof: each card's limit line; Max SPL once opened.*
+**"Bigger power, louder results."** Only until a limit: at the default 300 W, 957 of the 1,486 home-sub boxes are over one. The card always says what sets its output (the amplifier, the cone, the port) and the power that keeps it within. *Proof: each card's limit line; Max SPL once opened.*
 
 ## Good to know
 

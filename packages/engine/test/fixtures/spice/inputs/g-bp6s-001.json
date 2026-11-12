@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6s-001",
+  "title": "bp6s, sb-acoustics/sb12pfc25-8 (Qts 0.56), 2.241 L, rear 0.9107 L port at 63.2 Hz, front 1.33 L port at 134.8 Hz",
+  "driver": {
+    "fs": 64,
+    "qms": 4.1,
+    "qes": 0.65,
+    "vas_l": 4.3,
+    "re": 6.4,
+    "sd_cm2": 50,
+    "le_mh": 0.36
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.9107,
+      "port": {
+        "shape": "slot",
+        "width_cm": 7.156,
+        "height_cm": 0.7497,
+        "length_cm": 86.32
+      },
+      "portCount": 2,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 1.33,
+      "port": {
+        "shape": "slot",
+        "width_cm": 9.758,
+        "height_cm": 1.108,
+        "length_cm": 10.68
+      },
+      "ql": 20,
+      "qa": 61
+    },
+    "rearPortTo": "front"
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 51,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

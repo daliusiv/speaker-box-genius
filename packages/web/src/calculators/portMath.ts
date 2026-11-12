@@ -42,6 +42,8 @@ export interface PortCalcResult {
   portDisp_l: number;
   tunedVb_l: number;
   pipe_hz: number;
+  /** WinISD's "1st port resonance": the same from the physical length, without end corrections (Hz). */
+  pipeNoEnds_hz: number;
   /** Room for a straight port (cm) and whether it fits. */
   room_cm: number;
   fits: boolean;
@@ -103,6 +105,7 @@ export function portCalc(i: PortCalcInput, air: Air): PortCalcResult | null {
     portDisp_l: displacement(i, length),
     tunedVb_l: vb,
     pipe_hz: portPipeResonance(port, k, air),
+    pipeNoEnds_hz: air.c / (2 * (length / 100)),
     room_cm: room,
     fits: length <= room,
     ...(wallRange ? { wallRange } : {}),

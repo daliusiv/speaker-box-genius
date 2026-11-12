@@ -1,0 +1,51 @@
+{
+  "id": "g-bp4-043",
+  "title": "bp4, bc-speakers/10nw76-4ohm (Qts 0.19), 10.35 L, rear 3.353 L closed, front 6.993 L 1 × seas/sp26r at 94.0 Hz",
+  "driver": {
+    "fs": 67,
+    "qms": 7,
+    "qes": 0.2,
+    "vas_l": 17.8,
+    "re": 3,
+    "sd_cm2": 320,
+    "le_mh": 0.53
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 3.353,
+      "ql": 13,
+      "qa": 20
+    },
+    "front": {
+      "vb_l": 6.993,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 40,
+            "sd_cm2": 342,
+            "cms_mm_per_n": 0.67
+          },
+          "count": 1,
+          "addedMass_g": 32.23
+        }
+      ],
+      "ql": 12,
+      "qa": null
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

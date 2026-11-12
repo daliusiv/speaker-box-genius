@@ -1,0 +1,41 @@
+{
+  "id": "g-vented-004",
+  "title": "vented, dayton-audio/ps95-8 (Qts 0.72), 0.5 L, Fb 107.3 Hz",
+  "driver": {
+    "fs": 119.8,
+    "qms": 7.33,
+    "qes": 0.8,
+    "vas_l": 0.94,
+    "re": 7.1,
+    "sd_cm2": 28.3,
+    "le_mh": 0.63
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 0.5,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 2.244,
+      "length_cm": 18.85
+    },
+    "ql": 23,
+    "qa": 110
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "coilTemp_C": 142,
+    "driveModel": "winisd",
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

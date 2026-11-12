@@ -1,0 +1,53 @@
+{
+  "id": "g-bp6p-045",
+  "title": "bp6p, faital-pro/10fe200 (Qts 0.69), 76.17 L, rear 50.73 L port at 41.9 Hz, front 25.44 L port at 60.2 Hz",
+  "driver": {
+    "fs": 55,
+    "qms": 11.3,
+    "qes": 0.74,
+    "vas_l": 61.7,
+    "re": 5.9,
+    "sd_cm2": 359.7,
+    "le_mh": 0.42
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 50.73,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 7.053,
+        "length_cm": 8.749
+      },
+      "ql": 24,
+      "qa": 38
+    },
+    "front": {
+      "vb_l": 25.44,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 8.757,
+        "length_cm": 14.09
+      },
+      "ql": 16,
+      "qa": 105
+    },
+    "endCorrection": 0.613,
+    "qicl": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

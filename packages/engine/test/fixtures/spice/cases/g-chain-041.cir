@@ -1,0 +1,53 @@
+* g-chain-041: chain (sealed), dayton-audio/dc160-8 (Qts 0.34), 9.428 L, HP butterworth 4, 1 EQ, passive parts
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 src 0 AC 39.7414141670877
+A1 %vd(src 0) %vd(f1 0) xf1
+A2 %vd(f1 0) %vd(f2 0) xf2
+A3 %vd(f2 0) %vd(amp 0) xf3
+Rg amp spk 0.1
+Vin spk n0 0
+Rx1 n0 n1 9.23
+Rx2 n1 x2n1 8.212
+Lx2 x2n1 0 0.007626
+Rx3 n1 n3 2.235
+Lx3 n1 n3 0.001837
+Vx9 n3 bk 0
+Re1 bk c1a 7.8969
+Le1 c1a c1b 0.00226
+Hemf1 c1b c1d Vcone1 783.342943878694
+Vi1 c1d w1 0
+Re2 w1 c2a 7.8969
+Le2 c2a c2b 0.00226
+Hemf2 c2b c2d Vcone2 783.342943878694
+Vi2 c2d 0 0
+Hd1 u1h1 0 Vi1 783.342943878694
+Ras11 u1h1 u1r1 10210.9801951009
+Lmas11 u1r1 u1m1 157.505400074191
+Ccas11 u1m1 u1k1 1.26185189101548e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Hd2 u2h1 0 Vi2 783.342943878694
+Ras21 u2h1 u2r1 10210.9801951009
+Lmas21 u2r1 u2m1 157.505400074191
+Ccas21 u2m1 u2k1 1.26185189101548e-7
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 box 0
+Rbl_box box 0 1e+15
+Rab box b1 614.139303824094
+Cab b1 0 6.64622325614186e-8
+Rbl_b1 b1 0 1e+15
+Ral box l1 122501.970977701
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpc2 0 prs Vcone2 -1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.19113747540989
+Fx 0 xn Vcone1 74.1839762611276
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) I(Vin) I(Vcone1) I(Vleak)
+.model xf1 s_xfer(num_coeff=[1 0 0] den_coeff=[1 165.571867519344 46798.6992408037])
+.model xf2 s_xfer(num_coeff=[1 0 0] den_coeff=[1 399.725848112642 46798.6992408037])
+.model xf3 s_xfer(num_coeff=[1 273.690759779906 1903813.52709935] den_coeff=[1 637.984511249544 1903813.52709935])
+.ac dec 50 5 2000
+.end

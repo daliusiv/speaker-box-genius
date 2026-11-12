@@ -1,0 +1,59 @@
+{
+  "id": "g-chain-045",
+  "title": "chain (sealed), beyma/12cxa400nd (Qts 0.25), 74.83 L, 1 EQ, passive parts",
+  "driver": {
+    "fs": 45,
+    "qms": 7.1,
+    "qes": 0.26,
+    "vas_l": 88.5,
+    "re": 6.6,
+    "sd_cm2": 550,
+    "le_mh": 1
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 74.83
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 100,
+    "space": "full",
+    "distance_m": 2,
+    "eq": [
+      {
+        "type": "linkwitz",
+        "f0": 51.84,
+        "q0": 0.6204,
+        "fp": 32.87,
+        "qp": 0.5473
+      }
+    ],
+    "passive": {
+      "branches": [
+        {
+          "r": 5.827,
+          "c_uF": 601.1,
+          "join": "parallel"
+        },
+        {
+          "r": 7.912,
+          "c_uF": 486.6,
+          "join": "parallel"
+        },
+        {},
+        {
+          "c_uF": 671
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "g-sealed-058",
+  "title": "sealed, faital-pro/12hx500 (Qts 0.37), 68.68 L",
+  "driver": {
+    "fs": 55,
+    "qms": 7.3,
+    "qes": 0.39,
+    "vas_l": 57.8,
+    "re": 5.6,
+    "sd_cm2": 540,
+    "le_mh": 0.57
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 68.68,
+    "ql": 17,
+    "qa": 109
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

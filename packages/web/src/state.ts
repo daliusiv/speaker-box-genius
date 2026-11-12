@@ -2,7 +2,11 @@ import { DEFAULT_END_CORRECTION, TS_PARAMS, type EqStage, type HighPassType, typ
 import { stuffable, stuffingFrom, type Stuffing } from "./stuffing.ts";
 
 export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line";
-export type ShapeKind = "box" | "cylinder" | "sphere" | "frustum";
+/**
+ * Volume calculator shapes. "frustum" is shown as "Tapered (all sides)" (it was "Truncated
+ * pyramid"; the id stays so old links open); "wedge" is the car wedge with one sloped panel.
+ */
+export type ShapeKind = "box" | "wedge" | "cylinder" | "sphere" | "frustum";
 export type PrParams = Required<Pick<PassiveRadiatorInput, "mms_g" | "sd_cm2" | "xmax_mm" | "qms" | "vas_l">>;
 
 interface DesignBase {
@@ -232,6 +236,12 @@ export interface Settings {
    * the textbook lossless equations (Thiele/Small/Bullock; QB3/B4, Keele above B4, SQB3).
    */
   alignments: "winisd" | "textbook";
+  /** Air distortion limit (HD2, %): the line on its chart, the ⚠ in the summary and, if airInMaxSpl, a max-SPL limit. */
+  airLimit_pct: number;
+  /** Count the air distortion limit in the Max SPL chart. */
+  airInMaxSpl: boolean;
+  /** Box fill for the air distortion: fill makes the air's compression less adiabatic (empty = worst case). */
+  airFill: "empty" | "lined" | "filled" | "packed";
 }
 
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
@@ -358,6 +368,19 @@ export interface AppState {
     wall_mm: number;
     /** Cylinder: end-cap thickness (mm) when it differs from the tube wall; null = the same as the wall. */
     capWall_mm: number | null;
+    /**
+     * Car wedge: depth_cm is the bottom (long) depth and topDepth_cm the top (short) one.
+     * slopeWall_mm is the sloped panel's thickness (null = the wall; a double baffle is 2×),
+     * slope which panel leans (front: the driver on it; rear: an upright baffle), joinery
+     * how the corners are cut (butt joints with bevels, or mitres).
+     */
+    slopeWall_mm: number | null;
+    slope: "front" | "rear";
+    joinery: "butt" | "miter";
+    /** Driver mounting depth (mm, 0 = unknown) for the wedge's motor clearance check. */
+    driverDepth_mm: number;
+    /** Wedge: driver centre along the baffle's inside face from its bottom edge (mm); null = the middle. */
+    driverAt_mm: number | null;
     driverDisp_l: number;
     prDisp_l: number;
     portWall_mm: number;
@@ -518,6 +541,9 @@ export const DEFAULT_STATE: AppState = {
     portLimit_ms: 17,
     prCaution_pct: 75,
     alignments: "winisd",
+    airLimit_pct: 10,
+    airInMaxSpl: false,
+    airFill: "empty",
   },
   eq: [],
   measured: [],
@@ -534,6 +560,11 @@ export const DEFAULT_STATE: AppState = {
     topDepth_cm: 30,
     wall_mm: 18,
     capWall_mm: null,
+    slopeWall_mm: null,
+    slope: "front",
+    joinery: "butt",
+    driverDepth_mm: 0,
+    driverAt_mm: null,
     driverDisp_l: 1.8,
     prDisp_l: 0.6,
     portWall_mm: 3,
@@ -962,6 +993,18 @@ function compareFrom(raw: unknown): CompareDriver | null {
   return out as CompareDriver;
 }
 
+/** A link's volume calculator: what it gives over the defaults (older links lack the wedge's fields), with the choices checked. */
+function volumeFrom(raw: Raw, d: AppState["volume"]): AppState["volume"] {
+  const v = { ...d, ...raw };
+  if (!["box", "wedge", "cylinder", "sphere", "frustum"].includes(v.shape)) v.shape = d.shape;
+  if (v.slope !== "rear") v.slope = "front";
+  if (v.joinery !== "miter") v.joinery = "butt";
+  if (!(typeof v.slopeWall_mm === "number" && Number.isFinite(v.slopeWall_mm) && v.slopeWall_mm > 0)) v.slopeWall_mm = null;
+  if (!(typeof v.driverAt_mm === "number" && Number.isFinite(v.driverAt_mm) && v.driverAt_mm >= 0)) v.driverAt_mm = null;
+  if (!(typeof v.driverDepth_mm === "number" && Number.isFinite(v.driverDepth_mm) && v.driverDepth_mm >= 0)) v.driverDepth_mm = 0;
+  return v;
+}
+
 /** Reads state from a URL hash, falling back to defaults for anything missing. */
 export function decodeState(hash: string): AppState | null {
   const m = /(?:^#?|&)s=([A-Za-z0-9_-]+)/.exec(hash);
@@ -1018,6 +1061,9 @@ export function decodeState(hash: string): AppState | null {
         endCorrection: endCorrectionFrom(raw.settings?.endCorrection),
         airConditions: airConditionsFrom(raw.settings?.airConditions, d.settings.airConditions),
         alignments: raw.settings?.alignments === "textbook" ? "textbook" : "winisd",
+        airLimit_pct: Number.isFinite(raw.settings?.airLimit_pct) ? Math.min(30, Math.max(1, raw.settings!.airLimit_pct!)) : d.settings.airLimit_pct,
+        airInMaxSpl: raw.settings?.airInMaxSpl === true,
+        airFill: (["empty", "lined", "filled", "packed"] as const).find((x) => x === raw.settings?.airFill) ?? "empty",
       },
       eq: Array.isArray(raw.eq)
         ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf", "highshelf"].includes(e.type)).slice(0, 12)
@@ -1025,7 +1071,7 @@ export function decodeState(hash: string): AppState | null {
       measured: measuredFrom(raw.measured),
       compare,
       designs,
-      volume: { ...d.volume, ...rawVolume },
+      volume: volumeFrom(rawVolume, d.volume),
     };
   } catch {
     return null;

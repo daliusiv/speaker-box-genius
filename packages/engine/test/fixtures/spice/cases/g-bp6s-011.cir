@@ -1,0 +1,48 @@
+* g-bp6s-011: bp6s, monacor/spx-30m-8ohm (Qts 0.71), 1.296 L, rear 0.6367 L port at 63.9 Hz, front 0.6592 L port at 213.6 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 2.5298221281347
+Vrg amp spk 0
+Vin spk bk 0
+Re1 bk c1a 9.29248
+Le1 c1a c1b 0.00018
+Hemf1 c1b c1d Vcone1 949.710240634253
+Vi1 c1d 0 0
+Hd1 u1h1 br Vi1 949.710240634253
+Ras11 u1h1 u1r1 36324.1697272914
+Lmas11 u1r1 u1m1 199.62384035533
+Ccas11 u1m1 u1k1 1.26890134292059e-8
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 bf 0
+Rbl_bf bf 0 1e+15
+Rabf bf fb1 2717.99411929883
+Cabf fb1 0 4.64699869585142e-9
+Rbl_fb1 fb1 0 1e+15
+Ralf bf fl1 2726148.10165672
+Vleakf fl1 0 0
+Rapf bf fp1 1603.61653038631
+Lmapf fp1 fp2 119.501566791964
+Vportf fp2 0 0
+Fvf 0 vf Vportf 3583.47493434536
+Rvf vf 0 1
+Rbl_br br 0 1e+15
+Rabr br rb1 5547.47084473835
+Cabr rb1 0 4.48838602798634e-9
+Rbl_rb1 rb1 0 1e+15
+Ralr br rl1 5547470.84473835
+Vleakr rl1 0 0
+Rapr br rp1 7022.11499333969
+Lmapr rp1 rp2 1381.27534078535
+Vportr rp2 bf 0
+Fvr 0 vr Vportr 3277.45600073507
+Rvr vr 0 1
+Ricl br bf 16054701.8327472
+Fpo1 0 prs Vleakf 1
+Fpo2 0 prs Vportf 1
+Fpo3 0 prs Vleakr 1
+Lrad prs 0 0.095568737704945
+Fx 0 xn Vcone1 312.5
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vf) V(vr) V(br) V(bf) I(Vin) I(Vcone1) I(Vportf)
+.ac dec 50 5 2000
+.end

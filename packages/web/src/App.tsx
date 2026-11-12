@@ -11,7 +11,6 @@ import {
   parseWdr,
   parseWpr,
   resampleMagnitude,
-  writeWdr,
   type HighPassType,
   type SimulationResult,
   type TsValues,
@@ -84,6 +83,8 @@ import {
   limitsOf,
   checkFromHz,
   portLimitOf,
+  airLimitOf,
+  AIR_COMPRESSION_CAUTION,
   driveAt,
   deepSplitOf,
   DEEP_ALLOW,
@@ -96,45 +97,34 @@ import {
 } from "./sim.ts";
 import { RoomGainPanel } from "./RoomGain.tsx";
 import { BafflePanel } from "./BafflePanel.tsx";
+import { AirChart } from "./AirChart.tsx";
 import { AddBoxMenu, DesignCard } from "./Designs.tsx";
 import { useFolded } from "./fold.ts";
 import { COMPAT, COMPAT_NAMES, compatOf, nearestCompat, withCompat, type CompatPreset } from "./compat.ts";
-import { MeasuredCard, measuredSeries } from "./Measured.tsx";
+import { addMeasured, MeasuredCard, measuredSeries } from "./Measured.tsx";
 import { HelpDock } from "./HelpDock.tsx";
-import { reportUrl, ShareMenu } from "./Share.tsx";
+import { reportUrl, ShareButton } from "./Share.tsx";
 import { DspExportPanel } from "./DspExport.tsx";
 import { EqPanel } from "./Eq.tsx";
 import { PassivePanel } from "./Passive.tsx";
-import { MeasurePanel, type Measurement } from "./Measure.tsx";
+import { measurementOf, MeasurePanel, type Measurement } from "./Measure.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
 import { AppMenu } from "./AppMenu.tsx";
+import { ExportWindow } from "./ExportWindow.tsx";
+import { OpenWindow } from "./OpenWindow.tsx";
+import { importKind, type ImportUse } from "./formats/imports.ts";
+import { readProjectJson } from "./formats/project.ts";
 import { openResults, withDriver } from "./assistant.ts";
 import type { SharedResults } from "./assistant.ts";
 import { ASSISTANT_HASH, SHARED_LINK, SHARED_RESULTS, START_IN_ASSISTANT, untouched } from "./start.ts";
 import { DesignAssistant } from "./DesignAssistant.tsx";
 import { Logo, Sparkle } from "./Logo.tsx";
 import { submitDriverUrl } from "./submit.ts";
+import { EQ_HANDLE, GUIDE, GUIDE_DIM, LIMIT } from "./palette.ts";
+import { excursionChart, maxSplChart, relRefOf, responseChart, valueAt, type ChartInput } from "./chartProps.ts";
 
-const LIMIT_RED = "#dc2626";
-
-/** What sets the maximum SPL at each frequency, as shown in the strip under the Max SPL chart. */
-const LIMIT_KINDS: Record<string, { label: string; short: string; color: string }> = {
-  xmax: { label: "Cone Xmax", short: "cone Xmax", color: "#dc2626" },
-  "pr-xmax": { label: "PR Xmax", short: "PR Xmax", color: "#9333ea" },
-  port: { label: "Port speed", short: "port speed", color: "#d97706" },
-  thermal: { label: "Power (Pe)", short: "power handling", color: "#6b7389" },
-  amp: { label: "Amplifier", short: "amplifier limit", color: "#0891b2" },
-};
-
-type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay" | "transient" | "pressure";
-
-/**
- * The level a design's relative response is drawn against: a plain cone's level, or for a
- * bandpass box its band's own peak (so its −3 dB points are its band edges, as in the summary).
- */
-function relRefOf(r: SimulationResult): number {
-  return r.summary.bandPeakSpl ?? r.summary.referenceSpl;
-}
+const LIMIT_RED = LIMIT.xmax;
+type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay" | "transient" | "pressure" | "air";
 
 export function App(props: { initial: AppState | null }) {
   const { state, setState, undo, redo, canUndo, canRedo } = useUndoable<AppState>(() => props.initial ?? DEFAULT_STATE);
@@ -229,6 +219,12 @@ export function App(props: { initial: AppState | null }) {
   const wdrInput = useRef<HTMLInputElement>(null);
   const [pasting, setPasting] = useState(false);
   const [measureOpen, setMeasureOpen] = useState(false);
+  /** Save & Export window: null closed, "" the last format, else the format to show. */
+  const [exportFor, setExportFor] = useState<string | null>(null);
+  /** Open / Import window, and a measurement file waiting for "use as…". */
+  const [openWin, setOpenWin] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [dropping, setDropping] = useState(false);
   // SPL chart scale: relative to each design's passband (default) or absolute dB SPL. A view
   // preference of this browser, not part of the design.
   const [splMode, setSplMode] = useState<"relative" | "absolute">(() => {
@@ -261,6 +257,24 @@ export function App(props: { initial: AppState | null }) {
     setZMode(m);
     try {
       localStorage.setItem("sbg.z", m);
+    } catch {
+      // not remembered
+    }
+  };
+  // Air distortion chart: % or dB below the fundamental, at the drive set or at max SPL.
+  const [airView, setAirView] = useState<{ unit: "pct" | "dbc"; at: "now" | "max" }>(() => {
+    try {
+      const v = localStorage.getItem("sbg.air") ?? "";
+      return { unit: v.includes("dbc") ? "dbc" : "pct", at: v.includes("max") ? "max" : "now" };
+    } catch {
+      return { unit: "pct", at: "now" };
+    }
+  });
+  const chooseAirView = (v: Partial<typeof airView>) => {
+    const next = { ...airView, ...v };
+    setAirView(next);
+    try {
+      localStorage.setItem("sbg.air", `${next.unit} ${next.at}`);
     } catch {
       // not remembered
     }
@@ -435,14 +449,6 @@ export function App(props: { initial: AppState | null }) {
     [focusIds, designs, fadedLabels],
   );
   const mainDesigns = useMemo(() => designs.filter((d) => !d.compare), [designs]);
-  // A line's cone and mouth curves, when switched on.
-  const partsOf = (d: Design, map: (y: Float64Array) => Float64Array): Series[] =>
-    showParts && d.result.parts && !d.compare
-      ? [
-          { label: `${d.label} · cone`, color: d.color, y: map(d.result.parts.cone), dash: "6 4", thin: true },
-          { label: `${d.label} · mouth`, color: d.color, y: map(d.result.parts.mouth), dash: "1.5 3", thin: true },
-        ]
-      : [];
   const series = (pick: (r: SimulationResult) => Float64Array | null): Series[] =>
     designs.map((d) => ({ label: d.label, color: d.color, dash: d.dash, y: pick(d.result) }));
 
@@ -481,6 +487,7 @@ export function App(props: { initial: AppState | null }) {
           ...s.volume,
           ...(d.displacement_l !== undefined ? { driverDisp_l: Math.round(d.displacement_l * 100) / 100 } : {}),
           driverCutout_mm: 0,
+          driverDepth_mm: 0,
         },
       }));
       setWdrMsg(`Imported ${file.name}.`);
@@ -526,31 +533,103 @@ export function App(props: { initial: AppState | null }) {
     }
   };
 
-  const exportWdr = () => {
-    if (solved.missing.length > 0) {
-      setWdrMsg("Enter enough parameters to simulate before exporting.");
+  /** Any file from the Open window or dropped on the page: open it, or ask how to use a measurement. */
+  const importFile = async (f: File) => {
+    const head = new TextDecoder("latin1").decode(await f.slice(0, 4096).arrayBuffer());
+    const kind = importKind(f.name, head);
+    if (kind === null) return notify(`${f.name}: not a file Speaker Box Genius reads.`);
+    if (kind === "measurement") {
+      setPendingFile(f);
+      setOpenWin(true);
       return;
     }
-    const name = state.driverName.trim();
-    const brand = state.driverBrand && name.startsWith(state.driverBrand) ? state.driverBrand : "";
-    const text = writeWdr({
-      brand,
-      model: name.slice(brand.length).trim() || name,
-      nominal_ohms: state.nominal_ohms,
-      ts: solved.values,
-      le_mh: state.le_mh,
-      xmax_mm: state.xmax_mm,
-      pe_w: state.pe_w,
-      displacement_l: state.volume.driverDisp_l,
-    });
-    const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${state.driverName.replace(/[^\w.-]+/g, " ").trim() || "driver"}.wdr`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setWdrMsg("Exported a WinISD driver file.");
+    setOpenWin(false);
+    setPendingFile(null);
+    if (kind === "project") {
+      const s = readProjectJson(await f.text());
+      if (!s) return notify(`${f.name} isn't a Speaker Box Genius project file.`);
+      setStep(s);
+      return notify(`Opened “${s.driverName}”.`);
+    }
+    // WinISD / OpenISD: the result (and any notes) shows on the driver card.
+    showOnPhone("panel", "driver");
+    await importWdr(f);
   };
+
+  const applyImport = async (f: File, use: ImportUse) => {
+    setPendingFile(null);
+    setOpenWin(false);
+    try {
+      if (use === "measure-driver") {
+        setMeasurement(await measurementOf(f));
+        setMeasureOpen(true);
+        showOnPhone("panel", "driver");
+        showMeasurePanel();
+        return;
+      }
+      const r = await addMeasured(f, use === "overlay-response" ? "spl" : "impedance", state.measured, mainDesigns);
+      setStep((s) => ({ ...s, measured: r.list }));
+      notify(r.message);
+    } catch (e) {
+      notify(`${f.name}: ${(e as Error).message}.`);
+    }
+  };
+
+  // Ctrl/⌘+S: Save & Export, at "Save in this browser" (Enter saves). Ctrl/⌘+O: Open / Import.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+      const k = e.key.toLowerCase();
+      if (k === "s") {
+        e.preventDefault();
+        setExportFor("browser");
+      } else if (k === "o") {
+        e.preventDefault();
+        setOpenWin(true);
+      }
+    };
+    addEventListener("keydown", onKey);
+    return () => removeEventListener("keydown", onKey);
+  }, []);
+
+  // Drop a file anywhere on the page to open it.
+  const importRef = useRef(importFile);
+  importRef.current = importFile;
+
+  // The installed app (desktop Chrome/Edge) opens .sbgenius files double-clicked in the file manager.
+  useEffect(() => {
+    const queue = (window as { launchQueue?: LaunchQueue }).launchQueue;
+    queue?.setConsumer(async (params) => {
+      const handle = params.files?.[0];
+      if (handle) void importRef.current(await handle.getFile());
+    });
+  }, []);
+  useEffect(() => {
+    const hasFiles = (e: DragEvent) => e.dataTransfer?.types.includes("Files") ?? false;
+    const over = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      setDropping(true);
+    };
+    const leave = (e: DragEvent) => {
+      if (!e.relatedTarget) setDropping(false);
+    };
+    const drop = (e: DragEvent) => {
+      setDropping(false);
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      const f = e.dataTransfer?.files[0];
+      if (f) void importRef.current(f);
+    };
+    addEventListener("dragover", over);
+    addEventListener("dragleave", leave);
+    addEventListener("drop", drop);
+    return () => {
+      removeEventListener("dragover", over);
+      removeEventListener("dragleave", leave);
+      removeEventListener("drop", drop);
+    };
+  }, []);
 
   const hp = state.highPass;
 
@@ -607,7 +686,7 @@ export function App(props: { initial: AppState | null }) {
           from: (l.value * prCaution) / 100,
           to: l.value,
           label: i === 0 ? `Over ${prCaution} % of PR Xmax: suspension stiffens (rule of thumb)` : "",
-          color: "#d97706",
+          color: LIMIT.port,
         }))
       : [];
   // One curve per PR group; groups after the first are dashed and named after their PR.
@@ -644,9 +723,10 @@ export function App(props: { initial: AppState | null }) {
   const hasPr = prDesigns.length > 0;
   const hasPort = designs.some((d) => d.result.portVelocity || d.result.rearPortVelocity);
   const hasBoxPressure = designs.some((d) => d.result.boxPressurePa);
+  const hasAir = designs.some((d) => d.result.airHd2);
   // A dot on the charts where a box is over its limit at this drive (as in the summary).
   const overCharts = new Set(
-    designs.filter((d) => !d.compare).flatMap((d) => limitsOf(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state)).over.map((k) => LIMIT_CHART[k])),
+    designs.filter((d) => !d.compare).flatMap((d) => limitsOf(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state), airLimitOf(state)).over.map((k) => LIMIT_CHART[k])),
   );
   const chartTabs: { id: ChartId; label: string; alert?: string }[] = [
     ...(narrow ? [{ id: "excursion" as const, label: "Excursion", alert: overCharts.has("excursion") ? "A box is past Xmax" : undefined }] : []),
@@ -655,6 +735,7 @@ export function App(props: { initial: AppState | null }) {
     { id: "maxspl", label: "Max SPL" },
     { id: "impedance", label: "Impedance" },
     ...(hasBoxPressure ? [{ id: "pressure" as const, label: "Box pressure" }] : []),
+    ...(hasAir ? [{ id: "air" as const, label: "Air distortion", alert: overCharts.has("air") ? "A design's air distortion is over the limit" : undefined }] : []),
     ...(zaDesigns.length > 0 ? [{ id: "za" as const, label: "Line load (Za)" }] : []),
     { id: "delay", label: "Group delay" },
     { id: "transient", label: "Impulse / step" },
@@ -696,7 +777,7 @@ export function App(props: { initial: AppState | null }) {
             f: e.freq,
             y: e.gain_db,
             // White, so an EQ point never looks like one of the boxes' curves.
-            color: "#e8ebf2",
+            color: EQ_HANDLE,
             shape: "dot",
             axes: "xy",
             label: `EQ ${i + 1} (${e.type === "peak" ? "peaking" : e.type === "highshelf" ? "high shelf" : "low shelf"})`,
@@ -743,7 +824,7 @@ export function App(props: { initial: AppState | null }) {
   const finderCtx = useMemo<FinderContext>(
     () => ({
       driver: solved.missing.length > 0 ? null : driverInputOf(state, solved),
-      sim: simOptionsOf(state),
+      sim: simOptionsOf(state, true),
       losses: { ql: state.settings.losses.ql, qa: state.settings.losses.qa },
       fMin: checkFromHz(state.highPass.on),
       align: alignmentDriver(solved, state),
@@ -751,6 +832,14 @@ export function App(props: { initial: AppState | null }) {
     }),
     [state, solved],
   );
+  // What the response, excursion and Max SPL charts draw (shared with the guide pages).
+  const chartInput: ChartInput = {
+    state,
+    designs,
+    showParts,
+    sd_cm2: finderCtx.driver?.sd_cm2,
+    measured: (relative) => measuredSeries(state.measured, "spl", freq, mainDesigns, relative),
+  };
 
   const signalOn = (state.highPass.on ? 1 : 0) + (state.passive.on ? 1 : 0) + state.eq.filter((e) => e.on).length + (state.roomGain.mode !== "off" ? 1 : 0);
   const tabBadges: Partial<Record<PanelId, string>> = {
@@ -778,18 +867,44 @@ export function App(props: { initial: AppState | null }) {
               ↷
             </button>
           </div>
-          <ShareMenu state={state} designs={designs} shareUrl={shareUrl} notify={(m) => notify(m)} />
+          <ShareButton state={state} designs={designs} shareUrl={shareUrl} notify={(m) => notify(m)} onExport={() => setExportFor("")} />
           <AppMenu
-            state={state}
             install={pwa.install}
-            onOpen={(s) => {
-              setStep(s);
-              notify(`Opened “${s.driverName}”.`);
-            }}
-            notify={(m) => notify(m)}
             showTips={welcome.showTips}
             onAssistant={launchAssistant}
             reportUrl={() => reportUrl(shareUrl())}
+            onExport={() => setExportFor("")}
+            onImport={() => setOpenWin(true)}
+          />
+          <OpenWindow
+            open={openWin}
+            onClose={() => {
+              setOpenWin(false);
+              setPendingFile(null);
+            }}
+            onOpen={(s, name) => {
+              setOpenWin(false);
+              setStep(s);
+              notify(`Opened “${name}”.`);
+            }}
+            onFile={(f) => void importFile(f)}
+            pending={pendingFile}
+            onUse={(f, u) => void applyImport(f, u)}
+            notify={(m) => notify(m)}
+          />
+          {dropping && (
+            <div className="drop-overlay" aria-hidden="true">
+              Drop to open
+            </div>
+          )}
+          <ExportWindow
+            open={exportFor !== null}
+            format={exportFor || undefined}
+            onClose={() => setExportFor(null)}
+            state={state}
+            designs={designs}
+            shareUrl={shareUrl}
+            notify={(m) => notify(m)}
           />
           <PwaStatus pwa={pwa} />
           {/* Always one tap away: start a new project (the launcher; a new tab once this one is in use). */}
@@ -993,7 +1108,7 @@ export function App(props: { initial: AppState | null }) {
                     ...s,
                     driverName: "Pasted driver",
                     driverBrand: "",
-                    volume: { ...s.volume, driverCutout_mm: 0 },
+                    volume: { ...s.volume, driverCutout_mm: 0, driverDepth_mm: 0 },
                     ts,
                     le_mh: x.le_mh ?? s.le_mh,
                     l2_mh: 0,
@@ -1018,7 +1133,7 @@ export function App(props: { initial: AppState | null }) {
                     notify("Cleared the T/S values.");
                   }}
                   onImport={() => wdrInput.current?.click()}
-                  onExport={exportWdr}
+                  onExport={() => setExportFor("wdr")}
                   submitUrl={submitDriverUrl(state)}
                 />
                 <input
@@ -1340,7 +1455,7 @@ export function App(props: { initial: AppState | null }) {
                     vb_l: builtVbOf(state, d),
                     fb: r.summary.fb,
                     f3: r.summary.f3,
-                    over: limitsOf(r, state.xmax_mm, state.highPass.on, portLimitOf(state)).over.length,
+                    over: limitsOf(r, state.xmax_mm, state.highPass.on, portLimitOf(state), airLimitOf(state)).over.length,
                   };
                 })()}
                 design={d}
@@ -1790,6 +1905,61 @@ export function App(props: { initial: AppState | null }) {
                 </p>
               </details>
 
+              <h3 className="set-head">Air distortion</h3>
+              <div className="fields">
+                <Num
+                  help="2nd harmonic (HD2) from the air (in a box, or along a line or horn) above this counts as too much: the line on the Air distortion chart, the summary's red value and, if counted, a Max SPL limit. Bass hides harmonic distortion well; 10 % is a common guide for subwoofers, 3 % for hi-fi."
+                  label="Limit"
+                  unit="% HD2"
+                  value={airLimitOf(state)}
+                  min={1}
+                  onChange={(v) => set("settings", { ...state.settings, airLimit_pct: Math.min(30, Math.max(1, v > 0 ? v : 10)) })}
+                />
+                <Select<"off" | "on">
+                  help="Count the air distortion limit on the Max SPL chart, with Xmax, port speed and the rest. Off keeps Max SPL as WinISD and Hornresp show it (neither models the air's distortion)."
+                  label="In Max SPL"
+                  value={state.settings.airInMaxSpl ? "on" : "off"}
+                  options={[
+                    { value: "off", text: "Off (like WinISD)" },
+                    { value: "on", text: "Count it" },
+                  ]}
+                  onChange={(x) => set("settings", { ...state.settings, airInMaxSpl: x === "on" })}
+                />
+                <Select<Settings["airFill"]>
+                  help="Fill (wool, polyester) lets the air exchange heat with the fibres, so it compresses less adiabatically and distorts a little less. Empty is the worst case. Changes the air distortion only, not the response. Boxes only: lines and horns use the path model."
+                  label="Box fill"
+                  value={state.settings.airFill}
+                  options={[
+                    { value: "empty", text: "Empty (worst case)" },
+                    { value: "lined", text: "Walls lined" },
+                    { value: "filled", text: "Filled" },
+                    { value: "packed", text: "Packed" },
+                  ]}
+                  onChange={(airFill) => set("settings", { ...state.settings, airFill })}
+                />
+              </div>
+              <details className="more">
+                <summary>About air distortion</summary>
+                <p className="hint">
+                  The air in a box is a spring that stiffens more when squeezed than it softens when stretched, so a big cone in a small box adds
+                  2nd harmonic. The Air distortion chart shows it for sealed, ported, passive radiator and bandpass boxes, at the frequency of the
+                  note that makes it. It's a 2nd-order estimate from the box pressure, checked against a direct solution of the nonlinear
+                  equations; it's mostly 2nd harmonic, so it reads as THD too. Where the cone squeezes the air by more than 10 % of the box it's
+                  a rough estimate, and past 20 % outside the model.
+                </p>
+                <p className="hint">
+                  It's the air only. The driver's own distortion (Bl and suspension non-linearity) isn't modelled and is usually larger,
+                  so a low figure here doesn't mean a clean box.
+                </p>
+                <p className="hint">
+                  Lines and horns: a strong wave steepens as it travels, so the air adds 2nd harmonic that grows with pressure, path length and
+                  frequency (Thuras, Jenkins and O&rsquo;Neil, 1935). The chart shows it at the mouth, from the pressure along the path from the
+                  driver (or a tapped horn&rsquo;s rear tap) on; it matches their tube and horn measurements. Inside a line the pressure is a
+                  standing wave, so it&rsquo;s an estimate; above 25 % it&rsquo;s rough, and past 50 % outside the model. Lines are taken as lossless
+                  inside, so in a long, narrow line it reads a little high.
+                </p>
+              </details>
+
               <h3 className="set-head">SPL</h3>
               <div className="fields">
                 <Select<"on-axis" | "power"> help="How SPL is worked out, for every box: in front of it, adding the cone, ports and mouths as point sources (as WinISD does), or from the power each one radiates (as Hornresp does)."
@@ -1898,8 +2068,7 @@ export function App(props: { initial: AppState | null }) {
           <CrosshairProvider>
             <LogChart
               forum
-              chartId="response"
-              best="high"
+              {...responseChart(chartInput, splMode)}
               handles={chartHandles}
               onSelect={setPicked}
               selected={picked}
@@ -1947,10 +2116,6 @@ export function App(props: { initial: AppState | null }) {
                   </div>
                 ) : undefined
               }
-              shortTitle={`${splMode === "relative" ? "Response" : "SPL"} · ${driveLabel(state)}${hp.on ? " · high-pass" : ""}`}
-              title={`${splMode === "relative" ? "Relative response" : "SPL"} at ${driveLabel(state)}${coilLabel(state)}, 1 m, ${state.roomGain.mode === "car" ? "in the car (cabin gain added)" : state.roomGain.mode === "room" ? "in the room (room gain added)" : state.roomGain.mode === "curve" ? "with your room curve added" : state.baffle.on ? "free-standing (baffle step)" : "half space"}${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`}
-              unit="dB"
-              freq={freq}
               actions={
                 <>
                 {designs.some((d) => d.result.parts) && (
@@ -1990,66 +2155,6 @@ export function App(props: { initial: AppState | null }) {
                 )}
                 </>
               }
-              {...(splMode === "relative"
-                ? {
-                    series: designs.flatMap((d) => {
-                      const ref = relRefOf(d.result);
-                      return [
-                        {
-                          label: d.label,
-                          color: d.color,
-                          dash: d.dash,
-                          y: d.result.spl.map((v) => v - ref),
-                          notes: Array.from(d.result.spl, (v) => `${v.toFixed(1)} dB SPL`),
-                        },
-                        ...partsOf(d, (y) => y.map((v) => v - ref)),
-                      ];
-                    }).concat(measuredSeries(state.measured, "spl", freq, mainDesigns, true)),
-                    limits: [
-                      { value: -3, label: "−3 dB", color: "var(--muted)" },
-                      { value: -6, label: "−6 dB", color: "var(--muted)" },
-                    ],
-                    limitStyle: "guide" as const,
-                    yStep: 6,
-                    yMin: -30,
-                    // F3 dots for the main driver only; the comparison's F3 is in the summary.
-                    points: mainDesigns.flatMap((d) => {
-                      const ref = relRefOf(d.result);
-                      const rel = d.result.spl.map((v) => v - ref);
-                      // With room or cabin gain, the dot is the F3 in that space (the summary's second
-                      // F3), where the curve as drawn crosses −3 dB. Otherwise it's the box's own F3, as
-                      // in the summary: without the baffle step (not a box property), drawn on the curve.
-                      const step = baffleDbFor(state, d.result.freq, finderCtx.driver?.sd_cm2);
-                      const where = state.roomGain.mode === "car" ? "in the car" : "in the room";
-                      if (d.f3Room !== undefined) {
-                        return (d.f3Room === null ? [] : [d.f3Room]).map((f) => ({
-                          f,
-                          y: valueAt(d.result.freq, rel, f),
-                          color: d.color,
-                          label: `F3 ${where} ${f < 100 ? f.toFixed(1) : f.toFixed(0)}`,
-                          of: d.label,
-                        }));
-                      }
-                      const own = step ? rel.map((v, i) => v - step[i]!) : rel;
-                      const pts =
-                        d.design.kind === "line"
-                          ? lowEdge(d.result.freq, own)
-                          : minus3Points(d.result.freq, own, d.design.kind === "bandpass");
-                      return pts.map((f) => ({
-                        f,
-                        y: step ? valueAt(d.result.freq, rel, f) : -3,
-                        color: d.color,
-                        // With the baffle step the dot sits on the curve away from −3 dB: say whose F3 it is.
-                        label: `${step ? "Box F3" : "F3"} ${f < 100 ? f.toFixed(1) : f.toFixed(0)}`,
-                        of: d.label,
-                      }));
-                    }),
-                  }
-                : {
-                    series: designs
-                      .flatMap((d) => [{ label: d.label, color: d.color, dash: d.dash, y: d.result.spl }, ...partsOf(d, (y) => y)])
-                      .concat(measuredSeries(state.measured, "spl", freq, mainDesigns)),
-                  })}
             />
             {narrow && (
               <TabRow<ChartId>
@@ -2060,50 +2165,7 @@ export function App(props: { initial: AppState | null }) {
                 className="chart-tabs"
               />
             )}
-            <LogChart
-              forum
-              chartId="excursion"
-              hidden={narrow && chartTab !== "excursion"}
-              best="low"
-              shortTitle="Cone excursion"
-              title="Cone excursion (peak, one way)"
-              unit="mm"
-              freq={freq}
-              series={designs.map((d) => ({
-                label: d.label,
-                color: d.color,
-                dash: d.dash,
-                y: d.result.excursionMm,
-                over: d.compare && state.compare ? state.compare.xmax_mm : state.xmax_mm,
-                ...(() => {
-                  const split = deepSplitOf(d.result, state.highPass.on);
-                  const xmax = d.compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
-                  // No glow below where the limits are checked (the same floor for every box).
-                  return split ? { deepBelow: split, deepOver: DEEP_ALLOW * xmax, deepFloor: DEEP_FLOOR_HZ } : { deepFloor: checkFromHz(state.highPass.on, d.result.summary.f3) };
-                })(),
-              }))}
-              zones={(() => {
-                // Deep bass of the tuned boxes (no high-pass filter): graded up to 2 × Xmax, not failed.
-                const splits = designs.filter((d) => !d.compare).map((d) => deepSplitOf(d.result, state.highPass.on)).filter((v): v is number => v !== null);
-                return splits.length
-                  ? [{ below: Math.max(...splits), value: DEEP_ALLOW * state.xmax_mm, label: `Deep bass: ${DEEP_ALLOW} × Xmax`, color: "#fbbf24" }]
-                  : [];
-              })()}
-              limits={[
-                {
-                  value: state.xmax_mm,
-                  label:
-                    state.compare && fadedLabels.length > 0 && state.compare.xmax_mm !== state.xmax_mm
-                      ? `Xmax ${state.xmax_mm} · vs ${state.compare.xmax_mm} mm`
-                      : `Xmax ${state.xmax_mm} mm`,
-                  color: LIMIT_RED,
-                },
-                ...(state.compare && fadedLabels.length > 0 && state.compare.xmax_mm !== state.xmax_mm
-                  ? [{ value: state.compare.xmax_mm, label: "", color: LIMIT_RED }]
-                  : []),
-              ]}
-              yMin={0}
-            />
+            <LogChart forum {...excursionChart(chartInput)} hidden={narrow && chartTab !== "excursion"} />
             <LowDriveNote state={state} chart="excursion" hidden={narrow && chartTab !== "excursion"} onRated={useRatedPower} />
             {!narrow && (
               <TabRow<ChartId>
@@ -2190,28 +2252,27 @@ export function App(props: { initial: AppState | null }) {
                 yMin={0}
               />
             )}
+            {hasAir && (
+              <AirChart
+                designs={designs}
+                freq={freq}
+                hidden={chartTab !== "air"}
+                limit_pct={airLimitOf(state)}
+                highPassOn={state.highPass.on}
+                view={airView}
+                onView={chooseAirView}
+              />
+            )}
             <LogChart
-              chartId="maxspl"
+              {...maxSplChart(chartInput, maxMode)}
               hidden={chartTab !== "maxspl"}
-              below={
+              info={
                 winisdWatts ? (
-                  <p className="hint">
+                  <p>
                     Watts as WinISD counts them (Settings → Watts): into the coil and the amp + cable together, with a hot coil's Re. The amplifier volts and amps are real.
                   </p>
                 ) : undefined
               }
-              best={maxMode === "spl" ? "high" : "low"}
-              shortTitle={maxMode === "spl" ? "Max SPL" : maxMode === "volts" ? "Amp volts for max SPL" : "Amp current for max SPL"}
-              title={
-                maxMode === "spl"
-                  ? "Maximum SPL (first limit reached)"
-                  : maxMode === "volts"
-                    ? "Amplifier voltage needed for maximum SPL (RMS, at the amplifier's terminals)"
-                    : "Amplifier current needed for maximum SPL (RMS)"
-              }
-              unit={maxMode === "spl" ? "dB" : maxMode === "volts" ? "V" : "A"}
-              freq={freq}
-              yMin={maxMode === "spl" ? undefined : 0}
               actions={
                 <div className="unit-switch" role="group" aria-label="Show">
                   <button aria-pressed={maxMode === "spl"} onClick={() => chooseMaxMode("spl")} title="The loudest each design can play, and what limits it">
@@ -2232,34 +2293,6 @@ export function App(props: { initial: AppState | null }) {
                     Amps
                   </button>
                 </div>
-              }
-              series={designs.map((d) => {
-                const a = d.result.ampAtMax;
-                const limit = (i: number) => LIMIT_KINDS[d.result.limitedBy[i]!]?.short ?? "";
-                const n1 = (v: number) => (Number.isFinite(v) ? (v < 10 ? v.toFixed(1) : v.toFixed(0)) : "–");
-                return {
-                  label: d.label,
-                  color: d.color,
-                  dash: d.dash,
-                  y: maxMode === "spl" ? d.result.maxSpl : maxMode === "volts" ? a.volts : a.amps,
-                  notes: Array.from(d.result.maxSpl, (_, i) =>
-                    maxMode === "spl"
-                      ? `${limit(i)} · amp ${n1(a.volts[i]!)} V, ${n1(a.amps[i]!)} A`
-                      : maxMode === "volts"
-                        ? `${n1(a.amps[i]!)} A, ${n1(a.watts[i]!)} W · ${limit(i)}`
-                        : `${n1(a.volts[i]!)} V, ${n1(a.watts[i]!)} W · ${limit(i)}`,
-                  ),
-                };
-              })}
-              // Each box's first limit, then the comparison driver's in the same box (outlined marker).
-              ribbons={designs.map((d) => ({ label: d.label, color: d.color, kinds: d.result.limitedBy, ...(d.compare ? { hollow: true } : {}) }))}
-              ribbonKinds={LIMIT_KINDS}
-              limits={
-                maxMode === "volts" && state.settings.ampVolts > 0
-                  ? [{ value: state.settings.ampVolts, label: `Amp max ${state.settings.ampVolts} V`, color: LIMIT_KINDS.amp!.color }]
-                  : maxMode === "amps" && state.settings.ampAmps > 0
-                    ? [{ value: state.settings.ampAmps, label: `Amp max ${state.settings.ampAmps} A`, color: LIMIT_KINDS.amp!.color }]
-                    : undefined
               }
             />
             <LogChart
@@ -2287,17 +2320,17 @@ export function App(props: { initial: AppState | null }) {
                 ...measuredSeries(state.measured, "impedance", freq, mainDesigns),
                 ...(measurement
                   ? [
-                      { label: "Measured (free air)", color: "#6b7389", dash: "6 4", y: resampleMagnitude(measurement.data, freq) },
+                      { label: "Measured (free air)", color: GUIDE_DIM, dash: "6 4", y: resampleMagnitude(measurement.data, freq) },
                       {
                         label: "Fit (free air)",
-                        color: "#8e96aa",
+                        color: GUIDE,
                         dash: "2 3",
                         y: freq.map((f) => impedanceMagnitude(measurement.fit, f)),
                       },
                     ]
                   : []),
               ]}
-              {...(zMode === "phase" ? { yMin: -90, yMax: 90, yStep: 45, limits: [{ value: 0, label: "0° (resistive)", color: "#8e96aa" }], limitStyle: "guide" as const } : { yMin: 0 })}
+              {...(zMode === "phase" ? { yMin: -90, yMax: 90, yStep: 45, limits: [{ value: 0, label: "0° (resistive)", color: GUIDE }], limitStyle: "guide" as const } : { yMin: 0 })}
             />
             {zaDesigns.length > 0 && (
               <LogChart
@@ -2307,7 +2340,7 @@ export function App(props: { initial: AppState | null }) {
                 unit="× ρc/S"
                 freq={freq}
                 series={zaSeries}
-                limits={[{ value: 1, label: "1 = the duct's own impedance", color: "#8e96aa" }]}
+                limits={[{ value: 1, label: "1 = the duct's own impedance", color: GUIDE }]}
                 limitStyle="guide"
                 digits={2}
                 {...zaRange}
@@ -2391,6 +2424,7 @@ export function App(props: { initial: AppState | null }) {
               <h3>Project</h3>
               <ul>
                 <li><a href="/about/">About</a></li>
+                <li><a href="/changelog/">Changelog</a></li>
                 <li><a href={REPO}>GitHub</a></li>
                 <li><a href={`${REPO}/blob/main/LICENSE`}>Licence</a></li>
                 <li><a href="/privacy/">Privacy</a></li>
@@ -2584,7 +2618,7 @@ function StatusStrip({
         {drive}
       </button>
       {mains.map((d) => {
-        const l = limitsOf(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state));
+        const l = limitsOf(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state), airLimitOf(state));
         const f3 = d.result.summary.f3;
         const first = l.over[0] ?? null;
         const jump = first ?? (l.deep ? "xmax" : null);
@@ -2641,11 +2675,12 @@ function Summary({
   designs = designs.filter((d) => !d.compare).flatMap((d) => [d, ...designs.filter((c) => c.compare && c.design.id === d.design.id)]);
   // Without a high-pass filter, a tuned box's deep bass is graded, not failed (limitsOf).
   const fMin = checkFromHz(state.highPass.on);
+  const hasAir = designs.some((d) => d.result.airHd2);
   if (narrow) {
     // Phones: folded to one line by default, so the charts start near the top of the screen.
     // Open: name, volume, F3 and what (if anything) is over its limit; the rest one tap away.
     const mains = designs.filter((d) => !d.compare);
-    const lims = mains.map((d) => ({ id: d.design.id, l: limitsOf(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state)) }));
+    const lims = mains.map((d) => ({ id: d.design.id, l: limitsOf(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state), airLimitOf(state)) }));
     const overs = lims.map((x) => ({ id: x.id, over: x.l.over })).filter((x) => x.over.length > 0);
     const overCount = overs.length;
     const deeps = lims.filter((x) => x.l.over.length === 0 && x.l.deep);
@@ -2707,8 +2742,8 @@ function Summary({
           <tbody>
             {designs.map(({ design: d, label, compare, color, vb_l, acting_l, f3Room, result: r }) => {
               const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
-              const lim = limitsOf(r, xmax, state.highPass.on, portLimitOf(state));
-              const { x, xpr, vp, deep } = lim;
+              const lim = limitsOf(r, xmax, state.highPass.on, portLimitOf(state), airLimitOf(state));
+              const { x, xpr, vp, deep, hd2 } = lim;
               const over = lim.over.map((k) => LIMIT_NAME[k]);
               if (compare) {
                 // The compare driver in the same box: one dimmed line under the box's own row.
@@ -2782,6 +2817,7 @@ function Summary({
                       {` · cone ${fmt(x)} mm`}
                       {xpr ? ` · PR ${fmt(xpr.mm)} mm` : ""}
                       {vp !== null ? ` · port ${fmt(vp)} m/s` : ""}
+                      {hd2 !== null ? ` · air HD2 ${fmt(hd2)} %` : ""}
                       {over.length ? ` · over: ${over.join(", ")} (within up to ${driveAt(state, lim.safeScale)})` : ""}
                       {deep ? ` · ${deepText(deep, state)}` : ""}
                     </td>
@@ -2813,13 +2849,14 @@ function Summary({
             <th>Peak cone</th>
             <th>Peak PR</th>
             <th>Peak port</th>
+            {hasAir && <th title="Peak 2nd harmonic from the air (HD2: in the box, or along a line), above the same floor as the other peaks">Peak air</th>}
           </tr>
         </thead>
         <tbody>
           {designs.map(({ design: d, label, compare, color, vb_l, acting_l, f3Room, result: r }) => {
             const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
-            const lim = limitsOf(r, xmax, state.highPass.on, portLimitOf(state));
-            const { x, xpr, vp, deep } = lim;
+            const lim = limitsOf(r, xmax, state.highPass.on, portLimitOf(state), airLimitOf(state));
+            const { x, xpr, vp, deep, hd2 } = lim;
             const xOver = lim.over.includes("xmax");
             return (
               <tr key={compare ? `${d.id}-vs` : d.id} className={compare ? "summary-vs" : undefined}>
@@ -2861,13 +2898,18 @@ function Summary({
                 <td className={vp !== null && vp > portLimitOf(state) ? "over" : ""}>
                   {vp === null ? "–" : <OverValue over={vp > portLimitOf(state)} text={`${fmt(vp)} m/s`} onJump={() => onJump?.("port", [d.id])} />}
                 </td>
+                {hasAir && (
+                  <td className={lim.over.includes("air") ? "over" : ""}>
+                    {hd2 === null ? "–" : <OverValue over={lim.over.includes("air")} text={`${fmt(hd2)} %`} onJump={() => onJump?.("air", [d.id])} />}
+                  </td>
+                )}
               </tr>
             );
           })}
         </tbody>
       </table>
       </div>
-      <p className="hint swipe-hint">Swipe the table sideways for peak excursion and port speed.</p>
+      <p className="hint swipe-hint">Swipe the table sideways for peak excursion, port speed and air distortion.</p>
       <p className="hint">
         {state.highPass.on ? (
           <>Peaks are taken above {fMin} Hz. </>
@@ -2893,13 +2935,6 @@ function RoomF3({ f3, car }: { f3: number | null; car: boolean }) {
   );
 }
 
-/** Value of a curve at frequency f (log-frequency interpolation). */
-function valueAt(freq: Float64Array, ys: ArrayLike<number>, f: number): number {
-  let i = 1;
-  while (i < freq.length - 1 && freq[i]! < f) i++;
-  const t = Math.log(f / freq[i - 1]!) / Math.log(freq[i]! / freq[i - 1]!);
-  return ys[i - 1]! + t * (ys[i]! - ys[i - 1]!);
-}
 
 
 /** A design's volume for the summary tables: "40.0 L", or "40.0 → 48.0 L" when stuffing makes it act bigger. */
@@ -2933,4 +2968,9 @@ function LowDriveNote(p: { state: AppState; chart: "excursion" | "port"; hidden:
       )}
     </p>
   );
+}
+
+/** File Handling API (installed app); not in TypeScript's DOM types yet. */
+interface LaunchQueue {
+  setConsumer(consumer: (params: { files?: readonly FileSystemFileHandle[] }) => void): void;
 }

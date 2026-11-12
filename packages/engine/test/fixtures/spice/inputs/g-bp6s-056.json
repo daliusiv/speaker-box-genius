@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6s-056",
+  "title": "bp6s, bc-speakers/18pzb100-8ohm (Qts 0.24), 181.6 L, rear 69.67 L port at 25.8 Hz, front 111.9 L port at 41.4 Hz",
+  "driver": {
+    "fs": 30,
+    "qms": 8.8,
+    "qes": 0.25,
+    "vas_l": 297,
+    "re": 5.3,
+    "sd_cm2": 1134,
+    "le_mh": 2.1
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 69.67,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 19.28,
+        "length_cm": 176.9
+      },
+      "qp": 53,
+      "ql": 6,
+      "qa": 91
+    },
+    "front": {
+      "vb_l": 111.9,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 14.46,
+        "length_cm": 16.79
+      },
+      "qp": 43,
+      "ql": null,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "endCorrection": 0.613,
+    "qicl": 20
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

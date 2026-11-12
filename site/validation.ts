@@ -12,6 +12,7 @@ import { sealedVolumeForAlignment } from "../packages/engine/src/alignments.ts";
 import { WINISD_AIR } from "../packages/engine/src/constants.ts";
 import { prFb } from "../packages/engine/src/model.ts";
 import { simulate } from "../packages/engine/src/simulate.ts";
+import { OUTPUT_UNITS, readSpiceReport, type SpiceReport } from "../packages/engine/validation/spice-report.ts";
 
 const REPO = "https://github.com/daliusiv/speaker-box-genius";
 
@@ -155,8 +156,19 @@ function runSection(r: Report["winisdRun"], group: (id: string, label: string, c
   const fmt = (g: keyof Report["winisdRun"]["tol"], d: number) => (r.tol[g].rel ? `${(d * 100).toFixed(2)} %` : `${d.toFixed(3)} ${r.tol[g].unit}`);
   const rows = r.cases
     .map((c) => {
-      const worst = (Object.entries(c.worst) as [keyof Report["winisdRun"]["tol"], number][]).map(([g, d]) => `${esc(r.tol[g].label)} ${fmt(g, d)}`).join("; ");
-      return `<tr><td><code>${esc(c.id)}</code> ${esc(c.title)}</td><td>${c.compared}</td><td><small class="n">${worst || "—"}</small></td><td>${ok(c.pass)}</td></tr>`;
+      // A percentage over its tolerance passed on the absolute rule (WinISD's last digit, or group delay in ms): show that gap too.
+      const worst = (Object.entries(c.worst) as [keyof Report["winisdRun"]["tol"], number][])
+        .map(([g, d]) => {
+          const a = c.abs?.[g];
+          const extra = r.tol[g].rel && d > r.tol[g].tol && a !== undefined ? ` (${a} ${r.tol[g].unit})` : "";
+          return `<span class="n">${esc(r.tol[g].label)} ${fmt(g, d)}${extra}</span>`;
+        })
+        // Each figure stays on one line; the list wraps between them.
+        .join("; ");
+      // A project whose readings were all left out was checked again as its u-repeat.
+      const redo = c.compared === 0 ? r.cases.find((u) => u.id === `u${c.id.slice(1)}` && u.compared > 0) : undefined;
+      if (redo) return `<tr><td><code>${esc(c.id)}</code> ${esc(c.title)}</td><td>0</td><td><small>All left out (see below); checked again as <code>${esc(redo.id)}</code></small></td><td><span class="muted">—</span></td></tr>`;
+      return `<tr><td><code>${esc(c.id)}</code> ${esc(c.title)}</td><td>${c.compared}</td><td><small>${worst || "—"}</small></td><td>${ok(c.pass)}</td></tr>`;
     })
     .join("");
   const tols = (Object.entries(r.tol) as [keyof Report["winisdRun"]["tol"], Report["winisdRun"]["tol"][keyof Report["winisdRun"]["tol"]]][])
@@ -167,11 +179,80 @@ function runSection(r: Report["winisdRun"], group: (id: string, label: string, c
     .sort((a, b) => b[1] - a[1])
     .map(([why, n]) => `<li>${n}: ${esc(why)}</li>`)
     .join("");
-  const known = r.known.map((k) => `<li><code>${esc(k.id)}</code> ${esc(r.tol[k.graph].label)} at ${num(k.f, 2)} Hz: WinISD ${k.winisd}, ours ${k.ours}. ${esc(k.note)}</li>`).join("");
+  const known = r.known.map((k) => `<li><code>${esc(k.id)}</code> ${esc(r.tol[k.graph].label)} at ${num(k.f, 2)} Hz: WinISD ${minus(String(k.winisd))}, ours ${minus(String(k.ours))}. ${esc(k.note)}</li>`).join("");
   const ocr = r.ocr.map((k) => `<code>${esc(k.id)}</code> ${esc(r.tol[k.graph].label)} at ${num(k.f, 2)} Hz (${esc(k.note)})`).join("; ");
-  return `<p>${r.cases.length} WinISD projects written by the app's own WinISD export and opened in WinISD, with ${r.readings} values read off WinISD's graph cursor at six frequencies from 15 to 150 Hz: sealed, ported, passive radiator and bandpass boxes with losses, amplifier resistance, coil inductance and heating, air conditions, distance, two and four drivers, isobaric pairs, high-pass filters and runs at rated power. ${r.compared} values are compared, each within ${tols} (or WinISD's last displayed digit). The projects and readings are in <a href="${REPO}/tree/main/packages/engine/test/fixtures/winisd-run">fixtures/winisd-run</a>.</p>
+  return `<p>${r.cases.length} WinISD projects written by the app's own WinISD export and opened in WinISD, with ${r.readings} values read off WinISD's graph cursor at six frequencies from 15 to 150 Hz: sealed, ported, passive radiator and bandpass boxes with losses, amplifier resistance, coil inductance and heating, air conditions, distance, two and four drivers, isobaric pairs, high-pass filters and runs at rated power. ${r.compared} values are compared, each within ${tols}, or within WinISD's last displayed digit (0.0015), and a group delay also passes within ${r.gdAbsMs} ms: near a notch the delay is tiny, so a large percentage can be a fraction of a millisecond. Where a percentage below is over its tolerance, the absolute gap is shown in brackets. The projects and readings are in <a href="${REPO}/tree/main/packages/engine/test/fixtures/winisd-run">fixtures/winisd-run</a>.</p>
 ${group("winisd-run-cases", `${r.cases.length} projects, ${r.compared} values`, r.cases, `<div class="table"><table><thead><tr><th>Project</th><th>Values</th><th>Largest difference</th><th>OK</th></tr></thead><tbody>${rows}</tbody></table></div>
 <div class="known"><h4>Left out</h4><ul>${skipped}</ul><p>OCR misreads, one digit off and plain against the neighbouring values: ${ocr}.</p><h4>Leftover differences</h4><ul>${known}</ul></div>`)}`;
+}
+
+/** How an output is named on the page (units go with the numbers; group delay is a share of its tolerance). */
+const spiceName = (o: string) => (o === "Group delay (ms)" ? "Group delay (share of tolerance)" : o.replace(/ \((dB|°)\)$/, ""));
+
+/** A circuit-check difference with its unit: dB, degrees, per cent for relative outputs (as their tolerances are), or a bare share of tolerance. */
+function spiceValue(output: string, x: number): string {
+  const u = OUTPUT_UNITS[output]!.unit;
+  return u === "dB" ? `${sci(x)}&nbsp;dB` : u === "°" ? `${sci(x)}°` : u === "rel" ? `${sci(x * 100)}&nbsp;%` : sci(x);
+}
+
+/** 1.6 × 10⁻⁷ for the circuit check's tiny differences. */
+function sci(x: number): string {
+  if (x === 0) return "0";
+  const e = Math.floor(Math.log10(x) + 1e-9);
+  return `${(x / 10 ** e).toFixed(1)}&nbsp;×&nbsp;10<sup>${minus(String(e))}</sup>`;
+}
+
+const KIND_LABEL: Record<string, string> = {
+  sealed: "sealed",
+  vented: "ported",
+  pr: "passive radiator",
+  bandpass: "hand-made bandpass",
+  bp4: "4th-order bandpass",
+  bp6p: "6th-order bandpass (parallel)",
+  bp6s: "6th-order bandpass (series)",
+  chain: "with high-pass filters, EQ and passive parts",
+};
+
+/** The independent circuit check (docs/validation/spice.json, `pnpm spice:report`). */
+export function spiceSection(rep: SpiceReport, cirHref: (id: string) => string): { html: string; failing: number } {
+  const cell = (o: SpiceReport["outputs"][number], r: "below" | "around" | "above") => {
+    const g = o.regions[r];
+    if (!g.points) return "<td>–</td>";
+    return `<td>${spiceValue(o.output, g.worst)}<br><span class="muted">mean ${spiceValue(o.output, g.mean)}</span></td>`;
+  };
+  const rows = rep.outputs
+    .map((o) => `<tr><td>${esc(spiceName(o.output))}</td><td>${o.comparisons}</td>${cell(o, "below")}${cell(o, "around")}${cell(o, "above")}<td>${OUTPUT_UNITS[o.output]!.tol}</td><td>${ok(o.pass)}</td></tr>`)
+    .join("");
+  const kinds = Object.entries(rep.kinds)
+    .map(([k, n]) => `${n} ${KIND_LABEL[k] ?? k}`)
+    .join(", ");
+  const charts = rep.showcase
+    .map((c) => {
+      const pts = (i: 1 | 2) => c.points.map((p) => [p[0], p[i]] as [number, number]);
+      const peak = Math.max(...c.points.map((p) => p[2]));
+      const what = c.output === "spl" ? "SPL" : "Impedance";
+      return `<figure>${chart({
+        label: what,
+        unit: c.unit,
+        series: [
+          { points: pts(2), style: "ref" },
+          { points: pts(1), style: "line" },
+        ],
+        aria: `${what} of ${c.title}: the circuit's curve as a wide band, ours as a line on top of it`,
+        ...(c.output === "spl" ? { yMin: Math.floor((peak - 45) / 10) * 10 } : {}),
+      })}<figcaption>${what}: ${esc(c.title)} · <a href="${cirHref(c.id)}" download>netlist</a></figcaption></figure>`;
+    })
+    .join("");
+  const failing = rep.outputs.filter((o) => !o.pass).length;
+  const spl = rep.outputs.find((o) => o.output === "SPL (dB)")!;
+  const html = `<p>WinISD and Hornresp are other people's models of the same physics, so agreeing with them shows the app does what they do. This check is different: for each case a separate program writes the textbook equivalent circuit of the box (Thiele and Small's lumped elements: the voice coil, the cone's mass, compliance and losses, the motor as a gyrator, the box, ports and passive radiators, the filters and passive parts) as a standard SPICE netlist, and a circuit solver works it out. That program doesn't use the app's code (a test checks it only borrows the app's type names), so a mistake in the app's maths, or a shortcut that isn't exact, shows up as a difference.</p>
+<p>${rep.compared} cases are compared: ${kinds}. Most were drawn at random, but stratified, across the database's drivers, box sizes and tunings, losses, amplifier resistance, hot voice coils, air conditions, several drivers in series or parallel and isobaric pairs. Each circuit is solved by <a href="https://ngspice.sourceforge.io/">ngspice</a> on every change to the engine, and by a small solver written for the tests (mna.py) in every test run; the two agree to one part in a million or better. The app matches the circuit to rounding: the largest SPL difference over ${spl.points.toLocaleString("en-GB")} points is ${sci(spl.worst)}&nbsp;dB.</p>
+<p>Differences are listed by where they fall: below half the box's resonance, within a factor of two of it, and above twice it, each the worst with the mean under it. Relative differences are in per cent, like their tolerances (10<sup>−6</sup>&nbsp;% is a millionth of a per cent). The tolerances are the ones the tests hold the app to; SPL and phase are only compared within 60 and 40&nbsp;dB of the case's peak.</p>
+<div class="table"><table><thead><tr><th>Output</th><th>Cases</th><th>Below resonance</th><th>Around resonance</th><th>Above resonance</th><th>Tolerance</th><th>OK</th></tr></thead><tbody>${rows}</tbody></table></div>
+<p class="key"><span class="k-ref">Circuit (SPICE netlist)</span><span>Speaker Box Genius</span></p>
+<div class="charts">${charts}</div>
+<p>Every case's netlist is in <a href="${REPO}/tree/main/packages/engine/test/fixtures/spice/cases">fixtures/spice/cases</a>, with its inputs next to it; they're plain SPICE (SI units, the acoustic side in pascals and m³/s) and run in ngspice as they are. Any box in the app downloads as the same circuit for LTspice: Save &amp; Export → LTspice netlist. Not covered: the cone's air load as a piston (no exact circuit exists for it), a port's own pipe resonances and compression, and lines and horns, which the Hornresp comparisons above cover. How the circuits are built is in <a href="${REPO}/blob/main/docs/validation.md#independent-circuit-check-spice">docs/validation.md</a>.</p>`;
+  return { html, failing };
 }
 
 const ok = (pass: boolean) => (pass ? '<span class="ok">✓</span>' : '<span class="bad">✗ outside</span>');
@@ -400,13 +481,25 @@ td small,th small{color:var(--muted);font-weight:400}
 .case h3{margin-bottom:.2rem}
 .setup{margin:.2rem 0 .6rem;color:var(--muted);font-size:.95rem}
 .setup a.open{font-weight:700;white-space:nowrap}
-.known{margin-top:1rem;padding:.2rem 1rem;border-left:3px solid var(--accent);border-radius:.4rem;background:var(--card)}
+.known{margin-top:1rem;padding:.2rem 1rem;border-left:3px solid var(--draw);border-radius:.4rem;background:var(--card)}
 .known h4{margin:.7rem 0 0;font-size:.95rem}
 .known p,.known li{font-size:.95rem}
 h4{font-size:1rem}
 `;
 
-export function validationContent(rep: Report, info: BuildInfo): string {
+/** One row per output for the Summary: the worst difference over every region. */
+function spiceSummaryRows(rep: SpiceReport): string {
+  return rep.outputs
+    .map((o) => {
+      return `<tr><td><a href="#spice">${esc(spiceName(o.output))}</a></td><td>${o.comparisons}</td><td>${spiceValue(o.output, o.worst)}</td><td>${OUTPUT_UNITS[o.output]!.tol}</td><td>${ok(o.pass)}</td></tr>`;
+    })
+    .join("");
+}
+
+/** Where the site build puts the showcase netlists. */
+export const spiceNetlistHref = (id: string) => `/validation/spice/${id}.cir`;
+
+export function validationContent(rep: Report, info: BuildInfo, spiceRep: SpiceReport = readSpiceReport()): string {
   const q = rep.quantities;
   const w = rep.winisd.cases;
   const h = rep.hornresp.cases;
@@ -415,7 +508,8 @@ export function validationContent(rep: Report, info: BuildInfo): string {
   const stuffed = b.filter((k) => /^s\d/.test(k.id));
   const boxes = b.filter((k) => !stuffed.includes(k));
   const checks = w.reduce((n, c) => n + c.checks.length, 0);
-  const failing = w.filter((c) => !c.pass).length + h.filter((c) => !c.pass).length + b.filter((c) => !c.pass).length + rep.winisdRun.cases.filter((c) => !c.pass).length;
+  const sp = spiceSection(spiceRep, spiceNetlistHref);
+  const failing = w.filter((c) => !c.pass).length + h.filter((c) => !c.pass).length + b.filter((c) => !c.pass).length + rep.winisdRun.cases.filter((c) => !c.pass).length + sp.failing;
   const date = info.date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
   const al = alignmentSection(readAlignmentChecks());
   const par = paritySection();
@@ -444,8 +538,8 @@ export function validationContent(rep: Report, info: BuildInfo): string {
     return `<details class="group" id="${id}"><summary>${esc(label)} <span class="muted">· ${bad ? `${bad} outside tolerance` : "all within tolerance"}</span></summary>\n${body}\n</details>`;
   };
   return `<h1>Validation</h1>
-<p class="lede">Speaker Box Genius is checked against WinISD and Hornresp, the two free simulators most DIY builders know. Every comparison on this page is an automated test that runs on every change to the code, and the page is rebuilt from those results.</p>
-<p class="status"><strong>${w.length} WinISD cases (${checks} values), the full WinISD run (${rep.winisdRun.compared} values) and ${h.length + b.length} Hornresp cases, ${failing ? `${failing} outside tolerance` : "all within tolerance"}.</strong><!--volatile--> Built${commit} on ${date}.<!--/volatile--></p>
+<p class="lede">Speaker Box Genius is checked against WinISD and Hornresp, the two free simulators most DIY builders know, and against an equivalent circuit of each box built independently and solved by a circuit simulator. Every comparison on this page is an automated test that runs on every change to the code, and the page is rebuilt from those results.</p>
+<p class="status"><strong>${w.length} WinISD cases (${checks} values), the full WinISD run (${rep.winisdRun.compared} values), ${h.length + b.length} Hornresp cases and ${spiceRep.compared} circuit cases, ${failing ? `${failing} outside tolerance` : "all within tolerance"}.</strong><!--volatile--> Built${commit} on ${date}.<!--/volatile--></p>
 
 <h2 id="summary">Summary</h2>
 <h3>WinISD ${esc(rep.winisd.version.replace(/^WinISD /, ""))}</h3>
@@ -453,6 +547,9 @@ export function validationContent(rep: Report, info: BuildInfo): string {
 <h3>Hornresp ${esc(rep.hornresp.version.replace(/^Hornresp /, ""))}</h3>
 <div class="table"><table><thead><tr><th>Line or horn</th><th>SPL, mean / 95 %</th><th>Impedance, mean / worst</th><th>Excursion, mean</th><th>OK</th></tr></thead><tbody>${hornrespSummary}</tbody></table></div>
 <div class="table"><table><thead><tr><th>Box</th><th>SPL, mean / 95 %</th><th>Impedance, mean / worst</th><th>Excursion, mean</th><th>OK</th></tr></thead><tbody>${boxSummary}</tbody></table></div>
+<h3>Equivalent circuit (SPICE)</h3>
+<p>${spiceRep.compared} cases against an independently built circuit: the largest difference per output, wherever it falls. <a href="#spice">Details and the netlists</a>.</p>
+<div class="table"><table><thead><tr><th>Output</th><th>Cases</th><th>Largest difference</th><th>Tolerance</th><th>OK</th></tr></thead><tbody>${spiceSummaryRows(spiceRep)}</tbody></table></div>
 
 <h2 id="known-differences">Known differences</h2>
 <ul>
@@ -474,7 +571,7 @@ ${runSection(rep.winisdRun, group)}
 <p>The ported and passive radiator presets (QB3, BB4/SBB4, C4/SC4) give the boxes WinISD's new-project wizard gives. WinISD doesn't use the textbook equations: each alignment is one curve of box size and tuning against the driver's Qts, and that Qts includes WinISD's 0.1&nbsp;Ω amplifier resistance in series with the voice coil. The app carries those curves, measured from WinISD for 32 drivers from Qts 0.14 to 0.76. Below, ${al.values} values for 19 other drivers (database drivers and test drivers, Re 3–6.5&nbsp;Ω) are compared with WinISD's own boxes: the largest difference is ${al.vbWorst.toFixed(2)}&nbsp;% in volume and ${al.fbWorst.toFixed(2)}&nbsp;% in tuning, the rounding of WinISD's two-decimal display. (Boxes under 2&nbsp;L differ by up to 0.01&nbsp;L, the same rounding.) WinISD's QB3 above Qts 0.62 and its C4 below 0.20 aren't offered: there WinISD's boxes stop making sense (the QB3 shrinks and tunes below Fs; the C4 shrinks to nothing). Settings &rarr; Box presets &rarr; Textbook gives the lossless textbook alignments instead.</p>
 ${al.html}
 
-<h3 id="winisd-sealed">Sealed presets, Qtc, the driver editor and passive radiators</h3>
+<h3 id="winisd-sealed-presets">Sealed presets, Qtc, the driver editor and passive radiators</h3>
 <p>The sealed presets (Qtc 0.5, 0.577, 0.707) give the boxes WinISD's closed-box wizard gives. It doesn't use the textbook Vb = Vas / ((Qtc/Qts)² − 1) either: its Qts counts the 0.1&nbsp;Ω amplifier resistance (Qes × (Re + 0.1) / Re) and the box's absorption (1/Q + 1/100), so its boxes come out a few per cent bigger. A box's Qtc in the summary counts the same two. The T/S solver's Mms, Cms, Rms and Bl, and the reference efficiency, match WinISD's driver editor for four database drivers within its display rounding (with WinISD's air). Largest difference below: ${par.worst.toFixed(2)}&nbsp;% over ${par.values} values.</p>
 ${par.html}
 
@@ -485,13 +582,18 @@ ${group("hornresp-lines", `Lines and horns: ${h.length} cases`, h, h.map((k) => 
 ${group("hornresp-boxes", `Boxes, filters and EQ: ${boxes.length} cases`, boxes, boxes.map((k) => hornrespBoxCase(k, rep.hornresp.maxSplTol, rep.hornresp.impulseTol, info.links?.[`hornresp-${k.id}`])).join("\n") + `<div class="known"><h4>Notes</h4>${notes(rep.hornresp.boxes.notes)}</div>`)}
 ${group("hornresp-stuffed", `Stuffed lines: ${stuffed.length} cases`, stuffed, stuffed.map((k) => hornrespBoxCase(k, rep.hornresp.maxSplTol, rep.hornresp.impulseTol, info.links?.[`hornresp-${k.id}`])).join("\n"))}
 
+<h2 id="spice">Independent circuit check (SPICE)</h2>
+${sp.html}
+
 <h2 id="not-compared">Not compared</h2>
 <p>Some features have no equivalent in WinISD or Hornresp and are checked by their own tests instead: the L2R2 voice-coil model (fitted against Dayton Audio's published impedance measurements), a port's own pipe resonances, and a hot voice coil. They're described in <a href="${REPO}/blob/main/docs/validation.md#not-compared-with-winisd-or-hornresp">docs/validation.md</a>. With those settings at their defaults, the app gives the results above.</p>
 
 <h2 id="reproduce">Check it yourself</h2>
-<p>Every number here comes from <a href="${REPO}/blob/main/docs/validation/results.json">docs/validation/results.json</a>, written by the same code the tests run. To repeat the comparisons, clone the repository and run:</p>
+<p>Every number here comes from <a href="${REPO}/blob/main/docs/validation/results.json">docs/validation/results.json</a>, and the circuit check's from <a href="${REPO}/blob/main/docs/validation/spice.json">docs/validation/spice.json</a>, both written by the same code the tests run. To repeat the comparisons, clone the repository and run:</p>
 <pre><code>pnpm test                # every comparison, with the other engine tests
-pnpm validation:report   # rewrites results.json</code></pre>
+pnpm validation:report   # rewrites results.json
+pnpm spice:report        # rewrites spice.json (the circuit check, with Python 3)
+pnpm spice:ngspice       # every netlist in ngspice too, if it's installed</code></pre>
 <p>To compare your own design, open the same WinISD project or Hornresp record in the app: <a href="/winisd-alternative/">importing WinISD projects</a>, <a href="/hornresp-alternative/">Hornresp records</a>. Found a case that doesn't match? <a href="${REPO}/issues">Open an issue</a> with the project file.</p>
 <a class="to-summary" href="#summary">↑ Summary</a>
 <script>${GROUP_SCRIPT}</script>`;

@@ -5,11 +5,15 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#090a0f",
-  "theme_color": "#12141c",
+  "background_color": "#11141a",
+  "theme_color": "#1a1e26",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
     { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ]
+  ],
+  "file_handlers": [
+    { "action": "./", "accept": { "application/vnd.speakerboxgenius+json": [".sbgenius"] } }
+  ],
+  "launch_handler": { "client_mode": "focus-existing" }
 }

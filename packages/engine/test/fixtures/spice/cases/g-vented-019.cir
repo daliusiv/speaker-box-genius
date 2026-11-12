@@ -1,0 +1,69 @@
+* g-vented-019: vented, redcatt/61fhm-1-8ohm (Qts 0.50), 17.15 L, Fb 33.7 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 4.81663783151692
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 5.8
+Le1 c1a c1b 0.0004
+Hemf1 c1b c1d Vcone1 491.268930362773
+Vi1 c1d w1 0
+Re2 w1 c2a 5.8
+Le2 c2a c2b 0.0004
+Hemf2 c2b c2d Vcone2 491.268930362773
+Vi2 c2d w2 0
+Re3 w2 c3a 5.8
+Le3 c3a c3b 0.0004
+Hemf3 c3b c3d Vcone3 491.268930362773
+Vi3 c3d w3 0
+Re4 w3 c4a 5.8
+Le4 c4a c4b 0.0004
+Hemf4 c4b c4d Vcone4 491.268930362773
+Vi4 c4d 0 0
+Hd1 u1h1 0 Vi1 491.268930362773
+Ras11 u1h1 u1r1 1965.28992778802
+Lmas11 u1r1 u1m1 93.0748521309218
+Ccas11 u1m1 u1k1 1.98794543724226e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Hd2 u2h1 0 Vi2 491.268930362773
+Ras21 u2h1 u2r1 1965.28992778802
+Lmas21 u2r1 u2m1 93.0748521309218
+Ccas21 u2m1 u2k1 1.98794543724226e-7
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 box 0
+Hd3 u3h1 0 Vi3 491.268930362773
+Ras31 u3h1 u3r1 1965.28992778802
+Lmas31 u3r1 u3m1 93.0748521309218
+Ccas31 u3m1 u3k1 1.98794543724226e-7
+Rbl_u3k1 u3k1 0 1e+15
+Vcone3 u3k1 box 0
+Hd4 u4h1 0 Vi4 491.268930362773
+Ras41 u4h1 u4r1 1965.28992778802
+Lmas41 u4r1 u4m1 93.0748521309218
+Ccas41 u4m1 u4k1 1.98794543724226e-7
+Rbl_u4k1 u4k1 0 1e+15
+Vcone4 u4k1 box 0
+Rbl_box box 0 1e+15
+Rap box p1 390.328454447734
+Lmap p1 p2 184.195875036425
+Vport p2 0 0
+Fvp 0 vn Vport 288.784553440077
+Rvn vn 0 1
+Rab box b1 390.328454447734
+Cab b1 0 1.20898100172712e-7
+Rbl_b1 b1 0 1e+15
+Ral box l1 390328.454447734
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpc2 0 prs Vcone2 -1
+Fpc3 0 prs Vcone3 -1
+Fpc4 0 prs Vcone4 -1
+Fpp 0 prs Vport 1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.19113747540989
+Fx 0 xn Vcone1 75.3579502637528
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vn) V(box) I(Vin) I(Vcone1) I(Vport) I(Vleak)
+.ac dec 50 5 2000
+.end

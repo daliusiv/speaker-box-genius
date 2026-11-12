@@ -1,0 +1,53 @@
+{
+  "id": "g-bp6s-036",
+  "title": "bp6s, 18-sound/10w650-8ohm (Qts 0.48), 12.7 L, rear 8.206 L port at 59.8 Hz, front 4.498 L port at 71.9 Hz",
+  "driver": {
+    "fs": 67,
+    "qms": 9.6,
+    "qes": 0.51,
+    "vas_l": 26,
+    "re": 5.1,
+    "sd_cm2": 350,
+    "le_mh": 0.59
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 8.206,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 8.923,
+        "length_cm": 57.01
+      },
+      "ql": 17,
+      "qa": 82
+    },
+    "front": {
+      "vb_l": 4.498,
+      "port": {
+        "shape": "slot",
+        "width_cm": 15,
+        "height_cm": 4.866,
+        "length_cm": 86.66
+      },
+      "qp": 91,
+      "ql": 12,
+      "qa": null
+    },
+    "rearPortTo": "front"
+  },
+  "opts": {
+    "rg": 0.1,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

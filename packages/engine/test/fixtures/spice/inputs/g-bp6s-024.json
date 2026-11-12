@@ -1,0 +1,55 @@
+{
+  "id": "g-bp6s-024",
+  "title": "bp6s, markaudio/chn-40 (Qts 0.64), 3.344 L, rear 2.038 L port at 80.1 Hz, front 1.306 L port at 193.8 Hz",
+  "driver": {
+    "fs": 97.4826,
+    "qms": 3.7689,
+    "qes": 0.7752,
+    "vas_l": 1.1523,
+    "re": 6.8,
+    "sd_cm2": 23,
+    "le_mh": 1.0575
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 2.038,
+      "port": {
+        "shape": "slot",
+        "width_cm": 3.008,
+        "height_cm": 0.4381,
+        "length_cm": 2.061
+      },
+      "qp": 97
+    },
+    "front": {
+      "vb_l": 1.306,
+      "port": {
+        "shape": "slot",
+        "width_cm": 6.949,
+        "height_cm": 0.8007,
+        "length_cm": 1.435
+      },
+      "ql": 14,
+      "qa": null
+    },
+    "rearPortTo": "front",
+    "qicl": 30
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.5,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

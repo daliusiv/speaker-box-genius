@@ -33,7 +33,7 @@ Import reads `Key = value` pairs in order from a file or a one-line forum paste,
 
 Settings → Amp + cable is written as Rg (and read back: the import says to set it). The high-pass filter, EQ bands (as Peak EQ, Low Shelf, High Shelf), passive parts (the same four branches), a hot coil and non-Hornresp air come with the export as steps to repeat in Hornresp's Filter Wizard and Power Compression tool: the record fields that hold them aren't documented, so they aren't written.
 
-Hornresp 55.30 and 60.60 import the exported records unchanged (checked with the fourteen validation records in `docs/hornresp-validation/records`; the layout test compares against a record Hornresp itself exported).
+Hornresp 55.30, 60.60 and 60.70 import the exported records unchanged (checked with the fourteen validation records in `docs/hornresp-validation/records`; the layout test compares against a record Hornresp itself exported).
 
 ## Folding (`linefold.ts`)
 
@@ -57,7 +57,7 @@ Tries driver positions (0–40 % along) against stuffing (none, or the first 1�
 
 ## Validation against Hornresp
 
-Results (Hornresp 60.60; records 01–07 were first run in 55.30 with the same results). DSA215-8 unless noted, 2.83 V, half space, Hornresp's air c = 344 m/s, ρ = 1.205 kg/m³, SPL from radiated power as Hornresp does, every exported point from 10 Hz to 1 kHz. Each case is a permanent test in `packages/engine/test/hornresp.test.ts`, with Hornresp's exported table (`hornresp.txt`: SPL, Ze and its phase, excursion, Za, group delay) under `test/fixtures/hornresp/`; the [validation page](https://speakerboxgenius.com/validation/#hornresp) shows every case with both curves:
+Results (Hornresp 60.60, re-run on 60.70 on 10 Nov 2026 with identical exports; records 01–07 were first run in 55.30 with the same results; 20–32 added with 60.70). DSA215-8 unless noted, 2.83 V, half space, Hornresp's air c = 344 m/s, ρ = 1.205 kg/m³, SPL from radiated power as Hornresp does, every exported point from 10 Hz to 1 kHz. Each case is a permanent test in `packages/engine/test/hornresp.test.ts`, with Hornresp's exported table (`hornresp.txt`: SPL, Ze and its phase, excursion, Za, group delay) under `test/fixtures/hornresp/`; the [validation page](https://speakerboxgenius.com/validation/#hornresp) shows every case with both curves:
 
 | Case | SPL, mean | Impedance, mean | Cone excursion, mean | Group delay, 95 % | Line load (Za), mean |
 |---|---|---|---|---|---|
@@ -73,6 +73,18 @@ Results (Hornresp 60.60; records 01–07 were first run in 55.30 with the same r
 | 12 Subwoofer in a tapped horn | 0.03 dB | 0.06 % | 0.26 % | 0.12 ms | 0.01 dB |
 | 13 Full-range TQWT | 0.03 dB | 0.20 % | 0.35 % | 0.16 ms | 0.02 dB |
 | 14 Full-range tapered line | 0.04 dB | 0.17 % | 0.35 % | 0.31 ms | 0.01 dB |
+| 20 Exponential line | 0.03 dB | 0.16 % | 0.25 % | 0.33 ms | 0.03 dB |
+| 21 Three-segment line (Con + Par + Exp) | 0.04 dB | 0.19 % | 0.30 % | 0.34 ms | 0.05 dB |
+| 22 Offset line, driver at a fifth | 0.02 dB | 0.13 % | 0.26 % | 0.12 ms | 0.00 dB |
+| 23 Offset tapered line | 0.03 dB | 0.15 % | 0.27 % | 0.15 ms | 0.02 dB |
+| 24 Subwoofer in a tapered mass-loaded line | 0.03 dB | 0.19 % | 0.26 % | 0.40 ms | 0.01 dB |
+| 25 Mass-loaded line, wide short port | 0.03 dB | 0.12 % | 0.27 % | 0.07 ms | 0.01 dB |
+| 26 Conical tapped horn | 0.05 dB | 0.09 % | 0.28 % | 0.11 ms | 0.02 dB |
+| 27 Subwoofer tapped horn, two segments | 0.03 dB | 0.09 % | 0.29 % | 0.17 ms | 0.02 dB |
+| 28 Full-range front horn | 0.03 dB | 0.20 % | 0.29 % | 0.10 ms | 0.09 dB |
+| 29 Subwoofer front horn, Par + Exp | 0.03 dB | 0.16 % | 0.24 % | 0.13 ms | 0.04 dB |
+| 30 Straight line, two drivers | 0.03 dB | 0.14 % | 0.24 % | 0.06 ms | 0.00 dB |
+| 32 Subwoofer TQWT | 0.03 dB | 0.15 % | 0.25 % | 0.58 ms | 0.02 dB |
 
 Group delay is compared away from deep nulls (within 10 dB of the response's highest point a third of an octave either side), where it swings by tens of milliseconds in both. The MLTLs' port output alone (Hornresp's "Horn" output) is compared too: within 0.05 dB, so the port's air speed matches (peaks of 5.0 m/s at 40 Hz in case 05 and 4.5 m/s at 32 Hz in case 11, in both). Hornresp counts drivers with their wiring (OD = 2P or 2S; a bare 2 is read as one), and case 15 is case 05 with two drivers in parallel. Hornresp treats side-by-side cones as one piston of their total area, so each cone's front carries √2 × one cone's air and their output beams like the bigger piston; the app's lines do the same (each cone sees n × the impedance of a piston of n·Sd), and case 15 matches within 0.03 dB and 0.2 %. Before that change the impedance was 0.8 % out and the SPL up to 1.2 dB high at 1 kHz.
 
@@ -95,6 +107,6 @@ For each case, the user saves the Hornresp record and exports SPL and impedance 
 3. An offset-driver TL with the driver at L/3.
 4. A TQWT (Con taper, narrow closed end).
 5. An MLTL (offset driver plus a port at the mouth).
-6. A tapped horn (Hornresp TH, S1–S4), driver rear at the closed end.
+6. A tapped horn (Hornresp TH, S1–S4), driver rear at the closed end. Hornresp takes the driver's front tap where the last segment starts (S3, or S4 with four segments: case 27), so the export allows only one section after the tap and the import reads the tap there.
 
 Target: empty lines within about 0.2 dB of Hornresp, matching resonance frequencies. Stuffed lines are judged on the trend, since the stuffing models differ.

@@ -1,0 +1,30 @@
+{
+  "id": "g-sealed-038",
+  "title": "sealed, purifi/ptt6-5x04-nfa-06 (Qts 0.29), 17.59 L",
+  "driver": {
+    "fs": 30,
+    "qms": 7.3,
+    "qes": 0.3,
+    "vas_l": 25.9,
+    "re": 3.6,
+    "sd_cm2": 132.7,
+    "le_mh": 0.38
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 17.59
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

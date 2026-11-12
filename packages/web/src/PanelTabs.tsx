@@ -1,13 +1,14 @@
-import { useRef, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
+import { Icon, type IconName } from "./Icon.tsx";
 
 export type PanelId = "driver" | "boxes" | "signal" | "build" | "settings";
 
-export const PANELS: { id: PanelId; label: string }[] = [
-  { id: "driver", label: "Driver" },
-  { id: "boxes", label: "Boxes" },
-  { id: "signal", label: "Signal" },
-  { id: "build", label: "Build" },
-  { id: "settings", label: "Settings" },
+export const PANELS: { id: PanelId; label: string; icon: IconName }[] = [
+  { id: "driver", label: "Driver", icon: "speaker" },
+  { id: "boxes", label: "Boxes", icon: "box" },
+  { id: "signal", label: "Signal", icon: "signal" },
+  { id: "build", label: "Build", icon: "wrench" },
+  { id: "settings", label: "Settings", icon: "gear" },
 ];
 
 const KEY = "sbg.panel";
@@ -70,6 +71,9 @@ export function PanelTabs(props: {
           className={leadSelected ? "on" : ""}
           onClick={props.lead.onSelect}
         >
+          <span className="tab-icon" aria-hidden="true">
+            <Icon name="charts" size={22} filled={leadSelected} />
+          </span>
           {props.lead.label}
         </button>
       )}
@@ -86,11 +90,9 @@ export function PanelTabs(props: {
             className={`${on ? "on" : ""}${p.id === "settings" ? " tab-settings" : ""}`}
             onClick={() => props.onChange(p.id)}
           >
-            {p.id === "settings" && (
-              <span className="tab-gear" aria-hidden="true">
-                ⚙
-              </span>
-            )}
+            <span className={`tab-icon${p.id === "settings" ? " tab-gear" : ""}`} aria-hidden="true">
+              <Icon name={p.icon} size={22} filled={on} />
+            </span>
             {p.label}
             {props.badges?.[p.id] !== undefined && <span className="tab-badge">{props.badges[p.id]}</span>}
           </button>
@@ -123,8 +125,28 @@ export function TabRow<T extends string>(props: {
     tabs[j]!.focus();
     tabs[j]!.click();
   };
+  // One scrolling row: the picked tab scrolled into view, and a fade on each side that has more.
+  const edges = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.classList.toggle("more-left", el.scrollLeft > 2);
+    el.classList.toggle("more-right", el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  };
+  useEffect(() => {
+    const el = ref.current;
+    const on = el?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (el && on) {
+      const left = on.offsetLeft - el.offsetLeft;
+      if (left < el.scrollLeft || left + on.offsetWidth > el.scrollLeft + el.clientWidth) el.scrollLeft = Math.max(0, left - 24);
+    }
+    edges();
+  }, [props.selected, props.tabs.length]);
+  useEffect(() => {
+    window.addEventListener("resize", edges);
+    return () => window.removeEventListener("resize", edges);
+  }, []);
   return (
-    <div className={`panel-tabs ${props.className ?? ""}`} role="tablist" aria-label={props.ariaLabel} ref={ref} onKeyDown={onKey}>
+    <div className={`panel-tabs ${props.className ?? ""}`} role="tablist" aria-label={props.ariaLabel} ref={ref} onKeyDown={onKey} onScroll={edges}>
       {props.tabs.map((t) => {
         const on = t.id === props.selected;
         return (

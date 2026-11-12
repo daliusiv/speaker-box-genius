@@ -1,0 +1,37 @@
+{
+  "id": "v09",
+  "title": "Vented 60 L, DSA215-8, two 5 cm ports with a 3 cm flare at one end, k 0.85",
+  "driver": {
+    "fs": 35,
+    "qms": 1.87,
+    "qes": 0.4,
+    "vas_l": 37.4,
+    "re": 5.9,
+    "sd_cm2": 211.2,
+    "le_mh": 1
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 60,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 5,
+      "length_cm": 18,
+      "flare_cm": 3,
+      "flareEnds": 1
+    },
+    "portCount": 2
+  },
+  "opts": {
+    "endCorrection": 0.85
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

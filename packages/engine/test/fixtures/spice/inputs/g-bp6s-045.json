@@ -1,0 +1,53 @@
+{
+  "id": "g-bp6s-045",
+  "title": "bp6s, monacor/ftx1025-8ohm (Qts 0.44), 13.56 L, rear 4.714 L port at 48.4 Hz, front 8.85 L port at 135.7 Hz",
+  "driver": {
+    "fs": 78.8,
+    "qms": 2.788,
+    "qes": 0.523,
+    "vas_l": 25.9,
+    "re": 5.42,
+    "sd_cm2": 346.36,
+    "le_mh": 0.48
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 4.714,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.739,
+        "length_cm": 135.3
+      },
+      "portCount": 2,
+      "qp": 121,
+      "ql": 30,
+      "qa": 59
+    },
+    "front": {
+      "vb_l": 8.85,
+      "port": {
+        "shape": "slot",
+        "width_cm": 21.22,
+        "height_cm": 2.695,
+        "length_cm": 3.244
+      }
+    },
+    "rearPortTo": "front",
+    "endCorrection": 0.85,
+    "qicl": 53
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

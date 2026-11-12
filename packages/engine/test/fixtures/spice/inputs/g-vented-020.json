@@ -1,0 +1,39 @@
+{
+  "id": "g-vented-020",
+  "title": "vented, monacor/sp-302e (Qts 0.72), 88.16 L, Fb 49.1 Hz",
+  "driver": {
+    "fs": 39,
+    "qms": 4.24,
+    "qes": 0.87,
+    "vas_l": 141,
+    "re": 3.6,
+    "sd_cm2": 518,
+    "le_mh": 1.1
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 88.16,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 9.964,
+      "length_cm": 3.891
+    },
+    "ql": 7,
+    "qa": 17,
+    "qp": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 49,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

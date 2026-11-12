@@ -1,0 +1,64 @@
+{
+  "id": "g-chain-052",
+  "title": "chain (vented), rcf/l10-750yk (Qts 0.24), 64.6 L, Fb 61.1 Hz, HP butterworth 4, 1 EQ, passive parts",
+  "driver": {
+    "fs": 68,
+    "qms": 4.2,
+    "qes": 0.25,
+    "vas_l": 26,
+    "re": 5.1,
+    "sd_cm2": 400,
+    "le_mh": 0.5
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 64.6,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 8.673,
+      "length_cm": 8.245
+    },
+    "portCount": 2,
+    "ql": 13,
+    "qa": 17
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 68,
+    "convention": "volts",
+    "power": 2.83,
+    "highPass": {
+      "type": "butterworth",
+      "order": 4,
+      "freq": 30.17
+    },
+    "eq": [
+      {
+        "type": "peak",
+        "freq": 73.94,
+        "gain_db": 6.594,
+        "q": 1.696
+      }
+    ],
+    "passive": {
+      "branches": [
+        {
+          "r": 9.631,
+          "c_uF": 557.7
+        },
+        {},
+        {},
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

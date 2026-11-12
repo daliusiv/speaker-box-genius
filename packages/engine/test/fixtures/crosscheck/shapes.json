@@ -1,0 +1,26 @@
+{
+  "about": "Inside volumes to cross-check against a CAD kernel. Lengths in mm, volumes in litres. Expected values are the closed forms, checked by an independent shoelace/slicing sum in shapeCrosscheck.test.ts. The wedge cases are also confirmed independently by FreeCAD (wedge_check.py, freecad-wedge.json).",
+  "cases": [
+    {
+      "id": "car-wedge-800x380",
+      "shape": "wedge",
+      "note": "Worked example: slope front, butt joints. theta 68.459 deg, inside depth 355.543 (bottom) / 219.754 (top). The (D_avg - 2T) shortcut gives 75.9538 L.",
+      "width": 800, "height": 380, "topDepth": 250, "bottomDepth": 400, "wall": 18, "slopeWall": 18,
+      "expected_l": 75.5986, "tol_l": 0.0001
+    },
+    {
+      "id": "car-wedge-double-baffle",
+      "shape": "wedge",
+      "note": "36 mm (double) sloped baffle, 18 mm walls, theta 63.435 deg.",
+      "width": 500, "height": 400, "topDepth": 200, "bottomDepth": 400, "wall": 18, "slopeWall": 36,
+      "expected_l": 40.8307, "tol_l": 0.0001
+    },
+    {
+      "id": "tapered-all-sides",
+      "shape": "frustum",
+      "note": "Tapered (all sides): every wall tapers evenly, walls taken square to each sloping face. A one-slope wedge entered this way reads about 0.2% high (the taper is split between front and back): use the wedge shape for those.",
+      "bottomWidth": 400, "bottomDepth": 450, "topWidth": 250, "topDepth": 300, "height": 500, "wall": 18,
+      "expected_l": 46.0905, "tol_l": 0.0005
+    }
+  ]
+}

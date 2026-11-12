@@ -1,0 +1,47 @@
+{
+  "id": "g-bp4-055",
+  "title": "bp4, bc-speakers/12hpl76 (Qts 0.24), 61.99 L, rear 30.71 L closed, front 31.28 L port at 47.5 Hz",
+  "driver": {
+    "fs": 49,
+    "qms": 2.5,
+    "qes": 0.26,
+    "vas_l": 91,
+    "re": 6,
+    "sd_cm2": 522,
+    "le_mh": 1.5
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 30.71,
+      "ql": 28,
+      "qa": 36
+    },
+    "front": {
+      "vb_l": 31.28,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 8.719,
+        "length_cm": 18.88
+      },
+      "qp": 94,
+      "ql": 5,
+      "qa": 24
+    },
+    "qicl": 66
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "id": "g-sealed-060",
+  "title": "sealed, peerless/pls-75f25al02-08 (Qts 0.74), 1.988 L",
+  "driver": {
+    "fs": 100,
+    "qms": 6.71,
+    "qes": 0.836,
+    "vas_l": 1.08,
+    "re": 6.3,
+    "sd_cm2": 28.9,
+    "le_mh": 0.092
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 1.988,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,45 @@
+* g-chain-036: chain (sealed), celestion/bl15-300x-4 (Qts 0.75), 224.3 L, 2 EQ
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 src 0 AC 25.0998007960223
+A1 %vd(src 0) %vd(f1 0) xf1
+A2 %vd(f1 0) %vd(amp 0) xf2
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 3.7070775
+Le1 c1a c1b 0.00045
+Hemf1 c1b c1d Vcone1 103.39975283604
+Vi1 c1d w1 0
+Re2 w1 c2a 3.7070775
+Le2 c2a c2b 0.00045
+Hemf2 c2b c2d Vcone2 103.39975283604
+Vi2 c2d 0 0
+Hd1 u1h1 0 Vi1 103.39975283604
+Ras11 u1h1 u1r1 1139.701111865
+Lmas11 u1r1 u1m1 11.2755365103102
+Ccas11 u1m1 u1k1 9.70985836411109e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Hd2 u2h1 0 Vi2 103.39975283604
+Ras21 u2h1 u2r1 1139.701111865
+Lmas21 u2r1 u2m1 11.2755365103102
+Ccas21 u2m1 u2k1 9.70985836411109e-7
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 box 0
+Rbl_box box 0 1e+15
+Rab box b1 25.4315132386241
+Cab b1 0 0.00000158164214311555
+Rbl_b1 b1 0 1e+15
+Ral box l1 14016.0871441206
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpc2 0 prs Vcone2 -1
+Fpl 0 prs Vleak 1
+Lrad prs 0 0.191622551482642
+Fx 0 xn Vcone1 11.6918040453642
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) I(Vin) I(Vcone1) I(Vleak)
+.model xf1 s_xfer(num_coeff=[1.02682752075672 843.31541251556 1994556.11756701] den_coeff=[1.02682752075672 821.282440788187 1891695.62681569])
+.model xf2 s_xfer(num_coeff=[0.686514951332032 1070.24744762341 1675150.55138717] den_coeff=[1 1291.69268694884 1675150.55138717])
+.ac dec 50 5 2000
+.end

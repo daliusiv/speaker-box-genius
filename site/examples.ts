@@ -116,11 +116,22 @@ function portExample(): AppState {
   return {
     ...s,
     designs: [
-      ventedWith(v, "10 cm port", vb, fb, { shape: "round", diameter_cm: 10 }),
+      { ...ventedWith(v, "10 cm port", vb, fb, { shape: "round", diameter_cm: 10 }), id: "d1" },
       { ...ventedWith(v, "5 × 30 cm slot", vb, fb, { shape: "slot", width_cm: 5, height_cm: 30 }), id: "d2" },
       { ...ventedWith(v, "10 cm flared", vb, fb, { shape: "round", diameter_cm: 10, flare_cm: 2.5 }), id: "d3" },
     ],
   };
+}
+
+/**
+ * The deep-bass zone picture (subsonic filter and design assistant guides): a B&C 8NDL51 (4 Ω)
+ * in 20 L at 59.3 Hz, 55 W, no filter. The cone passes its 7 mm Xmax only below 0.7 × the
+ * tuning, so the app grades it "deep bass" (amber), not over.
+ */
+function deepBassExample(): AppState {
+  const s = withDriver({ ...DEFAULT_STATE, power: 55 }, "bc-speakers/8ndl51-4ohm");
+  const v = byKind(s, "vented") as Vented;
+  return { ...s, designs: [{ ...ventedWith(v, "Ported 20 L", 20, 59.3, { shape: "round", diameter_cm: 7.5, flare_cm: 2 }), id: "d1" }] };
 }
 
 /**
@@ -700,6 +711,7 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "pr-example": prExample,
   "winisd-example": winisdExample,
   "port-example": portExample,
+  "deep-bass-example": deepBassExample,
   "tl-example": tlExample,
   "qtc-example": qtcExample,
   "group-delay": groupDelayExample(false),

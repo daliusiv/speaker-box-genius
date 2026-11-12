@@ -1,0 +1,50 @@
+{
+  "id": "g-bp6p-058",
+  "title": "bp6p, celestion/tf1525e (Qts 0.47), 112.2 L, rear 53.85 L port at 45.0 Hz, front 58.35 L port at 45.6 Hz",
+  "driver": {
+    "fs": 47.5,
+    "qms": 4.486,
+    "qes": 0.529,
+    "vas_l": 141.77,
+    "re": 6.82,
+    "sd_cm2": 855.3,
+    "le_mh": 1.31
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 53.85,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 15.51,
+        "length_cm": 40.21
+      },
+      "qp": 27,
+      "ql": 25,
+      "qa": 72
+    },
+    "front": {
+      "vb_l": 58.35,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 11.92,
+        "length_cm": 46.12
+      },
+      "portCount": 2
+    },
+    "qicl": 127
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

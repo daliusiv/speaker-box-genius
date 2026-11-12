@@ -1,0 +1,56 @@
+{
+  "id": "g-bp6s-004",
+  "title": "bp6s, celestion/truvox-1525 (Qts 0.76), 112.9 L, rear 34.4 L port at 46.4 Hz, front 78.48 L port at 68.2 Hz",
+  "driver": {
+    "fs": 49,
+    "qms": 12.918,
+    "qes": 0.803,
+    "vas_l": 135.4,
+    "re": 6.58,
+    "sd_cm2": 855.3,
+    "le_mh": 0.703
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 34.4,
+      "port": {
+        "shape": "slot",
+        "width_cm": 24.16,
+        "height_cm": 7.586,
+        "length_cm": 62.76
+      },
+      "qp": 126
+    },
+    "front": {
+      "vb_l": 78.48,
+      "port": {
+        "shape": "slot",
+        "width_cm": 28.35,
+        "height_cm": 7.869,
+        "length_cm": 5.913
+      },
+      "qp": 121
+    },
+    "rearPortTo": "front",
+    "qicl": 48
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0,
+    "coilTemp_C": 87,
+    "driveModel": "winisd",
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

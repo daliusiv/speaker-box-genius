@@ -1,0 +1,49 @@
+{
+  "id": "g-bp4-010",
+  "title": "bp4, dayton-audio/dma90-8 (Qts 0.57), 0.7201 L, rear 0.3897 L closed, front 0.3305 L port at 87.1 Hz",
+  "driver": {
+    "fs": 94.2,
+    "qms": 2.65,
+    "qes": 0.73,
+    "vas_l": 1.7,
+    "re": 7.3,
+    "sd_cm2": 38.5,
+    "le_mh": 0.5
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.3897,
+      "ql": 4,
+      "qa": 64
+    },
+    "front": {
+      "vb_l": 0.3305,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 3.714,
+        "length_cm": 126.6
+      },
+      "qp": 102,
+      "ql": 27,
+      "qa": 104
+    },
+    "qicl": 34
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "parallel",
+    "rg": 0.5,
+    "driveModel": "winisd",
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

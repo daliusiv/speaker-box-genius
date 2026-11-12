@@ -1,0 +1,54 @@
+{
+  "id": "g-bp6p-011",
+  "title": "bp6p, rcf/mb12n351 (Qts 0.20), 18.67 L, rear 10.53 L port at 40.5 Hz, front 8.133 L port at 73.7 Hz",
+  "driver": {
+    "fs": 55,
+    "qms": 4.5,
+    "qes": 0.21,
+    "vas_l": 61,
+    "re": 5.6,
+    "sd_cm2": 500,
+    "le_mh": 1.65
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 10.53,
+      "port": {
+        "shape": "slot",
+        "width_cm": 15.23,
+        "height_cm": 4.098,
+        "length_cm": 101.4
+      },
+      "ql": 5,
+      "qa": 26
+    },
+    "front": {
+      "vb_l": 8.133,
+      "port": {
+        "shape": "slot",
+        "width_cm": 32.44,
+        "height_cm": 3.978,
+        "length_cm": 77.99
+      }
+    },
+    "qicl": null
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 1,
+    "space": "full"
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

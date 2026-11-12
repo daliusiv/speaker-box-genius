@@ -1,0 +1,33 @@
+{
+  "id": "g-sealed-008",
+  "title": "sealed, dayton-audio/umii8-22 (Qts 0.75), 6.918 L",
+  "driver": {
+    "fs": 46,
+    "qms": 3.1,
+    "qes": 0.99,
+    "vas_l": 8.4,
+    "re": 3.9,
+    "sd_cm2": 200,
+    "le_mh": 0.75
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 6.918,
+    "ql": 28,
+    "qa": 15
+  },
+  "opts": {
+    "rg": 0.5,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

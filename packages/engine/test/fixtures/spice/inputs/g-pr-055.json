@@ -1,0 +1,42 @@
+{
+  "id": "g-pr-055",
+  "title": "passive-radiator, peerless/fsl-1830r09-08 (Qts 0.58), 142.7 L, Fb 24.8 Hz, 1 × dayton-audio/rss460-pr",
+  "driver": {
+    "fs": 33,
+    "qms": 15.9,
+    "qes": 0.602,
+    "vas_l": 220,
+    "re": 6.8,
+    "sd_cm2": 1130,
+    "le_mh": 1.42
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 142.7,
+    "pr": {
+      "mms_g": 500,
+      "sd_cm2": 1164,
+      "cms_mm_per_n": 0.23,
+      "qms": 5.03
+    },
+    "addedMass_g": 232.6,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "series",
+    "rg": 0.5,
+    "coilTemp_C": 87,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

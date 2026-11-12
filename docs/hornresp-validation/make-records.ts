@@ -30,6 +30,20 @@ const more: [string, string, typeof driver, number, Partial<LineDesign>][] = [
   // front of the cone, and a two-segment horn on the subwoofer.
   ["17-front-horn-small-chambers", "07 with an 8 L rear chamber and a 3 L throat chamber", driver, 1, { end: "horn", closedArea_cm2: 110, driverAt_cm: 0, sections: [sec(230, 4000, "exponential")], rearChamber_l: 8, throatChamber_l: 3 }],
   ["18-front-horn-no-throat", "07 with no throat chamber (cone straight into the throat), 20 L rear", driver, 1, { end: "horn", closedArea_cm2: 110, driverAt_cm: 0, sections: [sec(230, 4000, "exponential")], rearChamber_l: 20, throatChamber_l: 0 }],
+  // Wider coverage (Hornresp 60.70, Nov 2026): other tapers and segment mixes, offset positions,
+  // tapered mass-loaded lines, tapped horns and front horns with other flares, two drivers in a line.
+  ["20-exp-tl", "Expanding exponential TL, 100 -> 600 cm2, 200 cm, driver at the closed end", driver, 1, { end: "open", closedArea_cm2: 100, driverAt_cm: 0, sections: [sec(200, 600, "exponential")] }],
+  ["21-multi-seg-tl", "Three-segment TL: Con 150 -> 250 cm2 60 cm, Par -> 120 cm2 80 cm, Exp -> 400 cm2 60 cm", driver, 1, { end: "open", closedArea_cm2: 150, driverAt_cm: 0, sections: [sec(60, 250, "conical"), sec(80, 120), sec(60, 400, "exponential")] }],
+  ["22-offset-l5", "Offset TL, 250 cm2 straight, 240 cm, driver at L/5 (48 cm)", driver, 1, { end: "open", closedArea_cm2: 250, driverAt_cm: 48, sections: [sec(240, 250)] }],
+  ["23-offset-tapered", "Offset tapered TL (Con), 320 -> 100 cm2, 200 cm, driver at 60 cm", driver, 1, { end: "open", closedArea_cm2: 320, driverAt_cm: 60, sections: [sec(200, 100, "conical")] }],
+  ["24-sub-mltl-tapered", "12-inch sub, tapered MLTL (Con) 700 -> 350 cm2, 180 cm, driver at 45 cm, 10 x 20 cm port", SUB, 1, { end: "port", closedArea_cm2: 700, driverAt_cm: 45, sections: [sec(180, 350, "conical")], portDiameter_cm: 10, portLength_cm: 20, portFlare_cm: 0 }],
+  ["25-mltl-big-port", "MLTL 220 cm2, 110 cm, driver at 27.5 cm, 10 cm x 5 cm port", driver, 1, { end: "port", closedArea_cm2: 220, driverAt_cm: 27.5, sections: [sec(110, 220)], portDiameter_cm: 10, portLength_cm: 5, portFlare_cm: 0 }],
+  ["26-tapped-con", "Tapped horn (Con), 150 -> 900 cm2, 200 cm, taps at 15 and 110 cm", driver, 1, { end: "tapped", closedArea_cm2: 150, driverAt_cm: 15, tapAt_cm: 110, sections: [sec(200, 900, "conical")] }],
+  ["27-sub-tapped-2seg", "12-inch sub, tapped horn Par 400 -> 900 cm2 150 cm + Exp -> 2500 cm2 150 cm, taps at 30 and 170 cm", SUB, 1, { end: "tapped", closedArea_cm2: 400, driverAt_cm: 30, tapAt_cm: 170, sections: [sec(150, 900), sec(150, 2500, "exponential")] }],
+  ["28-fr-front-horn", "4-inch full-range, front horn Con 30 -> 600 cm2 90 cm, Vrc 2 L, Vtc 0.1 L", FR, 1, { end: "horn", closedArea_cm2: 30, driverAt_cm: 0, sections: [sec(90, 600, "conical")], rearChamber_l: 2, throatChamber_l: 0.1 }],
+  ["29-sub-front-par", "12-inch sub, front horn Par 350 -> 1200 cm2 100 cm + Exp -> 5000 cm2 150 cm, Vrc 60 L, Vtc 0.5 L", SUB, 1, { end: "horn", closedArea_cm2: 350, driverAt_cm: 0, sections: [sec(100, 1200), sec(150, 5000, "exponential")], rearChamber_l: 60, throatChamber_l: 0.5 }],
+  ["30-tl-2p", "Straight TL 400 cm2, 160 cm, two drivers in parallel at the closed end", driver, 2, { end: "open", closedArea_cm2: 400, driverAt_cm: 0, sections: [sec(160, 400)] }],
+  ["32-sub-tqwt", "12-inch sub, TQWT (Con) 80 -> 900 cm2, 240 cm, driver at 80 cm", SUB, 1, { end: "open", closedArea_cm2: 80, driverAt_cm: 80, sections: [sec(240, 900, "conical")] }],
   ["19-sub-front-horn", "12-inch sub, front horn Con 300 -> 900 cm2 60 cm + Exp -> 6000 cm2 200 cm, Vrc 40 L, Vtc 2 L", SUB, 1, { end: "horn", closedArea_cm2: 300, driverAt_cm: 0, sections: [sec(60, 900, "conical"), sec(200, 6000, "exponential")], rearChamber_l: 40, throatChamber_l: 2 }],
 ];
 mkdirSync(new URL("./records", import.meta.url), { recursive: true });

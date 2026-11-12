@@ -17,7 +17,7 @@ import {
   winisdC4Alignment,
   winisdQb3Alignment,
 } from "@sbg/engine";
-import { airOf, endCorrectionOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, portOf, portRoom_cm, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
+import { airLimitOf, airOf, endCorrectionOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, portOf, portRoom_cm, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
 import type { AppState, BandpassDesign, DesignState, PrDesign, VentedDesign } from "./state.ts";
 import { sizeBandpass } from "./bandpassSize.ts";
 import { choosePortCount, portCandidates, portFieldsOf, portSpeedFor, type AssistantPort } from "./ports.ts";
@@ -219,7 +219,7 @@ export function sizeBandpassDesign(s: AppState, d: BandpassDesign): { design: Ba
   const drv = driverInputOf(s, solved);
   if (!align || !drv) return "enter the driver's parameters first";
   const total = d.vb_l + d.frontVb_l;
-  const opts = simOptionsOf(s);
+  const opts = simOptionsOf(s, true);
   // The simulation's port speeds are peak; the chuffing line is in the displayed convention.
   const vLimit = portLimitOf(s) * (s.settings.velocity === "rms" ? Math.SQRT2 : 1);
   const losses = lossesFor(s, d);
@@ -237,7 +237,7 @@ export function sizeBandpassDesign(s: AppState, d: BandpassDesign): { design: Ba
     },
     // The engine's response, without room or cabin gain (the band is judged as the box makes it).
     (x) => simulate(drv, enclosureOf(x, x.vb_l, losses, s.volume.wall_mm), opts),
-    (r) => limitsOf(r, s.xmax_mm, s.highPass.on, vLimit),
+    (r) => limitsOf(r, s.xmax_mm, s.highPass.on, vLimit, airLimitOf(s)),
   )[d.order];
   if (!found) return `no flat band up to 80 Hz fits in ${r1(total)} L with this driver: try a bigger box`;
   const x = found.design;
@@ -279,14 +279,14 @@ export function bestVentedPort(s: AppState, d: DesignState & { kind: "vented" },
   const at: AppState = rated ? { ...s, drive: "watts", power: ratedPowerOf(s) } : s;
   const solved = solveDriver(at);
   const drv = driverInputOf(at, solved);
-  const opts = simOptionsOf(at);
+  const opts = simOptionsOf(at, true);
   // The simulation's port speeds are peak; the chuffing line is in the displayed convention.
   const vLimit = portLimitOf(s) * (s.settings.velocity === "rms" ? Math.SQRT2 : 1);
   let best: { p: AssistantPort; v: number } | null = null;
   for (const p of cands) {
     const x = { ...d, vb_l, targetFb: fb, ...portFieldsOf(p) } as DesignState;
     const r = simulate(drv, enclosureOf(x, vb_l, lossesFor(s, x), s.volume.wall_mm), opts);
-    const v = portSpeedFor(p, limitsOf(r, at.xmax_mm, at.highPass.on, vLimit).vp ?? Infinity);
+    const v = portSpeedFor(p, limitsOf(r, at.xmax_mm, at.highPass.on, vLimit, airLimitOf(at)).vp ?? Infinity);
     if (v <= vLimit) {
       best = { p, v };
       break;

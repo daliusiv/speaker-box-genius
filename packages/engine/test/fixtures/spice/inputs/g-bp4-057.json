@@ -1,0 +1,48 @@
+{
+  "id": "g-bp4-057",
+  "title": "bp4, dayton-audio/dma80-4 (Qts 0.41), 1.021 L, rear 0.5649 L closed, front 0.4564 L port at 195.4 Hz",
+  "driver": {
+    "fs": 93.5,
+    "qms": 1.97,
+    "qes": 0.51,
+    "vas_l": 1.4,
+    "re": 4,
+    "sd_cm2": 31.2,
+    "le_mh": 0.2
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.5649,
+      "ql": 24,
+      "qa": 38
+    },
+    "front": {
+      "vb_l": 0.4564,
+      "port": {
+        "shape": "slot",
+        "width_cm": 3.895,
+        "height_cm": 0.5037,
+        "length_cm": 2.278
+      },
+      "ql": 16,
+      "qa": 105
+    },
+    "qicl": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

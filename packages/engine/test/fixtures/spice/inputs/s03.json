@@ -1,0 +1,31 @@
+{
+  "id": "s03",
+  "title": "Sealed 120 L, RSS315HF-4, Rg 0.1, coil 100 °C, 10 W",
+  "driver": {
+    "fs": 24.2,
+    "qms": 2.83,
+    "qes": 0.45,
+    "vas_l": 84.1,
+    "re": 3.1,
+    "sd_cm2": 514.7,
+    "le_mh": 0.96
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 120
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 100,
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

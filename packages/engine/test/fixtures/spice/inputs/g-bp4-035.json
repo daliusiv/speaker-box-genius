@@ -1,0 +1,43 @@
+{
+  "id": "g-bp4-035",
+  "title": "bp4, dayton-audio/cfc120-8 (Qts 0.56), 4.123 L, rear 1.267 L closed, front 2.857 L port at 56.1 Hz",
+  "driver": {
+    "fs": 60,
+    "qms": 2.91,
+    "qes": 0.69,
+    "vas_l": 4.61,
+    "re": 7.2,
+    "sd_cm2": 55.6,
+    "le_mh": 0.49
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 1.267,
+      "ql": 20,
+      "qa": 89
+    },
+    "front": {
+      "vb_l": 2.857,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 2.671,
+        "length_cm": 16.33
+      }
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

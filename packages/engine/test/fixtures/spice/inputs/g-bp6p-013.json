@@ -1,0 +1,53 @@
+{
+  "id": "g-bp6p-013",
+  "title": "bp6p, peerless/pls-75f25al02-08 (Qts 0.74), 0.5 L, rear 0.2721 L port at 59.9 Hz, front 0.2279 L port at 146.7 Hz",
+  "driver": {
+    "fs": 100,
+    "qms": 6.71,
+    "qes": 0.836,
+    "vas_l": 1.08,
+    "re": 6.3,
+    "sd_cm2": 28.9,
+    "le_mh": 0.092
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 0.2721,
+      "port": {
+        "shape": "slot",
+        "width_cm": 5.555,
+        "height_cm": 0.7054,
+        "length_cm": 118.3
+      },
+      "qp": 60
+    },
+    "front": {
+      "vb_l": 0.2279,
+      "port": {
+        "shape": "slot",
+        "width_cm": 3.598,
+        "height_cm": 0.3867,
+        "length_cm": 16.12
+      },
+      "portCount": 2,
+      "ql": 21,
+      "qa": null
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

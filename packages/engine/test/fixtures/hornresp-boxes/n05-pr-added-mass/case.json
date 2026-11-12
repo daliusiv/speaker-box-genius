@@ -1,0 +1,19 @@
+{
+  "title": "Passive radiator, 30 g added mass",
+  "text": "B3 with Hornresp's Added Mass = 30 g; the PR's output",
+  "frontAir": 1,
+  "input": {
+    "kind": "passive-radiator",
+    "vb_l": 50,
+    "pr": {
+      "mms_g": 88.16,
+      "sd_cm2": 353,
+      "cms_mm_per_n": 0.596,
+      "qms": 5.265
+    },
+    "addedMass_g": 33.83,
+    "ql": null,
+    "qa": null,
+    "qp": null
+  }
+}

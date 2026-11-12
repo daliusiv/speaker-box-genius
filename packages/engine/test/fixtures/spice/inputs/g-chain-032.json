@@ -1,0 +1,59 @@
+{
+  "id": "g-chain-032",
+  "title": "chain (sealed), eminence/beta-10a (Qts 0.49), 57.93 L, HP linkwitz-riley 4, 3 EQ",
+  "driver": {
+    "fs": 53,
+    "qms": 8.14,
+    "qes": 0.52,
+    "vas_l": 60.1,
+    "re": 5.75,
+    "sd_cm2": 344.9,
+    "le_mh": 0.67
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 57.93
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "series"
+    },
+    "rg": 0.5,
+    "power": 1,
+    "space": "full",
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 4,
+      "freq": 50.51
+    },
+    "eq": [
+      {
+        "type": "highshelf",
+        "freq": 198.6,
+        "gain_db": -8.555,
+        "q": 2.288
+      },
+      {
+        "type": "lowshelf",
+        "freq": 120.8,
+        "gain_db": -3.633,
+        "q": 2.041
+      },
+      {
+        "type": "peak",
+        "freq": 299.7,
+        "gain_db": 8.529,
+        "q": 3.419
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

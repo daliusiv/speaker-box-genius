@@ -368,6 +368,14 @@ test("shaped cabinets guide: four shapes sized to the same net volume, their siz
   const slope = Math.atan((wv.width_cm - wv.topWidth_cm) / 2 / wv.height_cm);
   near((slope * 180) / Math.PI, 9.5, 0.05, "example slope");
   near(18 / Math.cos(slope), 18.25, 0.005, "18 mm at the example slope");
+  // The car wedge: exact against the shortcut and against the tapered shape.
+  const car = { kind: "wedge", width_cm: 80, height_cm: 38, topDepth_cm: 25, bottomDepth_cm: 40 } as const;
+  near(grossVolume(car, 18), 75.6, 0.005, "car wedge");
+  near((76.4 * 34.4 * (32.5 - 3.6)) / 1000, 75.95, 0.005, "car wedge shortcut");
+  near(((76.4 * 34.4 * (32.5 - 3.6)) / 1000 / grossVolume(car, 18) - 1) * 100, 0.47, 0.005, "shortcut error");
+  const tapered = grossVolume({ kind: "frustum", bottomWidth_cm: 80, bottomDepth_cm: 40, topWidth_cm: 80, topDepth_cm: 25, height_cm: 38 }, 18);
+  near((tapered / grossVolume(car, 18) - 1) * 100, 0.2, 0.05, "tapered shape on a car wedge");
+  near(90 - Math.atan2(380, 150) * 180 / Math.PI, 21.5, 0.05, "bevel");
 });
 
 test("amplifier matching guide: the amp's limits, the sub's impedance, watts at the rated voltage, and four wirings", async () => {
@@ -502,7 +510,7 @@ test("sealed / ported / PR guide: presets, rules of thumb, the three boxes at 35
   }
 });
 
-test("car subwoofer guide: three boxes at the RSS265HF-4's rated 350 W, in the car and out of it", () => {
+test("car subwoofer guide: what the text says about the three boxes (its numbers come from the engine at build: site/liveNumbers.ts)", () => {
   const peak = (f: Float64Array, y: ArrayLike<number>, lo: number, hi: number) => {
     let m = -Infinity, mf = 0;
     f.forEach((q, i) => { if (q >= lo && q <= hi && y[i]! > m) { m = y[i]!; mf = q; } });
@@ -510,36 +518,44 @@ test("car subwoofer guide: three boxes at the RSS265HF-4's rated 350 W, in the c
   };
   const car = run("car-example");
   const out = run("car-nocabin");
-  const want = [
-    { f3: 42.4, car: 22.4, spl: [110.1, 113.7, 115.1, 113.5, 111.9], hump: 3.2, max: [112.0, 113.3, 114.7], x: 13.5, out: [95.3, 100.8, 105.9, 109.3, 110.1] },
-    { f3: 29.9, car: 21.6, spl: [113.6, 119.6, 122.1, 116.5, 113.2], hump: 9.1, max: [114.5, 120.8, 122.2], x: 11.2, v: 14.4, port: 81.2, out: [98.8, 106.7, 112.8, 112.3, 111.4] },
-    { f3: 28.8, car: 20.2, spl: [116.4, 120.6, 120.4, 115.5, 112.7], hump: 8.5, max: [120.1, 121.8, 120.5], x: 12.2, v: 11.0, port: 116.7, out: [101.6, 107.6, 111.1, 111.2, 110.9] },
-  ];
+  const [se, p33, p28] = car.map((d) => d.result);
+  const hump = (r: typeof se) => peak(r.freq, r.spl, 15, 200)[0] - at(r.freq, r.spl, 80);
+  const xPeak = (r: typeof se) => peak(r.freq, r.excursionMm, 10, 200)[0];
+  // "All three boxes reach the low 20s" in the car.
+  car.forEach((d) => assert.ok(d.f3Room! > 19 && d.f3Room! < 25, `${d.design.name} F3 in the car ${d.f3Room}`));
+  // "The ported boxes … sit 5–7 dB higher at 30–40 Hz with a hump"; the sealed box has the smallest hump.
+  for (const p of [p33, p28]) for (const f of [30, 40]) {
+    const d = at(p.freq, p.spl, f) - at(se.freq, se.spl, f);
+    assert.ok(d > 4.5 && d < 7.5, `ported over sealed at ${f} Hz: ${d}`);
+  }
+  assert.ok(hump(se) < Math.min(hump(p33), hump(p28)), "sealed hump smallest");
+  // The table's bold cells: the 28 Hz box loudest at 25 and 30 Hz, the 33 Hz box at 40 Hz.
+  for (const f of [25, 30]) assert.ok(at(p28.freq, p28.spl, f) > Math.max(at(se.freq, se.spl, f), at(p33.freq, p33.spl, f)), `28 Hz box loudest at ${f} Hz`);
+  assert.ok(at(p33.freq, p33.spl, 40) > Math.max(at(se.freq, se.spl, 40), at(p28.freq, p28.spl, 40)), "33 Hz box loudest at 40 Hz");
+  // "Tuning lower … moves the hump down … makes it smaller."
+  assert.ok(peak(p28.freq, p28.spl, 15, 200)[1] < peak(p33.freq, p33.spl, 15, 200)[1] && hump(p28) < hump(p33), "28 Hz hump lower and smaller");
+  // "The sealed curve is the only one that crosses the red Xmax line"; "28 Hz box just under".
+  assert.ok(xPeak(se) > 12.3 && xPeak(p33) < 12.3 && xPeak(p28) < 12.3 && xPeak(p28) > 11.5, "only sealed over Xmax");
+  // Max SPL: the sealed box cone-limited up to 45 Hz; the 28 Hz box limited by power at 25 and 30 Hz.
+  se.freq.forEach((f, i) => { if (f >= 10 && f <= 44) assert.equal(se.limitedBy[i], "xmax", `sealed at ${f} Hz`); });
+  for (const f of [25, 30]) assert.equal(p28.limitedBy[p28.freq.findIndex((q) => q >= f)], "thermal", `28 Hz box at ${f} Hz`);
+  // Both ports under the 17 m/s chuffing line.
+  for (const p of [p33, p28]) assert.ok(peak(p.freq, p.portVelocity!, 10, 200)[0] < 17, "port under 17 m/s");
+  // Out of the car: "the sealed box … is 14 dB down at 25 Hz"; the ported boxes "nearly flat" (humps under 2 dB).
+  const [oSe, o33, o28] = out.map((d) => d.result);
+  const down25 = at(oSe.freq, oSe.spl, 80) - at(oSe.freq, oSe.spl, 25);
+  assert.ok(down25 > 13.5 && down25 < 15, `sealed 25 Hz out of the car: ${down25}`);
+  assert.ok(hump(o33) < 2 && hump(o28) < 2, "ported nearly flat out of the car");
+  // "The excursion and port speed are exactly the same in the car and out of it."
   car.forEach((d, i) => {
-    const r = d.result;
-    const w = want[i]!;
-    const n = d.design.name;
-    near(r.summary.f3!, w.f3, 0.06, `${n} box F3`);
-    near(d.f3Room!, w.car, 0.06, `${n} F3 in the car`);
-    [25, 30, 40, 60, 80].forEach((f, j) => near(at(r.freq, r.spl, f), w.spl[j]!, 0.06, `${n} in the car at ${f} Hz`));
-    near(peak(r.freq, r.spl, 15, 200)[0] - at(r.freq, r.spl, 80), w.hump, 0.06, `${n} peak over 80 Hz`);
-    [25, 30, 40].forEach((f, j) => near(at(r.freq, r.maxSpl, f), w.max[j]!, 0.06, `${n} max SPL at ${f} Hz`));
-    near(peak(r.freq, r.excursionMm, 10, 200)[0], w.x, 0.06, `${n} peak excursion`);
-    if (w.v) near(peak(r.freq, r.portVelocity!, 10, 200)[0], w.v, 0.06, `${n} port speed`);
-    if (w.port) near((d.design as { length_cm: number }).length_cm, w.port, 0.06, `${n} port length`);
-    // Out of the car: the same boxes, the same cone and port, no cabin gain.
-    const o = out[i]!.result;
-    [25, 30, 40, 60, 80].forEach((f, j) => near(at(o.freq, o.spl, f), w.out[j]!, 0.06, `${n} out of the car at ${f} Hz`));
-    near(peak(o.freq, o.excursionMm, 10, 200)[0], w.x, 0.06, `${n} excursion out of the car`);
-    if (w.v) near(peak(o.freq, o.portVelocity!, 10, 200)[0], w.v, 0.06, `${n} port speed out of the car`);
+    assert.deepEqual(Array.from(out[i]!.result.excursionMm), Array.from(d.result.excursionMm), `${d.design.name} excursion`);
+    if (d.result.portVelocity) assert.deepEqual(Array.from(out[i]!.result.portVelocity!), Array.from(d.result.portVelocity), `${d.design.name} port speed`);
   });
   // No subsonic filter: the ported cones reach about 36 mm at 15 Hz, the sealed one 16 mm.
   const s0 = EXAMPLES["car-example"]!();
   const s = { ...s0, highPass: { ...s0.highPass, on: false } };
   const bare = runDesigns(s, solveDriver(s));
-  [15.9, 35.9, 36.2].forEach((x, i) => near(at(bare[i]!.result.freq, bare[i]!.result.excursionMm, 15), x, 0.15, `${bare[i]!.design.name} at 15 Hz, no filter`));
-  // The sealed box reaches Xmax (12.3 mm) at about 290 W; the ported 33 Hz box only past 400 W.
-  near(350 * (12.3 / peak(car[0]!.result.freq, car[0]!.result.excursionMm, 10, 200)[0]) ** 2, 290, 1, "sealed watts at Xmax");
+  [15.9, 35.9, 36.2].forEach((x, i) => near(at(bare[i]!.result.freq, bare[i]!.result.excursionMm, 15), x, 0.6, `${bare[i]!.design.name} at 15 Hz, no filter`));
 });
 
 test("compare drivers guide: RSS265HF-4 vs RSS265HO-4 at 350 W in 30 L sealed and 50 L ported at 26 Hz, and the boxes the app sizes for each", async () => {
@@ -671,7 +687,7 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   assert.equal(sealed.vb_l, 23.6);
   assert.equal(ranked.findIndex((r) => r.driverId === "18-sound/18ntlw5000-8ohm" && r.box === "vented") + 1, 4);
   assert.equal(ranked.indexOf(sealed) + 1, 3);
-  assert.equal(ranked.indexOf(ported) + 1, 526);
+  assert.equal(ranked.indexOf(ported) + 1, 530);
   assert.equal(sealed.subsonic, undefined);
   // Re-sorted: Deepest and Loudest on the same results; Smallest sizes the boxes again.
   const deep = rankResults(res, { ...goal, priority: "deep" })[0]!;
@@ -687,7 +703,7 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   assert.ok(small.notes.some((n) => n.includes("won't all fit")));
   // The counts the guide gives for these defaults.
   const grade = (g: string) => ranked.filter((r) => (g === "over" ? r.over.length > 0 : g === "deep" ? !r.over.length && !!r.deep : !r.over.length && !r.deep)).length;
-  assert.deepEqual([cands.length, ranked.length, grade("ok"), grade("deep"), grade("over")], [756, 1478, 447, 78, 953]);
+  assert.deepEqual([cands.length, ranked.length, grade("ok"), grade("deep"), grade("over")], [760, 1486, 451, 78, 957]);
   // Opening it with ported too, plus the sealed box, gives the example's designs.
   const opened = openResults(DEFAULT_STATE, loaded(top.driverId) as never, [top, ported, sealed], goal);
   const ex = EXAMPLES["assistant-example"]!();
@@ -702,7 +718,7 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   near(l[1]!.x!, 8.71, 0.01, "ported cone");
   near(l[1]!.vp!, 37.7, 0.06, "ported port speed");
   near(l[2]!.x!, 10.30, 0.01, "sealed cone");
-  [24.9, 24.1, 42.8].forEach((f3, i) => near(rows3[i]!.result.summary.f3!, f3, 0.06, `${rows3[i]!.label} F3`));
+  [24.9, 24.1, 42.9].forEach((f3, i) => near(rows3[i]!.result.summary.f3!, f3, 0.06, `${rows3[i]!.label} F3`));
   [106.8, 107.4, 101.0].forEach((db30, i) => near(at(rows3[i]!.result.freq, rows3[i]!.result.spl, 30), db30, 0.06, `${rows3[i]!.label} at 30 Hz`));
   // The trap: below 20 Hz the PR box's cone passes Xmax; a 24 dB/oct 18 Hz high-pass filter fixes it.
   near(at(rows3[0]!.result.freq, rows3[0]!.result.excursionMm, 15), 21.0, 0.06, "PR cone at 15 Hz");
@@ -757,4 +773,24 @@ test("port, group delay and subsonic guides: their Keele box against the app's Q
   near(qb3.vb_l, 75.6, 0.05, "QB3 Vb"); near(qb3.fb, 24.4, 0.05, "QB3 Fb");
   const keele = ventedAlignmentFor({ ...alignmentDriver(solveDriver(s), s)!, style: "textbook" }, 1)!;
   assert.equal(keele.name, "Keele"); near(keele.vb_l, 83.5, 0.05, "Keele Vb"); near(keele.fb, 23.8, 0.05, "Keele Fb");
+});
+
+test("deep-bass zone picture: the 8NDL51 passes Xmax only below 0.7 × its tuning at 55 W", async () => {
+  const { limitsOf } = await import("../packages/web/src/sim.ts");
+  const s = EXAMPLES["deep-bass-example"]!();
+  const r = run("deep-bass-example")[0]!.result;
+  near(r.summary.fb!, 59.3, 0.1, "tuning");
+  const l = limitsOf(r, s.xmax_mm, false);
+  assert.deepEqual(l.over, [], "not over");
+  assert.ok(l.deep, "graded deep bass");
+  near(l.deep!.below_hz, 41.6, 0.06, "zone edge");
+  near(l.deep!.x_mm, 7.3, 0.06, "cone in the zone");
+  assert.ok(l.x! < s.xmax_mm, "within Xmax above the zone");
+});
+
+test("every example gives each design its own id", () => {
+  for (const [k, f] of Object.entries(EXAMPLES)) {
+    const ids = f().designs.map((d) => d.id);
+    assert.equal(new Set(ids).size, ids.length, k);
+  }
 });

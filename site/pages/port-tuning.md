@@ -35,7 +35,7 @@ The simulation uses the **net** volume: the air the box really holds. Everything
 | The port tube itself (0.51 L, outside diameter 5.8 cm) | 14.8 L | 41.6 Hz |
 | 5 % for bracing | 14.1 L | 42.7 Hz |
 
-![The same port in the box as designed (blue) and as built (orange): the impedance dip, which marks the tuning, moves up by about 3 Hz.](img/port-tuning-impedance.png)
+![The same port in the box as designed (orange) and as built (light orange): the impedance dip, which marks the tuning, moves up by about 3 Hz.](img/port-tuning-impedance.png)
 
 That's the most common cause of a box tuning high. The tuning goes roughly with one over the square root of the volume, so every 10 % of volume you lose raises Fb by about 5 %.
 

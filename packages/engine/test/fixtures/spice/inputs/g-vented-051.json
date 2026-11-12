@@ -1,0 +1,42 @@
+{
+  "id": "g-vented-051",
+  "title": "vented, redcatt/cx10f140f (Qts 0.65), 93.89 L, Fb 54.0 Hz",
+  "driver": {
+    "fs": 76.2,
+    "qms": 5.03,
+    "qes": 0.75,
+    "vas_l": 24.2,
+    "re": 5.39,
+    "sd_cm2": 346.4,
+    "le_mh": 0.49
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 93.89,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 6.557,
+      "length_cm": 1.948
+    },
+    "portCount": 2,
+    "endCorrection": 0.85,
+    "ql": 25,
+    "qa": 17,
+    "qp": null
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 149,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "g-sealed-017",
+  "title": "sealed, sb-acoustics/mr16p-4 (Qts 0.25), 15.19 L",
+  "driver": {
+    "fs": 31,
+    "qms": 4.85,
+    "qes": 0.26,
+    "vas_l": 47.2,
+    "re": 3.2,
+    "sd_cm2": 119,
+    "le_mh": 0.11
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 15.19
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "series",
+    "rg": 0,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

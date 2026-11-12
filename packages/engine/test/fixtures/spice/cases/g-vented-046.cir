@@ -1,0 +1,31 @@
+* g-vented-046: vented, redcatt/30ff (Qts 0.78), 0.5503 L, Fb 115.9 Hz
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 7.48331477354788
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 6.172208
+Le1 c1a c1b 0.00004
+Hemf1 c1b c1d Vcone1 1156.90414048516
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 1156.90414048516
+Ras11 u1h1 u1r1 60523.1933585397
+Lmas11 u1r1 u1m1 313.260740147557
+Ccas11 u1m1 u1k1 5.71005604314267e-9
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Rap box p1 3371.08226298082
+Lmap p1 p2 486.040169826553
+Vport p2 0 0
+Fvp 0 vn Vport 2475.27820690436
+Rvn vn 0 1
+Cab box 0 3.87931338338446e-9
+Fpc1 0 prs Vcone1 -1
+Fpp 0 prs Vport 1
+Lrad prs 0 0.19113747540989
+Fx 0 xn Vcone1 353.731871241599
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vn) V(box) I(Vin) I(Vcone1) I(Vport)
+.ac dec 50 5 2000
+.end

@@ -1,0 +1,40 @@
+{
+  "id": "g-pr-057",
+  "title": "passive-radiator, rcf/mb10n251 (Qts 0.27), 23.98 L, Fb 43.8 Hz, 1 × dayton-audio/ds270-pr",
+  "driver": {
+    "fs": 55,
+    "qms": 4.2,
+    "qes": 0.29,
+    "vas_l": 39,
+    "re": 5.1,
+    "sd_cm2": 400,
+    "le_mh": 1.3
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 23.98,
+    "pr": {
+      "mms_g": 88.4,
+      "sd_cm2": 353,
+      "cms_mm_per_n": 0.6,
+      "qms": 3.98
+    },
+    "addedMass_g": 13.71
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "parallel",
+    "rg": 0,
+    "driveModel": "winisd",
+    "power": 100
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,33 @@
+* g-pr-041: passive-radiator, celestion/tf0815re (Qts 0.53), 7.795 L, Fb 54.7 Hz, 4 × sb-acoustics/sb12pfcr-00
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 7.96241169495775
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 6.34
+Le1 c1a c1b 0.000643
+Hemf1 c1b c1d Vcone1 392.418528184643
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 392.418528184643
+Ras11 u1h1 u1r1 5265.73309380271
+Lmas11 u1r1 u1m1 38.6571544858664
+Ccas11 u1m1 u1k1 1.56048776759461e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Rpr1 box r1 3166.49122321011
+Lpr1 r1 q1 224.93
+Cpr1 q1 s1 1.2e-7
+Vpr1 s1 0 0
+Fxp1 0 xp1 Vpr1 50
+Cxp1 xp1 0 1
+Rbl_xp1 xp1 0 1e+15
+Cab box 0 5.4966119061907e-8
+Fpc1 0 prs Vcone1 -1
+Fpr1 0 prs Vpr1 1
+Lrad prs 0 0.191622551482642
+Fx 0 xn Vcone1 44.0567450876729
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) V(xp1) I(Vin) I(Vcone1) I(Vpr1)
+.ac dec 50 5 2000
+.end

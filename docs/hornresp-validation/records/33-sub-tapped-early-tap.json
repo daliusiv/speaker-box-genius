@@ -1,0 +1,37 @@
+{
+  "id": "d4",
+  "kind": "line",
+  "name": "SBG 33-sub-tapped-early-tap",
+  "on": true,
+  "vb_l": 32,
+  "closedArea_cm2": 400,
+  "sections": [
+    {
+      "length_cm": 150,
+      "endArea_cm2": 900,
+      "taper": "linear",
+      "fill_kgm3": 0
+    },
+    {
+      "length_cm": 150,
+      "endArea_cm2": 2500,
+      "taper": "exponential",
+      "fill_kgm3": 0
+    }
+  ],
+  "driverAt_cm": 30,
+  "end": "tapped",
+  "tapAt_cm": 120,
+  "portDiameter_cm": 5,
+  "portLength_cm": 10,
+  "portFlare_cm": 0,
+  "mouth": "front",
+  "mouthDistance_cm": 0,
+  "fold": {
+    "width_cm": 20,
+    "folds": 2
+  },
+  "targetFb": 40,
+  "rearChamber_l": 20,
+  "throatChamber_l": 0
+}

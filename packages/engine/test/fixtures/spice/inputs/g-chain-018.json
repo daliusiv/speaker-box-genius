@@ -1,0 +1,65 @@
+{
+  "id": "g-chain-018",
+  "title": "chain (sealed), 18-sound/15mb650 (Qts 0.25), 133.7 L, HP butterworth 2, 2 EQ, passive parts",
+  "driver": {
+    "fs": 40,
+    "qms": 3.95,
+    "qes": 0.27,
+    "vas_l": 210,
+    "re": 5.5,
+    "sd_cm2": 900,
+    "le_mh": 1.36
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 133.7,
+    "ql": 20,
+    "qa": 50
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "series",
+    "rg": 0.5,
+    "convention": "volts",
+    "power": 2.83,
+    "highPass": {
+      "type": "butterworth",
+      "order": 2,
+      "freq": 22.99
+    },
+    "eq": [
+      {
+        "type": "highshelf",
+        "freq": 20.47,
+        "gain_db": 7.329,
+        "q": 0.588
+      },
+      {
+        "type": "highshelf",
+        "freq": 55.99,
+        "gain_db": 7.419,
+        "q": 0.8404
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {
+          "l_mH": 5.039,
+          "join": "parallel"
+        },
+        {},
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

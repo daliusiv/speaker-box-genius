@@ -1,0 +1,44 @@
+{
+  "id": "g-bp4-027",
+  "title": "bp4, peerless/hds-p830991 (Qts 0.55), 7.402 L, rear 2.292 L closed, front 5.111 L port at 89.4 Hz",
+  "driver": {
+    "fs": 76,
+    "qms": 2.64,
+    "qes": 0.692,
+    "vas_l": 5.11,
+    "re": 5.9,
+    "sd_cm2": 89.9,
+    "le_mh": 0.352
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 2.292,
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 5.111,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 5.638,
+        "length_cm": 14.17
+      },
+      "ql": 13,
+      "qa": 25
+    }
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 1
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

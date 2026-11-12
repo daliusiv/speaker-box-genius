@@ -1,0 +1,76 @@
+{
+  "id": "g-chain-031",
+  "title": "chain (vented), sb-acoustics/sb17nbac35-4 (Qts 0.29), 38.99 L, Fb 30.2 Hz, HP butterworth 1, 3 EQ, passive parts",
+  "driver": {
+    "fs": 30,
+    "qms": 4.3,
+    "qes": 0.31,
+    "vas_l": 42.6,
+    "re": 3.1,
+    "sd_cm2": 118,
+    "le_mh": 0.13
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 38.99,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 3.777,
+      "length_cm": 6.649
+    },
+    "ql": 28,
+    "qa": 85,
+    "qp": null
+  },
+  "opts": {
+    "rg": 0.5,
+    "power": 1,
+    "highPass": {
+      "type": "butterworth",
+      "order": 1,
+      "freq": 16.61
+    },
+    "eq": [
+      {
+        "type": "peak",
+        "freq": 81.97,
+        "gain_db": 6.61,
+        "q": 1.639
+      },
+      {
+        "type": "highshelf",
+        "freq": 207.7,
+        "gain_db": -7.575,
+        "q": 1.436
+      },
+      {
+        "type": "peak",
+        "freq": 255.6,
+        "gain_db": 3.166,
+        "q": 3.047
+      }
+    ],
+    "passive": {
+      "branches": [
+        {
+          "r": 7.312
+        },
+        {
+          "l_mH": 1.831,
+          "c_uF": 183.9
+        },
+        {},
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

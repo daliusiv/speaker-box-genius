@@ -1,0 +1,48 @@
+{
+  "id": "g-pr-025",
+  "title": "passive-radiator, dayton-audio/cfc100-4 (Qts 0.60), 0.5 L, Fb 91.3 Hz, 1 × dayton-audio/ds115-pr + 1 × purifi/ptt4-0pr-nl2-01",
+  "driver": {
+    "fs": 94,
+    "qms": 3,
+    "qes": 0.75,
+    "vas_l": 0.834,
+    "re": 3.3,
+    "sd_cm2": 28,
+    "le_mh": 0.18
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 0.5,
+    "pr": {
+      "mms_g": 13,
+      "sd_cm2": 54.1,
+      "cms_mm_per_n": 2.27,
+      "qms": 3.66
+    },
+    "addedMass_g": 13.57,
+    "extraPrs": [
+      {
+        "pr": {
+          "mms_g": 30,
+          "sd_cm2": 57,
+          "cms_mm_per_n": 1.3,
+          "qms": 6.9
+        },
+        "count": 1
+      }
+    ]
+  },
+  "opts": {
+    "rg": 0,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

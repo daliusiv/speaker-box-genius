@@ -1,0 +1,66 @@
+* g-pr-039: passive-radiator, seas/t18rex-xfc (Qts 0.25), 40.39 L, Fb 28.4 Hz, 2 × sb-acoustics/sb15sfcr-00 + 1 × seas/sp26r
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 2.83
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 6.2
+Le1 c1a c1b 0.0007
+Hemf1 c1b c1d Vcone1 561.610524325692
+Vi1 c1d w1 0
+Re2 w1 c2a 6.2
+Le2 c2a c2b 0.0007
+Hemf2 c2b c2d Vcone2 561.610524325692
+Vi2 c2d w2 0
+Re3 w2 c3a 6.2
+Le3 c3a c3b 0.0007
+Hemf3 c3b c3d Vcone3 561.610524325692
+Vi3 c3d 0 0
+Hd1 u1h1 0 Vi1 561.610524325692
+Ras11 u1h1 u1r1 8995.65799564121
+Lmas11 u1r1 u1m1 78.2664545215835
+Ccas11 u1m1 u1k1 3.59601995593415e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Hd2 u2h1 0 Vi2 561.610524325692
+Ras21 u2h1 u2r1 8995.65799564121
+Lmas21 u2r1 u2m1 78.2664545215835
+Ccas21 u2m1 u2k1 3.59601995593415e-7
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 box 0
+Hd3 u3h1 0 Vi3 561.610524325692
+Ras31 u3h1 u3r1 8995.65799564121
+Lmas31 u3r1 u3m1 78.2664545215835
+Ccas31 u3m1 u3k1 3.59601995593415e-7
+Rbl_u3k1 u3k1 0 1e+15
+Vcone3 u3k1 box 0
+Rbl_box box 0 1e+15
+Rpr1 box r1 4772.22164316915
+Lpr1 r1 q1 144.17371543997
+Cpr1 q1 s1 5.893224e-7
+Vpr1 s1 0 0
+Fxp1 0 xp1 Vpr1 28.0898876404494
+Cxp1 xp1 0 1
+Rbl_xp1 xp1 0 1e+15
+Rpr2 box r2 660.602757503382
+Lpr2 r2 q2 34.1985568209022
+Cpr2 q2 s2 7.836588e-7
+Vpr2 s2 0 0
+Fxp2 0 xp2 Vpr2 29.2397660818713
+Cxp2 xp2 0 1
+Rbl_xp2 xp2 0 1e+15
+Cab box 0 3.45817252429001e-7
+Ral box l1 150048.402255335
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpc2 0 prs Vcone2 -1
+Fpc3 0 prs Vcone3 -1
+Fpl 0 prs Vleak 1
+Fpr1 0 prs Vpr1 1
+Fpr2 0 prs Vpr2 1
+Lrad prs 0 0.154384363389331
+Fx 0 xn Vcone1 79.3650793650794
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) V(xp1) V(xp2) I(Vin) I(Vcone1) I(Vleak) I(Vpr1) I(Vpr2)
+.ac dec 50 5 2000
+.end

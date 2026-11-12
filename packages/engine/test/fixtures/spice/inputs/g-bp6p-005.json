@@ -1,0 +1,59 @@
+{
+  "id": "g-bp6p-005",
+  "title": "bp6p, bc-speakers/15ps100 (Qts 0.44), 90.56 L, rear 27.86 L 2 × dayton-audio/rss315-pr at 27.0 Hz, front 62.71 L port at 47.1 Hz",
+  "driver": {
+    "fs": 39,
+    "qms": 6,
+    "qes": 0.47,
+    "vas_l": 103,
+    "re": 5.2,
+    "sd_cm2": 855,
+    "le_mh": 2
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 27.86,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 300,
+            "sd_cm2": 506.7,
+            "cms_mm_per_n": 0.22,
+            "qms": 4.79
+          },
+          "count": 2,
+          "addedMass_g": 767.9
+        }
+      ]
+    },
+    "front": {
+      "vb_l": 62.71,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 17.77,
+        "length_cm": 42.4
+      },
+      "qp": 87,
+      "ql": 15,
+      "qa": 11
+    },
+    "endCorrection": 0.613
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0.5,
+    "coilTemp_C": 62,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

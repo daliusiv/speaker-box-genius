@@ -1,0 +1,38 @@
+{
+  "id": "g-vented-026",
+  "title": "vented, beyma/8mc300nd (Qts 0.23), 6.223 L, Fb 86.0 Hz",
+  "driver": {
+    "fs": 62,
+    "qms": 3.8,
+    "qes": 0.24,
+    "vas_l": 18,
+    "re": 6.1,
+    "sd_cm2": 220,
+    "le_mh": 0.6
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 6.223,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 8.811,
+      "length_cm": 33.95
+    },
+    "ql": 7,
+    "qa": 46
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 78,
+    "power": 100
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

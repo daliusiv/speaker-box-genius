@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { Transient } from "./sim.ts";
+import { CursorBadge, shortName } from "./LogChart.tsx";
+import { ChartLegend, type LegendRow } from "./ChartLegend.tsx";
 
 const W = 640;
 
@@ -26,8 +28,9 @@ export function TimeChart(props: { title: string; curves: Transient[]; view: "im
   }, []);
   const tall = k > 1.3;
   const H = tall ? 470 : 260;
-  const PAD = tall ? { l: 30 + 14 * (k - 1), r: 8 + 6 * (k - 1), t: 10 + 6 * (k - 1), b: 22 + 14 * (k - 1) } : { l: 44, r: 12, t: 14, b: 28 };
+  const PAD = tall ? { l: 30 + 14 * (k - 1), r: 8 + 6 * (k - 1), t: 26 * k, b: 22 + 14 * (k - 1) } : { l: 44, r: 12, t: 30, b: 28 };
   const fs = { style: { fontSize: `${11 * k}px` } };
+  const fsOf = (px: number) => ({ style: { fontSize: `${px * k}px` } });
   const PW = W - PAD.l - PAD.r;
   const PH = H - PAD.t - PAD.b;
   const xOf = (t: number) => PAD.l + ((t - props.from_ms) / (props.to_ms - props.from_ms)) * PW;
@@ -76,22 +79,46 @@ export function TimeChart(props: { title: string; curves: Transient[]; view: "im
     while (i < c.t_ms.length - 1 && c.t_ms[i]! < t) i++;
     return y[i]!;
   };
+  // Legend rows: the value at the cursor (peak = 1).
+  const rows: LegendRow[] = props.curves.map((c) => ({
+    key: c.label,
+    label: shortName(c.label),
+    color: c.color,
+    dash: c.dash,
+    at: hoverT === null ? "–" : valueAt(c, hoverT).toFixed(2),
+    cols: [],
+  }));
   return (
     <figure className="chart" hidden={props.hidden} data-chart="transient">
       <figcaption>
         <span className="chart-title">{props.title}</span>
-        {props.actions}
+        {props.actions && <span className="chart-actions">{props.actions}</span>}
         <span className="chart-hint muted">Peak scaled to 1</span>
       </figcaption>
       <div className="chart-body">
         {hoverT !== null && (
           <div className="chart-tip" role="status" style={{ right: `${((PAD.r + 6) / W) * 100}%`, top: `${((PAD.t + 4) / H) * 100}%` }}>
-            <b>{hoverT.toFixed(1)} ms</b>
-            {props.curves.map((c) => (
-              <div key={c.label}>
-                <span style={{ color: c.color }}>■</span> {c.label}: {valueAt(c, hoverT).toFixed(2)}
-              </div>
-            ))}
+            <table className="tip-table">
+              <thead>
+                <tr>
+                  <th scope="col" />
+                  <th scope="col" className="legend-at on">
+                    {hoverT.toFixed(1)} ms
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.key}>
+                    <th scope="row">
+                      <span className="legend-swatch" style={{ background: r.color }} aria-hidden="true" />
+                      {r.label}
+                    </th>
+                    <td className="legend-val">{r.at}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
         <svg
@@ -124,33 +151,26 @@ export function TimeChart(props: { title: string; curves: Transient[]; view: "im
                 {v < 0 ? `−${-v}` : v}
               </text>
             ))}
-            <text className="tick" x={PAD.l + PW} y={H - 9 * k - 12 * k} textAnchor="end" {...fs}>
+            <text className="tick unit-label" x={PAD.l - 6} y={H - 9 * k} textAnchor="end" {...fs}>
               ms
             </text>
           </g>
           {props.curves.map((c) => (
             <path key={c.label} d={path(c)} fill="none" stroke={c.color} strokeWidth={1.8 * k} strokeDasharray={c.dash} strokeLinejoin="round" />
           ))}
-          {hoverT !== null && <line x1={xOf(hoverT)} x2={xOf(hoverT)} y1={PAD.t} y2={PAD.t + PH} stroke="currentColor" strokeOpacity={0.3} strokeWidth={k} />}
+          {hoverT !== null && (
+            <>
+              <line className="cursor" x1={xOf(hoverT)} x2={xOf(hoverT)} y1={PAD.t} y2={PAD.t + PH} strokeWidth={k} strokeDasharray={`${4 * k} ${4 * k}`} />
+              {props.curves.map((c) => (
+                <circle key={c.label} className="cursor-dot" cx={xOf(hoverT)} cy={yOf(valueAt(c, hoverT))} r={4 * k} fill={c.color} strokeWidth={1.5 * k} />
+              ))}
+              <CursorBadge x={xOf(hoverT)} top={PAD.t} left={PAD.l} right={PAD.l + PW} k={k} label={`${hoverT.toFixed(1)} ms`} fs={fsOf} />
+            </>
+          )}
         </svg>
       </div>
-      {/* Phones: the values in a strip under the plot, as on the frequency charts (the floating box is for desktops). */}
-      <div className="chart-strip" role="status">
-        <div className="strip-head">
-          {hoverT === null ? <span className="muted">Tap the chart for values (peak = 1)</span> : <b>{hoverT.toFixed(1)} ms</b>}
-        </div>
-        {props.curves.map((c) => (
-          <div key={c.label} className="strip-item">
-            <svg className="strip-line" viewBox="0 0 22 8" aria-hidden="true">
-              <line x1="1" y1="4" x2="21" y2="4" stroke={c.color} strokeWidth="3" strokeDasharray={c.dash} strokeLinecap="round" />
-            </svg>
-            <span className="strip-name" title={c.label}>
-              {c.label}
-            </span>
-            <span />
-            <span className="strip-value">{hoverT === null ? "" : valueAt(c, hoverT).toFixed(2)}</span>
-          </div>
-        ))}
+      <div role="status" aria-live="off">
+        <ChartLegend atHeading={hoverT === null ? null : `@ ${hoverT.toFixed(1)} ms`} columns={[]} rows={rows} />
       </div>
     </figure>
   );

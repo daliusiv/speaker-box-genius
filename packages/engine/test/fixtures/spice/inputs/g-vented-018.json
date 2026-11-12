@@ -1,0 +1,40 @@
+{
+  "id": "g-vented-018",
+  "title": "vented, rcf/lf12x401 (Qts 0.27), 38.48 L, Fb 38.0 Hz",
+  "driver": {
+    "fs": 45,
+    "qms": 8,
+    "qes": 0.28,
+    "vas_l": 50,
+    "re": 5.2,
+    "sd_cm2": 500,
+    "le_mh": 1
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 38.48,
+    "port": {
+      "shape": "slot",
+      "width_cm": 11.26,
+      "height_cm": 2.813,
+      "length_cm": 12.38
+    }
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.5,
+    "power": 1,
+    "distance_m": 2
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "g-bp6p-028",
+  "title": "bp6p, rcf/mb15n401 (Qts 0.19), 101.9 L, rear 40.55 L port at 32.0 Hz, front 61.35 L port at 75.5 Hz",
+  "driver": {
+    "fs": 42,
+    "qms": 7.7,
+    "qes": 0.2,
+    "vas_l": 136,
+    "re": 5,
+    "sd_cm2": 900,
+    "le_mh": 1.6
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 40.55,
+      "port": {
+        "shape": "slot",
+        "width_cm": 40.96,
+        "height_cm": 6.523,
+        "length_cm": 183.1
+      }
+    },
+    "front": {
+      "vb_l": 61.35,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 14.78,
+        "length_cm": 4.141
+      },
+      "qp": 74,
+      "ql": 10,
+      "qa": null
+    }
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "parallel",
+    "rg": 0.5,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

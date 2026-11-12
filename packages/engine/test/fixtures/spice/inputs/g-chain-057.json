@@ -1,0 +1,52 @@
+{
+  "id": "g-chain-057",
+  "title": "chain (vented), monacor/sp-90 (Qts 0.57), 23.54 L, Fb 36.2 Hz, HP butterworth 3, 1 EQ",
+  "driver": {
+    "fs": 45,
+    "qms": 3.36,
+    "qes": 0.68,
+    "vas_l": 42,
+    "re": 6.5,
+    "sd_cm2": 210,
+    "le_mh": 0.5
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 23.54,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7.513,
+      "length_cm": 36.55
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "drivers": 3,
+    "wiring": "series",
+    "rg": 0.5,
+    "power": 1,
+    "space": "full",
+    "highPass": {
+      "type": "butterworth",
+      "order": 3,
+      "freq": 38.85
+    },
+    "eq": [
+      {
+        "type": "highshelf",
+        "freq": 157.1,
+        "gain_db": -0.7159,
+        "q": 1.937
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

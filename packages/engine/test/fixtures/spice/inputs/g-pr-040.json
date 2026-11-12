@@ -1,0 +1,41 @@
+{
+  "id": "g-pr-040",
+  "title": "passive-radiator, peerless/sds-160f25pr01-08 (Qts 0.58), 15.15 L, Fb 34.4 Hz, 4 × dayton-audio/dsa115-pr",
+  "driver": {
+    "fs": 48,
+    "qms": 3.75,
+    "qes": 0.686,
+    "vas_l": 21.8,
+    "re": 7,
+    "sd_cm2": 141,
+    "le_mh": 0.803
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 15.15,
+    "pr": {
+      "mms_g": 11.7,
+      "sd_cm2": 54.1,
+      "cms_mm_per_n": 2.27,
+      "qms": 3.48
+    },
+    "prCount": 4,
+    "addedMass_g": 16.99,
+    "ql": 28,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0.5,
+    "coilTemp_C": 142,
+    "power": 10
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

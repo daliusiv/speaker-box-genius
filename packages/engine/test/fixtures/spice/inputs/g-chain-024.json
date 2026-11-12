@@ -1,0 +1,52 @@
+{
+  "id": "g-chain-024",
+  "title": "chain (sealed), dayton-audio/ds315-8 (Qts 0.31), 428.7 L, HP linkwitz-riley 2, passive parts",
+  "driver": {
+    "fs": 24.2,
+    "qms": 1.79,
+    "qes": 0.37,
+    "vas_l": 159,
+    "re": 6.1,
+    "sd_cm2": 506.7,
+    "le_mh": 1.43
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 428.7
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 10,
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 2,
+      "freq": 17.72
+    },
+    "passive": {
+      "branches": [
+        {},
+        {
+          "r": 9.204,
+          "l_mH": 6.21,
+          "c_uF": 836.5
+        },
+        {
+          "c_uF": 167.1
+        },
+        {
+          "r": 9.103,
+          "join": "parallel"
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

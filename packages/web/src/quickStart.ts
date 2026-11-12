@@ -26,7 +26,7 @@ export function sizeForNewDriver(s: AppState, prs: QuickPr[] | null): { state: A
         vb_l: qb3.vb_l,
         targetFb: qb3.fb,
         losses: { ql: s.settings.losses.ql, qa: s.settings.losses.qa },
-        sim: simOptionsOf(s),
+        sim: simOptionsOf(s, true),
         fMin: checkFromHz(s.highPass.on),
       }).find((r) => r.ok);
     }

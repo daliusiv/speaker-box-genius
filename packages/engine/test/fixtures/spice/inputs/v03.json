@@ -1,0 +1,40 @@
+{
+  "id": "v03",
+  "title": "Vented 90 L, RSS315HF-4, two 30×5 cm slots, Ql 7, no Qa, Qp 50, k 0.85",
+  "driver": {
+    "fs": 24.2,
+    "qms": 2.83,
+    "qes": 0.45,
+    "vas_l": 84.1,
+    "re": 3.1,
+    "sd_cm2": 514.7,
+    "le_mh": 0.96
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 90,
+    "port": {
+      "shape": "slot",
+      "width_cm": 30,
+      "height_cm": 5,
+      "length_cm": 40
+    },
+    "portCount": 2,
+    "ql": 7,
+    "qa": null,
+    "qp": 50,
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "power": 50
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

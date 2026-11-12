@@ -21,7 +21,7 @@ A box simulator only needs one number from your cabinet: the **net internal volu
   - **Sloping walls** are wider across than the board is thick (18 mm at 45° takes 25.5 mm), and the inside of a steep pyramid closes before its top.
   - **A wedge** (top and bottom different shapes) needs the prismoidal formula. The common frustum formula is up to 33% low.
 - **Shape moves standing waves; it doesn't remove them.** A sphere's lowest is 32% higher than a box of the same inside length would have; a long tube's is along its length. Non-parallel walls shift and spread them [7][8].
-- **In the app:** **Build → Volume calculator** handles all four shapes, takes off everything inside, sizes the cabinet for a target volume and feeds the result straight into the design.
+- **In the app:** **Build → Volume calculator** handles all four shapes (and the car wedge, below), takes off everything inside, sizes the cabinet for a target volume and feeds the result straight into the design.
 
 ## The example: one sub, four cabinets
 
@@ -94,7 +94,15 @@ Enter the bottom and top width and depth and the height. Two shortcuts give the 
    - A 50 × 50 cm, 40 cm tall pyramid in 18 mm MDF: the upright-wall shortcut gives 26.1 L; the true inside is 22.0 L, so the shortcut is **19% high**.
    - The app works out the true inside, and stops where a steep pyramid's inside closes before its top.
 
-**One sloped face or two:** a wedge sloped only at the front holds the same as one sloped evenly front and back with the same top and bottom (Cavalieri's principle), and the wall correction differs by a fraction of a millimetre. Enter its depth at the top and the bottom.
+**One sloped face or two:** the outside of a wedge sloped only at the front holds the same as one sloped evenly front and back with the same top and bottom (Cavalieri's principle), but the inside doesn't quite: one steep wall takes more across than two gentle ones. For a box with one sloped panel use the **Car wedge** shape below; the tapered shape reads it about 0.2% high.
+
+### Car wedge (single slope)
+
+The box that sits behind a car's rear seat: upright back, flat top and bottom, and one sloped panel, usually the baffle. Enter the width, the height, the depth along the bottom (the long one) and along the top (or the slope angle instead). The sloped panel, t thick, takes `t / sin θ` across the horizontal, θ its slope from horizontal, so the inside is exactly
+
+`V = (W − 2t)(H − 2t) · [(D_top + D_bottom)/2 − t − t_baffle / sin θ]`
+
+For an 800 mm wide, 380 mm tall wedge, 400 mm deep at the bottom and 250 mm at the top, in 18 mm MDF, that's **75.60 L**. The usual shortcut, `(W − 2t)(H − 2t)(D_avg − 2t)`, gives 75.95 L, **0.47% high**; on a double baffle or a steeper slope the gap grows. The calculator also gives the saw angles (one bevel of 90° − θ for butt joints, 21.5° here), draws the side view, solves any one dimension for a target volume, and checks that the driver's motor clears the back and the bottom (it needs the driver's mounting depth). The slope can go on the back instead, with an upright baffle.
 
 ## Standing waves: what the shape changes
 
@@ -121,13 +129,14 @@ The port's own pipe resonance (here 346 Hz) and the cabinet's lowest mode are bo
 ![The volume calculator for the Sonotube: 36.8 cm outside, 98.5 cm long, 6 mm wall, 38 mm end caps, the driver and port taken off: 83.45 L net.](img/shaped-cabinets-app.png)
 
 1. **Build → Volume calculator → Used by:** pick the design. Its volume now follows the calculator.
-2. **Shape:** pick Box, Cylinder (sonotube), Sphere or Truncated pyramid, then enter the **outside** sizes.
+2. **Shape:** pick Box, Car wedge (single slope), Cylinder (sonotube), Sphere or Tapered (all sides), then enter the **outside** sizes.
 3. **Walls:** enter the wall thickness. For a tube, also enter **End caps** (it follows the wall until you change it).
 4. **Takes up space inside:** check the driver's displacement (from the database, or estimated), **Bracing** and **Other**. The design's ports or passive radiators are taken off automatically; **Port wall** and **Each PR** only show when it has them.
 5. **Size the box → Target:** enter the net volume you want and press **Size the box**. A box can use golden-ratio proportions; a tube keeps its diameter and finds its length.
-6. **Boxes → the design's port:** **Port too long to fit** uses the shape's longest straight run, and **Pipe resonance** shows the cabinet's lowest standing wave.
+6. **3D view** (for a car wedge, **3D** above its drawing): turn the cabinet round and slide **Take apart** to see how its pieces go together (a tube's end caps lift off, a sphere's halves part, a tapered box's walls come off square to their faces). Tap a piece for its size.
+7. **Boxes → the design's port:** **Port too long to fit** uses the shape's longest straight run, and **Pipe resonance** shows the cabinet's lowest standing wave.
 
-The **Cut list** is for rectangular boxes only.
+The **Cut list** builds boxes and car wedges (with the wedge's bevel or miter angles on each panel). **FreeCAD macro** downloads any of the shapes as a FreeCAD script: the panels (or the tube, caps or shell) as solids and the air inside, whose volume the script checks against the app's.
 
 ## The forum claims, checked
 

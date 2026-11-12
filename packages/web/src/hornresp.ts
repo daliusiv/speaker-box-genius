@@ -8,7 +8,8 @@ import type { LineDesign, LineSection } from "./state.ts";
  * Hornresp describes a horn as up to four segments (S1…S5 areas, L12…L45 lengths, each
  * with its flare: Par = area linear in length, Con = conical, Exp = exponential), the driver
  * arrangement (OD = offset driver: the driver at S2, used for lines; TH = tapped horn: the
- * driver between S2 and S3; Nd = front-loaded: the driver at the throat with chambers
+ * driver's rear at S2 and its front where the last segment starts, S3 or with four segments S4
+ * (Hornresp 60.70, validation case 27); Nd = front-loaded: the driver at the throat with chambers
  * Vrc and Vtc), the driver as mechanical parameters, and filling per segment (Fr1…Fr4
  * flow resistivity in mks rayls/m, Tal1…Tal4 percentage of the segment filled).
  *
@@ -129,6 +130,13 @@ export function toHornresp(
     segs.push({ s1: area, s2: area, length_cm: portEffectiveLength(port, 0) * 100, taper: "linear", fill_kgm3: 0 });
     if (d.portFlare_cm > 0) warnings.push("The flared port is exported as a straight port of the same tuning (Hornresp segments can't flare at both ends).");
   }
+  // Hornresp's tapped horn takes its front tap where the last segment starts: with four segments
+  // that's S4, so the tap mustn't be followed by more than one segment (validation case 27).
+  if (topo === "TH" && segs.length <= MAX_SEGMENTS) {
+    const tapAt = segs.slice(0, -1).reduce((a, sg) => a + sg.length_cm, 0);
+    if (Math.abs(tapAt - d.tapAt_cm) > 0.05)
+      return "Hornresp's tapped horn puts the front tap where its last segment starts, and this horn has more than one section after its tap. Make the horn after the tap one section to export it.";
+  }
   if (segs.length > MAX_SEGMENTS) {
     return `Hornresp takes at most ${MAX_SEGMENTS} segments, and this ${d.end === "horn" ? "horn" : "line"} needs ${segs.length} (sections, ${topo === "TH" ? "the rear and the tap" : "the driver position"}${d.end === "port" ? " and the port" : ""} each start one). Merge some sections to export it.`;
   }
@@ -193,11 +201,11 @@ export function toHornresp(
   // More than one driver is written with its wiring, "2P" or "2S": Hornresp 60.60 ignores a
   // bare "2" (checked: OD = 2 gives the same results as OD = 1).
   const count = Math.max(1, Math.round(o.drivers));
-  const kind = topo === "OD" ? "offset driver (driver at S2)" : topo === "TH" ? "tapped horn (driver between S2 and S3)" : "front-loaded";
+  const kind = topo === "OD" ? "offset driver (driver at S2)" : topo === "TH" ? `tapped horn (driver between S2 and S${segs.length})` : "front-loaded";
   put(topo, count > 1 ? `${count}${o.wiring === "series" ? "S" : "P"}` : "1", count > 1 ? `${kind}, ${count} drivers in ${o.wiring === "series" ? "series" : "parallel"}` : kind);
   head("ADVANCED DRIVER PARAMETER VALUES FOR SEMI-INDUCTANCE MODEL");
-  // Hornresp's semi-inductance model is the app's (Re' is the model's own Re, if set). Hornresp also
-  // needs it switched on: double-click Le, then On.
+  // Hornresp's semi-inductance model is the app's (Re' is the model's own Re, if set). The record
+  // switches it on ("Semi-Inductance Model Flag = 1"): imported, Le shows green (checked, Hornresp 60.70).
   const semi = semiActive(driver.semi) ? driver.semi : null;
   if (semi) {
     put("Re'", r2(semi.re_ohm && semi.re_ohm > 0 ? semi.re_ohm : m.re), "Ω");
@@ -205,15 +213,13 @@ export function toHornresp(
     put("Le", r2(semi.le_mh), "mH");
     put("Ke", r2(semi.ke), "sH");
     put("Rss", r2(semi.rss_ohm), "Ω");
-    warnings.push("The driver uses the semi-inductance model: in Hornresp, double-click Le and click On (Le turns green), or it uses the plain Le.");
   } else for (const k of ["Re'", "Leb", "Le", "Ke", "Rss"]) fixed(k, "0.00");
   head("ADVANCED DRIVER PARAMETER VALUES FOR FREQUENCY-DEPENDENT DAMPING MODEL");
-  // Frequency-dependent damping: its own Rms and Ams (m/N, written like Cms). Hornresp needs it
-  // switched on too: double-click the Cms label, then On.
+  // Frequency-dependent damping: its own Rms and Ams (m/N, written like Cms), switched on by the
+  // record's "Damping Model Flag = 1" (Cms shows green once imported).
   if (driver.fdd && driver.fdd.ams_mm_per_n > 0) {
     put("Rms", r2(driver.fdd.rms), "N·s/m (FDD)");
     put("Ams", (driver.fdd.ams_mm_per_n / 1000).toExponential(2).toUpperCase().replace(/E([+-])(\d)$/, "E$10$2"), "m/N (FDD)");
-    warnings.push("The driver uses frequency-dependent damping: in Hornresp, double-click the Cms label and click On (Cms turns green), or it uses Rms alone.");
   } else {
     fixed("Rms", "0.00");
     fixed("Ams", "0.00");
@@ -248,7 +254,10 @@ export function toHornresp(
   gap();
   for (let i = 0; i < MAX_SEGMENTS; i++) put(`Tal${i + 1}`, "100", segs[i]?.fill_kgm3 ? "% of the segment filled" : "");
   if (segs.some((sg) => sg.fill_kgm3 > 0)) warnings.push("Stuffing is exported as flow resistivity (Fr1…Fr4, rayls/m). Hornresp only uses it in the Loudspeaker Wizard (Tools → Loudspeaker Wizard), not from the main window's Calculate, and its filling model differs from this one, so stuffed lines won't match exactly.");
-  lines.push(...HORNRESP_TAIL);
+  lines.push(...HORNRESP_TAIL.map((l) =>
+    l === "Semi-Inductance Model Flag = 0" && semi ? "Semi-Inductance Model Flag = 1"
+    : l === "Damping Model Flag = 0" && driver.fdd && driver.fdd.ams_mm_per_n > 0 ? "Damping Model Flag = 1"
+    : l));
   return { text: lines.join("\r\n") + "\r\n", rows, warnings };
 }
 
@@ -378,7 +387,9 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
   if (topo === "TH") {
     design.end = "tapped";
     design.driverAt_cm = lengths[0]! < 0.5 ? 0 : lengths[0]!;
-    design.tapAt_cm = lengths[0]! + (lengths[1] ?? 0);
+    // The front tap is where the last segment starts (S3, or S4 with four segments): Hornresp
+    // 60.70 ran a four-segment record (validation case 27) with its tap there, not at S3.
+    design.tapAt_cm = lengths.length >= 3 ? lengths.slice(0, -1).reduce((a, b) => a + b, 0) : lengths[0]! + (lengths[1] ?? 0);
     if (lengths[0]! < 0.5) sections = sections.slice(1);
   } else if (topo === "OD") {
     design.end = "open";
@@ -423,11 +434,19 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
 
   // The semi-inductance values: Leb, then the second "Le" (the first is the plain Le), Ke, Rss.
   // Frequency-dependent damping: the Rms and Ams after Hornresp's FDD heading (the first Rms is the driver's own).
+  // A record's status flags say whether Hornresp uses its semi-inductance and FDD values: with the
+  // flag at 0 it computes with plain Le / Rms whatever the fields hold. Records without the flags
+  // (older versions, forum pastes) are read as before.
+  const flagOff = (name: string) => new RegExp(`${name}\\s*=\\s*0\\b`, "i").test(text);
   const fddOf = (): { fdd?: { rms: number; ams_mm_per_n: number } } => {
     const at = pairs.findIndex(([k]) => k.toLowerCase() === "ams");
     if (at < 0) return {};
     const ams = num(pairs[at]![1]) || 0;
     if (!(ams > 0)) return {};
+    if (flagOff("Damping Model Flag")) {
+      warnings.push("The record holds frequency-dependent damping values but has the model switched off (Damping Model Flag = 0), so Hornresp uses Rms alone: they're left out.");
+      return {};
+    }
     const rms = [...pairs.slice(0, at)].reverse().find(([k]) => k.toLowerCase() === "rms")?.[1];
     return { fdd: { rms: rms === undefined ? 0 : num(rms) || 0, ams_mm_per_n: Number((ams * 1000).toPrecision(6)) } };
   };
@@ -440,6 +459,10 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
     };
     const s: SemiInductance = { leb_mh: after("leb"), le_mh: after("le"), ke: after("ke"), rss_ohm: after("rss") };
     if (!semiActive(s)) return {};
+    if (flagOff("Semi-Inductance Model Flag")) {
+      warnings.push("The record holds semi-inductance values but has the model switched off (Semi-Inductance Model Flag = 0), so Hornresp uses the plain Le: they're left out.");
+      return {};
+    }
     // Re' only when it differs from Re (Hornresp takes it as the coil's resistance, Bl kept).
     const reP = Number(/Re'\s*=\s*([-+\d.eE]+)/.exec(text)?.[1] ?? 0);
     if (reP > 0 && Math.abs(reP / (get("Re") ?? reP) - 1) > 0.001) s.re_ohm = reP;

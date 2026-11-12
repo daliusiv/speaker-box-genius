@@ -1,0 +1,59 @@
+{
+  "id": "g-bp6s-037",
+  "title": "bp6s, dayton-audio/pa255-8 (Qts 0.61), 23.58 L, rear 12.8 L port at 35.1 Hz, front 10.78 L 4 × sb-acoustics/sb20pfc-00 at 72.8 Hz",
+  "driver": {
+    "fs": 50.5,
+    "qms": 8.49,
+    "qes": 0.66,
+    "vas_l": 41.2,
+    "re": 5.5,
+    "sd_cm2": 346.4,
+    "le_mh": 1.49
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 12.8,
+      "port": {
+        "shape": "slot",
+        "width_cm": 9.56,
+        "height_cm": 4.251,
+        "length_cm": 71.63
+      },
+      "ql": null,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 10.78,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 76.7,
+            "sd_cm2": 216,
+            "cms_mm_per_n": 0.83,
+            "qms": 6.8
+          },
+          "count": 4,
+          "addedMass_g": 46.48
+        }
+      ]
+    },
+    "rearPortTo": "front"
+  },
+  "opts": {
+    "rg": 0.1,
+    "coilTemp_C": 95,
+    "driveModel": "winisd",
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

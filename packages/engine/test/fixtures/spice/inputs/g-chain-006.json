@@ -1,0 +1,45 @@
+{
+  "id": "g-chain-006",
+  "title": "chain (sealed), redcatt/81find (Qts 0.50), 8.921 L, passive parts",
+  "driver": {
+    "fs": 80,
+    "qms": 8.35,
+    "qes": 0.53,
+    "vas_l": 11.3,
+    "re": 4.7,
+    "sd_cm2": 213.8,
+    "le_mh": 0.44
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 8.921
+  },
+  "opts": {
+    "rg": 0.5,
+    "driveModel": "winisd",
+    "power": 100,
+    "passive": {
+      "branches": [
+        {},
+        {
+          "r": 1.785,
+          "c_uF": 661.6
+        },
+        {
+          "r": 6.093,
+          "c_uF": 552.4
+        },
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

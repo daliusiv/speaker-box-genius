@@ -1,0 +1,71 @@
+* g-pr-006: passive-radiator, purifi/ptt6-5m08-nfa-01 (Qts 0.34), 19.12 L, Fb 38.5 Hz, 2 × dayton-audio/ds135-pr
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 2.83
+Rg amp spk 0.1
+Vin spk bk 0
+Re1 bk c1a 6.2
+Le1 c1a c1b 0.00039
+Hemf1 c1b c1d Vcone1 742.401319605179
+Vi1 c1d w1 0
+Re2 w1 c2a 6.2
+Le2 c2a c2b 0.00039
+Hemf2 c2b c2d Vcone2 742.401319605179
+Vi2 c2d w2 0
+Re3 w2 c3a 6.2
+Le3 c3a c3b 0.00039
+Hemf3 c3b c3d Vcone3 742.401319605179
+Vi3 c3d w3 0
+Re4 w3 c4a 6.2
+Le4 c4a c4b 0.00039
+Hemf4 c4b c4d Vcone4 742.401319605179
+Vi4 c4d 0 0
+Hd1 u1h1 0 Vi1 742.401319605179
+Ras11 u1h1 u1r1 8222.94742580882
+Lmas11 u1r1 u1m1 100.670979200173
+Ccas11 u1m1 u1k1 9.30527651475102e-8
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Hd2 u2h1 0 Vi2 742.401319605179
+Ras21 u2h1 u2r1 8222.94742580882
+Lmas21 u2r1 u2m1 100.670979200173
+Ccas21 u2m1 u2k1 9.30527651475102e-8
+Rbl_u2k1 u2k1 0 1e+15
+Vcone2 u2k1 box 0
+Hd3 u3h1 0 Vi3 742.401319605179
+Ras31 u3h1 u3r1 8222.94742580882
+Lmas31 u3r1 u3m1 100.670979200173
+Ccas31 u3m1 u3k1 9.30527651475102e-8
+Rbl_u3k1 u3k1 0 1e+15
+Vcone3 u3k1 box 0
+Hd4 u4h1 0 Vi4 742.401319605179
+Ras41 u4h1 u4r1 8222.94742580882
+Lmas41 u4r1 u4m1 100.670979200173
+Ccas41 u4m1 u4k1 9.30527651475102e-8
+Rbl_u4k1 u4k1 0 1e+15
+Vcone4 u4k1 box 0
+Rbl_box box 0 1e+15
+Rpr1 box r1 8475.02943121079
+Lpr1 r1 q1 225.930316824856
+Cpr1 q1 s1 1.72828864e-7
+Vpr1 s1 0 0
+Fxp1 0 xp1 Vpr1 66.3129973474801
+Cxp1 xp1 0 1
+Rbl_xp1 xp1 0 1e+15
+Rab box b1 546.211472780826
+Cab b1 0 1.34785520425788e-7
+Rbl_b1 b1 0 1e+15
+Ral box l1 546211.472780826
+Vleak l1 0 0
+Fpc1 0 prs Vcone1 -1
+Fpc2 0 prs Vcone2 -1
+Fpc3 0 prs Vcone3 -1
+Fpc4 0 prs Vcone4 -1
+Fpl 0 prs Vleak 1
+Fpr1 0 prs Vpr1 1
+Lrad prs 0 0.19113747540989
+Fx 0 xn Vcone1 75.3579502637528
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(box) V(xp1) I(Vin) I(Vcone1) I(Vleak) I(Vpr1)
+.ac dec 50 5 2000
+.end

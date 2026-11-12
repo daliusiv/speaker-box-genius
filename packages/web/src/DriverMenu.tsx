@@ -63,7 +63,7 @@ export function DriverMenu(props: {
             Import WinISD or OpenISD file…
           </button>
           <button role="menuitem" onClick={pick(props.onExport)}>
-            Export WinISD .wdr
+            Export WinISD .wdr…
           </button>
           <hr />
           <a

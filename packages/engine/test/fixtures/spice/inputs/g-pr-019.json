@@ -1,0 +1,41 @@
+{
+  "id": "g-pr-019",
+  "title": "passive-radiator, sb-acoustics/mr16tx-8 (Qts 0.30), 19.29 L, Fb 34.7 Hz, 4 × purifi/ptt6-5pr-na2-03",
+  "driver": {
+    "fs": 35,
+    "qms": 6.47,
+    "qes": 0.32,
+    "vas_l": 38.9,
+    "re": 6.2,
+    "sd_cm2": 117,
+    "le_mh": 0.11
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 19.29,
+    "pr": {
+      "mms_g": 85,
+      "sd_cm2": 132.7,
+      "cms_mm_per_n": 0.82,
+      "qms": 13.1
+    },
+    "prCount": 4,
+    "addedMass_g": 30.68
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "power": 100
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

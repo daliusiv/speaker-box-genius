@@ -1,0 +1,71 @@
+{
+  "id": "g-chain-003",
+  "title": "chain (sealed), faital-pro/10fe200 (Qts 0.69), 29.99 L, HP linkwitz-riley 2, 2 EQ, passive parts",
+  "driver": {
+    "fs": 55,
+    "qms": 11.3,
+    "qes": 0.74,
+    "vas_l": 61.7,
+    "re": 5.9,
+    "sd_cm2": 359.7,
+    "le_mh": 0.42
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 29.99,
+    "ql": null,
+    "qa": null
+  },
+  "opts": {
+    "rg": 0,
+    "driveModel": "winisd",
+    "power": 100,
+    "highPass": {
+      "type": "linkwitz-riley",
+      "order": 2,
+      "freq": 32.41
+    },
+    "eq": [
+      {
+        "type": "peak",
+        "freq": 153.8,
+        "gain_db": -1.25,
+        "q": 1.988
+      },
+      {
+        "type": "linkwitz",
+        "f0": 84.25,
+        "q0": 0.5722,
+        "fp": 45.53,
+        "qp": 0.5683
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {
+          "r": 8.746,
+          "l_mH": 0.4466
+        },
+        {
+          "r": 11.54,
+          "c_uF": 383.9
+        },
+        {
+          "r": 1.072,
+          "c_uF": 85.63,
+          "join": "parallel"
+        }
+      ]
+    }
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

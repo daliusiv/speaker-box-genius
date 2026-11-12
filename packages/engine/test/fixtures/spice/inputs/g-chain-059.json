@@ -1,0 +1,72 @@
+{
+  "id": "g-chain-059",
+  "title": "chain (sealed), bc-speakers/15pl100 (Qts 0.20), 109.4 L, HP butterworth 2, 3 EQ, passive parts",
+  "driver": {
+    "fs": 37,
+    "qms": 6.6,
+    "qes": 0.21,
+    "vas_l": 154,
+    "re": 5,
+    "sd_cm2": 855,
+    "le_mh": 1.7
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 109.4,
+    "ql": 21,
+    "qa": 114
+  },
+  "opts": {
+    "drivers": 2,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 1,
+    "highPass": {
+      "type": "butterworth",
+      "order": 2,
+      "freq": 26.42
+    },
+    "eq": [
+      {
+        "type": "highshelf",
+        "freq": 149.7,
+        "gain_db": 0.5882,
+        "q": 2.905
+      },
+      {
+        "type": "peak",
+        "freq": 184.8,
+        "gain_db": 6.575,
+        "q": 2.495
+      },
+      {
+        "type": "linkwitz",
+        "f0": 57.22,
+        "q0": 0.86,
+        "fp": 34.89,
+        "qp": 0.6279
+      }
+    ],
+    "passive": {
+      "branches": [
+        {},
+        {},
+        {
+          "c_uF": 507.4,
+          "join": "parallel"
+        },
+        {}
+      ]
+    }
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

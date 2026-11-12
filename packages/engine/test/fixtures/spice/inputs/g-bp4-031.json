@@ -1,0 +1,44 @@
+{
+  "id": "g-bp4-031",
+  "title": "bp4, bc-speakers/6ps44 (Qts 0.33), 3.985 L, rear 1.335 L closed, front 2.65 L port at 95.6 Hz",
+  "driver": {
+    "fs": 71,
+    "qms": 12.5,
+    "qes": 0.34,
+    "vas_l": 7,
+    "re": 5.3,
+    "sd_cm2": 132,
+    "le_mh": 0.7
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 1.335
+    },
+    "front": {
+      "vb_l": 2.65,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6.125,
+        "length_cm": 33.31
+      },
+      "ql": 9,
+      "qa": 92
+    },
+    "endCorrection": 0.613,
+    "qicl": null
+  },
+  "opts": {
+    "rg": 0,
+    "power": 1
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

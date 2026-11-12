@@ -1,0 +1,54 @@
+{
+  "id": "g-bp4-028",
+  "title": "bp4, peerless/pls-75f25al02-08 (Qts 0.74), 1.813 L, rear 1.138 L closed, front 0.6749 L 4 × dayton-audio/nd90-pr at 153.0 Hz",
+  "driver": {
+    "fs": 100,
+    "qms": 6.71,
+    "qes": 0.836,
+    "vas_l": 1.08,
+    "re": 6.3,
+    "sd_cm2": 28.9,
+    "le_mh": 0.092
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 1.138,
+      "ql": 25,
+      "qa": null
+    },
+    "front": {
+      "vb_l": 0.6749,
+      "prs": [
+        {
+          "pr": {
+            "mms_g": 8.1,
+            "sd_cm2": 31.2,
+            "cms_mm_per_n": 1.09,
+            "qms": 6.15
+          },
+          "count": 4,
+          "addedMass_g": 1.743
+        }
+      ]
+    },
+    "endCorrection": 0.85
+  },
+  "opts": {
+    "isobaric": {
+      "coils": "parallel"
+    },
+    "rg": 0.1,
+    "driveModel": "winisd",
+    "power": 10
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

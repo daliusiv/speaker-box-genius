@@ -1,0 +1,35 @@
+{
+  "id": "v02",
+  "title": "Vented 40 L, DSA215-8, lossless, no Le",
+  "driver": {
+    "fs": 35,
+    "qms": 1.87,
+    "qes": 0.4,
+    "vas_l": 37.4,
+    "re": 5.9,
+    "sd_cm2": 211.2,
+    "le_mh": 0
+  },
+  "box": {
+    "kind": "vented",
+    "vb_l": 40,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7.5,
+      "length_cm": 20
+    },
+    "ql": null,
+    "qa": null,
+    "qp": null
+  },
+  "opts": {},
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

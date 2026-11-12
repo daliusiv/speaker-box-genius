@@ -1,0 +1,51 @@
+{
+  "id": "g-bp6p-040",
+  "title": "bp6p, peerless/fsl-1520r02-08 (Qts 0.69), 63.72 L, rear 26.47 L port at 42.5 Hz, front 37.25 L port at 75.1 Hz",
+  "driver": {
+    "fs": 43,
+    "qms": 10.2,
+    "qes": 0.745,
+    "vas_l": 203,
+    "re": 5.5,
+    "sd_cm2": 855,
+    "le_mh": 0.729
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 26.47,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 12.05,
+        "length_cm": 63.84
+      },
+      "qp": 115,
+      "ql": 17,
+      "qa": 65
+    },
+    "front": {
+      "vb_l": 37.25,
+      "port": {
+        "shape": "slot",
+        "width_cm": 38.18,
+        "height_cm": 4.586,
+        "length_cm": 14.49
+      }
+    }
+  },
+  "opts": {
+    "rg": 0,
+    "coilTemp_C": 92,
+    "convention": "volts",
+    "power": 2.83
+  },
+  "air": {
+    "rho": 0.970025563706117,
+    "c": 346.99403473723254
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

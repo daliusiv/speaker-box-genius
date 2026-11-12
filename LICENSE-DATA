@@ -42,6 +42,8 @@ Speaker Box Genius without that manufacturer's permission:
 
   drivers/markaudio/   Markaudio (permission 6 Nov 2026; see
                        docs/data-permissions.md)
+  drivers/beyma/       Beyma (permission 6 Nov 2026; see
+                       docs/data-permissions.md)
 
 Each such brand's _brand.json has a "licence" field, and each entry's
 source note says "Not covered by CC BY-NC-SA". Leave these entries out

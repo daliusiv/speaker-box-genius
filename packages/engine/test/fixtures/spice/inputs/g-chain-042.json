@@ -1,0 +1,45 @@
+{
+  "id": "g-chain-042",
+  "title": "chain (sealed), dayton-audio/ls10-44 (Qts 0.43), 9.684 L, HP butterworth 3, 1 EQ",
+  "driver": {
+    "fs": 34.3,
+    "qms": 5.15,
+    "qes": 0.47,
+    "vas_l": 30.8,
+    "re": 7.4,
+    "sd_cm2": 366.4,
+    "le_mh": 5.25
+  },
+  "box": {
+    "kind": "sealed",
+    "vb_l": 9.684,
+    "ql": 15,
+    "qa": 39
+  },
+  "opts": {
+    "rg": 0.1,
+    "power": 1,
+    "highPass": {
+      "type": "butterworth",
+      "order": 3,
+      "freq": 14.78
+    },
+    "eq": [
+      {
+        "type": "highshelf",
+        "freq": 288.4,
+        "gain_db": 0.131,
+        "q": 3.691
+      }
+    ]
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}
