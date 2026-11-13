@@ -2,7 +2,7 @@
 title: "Box losses (Ql, Qa, Qp): what values should you use?"
 description: What leakage, absorption and port losses are, what values real boxes have, how much they change the response and the impedance, and how to measure your own box's losses.
 path: guides/box-losses
-image: losses-impedance-ql10.png
+image: chart:losses-ql10/impedance
 order: 13
 group: measuring
 ---
@@ -39,30 +39,30 @@ Neville Thiele, who first set out the vented-box alignments, noted that leakage 
 
 ## How much they matter
 
-The example: a **Dayton Audio DSA215-8** in its QB3 ported box, 16.2 L tuned to 39.8 Hz.
+The example: a **Dayton Audio DSA215-8** in its QB3 ported box, 16.2 L tuned to {{num:losses-ql10/1/fb}} Hz.
 
 | Ql (Qa, Qp 100) | F3 | Response at 40 Hz | Impedance peaks |
 |---|---|---|---|
-| 100 (no leakage) | 46.6 Hz | −5.3 dB | 31.4 Ω and 30.8 Ω |
-| 20 | 48.4 Hz | −5.8 dB | 30.0 Ω and 28.9 Ω |
-| 10 (WinISD's default) | 50.6 Hz | −6.4 dB | 28.6 Ω and 26.9 Ω |
-| 7 (the classic value) | 52.4 Hz | −6.8 dB | 27.5 Ω and 25.5 Ω |
-| 5 | 54.9 Hz | −7.4 dB | 26.2 Ω and 23.9 Ω |
-| 3 | 60.4 Hz | −8.6 dB | 23.8 Ω and 21.1 Ω |
+| 100 (no leakage) | {{num:losses-ql100/1/f3}} Hz | {{num:losses-ql100/1/rel@40}} dB | {{num:losses-ql100/1/zlo}} Ω and {{num:losses-ql100/1/zpk}} Ω |
+| 20 | {{num:losses-ql20/1/f3}} Hz | {{num:losses-ql20/1/rel@40}} dB | {{num:losses-ql20/1/zlo}} Ω and {{num:losses-ql20/1/zpk}} Ω |
+| 10 (WinISD's default) | {{num:losses-ql10/1/f3}} Hz | {{num:losses-ql10/1/rel@40}} dB | {{num:losses-ql10/1/zlo}} Ω and {{num:losses-ql10/1/zpk}} Ω |
+| 7 (the classic value) | {{num:losses-ql7/1/f3}} Hz | {{num:losses-ql7/1/rel@40}} dB | {{num:losses-ql7/1/zlo}} Ω and {{num:losses-ql7/1/zpk}} Ω |
+| 5 | {{num:losses-ql5/1/f3}} Hz | {{num:losses-ql5/1/rel@40}} dB | {{num:losses-ql5/1/zlo}} Ω and {{num:losses-ql5/1/zpk}} Ω |
+| 3 | {{num:losses-ql3/1/f3}} Hz | {{num:losses-ql3/1/rel@40}} dB | {{num:losses-ql3/1/zlo}} Ω and {{num:losses-ql3/1/zpk}} Ω |
 
-![Impedance with Ql 10: two peaks (19 Hz and 73 Hz) and the dip at the tuning between them.](img/losses-impedance-ql10.png)
+![Impedance with Ql 10: two peaks ({{num:losses-ql10/1/zlof}} Hz and {{num:losses-ql10/1/zpkf}} Hz) and the dip at the tuning between them.](chart:losses-ql10/impedance)
 
-![The same box with Ql 5: the dip stays at the tuning, but both peaks come down.](img/losses-impedance-ql5.png)
+![The same box with Ql 5: the dip stays at the tuning, but both peaks come down.](chart:losses-ql5/impedance)
 
-Going from a nearly perfect box (Ql 100) to a typical one (Ql 7–10) raises the F3 by 4–6 Hz and costs about 1 dB around the tuning. Even a leaky box (Ql 5) keeps its tuning frequency. Losses change **how much** the port helps, not **where** it tunes.
+Going from a nearly perfect box (Ql 100) to a typical one (Ql 7–10) raises the F3 by {{diff:losses-ql10/1/losses-ql100/1/f3:0}}–{{diff:losses-ql7/1/losses-ql100/1/f3:0}} Hz and costs about {{diff:losses-ql100/1/losses-ql7/1/rel@40:0}} dB around the tuning. Even a leaky box (Ql 5) keeps its tuning frequency. Losses change **how much** the port helps, not **where** it tunes.
 
 The other two losses, for comparison (with Ql 10):
 
 | Losses | F3 | What changes |
 |---|---|---|
-| Ql 10, Qa 100, Qp 100 | 50.6 Hz | The reference |
-| Absorption Qa 10 (heavily stuffed) | 58.4 Hz | The upper impedance peak drops sharply (to 19.8 Ω) |
-| Port Qp 10 (a lossy port) | 52.9 Hz | The lower impedance peak drops (to 21.4 Ω); less port output |
+| Ql 10, Qa 100, Qp 100 | {{num:losses-ql10/1/f3}} Hz | The reference |
+| Absorption Qa 10 (heavily stuffed) | {{num:losses-qa10/1/f3}} Hz | The upper impedance peak drops sharply (to {{num:losses-qa10/1/zpk}} Ω) |
+| Port Qp 10 (a lossy port) | {{num:losses-qp10/1/f3}} Hz | The lower impedance peak drops (to {{num:losses-qp10/1/zlo}} Ω); less port output |
 
 ## How to measure your box's losses
 
@@ -77,7 +77,9 @@ Fit the driver's parameters first: an error in the driver's Qms looks just like 
 
 ## Sealed boxes
 
-A sealed box can't use a port's resonance, so its losses matter less, but they're not zero: leakage lowers its output at the bottom a little. In the app the same Ql applies: for the DSA215-8's sealed box, Ql 10 instead of 100 moves the F3 from 75 Hz to 79 Hz. Stuffing in a sealed box mostly makes it act a little larger (and raises its losses), which is why stuffed sealed boxes are often simulated as larger than they are. How much larger, and how to model and measure it, is in the [box stuffing guide](/guides/box-stuffing/).
+A sealed box can't use a port's resonance, so its losses matter less, but they're not zero: leakage lowers its output at the bottom a little. In the app the same Ql applies: for the DSA215-8's sealed box, Ql 10 instead of 100 moves the F3 from {{num:losses-sealed-ql100/1/f3:0}} Hz to {{num:losses-sealed-ql10/1/f3:0}} Hz. Stuffing in a sealed box mostly makes it act a little larger (and raises its losses), which is why stuffed sealed boxes are often simulated as larger than they are. How much larger, and how to model and measure it, is in the [box stuffing guide](/guides/box-stuffing/).
+
+VituixCAD's Qa also makes the box act larger (+1.4 % at Qa 100, +11.3 % at Qa 10). Settings → Box losses → Absorption, or Settings → Match → VituixCAD, does the same.
 
 ## What to use
 

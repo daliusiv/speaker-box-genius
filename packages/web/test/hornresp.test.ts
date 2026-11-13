@@ -103,6 +103,23 @@ test("tapped horn and front-loaded horn", () => {
   assert.equal(horn.back.design.sections![0]!.taper, "exponential");
 });
 
+test("the mouth's extra distance is Hornresp's Acoustic Path Length, both ways", () => {
+  const d = { ...base, end: "open", mouth: "custom", mouthDistance_cm: 50 } as LineDesign;
+  const out = toHornresp(d, driver, { eg: 2.83, drivers: 1, name: "path" });
+  if (typeof out === "string") assert.fail(out);
+  assert.match(out.text, /Acoustic Path Length = 50\.0/);
+  const back = fromHornresp(out.text, base);
+  if (typeof back === "string") assert.fail(back);
+  assert.equal(back.design.mouth, "custom");
+  assert.equal(back.design.mouthDistance_cm, 50);
+  const plain = toHornresp({ ...base, mouth: "front" } as LineDesign, driver, { eg: 2.83, drivers: 1, name: "x" });
+  if (typeof plain === "string") assert.fail(plain);
+  assert.match(plain.text, /Acoustic Path Length = 0\.0/);
+  const r = fromHornresp(plain.text, base);
+  if (typeof r === "string") assert.fail(r);
+  assert.equal(r.design.mouth, base.mouth);
+});
+
 test("too many segments for Hornresp: says so", () => {
   const d: LineDesign = {
     ...base,

@@ -10,7 +10,9 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # Private dev repo: the self-hosted runner. The public mirror (this file is synced there)
+    # stays on GitHub's runners, so fork PRs never run on our machine.
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -19,16 +21,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          # Add `cache: pnpm` here once pnpm-lock.yaml is committed.
+          cache: pnpm
 
-      # Switch to --frozen-lockfile once pnpm-lock.yaml is committed.
-      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
       - name: Validate driver database
         run: pnpm validate:db
 
       - name: Tests
-        run: pnpm test
+        # Node's default is one file fewer than the cores; the files are independent, use them all.
+        run: pnpm test --test-concurrency=$(nproc)
 
       - name: Typecheck
         run: pnpm typecheck

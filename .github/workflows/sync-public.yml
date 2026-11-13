@@ -1,6 +1,6 @@
 name: Sync with public repo
 
-# Private dev repo only. Nightly (03:00 UTC) or by hand, scripts/sync-public.sh:
+# Private dev repo only. Daily (19:02 UTC = 19:02 UK in winter, 20:02 in BST; off the hour, as GitHub delays on-the-hour schedules) or by hand, scripts/sync-public.sh:
 #   1. copies commits merged on the public repo into a dev branch and opens a
 #      "Changes from public" PR in dev (CI and preview run on it);
 #   2. publishes dev main to public main as one "Sync from dev, <date>" commit, but only
@@ -11,7 +11,7 @@ name: Sync with public repo
 
 on:
   schedule:
-    - cron: "0 3 * * *"
+    - cron: "2 19 * * *"
   workflow_dispatch:
     inputs:
       dry_run:

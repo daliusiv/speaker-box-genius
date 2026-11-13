@@ -2,7 +2,7 @@
 title: How to design a passive radiator box
 description: Box size, tuning, added mass and excursion, step by step, with a worked example you can open and change in your browser.
 path: guides/passive-radiator-box
-image: pr-spl.png
+image: chart:pr-example/response
 order: 2
 group: ported
 ---
@@ -72,7 +72,7 @@ Keep the added mass reasonable. Past about **1.5 times the PR's own moving mass*
 
 The app does the sums: type the target Fb and press **Set added mass**, or use **Best tuning…** for the added mass that gives the flattest response, the deepest bass or the smallest box.
 
-![The worked example: the PR box (green) next to a ported box of the same size (orange), both behind the 30 Hz high-pass filter. The PR box rolls off a little higher.](img/pr-spl.png)
+![The worked example: the PR box ({{color:pr-example/2}}) next to a ported box of the same size ({{color:pr-example/1}}), both behind the 30 Hz high-pass filter. The PR box rolls off a little higher.](chart:pr-example/response)
 
 ## Step 4: check the excursion at your real power
 
@@ -81,11 +81,11 @@ This is where PR designs fail. Look at **both** excursion charts at the power yo
 - **Cone excursion** against the woofer's Xmax (5.5 mm).
 - **PR excursion** against the PR's Xmax (11 mm).
 
-At 35 W with the 30 Hz high-pass filter, the woofer peaks at **5.3 mm** and the PR at **7.9 mm**. Both are within their limits.
+At 35 W with the 30 Hz high-pass filter, the woofer peaks at **{{num:pr-example/2/x}} mm** and the PR at **{{num:pr-example/2/prx}} mm**. Both are within their limits.
 
 The PR chart also shades a band from **75 % of the PR's Xmax** up to it (8.25 mm here). A PR's suspension stiffens as it nears its limit, so its travel stops growing in step with the woofer's and its distortion rises; staying under the band leaves that headroom. 75 % is a rule of thumb, not a datasheet figure: change it, or turn it off, with **PR caution** in **Settings**. This design's 7.9 mm is 72 %, under the band.
 
-![PR excursion at 35 W with the 30 Hz high-pass filter: 7.9 mm at most, against an Xmax of 11 mm (the red line).](img/pr-excursion.png)
+![PR excursion at 35 W with the 30 Hz high-pass filter: {{num:pr-example/2/prx}} mm at most, against an Xmax of 11 mm (the red line).](chart:pr-example/pr)
 
 Without the high-pass filter, the same 35 W pushes the woofer to 12 mm (more than twice its Xmax) down at 15 Hz, where the PR no longer holds it back. A PR box almost always needs a high-pass filter (a "subsonic" filter) just below the tuning.
 
@@ -93,7 +93,7 @@ The **Max SPL** chart puts it together: the loudest the box can play at each fre
 
 ## Step 5: compare it with a port
 
-It's worth putting a ported box of the same size next to the PR box, because the result often surprises people: **the port goes a little deeper** (F3 49.2 Hz against the PR box's 52.5 Hz). The catch is the port itself:
+It's worth putting a ported box of the same size next to the PR box, because the result often surprises people: **the port goes a little deeper** (F3 {{num:pr-example/1/f3}} Hz against the PR box's {{num:pr-example/2/f3}} Hz). The catch is the port itself:
 
 | Port diameter (plain tube) | Length for 41.7 Hz | Peak air speed at 35 W |
 |---|---|---|

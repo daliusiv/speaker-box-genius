@@ -2,7 +2,7 @@
 title: Why your measurement doesn't match the simulation
 description: The real reasons a built speaker measures differently from its simulation (driver tolerances, losses, inductance, baffle step, the room and the measurement itself) and how to close the gap.
 path: guides/simulation-vs-measurement
-image: mismatch-spl.png
+image: chart:mismatch-example/response
 order: 11
 group: measuring
 ---
@@ -30,19 +30,19 @@ You simulated the box, built it carefully, measured it, and the curves don't mat
 
 Datasheet values describe an average sample, measured one way. Production tolerances are wide: a typical factory tolerance for Fs is ±15 %, and Vas is commonly quoted to ±20–30 % [1]. Q values vary by up to ±20 % [2]. The suspension also softens as the driver breaks in, so Fs and Qts fall and Vas rises over the first hours of use [3].
 
-How much does that matter? Take the worked example: a **Dayton Audio DSA215-8** in its QB3 ported box (16.2 L tuned to 39.8 Hz). Change one datasheet value at a time by a realistic amount, and the F3 moves like this:
+How much does that matter? Take the worked example: a **Dayton Audio DSA215-8** in its QB3 ported box (16.2 L tuned to {{num:losses-ql10/1/fb}} Hz). Change one datasheet value at a time by a realistic amount, and the F3 moves like this:
 
 | Driver | F3 | Response at 40 Hz |
 |---|---|---|
-| As the datasheet | 50.6 Hz | −6.4 dB |
-| Fs 15 % higher | 64.1 Hz | −8.6 dB |
-| Fs 15 % lower | 41.6 Hz | −3.8 dB |
-| Vas 25 % lower | 43.4 Hz | −4.3 dB |
-| Vas 25 % higher | 56.3 Hz | −8.0 dB |
-| Qes 15 % higher | 48.9 Hz | −6.2 dB |
-| Qes 15 % lower | 54.7 Hz | −6.6 dB |
+| As the datasheet | {{num:losses-ql10/1/f3}} Hz | {{num:losses-ql10/1/rel@40}} dB |
+| Fs 15 % higher | {{num:tol-fs-up/1/f3}} Hz | {{num:tol-fs-up/1/rel@40}} dB |
+| Fs 15 % lower | {{num:tol-fs-down/1/f3}} Hz | {{num:tol-fs-down/1/rel@40}} dB |
+| Vas 25 % lower | {{num:tol-vas-down/1/f3}} Hz | {{num:tol-vas-down/1/rel@40}} dB |
+| Vas 25 % higher | {{num:tol-vas-up/1/f3}} Hz | {{num:tol-vas-up/1/rel@40}} dB |
+| Qes 15 % higher | {{num:tol-qes-up/1/f3}} Hz | {{num:tol-qes-up/1/rel@40}} dB |
+| Qes 15 % lower | {{num:tol-qes-down/1/f3}} Hz | {{num:tol-qes-down/1/rel@40}} dB |
 
-![The same box with the datasheet driver (solid) and a sample with Fs 15 % higher (dashed): within tolerance, but with an F3 14 Hz higher.](img/mismatch-spl.png)
+![The same box with the datasheet driver (solid) and a sample with Fs 15 % higher (dashed): within tolerance, but with an F3 {{diff:tol-fs-up/1/losses-ql10/1/f3:0}} Hz higher.](chart:mismatch-example/response)
 
 A driver that's within its tolerance can move the F3 of a ported box by more than 10 Hz. Small, tuned boxes like this QB3 alignment are the most sensitive; a big sealed box barely notices.
 
@@ -52,7 +52,7 @@ A driver that's within its tolerance can move the F3 of a ported box by more tha
 
 Box simulators, WinISD included, assume the speaker is mounted in an infinite wall ("half space", or 2π). A real free-standing speaker radiates into the whole room ("full space", 4π) at low frequencies, where the sound wraps around the cabinet, and into half space only at higher frequencies, where the baffle is large compared to the wavelength. The change between the two is the **baffle step**: up to 6 dB less bass, centred on a frequency set by the baffle's width [4].
 
-For the example box on a 22 × 32 cm baffle, turning on **Baffle step** (on the Signal tab) lowers the response by **5.7 dB** at 40–60 Hz and 2.4 dB at 300 Hz, relative to the half-space simulation. That's a large part of most "my bass is weaker than predicted" complaints.
+For the example box on a 22 × 32 cm baffle, turning on **Baffle step** (on the Signal tab) lowers the response by **{{diff:losses-ql10/1/sim-baffle/1/spl@50}} dB** at 40–60 Hz and {{diff:losses-ql10/1/sim-baffle/1/spl@300}} dB at 300 Hz, relative to the half-space simulation. That's a large part of most "my bass is weaker than predicted" complaints.
 
 **How to close it:** turn on **Baffle step** and enter your baffle's size and the driver's position. Then either accept the step (a speaker near a wall gets much of it back), or compensate for it in the crossover or with EQ [4]. [Baffle step loss explained](/guides/baffle-step/) works through a bookshelf example: where the step really falls, how much to compensate and what each way costs.
 
@@ -79,10 +79,10 @@ The simulation uses the **net** inside volume: what's left after the driver, the
 
 | | Volume | Port tuning |
 |---|---|---|
-| As simulated | 16.2 L | 39.8 Hz |
-| Minus the driver (0.87 L) | 15.3 L | 40.9 Hz |
-| Minus the port tube (0.51 L) | 14.8 L | 41.6 Hz |
-| Minus 5 % bracing | 14.1 L | 42.7 Hz |
+| As simulated | 16.2 L | {{num:port-tuning-tables/1/fb}} Hz |
+| Minus the driver (0.87 L) | 15.3 L | {{num:port-tuning-tables/2/fb}} Hz |
+| Minus the port tube (0.51 L) | 14.8 L | {{num:port-tuning-tables/3/fb}} Hz |
+| Minus 5 % bracing | 14.1 L | {{num:port-tuning-tables/4/fb}} Hz |
 
 Three Hertz of tuning error from volume alone. Stuffing works the other way: fibre in a box makes it act a little larger, by up to about 15–25 % for a sealed box filled with fibre, depending on the material and how densely it's packed (see the [box stuffing guide](/guides/box-stuffing/)).
 
@@ -92,11 +92,11 @@ Three Hertz of tuning error from volume alone. Stuffing works the other way: fib
 
 Every box leaks a little air (through the driver's dust cap and surround, gaskets and terminal cups), absorbs some energy in its walls and stuffing, and loses some in the port. Small described these as three Q values: leakage QL, absorption QA and port loss QP [7]. A simulation needs a guess for them, and the usual guess (QL = 7 in the classic texts [8], 10 in WinISD and in this app) may not be your box.
 
-For the example box, changing QL from 10 to 5 raises the F3 from 50.6 Hz to 54.9 Hz and costs about 1 dB around the tuning. See [the box losses guide](/guides/box-losses/) for the whole story, including how to measure your box's QL.
+For the example box, changing QL from 10 to 5 raises the F3 from {{num:losses-ql10/1/f3}} Hz to {{num:losses-ql5/1/f3}} Hz and costs about {{diff:losses-ql10/1/losses-ql5/1/rel@40:0}} dB around the tuning. See [the box losses guide](/guides/box-losses/) for the whole story, including how to measure your box's QL.
 
 ## 7. Voice-coil heating
 
-At high power the voice coil heats up, its resistance rises, and the driver plays quieter and with a higher Q. A coil at 100 °C has about 30 % more resistance than at 20 °C. In the example, that's **1–2 dB less** output across the bass. It's called power compression, and it's why a speaker driven hard never quite reaches its simulated SPL.
+At high power the voice coil heats up, its resistance rises, and the driver plays quieter and with a higher Q. A coil at 100 °C has about 30 % more resistance than at 20 °C. In the example, that's **{{diff:losses-ql10/1/sim-hot/1/spl@100:0}}–{{diff:losses-ql10/1/sim-hot/1/spl@40:0}} dB less** output across the bass. It's called power compression, and it's why a speaker driven hard never quite reaches its simulated SPL.
 
 **How to close it:** in **Settings**, set **Voice coil** to the temperature you expect (around 100–150 °C at sustained high power), and compare. The [power compression guide](/guides/power-compression/) shows what a hot coil does to a ported box in detail.
 

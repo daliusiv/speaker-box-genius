@@ -1,0 +1,31 @@
+{
+  "id": "d4",
+  "kind": "line",
+  "name": "SBG 35-tl-path-100",
+  "on": true,
+  "vb_l": 32,
+  "closedArea_cm2": 200,
+  "sections": [
+    {
+      "length_cm": 150,
+      "endArea_cm2": 200,
+      "taper": "linear",
+      "fill_kgm3": 0
+    }
+  ],
+  "driverAt_cm": 0,
+  "end": "open",
+  "tapAt_cm": 90,
+  "portDiameter_cm": 5,
+  "portLength_cm": 10,
+  "portFlare_cm": 0,
+  "mouth": "custom",
+  "mouthDistance_cm": 100,
+  "fold": {
+    "width_cm": 20,
+    "folds": 2
+  },
+  "targetFb": 40,
+  "rearChamber_l": 20,
+  "throatChamber_l": 0
+}

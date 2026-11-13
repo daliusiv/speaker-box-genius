@@ -122,18 +122,35 @@ test("tapped horn: front and rear cancel at very low frequencies, the horn works
   assert.throws(() => lineNetwork({ ...th, driverAt_cm: 120 }));
 });
 
-test("mouth distance: same bass, different where the extra path is half a wavelength", () => {
+test("mouth distance on axis: the mouth heard d/c later at the same level (far field, as a box's port)", () => {
   const near = simulate(D, TL, OPT);
   const far = simulate(D, { ...TL, mouthDistance_cm: 40 }, OPT);
-  const at = (r: typeof near, f: number) => {
-    let i = 0;
-    while (r.freq[i]! < f) i++;
-    return r.spl[i]!;
-  };
-  assert.ok(Math.abs(at(near, 20) - at(far, 20)) < 0.5);
+  // A full wavelength late is the same as side by side: no 1/r level drop on the mouth.
+  for (const f of [100, 200, 343.2]) {
+    const at = (d: number) => simulate(D, { ...TL, mouthDistance_cm: d }, { ...OPT, air: { rho: 1.204, c: 343.2 }, fMin: f, fMax: f, points: 1 }).spl[0]!;
+    assert.ok(Math.abs(at((343.2 / f) * 100) - at(0)) < 1e-9, `${f} Hz`);
+  }
+  // Where the extra path is half a wavelength the curves part.
   let diff = 0;
   for (let i = 0; i < near.freq.length; i++) if (near.freq[i]! > 300 && near.freq[i]! < 600) diff = Math.max(diff, Math.abs(near.spl[i]! - far.spl[i]!));
   assert.ok(diff > 2, `${diff}`);
+});
+
+test("mouth distance from radiated power: two sources that far apart, powers summed; phase unchanged", () => {
+  const P = { ...OPT, splFrom: "power" as const };
+  const near = simulate(D, TL, P);
+  const far = simulate(D, { ...TL, mouthDistance_cm: 60 }, P);
+  const c = 343.2;
+  for (let i = 0; i < near.freq.length; i += 7) {
+    // The parts don't move with the distance; the total is |M|² + |C|² + 2·Re(M·C*)·sinc(kd).
+    assert.ok(Math.abs(far.parts!.mouth[i]! - near.parts!.mouth[i]!) < 1e-9);
+    const p2 = (db: number) => 10 ** (db / 10);
+    const m = p2(near.parts!.mouth[i]!), cn = p2(near.parts!.cone[i]!), t = p2(near.spl[i]!);
+    const kd = (2 * Math.PI * near.freq[i]! * 0.6) / c;
+    const want = 10 * Math.log10(m + cn + (t - m - cn) * (Math.sin(kd) / kd));
+    assert.ok(Math.abs(far.spl[i]! - want) < 1e-6, `${near.freq[i]} Hz: ${far.spl[i]} vs ${want}`);
+    assert.ok(Math.abs(far.phaseDeg[i]! - near.phaseDeg[i]!) < 1e-6);
+  }
 });
 
 test("MLTL port: a flare lowers the air speed at its mouth; compression costs output at high power", () => {

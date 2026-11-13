@@ -42,19 +42,19 @@ The first result is a **Dayton Audio RSS315HO-44** 12″ (its two 4 Ω coils in 
 
 | At 300 W, no filter | PR, 43.5 L | Ported, 43.5 L | Sealed, 23.6 L |
 |---|---|---|---|
-| F3 | 24.9 Hz | **24.1 Hz** | 42.9 Hz |
-| Output at 30 Hz | 106.8 dB | **107.4 dB** | 101.0 dB |
-| Peak cone travel, 20 Hz up (Xmax 14 mm) | 9.5 mm | 8.7 mm | 10.3 mm |
-| Peak PR travel, 20 Hz up (26 mm) | 14.0 mm | — | — |
-| Port air speed | — | **37.7 m/s** | — |
+| F3 | {{num:assistant-example/1/f3}} Hz | **{{num:assistant-example/2/f3}} Hz** | {{num:assistant-example/3/f3}} Hz |
+| Output at 30 Hz | {{num:assistant-example/1/spl@30}} dB | **{{num:assistant-example/2/spl@30}} dB** | {{num:assistant-example/3/spl@30}} dB |
+| Peak cone travel, 20 Hz up (Xmax 14 mm) | {{num:assistant-example/1/x20}} mm | {{num:assistant-example/2/x20}} mm | {{num:assistant-example/3/x20}} mm |
+| Peak PR travel, 20 Hz up (26 mm) | {{num:assistant-example/1/prx20}} mm | — | — |
+| Port air speed | — | **{{num:assistant-example/2/port}} m/s** | — |
 | Grade | ✓ within limits from 20 Hz up | ⚠ port, safe to about 61 W | ✓ within limits down to 10 Hz |
 | Rank in the list | **1st** | 530th | 3rd |
 
-![The example's response: the ported box (orange) reaches 24.1 Hz, the PR box (green) 24.9 Hz, the sealed box (blue) 42.9 Hz.](img/assistant-example-spl.png)
+![The example's response: the ported box ({{color:assistant-example/2}}) reaches {{num:assistant-example/2/f3}} Hz, the PR box ({{color:assistant-example/1}}) {{num:assistant-example/1/f3}} Hz, the sealed box ({{color:assistant-example/3}}) {{num:assistant-example/3/f3}} Hz.](chart:assistant-example/response)
 
-![Port air speed in the ported box at 300 W: 37.7 m/s, more than twice the 17 m/s chuffing line.](img/assistant-example-port.png)
+![Port air speed in the ported box at 300 W: {{num:assistant-example/2/port}} m/s, more than twice the 17 m/s chuffing line.](chart:assistant-example/port)
 
-The ported box goes only 0.8 Hz deeper than the PR box, and it can't be built to play at 300 W. A 43.5 L box tuned to 23 Hz needs a long port. The biggest that fits straight inside is **5 cm** across (flared, 23.8 cm long), and at 300 W its air moves at **37.7 m/s**. That box is only quiet up to about **61 W**. The PR box has no port to chuff, which is why it ranks first and the ported box 530th. That's the trade a passive radiator makes: a hertz or so of F3 and the cost of two radiators, against a port you can't fit.
+The ported box goes only {{diff:assistant-example/1/2/f3}} Hz deeper than the PR box, and it can't be built to play at 300 W. A 43.5 L box tuned to 23 Hz needs a long port. The biggest that fits straight inside is **5 cm** across (flared, {{num:assistant-example/2/len}} cm long), and at 300 W its air moves at **{{num:assistant-example/2/port}} m/s**. That box is only quiet up to about **61 W**. The PR box has no port to chuff, which is why it ranks first and the ported box 530th. That's the trade a passive radiator makes: a hertz or so of F3 and the cost of two radiators, against a port you can't fit.
 
 ## How results are graded
 
@@ -67,13 +67,13 @@ Every design is simulated at your power and graded exactly as the app grades it,
 
 **Where the checks stop.** With no high-pass filter, every box is checked from **20 Hz** up, sealed or tuned, or from its own F3 if that's lower: a box built to reach 18 Hz is checked at 18 Hz. Below that, music has little energy. Any design with a high-pass filter on the **Signal** tab is checked from 10 Hz, since the filter is part of the simulation. A card within its limits also says whether the cone (or a PR) passes Xmax below the checks, and up to what power it wouldn't: "within its limits from 20 Hz up" with a subsonic-filter warning, or "down to 10 Hz" when nothing passes Xmax at all.
 
-![The example's cone travel at 300 W: within the 14 mm Xmax from 20 Hz up in all three boxes, but below 20 Hz the PR (green) and ported (orange) cones unload and pass it.](img/assistant-example-excursion.png)
+![The example's cone travel at 300 W: within the 14 mm Xmax from 20 Hz up in all three boxes, but below 20 Hz the PR ({{color:assistant-example/1}}) and ported ({{color:assistant-example/2}}) cones unload and pass it.](chart:assistant-example/excursion)
 
-> **Common trap: "within its limits" means safe with any signal.** The grade ignores everything below 20 Hz, but your amplifier doesn't. On the excursion chart the PR box's cone reaches **21.0 mm at 15 Hz** (Xmax 14), and the card says it's only safe to 80 W down there. Turn on **Signal → High-pass filter**, 24 dB/oct at 18 Hz, and that drops to **9.1 mm**, for an F3 of 25.5 Hz instead of 24.9. The sealed box doesn't need it: its cone tops out at 11.3 mm, even at 10 Hz. See the [subsonic filter guide](/guides/subsonic-filter/).
+> **Common trap: "within its limits" means safe with any signal.** The grade ignores everything below 20 Hz, but your amplifier doesn't. On the excursion chart the PR box's cone reaches **{{num:assistant-example/1/x@15}} mm at 15 Hz** (Xmax 14), and the card says it's only safe to 80 W down there. Turn on **Signal → High-pass filter**, 24 dB/oct at 18 Hz, and that drops to **9.1 mm**, for an F3 of 25.5 Hz instead of 24.9. The sealed box doesn't need it: its cone tops out at 11.3 mm, even at 10 Hz. See the [subsonic filter guide](/guides/subsonic-filter/).
 
 On a box tuned higher, the deep-bass zone is shaded on the excursion chart, with its own 2 × Xmax line:
 
-![A tuned box's deep-bass zone, shaded below 0.7 × its tuning (here 41.6 Hz for a 59.3 Hz box), with the 2 × Xmax line. The cone passes Xmax only inside it, so the box is graded deep bass, not over.](img/deep-bass-zone.png)
+![A tuned box's deep-bass zone, shaded below 0.7 × its tuning (here 41.6 Hz for a 59.3 Hz box), with the 2 × Xmax line. The cone passes Xmax only inside it, so the box is graded deep bass, not over.](chart:deep-bass-example/excursion)
 
 ## How results are ranked
 
@@ -124,9 +124,9 @@ When filling the space reaches at least 3 % lower F3 than the flat alignment, a 
 
 **"The top result is the best driver."** It's the best by the measure you picked, among those within their limits at your power. Balanced is a sum of ranks, not your target. Set the power to what your amplifier really gives, and re-sort if depth or size matters more. *Proof: on the same list, Balanced puts the RSS315HO-44 PR box first, Deepest the same RSS315HO-44 PR box (F3 24.9 Hz), and Loudest an 18 Sound 15NTLS3500 ported in 80 L (110.0 dB at 30 Hz). Smallest box puts a Peerless STW-350F188PR01-04 in 31.7 L, but with a SEAS SL26R carrying 640 g, and its card warns the driver and radiator won't all fit a cube that size.*
 
-**"A ported box always beats a PR box."** In the same box and tuning the port goes a little deeper here (24.1 Hz against 24.9 Hz). But only the PR box can play at 300 W, because the port that fits a 43.5 L box at 23 Hz chuffs above about 61 W. *Proof: the response and Port speed charts of the worked example.*
+**"A ported box always beats a PR box."** In the same box and tuning the port goes a little deeper here ({{num:assistant-example/2/f3}} Hz against {{num:assistant-example/1/f3}} Hz). But only the PR box can play at 300 W, because the port that fits a 43.5 L box at 23 Hz chuffs above about 61 W. *Proof: the response and Port speed charts of the worked example.*
 
-**"Within its limits means I don't need a subsonic filter."** The grade stops at 20 Hz. Below that the example's PR box reaches 21.0 mm at 15 Hz, past its 14 mm Xmax, and its card says so. *Proof: the card's "from 20 Hz up" line, the excursion chart, then Signal → High-pass filter.*
+**"Within its limits means I don't need a subsonic filter."** The grade stops at 20 Hz. Below that the example's PR box reaches {{num:assistant-example/1/x@15}} mm at 15 Hz, past its 14 mm Xmax, and its card says so. *Proof: the card's "from 20 Hz up" line, the excursion chart, then Signal → High-pass filter.*
 
 **"Bigger power, louder results."** Only until a limit: at the default 300 W, 957 of the 1,486 home-sub boxes are over one. The card always says what sets its output (the amplifier, the cone, the port) and the power that keeps it within. *Proof: each card's limit line; Max SPL once opened.*
 

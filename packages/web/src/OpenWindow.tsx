@@ -100,7 +100,7 @@ export function OpenWindow(props: {
                 Choose a file
               </button>
               <p className="drop-only">or drop it here</p>
-              <p className="hint">Project (.sbgenius) · WinISD (.wpr, .wdr) · OpenISD (.owpr, .owdr) · impedance (.zma) · response (.frd)</p>
+              <p className="hint">Project (.sbgenius) · WinISD (.wpr, .wdr) · OpenISD (.owpr, .owdr) · Hornresp record (.txt) · impedance (.zma) · response (.frd)</p>
               <input
                 ref={input}
                 type="file"

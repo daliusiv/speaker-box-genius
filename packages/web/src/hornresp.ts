@@ -1,5 +1,5 @@
 import { flowResistivity, passiveActive, portEffectiveLength, semiActive, STANDARD_AIR, type DriverInput, type SemiInductance, type SimulationOptions, type TsValues } from "@sbg/engine";
-import { lineLength } from "./sim.ts";
+import { lineInputOf, lineLength } from "./sim.ts";
 import type { LineDesign, LineSection } from "./state.ts";
 
 /**
@@ -141,7 +141,7 @@ export function toHornresp(
     return `Hornresp takes at most ${MAX_SEGMENTS} segments, and this ${d.end === "horn" ? "horn" : "line"} needs ${segs.length} (sections, ${topo === "TH" ? "the rear and the tap" : "the driver position"}${d.end === "port" ? " and the port" : ""} each start one). Merge some sections to export it.`;
   }
   if (L <= 0) return "The line has no length.";
-  if (d.mouth !== "front") warnings.push("Hornresp places the mouth next to the driver: the mouth position isn't exported.");
+  if (d.mouth !== "front") warnings.push("The mouth's extra distance is written as Hornresp's Acoustic Path Length, which gives the level from radiated power (not on axis).");
 
   const m = mechanicalFromTs(driver);
   const rows: HornrespExport["rows"] = [];
@@ -237,7 +237,8 @@ export function toHornresp(
   put("Vtc", r2(topo === "Nd" ? d.throatChamber_l * 1000 : 0), "throat chamber, cm³");
   put("Atc", r2(topo === "Nd" && d.throatChamber_l > 0 ? m.sd_cm2 * Math.max(1, o.drivers) : 0), "cm²");
   gap();
-  fixed("Acoustic Path Length", "0.0");
+  // The mouth's extra distance: Hornresp's Path is the distance between the cone and the mouth.
+  put("Acoustic Path Length", (lineInputOf(d).mouthDistance_cm ?? 0).toFixed(1), "cm");
   head("MAXIMUM SPL PARAMETER VALUES");
   fixed("Pamp", "100");
   fixed("Vamp", "25");
@@ -263,7 +264,7 @@ export function toHornresp(
 
 
 /** Filter, EQ, flag and other settings, exactly as Hornresp 55.30 writes its defaults. */
-const HORNRESP_TAIL = `
+export const HORNRESP_TAIL = `
 |ACTIVE BAND PASS FILTER PARAMETER VALUES:
 
 High Pass Frequency = 0
@@ -428,6 +429,12 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
   }
   design.sections = sections.map((s) => ({ ...s, length_cm: Math.round(s.length_cm * 100) / 100, endArea_cm2: Math.round(s.endArea_cm2 * 100) / 100 }));
   if (get("Lrc") && (get("Lrc") ?? 0) > 0) warnings.push("The rear chamber's length (Lrc) isn't modelled: it's treated as a plain volume.");
+  const path = get("Acoustic Path Length") ?? 0;
+  if (path > 0) {
+    design.mouth = "custom";
+    design.mouthDistance_cm = Math.round(path * 10) / 10;
+    warnings.push(`Acoustic Path Length ${design.mouthDistance_cm} cm is the mouth's extra distance; it matches Hornresp with SPL from radiated power (Settings → Line/horn SPL).`);
+  }
   if ((get("Ap1") ?? 0) > 0 || (get("Ap") ?? 0) > 0) warnings.push("The record has a port in a chamber (Ap1/Lp), which isn't modelled here.");
   const ang = pairs.find(([k]) => k.toLowerCase() === "ang")?.[1];
   if (ang && !/^2(\.0+)?\s*x\s*Pi$/i.test(ang)) warnings.push(`The record radiates into ${ang}; here it's half space (2 × Pi).`);

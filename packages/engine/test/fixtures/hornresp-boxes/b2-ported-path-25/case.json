@@ -1,0 +1,20 @@
+{
+  "title": "Ported box, port 25 cm away",
+  "text": "Case B2 with Acoustic Path Length 25 cm: cone and port as two sources 25 cm apart, their powers summed (SPL from radiated power)",
+  "frontAir": 1,
+  "input": {
+    "kind": "vented",
+    "vb_l": 30,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7,
+      "length_cm": 15
+    },
+    "ql": null,
+    "qa": null,
+    "qp": null,
+    "ventDistance_cm": 25
+  },
+  "portModel": "pipe",
+  "splFrom": "power"
+}

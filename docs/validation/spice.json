@@ -1,159 +1,159 @@
 {
- "cases": 439,
- "compared": 438,
- "kinds": { "bandpass": 3, "bp4": 60, "bp6p": 60, "bp6s": 60, "chain": 60, "pr": 60, "sealed": 66, "vented": 69 },
+ "cases": 442,
+ "compared": 441,
+ "kinds": { "bandpass": 4, "bp4": 60, "bp6p": 60, "bp6s": 60, "chain": 60, "pr": 60, "sealed": 66, "vented": 70, "passive-radiator": 1 },
  "outputs": [
   {
    "output": "SPL (dB)",
-   "comparisons": 438,
-   "points": 52440,
+   "comparisons": 441,
+   "points": 52821,
    "worst": 1.6e-7,
    "worstCase": "g-bp4-020",
    "worstHz": 72.43,
    "regions": {
-    "below": { "worst": 6.6e-8, "mean": 1.3e-9, "points": 13517 },
-    "around": { "worst": 1.6e-7, "mean": 1.5e-9, "points": 13182 },
-    "above": { "worst": 8e-8, "mean": 2.9e-10, "points": 25741 }
+    "below": { "worst": 6.6e-8, "mean": 1.3e-9, "points": 13606 },
+    "around": { "worst": 1.6e-7, "mean": 1.5e-9, "points": 13273 },
+    "above": { "worst": 8e-8, "mean": 2.9e-10, "points": 25942 }
    },
    "pass": true
   },
   {
    "output": "SPL phase (°)",
-   "comparisons": 438,
-   "points": 43871,
+   "comparisons": 441,
+   "points": 44177,
    "worst": 0.0000011,
    "worstCase": "g-bp6s-009",
    "worstHz": 25.09,
    "regions": {
-    "below": { "worst": 0.0000011, "mean": 2.3e-8, "points": 8080 },
-    "around": { "worst": 5.9e-7, "mean": 7.8e-9, "points": 13083 },
-    "above": { "worst": 3.6e-7, "mean": 3.4e-9, "points": 22708 }
+    "below": { "worst": 0.0000011, "mean": 2.3e-8, "points": 8116 },
+    "around": { "worst": 5.9e-7, "mean": 7.8e-9, "points": 13174 },
+    "above": { "worst": 3.6e-7, "mean": 3.4e-9, "points": 22887 }
    },
    "pass": true
   },
   {
    "output": "Group delay (ms)",
-   "comparisons": 438,
-   "points": 43871,
+   "comparisons": 441,
+   "points": 44177,
    "worst": 0.0000046,
    "worstCase": "g-bp6s-009",
    "worstHz": 25.09,
    "regions": {
-    "below": { "worst": 0.0000046, "mean": 3.7e-8, "points": 8080 },
-    "around": { "worst": 0.0000027, "mean": 1.5e-8, "points": 13083 },
-    "above": { "worst": 1.1e-7, "mean": 6.8e-10, "points": 22708 }
+    "below": { "worst": 0.0000046, "mean": 3.7e-8, "points": 8116 },
+    "around": { "worst": 0.0000027, "mean": 1.5e-8, "points": 13174 },
+    "above": { "worst": 1.1e-7, "mean": 6.7e-10, "points": 22887 }
    },
    "pass": true
   },
   {
    "output": "Impedance",
-   "comparisons": 438,
-   "points": 57378,
+   "comparisons": 441,
+   "points": 57771,
    "worst": 1.2e-8,
    "worstCase": "g-bp6s-030",
    "worstHz": 72.43,
    "regions": {
-    "below": { "worst": 1.1e-8, "mean": 4.8e-11, "points": 17928 },
-    "around": { "worst": 1.2e-8, "mean": 9.7e-11, "points": 13192 },
-    "above": { "worst": 6.3e-9, "mean": 1.5e-11, "points": 26258 }
+    "below": { "worst": 1.1e-8, "mean": 4.8e-11, "points": 18025 },
+    "around": { "worst": 1.2e-8, "mean": 9.6e-11, "points": 13283 },
+    "above": { "worst": 6.3e-9, "mean": 1.5e-11, "points": 26463 }
    },
    "pass": true
   },
   {
    "output": "Impedance phase (°)",
-   "comparisons": 438,
-   "points": 57378,
+   "comparisons": 441,
+   "points": 57771,
    "worst": 7.9e-7,
    "worstCase": "g-bp4-020",
    "worstHz": 72.43,
    "regions": {
-    "below": { "worst": 5.7e-7, "mean": 2.2e-9, "points": 17928 },
-    "around": { "worst": 7.9e-7, "mean": 6.3e-9, "points": 13192 },
-    "above": { "worst": 3e-7, "mean": 8.2e-10, "points": 26258 }
+    "below": { "worst": 5.7e-7, "mean": 2.1e-9, "points": 18025 },
+    "around": { "worst": 7.9e-7, "mean": 6.3e-9, "points": 13283 },
+    "above": { "worst": 3e-7, "mean": 8.2e-10, "points": 26463 }
    },
    "pass": true
   },
   {
    "output": "Excursion",
-   "comparisons": 438,
-   "points": 57378,
+   "comparisons": 441,
+   "points": 57771,
    "worst": 1.8e-8,
    "worstCase": "g-bp6s-030",
    "worstHz": 43.62,
    "regions": {
-    "below": { "worst": 1.8e-8, "mean": 1.5e-10, "points": 17928 },
-    "around": { "worst": 1.8e-8, "mean": 1.6e-10, "points": 13192 },
-    "above": { "worst": 2.8e-9, "mean": 1.7e-11, "points": 26258 }
+    "below": { "worst": 1.8e-8, "mean": 1.5e-10, "points": 18025 },
+    "around": { "worst": 1.8e-8, "mean": 1.6e-10, "points": 13283 },
+    "above": { "worst": 2.8e-9, "mean": 1.7e-11, "points": 26463 }
    },
    "pass": true
   },
   {
    "output": "Port air speed",
-   "comparisons": 259,
-   "points": 33929,
+   "comparisons": 261,
+   "points": 34191,
    "worst": 7.9e-7,
    "worstCase": "g-bp6s-009",
    "worstHz": 5,
    "regions": {
-    "below": { "worst": 7.9e-7, "mean": 1.4e-9, "points": 10792 },
-    "around": { "worst": 1.8e-8, "mean": 2e-10, "points": 7805 },
-    "above": { "worst": 2.9e-9, "mean": 2.2e-11, "points": 15332 }
+    "below": { "worst": 7.9e-7, "mean": 1.4e-9, "points": 10865 },
+    "around": { "worst": 1.8e-8, "mean": 2e-10, "points": 7866 },
+    "above": { "worst": 2.9e-9, "mean": 2.2e-11, "points": 15460 }
    },
    "pass": true
   },
   {
    "output": "Box pressure",
-   "comparisons": 438,
-   "points": 57378,
+   "comparisons": 441,
+   "points": 57771,
    "worst": 1.1e-7,
    "worstCase": "g-bp4-020",
    "worstHz": 100,
    "regions": {
-    "below": { "worst": 8.2e-9, "mean": 1.2e-10, "points": 17928 },
-    "around": { "worst": 1.1e-7, "mean": 2.2e-10, "points": 13192 },
-    "above": { "worst": 2.8e-9, "mean": 1.8e-11, "points": 26258 }
+    "below": { "worst": 8.2e-9, "mean": 1.2e-10, "points": 18025 },
+    "around": { "worst": 1.1e-7, "mean": 2.2e-10, "points": 13283 },
+    "above": { "worst": 2.8e-9, "mean": 1.8e-11, "points": 26463 }
    },
    "pass": true
   },
   {
    "output": "Front chamber pressure",
-   "comparisons": 183,
-   "points": 23973,
+   "comparisons": 184,
+   "points": 24104,
    "worst": 7.9e-7,
    "worstCase": "g-bp6s-009",
    "worstHz": 5,
    "regions": {
-    "below": { "worst": 7.9e-7, "mean": 1.9e-9, "points": 8182 },
-    "around": { "worst": 1.8e-8, "mean": 2.7e-10, "points": 5515 },
-    "above": { "worst": 2.9e-9, "mean": 2.6e-11, "points": 10276 }
+    "below": { "worst": 7.9e-7, "mean": 1.9e-9, "points": 8227 },
+    "around": { "worst": 1.8e-8, "mean": 2.7e-10, "points": 5546 },
+    "above": { "worst": 2.9e-9, "mean": 2.6e-11, "points": 10331 }
    },
    "pass": true
   },
   {
    "output": "Rear port air speed",
-   "comparisons": 107,
-   "points": 14017,
+   "comparisons": 108,
+   "points": 14148,
    "worst": 2.7e-8,
    "worstCase": "g-bp6p-031",
    "worstHz": 114.8,
    "regions": {
-    "below": { "worst": 6.7e-9, "mean": 1.1e-10, "points": 4768 },
-    "around": { "worst": 2.7e-8, "mean": 2.9e-10, "points": 3225 },
-    "above": { "worst": 2.9e-9, "mean": 2.3e-11, "points": 6024 }
+    "below": { "worst": 6.7e-9, "mean": 1.1e-10, "points": 4813 },
+    "around": { "worst": 2.7e-8, "mean": 2.9e-10, "points": 3256 },
+    "above": { "worst": 2.9e-9, "mean": 2.2e-11, "points": 6079 }
    },
    "pass": true
   },
   {
    "output": "PR excursion",
-   "comparisons": 105,
-   "points": 13755,
+   "comparisons": 107,
+   "points": 14017,
    "worst": 7.3e-9,
    "worstCase": "g-bp6p-003",
    "worstHz": 57.52,
    "regions": {
-    "below": { "worst": 3.6e-9, "mean": 7e-11, "points": 3843 },
-    "around": { "worst": 7.3e-9, "mean": 1.7e-10, "points": 3162 },
-    "above": { "worst": 9.7e-10, "mean": 1.8e-11, "points": 6750 }
+    "below": { "worst": 3.6e-9, "mean": 6.9e-11, "points": 3891 },
+    "around": { "worst": 7.3e-9, "mean": 1.7e-10, "points": 3222 },
+    "above": { "worst": 9.7e-10, "mean": 1.8e-11, "points": 6904 }
    },
    "pass": true
   }

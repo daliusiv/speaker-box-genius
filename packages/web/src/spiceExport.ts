@@ -1,8 +1,7 @@
 import { buildNetlist, type SpiceCase } from "@sbg/engine/spice";
 import type { EqStage } from "@sbg/engine";
-import { airOf, builtVbOf, driverInputOf, enclosureOf, lossesFor, simOptionsOf, solveDriver } from "./sim.ts";
+import { airOf, driverInputOf, enclosureOf, enclosureOptsOf, lossesFor, simOptionsOf, solveDriver, vbOf, ventDistanceOf } from "./sim.ts";
 import type { AppState, DesignState } from "./state.ts";
-import { stuffFactor } from "./stuffing.ts";
 
 /** Lines and horns aren't lumped boxes: Hornresp opens those. */
 export const spiceExportable = (d: DesignState): boolean => d.kind !== "line";
@@ -29,18 +28,21 @@ export function spiceFor(s: AppState, d: DesignState, shareUrl: string, date = n
   if (o.portModel === "pipe") notes.push("ports as pipes (Settings → Ports; written as lumped masses)");
   if (o.portCompression) notes.push("port compression");
   if (o.leakage === "absorbed") notes.push("leakage that's absorbed (the leak's air is heard, as in WinISD)");
+  if (ventDistanceOf(d, s.volume) > 0 && s.settings.lineSpl === "power")
+    notes.push("the port's position from radiated power (Settings → SPL; the netlist delays the port's sound on axis instead)");
   if (s.baffle.on) notes.push("the baffle step");
   if (s.roomGain.mode !== "off") notes.push(s.roomGain.mode === "car" ? "cabin gain" : "room gain");
   const eq = s.eq
     .filter((e) => e.on && (e.target === "all" || e.target === d.id))
     .map(({ id: _id, on: _on, target: _t, ...stage }) => stage as EqStage);
-  const vb = builtVbOf(s, d) * stuffFactor(d);
+  const vb = vbOf(s, d);
+  const dist = ventDistanceOf(d, s.volume);
   const air = airOf(s);
   const c: SpiceCase = {
     id: "export",
     title: d.name,
     driver,
-    box: enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm) as SpiceCase["box"],
+    box: enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm, s.volume, enclosureOptsOf(s)) as SpiceCase["box"],
     opts: {
       power: o.power,
       ...(o.convention ? { convention: o.convention } : {}),
@@ -80,6 +82,9 @@ export function spiceFor(s: AppState, d: DesignState, shareUrl: string, date = n
     "",
     "What to plot (RMS values; x 1.414 for peak):",
     `  SPL at 1 m:      V(${p.pressure}), sound pressure in Pa. LTspice shows it in dB re 1 V: add 93.98 for dB SPL.`,
+    ...(dist > 0
+      ? [`  Port position:   the ${d.kind === "bandpass" ? "rear chamber's opening" : d.kind === "pr" ? "PRs" : "port"} ${dist} cm away: V(prc) without it, V(pvd) its sound delayed ${((dist / 100 / air.c) * 1000).toFixed(3)} ms by the line Tpos.`]
+      : []),
     `  Impedance:       V(${p.terminals})/I(${p.coilSense}), what the amplifier sees past the amp + cable resistance.`,
     `  Cone excursion:  V(${p.excursion}), in metres (x 1414 for mm peak).`,
     ...(p.portSpeed ? [`  Port air speed:  V(${p.portSpeed}), m/s${p.rearPortSpeed ? " (the front chamber's port)" : ""}.`] : []),

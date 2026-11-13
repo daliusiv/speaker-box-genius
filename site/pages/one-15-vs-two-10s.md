@@ -2,7 +2,7 @@
 title: "One 15-inch or two 10-inch subwoofers: which plays louder and deeper?"
 description: One 15″ against two 10″ from the same series, in the same sealed and ported boxes on the same amplifier, in one project. Displacement against power handling against a 2 Ω load, with the maximum SPL chart that settles each forum claim.
 path: guides/one-15-vs-two-10s
-image: subs-maxspl.png
+image: chart:subs-example/maxspl
 order: 20
 group: start
 ---
@@ -20,7 +20,7 @@ This guide puts one 15″ and two 10″ from the same Dayton Audio Reference ser
 | | One 15″ | Two 10″ (parallel, 2 Ω) |
 |---|---|---|
 | Below about 40 Hz | **+2.5 dB** (sealed): more displacement | |
-| Above about 43 Hz | | **up to +1.6 dB**: more power handling, more current |
+| Above about {{fig:subs-difference/crossSealed:0}} Hz | | **up to +1.6 dB**: more power handling, more current |
 | Near a ported box's tuning | same: the port is the limit | same |
 | Sealed box for Qtc 0.707 | 133.3 L | **79.6 L** |
 | On an amplifier not rated for 2 Ω (pair in series, sealed) | **+3.1 to +5.2 dB** | |
@@ -65,17 +65,17 @@ The 15″ is the main driver. The two 10″ are the **comparison driver** with t
 
 A **24 dB/octave subsonic filter at 18 Hz** protects both. The amplifier is one channel of a **Crown XLS 1002**, rated 350 W into 4 Ω and 550 W into 2 Ω [8]. In **Settings → Work these out from the amp's ratings** that's **37.4 V** and **16.6 A**. The charts run at **28.3 V** (2.83 V + 20 dB), enough to show the limits without going past the amplifier.
 
-![Both at 28.3 V in dB SPL: the 15″ solid, the two 10″ dashed; blue the 100 L sealed box, orange the 150 L ported box. The pair is about 2 dB louder at 80 Hz in either box.](img/subs-spl.png)
+![Both at 28.3 V in dB SPL: the 15″ solid, the two 10″ dashed; blue the 100 L sealed box, orange the 150 L ported box. The pair is about 2 dB louder at 80 Hz in either box.](chart:subs-example/spl)
 
-**At the same voltage, the pair is louder: 113.6 against 111.6 dB at 80 Hz** in the sealed box. That's mostly not efficiency. Per watt they're within 0.2 dB (86.7 and 86.9 dB/W into Re, after the 0.1 Ω of amplifier and cable). The 2 Ω pair takes about 458 W from the same 28.3 V, the 15 about 267 W: 2.3 dB more power. In the same box the 15 goes deeper: F3 33.6 Hz (Qtc 0.77) against 40.0 Hz (Qtc 0.68), because its Vas is twice the pair's.
+**At the same voltage, the pair is louder: {{num:subs-example/3/spl@80}} against {{num:subs-example/1/spl@80}} dB at 80 Hz** in the sealed box. That's mostly not efficiency. Per watt they're within 0.2 dB (86.7 and 86.9 dB/W into Re, after the 0.1 Ω of amplifier and cable). The 2 Ω pair takes about 458 W from the same 28.3 V, the 15 about 267 W: 2.3 dB more power. In the same box the 15 goes deeper: F3 33.6 Hz (Qtc 0.77) against 40.0 Hz (Qtc 0.68), because its Vas is twice the pair's.
 
-![Cone excursion at 28.3 V: the 15″ (solid) stays under its 14 mm Xmax in both boxes; the two 10″ (dashed) pass their 12.3 mm, 14.6 mm at 24 Hz sealed and 14.0 mm at 17 Hz ported.](img/subs-excursion.png)
+![Cone excursion at 28.3 V: the 15″ (solid) stays under its 14 mm Xmax in both boxes; the two 10″ (dashed) pass their 12.3 mm, {{num:subs-example/3/x}} mm at {{num:subs-example/3/xf}} Hz sealed and {{num:subs-example/4/x}} mm at {{num:subs-example/4/xf}} Hz ported.](chart:subs-example/excursion)
 
-**At the same 28.3 V, the 10s run out of cone first.** On the **Excursion** chart each driver has its own Xmax line ("Xmax 14 · vs 12.3 mm"). The pair reaches 14.6 mm at 24 Hz in the sealed box. The 15 reaches 11.4 mm and has 2.6 mm in hand. The pair's extra current also pushes the shared port harder: 21.1 m/s against 14.5 m/s.
+**At the same 28.3 V, the 10s run out of cone first.** On the **Excursion** chart each driver has its own Xmax line ("Xmax 14 · vs 12.3 mm"). The pair reaches {{num:subs-example/3/x}} mm at {{num:subs-example/3/xf}} Hz in the sealed box. The 15 reaches {{num:subs-example/1/x}} mm and has {{num:subs-example/1/xin}} mm in hand. The pair's extra current also pushes the shared port harder: {{num:subs-example/4/port}} m/s against {{num:subs-example/2/port}} m/s.
 
 ## Maximum output, and what stops each one
 
-![Maximum SPL with each box's limit bars: filled markers for the 15″, outlined for the two 10″. Cone Xmax is red, port speed amber, the drivers' power rating grey, the amplifier teal.](img/subs-maxspl.png)
+![Maximum SPL with each box's limit bars: filled markers for the 15″, outlined for the two 10″. Cone Xmax is red, port speed amber, the drivers' power rating grey, the amplifier teal.](chart:subs-example/maxspl)
 
 The **Max SPL** chart lets each go to its first limit, and the four bars under it name the limit. Rows 1 and 2 are the 15 (sealed, ported); rows 3 and 4 are the pair.
 
@@ -83,42 +83,42 @@ The **Max SPL** chart lets each go to its first limit, and the four bars under i
 
 | Frequency | One 15″ | Two 10″ | Difference |
 |---|---|---|---|
-| 20 Hz | 101.8 dB (Xmax) | 99.3 dB (Xmax) | **15″ +2.5 dB** |
-| 25 Hz | 105.7 dB (Xmax) | 103.2 dB (Xmax) | 15″ +2.5 dB |
-| 30 Hz | 108.9 dB (Xmax) | 106.4 dB (Xmax) | 15″ +2.5 dB |
-| 35 Hz | 110.9 dB (amp) | 109.1 dB (Xmax) | 15″ +1.8 dB |
-| 40 Hz | 112.0 dB (amp) | 111.4 dB (Xmax) | 15″ +0.6 dB |
-| 45 Hz | 112.8 dB (amp) | 113.3 dB (power) | 10s +0.5 dB |
-| 50 Hz | 113.2 dB (amp) | 114.0 dB (power) | 10s +0.8 dB |
-| 60 Hz | 113.7 dB (amp) | 114.8 dB (power) | 10s +1.1 dB |
-| 80 Hz | 114.0 dB (amp) | 115.4 dB (power) | **10s +1.4 dB** |
+| 20 Hz | {{num:subs-example/1/max@20}} dB ({{num:subs-example/1/limit@20}}) | {{num:subs-example/3/max@20}} dB ({{num:subs-example/3/limit@20}}) | **{{lead:subs-example/1/3/max@20|15″|10s| dB}}** |
+| 25 Hz | {{num:subs-example/1/max@25}} dB ({{num:subs-example/1/limit@25}}) | {{num:subs-example/3/max@25}} dB ({{num:subs-example/3/limit@25}}) | {{lead:subs-example/1/3/max@25|15″|10s| dB}} |
+| 30 Hz | {{num:subs-example/1/max@30}} dB ({{num:subs-example/1/limit@30}}) | {{num:subs-example/3/max@30}} dB ({{num:subs-example/3/limit@30}}) | {{lead:subs-example/1/3/max@30|15″|10s| dB}} |
+| 35 Hz | {{num:subs-example/1/max@35}} dB ({{num:subs-example/1/limit@35}}) | {{num:subs-example/3/max@35}} dB ({{num:subs-example/3/limit@35}}) | {{lead:subs-example/1/3/max@35|15″|10s| dB}} |
+| 40 Hz | {{num:subs-example/1/max@40}} dB ({{num:subs-example/1/limit@40}}) | {{num:subs-example/3/max@40}} dB ({{num:subs-example/3/limit@40}}) | {{lead:subs-example/1/3/max@40|15″|10s| dB}} |
+| 45 Hz | {{num:subs-example/1/max@45}} dB ({{num:subs-example/1/limit@45}}) | {{num:subs-example/3/max@45}} dB ({{num:subs-example/3/limit@45}}) | {{lead:subs-example/1/3/max@45|15″|10s| dB}} |
+| 50 Hz | {{num:subs-example/1/max@50}} dB ({{num:subs-example/1/limit@50}}) | {{num:subs-example/3/max@50}} dB ({{num:subs-example/3/limit@50}}) | {{lead:subs-example/1/3/max@50|15″|10s| dB}} |
+| 60 Hz | {{num:subs-example/1/max@60}} dB ({{num:subs-example/1/limit@60}}) | {{num:subs-example/3/max@60}} dB ({{num:subs-example/3/limit@60}}) | {{lead:subs-example/1/3/max@60|15″|10s| dB}} |
+| 80 Hz | {{num:subs-example/1/max@80}} dB ({{num:subs-example/1/limit@80}}) | {{num:subs-example/3/max@80}} dB ({{num:subs-example/3/limit@80}}) | **{{lead:subs-example/1/3/max@80|15″|10s| dB}}** |
 
 **150 L ported, 22 Hz:**
 
 | Frequency | One 15″ | Two 10″ | Difference |
 |---|---|---|---|
-| 20 Hz | 106.5 dB (port) | 106.5 dB (port) | same |
-| 25 Hz | 112.3 dB (port) | 112.3 dB (port) | same |
-| 30 Hz | 114.5 dB (amp) | 113.0 dB (Xmax) | **15″ +1.5 dB** |
-| 40 Hz | 115.1 dB (amp) | 114.6 dB (Xmax) | 15″ +0.5 dB |
-| 45 Hz | 115.0 dB (amp) | 115.7 dB (power) | 10s +0.7 dB |
-| 60 Hz | 114.7 dB (amp) | 115.9 dB (power) | 10s +1.2 dB |
-| 80 Hz | 114.4 dB (amp) | 115.9 dB (power) | **10s +1.5 dB** |
+| 20 Hz | {{num:subs-example/2/max@20}} dB ({{num:subs-example/2/limit@20}}) | {{num:subs-example/4/max@20}} dB ({{num:subs-example/4/limit@20}}) | {{lead:subs-example/2/4/max@20|15″|10s| dB}} |
+| 25 Hz | {{num:subs-example/2/max@25}} dB ({{num:subs-example/2/limit@25}}) | {{num:subs-example/4/max@25}} dB ({{num:subs-example/4/limit@25}}) | {{lead:subs-example/2/4/max@25|15″|10s| dB}} |
+| 30 Hz | {{num:subs-example/2/max@30}} dB ({{num:subs-example/2/limit@30}}) | {{num:subs-example/4/max@30}} dB ({{num:subs-example/4/limit@30}}) | **{{lead:subs-example/2/4/max@30|15″|10s| dB}}** |
+| 40 Hz | {{num:subs-example/2/max@40}} dB ({{num:subs-example/2/limit@40}}) | {{num:subs-example/4/max@40}} dB ({{num:subs-example/4/limit@40}}) | {{lead:subs-example/2/4/max@40|15″|10s| dB}} |
+| 45 Hz | {{num:subs-example/2/max@45}} dB ({{num:subs-example/2/limit@45}}) | {{num:subs-example/4/max@45}} dB ({{num:subs-example/4/limit@45}}) | {{lead:subs-example/2/4/max@45|15″|10s| dB}} |
+| 60 Hz | {{num:subs-example/2/max@60}} dB ({{num:subs-example/2/limit@60}}) | {{num:subs-example/4/max@60}} dB ({{num:subs-example/4/limit@60}}) | {{lead:subs-example/2/4/max@60|15″|10s| dB}} |
+| 80 Hz | {{num:subs-example/2/max@80}} dB ({{num:subs-example/2/limit@80}}) | {{num:subs-example/4/max@80}} dB ({{num:subs-example/4/limit@80}}) | **{{lead:subs-example/2/4/max@80|15″|10s| dB}}** |
 
 (1 m, half space.)
 
-![Who plays louder, and where: the 15″'s maximum SPL minus the pair's. The sealed and ported curves cross zero at 43 Hz; the pair wired in series (dashed) never gets near.](img/subs-difference.png)
+![Who plays louder, and where: the 15″'s maximum SPL minus the pair's. The sealed ({{fig:subs-difference/sealedColor}}) and ported ({{fig:subs-difference/portedColor}}) curves cross zero at {{fig:subs-difference/crossSealed:0}} Hz; the pair wired in series (dashed) never gets near.](figure:subs-difference)
 
 The difference chart puts the tables in one picture:
 
-- **Displacement wins the deep bass.** Sealed, the 15 is 2.5 dB ahead from 18 to 31 Hz, the displacement ratio, until the amplifier caps it.
-- **The lines cross at 43 Hz** in both boxes.
-- **The pair's lead peaks at about 1.6 dB around 93 Hz.** That's where it reaches the amplifier's 16.6 A and the lead starts to shrink.
+- **Displacement wins the deep bass.** Sealed, the 15 is {{fig:subs-difference/sealedLead}} dB ahead from 18 to 31 Hz, the displacement ratio, until the amplifier caps it.
+- **The lines cross at {{fig:subs-difference/crossSealed:0}} Hz** in both boxes.
+- **The pair's lead peaks at about {{fig:subs-difference/pairLead}} dB around {{fig:subs-difference/pairLeadF:0}} Hz.** That's where it reaches the amplifier's 16.6 A and the lead starts to shrink.
 - **Near the tuning the port decides.** From 18 to 26 Hz both are port-limited and identical, because they share the port. A bigger port helps both (see the [port chuffing guide](/guides/port-chuffing/)).
 
 ## What the 2 Ω load does to the amplifier
 
-![Amplifier current needed for maximum SPL: the pair (dashed) reaches the amplifier's 16.6 A from about 93 Hz up; the 15″ (solid) peaks near 12 A.](img/subs-amps.png)
+![Amplifier current needed for maximum SPL: the pair (dashed) reaches the amplifier's 16.6 A from about 93 Hz up; the 15″ (solid) peaks near 12 A.](chart:subs-example/maxamps)
 
 An amplifier puts out a voltage; the load decides the current, and so the power [9]. The **Max SPL → Amps** view shows it:
 
@@ -131,7 +131,7 @@ The same goes for the two coils of one dual voice coil sub: see [DVC wiring](/gu
 
 ## Forum myths, checked
 
-**"There's no replacement for displacement."** True where the cone is the limit: below about 40 Hz here, the 15 is 2.5 dB ahead in the sealed box, exactly 20·log(1.16/0.88). Above 43 Hz it's power and the amplifier, and displacement doesn't help [7]. *Proof: Max SPL bars, red against grey and teal.*
+**"There's no replacement for displacement."** True where the cone is the limit: below about 40 Hz here, the 15 is 2.5 dB ahead in the sealed box, exactly 20·log(1.16/0.88). Above {{fig:subs-difference/crossSealed:0}} Hz it's power and the amplifier, and displacement doesn't help [7]. *Proof: Max SPL bars, red against grey and teal.*
 
 **"Two 10s have more cone area than a 15."** No: 713 against 830 cm². Two 10s add up to about one 14-inch driver. *Proof: the driver table; Sd on the Driver tab.*
 

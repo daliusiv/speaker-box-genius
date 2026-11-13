@@ -20,6 +20,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 - **Sealed**, **ported** (vented) and **passive radiator** boxes
 - **4th- and 6th-order bandpass**, each chamber with its own port or passive radiators
+- **Port and PR position**: next to the cone, on the back panel or a set distance away, added up in front of the box or as Hornresp's Acoustic Path Length
 - **Transmission lines**: open lines, mass-loaded lines, **tapped horns** and **front-loaded horns**, built from tapered sections (parallel, conical or exponential), with stuffing, the driver anywhere along the line and a drawing of the folded box. Presets and **Compare types** cover every type but the tapped horn, whose starting point is being reworked; set one up by hand or import it from Hornresp
 - **Stuffing** per sealed, ported or passive radiator design: lined walls, a fibre fill by weight (g/L or lb/ft³, with the grams to weigh out) or your own measured values, so an empty and a stuffed box can sit on one chart; **fit to a measured impedance sweep** (.zma) finds the volume a finished box really acts as and its Qa
 - Up to **8 designs side by side** on the same charts, each easy to switch on or off, rename or duplicate
@@ -79,7 +80,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **Shareable links**: the whole simulation lives in the URL, so a link opens exactly what you see
 - **Share** window: copy the link, the **forum image** (download or copy to the clipboard) with the summary, charts and a **QR code** to the live design, plus ready-to-paste **Reddit (Markdown)** and **diyAudio (BBCode)** posts
 - **Save & Export** window (☰ menu): save in the browser, a project file, a CSV of every curve, WinISD projects and drivers, LTspice netlists and DSP filters, with each format's settings in one place; several boxes download as one zip
-- **Hornresp import and export** for transmission lines and horns
+- **Hornresp import and export** for transmission lines, horns and sealed, ported and passive radiator boxes (Save & Export, and Open)
 - **Projects** saved in your browser, or as a `.sbgenius` project file you can keep or send (older `.json` saves still open; on desktop the installed app opens `.sbgenius` files with a double-click) (with **New project**, which starts in the design assistant, in a new tab if the current project is in use)
 - **Open / Import** window (☰ menu): your latest browser saves, and one drop zone for project, WinISD, OpenISD and measurement files; or drop a file anywhere on the page. An impedance sweep asks whether to measure the driver or show it on the charts
 - Undo and redo, and help on every input field (hover its label, or select the field)

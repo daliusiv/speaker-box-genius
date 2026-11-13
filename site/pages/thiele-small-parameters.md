@@ -2,7 +2,7 @@
 title: Thiele/Small parameters explained
 description: What Fs, Qts, Vas, Xmax and the rest mean in practice, checked on two real 8-inch drivers in the same boxes. Which numbers decide the box, which decide how loud, what the forum rules of thumb get wrong, and how to enter a datasheet without mistakes.
 path: guides/thiele-small-parameters
-image: ts-spl.png
+image: chart:ts-example/spl
 order: 10
 group: start
 ---
@@ -60,9 +60,9 @@ You can check a datasheet with these. For the DSA215-8, 2π × 35 × 0.0346 × 5
 
 **Vas and Qts together decide the box size.** For a sealed box with Qtc 0.707, Vb = Vas / ((0.707/Qts)² − 1) [5]. A low Qts shrinks the box fast:
 
-![Sealed box size for Qtc 0.707 against Qts, for Vas 37.4 L and 23.7 L. The DSA215-8 (Qts 0.33) needs 10.4 L; the RSS210HF-4 (Qts 0.57), despite its smaller Vas, needs 43.6 L.](img/ts-box-size.png)
+![Sealed box size for Qtc 0.707 against Qts, for Vas 37.4 L and 23.7 L. The DSA215-8 (Qts {{fig:ts-box-size/qtsA:2}}) needs {{fig:ts-box-size/vbA}} L; the RSS210HF-4 (Qts {{fig:ts-box-size/qtsB:2}}), despite its smaller Vas, needs {{fig:ts-box-size/vbB}} L.](figure:ts-box-size)
 
-The chart is that formula for both drivers' Vas. The DSA215-8 has the *bigger* Vas but needs the *smaller* box, 10.4 L against 43.6 L, because its Qts is so low. **Boxes → Size all** gives a little more, because it sizes boxes the way WinISD does: it allows for the 0.1 Ω of amplifier and cable in front of the coil (in **Settings**), which raises Qts a touch, and for the box's own damping:
+The chart is that formula for both drivers' Vas. The DSA215-8 has the *bigger* Vas but needs the *smaller* box, {{fig:ts-box-size/vbA}} L against {{fig:ts-box-size/vbB}} L, because its Qts is so low. **Boxes → Size all** gives a little more, because it sizes boxes the way WinISD does: it allows for the 0.1 Ω of amplifier and cable in front of the coil (in **Settings**), which raises Qts a touch, and for the box's own damping:
 
 | Size all gives | DSA215-8 | RSS210HF-4 |
 |---|---|---|
@@ -75,42 +75,42 @@ The chart is that formula for both drivers' Vas. The DSA215-8 has the *bigger* V
 
 The example puts both drivers in the DSA215-8's own boxes, the 10.7 L sealed box and the 18.0 L ported box at 41.7 Hz. The ported box has a 5 cm port flared 0.8 cm at both ends, 16.1 cm long, so it fits straight. The drive is **21.7 V**, the DSA215-8's rated 80 W into its 5.9 Ω coil; at the same voltage the 3.1 Ω RSS210HF-4 takes 152 W, well inside its 280 W. A 12 dB/oct high-pass filter at 30 Hz is on, as a bookshelf speaker's amp might have.
 
-![Both drivers at 21.7 V in dB SPL: DSA215-8 solid, RSS210HF-4 dashed; blue the 10.7 L sealed box, orange the 18.0 L ported box. The DSA215-8 is 3.9 dB louder above 100 Hz; the RSS210HF-4 in the ported box humps up near 57 Hz.](img/ts-spl.png)
+![Both drivers at 21.7 V in dB SPL: DSA215-8 solid, RSS210HF-4 dashed; blue the 10.7 L sealed box, orange the 18.0 L ported box. The DSA215-8 is {{diff:ts-example/1/3/ref}} dB louder above 100 Hz; the RSS210HF-4 in the ported box humps up near {{num:ts-example/4/risef}} Hz.](chart:ts-example/spl)
 
 | At 21.7 V | DSA215-8, sealed | RSS210HF-4, sealed | DSA215-8, ported | RSS210HF-4, ported |
 |---|---|---|---|---|
-| F3 | 79.3 Hz | **45.7 Hz** | **49.2 Hz** | 36.8 Hz, but… |
-| Qtc / peak | 0.70, flat | 1.04, +1.5 dB at 83 Hz | flat | **+5.9 dB at 57 Hz** |
-| Passband level | **107.0 dB** | 103.1 dB | **107.0 dB** | 103.1 dB |
-| 40 Hz | 93.7 dB | 97.5 dB | 100.0 dB | 102.6 dB |
-| Peak cone travel | 5.6 mm at 47 Hz (Xmax 5.5) | 8.3 mm at 46 Hz (Xmax 9) | **7.8 mm at 24 Hz** | **10.1 mm at 24 Hz** |
-| Peak port air speed | — | — | 18.7 m/s | **26.0 m/s** |
+| F3 | {{num:ts-example/1/f3}} Hz | **{{num:ts-example/3/f3}} Hz** | **{{num:ts-example/2/f3}} Hz** | {{num:ts-example/4/f3}} Hz, but… |
+| Qtc / peak | {{num:ts-example/1/qtc}}, flat | {{num:ts-example/3/qtc}}, +{{num:ts-example/3/rise}} dB at {{num:ts-example/3/risef}} Hz | flat | **+{{num:ts-example/4/rise}} dB at {{num:ts-example/4/risef}} Hz** |
+| Passband level | **{{num:ts-example/1/ref}} dB** | {{num:ts-example/3/ref}} dB | **{{num:ts-example/2/ref}} dB** | {{num:ts-example/4/ref}} dB |
+| 40 Hz | {{num:ts-example/1/spl@40}} dB | {{num:ts-example/3/spl@40}} dB | {{num:ts-example/2/spl@40}} dB | {{num:ts-example/4/spl@40}} dB |
+| Peak cone travel | {{num:ts-example/1/x}} mm at {{num:ts-example/1/xf}} Hz (Xmax 5.5) | {{num:ts-example/3/x}} mm at {{num:ts-example/3/xf}} Hz (Xmax 9) | **{{num:ts-example/2/x}} mm at {{num:ts-example/2/xf}} Hz** | **{{num:ts-example/4/x}} mm at {{num:ts-example/4/xf}} Hz** |
+| Peak port air speed | — | — | {{num:ts-example/2/port}} m/s | **{{num:ts-example/4/port}} m/s** |
 
-**In the box its numbers ask for, each driver is flat.** The DSA215-8 is flat in both of its boxes: Qtc 0.70 sealed, a QB3 ported. Its low Qts makes the sealed box roll off early (F3 79.3 Hz), and the port extends it to 49.2 Hz. That's what Qts 0.33 and EBP 88 predicted. At its full 80 W the port runs at 18.7 m/s, a little over the 17 m/s chuffing line; a bigger or longer-flared port would keep it quiet.
+**In the box its numbers ask for, each driver is flat.** The DSA215-8 is flat in both of its boxes: Qtc {{num:ts-example/1/qtc}} sealed, a QB3 ported. Its low Qts makes the sealed box roll off early (F3 {{num:ts-example/1/f3}} Hz), and the port extends it to {{num:ts-example/2/f3}} Hz. That's what Qts 0.33 and EBP 88 predicted. At its full 80 W the port runs at {{num:ts-example/2/port}} m/s, a little over the 17 m/s chuffing line; a bigger or longer-flared port would keep it quiet.
 
-**In the wrong box, the high-Qts driver booms.** The RSS210HF-4 in the same 10.7 L sealed box has Qtc 1.04 and a 1.5 dB bump. In the 18.0 L ported box it humps **5.9 dB** above its passband at 57 Hz: the classic boomy, one-note bass of a high-Qts driver in a small ported box. Its "F3 36.8 Hz" is measured from that hump, which is why the F3 alone doesn't tell you a box is good.
+**In the wrong box, the high-Qts driver booms.** The RSS210HF-4 in the same 10.7 L sealed box has Qtc {{num:ts-example/3/qtc}} and a {{num:ts-example/3/rise}} dB bump. In the 18.0 L ported box it humps **{{num:ts-example/4/rise}} dB** above its passband at {{num:ts-example/4/risef}} Hz: the classic boomy, one-note bass of a high-Qts driver in a small ported box. Its "F3 {{num:ts-example/4/f3}} Hz" is measured from that hump, which is why the F3 alone doesn't tell you a box is good.
 
-**The DSA215-8 is 3.9 dB louder, from a smaller cone mass.** Reference efficiency goes with Fs³ × Vas ÷ Qes [6]: 112.0 + 10·log₁₀(9.78 × 10⁻¹⁰ × Vas × Fs³ / Qes) gives **88.0 dB** at 1 W, 1 m for the DSA215-8 and **81.4 dB** for the RSS210HF-4. The app's passband levels work out to 87.9 and 81.3 dB per watt (a little under, from the 0.1 Ω of amplifier and cable). That 6.6 dB per watt (6.7 in the app) is partly made up because, at the same 21.7 V, the 3.1 Ω coil takes 2.8 dB more power. This is [Hofmann's Iron Law](/guides/hofmann-iron-law/) in two drivers: the RSS210HF-4 trades efficiency for depth in a big box.
+**The DSA215-8 is {{diff:ts-example/1/3/ref}} dB louder, from a smaller cone mass.** Reference efficiency goes with Fs³ × Vas ÷ Qes [6]: 112.0 + 10·log₁₀(9.78 × 10⁻¹⁰ × Vas × Fs³ / Qes) gives **88.0 dB** at 1 W, 1 m for the DSA215-8 and **81.4 dB** for the RSS210HF-4. The app's passband levels work out to 87.9 and 81.3 dB per watt (a little under, from the 0.1 Ω of amplifier and cable). That 6.6 dB per watt (6.7 in the app) is partly made up because, at the same 21.7 V, the 3.1 Ω coil takes 2.8 dB more power. This is [Hofmann's Iron Law](/guides/hofmann-iron-law/) in two drivers: the RSS210HF-4 trades efficiency for depth in a big box.
 
 ## The ones that decide how loud
 
 **Sd × Xmax is the air the cone can move** (its displacement), and it sets how loud a driver can play in the bottom octave, whatever the box. Xmax is one way, peak; some makers quote peak to peak, or a looser figure, so check. **Pe** is how much power the coil takes before it overheats; using it all takes an amplifier that delivers √(Pe × Re) volts: **21.7 V** for the DSA215-8.
 
-![Cone excursion at 21.7 V: the DSA215-8 (solid) reaches its 5.5 mm Xmax at 47 Hz in the sealed box and 7.8 mm at 24 Hz in the ported box, below the tuning; the RSS210HF-4 (dashed) stays under its 9 mm in the sealed box and reaches 10.1 mm at 24 Hz in the ported box.](img/ts-excursion.png)
+![Cone excursion at 21.7 V: the DSA215-8 (solid) reaches its 5.5 mm Xmax at {{num:ts-example/1/xf}} Hz in the sealed box and {{num:ts-example/2/x}} mm at {{num:ts-example/2/xf}} Hz in the ported box, below the tuning; the RSS210HF-4 (dashed) stays under its 9 mm in the sealed box and reaches {{num:ts-example/4/x}} mm at {{num:ts-example/4/xf}} Hz in the ported box.](chart:ts-example/excursion)
 
-On the **Excursion** chart each driver has its own Xmax line (the label says "Xmax 5.5 · vs 9 mm"). At its full 80 W the DSA215-8 just reaches Xmax in the sealed box (5.6 mm at 47 Hz). In the ported box it goes to **7.8 mm at 24 Hz**, below the tuning, where the port no longer holds the cone back and a 12 dB/oct filter at 30 Hz isn't steep enough.
+On the **Excursion** chart each driver has its own Xmax line (the label says "Xmax 5.5 · vs 9 mm"). At its full 80 W the DSA215-8 just reaches Xmax in the sealed box ({{num:ts-example/1/x}} mm at {{num:ts-example/1/xf}} Hz). In the ported box it goes to **{{num:ts-example/2/x}} mm at {{num:ts-example/2/xf}} Hz**, below the tuning, where the port no longer holds the cone back and a 12 dB/oct filter at 30 Hz isn't steep enough.
 
-![Maximum SPL (first limit reached) with each box's limit bars: filled markers for the DSA215-8, outlined for the RSS210HF-4. Cone Xmax (red) limits the sealed boxes up to 61 Hz (DSA215-8) and 66 Hz (RSS210HF-4); in the ported box port speed (amber) limits from 32 to 49 Hz for the DSA215-8 and from 27 to 64 Hz for the RSS210HF-4.](img/ts-maxspl.png)
+![Maximum SPL (first limit reached) with each box's limit bars: filled markers for the DSA215-8, outlined for the RSS210HF-4. Cone Xmax (red) limits the sealed boxes up to 61 Hz (DSA215-8) and 66 Hz (RSS210HF-4); in the ported box port speed (amber) limits from 32 to 49 Hz for the DSA215-8 and from 27 to 64 Hz for the RSS210HF-4.](chart:ts-example/maxspl)
 
-The **Max SPL** chart lets each driver go to its own limit, and the bars say which limit comes first. At 40 Hz the sealed DSA215-8 tops out at 93.8 dB (Xmax). The ported box reaches **99.2 dB with either driver**, because the port's air speed, not the driver, is the limit there. The RSS210HF-4's 280 W and 9 mm don't help at 40 Hz in a box this small.
+The **Max SPL** chart lets each driver go to its own limit, and the bars say which limit comes first. At 40 Hz the sealed DSA215-8 tops out at {{num:ts-example/1/max@40}} dB ({{num:ts-example/1/limit@40}}). The ported box reaches **{{num:ts-example/2/max@40}} dB with either driver**, because the port's air speed, not the driver, is the limit there. The RSS210HF-4's 280 W and 9 mm don't help at 40 Hz in a box this small.
 
 ## Forum myths, checked
 
 **"A big Vas means a big box."** Only for the same Qts. The DSA215-8's Vas is 58 % bigger, and its sealed box is under a quarter the size: 10.7 L against 47.4 L. Box size goes with Vas *and* Qts [5]; as a diyAudio regular put it, the box is usually smaller than Vas, except for small high-Qts drivers [7]. *Proof: Boxes → Size all for each driver; the box-size chart above.*
 
-**"A lower Fs means deeper bass."** Usually, but not on its own [8]. In the same 10.7 L sealed box the RSS210HF-4 (Fs 29.6 Hz) reaches 45.7 Hz and the DSA215-8 (Fs 35 Hz) 79.3 Hz. But it's the Qts that makes the gap that big, and in a ported box the DSA215-8 gets to 49.2 Hz with a flat response the RSS210HF-4 can't match there. *Proof: the response chart, with the summary table's F3 column.*
+**"A lower Fs means deeper bass."** Usually, but not on its own [8]. In the same 10.7 L sealed box the RSS210HF-4 (Fs 29.6 Hz) reaches {{num:ts-example/3/f3}} Hz and the DSA215-8 (Fs 35 Hz) {{num:ts-example/1/f3}} Hz. But it's the Qts that makes the gap that big, and in a ported box the DSA215-8 gets to 49.2 Hz with a flat response the RSS210HF-4 can't match there. *Proof: the response chart, with the summary table's F3 column.*
 
-**"Any driver can go in a ported box; just tune it lower."** The RSS210HF-4 in an 18.0 L ported box humps 5.9 dB at 57 Hz, and its port runs at 26.0 m/s, well over the 17 m/s chuffing line, at only 152 W. With Qts 0.57 a ported box has to be big (80.9 L) to be flat. *Proof: the response and Port speed charts.*
+**"Any driver can go in a ported box; just tune it lower."** The RSS210HF-4 in an 18.0 L ported box humps {{num:ts-example/4/rise}} dB at {{num:ts-example/4/risef}} Hz, and its port runs at {{num:ts-example/4/port}} m/s, well over the 17 m/s chuffing line, at only 152 W. With Qts 0.57 a ported box has to be big (80.9 L) to be flat. *Proof: the response and Port speed charts.*
 
 **"Sensitivity figures tell you which driver is more efficient."** The reference efficiency from Fs, Vas and Qes is the honest number: it predicted the app's 87.9 and 81.3 dB per watt within 0.2 dB. Published sensitivities are sometimes at 2.83 V into a low impedance, or optimistic [9]. *Proof: response chart in dB SPL, above 100 Hz.*
 

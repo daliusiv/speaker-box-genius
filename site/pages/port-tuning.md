@@ -2,7 +2,7 @@
 title: "My port tunes higher (or lower) than designed: why, and how to fix it"
 description: Why a built ported box tunes away from its design (net volume, end corrections, port position, flares, losses), how to measure the real tuning from the impedance curve, and how to correct it.
 path: guides/port-tuning
-image: port-tuning-impedance.png
+image: chart:port-tuning-example/impedance
 order: 12
 group: ported
 ---
@@ -26,16 +26,16 @@ The textbook end corrections are from Beranek: **0.85 × radius** for an end set
 
 ### The box is smaller than you think
 
-The simulation uses the **net** volume: the air the box really holds. Everything inside takes some of it. For the worked example, a **Dayton Audio DSA215-8** in its QB3 box, designed as 16.2 L tuned to 39.8 Hz with a 5 cm port 19.2 cm long:
+The simulation uses the **net** volume: the air the box really holds. Everything inside takes some of it. For the worked example, a **Dayton Audio DSA215-8** in its QB3 box, designed as 16.2 L tuned to {{num:port-tuning-tables/1/fb}} Hz with a 5 cm port {{num:port-tuning-tables/1/len}} cm long:
 
 | What's taken out | Net volume | Tuning |
 |---|---|---|
-| Nothing (as designed) | 16.2 L | 39.8 Hz |
-| The driver's own displacement (0.87 L) | 15.3 L | 40.9 Hz |
-| The port tube itself (0.51 L, outside diameter 5.8 cm) | 14.8 L | 41.6 Hz |
-| 5 % for bracing | 14.1 L | 42.7 Hz |
+| Nothing (as designed) | 16.2 L | {{num:port-tuning-tables/1/fb}} Hz |
+| The driver's own displacement (0.87 L) | 15.3 L | {{num:port-tuning-tables/2/fb}} Hz |
+| The port tube itself (0.51 L, outside diameter 5.8 cm) | 14.8 L | {{num:port-tuning-tables/3/fb}} Hz |
+| 5 % for bracing | 14.1 L | {{num:port-tuning-tables/4/fb}} Hz |
 
-![The same port in the box as designed (orange) and as built (light orange): the impedance dip, which marks the tuning, moves up by about 3 Hz.](img/port-tuning-impedance.png)
+![The same port in the box as designed ({{color:port-tuning-example/1}}) and as built ({{color:port-tuning-example/2}}): the impedance dip, which marks the tuning, moves up by about {{diff:port-tuning-example/2/1/fb:0}} Hz.](chart:port-tuning-example/impedance)
 
 That's the most common cause of a box tuning high. The tuning goes roughly with one over the square root of the volume, so every 10 % of volume you lose raises Fb by about 5 %.
 
@@ -47,21 +47,21 @@ How much does the end correction matter? For the example port, with everything e
 
 | Total end correction (× diameter) | Tuning |
 |---|---|
-| 0.614 (both ends free) | 40.3 Hz |
-| 0.732 (one flanged, one free: the usual value) | 39.8 Hz |
-| 0.85 (both ends flanged) | 39.3 Hz |
-| 1.0 (an end near a wall) | 38.7 Hz |
-| 1.2 (an end very close to a wall) | 37.9 Hz |
+| 0.614 (both ends free) | {{num:port-tuning-k0614/1/fb}} Hz |
+| 0.732 (one flanged, one free: the usual value) | {{num:port-tuning-tables/1/fb}} Hz |
+| 0.85 (both ends flanged) | {{num:port-tuning-k085/1/fb}} Hz |
+| 1.0 (an end near a wall) | {{num:port-tuning-k1/1/fb}} Hz |
+| 1.2 (an end very close to a wall) | {{num:port-tuning-k12/1/fb}} Hz |
 
 Builders regularly report built boxes tuning differently from the calculation by around 5–10 % [3][4]. A common rule of thumb is to keep the port's inner end at least one port diameter away from any wall or brace, so its end correction stays close to the textbook value. A slot port built along the box walls is the extreme case: the app gives it a likely tuning range rather than one number. See [round port vs slot port](/guides/round-vs-slot-port/).
 
 ### The port has flared ends
 
-A flared (rounded-over) end is wider than the tube, so the air in the flare is a lower mass per unit length: a flared port needs to be **longer** for the same tuning. The example port with 1 cm flares on both ends tunes to **41.0 Hz** at the original length. The app works this out when you set **Flare r**.
+A flared (rounded-over) end is wider than the tube, so the air in the flare is a lower mass per unit length: a flared port needs to be **longer** for the same tuning. The example port with 1 cm flares on both ends tunes to **{{num:port-tuning-tables/6/fb}} Hz** at the original length. The app works this out when you set **Flare r**.
 
 ## Why it tunes low
 
-- **The box is bigger than you think**: the dimensions you entered are outside dimensions, or the walls are thinner than planned. A box 10 % bigger tunes the example to 37.9 Hz.
+- **The box is bigger than you think**: the dimensions you entered are outside dimensions, or the walls are thinner than planned. A box 10 % bigger tunes the example to {{num:port-tuning-tables/5/fb}} Hz.
 - **The port's ends are crowded** (above): close to a wall, brace or the driver's magnet.
 - **Stuffing**: fibre in a ported box makes the box act slightly bigger (the air's compression changes from adiabatic towards isothermal), which lowers the tuning a little. It also adds losses. The [box stuffing guide](/guides/box-stuffing/) has measured tuning shifts and how much fill to use.
 - **Soft panels**: a box that flexes acts slightly bigger, and loses energy.
@@ -70,7 +70,7 @@ A flared (rounded-over) end is wider than the tube, so the air in the flare is a
 
 Measure the box's **impedance** with a DATS, REW, ARTA, a sound card and a resistor, or a multimeter and a signal generator. A ported box has **two peaks** with a **dip** between them, and the tuning is at (or very near) the dip [5].
 
-For a cross-check, Small showed that the two peak frequencies (fL and fH) and the driver's free-air resonance Fs are related to the tuning by fL × fH ≈ Fs × Fb [5]. In the example, the simulated peaks are at 19.0 Hz and 73.1 Hz: 19.0 × 73.1 = 1389, and 35 × 39.8 = 1393.
+For a cross-check, Small showed that the two peak frequencies (fL and fH) and the driver's free-air resonance Fs are related to the tuning by fL × fH ≈ Fs × Fb [5]. In the example, the simulated peaks are at {{num:port-tuning-example/1/zlof:1}} Hz and {{num:port-tuning-example/1/zpkf:1}} Hz, which multiply to {{num:port-tuning-example/1/zpp}}, and {{num:port-tuning-example/1/fs:0}} × {{num:port-tuning-example/1/fb}} = {{num:port-tuning-example/1/fsfb}}.
 
 A second check: measure the port's output in the near field (the microphone at the port's mouth). It peaks at the tuning frequency, and the cone's near-field output has a deep notch there, where the cone barely moves.
 
@@ -85,7 +85,7 @@ In the app, load your impedance measurement (`.zma`) with the **Measured** card 
 
 ## What a few hertz really costs
 
-A tuning a little off isn't a disaster. In the example, the box tuned 3 Hz high (42.6 Hz) has its F3 at **52.6 Hz** instead of 50.6 Hz, and about 1.5 dB less output around 30–40 Hz. It's worth fixing, but it's rarely the reason a speaker sounds wrong; check the other causes in [why your measurement doesn't match the simulation](/guides/simulation-vs-measurement/).
+A tuning a little off isn't a disaster. In the example, the box tuned 3 Hz high ({{num:port-tuning-example/2/fb}} Hz) has its F3 at **{{num:port-tuning-example/2/f3}} Hz** instead of {{num:port-tuning-example/1/f3}} Hz, and about 1.5 dB less output around 30–40 Hz. It's worth fixing, but it's rarely the reason a speaker sounds wrong; check the other causes in [why your measurement doesn't match the simulation](/guides/simulation-vs-measurement/).
 
 [[Open the example|port-tuning-example]]
 

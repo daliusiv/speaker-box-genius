@@ -1,5 +1,5 @@
 import { passiveRadiatorModel, portLengthForFb, prFb, ventedFb, writeWpr, type WprExport, type WprPortOut } from "@sbg/engine";
-import { airOf, builtVbOf, colorOf, dvcFactors, endCorrectionOf, lossesFor, solveDriver, switchDrive } from "./sim.ts";
+import { actingFactor, airOf, builtVbOf, colorOf, dvcFactors, endCorrectionOf, lossesFor, solveDriver, switchDrive, ventDistanceOf } from "./sim.ts";
 import type { AppState, DesignState, PortFields } from "./state.ts";
 import { stuffFactor } from "./stuffing.ts";
 
@@ -33,8 +33,9 @@ export function wprFor(s: AppState, d: DesignState): { text: string; notes: stri
   const k = dvcFactors(s);
   const name = s.driverName.trim();
   const brand = s.driverBrand && name.startsWith(s.driverBrand) ? s.driverBrand : "";
-  const vb = builtVbOf(s, d) * (d.kind === "line" ? 1 : stuffFactor(d));
+  const vb = builtVbOf(s, d) * actingFactor(s, d);
   if (d.kind !== "line" && stuffFactor(d) !== 1) notes.push("stuffing is written as the extra volume it acts as (WinISD has no stuffing)");
+  else if (actingFactor(s, d) !== 1) notes.push("Qa's volume gain is written as the volume the box acts as (WinISD has none)");
   const ec = endCorrectionOf(s);
   const portOut = (p: PortFields & { flare_cm?: number }, v: number): WprPortOut => {
     if (p.shape === "slot") {
@@ -82,6 +83,7 @@ export function wprFor(s: AppState, d: DesignState): { text: string; notes: stri
   if (s.highPass.on && s.highPass.type !== "butterworth") notes.push("only a Butterworth high-pass is written; set yours in WinISD's filters");
   if (s.settings.driveModel !== "winisd" && s.settings.rg > 0)
     notes.push("WinISD's watts go into the coil and the amp + cable resistance together: set Settings → Watts to “Into coil + cable” for the same numbers in both");
+  if (ventDistanceOf(d, s.volume) > 0) notes.push("the port's or PRs' position isn't written (WinISD puts them next to the cone)");
   if (s.eq.some((e) => e.on)) notes.push("EQ isn't written");
   if (s.passive.on) notes.push("passive parts aren't written");
   if (s.baffle.on) notes.push("baffle step isn't written");

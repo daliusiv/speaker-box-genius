@@ -5,13 +5,15 @@
  *
  * Each `site/pages/*.md` file becomes `<outDir>/<path>/index.html`. A page starts with a
  * front-matter block (`---` lines) giving its `title`, `description` and `path`, and
- * optionally `image` (its share card, from site/img) and `order` (its place in lists).
+ * optionally `image` (its share card: a file in site/img, or `chart:example/kind` for that chart
+ * drawn as a 1200 × 630 card with the page's title, site/guideCharts.ts) and `order` (its place in lists).
  * The body is Markdown (the subset in `markdown` below); the paragraph under the # title is
  * shown as the page's introduction. Extras:
  *
  *   {{link:pr-example}}               the share link of an example design (site/examples.ts)
  *   [[Open this design|pr-example]]   a button opening that example in the app
  *   ![caption](chart:pr-example/excursion)   the app's own chart of that example, drawn at build
+ *   ![caption](chart:a/spl|b/maxspl "A|B")   charts side by side, several examples or some designs (site/guideCharts.ts)
  *                                     (site/guideCharts.ts: response, spl, excursion, maxspl)
  *   {{num:pr-example/1/f3}}           a number from that example, worked out at build
  *   {{color:pr-example/1}}            a design's curve colour in words (site/liveNumbers.ts)
@@ -31,7 +33,7 @@ import { cirPath } from "../packages/engine/validation/spice/fixtures.ts";
 import { validationLinks } from "./validationLinks.ts";
 import { CHART_STYLE, chart } from "./chart.ts";
 import { fillLive } from "./liveNumbers.ts";
-import { guideCharts } from "./guideCharts.ts";
+import { guideCardHtml, guideCharts } from "./guideCharts.ts";
 import { cardSvg, findChrome, Rasterizer } from "./og.ts";
 import { CardCache, cardSalt } from "./cardCache.ts";
 import { CALC_STYLE, fillCalc, portExampleValues, portForm, prExampleValues, prForm, viteScript } from "./calculators.ts";
@@ -102,7 +104,7 @@ function inline(s: string): string {
  * Block Markdown: headings (#–###), paragraphs, - and 1. lists (nested by indenting), > notes, | tables |,
  * ``` code blocks, and button lines ([[Label|example]]), already resolved to links.
  */
-export function markdown(md: string, charts?: (src: string) => string): string {
+export function markdown(md: string, charts?: (src: string, title?: string) => string): string {
   const lines = md.replace(/\r\n/g, "\n").split("\n");
   const out: string[] = [];
   let i = 0;
@@ -180,13 +182,15 @@ export function markdown(md: string, charts?: (src: string) => string): string {
     for (; i < lines.length && lines[i]!.trim() !== "" && !(para.length > 0 && isBlockStart(lines[i]!)); i++) para.push(lines[i]!.trim());
     const text = para.join(" ");
     // A paragraph that is only an image becomes a figure, with its alt text as the caption.
-    const img = /^!\[([^\]]+)\]\(([^)\s]+)\)$/.exec(text);
+    // A chart figure may carry a title: its charts' own labels, `"Left label|Right label"`.
+    const img = /^!\[([^\]]+)\]\(([^)\s]+)(?: "([^"]*)")?\)$/.exec(text);
     // ![caption](chart:example/kind): the app's chart, drawn at build (site/guideCharts.ts).
-    if (img && img[2]!.startsWith("chart:")) {
+    if (img && (img[2]!.startsWith("chart:") || img[2]!.startsWith("figure:"))) {
       if (!charts) throw new Error(`${img[2]}: charts are only drawn in guide pages`);
-      out.push(`<figure class="guide-chart">${charts(img[2]!)}<figcaption>${inline(img[1]!)}</figcaption></figure>`);
+      out.push(`<figure class="guide-chart">${charts(img[2]!, img[3])}<figcaption>${inline(img[1]!)}</figcaption></figure>`);
       continue;
     }
+    if (img?.[3] !== undefined) throw new Error(`${img[2]}: only chart figures take a title`);
     out.push(img ? `<figure>${inline(text)}<figcaption>${inline(img[1]!)}</figcaption></figure>` : `<p>${inline(text)}</p>`);
   }
   // The paragraph right under the page title is its introduction.
@@ -346,45 +350,54 @@ ${o.content}
 }
 
 /** /drivers/, one index per brand, and one page per driver with suggested boxes (site/drivers.ts). */
-async function buildDriverPages(write: (path: string, html: string) => void, guides: Page[], outDir: string): Promise<void> {
+/**
+ * Share cards for the whole build: one cache (so pruning sees every card) and one headless
+ * Chrome, started only when a card has to be drawn.
+ */
+class Cards {
+  readonly cache: CardCache | null;
+  drawn = 0;
+  private r: Rasterizer | null | undefined;
+  constructor() {
+    this.cache = process.env.SBG_CARDS !== "0" ? new CardCache(process.env.SBG_CARD_CACHE ?? join(HERE, "..", ".cache", "cards"), cardSalt(readFileSync(join(HERE, "og.ts"), "utf8"))) : null;
+  }
+  /** The card for this source (an SVG, or a whole HTML page), from the cache or drawn now; null without Chrome. */
+  async jpeg(source: string, html = false): Promise<Uint8Array | null> {
+    if (!this.cache) return null;
+    let jpg: Uint8Array | null = this.cache.get(source);
+    if (!jpg) {
+      if (this.r === undefined) this.r = await startCards();
+      if (this.r) {
+        jpg = await this.r.image(source, { html });
+        this.cache.put(source, jpg);
+        this.drawn++;
+      }
+    }
+    return jpg;
+  }
+  async close() {
+    await this.r?.close();
+    if (this.cache) console.log(`Share cards: ${this.cache.hits} reused, ${this.drawn} drawn${this.cache.misses > this.drawn ? `, ${this.cache.misses - this.drawn} left without one (no Chrome)` : ""}; ${this.cache.prune()} old ones removed from the cache.`);
+  }
+}
+
+async function buildDriverPages(write: (path: string, html: string) => void, guides: Page[], outDir: string, cards: Cards): Promise<void> {
   const db = loadDb();
   const prs = db.passiveRadiators.map(prCandidate);
   const pages = db.drivers.map((e) => designDriver(e, prs)).filter((p): p is DriverPage => p !== null);
   const style = CHART_STYLE + DRIVERS_STYLE;
-  // Share cards: reused from the cache when unchanged (cardCache.ts); Chrome starts only when one has to be drawn.
-  const cardsOn = process.env.SBG_CARDS !== "0";
-  const cache = cardsOn ? new CardCache(process.env.SBG_CARD_CACHE ?? join(HERE, "..", ".cache", "cards"), cardSalt(readFileSync(join(HERE, "og.ts"), "utf8"))) : null;
-  let cards: Rasterizer | null | undefined;
-  let drawn = 0;
-  const raster = async () => (cards === undefined ? (cards = await startCards()) : cards);
-  try {
-    for (const p of pages) {
-      const page = driverContent(p, { all: await shareLink(SITE, p.state), related: relatedDrivers(p, pages) }, chart);
-      let imagePath: string | undefined;
-      if (cache) {
-        // The page's share card, next to it; pages without one keep the site's card.
-        const svg = cardSvg(cardData(p));
-        let jpg: Uint8Array | null = cache.get(svg);
-        if (!jpg) {
-          const r = await raster();
-          if (r) {
-            jpg = await r.image(svg);
-            cache.put(svg, jpg);
-            drawn++;
-          }
-        }
-        if (jpg) {
-          imagePath = `${driverPath(p.id)}card.jpg`;
-          mkdirSync(join(outDir, driverPath(p.id)), { recursive: true });
-          writeFileSync(join(outDir, imagePath), jpg);
-        }
-      }
-      write(driverPath(p.id), layout({ ...page, path: driverPath(p.id), imagePath, content: page.content, guides, style }));
+  for (const p of pages) {
+    const page = driverContent(p, { all: await shareLink(SITE, p.state), related: relatedDrivers(p, pages) }, chart);
+    // The page's share card, next to it; pages without one keep the site's card.
+    let imagePath: string | undefined;
+    const jpg = await cards.jpeg(cardSvg(cardData(p)));
+    if (jpg) {
+      imagePath = `${driverPath(p.id)}card.jpg`;
+      mkdirSync(join(outDir, driverPath(p.id)), { recursive: true });
+      writeFileSync(join(outDir, imagePath), jpg);
     }
-  } finally {
-    await cards?.close();
+    write(driverPath(p.id), layout({ ...page, path: driverPath(p.id), imagePath, content: page.content, guides, style }));
   }
-  if (cache) console.log(`Share cards: ${cache.hits} reused, ${drawn} drawn${cache.misses > drawn ? `, ${cache.misses - drawn} left without one (no Chrome)` : ""}; ${cache.prune()} old ones removed from the cache.`);
   const byBrand = [...new Set(pages.map((p) => p.brandSlug))]
     .map((slug) => ({ slug, name: db.brands.get(slug)?.name ?? pages.find((p) => p.brandSlug === slug)!.brand, pages: pages.filter((p) => p.brandSlug === slug) }))
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -482,11 +495,23 @@ export async function build(outDir: string): Promise<string[]> {
     entries.push({ path, group: groupOf(path), lastmod: lastmods.date(path, html) });
   };
 
+  const cards = new Cards();
+  try {
   for (const { file, page } of pages) {
     const body = fillLive(resolveExamples(page.body, links, file), file);
     const charts = await guideCharts(body, file);
     const content = markdown(body, charts.draw) + relatedGuides(page, guides);
-    write(page.path, layout({ ...page, content, guides, ...(charts.count ? { style: charts.style } : {}) }));
+    // `image: chart:example/kind`: the page's share card is that chart, drawn now (else the site's card).
+    let imagePath: string | undefined;
+    if (page.image?.startsWith("chart:")) {
+      const jpg = await cards.jpeg(await guideCardHtml(page.title, page.image, file), true);
+      if (jpg) {
+        imagePath = `${page.path}card.jpg`;
+        mkdirSync(join(outDir, page.path), { recursive: true });
+        writeFileSync(join(outDir, imagePath), jpg);
+      }
+    }
+    write(page.path, layout({ ...page, ...(page.image?.startsWith("chart:") ? { image: undefined, imagePath } : {}), content, guides, ...(charts.count ? { style: charts.style } : {}) }));
   }
 
   write(
@@ -587,7 +612,10 @@ export async function build(outDir: string): Promise<string[]> {
     );
   }
 
-  await buildDriverPages(write, guides, outDir);
+  await buildDriverPages(write, guides, outDir, cards);
+  } finally {
+    await cards.close();
+  }
 
   const imgDir = join(HERE, "img");
   if (existsSync(imgDir)) {

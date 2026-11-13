@@ -1,0 +1,50 @@
+{
+  "id": "p03",
+  "title": "Bandpass 6th order parallel (as b02), rear port 40 cm from the front one (on axis)",
+  "driver": {
+    "fs": 35,
+    "qms": 1.87,
+    "qes": 0.4,
+    "vas_l": 37.4,
+    "re": 5.9,
+    "sd_cm2": 211.2,
+    "le_mh": 0
+  },
+  "box": {
+    "kind": "bandpass",
+    "rear": {
+      "vb_l": 25,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 6,
+        "length_cm": 30
+      },
+      "ql": null,
+      "qa": null,
+      "qp": null
+    },
+    "front": {
+      "vb_l": 12,
+      "port": {
+        "shape": "round",
+        "diameter_cm": 7,
+        "length_cm": 10
+      },
+      "ql": null,
+      "qa": null,
+      "qp": null
+    },
+    "qicl": null,
+    "ventDistance_cm": 40
+  },
+  "opts": {},
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

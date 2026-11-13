@@ -219,6 +219,8 @@ export function buildNetlist(c: SpiceCase, o: NetlistOptions = {}): Netlist {
   let rearPortSpeed: string | null = null;
   /** Flows that radiate (out of the system), beyond the cones' fronts. */
   const radiating: string[] = [];
+  // A parallel 6th order's rear opening, for a position (ledger #29).
+  const rearOpening: string[] = [];
   const prs: string[] = [];
   const prExcursion: string[] = [];
   const space = opts.space === "full" ? 4 : 2;
@@ -282,6 +284,7 @@ export function buildNetlist(c: SpiceCase, o: NetlistOptions = {}): Netlist {
           prs.push(`Vpr${q}`);
           prExcursion.push(`xp${q}`);
           if (outside) radiating.push(`Vpr${q}`);
+          if (outside && tag === "r") rearOpening.push(`Vpr${q}`);
         }
       } else if (ch.port) {
         const count = ch.portCount ?? 1;
@@ -293,6 +296,7 @@ export function buildNetlist(c: SpiceCase, o: NetlistOptions = {}): Netlist {
         el(`Lmap${tag} ${tag}p1 ${tag}p2 ${num(map / count)}`);
         el(`Vport${tag} ${tag}p2 ${to} 0`);
         if (outside) radiating.push(`Vport${tag}`);
+        if (outside && tag === "r") rearOpening.push(`Vport${tag}`);
         el(`Fv${tag} 0 v${tag} Vport${tag} ${num(1 / (count * portSpeedArea(ch.port)))}`);
         el(`Rv${tag} v${tag} 0 1`);
         speed = `v${tag}`;
@@ -382,14 +386,28 @@ export function buildNetlist(c: SpiceCase, o: NetlistOptions = {}): Netlist {
 
   // --- Probes ---
   // Pressure: radiated U0 = openings to the room + leaks (− the cones, unless bandpass), into L = ρ/(kπr).
-  if (box.kind === "bandpass") radiating.forEach((s, k) => el(`Fpo${k + 1} 0 prs ${s} 1`));
+  // Ledger #29: with the port or PRs d away, they radiate into their own node, delayed by d/c.
+  const dist = (box.kind === "vented" || box.kind === "passive-radiator" || (box.kind === "bandpass" && rearOpening.length > 0)) && "ventDistance_cm" in box ? Math.max(0, box.ventDistance_cm ?? 0) / 100 : 0;
+  const near = dist > 0 ? "prc" : "prs";
+  const far = dist > 0 ? "prv" : "prs";
+  if (box.kind === "bandpass") radiating.forEach((s, k) => el(`Fpo${k + 1} 0 ${rearOpening.includes(s) ? far : near} ${s} 1`));
   else {
-    for (let u = 1; u <= bank.n; u++) el(`Fpc${u} 0 prs Vcone${u} -1`);
-    if (port) el(`Fpp 0 prs ${port} 1`);
-    if (leak) el(`Fpl 0 prs ${leak} 1`);
-    prs.forEach((s, k) => el(`Fpr${k + 1} 0 prs ${s} 1`));
+    for (let u = 1; u <= bank.n; u++) el(`Fpc${u} 0 ${near} Vcone${u} -1`);
+    if (port) el(`Fpp 0 ${far} ${port} 1`);
+    if (leak) el(`Fpl 0 ${far} ${leak} 1`);
+    prs.forEach((s, k) => el(`Fpr${k + 1} 0 ${far} ${s} 1`));
   }
-  el(`Lrad prs 0 ${num(air.rho / (space * Math.PI * r))}`);
+  const lrad = num(air.rho / (space * Math.PI * r));
+  if (dist > 0) {
+    el(`Lradc prc 0 ${lrad}`);
+    el(`Lradv prv 0 ${lrad}`);
+    // Unity buffer into a matched lossless line: V(pvd) = V(prv)·e^(−jω·d/c).
+    el(`Ebuf pvb 0 prv 0 1`);
+    el(`Tpos pvb 0 pvd 0 Z0=1 Td=${num(dist / air.c)}`);
+    el(`Rtpos pvd 0 1`);
+    el(`Eprc prs pm prc 0 1`);
+    el(`Eprv pm 0 pvd 0 1`);
+  } else el(`Lrad prs 0 ${lrad}`);
   el(`Fx 0 xn Vcone1 ${num(1 / d.sd)}`);
   el(`Cx xn 0 1`);
   el(`Rbl_xn xn 0 ${num(BLEED)}`);

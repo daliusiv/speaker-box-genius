@@ -483,13 +483,27 @@ export interface BandpassInput {
    * Infinity = no inter-chamber leak.
    */
   qicl?: number;
+  /** 6th order (parallel): how far the rear chamber's opening is from the front one's (cm), as for a ported box's ventDistance_cm. */
+  ventDistance_cm?: number;
 }
 
 export type EnclosureInput =
   | BandpassInput
   | LineInput
   | ({ kind: "sealed"; vb_l: number } & Losses)
-  | ({ kind: "vented"; vb_l: number; port: PortInput; portCount?: number; endCorrection?: number } & Losses)
+  | ({
+      kind: "vented";
+      vb_l: number;
+      port: PortInput;
+      portCount?: number;
+      endCorrection?: number;
+      /**
+       * How far the port (or PRs) is from the cone (cm): 0 / absent = side by side. With
+       * SimulationOptions.pathMode "on-axis", the extra distance its sound travels to the listener; "power",
+       * the distance between the two (Hornresp's Acoustic Path Length).
+       */
+      ventDistance_cm?: number;
+    } & Losses)
   | ({
       kind: "passive-radiator";
       vb_l: number;
@@ -498,4 +512,10 @@ export type EnclosureInput =
       addedMass_g?: number;
       /** Further groups of a different PR (or the same PR with a different added mass). */
       extraPrs?: PrGroup[];
+      /**
+       * How far the port (or PRs) is from the cone (cm): 0 / absent = side by side. With
+       * SimulationOptions.pathMode "on-axis", the extra distance its sound travels to the listener; "power",
+       * the distance between the two (Hornresp's Acoustic Path Length).
+       */
+      ventDistance_cm?: number;
     } & Losses);

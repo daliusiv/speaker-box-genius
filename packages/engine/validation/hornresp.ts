@@ -22,6 +22,9 @@ import type { LineInput } from "../src/line.ts";
 
 export const HORNRESP_DIR = join(import.meta.dirname, "..", "test", "fixtures", "hornresp");
 export const HORNRESP_VERSION = "Hornresp 60.70";
+/** Box cases set up in Hornresp's wizards (Filter, EQ, Loudspeaker Wizard), which a record can't carry: made and re-run on 60.60, not yet on 60.70. */
+export const HORNRESP_WIZARD_VERSION = "Hornresp 60.60";
+export const isHornrespWizardCase = (id: string) => /^(b4|b5|b6|b12|b14|b15|s\d+)-/.test(id);
 export const HORNRESP_AIR = { rho: 1.205, c: 344 };
 /** Dayton Audio DSA215-8, the driver in every record without a driver.json. */
 export const HORNRESP_DRIVER = { fs: 35, qms: 1.87, qes: 0.4, vas_l: 37.4, re: 5.9, sd_cm2: 211.2, le_mh: 1, xmax_mm: 5.5, pe_w: 80 };
@@ -79,6 +82,9 @@ export const HORNRESP_TITLES: Record<string, { title: string; text: string }> = 
   "30-tl-2p": { title: "Straight line, two drivers", text: "160 cm × 400 cm², two drivers in parallel at the closed end (Hornresp \"OD = 2P\")" },
   "32-sub-tqwt": { title: "Subwoofer TQWT", text: "12″ subwoofer, 240 cm conical 80 → 900 cm², driver 80 cm from the closed end" },
   "33-sub-tapped-early-tap": { title: "Tapped horn, four segments", text: "Case 27 written as Par 30 / 90 / 30 cm + Exp 150 cm (an old export of a tap at 120 cm): Hornresp takes the front tap where the last segment starts, 150 cm" },
+  "34-tl-path-50": { title: "Straight line, mouth 50 cm away", text: "Case 01 with Acoustic Path Length 50 cm: cone and mouth as two sources 50 cm apart, their powers summed" },
+  "35-tl-path-100": { title: "Straight line, mouth 100 cm away", text: "Case 01 with Acoustic Path Length 100 cm" },
+  "36-mltl-path-50": { title: "Mass-loaded line, port 50 cm away", text: "Case 05 with Acoustic Path Length 50 cm" },
   "16-mltl-hot-coil": { title: "Mass-loaded line, voice coil at 120 °C", text: "Case 05 with Hornresp's Power Compression at 120 °C" },
   "15-mltl-2-drivers": { title: "Mass-loaded line, two drivers", text: "Case 05 with two drivers in parallel (Hornresp \"OD = 2P\")" },
 };
@@ -105,6 +111,8 @@ The mouth's output on its own (Hornresp's "Horn" output) is compared where it wa
 **Impulse and step response.** Hornresp exports its impulse response (the chart window's Impulse Response) as a WAV: 48 kHz, t = 0 in the middle, scaled to a peak of ±1, the response cut off above 20 kHz. The app's (the chart "Impulse / step") is worked out the same way and matches for the mass-loaded line (05) and the sealed and ported boxes: within 0.02 of the peak RMS over −5 to 200 ms, and the step response (the running sum) within 0.02. Hornresp has no step response; it is taken from each impulse alike. Two things had to agree first. **Polarity:** the app now gives a positive pressure for a positive voltage with the cone facing the room (it had a box's output turned round, which the frequency charts don't show). Hornresp's boxes agree; its offset-driver lines put the line on the cone's front, so the room hears the cone's rear and its output is inverted against the app's: those are compared turned round (phase + 180°, impulse × −1). **High frequencies:** Hornresp's box SPL comes from radiated power (the cone as a piston, like the lines' "From radiated power" setting), which falls up top where a point source doesn't; the engine now does that for boxes too when asked, and the impulse always uses it.
 
 The first seven cases were checked against Hornresp 55.30 first, then against 60.60 with the same results; the five with other drivers (a 12″ subwoofer, a 4″ full-range) came with 60.60. **Re-run on Hornresp 60.70 (10 Nov 2026):** every earlier export came out identical to the last digit, and twelve more lines and horns were added (cases 20–32): an exponential and a three-segment (Con + Par + Exp) line, an offset driver at a fifth and in a tapered line, a tapered mass-loaded line and one with a wide short port, a conical and a two-segment tapped horn (and the same horn as four segments, 33, which settles where Hornresp takes the front tap: where the last segment starts), a full-range and a two-segment subwoofer front horn, two drivers in a line, and a subwoofer TQWT. All match as closely as the first cases (SPL within 0.05 dB on average). The subwoofer TQWT (32) has a looser group-delay limit: through its dense comb of resonances above 400 Hz the group delay swings by a millisecond between neighbouring points, while SPL there agrees within 0.07 dB.
+
+**Acoustic Path Length (34–36).** Hornresp's Path puts the mouth that far from the cone and treats the two as point sources, adding their powers over all directions: |M|² + |C|² + 2·Re(M·C*)·sin(kd)/(kd). Only the level changes; the phase and group delay it exports are those of the two side by side. With SPL from radiated power the app's mouth distance does the same (in front of the box it delays the mouth's sound instead, which is 4–5 dB from Hornresp's on average). Cases 01 and 05 with a 50 and a 100 cm Path match within 0.03 dB on average.
 
 **Air speed.** Hornresp's Particle Velocity chart can't be exported, but its cursor reads the value at each frequency. Read at five or six frequencies for three mass-loaded lines' mouths (05, 11, 25) and two ported boxes' ports (B2, N9), it agrees with the app's port air speed within 1 % everywhere and 0.3 % on average.
 
@@ -452,7 +460,7 @@ export const HORNRESP_BOX_TOL = {
 };
 type BoxTol = typeof HORNRESP_BOX_TOL;
 
-export const HORNRESP_BOX_NOTES = `Hornresp models an ordinary box as a very short horn on the cone's front (its "Horn" output) with the box behind, so these records are its "Nd" records with a 0.01 cm horn; bandpass boxes run in its Loudspeaker Wizard, which exports SPL, impedance and excursion but not group delay or port air speed.
+export const HORNRESP_BOX_NOTES = `Hornresp models an ordinary box as a very short horn on the cone's front (its "Horn" output) with the box behind, so these records are its "Nd" records with a 0.01 cm horn; bandpass boxes run in its Loudspeaker Wizard, which exports SPL, impedance and excursion but not group delay or port air speed. The cases set up in its wizards (bandpass B4–B6 and B14, high-pass B12, EQ B15, stuffed lines S1–S5) can't be carried in a record, so they are checked on Hornresp 60.60 (re-run 12 Nov 2026, identical exports), not yet on 60.70.
 
 What the comparison settles, and the conventions it has to bridge:
 
@@ -461,6 +469,8 @@ What the comparison settles, and the conventions it has to bridge:
 - **Leakage (QL) in bandpass boxes.** Hornresp's QL behaves as if referred to the box's lowest tuning (that's what fits all three records); the app, like WinISD, refers it to each chamber's own tuning. So Hornresp's QL 7 is entered as the same leak at the chamber's own tuning (10.4 and 13.7 in the front chambers of the 6th-order boxes). A series box's rear chamber, which opens only into the front one, has no leak in Hornresp.
 - **Passive radiators.** Hornresp adds the front air to the radiator's moving mass as well (3.83 g for the DSA270-PR); with that, its output alone is within 0.01 dB.
 - **Two drivers side by side** (Hornresp's "Nd = 2P") load each other's fronts: Hornresp treats them as one piston of twice the area, which gives each √2 × one cone's front air. In lines and horns the app does the same (case 15: the mass-loaded line with two drivers is within 0.03 dB and 0.2 %). In boxes it does with Settings → Box losses → Cone air load → "Piston, like Hornresp", which loads each cone with n × the radiation impedance of a piston of n·Sd in place of a fixed front-air mass; the default keeps each driver's datasheet Mms, as WinISD does. The two-driver cases (B7, B11) and the two-box cases (B17) use it, with SPL from radiated power.
+
+**Port and PR position (B2 and B3 with an Acoustic Path Length).** Hornresp's Path puts the port or passive radiator that far from the cone and sums the two sources' powers, |a|² + |b|² + 2·Re(a·b*)·sin(kd)/(kd); only the level changes. The app's port position does the same with SPL from radiated power: the ported box with the port 25, 50 and 100 cm away and the PR box with the PR 50 cm away match within 0.015 dB on average, as closely as the same boxes with the port beside the cone.
 
 **Amplifier resistance and wiring.** Hornresp's Rg (0.5 Ω, B10) matches the app's Settings → Amp + cable as closely as B1 without it. Two drivers in one sealed box (B11), in parallel and in series, match within 0.04 dB (95th percentile) and 0.25 % in impedance (95th percentile 1.0 %; with a fixed front-air mass of √2 × one cone's it was 2.1 %); series is exactly 6.02 dB below parallel in both. Records must say "2P" or "2S" as imported (the app's Hornresp export writes them so): the same counts typed into Hornresp's editor gave one cone's output with two drivers' impedance.
 

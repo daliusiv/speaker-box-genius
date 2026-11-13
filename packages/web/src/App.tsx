@@ -52,6 +52,7 @@ import { TsEditor } from "./TsEditor.tsx";
 import { DriverMenu } from "./DriverMenu.tsx";
 import { VolumePanel } from "./VolumePanel.tsx";
 import { BuildSheet } from "./BuildSheet.tsx";
+import { DriveSheet } from "./DriveSheet.tsx";
 import {
   airOf,
   shapeOf,
@@ -80,6 +81,7 @@ import {
   vbOf,
   switchDrive,
   builtVbOf,
+  backDepthOf,
   limitsOf,
   checkFromHz,
   portLimitOf,
@@ -100,6 +102,7 @@ import { BafflePanel } from "./BafflePanel.tsx";
 import { AirChart } from "./AirChart.tsx";
 import { AddBoxMenu, DesignCard } from "./Designs.tsx";
 import { useFolded } from "./fold.ts";
+import { usePanelFit } from "./panelFit.ts";
 import { COMPAT, COMPAT_NAMES, compatOf, nearestCompat, withCompat, type CompatPreset } from "./compat.ts";
 import { addMeasured, MeasuredCard, measuredSeries } from "./Measured.tsx";
 import { HelpDock } from "./HelpDock.tsx";
@@ -113,6 +116,7 @@ import { AppMenu } from "./AppMenu.tsx";
 import { ExportWindow } from "./ExportWindow.tsx";
 import { OpenWindow } from "./OpenWindow.tsx";
 import { importKind, type ImportUse } from "./formats/imports.ts";
+import { applyHornresp } from "./hornrespBox.ts";
 import { readProjectJson } from "./formats/project.ts";
 import { openResults, withDriver } from "./assistant.ts";
 import type { SharedResults } from "./assistant.ts";
@@ -121,7 +125,7 @@ import { DesignAssistant } from "./DesignAssistant.tsx";
 import { Logo, Sparkle } from "./Logo.tsx";
 import { submitDriverUrl } from "./submit.ts";
 import { EQ_HANDLE, GUIDE, GUIDE_DIM, LIMIT } from "./palette.ts";
-import { excursionChart, maxSplChart, relRefOf, responseChart, valueAt, type ChartInput } from "./chartProps.ts";
+import { delayChart, excursionChart, impedanceChart, maxSplChart, portChart, prChart, pressureChart, relRefOf, responseChart, valueAt, zaChart, type ChartInput } from "./chartProps.ts";
 
 const LIMIT_RED = LIMIT.xmax;
 type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay" | "transient" | "pressure" | "air";
@@ -135,6 +139,8 @@ export function App(props: { initial: AppState | null }) {
   const notify = (text: string, action?: { label: string; run: () => void }) => setToast({ text, id: Date.now(), action });
   // Handlers that run later (a toast's button) read the state as it is then.
   const latest = useRef(state);
+  const panelRef = useRef<HTMLElement>(null);
+  usePanelFit(panelRef);
   latest.current = state;
   // Resize every box for the current driver with its card's preset (sealed Qtc 0.707, ported/PR QB3).
   const [sizeReport, setSizeReport] = useState<{ changed: string[]; skipped: string[] } | null>(null);
@@ -333,6 +339,9 @@ export function App(props: { initial: AppState | null }) {
   };
   // Phones show one chart under the response at a time (excursion is one of them).
   const narrow = useNarrow();
+  // Phones (< 768 px): the drive bar is one row, the value opens a sheet with W / V and the quick choices.
+  const phone = useNarrow("(max-width: 767px)");
+  const [driveSheet, setDriveSheet] = useState(false);
   const [transientView, setTransientView] = useState<"impulse" | "step">("impulse");
   const [chartPick, setChartPick] = useState<ChartId>(() => {
     const first: ChartId = window.matchMedia?.("(max-width: 860px)").matches ? "excursion" : "maxspl";
@@ -551,6 +560,13 @@ export function App(props: { initial: AppState | null }) {
       setStep(s);
       return notify(`Opened “${s.driverName}”.`);
     }
+    if (kind === "hornresp") {
+      const r = applyHornresp(state, await f.text(), f.name);
+      if (typeof r === "string") return notify(`${f.name}: ${r}`);
+      setStep(() => r.state);
+      showOnPhone("panel", "boxes");
+      return notify(r.message);
+    }
     // WinISD / OpenISD: the result (and any notes) shows on the driver card.
     showOnPhone("panel", "driver");
     await importWdr(f);
@@ -673,51 +689,8 @@ export function App(props: { initial: AppState | null }) {
 
   // Every design with passive radiators (PR boxes, and bandpass chambers that use them).
   const prDesigns = designs.filter((d) => d.result.prGroups);
-  const prLimits = [...new Set(prDesigns.flatMap((d) => prXmaxes(d.design)))].map((x) => ({
-    value: x,
-    label: `PR Xmax ${x} mm`,
-    color: LIMIT_RED,
-  }));
-  // Caution band under each PR Xmax, from the share set in Settings (a rule of thumb: suspensions stiffen there).
-  const prCaution = state.settings.prCaution_pct;
-  const prBands =
-    prCaution > 0 && prCaution < 100
-      ? prLimits.map((l, i) => ({
-          from: (l.value * prCaution) / 100,
-          to: l.value,
-          label: i === 0 ? `Over ${prCaution} % of PR Xmax: suspension stiffens (rule of thumb)` : "",
-          color: LIMIT.port,
-        }))
-      : [];
-  // One curve per PR group; groups after the first are dashed and named after their PR.
-  const prSeries: Series[] = prDesigns.flatMap((d) => {
-    const names = prGroupLabels(d.design);
-    return (d.result.prGroups ?? []).map((g, k) => ({
-      label: d.design.kind === "pr" && k === 0 ? d.label : `${d.label}: ${names[k] ?? `group ${k + 1}`}`,
-      color: d.color,
-      dash: d.dash ?? (k === 0 ? undefined : k === 1 ? "6 3" : "2 3"),
-      y: g.excursionMm,
-      over: g.xmax_mm ?? undefined,
-      deepFloor: checkFromHz(state.highPass.on, d.result.summary.f3),
-    }));
-  });
 
-  // Lines and horns: the line's acoustic impedance (Hornresp's Za), resistance solid, reactance dashed.
   const zaDesigns = mainDesigns.filter((d) => d.result.acousticImpedance);
-  const zaSeries: Series[] = zaDesigns.flatMap((d) => {
-    const za = d.result.acousticImpedance!;
-    return [
-      { label: `${d.label}: resistance`, color: d.color, y: za.resistance },
-      { label: `${d.label}: reactance`, color: d.color, dash: "5 3", y: za.reactance },
-    ];
-  });
-  // Empty lines resonate sharply (Za runs into the hundreds): keep the scale on the useful part.
-  const zaRange = (() => {
-    let lo = 0;
-    let hi = 1;
-    for (const s of zaSeries) for (const v of s.y!) if (Number.isFinite(v)) (lo = Math.min(lo, v)), (hi = Math.max(hi, v));
-    return { yMin: Math.max(-4, Math.floor(lo)), yMax: Math.min(6, Math.ceil(hi)) };
-  })();
 
   // The charts under the tab row: one at a time, the choice remembered; unavailable ones are left out.
   const hasPr = prDesigns.length > 0;
@@ -809,16 +782,6 @@ export function App(props: { initial: AppState | null }) {
   };
   const pickedEq = picked?.startsWith("eq-") ? state.eq.find((e) => `eq-${e.id}` === picked && draggableEq(e)) : undefined;
 
-  // Passive radiators put a deep notch in the response at their own resonance, where the
-  // group delay swings far negative; mark it instead of drawing a cliff off the chart.
-  const notchMarkers = mainDesigns.flatMap((d) => {
-    const gd = d.result.groupDelayMs;
-    let i0 = -1;
-    for (let i = 0; i < gd.length; i++) if (gd[i]! < -20 && (i0 < 0 || gd[i]! < gd[i0]!)) i0 = i;
-    if (i0 < 0) return [];
-    const f = d.result.freq[i0]!;
-    return [{ f, label: `${d.label}: notch ${f < 100 ? f.toFixed(1) : f.toFixed(0)} Hz`, color: d.color }];
-  });
 
   // Passive radiator finder and the other box tools: the main driver and drive as the charts use them.
   const finderCtx = useMemo<FinderContext>(
@@ -832,7 +795,17 @@ export function App(props: { initial: AppState | null }) {
     }),
     [state, solved],
   );
-  // What the response, excursion and Max SPL charts draw (shared with the guide pages).
+  // The impedance chart's extra curves: measured impedance, and the free-air measurement and its fit.
+  const impedanceExtra: Series[] = [
+    ...measuredSeries(state.measured, "impedance", freq, mainDesigns),
+    ...(measurement
+      ? [
+          { label: "Measured (free air)", color: GUIDE_DIM, dash: "6 4", y: resampleMagnitude(measurement.data, freq) },
+          { label: "Fit (free air)", color: GUIDE, dash: "2 3", y: freq.map((f) => impedanceMagnitude(measurement.fit, f)) },
+        ]
+      : []),
+  ];
+  // What the charts draw (shared with the guide pages).
   const chartInput: ChartInput = {
     state,
     designs,
@@ -915,7 +888,7 @@ export function App(props: { initial: AppState | null }) {
         </div>
       </header>
 
-      <aside className="panel">
+      <aside className="panel" ref={panelRef}>
         <PanelTabs value={panel} onChange={choosePanel} badges={tabBadges} className="desktop-tabs" />
         {narrow && solved.missing.length === 0 && <StatusStrip designs={designs} state={state} onJump={jumpTo} onPower={() => showOnPhone("charts")} />}
         {panel === "driver" && (
@@ -1463,6 +1436,7 @@ export function App(props: { initial: AppState | null }) {
                 vb_l={vbOf(state, d)}
                 built_l={builtVbOf(state, d)}
                 linked={state.volume.link === d.id}
+                backDepth_cm={backDepthOf(d, state.volume)}
                 onSizeBandpass={d.kind === "bandpass" ? () => sizeOneBandpass(d) : undefined}
                 pickPort={d.kind === "vented" ? (x, vb, fb) => bestVentedPort(state, x, vb, fb) : undefined}
                 lineFb={d.kind === "line" ? (designs.find((x) => x.design.id === d.id)?.result.summary.fb ?? null) : undefined}
@@ -1630,7 +1604,7 @@ export function App(props: { initial: AppState | null }) {
                 const now = compatOf(state.settings);
                 const near = now ? null : nearestCompat(state.settings);
                 return (
-                  <div className="compat" data-help="Set the conventions that differ between programs in one go (air, coil inductance, power rating, leaked air, cone air load, ports, line SPL), to compare like for like. Your units, amplifier, box losses and coil temperature are kept. Each setting stays editable below.">
+                  <div className="compat" data-help="Set the conventions that differ between programs in one go (air, coil inductance, power rating, leaked air, cone air load, ports, line SPL, F3 reference, absorption volume, port sound), to compare like for like. Your units, amplifier, box losses and coil temperature are kept. Each setting stays editable below.">
                     <span className="compat-label">Match</span>
                     <div className="unit-switch" role="group" aria-label="Match a program's conventions">
                       {(Object.keys(COMPAT) as CompatPreset[]).map((id) => (
@@ -1772,9 +1746,18 @@ export function App(props: { initial: AppState | null }) {
                   value={state.settings.leakage}
                   options={[
                     { value: "radiates", text: "Heard (like WinISD)" },
-                    { value: "absorbed", text: "Lost (like Hornresp)" },
+                    { value: "absorbed", text: "Lost (like Hornresp, VituixCAD)" },
                   ]}
                   onChange={(leakage) => set("settings", { ...state.settings, leakage })}
+                />
+                <Select<"damping" | "volume"> help="What the absorption Qa does. Damping only: a loss, the box's volume unchanged. Bigger box (like VituixCAD): the filling also makes the air act as a bigger box, +1.4 % at Qa 100, +11 % at Qa 10. Ignored for a box with stuffing set, which has its own gain."
+                  label="Absorption"
+                  value={state.settings.qaVolume ? "volume" : "damping"}
+                  options={[
+                    { value: "damping", text: "Damping only (like WinISD, Hornresp)" },
+                    { value: "volume", text: "Damping + bigger box (like VituixCAD)" },
+                  ]}
+                  onChange={(x) => set("settings", { ...state.settings, qaVolume: x === "volume" })}
                 />
                 <Select<"mass" | "piston"> help="The air in front of the cone. Fixed mass (like WinISD): part of Mms at every frequency. Piston (like Hornresp): a baffled piston's radiation load, the same in the deep bass but lighter and lossier higher up, and with two or more drivers side by side (or identical boxes side by side: double the volume and the drivers) they push one bigger piston together, which adds a little air to each. Sealed, ported and passive radiator boxes."
                   label="Cone air load"
@@ -1858,13 +1841,14 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(x) => set("settings", { ...state.settings, portCompression: x === "on" })}
                 />
-                <Num
-                  help="How much longer than its physical length a port acts, as K × its diameter (a slot: the diameter of a circle of the same area). 0.732 is one end in the baffle and one free inside the box, like WinISD; 0.85 both ends flanged. A slot built along the box walls acts longer still, by an amount nobody can calculate well: leave 0.732 and use the slot's tuning range, or enter the K you measured on your own builds. Used for the ports of ported and bandpass boxes: their tuning, Set port length and sizing (transmission lines model their port ends themselves)."
-                  label="End correction K"
-                  unit="× Ø"
-                  value={state.settings.endCorrection}
-                  min={0}
-                  onChange={(v) => set("settings", { ...state.settings, endCorrection: Number.isFinite(v) && v >= 0 ? Math.min(END_CORRECTION_MAX, v) : DEFAULT_END_CORRECTION })}
+                <Select<"own" | "portLength"> help="Where a ported or passive radiator box's opening is heard from. Where each box puts it: its Position (next to the driver unless set). From the port's far end (like VituixCAD): a port left next to the driver is heard from its far end, so its sound arrives later by the port's length; its group delay drops a little. A passive radiator left next to the driver is heard later by the spacing of the driver's and the PR's centres side by side. On the back or a set distance still win. Bandpass boxes are unchanged."
+                  label="Port sound"
+                  value={state.settings.ventPlacement}
+                  options={[
+                    { value: "own", text: "Where each box puts it" },
+                    { value: "portLength", text: "From the port's far end (like VituixCAD)" },
+                  ]}
+                  onChange={(ventPlacement) => set("settings", { ...state.settings, ventPlacement })}
                 />
                 <Select<"peak" | "rms"> help="Port air speed shown as the peak value or as RMS (peak ÷ 1.41). The chuffing line moves with it."
                   label="Port speed"
@@ -1874,6 +1858,14 @@ export function App(props: { initial: AppState | null }) {
                     { value: "rms", text: "RMS" },
                   ]}
                   onChange={(velocity) => set("settings", { ...state.settings, velocity })}
+                />
+                <Num
+                  help="How much longer than its physical length a port acts, as K × its diameter (a slot: the diameter of a circle of the same area). 0.732 is one end in the baffle and one free inside the box, like WinISD; 0.85 both ends flanged. A slot built along the box walls acts longer still, by an amount nobody can calculate well: leave 0.732 and use the slot's tuning range, or enter the K you measured on your own builds. Used for the ports of ported and bandpass boxes: their tuning, Set port length and sizing (transmission lines model their port ends themselves)."
+                  label="End correction K"
+                  unit="× Ø"
+                  value={state.settings.endCorrection}
+                  min={0}
+                  onChange={(v) => set("settings", { ...state.settings, endCorrection: Number.isFinite(v) && v >= 0 ? Math.min(END_CORRECTION_MAX, v) : DEFAULT_END_CORRECTION })}
                 />
                 <Num
                   help="Port air speed above this counts as chuffing (the red line on the Port speed chart, the ⚠ in the summary, and the design assistant's checks). 17 m/s is the usual guide for a quiet hi-fi port; car SPL builds often accept 25–30."
@@ -1971,6 +1963,15 @@ export function App(props: { initial: AppState | null }) {
                   ]}
                   onChange={(lineSpl) => set("settings", { ...state.settings, lineSpl })}
                 />
+                <Select<"passband" | "peak"> help="Where F3, F6 and F10 are measured from. Passband (like WinISD): a plain cone's level, so a hump in the response doesn't move F3. Response peak (like VituixCAD): the highest point in the bass, so a box with a hump or a high Q gets a higher F3. Lines use their low-frequency edge and bandpass boxes their band's peak either way."
+                  label="F3 from"
+                  value={state.settings.f3From}
+                  options={[
+                    { value: "passband", text: "Passband (like WinISD)" },
+                    { value: "peak", text: "Response peak (like VituixCAD)" },
+                  ]}
+                  onChange={(f3From) => set("settings", { ...state.settings, f3From })}
+                />
               </div>
               <details className="more">
                 <summary>About the two ways</summary>
@@ -1979,6 +1980,9 @@ export function App(props: { initial: AppState | null }) {
                   SPL in the bass and reads lower once a source is large next to the wavelength: for a 10″ cone about 0.2 dB at
                   300 Hz and 0.6 dB at 500 Hz, twice that for two side by side, and about 1.5 dB at 500 Hz for an 850 cm² horn
                   mouth. WinISD uses the in-front SPL.
+                  A line&rsquo;s mouth distance and a box&rsquo;s port or PR position follow the same choice: in front of the box their
+                  sound arrives later than the cone&rsquo;s, at the same level (phase and group delay too, as VituixCAD shows a rear port); from radiated
+                  power it&rsquo;s the distance between the two, as Hornresp&rsquo;s Acoustic Path Length (level only).
                   For like-for-like checks against Hornresp, pick its air and &ldquo;From radiated power&rdquo; (or the Hornresp
                   preset), and set the drive to 2.83 V.
                 </p>
@@ -2017,48 +2021,75 @@ export function App(props: { initial: AppState | null }) {
               onChange={(e) => set("power", Math.round(10 ** e.currentTarget.valueAsNumber * 10) / 10)}
             />
           )}
-          {state.drive === "volts" ? (
-            <DriveValue value={state.volts} unit="V" min={0.1} max={100} onChange={(volts) => set("volts", Number(volts.toPrecision(3)))} />
-          ) : (
-            <DriveValue value={state.power} unit="W" min={1} max={10000} onChange={(power) => set("power", Math.round(power * 10) / 10)} />
-          )}
-          <div
-            className="unit-switch"
-            role="group"
-            aria-label="Drive by"
-            title="Watts: V = √(P·Re), like WinISD. Volts: a fixed voltage, like the 2.83 V datasheets quote."
-          >
-            <button aria-pressed={state.drive === "watts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "watts") }))}>
-              W
-            </button>
-            <button aria-pressed={state.drive === "volts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "volts") }))}>
-              V
-            </button>
-          </div>
-          {/* One tap between WinISD's and Hornresp's 1 W (2.83 V into 8 Ω) and what the driver is rated for. */}
-          <div className="drive-quick" role="group" aria-label="Quick drive">
+          {phone ? (
             <button
               type="button"
-              className="chip"
-              aria-pressed={state.drive === "watts" && state.power === 1}
-              title="1 W, as WinISD and Hornresp start: the response reads as the driver's sensitivity"
-              onClick={() => setStep((s) => ({ ...s, drive: "watts", power: 1 }))}
+              className="drive-chip"
+              aria-haspopup="dialog"
+              aria-label={`${driveLabel(state)}: change the drive`}
+              onClick={() => setDriveSheet(true)}
             >
-              1 W
+              {driveLabel(state)}
             </button>
-            {ratedPowerOf(state) > 0 && (
-              <button
-                type="button"
-                className="chip"
-                aria-pressed={state.drive === "watts" && state.power === ratedPowerOf(state)}
-                title={`The power rating (Pe${state.drivers > 1 ? ` × ${state.drivers} drivers` : ""}): see where it runs out of excursion or the port chuffs`}
-                onClick={() => setStep((s) => ({ ...s, drive: "watts", power: ratedPowerOf(s) }))}
+          ) : (
+            <>
+              {state.drive === "volts" ? (
+                <DriveValue value={state.volts} unit="V" min={0.1} max={100} onChange={(volts) => set("volts", Number(volts.toPrecision(3)))} />
+              ) : (
+                <DriveValue value={state.power} unit="W" min={1} max={10000} onChange={(power) => set("power", Math.round(power * 10) / 10)} />
+              )}
+              <div
+                className="unit-switch"
+                role="group"
+                aria-label="Drive by"
+                title="Watts: V = √(P·Re), like WinISD. Volts: a fixed voltage, like the 2.83 V datasheets quote."
               >
-                Rated {ratedPowerOf(state)} W
-              </button>
-            )}
-          </div>
+                <button aria-pressed={state.drive === "watts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "watts") }))}>
+                  W
+                </button>
+                <button aria-pressed={state.drive === "volts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "volts") }))}>
+                  V
+                </button>
+              </div>
+              {/* One tap between WinISD's and Hornresp's 1 W (2.83 V into 8 Ω) and what the driver is rated for. */}
+              <div className="drive-quick" role="group" aria-label="Quick drive">
+                <button
+                  type="button"
+                  className="chip"
+                  aria-pressed={state.drive === "watts" && state.power === 1}
+                  title="1 W, as WinISD and Hornresp start: the response reads as the driver's sensitivity"
+                  onClick={() => setStep((s) => ({ ...s, drive: "watts", power: 1 }))}
+                >
+                  1 W
+                </button>
+                {ratedPowerOf(state) > 0 && (
+                  <button
+                    type="button"
+                    className="chip"
+                    aria-pressed={state.drive === "watts" && state.power === ratedPowerOf(state)}
+                    title={`The power rating (Pe${state.drivers > 1 ? ` × ${state.drivers} drivers` : ""}): see where it runs out of excursion or the port chuffs`}
+                    onClick={() => setStep((s) => ({ ...s, drive: "watts", power: ratedPowerOf(s) }))}
+                  >
+                    Rated {ratedPowerOf(state)} W
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
+        {phone && (
+          <DriveSheet
+            open={driveSheet}
+            onClose={() => setDriveSheet(false)}
+            drive={state.drive}
+            power={state.power}
+            volts={state.volts}
+            rated={ratedPowerOf(state)}
+            onUnit={(to) => setStep((s) => ({ ...s, ...switchDrive(s, to) }))}
+            onValue={(drive, v) => setStep((s) => (drive === "volts" ? { ...s, volts: v } : { ...s, power: v }))}
+            onQuick={(watts) => setStep((s) => ({ ...s, drive: "watts", power: watts }))}
+          />
+        )}
         {welcome.linkNote && <LinkNote onDismiss={welcome.dismissLinkNote} onTips={welcome.showTips} />}
         {welcome.tips && <GettingStarted onDismiss={welcome.dismissTips} onAssistant={launchAssistant} drivers={db?.drivers.length} />}
         <Summary designs={designs} state={state} missing={solved.missing.length > 0} narrow={narrow} onJump={jumpTo} />
@@ -2177,80 +2208,14 @@ export function App(props: { initial: AppState | null }) {
               />
             )}
             {hasPr && (
-              <LogChart
-                forum
-                chartId="pr"
-                hidden={chartTab !== "pr"}
-                best="low"
-              shortTitle="PR excursion"
-              title="Passive radiator excursion (peak, one way)"
-                unit="mm"
-                freq={freq}
-                series={prSeries}
-                limits={prLimits}
-                bands={prBands}
-                yMin={0}
-              />
+              <LogChart forum {...prChart(chartInput)} hidden={chartTab !== "pr"} />
             )}
             {hasPort && (
-              <LogChart
-                forum
-                chartId="port"
-                hidden={chartTab !== "port"}
-                best="low"
-              shortTitle="Port speed"
-              title={`Port air velocity (${state.settings.velocity === "rms" ? "RMS" : "peak"})`}
-                unit="m/s"
-                freq={freq}
-                series={[
-                  ...designs.map((d) => ({
-                    label: d.design.kind === "bandpass" ? `${d.label} (front port)` : d.label,
-                    color: d.color,
-                    dash: d.dash,
-                    y: d.result.portVelocity,
-                    over: portLimitOf(state),
-                    deepFloor: checkFromHz(state.highPass.on, d.result.summary.f3),
-                  })),
-                  ...designs.map((d) => ({
-                    label: `${d.label} (rear port)`,
-                    color: d.color,
-                    dash: "5 3",
-                    y: d.result.rearPortVelocity,
-                    over: portLimitOf(state),
-                    deepFloor: checkFromHz(state.highPass.on, d.result.summary.f3),
-                  })),
-                ].filter((s) => s.y)}
-                limits={[{ value: portLimitOf(state), label: `Chuffing risk ${portLimitOf(state)} m/s`, color: LIMIT_RED }]}
-                yMin={0}
-              />
+              <LogChart forum {...portChart(chartInput)} hidden={chartTab !== "port"} />
             )}
             {hasPort && <LowDriveNote state={state} chart="port" hidden={chartTab !== "port"} onRated={useRatedPower} />}
             {hasBoxPressure && (
-              <LogChart
-                forum
-                chartId="pressure"
-                hidden={chartTab !== "pressure"}
-                best="low"
-                shortTitle="Box pressure"
-                title="Sound pressure inside the box (peak): the load on the cone and the walls"
-                unit="Pa"
-                freq={freq}
-                series={[
-                  ...designs.map((d) => ({
-                    label: d.design.kind === "bandpass" ? `${d.label} (rear chamber)` : d.label,
-                    color: d.color,
-                    dash: d.dash,
-                    y: d.result.boxPressurePa,
-                  })),
-                  ...designs.map((d) => ({
-                    label: `${d.label} (front chamber)`,
-                    color: d.color,
-                    dash: "5 3",
-                    y: d.result.frontChamberPressurePa,
-                  })),
-                ].filter((s) => s.y)}
-                yMin={0}
-              />
+              <LogChart forum {...pressureChart(chartInput)} hidden={chartTab !== "pressure"} />
             )}
             {hasAir && (
               <AirChart
@@ -2296,11 +2261,8 @@ export function App(props: { initial: AppState | null }) {
               }
             />
             <LogChart
-              chartId="impedance"
               hidden={chartTab !== "impedance"}
-              title={zMode === "phase" ? "Impedance phase" : "Impedance"}
-              unit={zMode === "phase" ? "°" : "Ω"}
-              freq={freq}
+              {...impedanceChart(chartInput, zMode, impedanceExtra)}
               actions={
                 <div className="unit-switch" role="group" aria-label="Show">
                   <button aria-pressed={zMode === "ohms"} onClick={() => chooseZMode("ohms")} title="How many ohms the amplifier sees at each frequency">
@@ -2315,36 +2277,9 @@ export function App(props: { initial: AppState | null }) {
                   </button>
                 </div>
               }
-              series={zMode === "phase" ? series((r) => r.impedancePhaseDeg) : [
-                ...series((r) => r.impedanceOhm),
-                ...measuredSeries(state.measured, "impedance", freq, mainDesigns),
-                ...(measurement
-                  ? [
-                      { label: "Measured (free air)", color: GUIDE_DIM, dash: "6 4", y: resampleMagnitude(measurement.data, freq) },
-                      {
-                        label: "Fit (free air)",
-                        color: GUIDE,
-                        dash: "2 3",
-                        y: freq.map((f) => impedanceMagnitude(measurement.fit, f)),
-                      },
-                    ]
-                  : []),
-              ]}
-              {...(zMode === "phase" ? { yMin: -90, yMax: 90, yStep: 45, limits: [{ value: 0, label: "0° (resistive)", color: GUIDE }], limitStyle: "guide" as const } : { yMin: 0 })}
             />
             {zaDesigns.length > 0 && (
-              <LogChart
-                chartId="za"
-              hidden={chartTab !== "za"}
-                title="Line load Za"
-                unit="× ρc/S"
-                freq={freq}
-                series={zaSeries}
-                limits={[{ value: 1, label: "1 = the duct's own impedance", color: GUIDE }]}
-                limitStyle="guide"
-                digits={2}
-                {...zaRange}
-              />
+              <LogChart {...zaChart(chartInput)} hidden={chartTab !== "za"} />
             )}
             {zaDesigns.length > 0 && chartTab === "za" && (
               <p className="hint">
@@ -2383,18 +2318,7 @@ export function App(props: { initial: AppState | null }) {
                 </p>
               </>
             )}
-            <LogChart
-              chartId="delay"
-              hidden={chartTab !== "delay"}
-              best="zero"
-              title="Group delay"
-              unit="ms"
-              freq={freq}
-              series={series((r) => r.groupDelayMs)}
-              markers={notchMarkers}
-              yMin={-20}
-              yMax={100}
-            />
+            <LogChart {...delayChart(chartInput)} hidden={chartTab !== "delay"} />
           </CrosshairProvider>
           </ChartEmphasis.Provider>
         )}
@@ -2773,7 +2697,7 @@ function Summary({
                   <td>
                     {fmt(r.summary.f3)}
                     {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
-                    {f3Room !== undefined && <RoomF3 f3={f3Room} car={state.roomGain.mode === "car"} />}
+                    {f3Room !== undefined && <RoomF3 f3={f3Room} car={state.roomGain.mode === "car"} peak={state.settings.f3From === "peak"} />}
                   </td>
                   <td className={over.length ? "over" : deep ? "deep" : "muted"}>
                     {over.length ? (
@@ -2814,6 +2738,8 @@ function Summary({
                           ? `Fb ${fmt(r.summary.fb)} Hz`
                           : `Fc ${fmt(r.summary.fc)} Hz`}
                       {r.summary.qtc !== undefined && r.summary.qtc !== null ? ` · Qtc ${fmt(r.summary.qtc, 2)}` : ""}
+                      {` · F6 ${fmt(r.summary.f6)} · F10 ${fmt(r.summary.f10)} Hz`}
+                      {state.settings.f3From === "peak" ? " (from peak)" : ""}
                       {` · cone ${fmt(x)} mm`}
                       {xpr ? ` · PR ${fmt(xpr.mm)} mm` : ""}
                       {vp !== null ? ` · port ${fmt(vp)} m/s` : ""}
@@ -2829,6 +2755,7 @@ function Summary({
         </table>
         <p className="hint">
           Tap a row for its details. Peaks above {fMin} Hz{state.highPass.on ? "" : " (or a box's F3, if lower)"}{state.highPass.on ? "" : "; a ported or PR box's deep bass (below 0.7 × its tuning) is graded, not failed"}.
+          {state.settings.f3From === "peak" ? " F3 measured from each box's bass peak (Settings → F3 from)." : ""}
         </p>
         </>
         )}
@@ -2871,7 +2798,7 @@ function Summary({
                 <td>
                   {fmt(r.summary.f3)}
                   {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
-                  {f3Room !== undefined && <RoomF3 f3={f3Room} car={state.roomGain.mode === "car"} />}
+                  {f3Room !== undefined && <RoomF3 f3={f3Room} car={state.roomGain.mode === "car"} peak={state.settings.f3From === "peak"} />}
                 </td>
                 <td>
                   {d.kind === "bandpass"
@@ -2920,16 +2847,17 @@ function Summary({
           </>
         )}
         Red means over the limit: click it to see the chart.
+        {state.settings.f3From === "peak" ? " F3 from bass peak." : ""}
       </p>
     </div>
   );
 }
 
 /** The F3 with room or cabin gain, under the box's own F3 in the summary. */
-function RoomF3({ f3, car }: { f3: number | null; car: boolean }) {
+function RoomF3({ f3, car, peak }: { f3: number | null; car: boolean; peak: boolean }) {
   const where = car ? "in the car" : "in the room";
   return (
-    <span className="room-f3" title={`F3 with the ${car ? "cabin" : "room"} gain (Signal tab), marked by the response chart's F3 dots. The F3 before it is the box's own, as WinISD gives it.`}>
+    <span className="room-f3" title={`F3 with the ${car ? "cabin" : "room"} gain (Signal tab), marked by the response chart's F3 dots. The F3 before it is the box's own, ${peak ? "from its bass peak (as VituixCAD gives it)" : "from the passband (as WinISD gives it)"}.`}>
       {f3 === null ? ` · flat to 10 Hz ${where}` : ` · ${f3 < 100 ? f3.toFixed(1) : f3.toFixed(0)} Hz ${where}`}
     </span>
   );

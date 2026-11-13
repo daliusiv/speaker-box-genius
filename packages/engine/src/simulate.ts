@@ -1,6 +1,7 @@
 import { abs, add, arg, cx, div, inv, mul, parallel, scale, sub, type Complex } from "./complex.ts";
 import { passiveActive, passiveBankGain, passiveInputImpedance, passiveThevenin, type PassiveNetwork } from "./passive.ts";
 import { AIR_GAMMA, STANDARD_AIR, type Air } from "./constants.ts";
+import { combineAtDistance, type PathMode } from "./combine.ts";
 import { baffledPistonImpedance, lineNetwork, pathHd2, pistonPowerFactor, type LineInput } from "./line.ts";
 import { eqResponse, highPassResponse, type EqStage, type HighPass } from "./filters.ts";
 import {
@@ -131,6 +132,12 @@ export interface SimulationOptions {
    */
   splFrom?: "on-axis" | "power";
   /**
+   * How a port, PR group or line mouth some distance from the cone (ventDistance_cm, mouthDistance_cm)
+   * adds to it: "on-axis" delays it by the extra distance; "power" sums the two sources' power, as
+   * Hornresp's Acoustic Path Length. Default: as splFrom.
+   */
+  pathMode?: PathMode;
+  /**
    * Vented and bandpass boxes: "lumped" (default, like WinISD) treats each port as a mass of air; "pipe"
    * treats it as a short pipe with its own resonances (the first near c / 2L), which show as
    * peaks in the response higher up.
@@ -142,6 +149,10 @@ export interface SimulationOptions {
    * only, mostly where the box's own output is low (a bandpass box away from its passband).
    */
   leakage?: "radiates" | "absorbed";
+  /**
+   * Where box F3/F6/F10 are measured from. "passband" (default, like WinISD): the plain cone's mass-controlled level (referenceSpl). "peak" (like VituixCAD): the response's highest point in the bass (below 5 × fc/fb); falls back to the passband if the response is still rising there. Lines and bandpass boxes keep their own rules.
+   */
+  f3From?: "passband" | "peak";
   /**
    * Sealed, ported and PR boxes: the air the cone's front moves. "mass" (default, like WinISD)
    * keeps it in Mms, a fixed mass. "piston" (like Hornresp) takes the front's share out of Mms
@@ -271,6 +282,8 @@ export interface SimulationResult {
    * spl is their sum, with the phase between them. Null for other designs and horns (only their mouth radiates).
    */
   parts: { cone: Float64Array; mouth: Float64Array } | null;
+  /** With a port, PRs or 6th-order rear opening some way off (ventDistance_cm > 0): the SPL with it side by side, to compare. */
+  splSideBySide: Float64Array | null;
   /** Highest input power (W) before any limit is reached, per frequency. */
   maxPowerW: Float64Array;
   /** SPL at maxPowerW. */
@@ -301,6 +314,10 @@ export interface SimulationResult {
     referenceSpl: number;
     f3: number | null;
     f6: number | null;
+    /** −10 dB point, from f3RefSpl (same walk as f3/f6). */
+    f10: number | null;
+    /** The level f3, f6 and f10 are measured from (dB SPL): referenceSpl, a bandpass box's bandPeakSpl, or with f3From "peak" a box's bass peak. */
+    f3RefSpl: number;
     /** Bandpass: upper −3 dB point. A bandpass box's f3, f6 and f3High are taken from its band's peak (bandPeakSpl), not referenceSpl. */
     f3High?: number | null;
     /** Bandpass: the band's peak SPL (its gain over a plain cone is bandPeakSpl − referenceSpl). */
@@ -414,7 +431,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const perDriverZ = (z: Complex) => (wiring === "parallel" ? scale(z, n) : scale(z, 1 / n));
 
   // Box elements
-  const summary: SimulationResult["summary"] = { volts: ampVolts, referenceSpl: 0, f3: null, f6: null };
+  const summary: SimulationResult["summary"] = { volts: ampVolts, referenceSpl: 0, f3: null, f6: null, f10: null, f3RefSpl: 0 };
   const bp = box.kind === "bandpass" ? bandpassNetwork({ ...box, endCorrection: box.endCorrection ?? opts.endCorrection }, d, n, air, summary, opts.portModel === "pipe", opts.leakage === "absorbed") : null;
   const line = box.kind === "line" ? lineNetwork(box, air) : null;
   // A line or horn models the air on the cone's sides explicitly, so the cone carries its bare
@@ -434,6 +451,9 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     lineReynoldsPerQ = (Math.sqrt(line.exitArea / Math.PI) * air.rho) / (AIR_VISCOSITY * line.exitArea);
   }
   const single = box.kind === "bandpass" || box.kind === "line" ? null : box;
+  // The port, PRs or (6th order) rear opening some way from the cone or front opening (m).
+  const ventDist = box.kind === "vented" || box.kind === "passive-radiator" || box.kind === "bandpass" ? Math.max(0, (box.ventDistance_cm ?? 0) / 100) : 0;
+  const pathMode: PathMode = (opts.pathMode ?? opts.splFrom) === "power" ? "power" : "on-axis";
   const cab = single ? boxCompliance(single.vb_l, air) : 0;
   const ql = finiteOr(single?.ql, DEFAULT_LOSSES.ql);
   const qa = finiteOr(single?.qa, DEFAULT_LOSSES.qa);
@@ -551,6 +571,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   const out = {
     spl: new Float64Array(N),
     parts: box.kind === "line" && box.tap_cm === undefined && !box.frontLoaded ? { cone: new Float64Array(N), mouth: new Float64Array(N) } : null,
+    splSide: ventDist > 0 ? new Float64Array(N) : null,
     phase: new Float64Array(N),
     gd: new Float64Array(N),
     x: new Float64Array(N),
@@ -616,6 +637,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     let vport = 0;
     let prLimitPower = Infinity;
     let airHd2Now = NaN;
+    let u0Side: Complex | null = null; // with the port etc. side by side, when ventDist > 0
     if (bp) {
       const unit = bp.solve(w); // chamber pressures for unit total cone volume velocity
       zLoad = sub(unit.pF, unit.pR);
@@ -626,6 +648,12 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       out.pbox![i] = Math.SQRT2 * abs(mul(ud, unit.pR));
       out.pfront![i] = Math.SQRT2 * abs(mul(ud, unit.pF));
       u0 = mul(ud, flows.radiated);
+      // 6th order (parallel): the rear chamber's opening some way from the front one's.
+      if (ventDist > 0 && flows.rearOut) {
+        const rearU = mul(ud, flows.rearOut);
+        u0Side = u0;
+        u0 = combineAtDistance(sub(u0, rearU), rearU, ventDist, w, air.c, pathMode);
+      }
       if (out.airC) {
         const sF = scale(mul(ud, unit.pF), Math.SQRT2 / rhoC2);
         const sR = scale(mul(ud, unit.pR), Math.SQRT2 / rhoC2);
@@ -701,14 +729,18 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         if (rNlLine > 0) line.setExitLoss(0);
         out.airC[i] = NaN; // no box air to squeeze: see airModel
       }
-      // The mouth's sound arrives later when it is farther from the listener.
       const dm = line.mouthDistance;
-      const exitAtListener = dm > 0 ? scale(mul(sol.exit, cx(Math.cos((w * dm) / air.c), -Math.sin((w * dm) / air.c))), r / (r + dm)) : sol.exit;
-      // Open line: the front of the cone radiates −ud as well. Tapped horn: only the mouth.
       const power = opts.splFrom === "power";
+      const pathPower = (opts.pathMode ?? opts.splFrom) === "power";
+      // On axis: the mouth's sound arrives dm/c later, at the same level (far field, as a box's port: combine.ts).
+      // From radiated power (like Hornresp's Acoustic Path Length) the mouth stays where it is: see below.
+      const exitAtListener = dm > 0 && !pathPower ? mul(sol.exit, cx(Math.cos((w * dm) / air.c), -Math.sin((w * dm) / air.c))) : sol.exit;
+      // Open line: the front of the cone radiates −ud as well. Tapped horn: only the mouth.
       const mouthOut = power ? scale(exitAtListener, pistonPowerFactor(line.exitArea, w, air)) : exitAtListener;
       const coneOut = power ? scale(ud, pistonPowerFactor(n * d.sd, w, air)) : ud;
       u0 = line.mouthOnly ? mouthOut : sub(mouthOut, coneOut);
+      // Two sources dm apart, their power over all directions (Hornresp's Path): the level only.
+      if (pathPower && dm > 0 && !line.mouthOnly) u0 = combineAtDistance(mouthOut, scale(coneOut, -1), dm, w, air.c, "power");
       if (out.parts) {
         const k = (w * air.rho) / (space * Math.PI * r) / 2e-5;
         // On the same footing as the total (from radiated power when that's asked for).
@@ -771,11 +803,17 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       }
       // From radiated power (like Hornresp): the cone and the vent each as a baffled piston of
       // its own area, which radiates less than a point source once it's large next to the wavelength.
-      if (opts.splFrom === "power") {
-        const cone = scale(sol.u, -n);
-        const vent = sub(u0, cone);
-        const ventTotal = prModels ? prModels.reduce((a, g) => a + g.m.sd * g.count, 0) : ventArea * ventCount;
-        u0 = add(scale(cone, pistonPowerFactor(n * d.sd, w, air)), ventTotal > 0 ? scale(vent, pistonPowerFactor(ventTotal, w, air)) : vent);
+      if (opts.splFrom === "power" || ventDist > 0) {
+        let cone = scale(sol.u, -n);
+        let vent = sub(u0, cone);
+        if (opts.splFrom === "power") {
+          const ventTotal = prModels ? prModels.reduce((a, g) => a + g.m.sd * g.count, 0) : ventArea * ventCount;
+          cone = scale(cone, pistonPowerFactor(n * d.sd, w, air));
+          if (ventTotal > 0) vent = scale(vent, pistonPowerFactor(ventTotal, w, air));
+        }
+        // The port or PRs some way from the cone (0: side by side, exactly the sum).
+        if (ventDist > 0) u0Side = add(cone, vent);
+        u0 = combineAtDistance(cone, vent, ventDist, w, air.c, pathMode);
       }
 
       if (out.airC) {
@@ -791,11 +829,15 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         let u2 = scale(div(sub(pNode, pnl), zAir2), -1);
         if (opts.leakage === "absorbed" && Number.isFinite(ral)) u2 = sub(u2, scale(pNode, 1 / ral));
         if (ventPipe && zVent2) u2 = add(u2, mul(div(pNode, zVent2), sub(ventPipe(w2).outPerIn, cx(1))));
-        if (opts.splFrom === "power") {
-          const cone = div(pNode, zd);
-          const vent = sub(u2, cone);
-          const ventTotal = prModels ? prModels.reduce((a, g) => a + g.m.sd * g.count, 0) : ventArea * ventCount;
-          u2 = add(scale(cone, pistonPowerFactor(n * d.sd, w2, air)), ventTotal > 0 ? scale(vent, pistonPowerFactor(ventTotal, w2, air)) : vent);
+        if (opts.splFrom === "power" || ventDist > 0) {
+          let cone = div(pNode, zd);
+          let vent = sub(u2, cone);
+          if (opts.splFrom === "power") {
+            const ventTotal = prModels ? prModels.reduce((a, g) => a + g.m.sd * g.count, 0) : ventArea * ventCount;
+            cone = scale(cone, pistonPowerFactor(n * d.sd, w2, air));
+            if (ventTotal > 0) vent = scale(vent, pistonPowerFactor(ventTotal, w2, air));
+          }
+          u2 = combineAtDistance(cone, vent, ventDist, w2, air.c, pathMode);
         }
         airHd2Now = abs(u0) > 0 ? (100 * 2 * abs(u2)) / (Math.SQRT2 * abs(u0)) : NaN;
         out.airC[i] = abs(s1);
@@ -828,6 +870,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     // Far-field pressure (RMS): p = jωρ·U0 / (k·π·r)
     const p = mul(cx(0, (w * air.rho) / (space * Math.PI * r)), u0);
     out.spl[i] = 20 * Math.log10(abs(p) / 2e-5);
+    if (out.splSide) out.splSide[i] = 20 * Math.log10(abs(mul(cx(0, (w * air.rho) / (space * Math.PI * r)), u0Side ?? u0)) / 2e-5);
     // The cone's flow (ud) is counted into the box or line behind it, so a cone that faces the
     // room pushes out −ud: turn the phase round so a positive voltage gives a positive pressure
     // in front (the cone moving out), as a real driver wired + to + does. A front horn's or
@@ -921,6 +964,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   summary.referenceSpl = 20 * Math.log10(pRef / 2e-5);
   summary.f3 = crossing(freq, out.spl, summary.referenceSpl - 3);
   summary.f6 = crossing(freq, out.spl, summary.referenceSpl - 6);
+  summary.f10 = crossing(freq, out.spl, summary.referenceSpl - 10);
   if (nlCoef > 0 || lineNl > 0) summary.portCompression = compression;
   if (line?.mouthOnly) {
     // Horns: the mouth's gain puts the passband well above a plain cone's, so the reference
@@ -942,6 +986,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     // where the response first reaches −3 dB coming up from the bottom.
     summary.f3 = crossingUp(freq, out.spl, summary.referenceSpl - 3);
     summary.f6 = crossingUp(freq, out.spl, summary.referenceSpl - 6);
+    summary.f10 = crossingUp(freq, out.spl, summary.referenceSpl - 10);
   }
   if (bp) {
     // A bandpass box's band is judged against its own peak, not a plain cone's level: its gain
@@ -953,6 +998,28 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     summary.f3 = crossingUp(freq, out.spl, peak - 3);
     summary.f6 = crossingUp(freq, out.spl, peak - 6);
     summary.f3High = crossingHigh(freq, out.spl, peak - 3);
+    summary.f10 = crossingUp(freq, out.spl, peak - 10);
+  }
+  summary.f3RefSpl = bp ? summary.bandPeakSpl! : summary.referenceSpl;
+  if (opts.f3From === "peak" && !line && !bp) {
+    // VituixCAD style: measure from the bass peak (not above 5 × the box's tuning, where the
+    // cone's own roll-off or breakup would take over). Still rising at the cap = no bass peak,
+    // so keep the passband reference.
+    const fSys = summary.fc ?? summary.fb ?? driverIn.fs;
+    const fCap = Math.min(freq[N - 1]!, 5 * fSys);
+    let iPk = -1;
+    let iLast = -1;
+    for (let k = 0; k < N && freq[k]! <= fCap; k++) {
+      iLast = k;
+      if (Number.isFinite(out.spl[k]!) && (iPk < 0 || out.spl[k]! > out.spl[iPk]!)) iPk = k;
+    }
+    if (iPk >= 0 && iPk < iLast) {
+      const top = out.spl[iPk]!;
+      summary.f3RefSpl = top;
+      summary.f3 = crossing(freq, out.spl, top - 3, iPk);
+      summary.f6 = crossing(freq, out.spl, top - 6, iPk);
+      summary.f10 = crossing(freq, out.spl, top - 10, iPk);
+    }
   }
 
   return {
@@ -978,6 +1045,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     impedanceOhm: out.zmag,
     impedancePhaseDeg: out.zph,
     parts: out.parts,
+    splSideBySide: out.splSide,
     maxPowerW: out.pmax,
     maxSpl: out.splmax,
     ampAtMax: { volts: out.ampV, amps: out.ampI, watts: out.ampW },
@@ -996,9 +1064,10 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
  * Starting at the peak keeps voice-coil inductance roll-off at the top from
  * hiding the bass corner.
  */
-function crossing(freq: Float64Array, spl: Float64Array, level: number): number | null {
+function crossing(freq: Float64Array, spl: Float64Array, level: number, iStart?: number): number | null {
   let i = 0;
-  for (let k = 1; k < spl.length; k++) if (spl[k]! > spl[i]!) i = k;
+  if (iStart !== undefined) i = iStart;
+  else for (let k = 1; k < spl.length; k++) if (spl[k]! > spl[i]!) i = k;
   if (spl[i]! < level) return null;
   while (i > 0 && spl[i - 1]! >= level) i--;
   if (i === 0) return freq[0]!;
@@ -1267,6 +1336,8 @@ function bandpassNetwork(
         rearPortOutEach: r.portOut,
         frontPrEach: f.prs,
         rearPrEach: r.prs,
+        /** What leaves the rear chamber to the outside (6th order, parallel), null otherwise. */
+        rearOut: rearVent && !series ? (rearVent.kind === "port" ? scale(r.portOut, rearVent.port.count) : r.prs.reduce((a, q, k) => add(a, scale(q, rearVent.groups[k]!.count)), cx(0))) : null,
       };
     },
   };

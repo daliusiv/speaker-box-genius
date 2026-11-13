@@ -41,7 +41,19 @@ pnpm dev
 - `packages/schema`: data formats for drivers, passive radiators and URL state.
 - `packages/db-tools`: database validation and bundling scripts.
 - `packages/web`: the app.
-- `site/`: the content pages built next to the app: guides (`site/pages/*.md`), calculators (`site/calculators/`, sums in `packages/web/src/calculators/`), the validation page, and a page per driver (`site/drivers.ts`, share cards in `site/og.ts`). `pnpm build:site` builds them; set `SBG_CARDS=0` to skip the share cards, which need Chrome. A guide's charts and numbers can come from its example at build instead of screenshots: `![caption](chart:example/excursion)`, `{{num:example/1/f3}}` and `{{color:example/1}}` (see the top of `site/build.ts`), so they stay right when the app or the engine changes.
+- `site/`: the content pages built next to the app: guides (`site/pages/*.md`), calculators (`site/calculators/`, sums in `packages/web/src/calculators/`), the validation page, and a page per driver (`site/drivers.ts`, share cards in `site/og.ts`). `pnpm build:site` builds them; set `SBG_CARDS=0` to skip the share cards, which need Chrome. A guide's charts and numbers come from its example at build instead of screenshots: see [Writing a guide](#writing-a-guide).
+
+### Writing a guide
+
+A guide's charts and numbers come from the simulation when the site is built, so they never go stale. A new guide:
+
+1. **Build the worked example** in `site/examples.ts`: a function returning the app's state, added to `EXAMPLES`. Give every table row its own design or example, so each number has somewhere to come from. Add new designs at the end: placeholders count them by position.
+2. **Write the numbers as placeholders**, not typed values: `{{num:example/2/f3}}` (design 2's F3; `:0` for no decimals, `@30` at 30 Hz), `{{diff:example/1/2/f3}}`, `{{lead:…}}` and `{{color:example/2}}` for a curve's colour in words. The metrics are listed at the top of `site/liveNumbers.ts`; if you need one that isn't there, add it with a test in `site/liveCharts.test.ts`.
+3. **Add the charts** as `![caption](chart:example/kind)`: the app's own chart, drawn at build. `chart:example:1,3/kind` draws some of its designs, `chart:a+b/kind` several examples on one chart (`{{color:a+b/2}}` names their colours), and `chart:a/spl|b/maxspl "Label A|Label B"` two or three charts side by side, stacked on phones, each with its label. Set `image: chart:example/kind` in the front matter for the page's share card. A figure the app doesn't draw (a difference of two curves, the cabin gain or baffle step alone) goes in `site/figures.ts` as `![caption](figure:name)`, drawn by the same chart code, with `{{fig:name/key}}` for the values its caption quotes; a figure whose horizontal axis isn't frequency uses the plain x–y chart in `site/xyPlot.ts`.
+4. **Test the claims, not the values**, in `site/guideNumbers.test.ts`: what the text says (this box goes deeper, that one passes Xmax, about 1 dB). The numbers update themselves; the words around them don't, and this test is what tells you when an engine change has made a sentence wrong.
+5. **Check it builds**: `pnpm build:site` stops on a bad placeholder or chart and names the page. Look at the page at phone and desktop width.
+
+When you change the engine or a chart, the guides follow on the next build. If a claims test fails, fix the sentence (or the change). Diagrams and screenshots of the app's other screens are still images in `site/img/`.
 
 Keep PRs small and focused. For anything large, open an issue first so we can agree on the approach.
 

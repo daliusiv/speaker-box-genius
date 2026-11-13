@@ -521,7 +521,7 @@ export function validationContent(rep: Report, info: BuildInfo, spiceRep: SpiceR
   const hornrespSummary = h
     .map(
       (k) =>
-        `<tr><td><a href="#hornresp-${k.id}">${esc(k.title)}</a></td><td>${k.stats.splMean.toFixed(2)} / ${k.stats.splP95.toFixed(2)} dB</td><td>${k.stats.zeMean.toFixed(2)} / ${k.stats.zeWorst.toFixed(2)} %</td><td>${k.stats.xdMean.toFixed(2)} %</td><td>${ok(k.pass)}</td></tr>`,
+        `<tr><td><a href="#hornresp-${k.id}">${esc(k.title)}</a>${k.version ? ` <small>(${esc(k.version)})</small>` : ""}</td><td>${k.stats.splMean.toFixed(2)} / ${k.stats.splP95.toFixed(2)} dB</td><td>${k.stats.zeMean.toFixed(2)} / ${k.stats.zeWorst.toFixed(2)} %</td><td>${k.stats.xdMean.toFixed(2)} %</td><td>${ok(k.pass)}</td></tr>`,
     )
     .join("");
   const boxSummary = b

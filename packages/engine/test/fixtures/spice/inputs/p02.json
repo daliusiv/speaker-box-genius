@@ -1,0 +1,49 @@
+{
+  "id": "p02",
+  "title": "passive-radiator, bc-speakers/15sw115-8ohm (Qts 0.24), 58.53 L, Fb 26.9 Hz, 1 \u00d7 dayton-audio/rss390-pr + 1 \u00d7 sb-acoustics/sw26dbac-00, PR 25 cm from the cone (on axis)",
+  "driver": {
+    "fs": 35,
+    "qms": 4.4,
+    "qes": 0.25,
+    "vas_l": 110,
+    "re": 5.2,
+    "sd_cm2": 855,
+    "le_mh": 1.8
+  },
+  "box": {
+    "kind": "passive-radiator",
+    "vb_l": 58.53,
+    "pr": {
+      "mms_g": 400,
+      "sd_cm2": 829.6,
+      "cms_mm_per_n": 0.22,
+      "qms": 4.07
+    },
+    "addedMass_g": 341.3,
+    "extraPrs": [
+      {
+        "pr": {
+          "mms_g": 400,
+          "sd_cm2": 312,
+          "cms_mm_per_n": 0.39,
+          "qms": 8.8
+        },
+        "count": 1
+      }
+    ],
+    "ventDistance_cm": 25
+  },
+  "opts": {
+    "rg": 0,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.20095217714682,
+    "c": 343.684120962152
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

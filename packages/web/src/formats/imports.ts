@@ -1,9 +1,9 @@
 /**
  * What a dropped or picked file is, from its name and first bytes, and what it can be used for.
- * Project and WinISD/OpenISD files open straight away; a measurement can mean more than one
+ * Project, WinISD/OpenISD files and Hornresp records open straight away; a measurement can mean more than one
  * thing, so the Open window asks.
  */
-export type ImportKind = "project" | "winisd" | "measurement";
+export type ImportKind = "project" | "winisd" | "hornresp" | "measurement";
 
 export type ImportUse = "measure-driver" | "overlay-impedance" | "overlay-response";
 
@@ -34,6 +34,8 @@ export function importKind(name: string, head: string): ImportKind | null {
   if (["zma", "frd", "txt", "csv", "dat"].includes(ext)) {
     // A WinISD file saved as .txt still opens as one.
     if (/^\s*\[(Box|Driver|Project)\]/im.test(head)) return "winisd";
+    // A Hornresp record (its export is a .txt).
+    if (/^\s*ID\s*=\s*\d/m.test(head) && /\|(HORN|TRADITIONAL DRIVER) PARAMETER VALUES/i.test(head)) return "hornresp";
     return "measurement";
   }
   return null;

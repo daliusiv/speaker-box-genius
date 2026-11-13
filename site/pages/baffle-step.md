@@ -2,7 +2,7 @@
 title: "Baffle step loss explained: why your bookshelf speaker sounds thin"
 description: Why a free-standing speaker loses up to 6 dB of bass, where the step really falls for your baffle (often an octave below the 115/width rule), how much to compensate with EQ or a passive network, and what it costs, with a worked bookshelf example you can open and change.
 path: guides/baffle-step
-image: baffle-step.png
+image: chart:baffle-ib+baffle-free+baffle-eq3+baffle-passive/spl
 order: 25
 group: measuring
 ---
@@ -28,7 +28,7 @@ You simulate a bookshelf woofer, the bass looks flat down to 45 Hz, you build it
 
 An **SB Acoustics SB17NRX2C35-8**, a popular 6.5″ two-way woofer [7], in a Keele-alignment box: **35 L tuned to 33 Hz** with a 5 cm port, at 2.83 V. Its front baffle is **20 × 32 cm**, with the woofer 10 cm from the side and 22 cm from the top (the tweeter above it).
 
-![Left: the bookshelf at 2.83 V on an infinite baffle (grey), free-standing (orange), free-standing with a +3 dB shelf (blue) and with a passive 6 dB network (green). Right: the baffle step alone for 15, 20 and 40 cm wide baffles and a 20 × 100 cm tower.](img/baffle-step.png)
+![The bookshelf at 2.83 V on an infinite baffle ({{color:baffle-ib+baffle-free+baffle-eq3+baffle-passive/1}}), free-standing ({{color:baffle-ib+baffle-free+baffle-eq3+baffle-passive/2}}), free-standing with a +3 dB shelf ({{color:baffle-ib+baffle-free+baffle-eq3+baffle-passive/3}}) and with a passive 6 dB network ({{color:baffle-ib+baffle-free+baffle-eq3+baffle-passive/4}}). And the baffle step alone for 15, 20 and 40 cm wide baffles and a 20 × 100 cm tower.](figure:baffle-step)
 
 | SPL at 2.83 V | 40 Hz | 100 Hz | 200 Hz | 300 Hz | 500 Hz | 1 kHz |
 |---|---|---|---|---|---|---|
@@ -66,10 +66,10 @@ So:
 
 Above the step, the edges send back delayed copies of the sound that add and cancel, leaving ripples. They're worst when the driver is the same distance from every edge, because the copies all arrive together [1][8][9]:
 
-![Left: the baffle step of a 30 × 30 cm baffle with the driver centred (orange: +2.9 dB peak, −1.7 dB dip) and off-centre (blue: +2.0 dB, no dip). Right: the bookshelf's maximum SPL on an infinite baffle (grey) and free-standing (orange), 5.8 dB lower at 50 Hz.](img/baffle-step-placement.png)
+![The baffle step of a 30 × 30 cm baffle with the driver centred (orange: +{{fig:baffle-step-placement/centredPeak}} dB peak, {{fig:baffle-step-placement/centredDip}} dB dip) and off-centre (blue: +{{fig:baffle-step-placement/offPeak}} dB, a dip of only {{fig:baffle-step-placement/offDip}} dB). And the bookshelf's maximum SPL on an infinite baffle ({{color:baffle-ib+baffle-free/1}}) and free-standing ({{color:baffle-ib+baffle-free/2}}), {{fig:baffle-step-placement/maxLoss50}} dB lower at 50 Hz.](figure:baffle-step-placement)
 
-- **Centred on a 30 cm square,** the response peaks +2.9 dB near 900 Hz and dips −1.7 dB near 1.9 kHz.
-- **Moved 4–5 cm off centre,** the peak drops to +2.0 dB and the dip all but disappears.
+- **Centred on a 30 cm square,** the response peaks +{{fig:baffle-step-placement/centredPeak}} dB near 900 Hz and dips {{fig:baffle-step-placement/centredDip}} dB near 1.9 kHz.
+- **Moved 4–5 cm off centre,** the peak drops to +{{fig:baffle-step-placement/offPeak}} dB and the dip all but disappears.
 - **Olson's 1951 measurements of twelve cabinet shapes** showed the same: a sphere was smoothest, a driver centred on a flat circular baffle roughest (ripples of several dB), and bevelled or rounded shapes in between [8][9].
 
 Rounded or chamfered edges smooth the ripple above the step; they don't remove the step itself, which is set by the cabinet's size. The app models a flat baffle with sharp edges, like The Edge and most diffraction tools [10]; it leaves out the cabinet's sides, rounded edges and the floor.
@@ -113,7 +113,7 @@ Either way you pay about the same, in amplifier power: the passive speaker needs
 
 ## What it costs in output
 
-The baffle step also lowers the **maximum** bass. On an infinite baffle the app's Max SPL chart gives this woofer 97.6 dB at 50 Hz within its excursion and power limits; free-standing, 91.8 dB, **5.8 dB less**. Compensation can't get that back. If the bass has to be loud, the answers are more cone area (a bigger woofer, or two), placement near a wall, or a subwoofer (see [Hofmann's Iron Law](/guides/hofmann-iron-law/) for the trade between box size, efficiency and bass extension).
+The baffle step also lowers the **maximum** bass. On an infinite baffle the app's Max SPL chart gives this woofer {{fig:baffle-step-placement/max50Ib}} dB at 50 Hz within its excursion and power limits; free-standing, {{fig:baffle-step-placement/max50Free}} dB, **{{fig:baffle-step-placement/maxLoss50}} dB less**. Compensation can't get that back. If the bass has to be loud, the answers are more cone area (a bigger woofer, or two), placement near a wall, or a subwoofer (see [Hofmann's Iron Law](/guides/hofmann-iron-law/) for the trade between box size, efficiency and bass extension).
 
 ## Doing it in the app
 

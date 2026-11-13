@@ -36,6 +36,8 @@ export function AirChart(p: {
   highPassOn: boolean;
   view: { unit: "pct" | "dbc"; at: "now" | "max" };
   onView: (v: Partial<{ unit: "pct" | "dbc"; at: "now" | "max" }>) => void;
+  /** Drawn once for a guide page (see LogChart's `still`). */
+  still?: { width: number; at?: number };
 }) {
   const { unit, at } = p.view;
   // Along a path it grows with frequency, so a line or horn gets the whole sweep.
@@ -92,6 +94,7 @@ export function AirChart(p: {
     <LogChart
       forum
       chartId="air"
+      still={p.still}
       columns={["Air squeezed", "Max SPL set by"]}
       peakFrom={floor}
       hidden={p.hidden}

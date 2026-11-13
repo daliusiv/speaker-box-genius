@@ -78,7 +78,10 @@ test("builds every guide, the index, sitemap and robots.txt, with live example l
   assert.match(pr, /<title>How to design a passive radiator box · Speaker Box Genius<\/title>/);
   assert.match(pr, /<link rel="canonical" href="https:\/\/speakerboxgenius.com\/guides\/passive-radiator-box\/">/);
   assert.match(pr, /class="button" href="https:\/\/speakerboxgenius.com\/#z=[A-Za-z0-9_-]+"/);
-  assert.ok(existsSync(join(out, "guides/img/pr-spl.png")));
+  assert.ok(existsSync(join(out, "guides/img/shaped-cabinets.png")));
+  // A guide whose share card is a chart (image: chart:…): with cards off (no Chrome), the site's card.
+  assert.match(pr, /<meta property="og:image" content="https:\/\/speakerboxgenius.com\/og-image.png">/);
+  assert.match(readFileSync(join(out, "guides/shaped-cabinets/index.html"), "utf8"), /og:image" content="https:\/\/speakerboxgenius.com\/guides\/img\/shaped-cabinets.png"/);
   // sitemap.xml is an index of one sitemap per kind of page, so Search Console reports each apart.
   const index = readFileSync(join(out, "sitemap.xml"), "utf8");
   assert.match(index, /<sitemapindex /);

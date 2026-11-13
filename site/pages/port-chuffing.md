@@ -2,7 +2,7 @@
 title: "Port chuffing: how big should my port be?"
 description: Why ports chuff, the 17 m/s rule, and how to get a port that's quiet and still fits in the box, with a worked 12-inch subwoofer example.
 path: guides/port-chuffing
-image: port-speed.png
+image: chart:port-example/port
 order: 4
 group: ported
 ---
@@ -30,26 +30,26 @@ Here's the catch. The air speed depends on the port's **area**: double the area 
 
 ## The worked example
 
-A **Dayton Audio RSS315HF-4**, a 12″ subwoofer (Xmax 14.3 mm, 400 W), in Keele's flat alignment: **83.5 L tuned to 23.8 Hz** (the textbook box; the app's QB3 preset, sized as WinISD sizes it, gives 75.6 L at 24.4 Hz). It's driven at **300 W** behind a 24 dB/oct high-pass filter at 20 Hz, which keeps the cone at 10.6 mm, within its Xmax. The port options, each cut to length for 23.8 Hz:
+A **Dayton Audio RSS315HF-4**, a 12″ subwoofer (Xmax 14.3 mm, 400 W), in Keele's flat alignment: **83.5 L tuned to 23.8 Hz** (the textbook box; the app's QB3 preset, sized as WinISD sizes it, gives 75.6 L at 24.4 Hz). It's driven at **300 W** behind a 24 dB/oct high-pass filter at 20 Hz, which keeps the cone at {{num:subsonic-on/1/x}} mm, within its Xmax. The port options, each cut to length for 23.8 Hz:
 
 | Port | Area | Length | Peak air speed |
 |---|---|---|---|
-| 7.5 cm round | 44 cm² | 22 cm | 51.5 m/s: far too fast |
-| 10 cm round | 79 cm² | 42 cm | 29.0 m/s: chuffs |
-| 12.5 cm round | 123 cm² | 68 cm | 18.5 m/s: borderline |
-| 15 cm round | 177 cm² | 101 cm | 12.9 m/s: quiet |
-| 5 × 30 cm slot | 150 cm² | 85 cm | 15.2 m/s: quiet |
-| 10 cm round, flared ends (2.5 cm) | 79 cm² | 46 cm | 12.9 m/s at the flared ends |
+| 7.5 cm round | 44 cm² | {{num:port-sizes/1/len:0}} cm | {{num:port-sizes/1/port}} m/s: far too fast |
+| 10 cm round | 79 cm² | {{num:port-sizes/2/len:0}} cm | {{num:port-sizes/2/port}} m/s: chuffs |
+| 12.5 cm round | 123 cm² | {{num:port-sizes/3/len:0}} cm | {{num:port-sizes/3/port}} m/s: borderline |
+| 15 cm round | 177 cm² | {{num:port-sizes/4/len:0}} cm | {{num:port-sizes/4/port}} m/s: quiet |
+| 5 × 30 cm slot | 150 cm² | {{num:port-sizes/5/len:0}} cm | {{num:port-sizes/5/port}} m/s: quiet |
+| 10 cm round, flared ends (2.5 cm) | 79 cm² | {{num:port-sizes/6/len:0}} cm | {{num:port-sizes/6/port}} m/s at the flared ends |
 
 The box is about 44 cm deep inside. The 10 cm port nearly fits, but chuffs; the quiet ones are two to three times longer than the box is deep.
 
-![Port air speed at 300 W: the 10 cm port (orange) is well over the 17 m/s line; the slot (light orange) and the flared port (dark orange) stay under it.](img/port-speed.png)
+![Port air speed at 300 W: the 10 cm port ({{color:port-example/1}}) is well over the 17 m/s line; the slot ({{color:port-example/2}}) and the flared port ({{color:port-example/3}}) stay under it.](chart:port-example/port)
 
 ## What to do when the right port won't fit
 
 **Use a slot port.** A slot along one wall of the box uses that wall as one of its sides, and it can run along the wall and turn the corner (an L shape) to get the length. A 5 × 30 cm slot is as quiet as a 15 cm tube here, and much easier to fit. In the app, set the port's shape to a slot. A slot along the walls tends to tune a little lower than calculated, and its sharp edges are noisier than a flared tube's: see [round port vs slot port](/guides/round-vs-slot-port/).
 
-**Flare the ends.** Rounding the port's ends (with a radius of a few centimetres) slows the air where the noise starts, which helps a lot: the app shows the speed at the flared ends, 12.9 m/s here, though the middle of the 10 cm port is still at 29.0 m/s. Flared ports are the best answer when you're only a little over. In the app, set the port's **Flare r** (about a quarter of the diameter is a good start).
+**Flare the ends.** Rounding the port's ends (with a radius of a few centimetres) slows the air where the noise starts, which helps a lot: the app shows the speed at the flared ends, {{num:port-sizes/6/port}} m/s here, though the middle of the 10 cm port is still at {{num:port-sizes/2/port}} m/s. Flared ports are the best answer when you're only a little over. In the app, set the port's **Flare r** (about a quarter of the diameter is a good start).
 
 The [design assistant](/guides/design-assistant/) works through the same choices for you: for each ported result it tries a plain tube, then a flared tube, then a slot along a wall, each the largest that fits straight, and keeps the first under your chuffing line.
 
@@ -63,7 +63,7 @@ The [design assistant](/guides/design-assistant/) works through the same choices
 
 ## Long ports have their own resonance
 
-A long port is also a pipe, with its own resonance at about the speed of sound divided by twice its length: around **200 Hz** for the 85 cm slot. For a subwoofer crossed over at 80 Hz, that's harmless. For a ported speaker that plays higher, it can show up as a peak in the midrange. Set **Settings → Ports → Pipe** to see a port's pipe resonances on the charts.
+A long port is also a pipe, with its own resonance at about the speed of sound divided by twice its length: around **200 Hz** for the {{num:port-sizes/5/len:0}} cm slot. For a subwoofer crossed over at 80 Hz, that's harmless. For a ported speaker that plays higher, it can show up as a peak in the midrange. Set **Settings → Ports → Pipe** to see a port's pipe resonances on the charts.
 
 ## Checklist
 

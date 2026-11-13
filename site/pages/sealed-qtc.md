@@ -51,6 +51,8 @@ Three things stand out.
 
 **F3 hardly moves.** From Qtc 0.5 to 0.9 the box shrinks from 33 L to 5.7 L, yet the F3 stays between 56 and 59 Hz. The F3 alone hides the difference: the low-Q boxes start rolling off earlier but fall more gently, so an octave further down they're far louder. At 25 Hz the Qtc 0.5 box is 3.4 dB ahead of the Qtc 0.707 box and 10.3 dB ahead of the Qtc 1.1 box.
 
+The F3 here is read from the passband, as WinISD does. For a box with a hump (a high Qtc), Settings → SPL → F3 from "Response peak" reads it from the highest point instead, as VituixCAD does, and gives a higher F3.
+
 **Maximum output is set by the cone, not the box.** At 30 Hz the three bigger boxes all reach the same 100.2 dB, where the cone hits its Xmax. The smaller of them needs almost twice the power to get there (577 W against 327 W). The two smallest boxes run out of the driver's 600 W rating first, a few dB short. A small box doesn't lower the ceiling; it makes the amplifier and the voice coil work harder to reach it. The same holds for EQ: see the [Linkwitz Transform guide](/guides/linkwitz-transform/).
 
 **Above 0.707 a peak appears.** Small at 0.9 (0.5 dB), clearer at 1.1 (1.4 dB in this simulation, with the default box losses taking a little off the textbook value), and the deep bass falls away fast.

@@ -154,6 +154,16 @@ function tlExample(): AppState {
   return { ...s, designs: [pick("tl", "Classic TL", 1), pick("otl", "Offset TL", 2), pick("mltl", "MLTL", 3)] };
 }
 
+/** The TL guide's stuffing table: the example's offset TL with the section behind the driver stuffed at `fill` kg/m³. */
+function tlStuffing(fill: number) {
+  return (): AppState => {
+    const s = tlExample();
+    const d = s.designs[1] as Extract<DesignState, { kind: "line" }>;
+    const sections = d.sections.map((x, i) => (i === 0 ? { ...x, fill_kgm3: fill } : x));
+    return { ...s, designs: [{ ...d, id: "d1", name: `Offset TL, ${fill} kg/m³`, sections }] };
+  };
+}
+
 const highPass = (order: number, freq: number): AppState["highPass"] => ({ ...DEFAULT_STATE.highPass, on: true, type: "butterworth", order, freq });
 
 /**
@@ -186,11 +196,19 @@ function boxTypesExample(filter: boolean) {
 }
 
 /** The subsonic filter guide: the port guide's sub with its slot port, the filter off or on. */
-function subsonicExample(on: boolean) {
+function subsonicExample(on: boolean, order = 4, freq = 20) {
   return (): AppState => {
     const s = portExample();
-    return { ...s, highPass: { ...highPass(4, 20), on }, designs: [{ ...s.designs[1]!, id: "d1", name: "Slot-ported sub" }] };
+    return { ...s, highPass: { ...highPass(order, freq), on }, designs: [{ ...s.designs[1]!, id: "d1", name: "Slot-ported sub" }] };
   };
+}
+
+/** The port guide's table: every port size on the port example's box (83.5 L at 23.8 Hz, 300 W). */
+function portSizesExample(): AppState {
+  const s = portExample();
+  const v = byKind(s, "vented") as Vented;
+  const round = (d: number, id: string) => ({ ...ventedWith(v, `${d} cm port`, 83.5, 23.8, { shape: "round", diameter_cm: d }), id });
+  return { ...s, designs: [round(7.5, "d1"), round(10, "d2"), round(12.5, "d3"), round(15, "d4"), { ...s.designs[1]!, id: "d5" }, { ...s.designs[2]!, id: "d6" }] };
 }
 
 /**
@@ -235,6 +253,14 @@ function compareExample(): AppState {
       { ...sealed, id: "d1", name: `Sealed ${COMPARE.sealed_l} L`, vb_l: COMPARE.sealed_l },
       { ...ventedWith(v, `Ported ${COMPARE.vented_l} L, ${COMPARE.fb} Hz`, COMPARE.vented_l, COMPARE.fb, { shape: "round", diameter_cm: 10.16, flare_cm: 2.5 }), id: "d2" },
     ],
+  };
+}
+
+/** Compare drivers guide: each driver in the sealed and ported boxes Boxes → Size all gives it, at 350 W. */
+function compareOwnExample(id: string) {
+  return (): AppState => {
+    const s = sizeAllForDriver(withDriver({ ...DEFAULT_STATE, power: 350 }, id)).state;
+    return { ...s, designs: s.designs.filter((d) => d.kind === "sealed" || d.kind === "vented") };
   };
 }
 
@@ -285,11 +311,56 @@ function portTuningExample(): AppState {
   return { ...s, designs: [{ ...d, name: "As designed, 16.2 L" }, { ...d, id: "d2", name: "As built, 14.1 L net", vb_l: 14.1 }] };
 }
 
-/** Box losses: the ported box with leakage Ql set as given. */
-function lossesExample(ql: number) {
+/**
+ * Port tuning guide's tables: the as-designed port (fixed length) in each net volume the text
+ * lists, a box 10 % bigger, and the same port with 1 cm flares; `k` sets the end correction.
+ */
+function portTuningTables(k?: number) {
   return (): AppState => {
     const s = dsaPorted();
-    return { ...s, settings: { ...s.settings, losses: { ...s.settings.losses, ql } } };
+    const d = s.designs[0] as Vented;
+    const at = (id: string, name: string, vb_l: number) => ({ ...d, id, name, vb_l });
+    if (k !== undefined) return { ...s, settings: { ...s.settings, endCorrection: k } };
+    return {
+      ...s,
+      designs: [
+        at("d1", "As designed, 16.2 L", 16.2),
+        at("d2", "Less the driver, 15.3 L", 15.3),
+        at("d3", "Less the port tube, 14.8 L", 14.8),
+        at("d4", "Less 5 % bracing, 14.1 L", 14.1),
+        at("d5", "10 % bigger, 17.8 L", 17.82),
+        { ...d, id: "d6", name: "1 cm flares", flare_cm: 1 },
+      ],
+    };
+  };
+}
+
+/**
+ * Simulation vs measurement guide: the DSA215-8 QB3 box with one datasheet value off by a
+ * realistic tolerance (`key` × `factor`), or with baffle step on (a 22 × 32 cm baffle), or a hot coil.
+ */
+function toleranceExample(key: "fs" | "vas_l" | "qes", factor: number) {
+  return (): AppState => {
+    const s = dsaPorted();
+    return { ...s, ts: { ...s.ts, [key]: s.ts[key]! * factor } };
+  };
+}
+function simBaffle(x_cm: number, y_cm: number) {
+  return (): AppState => ({ ...dsaPorted(), baffle: { on: true, fromBox: false, width_cm: 22, height_cm: 32, x_cm, y_cm } });
+}
+function simHot(): AppState {
+  const s = dsaPorted();
+  return { ...s, settings: { ...s.settings, coilTemp_C: 100 } };
+}
+
+/** Box losses: the ported box with leakage Ql (and absorption Qa, port Qp, default 100) set as given; `sealed` swaps in its Qtc 0.707 sealed box (10.7 L). */
+function lossesExample(ql: number, qa = 100, qp = 100, sealed = false) {
+  return (): AppState => {
+    const s = dsaPorted();
+    const settings = { ...s.settings, losses: { ...s.settings.losses, ql, qa, qp } };
+    if (!sealed) return { ...s, settings };
+    const base = withDriver({ ...DEFAULT_STATE, drive: "volts", volts: 2.83 }, "dayton-audio/dsa215-8");
+    return { ...s, settings, designs: [{ ...byKind(base, "sealed"), id: "d1", name: `Sealed ${TS_EX.sealed_l} L`, vb_l: TS_EX.sealed_l }] };
   };
 }
 
@@ -314,7 +385,7 @@ function ltExample(): AppState {
 }
 
 /** Isobaric: an RSS265HF-4 single in its textbook Qtc 0.707 box (37.3 L), or an isobaric pair (coils in parallel) in half of it, and in the full box. */
-function isoExample(pair: boolean) {
+function isoExample(pair: boolean, coils: "parallel" | "series" = "parallel") {
   return (): AppState => {
     const s = withDriver({ ...DEFAULT_STATE, power: 100, highPass: highPass(4, 18) }, "dayton-audio/rss265hf-4");
     const sealed = byKind(s, "sealed") as Extract<DesignState, { kind: "sealed" }>;
@@ -322,7 +393,7 @@ function isoExample(pair: boolean) {
     return {
       ...s,
       isobaric: true,
-      isoCoils: "parallel",
+      isoCoils: coils,
       designs: [
         { ...sealed, id: "d1", name: "Isobaric pair, 18.7 L", vb_l: 18.65 },
         { ...sealed, id: "d2", name: "Isobaric pair, 37.3 L", vb_l: 37.3 },
@@ -498,20 +569,20 @@ function mltlExample(): AppState {
  */
 export const DVC_AMP = { volts: 49, amps: 34.6 };
 export const DVC_RG = 0.15;
-function dvcExample(drive: "watts" | "volts") {
+function dvcExample(drive: "watts" | "volts", rg = DVC_RG) {
   return (): AppState => {
     const base = withDriver({ ...DEFAULT_STATE, highPass: highPass(4, 20) }, "dayton-audio/umii12-22");
     const s: AppState = {
       ...base,
       ...(drive === "watts" ? { drive: "watts" as const, power: 300 } : { drive: "volts" as const, volts: 20 }),
       dvc: { on: true, entered: "series", wired: "series" },
-      settings: { ...base.settings, rg: DVC_RG, ampVolts: DVC_AMP.volts, ampAmps: DVC_AMP.amps },
+      settings: { ...base.settings, rg, ampVolts: DVC_AMP.volts, ampAmps: DVC_AMP.amps },
     };
     return {
       ...s,
       compare: asCompare({ ...s, dvc: { on: true, entered: "series", wired: "parallel" } }),
       designs: [
-        { ...byKind(DEFAULT_STATE, "sealed"), id: "d1", name: "Sealed 28.3 L (1 ft³)", vb_l: 28.3 },
+        { ...byKind(DEFAULT_STATE, "sealed"), id: "d1", name: `${rg === 0 ? "No amp or cable resistance: " : ""}Sealed 28.3 L (1 ft³)`, vb_l: 28.3 },
         { ...ventedWith(byKind(DEFAULT_STATE, "vented") as Vented, "Ported 70.8 L (2.5 ft³), 25 Hz", 70.8, 25, { shape: "slot", width_cm: 5, height_cm: 30 }), id: "d2" },
       ],
     };
@@ -556,7 +627,7 @@ function portShapeExample(pipes: boolean) {
           flare_cm: 0,
           length_cm: Math.round((slot.length_cm + extra) * 10) / 10,
         },
-      ],
+      ].map((d) => (pipes ? { ...d, name: `As a pipe: ${d.name}` } : d)),
     };
   };
 }
@@ -603,7 +674,8 @@ function baffleExample(kind: "ib" | "free" | "eq3" | "passive") {
     const a = keeleAlignment(align)!;
     const vb = Math.round(a.vb_l * 10) / 10;
     const fb = Math.round(a.fb * 10) / 10;
-    const box = { ...ventedWith(byKind(DEFAULT_STATE, "vented") as Vented, `Ported ${vb} L, ${fb} Hz`, vb, fb, { shape: "round", diameter_cm: 5, flare_cm: 1 }), id: "d1" };
+    const how = { ib: "Infinite baffle (WinISD)", free: "Free-standing", eq3: "+3 dB shelf", passive: "Passive 6 dB network" }[kind];
+    const box = { ...ventedWith(byKind(DEFAULT_STATE, "vented") as Vented, `${how}: ported ${vb} L, ${fb} Hz`, vb, fb, { shape: "round", diameter_cm: 5, flare_cm: 1 }), id: "d1" };
     const baffled = { ...s, designs: [box], baffle: kind === "ib" ? { ...BAFFLE, on: false } : BAFFLE };
     if (kind === "eq3") {
       const step = baffleStepFrequency(baffleOf(baffled, solveDriver(s).values.sd_cm2)!);
@@ -651,7 +723,7 @@ function shapedExample(kind: keyof typeof SHAPED_START) {
  * driver's 400 W rating as V²/Re.
  */
 export const AMP = { channel: { volts: 37.4, amps: 16.6 }, bridged: { volts: 74.8, amps: 16.6 } };
-function ampExample(kind: "one" | "parallel" | "series" | "bridged") {
+function ampExample(kind: "one" | "parallel" | "series" | "bridged", limits = true) {
   return (): AppState => {
     const n = kind === "one" ? 1 : 2;
     const wiring = kind === "series" || kind === "bridged" ? "series" : "parallel";
@@ -660,7 +732,8 @@ function ampExample(kind: "one" | "parallel" | "series" | "bridged") {
     const names = { one: "One sub, one channel", parallel: "Two subs in parallel, one channel", series: "Two subs in series, one channel", bridged: "Two subs in series, bridged" };
     const box = { ...one, name: names[kind], vb_l: 83.5 * n, count: n, id: "d1" };
     const amp = kind === "bridged" ? AMP.bridged : AMP.channel;
-    return { ...s, designs: [box], settings: { ...s.settings, ampVolts: amp.volts, ampAmps: amp.amps } };
+    // Without limits: what the subs would ask of an amp with no ceiling (the amp-matching guide's "wants").
+    return { ...s, designs: [box], settings: { ...s.settings, ampVolts: limits ? amp.volts : 0, ampAmps: limits ? amp.amps : 0 } };
   };
 }
 
@@ -694,25 +767,56 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "stuffing-ported-empty": stuffingPorted(false),
   "stuffing-ported-filled": stuffingPorted(true),
   "mismatch-example": mismatchExample,
+  "tol-fs-up": toleranceExample("fs", 1.15),
+  "tol-fs-down": toleranceExample("fs", 0.85),
+  "tol-vas-down": toleranceExample("vas_l", 0.75),
+  "tol-vas-up": toleranceExample("vas_l", 1.25),
+  "tol-qes-up": toleranceExample("qes", 1.15),
+  "tol-qes-down": toleranceExample("qes", 0.85),
+  "sim-baffle": simBaffle(11, 22),
+  "sim-hot": simHot,
   "port-tuning-example": portTuningExample,
+  "port-tuning-tables": portTuningTables(),
+  "port-tuning-k0614": portTuningTables(0.614),
+  "port-tuning-k085": portTuningTables(0.85),
+  "port-tuning-k1": portTuningTables(1.0),
+  "port-tuning-k12": portTuningTables(1.2),
   "losses-ql10": lossesExample(10),
   "losses-ql5": lossesExample(5),
+  "losses-ql100": lossesExample(100),
+  "losses-ql20": lossesExample(20),
+  "losses-ql7": lossesExample(7),
+  "losses-ql3": lossesExample(3),
+  "losses-qa10": lossesExample(10, 10),
+  "losses-qp10": lossesExample(10, 100, 10),
+  "losses-sealed-ql100": lossesExample(100, 100, 100, true),
+  "losses-sealed-ql10": lossesExample(10, 100, 100, true),
   "lt-example": ltExample,
   "iso-single": isoExample(false),
   "iso-pair": isoExample(true),
+  "iso-series": isoExample(true, "series"),
   "box-types-example": boxTypesExample(true),
   "box-types-nofilter": boxTypesExample(false),
   "subsonic-off": subsonicExample(false),
   "subsonic-on": subsonicExample(true),
+  "subsonic-12-20": subsonicExample(true, 2, 20),
+  "subsonic-24-15": subsonicExample(true, 4, 15),
+  "subsonic-24-18": subsonicExample(true, 4, 18),
   "car-example": carExample(true),
   "car-nocabin": carExample(false),
   "compare-example": compareExample,
+  "compare-own-hf": compareOwnExample("dayton-audio/rss265hf-4"),
+  "compare-own-ho": compareOwnExample("dayton-audio/rss265ho-4"),
   "ts-example": tsExample,
   "pr-example": prExample,
   "winisd-example": winisdExample,
   "port-example": portExample,
+  "port-sizes": portSizesExample,
   "deep-bass-example": deepBassExample,
   "tl-example": tlExample,
+  "tl-stuff-0": tlStuffing(0),
+  "tl-stuff-3": tlStuffing(3),
+  "tl-stuff-10": tlStuffing(10),
   "qtc-example": qtcExample,
   "group-delay": groupDelayExample(false),
   "subs-example": subsExample("parallel"),
@@ -724,11 +828,13 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "mltl-example": mltlExample,
   "dvc-watts": dvcExample("watts"),
   "dvc-volts": dvcExample("volts"),
+  "dvc-watts-norg": dvcExample("watts", 0),
   "port-shape": portShapeExample(false),
   "amp-one": ampExample("one"),
   "amp-parallel": ampExample("parallel"),
   "amp-series": ampExample("series"),
   "amp-bridged": ampExample("bridged"),
+  "amp-parallel-free": ampExample("parallel", false),
   "shape-box": shapedExample("box"),
   "shape-tube": shapedExample("tube"),
   "shape-sphere": shapedExample("sphere"),

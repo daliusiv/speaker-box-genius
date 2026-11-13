@@ -62,6 +62,8 @@ export interface LineInput {
   /**
    * Extra distance from the mouth (or port) to the listener compared with the cone (cm),
    * e.g. about the box depth for a mouth on the back. 0 = next to the driver.
+   * On axis it delays the mouth's sound (and its level falls with the extra distance); with SPL from
+   * radiated power it's the distance between the two sources, as Hornresp's Acoustic Path Length.
    */
   mouthDistance_cm?: number;
 }

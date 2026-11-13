@@ -2,7 +2,7 @@
 title: "Isobaric subwoofers: half the box, but what does it cost?"
 description: What an isobaric pair really does (and doesn't do) to box size, sensitivity, output, impedance and power handling, with numbers from a worked 10-inch example checked against WinISD.
 path: guides/isobaric
-image: iso-spl.png
+image: chart:iso-pair/response
 order: 15
 group: sealed
 ---
@@ -40,30 +40,30 @@ A **Dayton Audio RSS265HF-4** 10″ subwoofer (4 Ω, 350 W) in its textbook Qtc 
 
 | | Single, 37.3 L | Pair (coils parallel), 18.7 L | Pair (coils series), 18.7 L |
 |---|---|---|---|
-| F3 / Qtc | 41.2 Hz / 0.72 | 40.4 Hz / 0.74 | 41.7 Hz / 0.71 |
-| Impedance (lowest above 60 Hz) | 3.6 Ω | **1.8 Ω** | 7.1 Ω |
-| Output at 60 Hz, **10 V** | 98.2 dB | 98.1 dB | **92.2 dB** |
-| Output at 60 Hz, **100 W** | 103.6 dB | **100.5 dB** | **100.7 dB** |
-| Cone excursion at 100 W | 8.9 mm | 6.2 mm | 6.3 mm |
-| **Maximum SPL at 25 / 30 / 40 Hz** | 97.2 / 100.4 / 105.4 dB | **the same** | **the same** |
-| Amplifier needed at 30 Hz to reach it | 26 V, 3.0 A | 27 V, **5.9 A** | **53 V**, 3.0 A |
+| F3 / Qtc | {{num:iso-single/1/f3}} Hz / {{num:iso-single/1/qtc}} | {{num:iso-pair/1/f3}} Hz / {{num:iso-pair/1/qtc}} | {{num:iso-series/1/f3}} Hz / {{num:iso-series/1/qtc}} |
+| Impedance (lowest above 60 Hz) | {{num:iso-single/1/zmin}} Ω | **{{num:iso-pair/1/zmin}} Ω** | {{num:iso-series/1/zmin}} Ω |
+| Output at 60 Hz, **10 V** | {{num:iso-single/1/v10@60}} dB | {{num:iso-pair/1/v10@60}} dB | **{{num:iso-series/1/v10@60}} dB** |
+| Output at 60 Hz, **100 W** | {{num:iso-single/1/spl@60}} dB | **{{num:iso-pair/1/spl@60}} dB** | **{{num:iso-series/1/spl@60}} dB** |
+| Cone excursion at 100 W | {{num:iso-single/1/x}} mm | {{num:iso-pair/1/x}} mm | {{num:iso-series/1/x}} mm |
+| **Maximum SPL at 25 / 30 / 40 Hz** | {{num:iso-single/1/max@25}} / {{num:iso-single/1/max@30}} / {{num:iso-single/1/max@40}} dB | **the same** | **the same** |
+| Amplifier needed at 30 Hz to reach it | {{num:iso-single/1/volts@30:0}} V, {{num:iso-single/1/amps@30}} A | {{num:iso-pair/1/volts@30:0}} V, **{{num:iso-pair/1/amps@30}} A** | **{{num:iso-series/1/volts@30:0}} V**, {{num:iso-series/1/amps@30}} A |
 
-![The isobaric pair in 18.7 L (blue, F3 40.4 Hz) has almost exactly the single driver's response in 37.3 L (F3 40.4 Hz and Qtc 0.74, against 41.2 Hz and 0.72). In the full 37.3 L box (light blue, F3 39.9 Hz) the pair is over-damped (Qtc 0.62): a softer, more gradual corner.](img/iso-spl.png)
+![The isobaric pair in 18.7 L ({{color:iso-pair/1}}, F3 {{num:iso-pair/1/f3}} Hz) has almost exactly the single driver's response in 37.3 L (F3 {{num:iso-pair/1/f3}} Hz and Qtc {{num:iso-pair/1/qtc}}, against {{num:iso-single/1/f3}} Hz and {{num:iso-single/1/qtc}}). In the full 37.3 L box ({{color:iso-pair/2}}, F3 {{num:iso-pair/2/f3}} Hz) the pair is over-damped (Qtc {{num:iso-pair/2/qtc}}): a softer, more gradual corner.](chart:iso-pair/response)
 
 ## What the numbers say
 
-**The box really is half the size,** for almost exactly the same response: F3 41.2 Hz and Qtc 0.72 for one driver, 40.4 Hz and 0.74 for the pair in parallel, 41.7 Hz and 0.71 in series. The small differences come from the 0.1 Ω of amplifier and cable resistance, which weighs more against the parallel pair's halved impedance than against the series pair's doubled one.
+**The box really is half the size,** for almost exactly the same response: F3 {{num:iso-single/1/f3}} Hz and Qtc {{num:iso-single/1/qtc}} for one driver, {{num:iso-pair/1/f3}} Hz and {{num:iso-pair/1/qtc}} for the pair in parallel, {{num:iso-series/1/f3}} Hz and {{num:iso-series/1/qtc}} in series. The small differences come from the 0.1 Ω of amplifier and cable resistance, which weighs more against the parallel pair's halved impedance than against the series pair's doubled one.
 
-**The output per watt is 3 dB lower,** however you wire the coils. You're powering two motors to move one cone's worth of air [1]. At 100 W, the pair plays 3 dB quieter than the single driver.
+**The output per watt is 3 dB lower,** however you wire the coils. You're powering two motors to move one cone's worth of air [1]. At 100 W, the pair plays {{diff:iso-single/1/iso-pair/1/spl@60}} dB quieter than the single driver at 60 Hz.
 
 **The output per volt depends on the wiring:**
 
-- **Coils in parallel:** about the same output per volt as one driver, but the impedance **halves** (here to 1.8 Ω), so the amplifier delivers twice the current and twice the power for the same voltage [3]. Check your amplifier is stable into that load.
-- **Coils in series:** the impedance **doubles** (7.1 Ω), and the output per volt is **6 dB lower** [4]. You need twice the voltage for the same output; into twice the impedance, that's twice the power, the same 3 dB-per-watt penalty.
+- **Coils in parallel:** about the same output per volt as one driver, but the impedance **halves** (here to {{num:iso-pair/1/zmin}} Ω), so the amplifier delivers twice the current and twice the power for the same voltage [3]. Check your amplifier is stable into that load.
+- **Coils in series:** the impedance **doubles** ({{num:iso-series/1/zmin}} Ω), and the output per volt is **6 dB lower** [4]. You need twice the voltage for the same output; into twice the impedance, that's twice the power, the same 3 dB-per-watt penalty.
 
-**The maximum output is the same as one driver** in its full-size box. Only one cone radiates, with the same area and the same Xmax, so it hits the same excursion limit at the same SPL [5]. The pair needs twice the power to get there: at 30 Hz, about the same voltage (27 V) but twice the current (5.9 A) with the coils in parallel, or twice the voltage (53 V) with them in series. It can also **handle** twice the power, so thermally it has more headroom. Switch the app's **Max SPL** chart to **Volts** or **Amps** to see what your amplifier has to deliver at each frequency.
+**The maximum output is the same as one driver** in its full-size box. Only one cone radiates, with the same area and the same Xmax, so it hits the same excursion limit at the same SPL [5]. The pair needs twice the power to get there: at 30 Hz, about the same voltage ({{num:iso-pair/1/volts@30:0}} V) but twice the current ({{num:iso-pair/1/amps@30}} A) with the coils in parallel, or twice the voltage ({{num:iso-series/1/volts@30:0}} V) with them in series. It can also **handle** twice the power, so thermally it has more headroom. Switch the app's **Max SPL** chart to **Volts** or **Amps** to see what your amplifier has to deliver at each frequency.
 
-**The cone moves less at the same power** (6.2–6.3 mm instead of 8.9 mm at 100 W), because the power is shared between two motors.
+**The cone moves less at the same power** ({{num:iso-pair/1/x}}–{{num:iso-series/1/x}} mm instead of {{num:iso-single/1/x}} mm at 100 W), because the power is shared between two motors.
 
 So, compared with one driver in its full box, an isobaric pair gives you: **half the box**, the **same response**, the **same maximum output**, **3 dB less per watt**, **double the power handling**, and a **lower or higher impedance**, for the price of a second driver.
 
@@ -73,7 +73,7 @@ If you have room for two drivers, compare the pair with two drivers in a normal 
 
 ## Don't put the pair in the old box
 
-A common mistake is to add a second driver isobarically to an existing box. The pair needs half the volume; in the original box it's like a single driver in a box twice its correct size. In the example, the pair in the full 37.3 L has a **Qtc of 0.62**: an over-damped, gently drooping response instead of the flat one (Qtc about 0.7) it was designed for.
+A common mistake is to add a second driver isobarically to an existing box. The pair needs half the volume; in the original box it's like a single driver in a box twice its correct size. In the example, the pair in the full 37.3 L has a **Qtc of {{num:iso-pair/2/qtc}}**: an over-damped, gently drooping response instead of the flat one (Qtc about 0.7) it was designed for.
 
 ## Building one
 

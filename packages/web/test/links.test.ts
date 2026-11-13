@@ -58,6 +58,14 @@ function variants(): [string, AppState][] {
         bp,
       ],
     }],
+    ["port and PR positions", {
+      ...d,
+      designs: [
+        { ...ported, ventAt: "back" },
+        { ...pr, ventAt: "custom", ventDistance_cm: 24.5 },
+        { ...(newDesign("bandpass", d.designs) as BandpassDesign), id: "d7", order: "6p", ventDistance_cm: 40 },
+      ],
+    }],
     ["transmission lines, flared ports, baffle step and port compression", {
       ...d,
       settings: { ...d.settings, portCompression: true },
@@ -213,4 +221,15 @@ test("a link with odd T/S values opens: unknown keys and bad values are dropped,
     assert.deepEqual(s.ts, want, JSON.stringify(ts));
     assert.doesNotThrow(() => run(s, solve(s)));
   }
+});
+
+test("port positions: side by side stays out of links; odd values are dropped", () => {
+  const [, ported] = DEFAULT_STATE.designs as [AppState["designs"][0], VentedDesign];
+  const plain = encodeState(DEFAULT_STATE);
+  const front = encodeState({ ...DEFAULT_STATE, designs: DEFAULT_STATE.designs.map((x) => (x.id === ported.id ? { ...ported, ventAt: undefined } : x)) });
+  assert.equal(front, plain);
+  const odd = decodeState(encodeState({ ...DEFAULT_STATE, designs: DEFAULT_STATE.designs.map((x) => (x.id === ported.id ? ({ ...ported, ventAt: "sideways", ventDistance_cm: -3 } as unknown as VentedDesign) : x)) }))!;
+  const v = odd.designs.find((x) => x.id === ported.id) as VentedDesign;
+  assert.equal(v.ventAt, undefined);
+  assert.equal(v.ventDistance_cm, undefined);
 });

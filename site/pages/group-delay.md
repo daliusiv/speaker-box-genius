@@ -2,7 +2,7 @@
 title: "Are ported boxes slow or boomy? Group delay explained"
 description: Why "sealed is fast, ported is slow" keeps coming up, what group delay really is, how a sealed box, a ported box tuned high and one tuned low compare in group delay, step response and ringing, and what listening tests say you can hear.
 path: guides/group-delay
-image: group-delay.png
+image: chart:group-delay/delay
 order: 19
 group: ported
 ---
@@ -51,29 +51,29 @@ A **Dayton Audio RSS315HF-4** 12-inch subwoofer (Fs 24.2 Hz, Qts 0.39, Vas 84 L)
 | | Sealed | Ported, tuned high | Ported, tuned low |
 |---|---|---|---|
 | Box | 38.9 L | 50 L, 42 Hz | 83.5 L, 23.8 Hz |
-| F3 | 45.2 Hz | 35.1 Hz | 23.3 Hz |
-| Response peak | none | **+5.5 dB at 51 Hz** | none |
-| Group delay at 25 Hz | 6.2 ms | 9.5 ms | 24.7 ms |
-| at 30 Hz | 6.1 ms | 10.0 ms | 15.5 ms |
-| at 40 Hz | 5.6 ms (0.22 cycle) | **15.1 ms (0.60 cycle)** | 7.3 ms (0.29 cycle) |
-| at 50 Hz | 4.7 ms | **15.2 ms** | 4.6 ms |
-| at 60 Hz | 3.7 ms | 7.7 ms | 3.2 ms |
-| at 80 Hz | 2.4 ms | 2.9 ms | 2.0 ms |
-| Peak group delay | about 6–7 ms, rising slowly below 20 Hz | **17.4 ms at 45 Hz** | **28.6 ms at 21.6 Hz** |
+| F3 | {{num:group-delay/1/f3}} Hz | {{num:group-delay/2/f3}} Hz | {{num:group-delay/3/f3}} Hz |
+| Response peak | none | **+{{num:group-delay/2/rise}} dB at {{num:group-delay/2/risef}} Hz** | none |
+| Group delay at 25 Hz | {{num:group-delay/1/gd@25}} ms | {{num:group-delay/2/gd@25}} ms | {{num:group-delay/3/gd@25}} ms |
+| at 30 Hz | {{num:group-delay/1/gd@30}} ms | {{num:group-delay/2/gd@30}} ms | {{num:group-delay/3/gd@30}} ms |
+| at 40 Hz | {{num:group-delay/1/gd@40}} ms ({{num:group-delay/1/gdc@40}} cycle) | **{{num:group-delay/2/gd@40}} ms ({{num:group-delay/2/gdc@40}} cycle)** | {{num:group-delay/3/gd@40}} ms ({{num:group-delay/3/gdc@40}} cycle) |
+| at 50 Hz | {{num:group-delay/1/gd@50}} ms | **{{num:group-delay/2/gd@50}} ms** | {{num:group-delay/3/gd@50}} ms |
+| at 60 Hz | {{num:group-delay/1/gd@60}} ms | {{num:group-delay/2/gd@60}} ms | {{num:group-delay/3/gd@60}} ms |
+| at 80 Hz | {{num:group-delay/1/gd@80}} ms | {{num:group-delay/2/gd@80}} ms | {{num:group-delay/3/gd@80}} ms |
+| Peak group delay | about 6–7 ms, rising slowly below 20 Hz | **{{num:group-delay/2/gdp}} ms at {{num:group-delay/2/gdpf}} Hz** | **{{num:group-delay/3/gdp}} ms at {{num:group-delay/3/gdpf}} Hz** |
 
-![Group delay of the sealed box (blue), the ported box tuned high (orange) and the ported box tuned low (light orange).](img/group-delay.png)
+![Group delay of the sealed box (blue), the ported box tuned high (orange) and the ported box tuned low (light orange).](chart:group-delay/delay)
 
 What it shows:
 
 - **The low-tuned box has the biggest peak of the three,** 29 ms, but at 22 Hz. From 40 Hz up it's within 1.7 ms of the sealed box, and above 45 Hz it's slightly *lower*, because it's flat there while the sealed box is already rolling off.
-- **The high-tuned box puts its peak in the middle of the bass:** 15–18 ms from 40 to 50 Hz, where a kick drum's weight sits (roughly 40–100 Hz [14]). It also has a +5.5 dB hump at 51 Hz. That combination is the "one-note" ported box.
+- **The high-tuned box puts its peak in the middle of the bass:** 15–18 ms from 40 to 50 Hz, where a kick drum's weight sits (roughly 40–100 Hz [14]). It also has a +{{num:group-delay/2/rise}} dB hump at {{num:group-delay/2/risef}} Hz. That combination is the "one-note" ported box.
 - **Sealed is lowest below 40 Hz,** as you'd expect: it rolls off earliest and most gently.
 
 You'll see posts claiming a badly tuned ported box reaches 25 ms or more on the kick drum. For this driver it's 15–18 ms (about two thirds of a cycle); a different driver or a smaller box can reach more, and a subsonic filter adds a few ms more (see below).
 
 ## Step response and ringing
 
-![Step response of the three boxes: the sealed box (blue) settles within about 20 ms; the box tuned high (orange) swings back hard and rings at about 45 Hz; the box tuned low (light orange) has a slower, smaller swing at about 22 Hz.](img/group-delay-step.png)
+![Step response of the three boxes: the sealed box (blue) settles within about 20 ms; the box tuned high (orange) swings back hard and rings at about 45 Hz; the box tuned low (light orange) has a slower, smaller swing at about 22 Hz.](chart:group-delay/step)
 
 The step response is where sealed boxes look best, and it's often posted as proof that ported boxes are slow. A ported box's step response always rings longer, because the port keeps sounding after the cone settles. But look at *what* rings: the high-tuned box swings back hard at about 45 Hz, while the low-tuned box's tail is smaller and at about 22 Hz, below most music.
 
@@ -114,9 +114,9 @@ That's also why the same sub can sound "fast" in one room and "boomy" in another
 
 Real systems rarely use a bare box:
 
-- **A low-tuned ported box needs a subsonic filter** to keep the cone from flapping below tuning (see the [subsonic filter guide](/guides/subsonic-filter/)). With an 18 Hz, 24 dB/octave filter, the low-tuned box's delay is 12.5 ms at 40 Hz and 7.7 ms at 50 Hz, and its peak moves to 58.1 ms at 17.6 Hz.
-- **A sealed sub often gets a filter or EQ too.** With the same filter, the sealed box is at 10.8 ms at 40 Hz. A sealed box equalised for deeper bass gets some of a ported box's group delay back [12]; see the [Linkwitz Transform guide](/guides/linkwitz-transform/).
-- **The high-tuned box with the filter** is at 20.3 ms at 40 Hz.
+- **A low-tuned ported box needs a subsonic filter** to keep the cone from flapping below tuning (see the [subsonic filter guide](/guides/subsonic-filter/)). With an 18 Hz, 24 dB/octave filter, the low-tuned box's delay is {{num:group-delay-subsonic/3/gd@40}} ms at 40 Hz and {{num:group-delay-subsonic/3/gd@50}} ms at 50 Hz, and its peak moves to {{num:group-delay-subsonic/3/gdp}} ms at {{num:group-delay-subsonic/3/gdpf}} Hz.
+- **A sealed sub often gets a filter or EQ too.** With the same filter, the sealed box is at {{num:group-delay-subsonic/1/gd@40}} ms at 40 Hz. A sealed box equalised for deeper bass gets some of a ported box's group delay back [12]; see the [Linkwitz Transform guide](/guides/linkwitz-transform/).
+- **The high-tuned box with the filter** is at {{num:group-delay-subsonic/2/gd@40}} ms at 40 Hz.
 
 [[Open the three boxes with an 18 Hz subsonic filter|group-delay-subsonic]]
 
@@ -139,6 +139,7 @@ The box tuned high is the one to avoid if you want tight bass: if you need a sma
 3. Look at the **Relative response** chart for a peak above the tuning: that's the boom.
 4. Open **Impulse / step** and choose **Step** to see how long each box rings.
 5. Turn on the **high-pass filter** in **Signal** if you'll use one, and check again: it adds delay.
+6. VituixCAD reads a ported box's group delay 2–3 % lower because it hears the port from its far end. Settings → Ports → Port sound, or Settings → Match → VituixCAD, does the same.
 6. A box tuned away from its design changes all of this; see [why a port tunes higher or lower](/guides/port-tuning/).
 
 ## The forum claims, checked

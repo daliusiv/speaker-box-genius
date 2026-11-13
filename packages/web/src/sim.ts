@@ -33,7 +33,7 @@ import {
 } from "@sbg/engine";
 import type { AppState, DesignKind, DesignState, LineDesign, PortFields, PrDesign, PrGroupState, Settings } from "./state.ts";
 import { compareView } from "./state.ts";
-import { stuffFactor, stuffable, stuffingEffect } from "./stuffing.ts";
+import { qaGain, stuffFactor, stuffable, stuffingEffect } from "./stuffing.ts";
 
 export { KIND_COLORS } from "./palette.ts";
 import { KIND_COLORS } from "./palette.ts";
@@ -168,9 +168,30 @@ export function builtVbOf(s: AppState, d: DesignState): number {
   return s.volume.link === d.id ? volumeFor(s, d).net_l : d.vb_l;
 }
 
-/** The volume a design acts as, which the simulation and tuning use: the built volume, scaled by its stuffing. */
+/**
+ * How many times bigger a design's box acts than it is built: its stuffing's gain, or (no
+ * stuffing, Settings → "Qa makes the box bigger") the gain of Settings' Qa, VituixCAD's way.
+ * Stuffing wins: its gain is the same physics, so it never counts twice.
+ */
+export function actingFactor(s: AppState, d: DesignState): number {
+  if (d.kind === "line") return 1;
+  const f = stuffFactor(d);
+  if (f !== 1) return f;
+  if (s.settings.qaVolume && (d.kind === "sealed" || d.kind === "vented" || d.kind === "pr")) return qaGain(lossesFor(s, d).qa);
+  return 1;
+}
+
+/** The volume a design acts as, which the simulation and tuning use: the built volume, scaled by its stuffing (or Qa). */
 export function vbOf(s: AppState, d: DesignState): number {
-  return builtVbOf(s, d) * stuffFactor(d);
+  return builtVbOf(s, d) * actingFactor(s, d);
+}
+
+/** What enclosureOf needs from Settings: Qa's volume gain on bandpass chambers, and the port-length vent delay. */
+export function enclosureOptsOf(s: AppState): EnclosureOpts {
+  return {
+    qaVolume: s.settings.qaVolume,
+    portLength: s.settings.ventPlacement === "portLength" ? { endCorrection: endCorrectionOf(s), driverSd_cm2: s.ts.sd_cm2 } : undefined,
+  };
 }
 
 /** Box losses for a design: Settings', with the Qa its stuffing sets. */
@@ -308,15 +329,54 @@ export function lineVolume(d: LineDesign): number {
   }
 }
 
-export function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"], wall_mm = 18): EnclosureInput {
+/**
+ * How far a box's port or PRs (a 6th-order parallel box: its rear opening from the front one) is
+ * from the cone, cm; 0 = side by side. "On the back" takes the volume calculator's outside depth
+ * when the calculator is linked to this box (box or wedge shape).
+ */
+export function ventDistanceOf(d: DesignState, volume?: AppState["volume"]): number {
+  if (d.kind === "bandpass") return d.order === "6p" ? (d.ventDistance_cm ?? 0) : 0;
+  if (d.kind !== "vented" && d.kind !== "pr") return 0;
+  if (d.ventAt === "custom") return d.ventDistance_cm ?? 0;
+  if (d.ventAt === "back") return backDepthOf(d, volume) ?? 0;
+  return 0;
+}
+
+/** The outside depth a port on the back panel sits from the cone, when the calculator is linked to this box. */
+export function backDepthOf(d: DesignState, volume?: AppState["volume"]): number | null {
+  if (!volume || volume.link !== d.id) return null;
+  if (volume.shape === "box") return volume.depth_cm;
+  if (volume.shape === "wedge") return (volume.depth_cm + volume.topDepth_cm) / 2;
+  return null;
+}
+
+export type EnclosureOpts = { qaVolume?: boolean; portLength?: { endCorrection: number; driverSd_cm2?: number } };
+
+export function enclosureOf(d: DesignState, vb: number, losses: Settings["losses"], wall_mm = 18, volume?: AppState["volume"], opts?: EnclosureOpts): EnclosureInput {
   const { ql, qa, qp } = losses;
+  let dv = ventDistanceOf(d, volume);
+  // "Port length" placement (VituixCAD). Vented: a side-by-side port is heard later by its physical
+  // length (no end correction: that fits VituixCAD's group delay for four port lengths within 0.07 ms).
+  // Passive radiator: VituixCAD (measured) delays it by the centre spacing of driver and PR side by
+  // side, (Dd + Dpr) / 2 with D = 2 sqrt(Sd / pi), whatever the PR count. With mixed PR groups the largest Sd is used.
+  if (opts?.portLength && dv === 0 && (d.kind === "vented" || d.kind === "pr") && !d.ventAt) {
+    if (d.kind === "vented") dv = portOf(d).length_cm;
+    else {
+      const sdd = opts.portLength.driverSd_cm2;
+      const sdp = Math.max(d.params.sd_cm2, ...d.extra.map((g) => g.params.sd_cm2));
+      if (sdd !== undefined && sdd > 0 && Number.isFinite(sdd) && sdp > 0 && Number.isFinite(sdp)) {
+        dv = (Math.sqrt(sdd / Math.PI) + Math.sqrt(sdp / Math.PI));
+      }
+    }
+  }
+  const at = dv > 0 ? { ventDistance_cm: dv } : {};
   switch (d.kind) {
     case "line":
       return lineInputOf(d, wall_mm);
     case "sealed":
       return { kind: "sealed", vb_l: vb, ql, qa };
     case "vented":
-      return { kind: "vented", vb_l: vb, port: portOf(d), portCount: d.count, ql, qa, qp };
+      return { kind: "vented", vb_l: vb, port: portOf(d), portCount: d.count, ql, qa, qp, ...at };
     case "pr":
       return {
         kind: "passive-radiator",
@@ -327,25 +387,31 @@ export function enclosureOf(d: DesignState, vb: number, losses: Settings["losses
         extraPrs: d.extra.map((g) => ({ pr: g.params, count: g.count, addedMass_g: g.addedMass_g })),
         ql,
         qa,
+        ...at,
       };
     case "bandpass": {
       // Each chamber has its own losses when the design sets them; otherwise both use Settings.
       const fl = d.losses?.front ?? losses;
       const rl = d.losses?.rear ?? losses;
+      // Qa's volume gain (Settings), per chamber: sealed/vented/pr get theirs through vbOf.
+      const g = (q: number) => (opts?.qaVolume ? qaGain(q) : 1);
+      const rearVb = vb * g(rl.qa);
+      const frontVb = d.frontVb_l * g(fl.qa);
       return {
         kind: "bandpass",
         rear:
           d.order === "4"
-            ? { vb_l: vb, ql: rl.ql, qa: rl.qa }
+            ? { vb_l: rearVb, ql: rl.ql, qa: rl.qa }
             : d.rearOpening === "pr"
-              ? { vb_l: vb, prs: groupsOf(d.rearPrs), ql: rl.ql, qa: rl.qa }
-              : { vb_l: vb, port: portOf(d.rear), portCount: d.rear.count, ...rl },
+              ? { vb_l: rearVb, prs: groupsOf(d.rearPrs), ql: rl.ql, qa: rl.qa }
+              : { vb_l: rearVb, port: portOf(d.rear), portCount: d.rear.count, ...rl },
         front:
           d.frontOpening === "pr"
-            ? { vb_l: d.frontVb_l, prs: groupsOf(d.frontPrs), ql: fl.ql, qa: fl.qa }
-            : { vb_l: d.frontVb_l, port: portOf(d.front), portCount: d.front.count, ...fl },
+            ? { vb_l: frontVb, prs: groupsOf(d.frontPrs), ql: fl.ql, qa: fl.qa }
+            : { vb_l: frontVb, port: portOf(d.front), portCount: d.front.count, ...fl },
         rearPortTo: d.order === "6s" ? "front" : "outside",
         qicl: d.losses?.qicl ?? 100,
+        ...at,
       };
     }
   }
@@ -417,6 +483,7 @@ export function simOptionsOf(s: AppState, search = false) {
     splFrom: s.settings.lineSpl === "power" ? ("power" as const) : undefined,
     portModel: s.settings.portModel === "pipe" ? ("pipe" as const) : undefined,
     leakage: s.settings.leakage === "absorbed" ? ("absorbed" as const) : undefined,
+    f3From: s.settings.f3From === "peak" ? ("peak" as const) : undefined,
     driveModel: s.settings.driveModel,
     coneLoad: s.settings.coneLoad === "piston" ? ("piston" as const) : undefined,
     coilTemp_C: s.settings.coilTemp_C > 20 ? s.settings.coilTemp_C : undefined,
@@ -473,12 +540,12 @@ export function transientsOf(s: AppState, solved: SolveResult, designs: Design[]
   for (const x of designs) {
     if (x.compare) continue;
     const d = x.design;
-    const vb = builtVbOf(s, d) * stuffFactor(d);
+    const vb = vbOf(s, d);
     const eq = s.eq
       .filter((e) => e.on && (e.target === "all" || e.target === d.id))
       .map(({ id: _id, on: _on, target: _t, ...stage }) => stage as EqStage);
     try {
-      const r = transientResponse(driver, enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm), { ...opts, eq, splFrom: "power" }, { length: 16384 });
+      const r = transientResponse(driver, enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm, s.volume, enclosureOptsOf(s)), { ...opts, eq, splFrom: "power", pathMode: s.settings.lineSpl }, { length: 16384 });
       out.push({ label: x.label, color: x.color, ...(x.dash ? { dash: x.dash } : {}), ...r });
     } catch {
       // Mid-edit: leave it out.
@@ -495,14 +562,14 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
   for (const d of s.designs) {
     if (!d.on) continue;
     const built = builtVbOf(s, d);
-    const vb = built * stuffFactor(d);
+    const vb = built * actingFactor(s, d);
     if (!(vb > 0)) continue;
     const eq = s.eq
       .filter((e) => e.on && (e.target === "all" || e.target === d.id))
       .map(({ id: _id, on: _on, target: _t, ...stage }) => stage as EqStage);
     try {
       // Settings → SPL applies to every design: in front of the box (default, like WinISD) or from radiated power (like Hornresp).
-      const result = simulate(driver, enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm), { ...opts, eq });
+      const result = simulate(driver, enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm, s.volume, enclosureOptsOf(s)), { ...opts, eq });
       if (s.settings.velocity === "rms") {
         if (result.portVelocity) result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
         if (result.rearPortVelocity) result.rearPortVelocity = result.rearPortVelocity.map((v) => v / Math.SQRT2);
@@ -513,18 +580,20 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
         result.spl = result.spl.map((v, i) => v + db[i]!);
         result.maxSpl = result.maxSpl.map((v, i) => v + db[i]!);
         if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + db[i]!), mouth: result.parts.mouth.map((v, i) => v + db[i]!) };
+        if (result.splSideBySide) result.splSideBySide = result.splSideBySide.map((v, i) => v + db[i]!);
       }
       const room = roomGainOf(s);
       let f3Room: number | null | undefined;
       if (room) {
         const lift = result.freq.map((f) => roomGainDb(f, room));
         // The F3 in the room or car: the box's own response (no baffle step) plus the gain.
-        const ref = result.summary.bandPeakSpl ?? result.summary.referenceSpl;
+        const ref = result.summary.f3RefSpl;
         const rel = result.spl.map((v, i) => v - (step ? baffleCache(result.freq, step)[i]! : 0) + lift[i]! - ref);
         f3Room = (d.kind === "line" ? lowEdge(result.freq, rel) : minus3Points(result.freq, rel, d.kind === "bandpass"))[0] ?? null;
         result.spl = result.spl.map((v, i) => v + lift[i]!);
         result.maxSpl = result.maxSpl.map((v, i) => v + lift[i]!);
         if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + lift[i]!), mouth: result.parts.mouth.map((v, i) => v + lift[i]!) };
+        if (result.splSideBySide) result.splSideBySide = result.splSideBySide.map((v, i) => v + lift[i]!);
       }
       out.push({
         design: d,

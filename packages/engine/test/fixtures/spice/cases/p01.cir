@@ -1,0 +1,42 @@
+* p01: Vented 40 L, DSA215-8, 7.5 cm port on the back, 30 cm from the cone (on axis)
+* Speaker Box Genius SPICE validation netlist. SI units; acoustic side: Pa, m^3/s. See packages/engine/validation/spice/elements.ts.
+V1 amp 0 AC 2.42899156029822
+Vrg amp spk 0
+Vin spk bk 0
+Re1 bk c1a 5.9
+Le1 c1a c1b 0.001
+Hemf1 c1b c1d Vcone1 504.309065730692
+Vi1 c1d 0 0
+Hd1 u1h1 0 Vi1 504.309065730692
+Ras11 u1h1 u1r1 9220.61574469911
+Lmas11 u1r1 u1m1 78.406779817259
+Ccas11 u1m1 u1k1 2.63724548161042e-7
+Rbl_u1k1 u1k1 0 1e+15
+Vcone1 u1k1 box 0
+Rbl_box box 0 1e+15
+Rap box p1 156.935965678163
+Lmap p1 p2 69.4678590192717
+Vport p2 0 0
+Fvp 0 vn Vport 226.353696841807
+Rvn vn 0 1
+Rab box b1 156.935965678163
+Cab b1 0 2.82058340279189e-7
+Rbl_b1 b1 0 1e+15
+Ral box l1 156935.965678163
+Vleak l1 0 0
+Fpc1 0 prc Vcone1 -1
+Fpp 0 prv Vport 1
+Fpl 0 prv Vleak 1
+Lradc prc 0 0.191622551482642
+Lradv prv 0 0.191622551482642
+Ebuf pvb 0 prv 0 1
+Tpos pvb 0 pvd 0 Z0=1 Td=0.000874125874125874
+Rtpos pvd 0 1
+Eprc prs pm prc 0 1
+Eprv pm 0 pvd 0 1
+Fx 0 xn Vcone1 47.3484848484849
+Cx xn 0 1
+Rbl_xn xn 0 1e+15
+* probes: V(spk) V(prs) V(xn) V(vn) V(box) I(Vin) I(Vcone1) I(Vport) I(Vleak)
+.ac dec 50 5 2000
+.end

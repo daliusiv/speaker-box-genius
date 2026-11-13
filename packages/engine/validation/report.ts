@@ -21,6 +21,8 @@ import {
   HORNRESP_TITLES,
   HORNRESP_TOL,
   HORNRESP_VERSION,
+  HORNRESP_WIZARD_VERSION,
+  isHornrespWizardCase,
   MAXSPL_TOL,
   IMPULSE_TOL,
   hornrespBoxIds,
@@ -124,6 +126,8 @@ export interface HornrespBoxCaseReport {
   tol: typeof HORNRESP_BOX_TOL;
   /** The port model and drivers it was run with. */
   options: string;
+  /** Hornresp version, where it isn't the section's. */
+  version?: string;
   /** Impedance compared up to here (Hz), for coil-model cases. */
   zeFMax?: number;
   /** Everything compared up to here (Hz) when not the boxes' 300 Hz (stuffed lines). */
@@ -288,6 +292,7 @@ function hornrespBoxCase(id: string): HornrespBoxCaseReport {
   return {
     id,
     title: c.title,
+    ...(isHornrespWizardCase(id) ? { version: HORNRESP_WIZARD_VERSION } : {}),
     setup: c.text,
     pass: Object.values(run.pass).every((p) => p !== false) && run.maxSpl.every((m) => m.pass) && run.impulse?.pass !== false,
     stats: Object.fromEntries(Object.entries(run.stats).map(([k, v]) => [k, r(v as number)!])) as HornrespBoxRun["stats"],

@@ -430,7 +430,11 @@ export function LogChart({
   const faded = useContext(ChartEmphasis);
 
   // Legend rows: value at the cursor, peak (and where), the chart's own columns, then notes.
-  const withUnit = (v: number) => (unit && unit.length <= 4 ? `${v.toFixed(digits)} ${unit}` : v.toFixed(digits));
+  const num = (v: number) => {
+    const t = v.toFixed(digits);
+    return /^-0(\.0+)?$/.test(t) ? t.slice(1) : t; // never "-0.0"
+  };
+  const withUnit = (v: number) => (unit && unit.length <= 4 ? `${num(v)} ${unit}` : num(v));
   const fHz = (f: number) => `${f.toFixed(f < 100 ? 1 : 0)} Hz`;
   const hasNotes = visible.some((s) => s.notes);
   const legendColumns = [...columns, ...(hasNotes ? [noteLabel] : [])];
@@ -463,6 +467,10 @@ export function LogChart({
       faint: faded.length > 0 && fadedBy(faded, s.label),
     };
   });
+
+  const hasPeakTip = legendRows.some((r) => r.peak);
+  // Columns of numbers (e.g. "vs loudest"): right-aligned in the hover box.
+  const numCols = legendColumns.map((_, ci) => legendRows.some((r) => /^[−-]?\d/.test(r.cols[ci] ?? "")));
 
   // Limit strip under the plot: one row per design, then a legend of the kinds shown.
   const ROW = 11 * k;
@@ -499,14 +507,14 @@ export function LogChart({
         ) : (
           <span className="chart-title">{title}</span>
         )}
-        {info && (
+        {info && !still && (
           <InfoPopover label={title}>
             {tall && shortTitle && shortTitle !== title && <p className="info-title">{title}</p>}
             {info}
           </InfoPopover>
         )}
         </span>
-        {actions && <span className="chart-actions">{actions}</span>}
+        {actions && !still && <span className="chart-actions">{actions}</span>}
         {!still && <span className="chart-hint muted">{editing ? "Drag the handles" : "Hover or tap for values"}</span>}
       </figcaption>
       {below}
@@ -539,12 +547,18 @@ export function LogChart({
           <table className="tip-table">
             <thead>
               <tr>
-                <th scope="col">{legendColumns.length > 0 ? "Enclosure" : ""}</th>
+                <th scope="col">{legendColumns.length > 0 || hasPeakTip ? "Enclosure" : ""}</th>
                 <th scope="col" className="legend-at on">
                   {fHz(freq[hover]!)}
                 </th>
-                {legendColumns.slice(0, 1).map((c) => (
-                  <th scope="col" key={c}>
+                {/* Everything the legend under the chart has (that legend is hidden on desktop). */}
+                {hasPeakTip && (
+                  <th scope="col" className="num">
+                    Peak
+                  </th>
+                )}
+                {legendColumns.map((c, ci) => (
+                  <th scope="col" key={c} className={numCols[ci] ? "num" : undefined}>
                     {c}
                   </th>
                 ))}
@@ -561,7 +575,22 @@ export function LogChart({
                     {r.at}
                     {r.lead && <span className="lead" title={r.lead.title}> {r.lead.mark}</span>}
                   </td>
-                  {legendColumns.length > 0 && <td className="legend-note">{r.cols[0] || "–"}</td>}
+                  {hasPeakTip && (
+                    <td className={`tip-peak${r.peak?.over ? " over" : ""}`}>
+                      {r.peak ? (
+                        <>
+                          {r.peak.main} <span className="muted">{r.peak.sub}</span>
+                        </>
+                      ) : (
+                        "–"
+                      )}
+                    </td>
+                  )}
+                  {legendColumns.map((c, ci) => (
+                    <td key={c} className={`legend-note${numCols[ci] ? " num" : ""}`}>
+                      {r.cols[ci] || "–"}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
@@ -875,7 +904,7 @@ export function LogChart({
       </svg>
       </div>
       {/* The legend: every curve, its value at the cursor, its peak and the chart's own columns. */}
-      <div role="status" aria-live="off">
+      <div className={still ? undefined : "legend-below"} role="status" aria-live="off">
         <ChartLegend atHeading={hover === null ? null : `@ ${fHz(freq[hover]!)}`} peakHeading="Peak" columns={legendColumns} rows={legendRows} />
       </div>
     </figure>

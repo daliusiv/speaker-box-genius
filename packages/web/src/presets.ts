@@ -17,15 +17,18 @@ import {
   winisdC4Alignment,
   winisdQb3Alignment,
 } from "@sbg/engine";
-import { airLimitOf, airOf, endCorrectionOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, portOf, portRoom_cm, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
+import { actingFactor, enclosureOptsOf, airLimitOf, airOf, endCorrectionOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, portOf, portRoom_cm, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
 import type { AppState, BandpassDesign, DesignState, PrDesign, VentedDesign } from "./state.ts";
 import { sizeBandpass } from "./bandpassSize.ts";
 import { choosePortCount, portCandidates, portFieldsOf, portSpeedFor, type AssistantPort } from "./ports.ts";
 import { stuffFactor } from "./stuffing.ts";
 
-/** "31.1 L" or, for a stuffed box, "31.1 L (stuffed, acting as 37.3 L)". */
-const sizeText = (d: DesignState, acting: number) =>
-  stuffFactor(d) === 1 ? `${r1(acting)} L` : `${r1(acting / stuffFactor(d))} L (stuffed, acting as ${r1(acting)} L)`;
+/** "31.1 L", or for a stuffed box "31.1 L (stuffed, acting as 37.3 L)", or with Qa's volume gain "31.1 L (acting as 37.3 L with Qa)". */
+const sizeText = (s: AppState, d: DesignState, acting: number) => {
+  const f = actingFactor(s, d);
+  if (f === 1) return `${r1(acting)} L`;
+  return `${r1(acting / f)} L (${stuffFactor(d) !== 1 ? "stuffed, acting" : "acting"} as ${r1(acting)} L${stuffFactor(d) !== 1 ? "" : " with Qa"})`;
+};
 
 /** Preset names that older versions appended to a design's name ("Ported QB3"). */
 const PRESET_SUFFIX = / (Qtc [\d.]+|QB3|B4|Keele)$/;
@@ -152,8 +155,8 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
           skipped.push(`${d.name}: the driver's Qts is already above 0.707`);
           return d;
         }
-        changed.push(`${d.name} → ${sizeText(d, sealed.vb_l)} (${sealed.name})`);
-        return { ...d, vb_l: r1(sealed.vb_l / stuffFactor(d)), ...withPreset(d.name, sealed.name) };
+        changed.push(`${d.name} → ${sizeText(s, d, sealed.vb_l)} (${sealed.name})`);
+        return { ...d, vb_l: r1(sealed.vb_l / actingFactor(s, d)), ...withPreset(d.name, sealed.name) };
       }
       case "vented": {
         if (!qb3) {
@@ -165,8 +168,8 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
           skipped.push(`${d.name}: no port fits ${r1(qb3.vb_l)} L tuned to ${r1(qb3.fb)} Hz`);
           return d;
         }
-        changed.push(`${d.name} → ${sizeText(d, qb3.vb_l)} at ${r1(qb3.fb)} Hz (${qb3.name}), ${best.text}`);
-        return { ...d, vb_l: r1(qb3.vb_l / stuffFactor(d)), targetFb: r1(qb3.fb), ...best.fields, ...withPreset(d.name, qb3.name) };
+        changed.push(`${d.name} → ${sizeText(s, d, qb3.vb_l)} at ${r1(qb3.fb)} Hz (${qb3.name}), ${best.text}`);
+        return { ...d, vb_l: r1(qb3.vb_l / actingFactor(s, d)), targetFb: r1(qb3.fb), ...best.fields, ...withPreset(d.name, qb3.name) };
       }
       case "pr": {
         if (!qb3) {
@@ -178,10 +181,10 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
           skipped.push(`${d.name}: these PRs can't reach ${r1(qb3.fb)} Hz in ${r1(qb3.vb_l)} L`);
           return d;
         }
-        changed.push(`${d.name} → ${sizeText(d, qb3.vb_l)} at ${r1(qb3.fb)} Hz (${qb3.name}, ${Math.round(add)} g added)`);
+        changed.push(`${d.name} → ${sizeText(s, d, qb3.vb_l)} at ${r1(qb3.fb)} Hz (${qb3.name}, ${Math.round(add)} g added)`);
         return {
           ...d,
-          vb_l: r1(qb3.vb_l / stuffFactor(d)),
+          vb_l: r1(qb3.vb_l / actingFactor(s, d)),
           targetFb: r1(qb3.fb),
           addedMass_g: Math.round(add),
           ...withPreset(d.name, qb3.name),
@@ -236,7 +239,7 @@ export function sizeBandpassDesign(s: AppState, d: BandpassDesign): { design: Ba
       portLimit: vLimit,
     },
     // The engine's response, without room or cabin gain (the band is judged as the box makes it).
-    (x) => simulate(drv, enclosureOf(x, x.vb_l, losses, s.volume.wall_mm), opts),
+    (x) => simulate(drv, enclosureOf(x, x.vb_l, losses, s.volume.wall_mm, undefined, enclosureOptsOf(s)), opts),
     (r) => limitsOf(r, s.xmax_mm, s.highPass.on, vLimit, airLimitOf(s)),
   )[d.order];
   if (!found) return `no flat band up to 80 Hz fits in ${r1(total)} L with this driver: try a bigger box`;
@@ -285,7 +288,7 @@ export function bestVentedPort(s: AppState, d: DesignState & { kind: "vented" },
   let best: { p: AssistantPort; v: number } | null = null;
   for (const p of cands) {
     const x = { ...d, vb_l, targetFb: fb, ...portFieldsOf(p) } as DesignState;
-    const r = simulate(drv, enclosureOf(x, vb_l, lossesFor(s, x), s.volume.wall_mm), opts);
+    const r = simulate(drv, enclosureOf(x, vb_l, lossesFor(s, x), s.volume.wall_mm, s.volume, enclosureOptsOf(s)), opts);
     const v = portSpeedFor(p, limitsOf(r, at.xmax_mm, at.highPass.on, vLimit, airLimitOf(at)).vp ?? Infinity);
     if (v <= vLimit) {
       best = { p, v };

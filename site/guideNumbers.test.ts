@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { EXAMPLES } from "./examples.ts";
-import { runDesigns, solveDriver } from "../packages/web/src/sim.ts";
+import { driverInputOf, runDesigns, simOptionsOf, solveDriver } from "../packages/web/src/sim.ts";
+import { scoreLine } from "../packages/web/src/lineopt.ts";
 
 /**
  * The sealed Qtc, MLTL and group delay guides quote the app's simulation of their examples: these are the
@@ -48,48 +49,36 @@ test("MLTL guide: port lengths, tuning and F3 of the ported box, the empty line 
   near(mltl!.result.summary.f3!, 40.2, 0.06, "MLTL F3");
 });
 
-test("group delay guide: sizes, F3, response peak and group delay of the three boxes, with and without the subsonic filter", () => {
-  const want = [
-    { vb: 38.9, f3: 45.2, gd: { 25: 6.2, 30: 6.1, 40: 5.6, 50: 4.7, 60: 3.7, 80: 2.4 } },
-    { vb: 50, f3: 35.1, gd: { 25: 9.5, 30: 10.0, 40: 15.1, 50: 15.2, 60: 7.7, 80: 2.9 }, peak: { db: 5.5, hz: 51 }, gdPeak: { ms: 17.4, hz: 45 } },
-    { vb: 83.5, f3: 23.3, gd: { 25: 24.7, 30: 15.5, 40: 7.3, 50: 4.6, 60: 3.2, 80: 2.0 }, gdPeak: { ms: 28.6, hz: 21.6 } },
-  ];
-  run("group-delay").forEach((d, i) => {
-    const r = d.result;
-    const w = want[i]!;
-    assert.equal(d.design.vb_l, w.vb, d.design.name);
-    near(r.summary.f3!, w.f3, 0.1, `${d.design.name} F3`);
-    for (const [hz, ms] of Object.entries(w.gd)) near(at(r.freq, r.groupDelayMs, Number(hz)), ms, 0.2, `${d.design.name} group delay at ${hz} Hz`);
-    let gi = 0;
-    let si = 0;
-    for (let k = 0; k < r.freq.length; k++) {
-      if (r.freq[k]! >= 10 && r.groupDelayMs[k]! > r.groupDelayMs[gi]!) gi = k;
-      if (r.freq[k]! < 200 && r.spl[k]! > r.spl[si]!) si = k;
-    }
-    if (w.gdPeak) {
-      near(r.groupDelayMs[gi]!, w.gdPeak.ms, 0.2, `${d.design.name} peak group delay`);
-      near(r.freq[gi]!, w.gdPeak.hz, 1, `${d.design.name} peak group delay frequency`);
-    }
-    if (w.peak) {
-      near(r.spl[si]! - r.summary.referenceSpl, w.peak.db, 0.1, `${d.design.name} response peak`);
-      near(r.freq[si]!, w.peak.hz, 1.5, `${d.design.name} response peak frequency`);
-    }
-  });
-  const filtered = run("group-delay-subsonic").map((d) => at(d.result.freq, d.result.groupDelayMs, 40));
-  [10.8, 20.3, 12.5].forEach((ms, i) => near(filtered[i]!, ms, 0.2, `subsonic filter: box ${i + 1} at 40 Hz`));
+test("group delay guide: the text's claims about the three boxes (its numbers come from the engine at build)", () => {
+  const [se, hi, lo] = run("group-delay").map((d) => d.result);
+  const gd = (r: typeof se, hz: number) => at(r.freq, r.groupDelayMs, hz);
+  const pk = (r: typeof se) => { let m = -Infinity, mf = 0; r.freq.forEach((f, i) => { if (f >= 15 && f <= 200 && r.groupDelayMs[i]! > m) { m = r.groupDelayMs[i]!; mf = f; } }); return [m, mf] as const; };
+  assert.deepEqual(run("group-delay").map((d) => d.design.vb_l), [38.9, 50, 83.5]);
+  // The low-tuned box: the biggest peak, below 25 Hz; within about 1.7 ms of sealed from 40 Hz up, lower above 45 Hz.
+  assert.ok(pk(lo)[0] > pk(hi)[0] && pk(lo)[1] < 25, "low-tuned: biggest peak, low down");
+  for (const hz of [40, 50, 60, 80]) assert.ok(Math.abs(gd(lo, hz) - gd(se, hz)) <= 1.75, `low-tuned near sealed at ${hz} Hz`);
+  for (const hz of [50, 60, 80]) assert.ok(gd(lo, hz) < gd(se, hz), `low-tuned below sealed at ${hz} Hz`);
+  // The high-tuned box: 15–18 ms from 40 to 50 Hz, a ~5.5 dB hump near 51 Hz; under 1.5 cycles everywhere.
+  for (const hz of [40, 45, 50]) assert.ok(gd(hi, hz) >= 15 && gd(hi, hz) <= 18, `high-tuned at ${hz} Hz`);
+  let si = 0; hi.freq.forEach((f, k) => { if (f < 200 && hi.spl[k]! > hi.spl[si]!) si = k; });
+  near(hi.spl[si]! - hi.summary.referenceSpl, 5.5, 0.3, "high-tuned hump");
+  for (const r of [se, hi, lo]) r.freq.forEach((f, k) => { if (f >= 20 && f <= 200) assert.ok((r.groupDelayMs[k]! * f) / 1000 < 1.5, "under 1.5 cycles"); });
+  // The sealed box 4–6 ms from 40 to 60 Hz; the low-tuned 3–7.5.
+  for (const hz of [40, 50, 60]) assert.ok(gd(se, hz) >= 3.5 && gd(se, hz) <= 6.2 && gd(lo, hz) >= 3 && gd(lo, hz) <= 7.5, `ranges at ${hz} Hz`);
+  // The filter adds delay to all three.
+  run("group-delay-subsonic").forEach((d, i) => assert.ok(at(d.result.freq, d.result.groupDelayMs, 40) > gd([se, hi, lo][i]!, 40), "filter adds delay"));
 });
 
 test("one 15 vs two 10s guide: one project (the pair as the comparison driver), max SPL and limits on the same amplifier, at 28.3 V, and the pair in series", () => {
   const F = [20, 25, 30, 35, 40, 45, 50, 60, 80];
   const rows = run("subs-example");
   assert.deepEqual(rows.map((d) => d.label), ["100 L sealed · RSS390HF-4", "150 L ported, 22 Hz · RSS390HF-4", "100 L sealed · 2 × RSS265HF-4", "150 L ported, 22 Hz · 2 × RSS265HF-4"]);
-  const want = [
-    [101.8, 105.7, 108.9, 110.9, 112.0, 112.8, 113.2, 113.7, 114.0],
-    [106.5, 112.3, 114.5, 115.1, 115.1, 115.0, 114.9, 114.7, 114.4],
-    [99.3, 103.2, 106.4, 109.1, 111.4, 113.3, 114.0, 114.8, 115.4],
-    [106.5, 112.3, 113.0, 113.5, 114.6, 115.7, 115.8, 115.9, 115.9],
-  ];
-  rows.forEach((d, i) => F.forEach((hz, k) => near(at(d.result.freq, d.result.maxSpl, hz), want[i]![k]!, 0.06, `${d.label} max SPL at ${hz} Hz`)));
+  // The tables come from the engine at build (site/liveNumbers.ts); the text's claims: the 15 ahead in the deep
+  // bass (about the 2.4 dB displacement ratio), the pair ahead higher up (by up to about 1.6 dB), ported the same at 20–25 Hz.
+  const mx = (i: number, hz: number) => at(rows[i]!.result.freq, rows[i]!.result.maxSpl, hz);
+  for (const hz of [20, 25, 30]) near(mx(0, hz) - mx(2, hz), 2.5, 0.2, `sealed 15 ahead at ${hz} Hz`);
+  for (const hz of [45, 50, 60, 80]) assert.ok(mx(2, hz) > mx(0, hz) && mx(2, hz) - mx(0, hz) < 1.7, `sealed pair ahead at ${hz} Hz`);
+  for (const hz of [20, 25]) near(mx(1, hz), mx(3, hz), 0.06, `ported same at ${hz} Hz`);
   const limit = (r: (typeof rows)[number]["result"], hz: number) => r.limitedBy[r.freq.findIndex((f) => f >= hz)];
   assert.equal(limit(rows[0]!.result, 30), "xmax");
   assert.equal(limit(rows[0]!.result, 50), "amp");
@@ -98,21 +87,11 @@ test("one 15 vs two 10s guide: one project (the pair as the comparison driver), 
   assert.equal(limit(rows[3]!.result, 25), "port");
   const peak = (r: (typeof rows)[number]["result"], y: ArrayLike<number>) => { let m = -Infinity; r.freq.forEach((f, i) => { if (f >= 10 && f <= 200) m = Math.max(m, y[i]!); }); return m; };
   // At 28.3 V: F3, Qtc, level, excursion, port speed.
-  const at28 = [
-    { f3: 33.6, qtc: 0.77, l80: 111.6, x: 11.4 },
-    { f3: 22.4, l80: 112.0, x: 9.8, v: 14.5 },
-    { f3: 40.0, qtc: 0.68, l80: 113.6, x: 14.6 },
-    { f3: 21.9, l80: 114.1, x: 14.0, v: 21.1 },
-  ];
-  rows.forEach((d, i) => {
-    const r = d.result;
-    const w = at28[i]!;
-    near(r.summary.f3!, w.f3, 0.06, `${d.label} F3`);
-    if (w.qtc) near(r.summary.qtc!, w.qtc, 0.006, `${d.label} Qtc`);
-    near(at(r.freq, r.spl, 80), w.l80, 0.06, `${d.label} at 80 Hz, 28.3 V`);
-    near(peak(r, r.excursionMm), w.x, 0.06, `${d.label} excursion`);
-    if (w.v) near(peak(r, r.portVelocity!), w.v, 0.06, `${d.label} port speed`);
-  });
+  // At 28.3 V: the pair louder at 80 Hz, the 10s past Xmax and the 15 under it, the pair's port faster (and over 17 m/s).
+  const [o15, p15, s10, p10] = rows.map((d) => d.result);
+  assert.ok(at(s10.freq, s10.spl, 80) - at(o15.freq, o15.spl, 80) > 1.5, "pair louder at 80 Hz");
+  assert.ok(peak(o15, o15.excursionMm) < 14 && peak(s10, s10.excursionMm) > 12.3 && peak(p10, p10.excursionMm) > 12.3, "the 10s past Xmax, the 15 under");
+  assert.ok(peak(p10, p10.portVelocity!) > peak(p15, p15.portVelocity!), "pair's port faster");
   // The amplifier at 80 Hz: the 15 at 37.4 V and about 367 W; the pair at about 15 A and 471 W.
   near(at(rows[0]!.result.freq, rows[0]!.result.ampAtMax.watts, 80), 367, 1, "15 watts at 80 Hz");
   near(at(rows[2]!.result.freq, rows[2]!.result.ampAtMax.amps, 80), 15.2, 0.06, "pair amps at 80 Hz");
@@ -378,71 +357,40 @@ test("shaped cabinets guide: four shapes sized to the same net volume, their siz
   near(90 - Math.atan2(380, 150) * 180 / Math.PI, 21.5, 0.05, "bevel");
 });
 
-test("amplifier matching guide: the amp's limits, the sub's impedance, watts at the rated voltage, and four wirings", async () => {
+test("amplifier matching guide: the text's claims about the amp's limits, the sub's load and the four wirings (its numbers come from the engine and site/figures.ts at build)", async () => {
   const { ampLimitsFromRatings, ampPowerInto } = await import("../packages/web/src/ampRating.ts");
-  // The Crown XLS 1002 as a voltage and a current limit, per channel and bridged.
+  const { figure } = await import("./figures.ts");
+  // The Crown XLS 1002 as a voltage and a current limit, per channel and bridged (the datasheet table is typed).
   const ch = ampLimitsFromRatings([{ watts: 350, ohms: 4 }, { watts: 550, ohms: 2 }])!;
   assert.deepEqual(ch, { volts: 37.4, amps: 16.6 });
   assert.deepEqual(ampLimitsFromRatings([{ watts: 700, ohms: 8 }, { watts: 1100, ohms: 4 }]), { volts: 74.8, amps: 16.6 });
-  near(ampPowerInto(ch, 8), 175, 0.5, "model into 8 Ω (rated 215 W)");
+  assert.ok(ampPowerInto(ch, 8) < 215, "the 8 Ω rating sits above the model's curve");
   near(Math.sqrt(215 * 8), 41.5, 0.05, "8 Ω rating's voltage");
-  near(ampLimitsFromRatings([{ watts: 525, ohms: 4 }, { watts: 775, ohms: 2 }])!.volts, 45.8, 1e-9, "XLS 1502 volts");
-  // The sub's rating as a voltage, and the amp's 4 Ω watts in the sub's V²/Re terms.
+  // The sub's rating as a voltage, and the amp's 4 Ω watts in the sub's V²/Re terms (typed arithmetic in the text).
   near(Math.sqrt(400 * 3.1), 35.2, 0.05, "volts for 400 W into Re");
   near(37.4 ** 2 / 3.1, 451, 0.5, "350 W @ 4 Ω as V²/Re");
   near(20 * Math.log10(37.4 / 35.2), 0.53, 0.005, "XLS 1002 headroom");
   near(20 * Math.log10(45.8 / 35.2), 2.29, 0.005, "XLS 1502 headroom");
   near((2 * 37.4 ** 2) / 3.1, 902, 1, "clipped to a square wave, V²/Re");
-  const r = (name: string) => run(name)[0]!.result as any;
+  const v = figure("amp-matching").values as Record<string, number>;
+  const r = (name: string) => run(name)[0]!.result;
   const one = r("amp-one"), par = r("amp-parallel"), ser = r("amp-series"), bri = r("amp-bridged");
-  const ix = (x: any, hz: number) => (x.freq as Float64Array).findIndex((f) => f >= hz);
-  const extreme = (x: any, key: string, lo: number, hi: number, sign: 1 | -1) => {
-    let best = { v: -Infinity, f: 0 };
-    x.freq.forEach((f: number, i: number) => { if (f >= lo && f <= hi && sign * x[key][i] > best.v) best = { v: sign * x[key][i], f }; });
-    return { v: sign * best.v, f: best.f };
-  };
-  // One sub's impedance: dips, peaks, phase.
-  const zmin = extreme(one, "impedanceOhm", 15, 500, -1);
-  near(zmin.v, 3.15, 0.005, "one sub lowest |Z|"); near(zmin.f, 183, 3, "where");
-  near(one.impedanceOhm[ix(one, 23.8)], 3.88, 0.01, "|Z| at the tuning");
-  const lowPk = extreme(one, "impedanceOhm", 10, 20, 1), hiPk = extreme(one, "impedanceOhm", 30, 60, 1);
-  near(lowPk.v, 17.3, 0.05, "lower peak"); near(lowPk.f, 14.6, 0.15, "at");
-  near(hiPk.v, 17.5, 0.05, "upper peak"); near(hiPk.f, 39.5, 0.2, "at");
-  near(one.impedanceOhm[ix(one, 50)], 7.84, 0.01, "|Z| at 50 Hz");
-  near(one.impedancePhaseDeg[ix(one, 50)], -45, 0.5, "phase at 50 Hz");
-  near(3.15 / 4, 0.79, 0.005, "79% of 4 Ω");
-  // Watts at the rated 35.2 V follow the impedance; the SPL doesn't.
-  [[25, 293], [40, 70], [100, 320], [150, 376]].forEach(([hz, w]) => near(one.ampAtMax.watts[ix(one, hz!)], w!, 1, `watts at ${hz} Hz`));
-  near(extreme({ freq: one.freq, w: one.ampAtMax.watts }, "w", 24, 200, 1).v, 381, 1, "most watts 24–200 Hz");
-  near(extreme({ freq: one.freq, w: one.ampAtMax.watts }, "w", 24, 200, -1).v, 70, 1, "fewest watts 24–200 Hz");
-  near(extreme(one, "spl", 30, 200, 1).v - extreme(one, "spl", 30, 200, -1).v, 1.37, 0.05, "SPL spread 30–200 Hz");
-  near(extreme({ freq: one.freq, amps: one.ampAtMax.amps }, "amps", 15, 200, 1).v, 10.8, 0.05, "one sub's peak current");
-  // Two in parallel on one channel: the dips and the current limit.
-  near(extreme(par, "impedanceOhm", 15, 500, -1).v, 1.58, 0.005, "parallel lowest |Z|");
-  near(par.impedanceOhm[ix(par, 23.8)], 1.94, 0.01, "parallel |Z| at the tuning");
-  const lim: number[] = []; par.freq.forEach((f: number, i: number) => { if (par.limitedBy[i] === "amp") lim.push(f); });
-  near(lim[0]!, 22.2, 0.15, "amp-limited from"); near(Math.max(...lim.filter((f) => f < 40)), 25.3, 0.15, "to");
-  near(Math.min(...lim.filter((f) => f > 40)), 79.0, 0.3, "and again from");
-  const unl = (() => { const s = EXAMPLES["amp-parallel"]!(); const t = { ...s, settings: { ...s.settings, ampVolts: 0, ampAmps: 0 } }; return runDesigns(t, solveDriver(t))[0]!.result as any; })();
-  near(unl.ampAtMax.amps[ix(unl, 23.8)], 17.2, 0.05, "current wanted at the tuning");
-  [[23.8, 115.1, 115.4], [25, 116.1, 116.1], [80, 118.2, 118.3], [100, 117.2, 118.3], [150, 116.3, 118.2]].forEach(([hz, a, b]) => {
-    near(par.maxSpl[ix(par, hz!)], a!, 0.05, `parallel max SPL at ${hz} Hz`);
-    near(unl.maxSpl[ix(unl, hz!)], b!, 0.05, `unlimited at ${hz} Hz`);
-  });
-  // The other wirings at 30 Hz, and what limits them.
-  near(one.maxSpl[ix(one, 30)], 111.3, 0.05, "one sub at 30 Hz");
-  near(ser.maxSpl[ix(ser, 30)], 111.9, 0.05, "series, one channel at 30 Hz");
-  near(bri.maxSpl[ix(bri, 30)], 117.4, 0.05, "series, bridged at 30 Hz");
-  near(par.maxSpl[ix(par, 30)], 117.2, 0.05, "parallel at 30 Hz");
-  near(one.maxSpl[ix(one, 100)], 112.5, 0.05, "one sub at 100 Hz");
-  near(ser.maxSpl[ix(ser, 100)], 113.2, 0.05, "series, one channel at 100 Hz");
-  near(bri.maxSpl[ix(bri, 100)], 118.7, 0.05, "series, bridged at 100 Hz");
-  assert.equal(ser.limitedBy[ix(ser, 30)], "amp");
-  assert.equal(bri.limitedBy[ix(bri, 30)], "thermal");
-  assert.ok(!bri.limitedBy.includes("amp"), "bridged never meets the amp's limits");
-  near(extreme({ freq: bri.freq, amps: bri.ampAtMax.amps }, "amps", 15, 200, 1).v, 11.0, 0.05, "bridged peak current");
-  near(extreme({ freq: ser.freq, amps: ser.ampAtMax.amps }, "amps", 15, 200, 1).v, 5.84, 0.05, "series peak current");
+  // A "4 Ω" sub just under 80 % of 4 Ω at its lowest; the parallel pair dips under 2 Ω.
+  assert.ok(v.oneMinPct! < 80 && v.oneMinPct! > 75, "just below IEC's 80 %");
+  assert.ok(v.parZTune! < 2 && v.parMin! < v.parZTune!, "parallel dips under 2 Ω");
+  // Parallel meets the amp's current limit near the tuning and again higher up, and wants more than it has.
+  assert.ok(v.ampFrom! < 23.8 && v.ampTo! > 23.8 && v.ampAgain! > 60, "two current-limited bands");
+  assert.ok(v.wantTune! > 16.6 && v.wantPeak! > 20, "wants more current than the amp has");
+  assert.ok(v.shortTune! < 0.5 && v.short150! > v.short100! && v.short100! > 0.8, "small at the tuning, bigger up top");
+  // The four wirings: series on one channel is voltage-limited and barely louder than one sub; bridged and parallel ~6 dB up.
+  const m = (x: typeof one, f: number) => at(x.freq, x.maxSpl, f);
+  assert.ok(m(ser, 30) - m(one, 30) < 1, "series barely louder than one sub");
+  near(m(bri, 30) - m(ser, 30), 5.5, 0.5, "bridged 5.5 dB over series at 30 Hz");
+  assert.ok(Math.abs(m(par, 30) - m(bri, 30)) < 0.5, "parallel and bridged alike at 30 Hz");
+  assert.ok(ser.limitedBy[ser.freq.findIndex((f) => f >= 30)] === "amp" && !bri.limitedBy.includes("amp"), "series hits the amp; bridged never does");
+  assert.ok(v.peakBri! < v.peakPar! && v.peakSer! < v.peakOne!, "bridged and series draw less current");
 });
+
 
 test("sealed / ported / PR guide: presets, rules of thumb, the three boxes at 350 W with and without a filter", async () => {
   const { sizeAllForDriver } = await import("../packages/web/src/presets.ts");
@@ -474,29 +422,24 @@ test("sealed / ported / PR guide: presets, rules of thumb, the three boxes at 35
   const ix = (r: any, hz: number) => (r.freq as Float64Array).findIndex((f) => f >= hz);
   const peak = (r: any, k: string, lo = 10, hi = 500) => { let b = { v: -1, f: 0 }; r.freq.forEach((f: number, i: number) => { if (f >= lo && f <= hi && r[k][i] > b.v) b = { v: r[k][i], f }; }); return b; };
   const dip = (r: any, lo: number, hi: number) => { let b = { v: 1e9, f: 0 }; r.freq.forEach((f: number, i: number) => { if (f >= lo && f <= hi && r.excursionMm[i] < b.v) b = { v: r.excursionMm[i], f }; }); return b; };
-  [[se, 41.1], [po, 21.1], [pr, 23.2], [po0, 20.1], [pr0, 22.65]].forEach(([r, f3], i) => near((r as any).summary.f3, f3 as number, 0.05, `F3 ${i}`));
-  near(po.summary.fb, 22.3, 0.05, "ported Fb"); near(pr.summary.fb, 22.8, 0.05, "PR Fb");
+  // Values in the text come from the engine at build (site/liveNumbers.ts); these are its claims.
+  assert.ok(po.summary.f3 < pr.summary.f3 && pr.summary.f3 < se.summary.f3, "ported deepest, then PR, then sealed");
+  assert.ok(se.summary.f3 / po.summary.f3 > 1.9, "ported a full octave below sealed");
   const v = run("box-types-example")[1]!.design as any; assert.equal(v.length_cm, 50.5);
-  near(peak(po, "portVelocity").v, 15.03, 0.05, "port speed at 350 W");
-  ([[se, [93.25, 97.4, 100.4, 105.4]], [po, [104.6, 109.45, 107.3, 108.6]], [pr, [96.1, 106.8, 105.3, 107.6]]] as const).forEach(([r, m], k) =>
-    [20, 25, 30, 40].forEach((hz, j) => near(r.maxSpl[ix(r, hz)], m[j]!, 0.05, `max SPL ${k} at ${hz} Hz`)));
-  ([[se, 24.5, 3.59], [po, 35.0, 6.54], [pr, 30.9, 5.01]] as const).forEach(([r, V, A], k) => {
-    near(r.ampAtMax.volts[ix(r, 25)], V, 0.05, `volts ${k}`); near(r.ampAtMax.amps[ix(r, 25)], A, 0.05, `amps ${k}`);
-  });
-  // Cone (and PR) travel at 350 W.
-  ([[se, 17.0, 25.0], [po, 18.4, 17.3], [pr, 19.8, 18.5], [se0, 19.96, 10], [po0, 43.5, 10], [pr0, 35.6, 10]] as const).forEach(([r, x, f], k) => {
-    const p = peak(r, "excursionMm"); near(p.v, x, 0.05, `peak travel ${k}`); near(p.f, f, 0.3, `where ${k}`);
-  });
-  near(peak(pr, "prExcursionMm").v, 21.5, 0.05, "PR travel, filtered"); near(peak(pr0, "prExcursionMm").v, 24.2, 0.05, "PR travel, no filter");
+  assert.ok(peak(po, "portVelocity").v < 17, "port under the chuffing line at 350 W");
+  for (const hz of [20, 25, 30, 40]) assert.ok(po.maxSpl[ix(po, hz)] > Math.max(se.maxSpl[ix(se, hz)], pr.maxSpl[ix(pr, hz)]), `ported loudest at ${hz} Hz`);
+  const gap = (hz: number) => at(po.freq, po.maxSpl, hz) - at(se.freq, se.maxSpl, hz);
+  assert.ok(gap(25) > 10 && gap(40) < 4, "a big lead at 25 Hz, a small one at 40 Hz");
+  // Cone travel: with the filter all three still over Xmax; without it the ported cone > 3 × Xmax, PR next, sealed least.
+  for (const r of [se, po, pr]) assert.ok(peak(r, "excursionMm").v > 12.3, "over Xmax with the filter");
+  assert.ok(peak(po0, "excursionMm").v > 3 * 12.3 && peak(pr0, "excursionMm").v < peak(po0, "excursionMm").v && peak(se0, "excursionMm").v < peak(pr0, "excursionMm").v, "no filter: ported > PR > sealed");
+  assert.ok(peak(pr0, "prExcursionMm").v > 24 && peak(pr, "prExcursionMm").v < 24, "PRs just past their 24 mm Xmax without the filter, under it with");
   near(dip(po, 18, 30).v, 6.27, 0.05, "ported dip"); near(dip(po, 18, 30).f, 22.5, 0.3, "at");
-  near(dip(pr, 18, 30).v, 9.93, 0.05, "PR dip");
+  // Group delay at 40 Hz within about 1 ms with the filter.
+  assert.ok(Math.abs(at(po.freq, po.groupDelayMs, 40) - at(se.freq, se.groupDelayMs, 40)) < 1.5, "GD at 40 Hz close");
   // Watts each box takes before its first limit (from the 350 W the slider shows).
   const w = (r: any, hz: number) => 350 * 10 ** ((r.maxSpl[ix(r, hz)] - r.spl[ix(r, hz)]) / 10);
   ([[se, 183, 284], [po, 373, 278], [pr, 291, 276]] as const).forEach(([r, a, b], k) => { near(w(r, 25), a, 1, `W at 25 Hz ${k}`); near(w(r, 40), b, 1, `W at 40 Hz ${k}`); });
-  // Group delay.
-  ([[se, 22.8, 11.0], [po, 39.1, 11.8], [pr, 43.6, 11.3], [se0, 6.9, 5.8], [po0, 23.3, 6.6], [pr0, 27.8, 6.1]] as const).forEach(([r, a, b], k) => {
-    near(r.groupDelayMs[ix(r, 25)], a, 0.05, `GD 25 ${k}`); near(r.groupDelayMs[ix(r, 40)], b, 0.05, `GD 40 ${k}`);
-  });
   // Where the sealed box out-plays the others, and the PR's notch.
   const below = (a: any) => { let f0 = 0; a.freq.forEach((f: number, i: number) => { if (f >= 10 && f <= 30 && a.maxSpl[i] < se.maxSpl[i]) f0 = f; }); return f0; };
   near(below(po), 15.6, 0.3, "sealed beats ported below"); near(below(pr), 19.2, 0.3, "sealed beats PR below");
@@ -562,26 +505,35 @@ test("compare drivers guide: RSS265HF-4 vs RSS265HO-4 at 350 W in 30 L sealed an
   const peak = (f: Float64Array, y: ArrayLike<number>) => { let m = -Infinity; f.forEach((q, i) => { if (q >= 10 && q <= 300) m = Math.max(m, y[i]!); }); return m; };
   const rows = run("compare-example");
   assert.deepEqual(rows.map((d) => d.label), ["Sealed 30 L · RSS265HF-4", "Ported 50 L, 26 Hz · RSS265HF-4", "Sealed 30 L · RSS265HO-4", "Ported 50 L, 26 Hz · RSS265HO-4"]);
-  const want = [
-    { f3: 41.9, ref: 109.6, spl: [98.0, 101.9, 106.1, 109.2], max: [97.2, 100.4, 105.4], v30: 28.3, x: 14.6 },
-    { f3: 26.4, ref: 109.6, spl: [105.2, 108.8, 110.7, 110.8], max: [106.6, 109.2, 110.1], v30: 35.0, x: 13.1, port: 10.3, len: 67.4 },
-    { f3: 54.3, ref: 108.9, spl: [96.7, 99.9, 103.3, 106.6], max: [97.0, 100.2, 105.3], v30: 34.7, x: 12.1 },
-    { f3: 24.2, ref: 108.9, spl: [107.1, 109.0, 108.0, 108.3], max: [109.6, 111.7, 110.0], v30: 45.8, x: 10.6, port: 12.8, len: 67.4 },
-  ];
-  rows.forEach((d, i) => {
-    const r = d.result;
-    const w = want[i]!;
-    near(r.summary.f3!, w.f3, 0.06, `${d.label} F3`);
-    near(r.summary.referenceSpl, w.ref, 0.06, `${d.label} passband level`);
-    [25, 30, 40, 60].forEach((f, j) => near(at(r.freq, r.spl, f), w.spl[j]!, 0.06, `${d.label} at ${f} Hz`));
-    [25, 30, 40].forEach((f, j) => near(at(r.freq, r.maxSpl, f), w.max[j]!, 0.06, `${d.label} max SPL at ${f} Hz`));
-    near(at(r.freq, r.ampAtMax.volts, 30), w.v30, 0.06, `${d.label} volts for max SPL at 30 Hz`);
-    near(peak(r.freq, r.excursionMm), w.x, 0.06, `${d.label} peak excursion`);
-    if (w.port) near(peak(r.freq, r.portVelocity!), w.port, 0.06, `${d.label} port speed`);
-    if (w.len) near((d.design as { length_cm: number }).length_cm, w.len, 0.06, `${d.label} port length`);
-  });
-  near(rows[0]!.result.summary.qtc!, 0.77, 0.006, "HF Qtc");
-  near(rows[2]!.result.summary.qtc!, 0.51, 0.006, "HO Qtc");
+  // The numbers in the guide come from the engine at build (site/liveNumbers.ts); these are its claims.
+  const [hfS, hfP, hoS, hoP] = rows.map((d) => d.result);
+  const spl = (r: typeof hfS, f: number) => at(r.freq, r.spl, f);
+  const max = (r: typeof hfS, f: number) => at(r.freq, r.maxSpl, f);
+  const between = (v: number, lo: number, hi: number, what: string) => assert.ok(v >= lo - 0.05 && v <= hi + 0.05, `${what}: ${v} (guide says ${lo}–${hi})`);
+  // "Above 100 Hz all four curves sit together … the HO's only 0.7 dB less sensitive"; "within 1.6 dB at 100 Hz".
+  near(hfS.summary.referenceSpl - hoS.summary.referenceSpl, 0.7, 0.06, "HO less sensitive");
+  const at100 = rows.map((d) => spl(d.result, 100));
+  assert.ok(Math.max(...at100) - Math.min(...at100) <= 1.65, "four curves within 1.6 dB at 100 Hz");
+  // Sealed: the HF wins, 1.9–2.7 dB louder from 30 to 60 Hz; the HO over-damped.
+  assert.ok(hfS.summary.f3! < hoS.summary.f3!, "HF sealed deeper");
+  for (const f of [30, 40, 60]) between(spl(hfS, f) - spl(hoS, f), 1.9, 2.7, `sealed HF over HO at ${f} Hz`);
+  // Ported: the HO a little deeper and louder at 25 Hz; the HF 2.5–2.7 dB louder from 40 to 60 Hz.
+  assert.ok(hoP.summary.f3! < hfP.summary.f3! && spl(hoP, 25) > spl(hfP, 25), "HO ported deeper, louder at 25 Hz");
+  for (const f of [40, 60]) between(spl(hfP, f) - spl(hoP, f), 2.5, 2.7, `ported HF over HO at ${f} Hz`);
+  // "Between −0.8 and +1.3 dB of its passband from 30 Hz up" (HF ported, relative; up to 200 Hz, the sub's band).
+  hfP.freq.forEach((f, i) => { if (f >= 30 && f <= 200) between(hfP.spl[i]! - hfP.summary.referenceSpl, -0.8, 1.3, `HF ported at ${f} Hz`); });
+  // The HF past Xmax in both boxes, the HO in neither.
+  const xPeak = (r: typeof hfS) => peak(r.freq, r.excursionMm);
+  assert.ok(xPeak(hfS) > 12.3 && xPeak(hfP) > 12.3 && xPeak(hoS) < 12.3 && xPeak(hoP) < 12.3, "only the HF over Xmax");
+  // Sealed ceilings the same within 0.2 dB (25–40 Hz); the HO's ported ceiling 2.5–3.0 dB higher at 25–30 Hz; the HO needs more volts.
+  for (const f of [25, 30, 40]) assert.ok(Math.abs(max(hfS, f) - max(hoS, f)) <= 0.25, `sealed ceilings at ${f} Hz`);
+  for (const f of [25, 30]) between(max(hoP, f) - max(hfP, f), 2.5, 3.0, `ported HO ceiling over HF at ${f} Hz`);
+  assert.ok(at(hoS.freq, hoS.ampAtMax.volts, 30) > at(hfS.freq, hfS.ampAtMax.volts, 30), "HO needs more volts");
+  // The ports under the chuffing line; both 67.4 cm (the text gives it).
+  for (const d of [rows[1]!, rows[3]!]) {
+    assert.ok(peak(d.result.freq, d.result.portVelocity!) < 17, `${d.label} port speed`);
+    near((d.design as { length_cm: number }).length_cm, 67.4, 0.06, `${d.label} port length`);
+  }
   // Size all for each driver: the boxes each one wants.
   const { sizeAllForDriver } = await import("../packages/web/src/presets.ts");
   const { withDriver } = await import("./examples.ts");
@@ -598,27 +550,23 @@ test("T/S parameters guide: DSA215-8 vs RSS210HF-4 at 21.7 V in the DSA215-8's o
   const peak = (f: Float64Array, y: ArrayLike<number>) => { let m = -Infinity; f.forEach((q, i) => { if (q >= 10 && q <= 400) m = Math.max(m, y[i]!); }); return m; };
   const rows = run("ts-example");
   assert.deepEqual(rows.map((d) => d.label), ["Sealed 10.7 L · DSA215-8", "Ported 18 L, 41.7 Hz · DSA215-8", "Sealed 10.7 L · RSS210HF-4", "Ported 18 L, 41.7 Hz · RSS210HF-4"]);
-  const want = [
-    { f3: 79.3, ref: 107.0, spl: [87.1, 93.7, 100.6], max: [88.7, 93.8], x: 5.6, qtc: 0.70 },
-    { f3: 49.2, ref: 107.0, spl: [90.9, 100.0, 105.8], max: [89.4, 99.2], x: 7.8, port: 18.7, len: 16.1 },
-    { f3: 45.7, ref: 103.1, spl: [90.5, 97.5, 103.6], max: [93.4, 98.4], x: 8.3, qtc: 1.04 },
-    { f3: 36.8, ref: 103.1, spl: [93.2, 102.6, 108.9], max: [91.7, 99.2], x: 10.1, port: 26.0, len: 16.1 },
-  ];
-  rows.forEach((d, i) => {
-    const r = d.result;
-    const w = want[i]!;
-    near(r.summary.f3!, w.f3, 0.06, `${d.label} F3`);
-    near(r.summary.referenceSpl, w.ref, 0.06, `${d.label} passband`);
-    [30, 40, 60].forEach((f, j) => near(at(r.freq, r.spl, f), w.spl[j]!, 0.06, `${d.label} at ${f} Hz`));
-    [30, 40].forEach((f, j) => near(at(r.freq, r.maxSpl, f), w.max[j]!, 0.06, `${d.label} max SPL at ${f} Hz`));
-    near(peak(r.freq, r.excursionMm), w.x, 0.06, `${d.label} peak excursion`);
-    if (w.qtc) near(r.summary.qtc!, w.qtc, 0.006, `${d.label} Qtc`);
-    if (w.port) near(peak(r.freq, r.portVelocity!), w.port, 0.06, `${d.label} port speed`);
-    if (w.len) near((d.design as { length_cm: number }).length_cm, w.len, 0.06, `${d.label} port length`);
-  });
-  // The ported RSS210HF-4 peaks 5.9 dB above its passband near 57 Hz.
-  const r3 = rows[3]!.result;
-  near(peak(r3.freq, r3.spl) - r3.summary.referenceSpl, 5.9, 0.06, "RSS210HF-4 ported peak");
+  // The numbers come from the engine at build (site/liveNumbers.ts); the text's claims:
+  const [dS, dP, rS, rP] = rows.map((d) => d.result);
+  // Each driver flat in its own boxes; the RSS210HF-4 bumps sealed (Qtc ~1) and booms ported (a ~6 dB hump near 57 Hz).
+  assert.ok(Math.abs(dS.summary.qtc! - 0.707) < 0.03 && rS.summary.qtc! > 1, "Qtc: DSA215-8 ~0.707, RSS210HF-4 over 1");
+  const rise = (r: typeof dS) => peak(r.freq, r.spl) - r.summary.referenceSpl;
+  assert.ok(rise(dS) < 1 && rise(dP) < 1 && rise(rP) > 5, "flat vs booming");
+  // The DSA215-8: early sealed roll-off, the port extends it; the RSS210HF-4 deeper sealed; the DSA215-8 louder (~4 dB).
+  assert.ok(dP.summary.f3! < dS.summary.f3! && rS.summary.f3! < dS.summary.f3!, "F3 order");
+  near(dS.summary.referenceSpl - rS.summary.referenceSpl, 3.9, 0.3, "DSA215-8 louder by about 4 dB");
+  // Excursion: the DSA215-8 just at Xmax sealed, over it ported below tuning; the RSS210HF-4 under 9 mm sealed, over it ported.
+  near(peak(dS.freq, dS.excursionMm), 5.5, 0.2, "DSA215-8 sealed at Xmax");
+  assert.ok(peak(dP.freq, dP.excursionMm) > 5.5 && peak(rS.freq, rS.excursionMm) < 9 && peak(rP.freq, rP.excursionMm) > 9, "excursion claims");
+  // Ports: the DSA215-8 a little over 17 m/s, the RSS210HF-4 well over; both 16.1 cm; the ported max SPL the same at 40 Hz (port-limited).
+  const pk = (r: typeof dS) => peak(r.freq, r.portVelocity!);
+  assert.ok(pk(dP) > 17 && pk(dP) < 20 && pk(rP) > 24, "port speeds");
+  for (const d of [rows[1]!, rows[3]!]) near((d.design as { length_cm: number }).length_cm, 16.1, 0.06, `${d.label} port length`);
+  near(at(dP.freq, dP.maxSpl, 40), at(rP.freq, rP.maxSpl, 40), 0.06, "ported max SPL equal at 40 Hz");
   // Size all for each driver: the example's boxes are the DSA215-8's.
   const { sizeAllForDriver } = await import("../packages/web/src/presets.ts");
   const { withDriver } = await import("./examples.ts");
@@ -752,8 +700,9 @@ test("passive radiator guide: the QB3 box, the finder's picks, the DS215-PR's tu
   // The example at 35 W with the 30 Hz filter.
   const [po, pr] = runDesigns(s, solveDriver(s)).map((d) => d.result);
   const max = (r: typeof po, k: "excursionMm" | "prExcursionMm" | "portVelocity") => Math.max(...Array.from(r[k]!).filter((_, i) => r.freq[i]! >= 10));
-  near(po.summary.f3!, 49.2, 0.06, "ported F3"); near(pr.summary.f3!, 52.5, 0.06, "PR F3");
-  near(max(pr, "excursionMm"), 5.33, 0.02, "woofer"); near(max(pr, "prExcursionMm"), 7.94, 0.02, "PR");
+  // The numbers come from the engine at build; the claims: the port goes a little deeper, both within limits, the PR under its 75 % band.
+  assert.ok(po.summary.f3! < pr.summary.f3! && pr.summary.f3! - po.summary.f3! < 6, "port a little deeper");
+  assert.ok(max(pr, "excursionMm") < 5.5 && max(pr, "prExcursionMm") < 0.75 * 11, "within limits, PR under the band");
   // The port table: plain tubes for 41.7 Hz in 18 L.
   for (const [dia, len, v] of [[5, 15.1, 21.5], [6, 22.6, 14.9], [7, 31.6, 11.0]]) {
     const L = portLengthForFb(18, { shape: "round", diameter_cm: dia!, length_cm: 10 } as never, 41.7);
@@ -793,4 +742,207 @@ test("every example gives each design its own id", () => {
     const ids = f().designs.map((d) => d.id);
     assert.equal(new Set(ids).size, ids.length, k);
   }
+});
+
+test("Linkwitz Transform guide: the text's claims about the three boxes (its numbers come from the engine at build)", () => {
+  const [lt, small, big] = run("lt-example").map((d) => d.result);
+  const pk = (y: ArrayLike<number>, f: Float64Array) => Math.max(...Array.from(y).filter((_, i) => f[i]! >= 10 && f[i]! <= 200));
+  // The LT goes deepest, about 12 Hz below the big box; the small box alone is shallowest.
+  assert.ok(lt.summary.f3! < big.summary.f3! - 10 && big.summary.f3! < small.summary.f3!, "F3 order");
+  // Same max SPL at 25 Hz (within 0.2 dB): the LT doesn't make it louder.
+  const m = [lt, small, big].map((r) => at(r.freq, r.maxSpl, 25));
+  assert.ok(Math.max(...m) - Math.min(...m) <= 0.2, `max SPL at 25 Hz: ${m}`);
+  // The small box needs the same amplifier with or without the LT, and more than the big box.
+  near(at(lt.freq, lt.ampAtMax.volts, 25), at(small.freq, small.ampAtMax.volts, 25), 0.5, "LT and no-EQ volts at 25 Hz");
+  assert.ok(at(small.freq, small.ampAtMax.watts, 25) > 2 * at(big.freq, big.ampAtMax.watts, 25), "the small box needs over twice the power");
+  // The filter keeps the LT inside Xmax (12.3 mm) at 40 W; the boost is under about 12 dB.
+  assert.ok(pk(lt.excursionMm, lt.freq) < 12.3, "LT inside Xmax");
+  assert.ok(40 * Math.log10(small.summary.fc! / 25) < 12.2, "boost to 25 Hz about 12 dB or less");
+  // Group delay: up at 20 Hz, down at 40 Hz, by a few ms.
+  const gd = (r: typeof lt, hz: number) => at(r.freq, r.groupDelayMs, hz);
+  assert.ok(gd(lt, 20) > gd(small, 20) && gd(lt, 20) - gd(small, 20) < 10, "LT adds a few ms at 20 Hz");
+  assert.ok(gd(lt, 40) < gd(small, 40), "LT lowers it at 40 Hz");
+});
+
+test("isobaric guide: the text's claims about the single driver and the pair (its numbers come from the engine at build)", () => {
+  const [single] = run("iso-single").map((d) => d.result);
+  const [par, parBig] = run("iso-pair").map((d) => d.result);
+  const [ser] = run("iso-series").map((d) => d.result);
+  const s60 = (r: typeof single) => at(r.freq, r.spl, 60);
+  // Half the box, about the same response.
+  for (const r of [par, ser]) {
+    near(r.summary.f3!, single.summary.f3!, 1.5, "pair F3");
+    near(r.summary.qtc!, single.summary.qtc!, 0.04, "pair Qtc");
+  }
+  // 3 dB less per watt either way; the same max SPL.
+  for (const r of [par, ser]) {
+    near(s60(single) - s60(r), 3, 0.5, "3 dB per watt");
+    for (const f of [25, 30, 40]) near(at(r.freq, r.maxSpl, f), at(single.freq, single.maxSpl, f), 0.1, `max SPL at ${f} Hz`);
+  }
+  // Parallel: same volts, twice the amps. Series: twice the volts, same amps.
+  const va = (r: typeof single) => [at(r.freq, r.ampAtMax.volts, 30), at(r.freq, r.ampAtMax.amps, 30)] as const;
+  near(va(par)[0], va(single)[0], 2, "parallel volts");
+  near(va(par)[1] / va(single)[1], 2, 0.1, "parallel amps ×2");
+  near(va(ser)[0] / va(single)[0], 2, 0.1, "series volts ×2");
+  // In the full box the pair is over-damped.
+  assert.ok(parBig.summary.qtc! < 0.66, "pair in 37.3 L over-damped");
+});
+
+test("box stuffing guide: the text's claims about the stuffed sealed and filled ported boxes (its numbers come from the engine at build)", () => {
+  const [empty, stuffed, big] = run("stuffing-sealed").map((d) => d.result);
+  const [lossy, over] = run("stuffing-sealed-losses").map((d) => d.result);
+  const rel = (r: typeof empty, hz: number) => at(r.freq, r.spl, hz) - r.summary.referenceSpl;
+  // Stuffing closes only part of the gap: F3 under 1 Hz lower with losses, about 1 dB more at 30 Hz, less hump.
+  const df3 = empty.summary.f3! - lossy.summary.f3!;
+  assert.ok(df3 > 0 && df3 < 1, `F3 drop ${df3}`);
+  near(rel(lossy, 30) - rel(empty, 30), 1, 0.4, "30 Hz gain");
+  assert.ok(lossy.summary.qtc! < stuffed.summary.qtc! && stuffed.summary.qtc! < empty.summary.qtc!, "Qtc falls with stuffing and losses");
+  assert.ok(big.summary.f3! < lossy.summary.f3!, "the full-size box still goes deeper");
+  assert.ok(over.summary.f3! > empty.summary.f3!, "overstuffed is worse than empty");
+  // Ported: filling tunes lower, gains at the very bottom, loses at 60 Hz, F3 rises, upper impedance peak drops.
+  const [pe] = run("stuffing-ported-empty").map((d) => d.result);
+  const [pf] = run("stuffing-ported-filled").map((d) => d.result);
+  assert.ok(pf.summary.fb! < pe.summary.fb! - 2, "tunes lower");
+  assert.ok(rel(pf, 30) > rel(pe, 30) && rel(pf, 60) < rel(pe, 60) - 1, "reshaped, not killed");
+  assert.ok(pf.summary.f3! > pe.summary.f3! + 5, "F3 rises");
+});
+
+test("box losses guide: the text's claims about leakage, absorption and port losses (its numbers come from the engine at build)", () => {
+  const r = (k: string) => run(k)[0]!.result;
+  const qls = [100, 20, 10, 7, 5, 3].map((q) => r(`losses-ql${q}`));
+  const pk = (x: typeof qls[0], lo: number, hi: number) => Math.max(...Array.from(x.impedanceOhm).filter((_, i) => x.freq[i]! >= lo && x.freq[i]! <= hi));
+  // More leakage: higher F3, lower peaks, same tuning.
+  for (let i = 1; i < qls.length; i++) {
+    assert.ok(qls[i]!.summary.f3! > qls[i - 1]!.summary.f3!, "F3 rises");
+    assert.ok(pk(qls[i]!, 10, 39) < pk(qls[i - 1]!, 10, 39) && pk(qls[i]!, 40, 200) < pk(qls[i - 1]!, 40, 200), "peaks drop");
+    near(qls[i]!.summary.fb!, qls[0]!.summary.fb!, 0.05, "tuning stays");
+  }
+  // Ql 100 → 7–10: F3 up 4–6 Hz, about 1 dB at 40 Hz.
+  const [q100, , q10, q7] = qls;
+  assert.ok(q10!.summary.f3! - q100!.summary.f3! >= 3.5 && q7!.summary.f3! - q100!.summary.f3! <= 6.5, "4–6 Hz");
+  // Qa hits the upper peak hardest, Qp the lower one.
+  const qa = r("losses-qa10"), qp = r("losses-qp10");
+  assert.ok(pk(qa, 40, 200) < pk(q10!, 40, 200) - 5, "Qa: upper peak drops sharply");
+  assert.ok(pk(qp, 10, 39) < pk(q10!, 10, 39) - 5, "Qp: lower peak drops");
+  // Sealed: Ql 10 costs a few Hz.
+  const d = r("losses-sealed-ql10").summary.f3! - r("losses-sealed-ql100").summary.f3!;
+  assert.ok(d > 2 && d < 6, `sealed F3 +${d}`);
+});
+
+test("port chuffing guide: the text's claims about the six ports (its numbers come from the engine at build)", () => {
+  const ports = run("port-sizes").map((d) => d.result);
+  const v = (r: (typeof ports)[0]) => Math.max(...Array.from(r.portVelocity!).filter((_, i) => r.freq[i]! >= 10 && r.freq[i]! <= 200));
+  const [p75, p10, p125, p15, slot, flared] = ports.map(v);
+  // Wider is slower; the verdicts against the 17 m/s line.
+  assert.ok(p75! > 40 && p10! > 25 && p125! > 17 && p125! < 20, "too fast / chuffs / borderline");
+  for (const q of [p15!, slot!, flared!]) assert.ok(q < 17, "quiet");
+  // The slot is about as quiet as the 15 cm tube; the flares bring the 10 cm port's ends under the line.
+  near(slot!, p15!, 3, "slot vs 15 cm");
+  assert.ok(flared! < p10! / 2, "flared ends much slower than the plain 10 cm port");
+  // The quiet ports are two to three times the 44 cm inside depth.
+  const len = run("port-sizes").map((d) => (d.design as { length_cm: number }).length_cm);
+  for (const i of [3, 4]) assert.ok(len[i]! > 2 * 40 && len[i]! < 3 * 44, `port ${i + 1} length ${len[i]}`);
+});
+
+test("subsonic filter guide: the text's claims about the five filter settings (its numbers come from the engine at build)", () => {
+  const xmax = 14.3;
+  const r = (k: string) => run(k)[0]!.result;
+  const xpk = (x: ReturnType<typeof r>) => Math.max(...Array.from(x.excursionMm).filter((_, i) => x.freq[i]! >= 10 && x.freq[i]! <= 200));
+  const off = r("subsonic-off"), hp12 = r("subsonic-12-20"), hp15 = r("subsonic-24-15"), hp18 = r("subsonic-24-18"), on = r("subsonic-on");
+  assert.ok(xpk(off) > 2 * xmax, "no filter: over twice Xmax");
+  assert.ok(xpk(hp15) > xmax, "24 dB/oct at 15 Hz still over");
+  for (const x of [hp12, hp18, on]) assert.ok(xpk(x) < xmax, "within Xmax");
+  assert.ok(xpk(on) < xpk(hp18) && xpk(hp18) < xpk(hp15), "higher filter, less excursion");
+  // The 24 dB/oct at 20 Hz filter costs about a hertz of F3; 12 dB/oct costs more for similar protection.
+  const cost = on.summary.f3! - off.summary.f3!;
+  assert.ok(cost > 0.5 && cost < 2, `F3 cost ${cost}`);
+  assert.ok(hp12.summary.f3! > on.summary.f3!, "12 dB/oct cuts more wanted bass");
+  // The filter adds group delay at 25 Hz.
+  assert.ok(at(on.freq, on.groupDelayMs, 25) > at(off.freq, off.groupDelayMs, 25) + 10, "group delay rises");
+});
+
+test("port tuning guide: the text's claims about volume, end correction and flares (its numbers come from the engine at build)", () => {
+  const t = run("port-tuning-tables").map((d) => d.result.summary.fb!);
+  // Less net volume, higher tuning; about 5 % higher Fb per 10 % less volume; a 10 % bigger box tunes lower.
+  assert.ok(t[0]! < t[1]! && t[1]! < t[2]! && t[2]! < t[3]!, "tuning rises as volume is taken out");
+  near(t[3]! / t[0]!, Math.sqrt(16.2 / 14.1), 0.01, "Fb ∝ 1/√V");
+  assert.ok(t[4]! < t[0]! - 1, "bigger box tunes low");
+  assert.ok(t[5]! > t[0]!, "flared ends tune higher at the same length");
+  // More end correction, lower tuning.
+  const k = ["port-tuning-k0614", "port-tuning-tables", "port-tuning-k085", "port-tuning-k1", "port-tuning-k12"].map((x) => run(x)[0]!.result.summary.fb!);
+  for (let i = 1; i < k.length; i++) assert.ok(k[i]! < k[i - 1]!, "K up, Fb down");
+  // Small's check: fL × fH ≈ Fs × Fb within 1 %.
+  const r = run("port-tuning-example")[0]!.result;
+  const pk = (lo: number, hi: number) => { let m = -Infinity, mf = 0; r.freq.forEach((f, i) => { if (f >= lo && f <= hi && r.impedanceOhm[i]! > m) { m = r.impedanceOhm[i]!; mf = f; } }); return mf; };
+  const fb = r.summary.fb!;
+  near(pk(10, fb) * pk(fb, 200) / (EXAMPLES["port-tuning-example"]!().ts.fs! * fb), 1, 0.01, "fL·fH / Fs·Fb");
+});
+
+test("transmission line guide: the text's claims about the three lines and the stuffing (its numbers come from the engine at build)", () => {
+  const [tl, otl, mltl] = run("tl-example");
+  const L = (d: typeof tl) => d!.design as Extract<typeof d.design, { kind: "line" }>;
+  // Offset deepest and biggest; MLTL smallest; all within Xmax 5.5 mm at 25 W.
+  assert.ok(otl!.result.summary.f3! < mltl!.result.summary.f3! && mltl!.result.summary.f3! < tl!.result.summary.f3!, "F3 order");
+  assert.ok(L(otl).vb_l > L(tl).vb_l && L(tl).vb_l > L(mltl).vb_l, "volume order");
+  for (const d of [tl, otl, mltl]) assert.ok(Math.max(...Array.from(d!.result.excursionMm).filter((_, i) => d!.result.freq[i]! >= 10 && d!.result.freq[i]! <= 200)) < 5.5, "within Xmax");
+  // The classic TL is shorter than a quarter wave at Fs (about 245 cm).
+  assert.ok(L(tl).sections.reduce((a, x) => a + x.length_cm, 0) < 245 * 0.8, "shorter than λ/4");
+  // Stuffing behind the driver: each step smooths the response and costs a little bass; a little does most of the work.
+  const score = (k: string, n = 0) => {
+    const s = EXAMPLES[k]!();
+    return scoreLine(driverInputOf(s, solveDriver(s)), s.designs[n] as Parameters<typeof scoreLine>[1], simOptionsOf(s))!;
+  };
+  const rows = [score("tl-stuff-0"), score("tl-stuff-3"), score("tl-example", 1), score("tl-stuff-10")];
+  for (let i = 1; i < rows.length; i++) assert.ok(rows[i]!.ripple < rows[i - 1]!.ripple && rows[i]!.f3 > rows[i - 1]!.f3, "smoother, less bass");
+  assert.ok(rows[0]!.ripple - rows[1]!.ripple > rows[1]!.ripple - rows[3]!.ripple, "a little stuffing does most of the work");
+});
+
+test("simulation vs measurement guide: the text's claims about tolerances, baffle step and a hot coil (its numbers come from the engine at build)", () => {
+  const r = (k: string) => run(k)[0]!.result;
+  const base = r("losses-ql10");
+  const f3 = (k: string) => r(k).summary.f3!;
+  // Tolerance moves the F3 of this small ported box by up to more than 10 Hz.
+  assert.ok(f3("tol-fs-up") - base.summary.f3! > 10, "Fs +15 %: over 10 Hz higher");
+  assert.ok(f3("tol-fs-down") < base.summary.f3! && f3("tol-vas-down") < base.summary.f3!, "Fs or Vas down: deeper");
+  assert.ok(f3("tol-vas-up") > base.summary.f3! && f3("tol-qes-down") > base.summary.f3! && f3("tol-qes-up") < base.summary.f3!, "the other directions");
+  // Baffle step: 4–6 dB less in the bass, less higher up.
+  const bs = (hz: number) => at(base.freq, base.spl, hz) - at(r("sim-baffle").freq, r("sim-baffle").spl, hz);
+  for (const hz of [40, 50, 60]) assert.ok(bs(hz) > 4 && bs(hz) < 6.5, `baffle step at ${hz} Hz: ${bs(hz)}`);
+  assert.ok(bs(300) < bs(50) / 2, "smaller at 300 Hz");
+  // A coil at 100 °C: 1–2 dB less across the bass.
+  for (const hz of [40, 100]) {
+    const d = at(base.freq, base.spl, hz) - at(r("sim-hot").freq, r("sim-hot").spl, hz);
+    assert.ok(d > 0.7 && d < 2.5, `hot coil at ${hz} Hz: ${d}`);
+  }
+});
+
+test("guide figures: the claims their captions and text make (the numbers come from site/figures.ts at build)", async () => {
+  const { figure } = await import("./figures.ts");
+  const n = (name: string, key: string) => figure(name).values[key] as number;
+  // One 15 or two 10s: both boxes cross within a hertz of each other; series never gets near zero; the 15's sealed lead is the displacement ratio.
+  assert.ok(Math.abs(n("subs-difference", "crossSealed") - n("subs-difference", "crossPorted")) < 1, "same crossing");
+  assert.ok(n("subs-difference", "seriesMin") > 2, "series pair never near");
+  near(n("subs-difference", "sealedLead"), 20 * Math.log10(1.16 / 0.88), 0.1, "displacement ratio");
+  // Cabin gain: smaller cabins lift more and start higher.
+  const at30 = [180, 250, 350, 450].map((cm) => n("car-cabin-length", `at30_${cm}`));
+  for (let i = 1; i < at30.length; i++) assert.ok(at30[i]! < at30[i - 1]!, "smaller cabin, more lift");
+  // Box + cabin: the sealed box's in-car response stays within a few dB from 30 to 80 Hz; the ported box humps.
+  assert.ok(n("car-cabin-sum", "sealedRipple") < 4 && n("car-cabin-sum", "portedRipple") > 7, "sealed flat, ported humps");
+  // Baffle step: off-centre lowers the peak and nearly removes the dip; the step costs 5–6 dB of maximum SPL at 50 Hz.
+  assert.ok(n("baffle-step-placement", "offPeak") < n("baffle-step-placement", "centredPeak") - 0.5, "lower peak");
+  assert.ok(n("baffle-step-placement", "offDip") > -0.5 && n("baffle-step-placement", "centredDip") < -1, "dip all but gone");
+  assert.ok(n("baffle-step-placement", "maxLoss50") > 5 && n("baffle-step-placement", "maxLoss50") < 6.5, "max SPL cost");
+  // Amp matching: a fivefold swing in watts at one voltage, while the SPL stays within 1.5 dB.
+  assert.ok(n("amp-matching-watts", "wMax") / n("amp-matching-watts", "wMin") > 5, "fivefold");
+  assert.ok(n("amp-matching-watts", "splSpread") < 1.5, "SPL steady");
+  // Amp: the knee where current and voltage limits meet sits between 2 and 2.5 Ω; parallel subs dip under 2 Ω.
+  assert.ok(n("amp-matching", "knee") > 2 && n("amp-matching", "knee") < 2.5 && n("amp-matching", "parMin") < 2, "knee and dip");
+  near(n("amp-matching", "serMin") / n("amp-matching", "oneMin"), 2, 0.05, "series doubles the load");
+  // T/S: the bigger-Vas driver needs the smaller box, by a lot.
+  assert.ok(n("ts-box-size", "vasA") > n("ts-box-size", "vasB") && n("ts-box-size", "vbA") < n("ts-box-size", "vbB") / 3, "Vas isn't box size");
+  // Tapered boxes: the upright-wall shortcut is high (most for a pyramid); the frustum formula on a wedge is a third low.
+  near(n("shaped-cabinets-shortcuts", "uprightMax"), 19, 1, "upright shortcut");
+  near(n("shaped-cabinets-shortcuts", "wedgeMin"), 100 / 3, 0.01, "frustum on a wedge");
+  // DVC: 0.15 Ω costs parallel about 1 dB, series a third of a dB at most; parallel loses least at resonance.
+  assert.ok(n("dvc-wiring", "sealedSeriesMax") < 0.4 && n("dvc-wiring", "sealedParallelMax") > 0.9 && n("dvc-wiring", "sealedParallelMin") < 0.4, "who pays for the 0.15 Ω");
 });

@@ -10,15 +10,26 @@ const W = 640;
  * Impulse or step response of each design against time (ms), scaled to a peak of ±1. A plain
  * linear chart: the frequency charts' crosshair and readouts don't apply to a time axis.
  */
-export function TimeChart(props: { title: string; curves: Transient[]; view: "impulse" | "step"; from_ms: number; to_ms: number; hidden?: boolean; actions?: ReactNode }) {
-  const [hoverT, setHoverT] = useState<number | null>(null);
+export function TimeChart(props: {
+  title: string;
+  curves: Transient[];
+  view: "impulse" | "step";
+  from_ms: number;
+  to_ms: number;
+  hidden?: boolean;
+  actions?: ReactNode;
+  /** Drawn once for a guide page: sized for this width, no switches, a cursor only at `at` (ms). */
+  still?: { width: number; at?: number };
+}) {
+  const still = props.still;
+  const [hoverT, setHoverT] = useState<number | null>(still?.at ?? null);
   // Like the frequency charts: on a phone the 640-unit chart shrinks, so text and lines grow by
   // k to stay readable, and the chart gets taller.
   const svgRef = useRef<SVGSVGElement>(null);
-  const [k, setK] = useState(1);
+  const [k, setK] = useState(() => (still ? Math.min(2, Math.max(1, W / still.width)) : 1));
   useEffect(() => {
     const el = svgRef.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
+    if (!el || still || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(([e]) => {
       const w = e?.contentRect.width ?? W;
       setK(w > 0 ? Math.min(2, Math.max(1, W / w)) : 1);
@@ -92,7 +103,7 @@ export function TimeChart(props: { title: string; curves: Transient[]; view: "im
     <figure className="chart" hidden={props.hidden} data-chart="transient">
       <figcaption>
         <span className="chart-title">{props.title}</span>
-        {props.actions && <span className="chart-actions">{props.actions}</span>}
+        {props.actions && !still && <span className="chart-actions">{props.actions}</span>}
         <span className="chart-hint muted">Peak scaled to 1</span>
       </figcaption>
       <div className="chart-body">
@@ -169,7 +180,7 @@ export function TimeChart(props: { title: string; curves: Transient[]; view: "im
           )}
         </svg>
       </div>
-      <div role="status" aria-live="off">
+      <div className={still ? undefined : "legend-below"} role="status" aria-live="off">
         <ChartLegend atHeading={hoverT === null ? null : `@ ${hoverT.toFixed(1)} ms`} columns={[]} rows={rows} />
       </div>
     </figure>

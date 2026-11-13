@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Sparkle } from "./Logo.tsx";
 import { Card, Num, Select } from "./components.tsx";
 import { useUnits } from "./units.ts";
-import { dimensionsFor, linkedDesign, solveWedgeFor, volumeFor, wedgeToVolume } from "./sim.ts";
+import { actingFactor, dimensionsFor, linkedDesign, solveWedgeFor, volumeFor, wedgeToVolume } from "./sim.ts";
 import { stuffFactor } from "./stuffing.ts";
 import type { AppState, ShapeKind } from "./state.ts";
 import { WedgeFields } from "./WedgeFields.tsx";
@@ -24,7 +24,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
   const { fmt } = useUnits();
   const target = linkedDesign(s);
   const r = volumeFor(s, target);
-  const fill = target ? stuffFactor(target) : 1;
+  const fill = target ? actingFactor(s, target) : 1;
   // Fields for parts the linked design doesn't have are hidden (unlinked: all shown).
   const rearOf = (d: typeof target) => (d?.kind === "bandpass" && d.order !== "4" ? d.rearOpening : null);
   const hasPr = !target || target.kind === "pr" || rearOf(target) === "pr";
@@ -211,7 +211,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
           </tr>
           {fill !== 1 && (
             <tr className="total">
-              <th>Acts as (stuffing)</th>
+              <th>Acts as ({target && stuffFactor(target) !== 1 ? "stuffing" : "Qa"})</th>
               <td>{fmt(r.net_l * fill, "vol", 2)}</td>
             </tr>
           )}

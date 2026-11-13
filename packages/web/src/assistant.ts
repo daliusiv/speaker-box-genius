@@ -28,7 +28,8 @@ import {
 import { doubtsXmax, type DbIndex, type LoadedDriver } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
 import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
-import { airLimitOf, airOf, endCorrectionOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, limitsOf, checkFromHz, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
+import { airLimitOf, airOf, endCorrectionOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, enclosureOptsOf, limitsOf, checkFromHz, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
+import { qaGain } from "./stuffing.ts";
 import { portCandidates, portFieldsOf, portSpeedFor, chamberPortFields, needsSpace, type AssistantPort, type PortSpace } from "./ports.ts";
 import { bandRipple, sizeBandpass, type BandpassFound, type BandpassOrder } from "./bandpassSize.ts";
 export { choosePort, portCandidates, portFieldsOf, type AssistantPort } from "./ports.ts";
@@ -548,7 +549,9 @@ export function evaluateDriver(
   const losses = s.settings.losses;
 
   const run = (design: DesignState, vb: number) => {
-    const r = simulate(drv, enclosureOf(design, vb, losses, s.volume.wall_mm), opts);
+    // As the app sizes it: with Settings → Absorption "bigger box", Qa scales the volume (VituixCAD's way).
+    const act = s.settings.qaVolume && (design.kind === "sealed" || design.kind === "vented" || design.kind === "pr") ? qaGain(losses.qa) : 1;
+    const r = simulate(drv, enclosureOf(design, vb * act, losses, s.volume.wall_mm, undefined, enclosureOptsOf(s)), opts);
     if (room) {
       const lift = r.freq.map((f) => roomGainDb(f, room));
       r.spl = r.spl.map((v, i) => v + lift[i]!);

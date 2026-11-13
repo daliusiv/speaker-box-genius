@@ -551,7 +551,7 @@ export function LineBody(p: {
           ]}
           onChange={(mouth) => set({ mouth })}
         />
-        {d.mouth === "custom" && <Num label="Extra" q="len" value={d.mouthDistance_cm} min={0} title="How much further the mouth is from the listener than the driver" onChange={(mouthDistance_cm) => set({ mouthDistance_cm })} />}
+        {d.mouth === "custom" && <Num label="Extra" q="len" value={d.mouthDistance_cm} min={0} title="How much further the mouth is from the listener than the driver (with SPL from radiated power: how far apart they are, as Hornresp's Acoustic Path Length)" onChange={(mouthDistance_cm) => set({ mouthDistance_cm })} />}
       </div>
 
       {d.sections.map((s, i) => (

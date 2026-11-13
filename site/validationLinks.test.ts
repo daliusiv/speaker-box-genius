@@ -56,7 +56,7 @@ test("every Hornresp line and horn opened in the app matches Hornresp (at the re
     const s = hornrespLineState(id, HORNRESP_TITLES[id as keyof typeof HORNRESP_TITLES] ?? id);
     assert.ok(s, `${id}: no project`);
     const d = s.designs[0]!;
-    const r = simulate(driverInputOf(s, solveDriver(s)), enclosureOf(d, builtVbOf(s, d), lossesFor(s, d), s.volume.wall_mm), { ...simOptionsOf(s), fMin: 10, fMax: 2000, points: 16000 });
+    const r = simulate(driverInputOf(s, solveDriver(s)), enclosureOf(d, builtVbOf(s, d), lossesFor(s, d), s.volume.wall_mm, s.volume), { ...simOptionsOf(s), fMin: 10, fMax: 2000, points: 16000 });
     const rows = readTable(join(FIXTURES, "hornresp", id, "hornresp.txt")).filter((x) => x.Freq! <= 1000);
     const mean = (a: number[]) => a.reduce((p, c) => p + c, 0) / a.length;
     const spl = mean(rows.map((x) => Math.abs(interp(r.freq, r.spl, x.Freq!) - x.SPL!)));
@@ -80,7 +80,7 @@ test("every Hornresp box, filter, EQ and stuffed-line case opened in the app is 
     const d = s.designs[0]!;
     // The app's pipeline (sim.ts): its driver, enclosure and options, at the comparison's sweep.
     const eq = s.eq.map(({ id: _i, on: _o, target: _t, ...e }) => e);
-    const r = simulate(driverInputOf(s, solveDriver(s)), enclosureOf(d, builtVbOf(s, d), lossesFor(s, d), s.volume.wall_mm), {
+    const r = simulate(driverInputOf(s, solveDriver(s)), enclosureOf(d, builtVbOf(s, d), lossesFor(s, d), s.volume.wall_mm, s.volume), {
       ...simOptionsOf(s),
       eq: eq as never,
       fMin: 10,

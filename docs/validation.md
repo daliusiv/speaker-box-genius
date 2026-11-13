@@ -1,7 +1,7 @@
 # Validation
 
 Speaker Box Genius is checked against **WinISD 0.7.0.950** (real WinISD project files) and
-**Hornresp 60.70** (re-run 10 Nov 2026; 60.60 gave identical exports) (Hornresp's own exported results: SPL, impedance, cone excursion, group
+**Hornresp 60.70** (re-run 10 Nov 2026; 60.60 gave identical exports; the wizard box cases B4–B6, B12, B14, B15 and S1–S5 are on 60.60 only, re-run 12 Nov 2026) (Hornresp's own exported results: SPL, impedance, cone excursion, group
 delay and the line's acoustic impedance for lines and horns; SPL, impedance, excursion and the
 port's or passive radiator's own output for sealed, ported, PR and bandpass boxes). Every comparison is an
 automated test, and the results are published at
@@ -209,6 +209,75 @@ in `packages/engine/test/fixtures/crosscheck/`, compared by `crosscheck.test.ts`
 WinISD's voice-coil connection (Parallel/Series) on a two-coil driver changes nothing in its
 simulation: the driver's values are taken as already wired, which is how the app imports them.
 
+### VituixCAD (Settings → Match → VituixCAD)
+
+**F3.** WinISD reads F3 from the passband, VituixCAD from the curve's maximum. The app does either; peak mode
+searches the bass up to 5 × the box's Fc or Fb, and uses the passband if the response is still
+rising there. VituixCAD 3's Enclosure tool, driver Fs 30 Hz, Qms 5, Qes 0.45, Vas 50 L, Re 6 Ω,
+Sd 500 cm², 2.83 V; f3 / f6 / f10 in Hz:
+
+| Box | VituixCAD | App (peak) |
+|---|---|---|
+| Sealed 20 L, lossless | 52.6 / 41.2 / 31.7 | 52.4 / 41.1 / 31.8 |
+| Sealed 20.3 L, Qa 100, QL 7 | 56.6 / 43.6 / 33.6 | 56.1 / 43.6 / 33.3 |
+| Vented 50.1 L, Fb about 30 Hz, lossless | 27.9 / 25.2 / 22.8 | 27.7 / 25.2 / 22.6 |
+| Vented 50.7 L, Qa 100, QL 7, Qp 100 | 29.5 / 25.9 / 22.4 | 29.6 / 25.9 / 22.6 |
+
+Within 0.3 Hz, except the lossy sealed f3 (0.5 Hz). The conventions differ most on boxes with a hump or a
+high Q: a vented box with a 1.3 dB hump reads 27.7 Hz from the peak and 26.6 Hz from the passband; a small
+sealed box (Qtc well above 1) can move 5-10 Hz; flat boxes (Qtc 0.5-0.7) under 1 Hz. The WinISD
+comparison above checks F3 from the passband. Tests: `f3ref.test.ts` (engine and web).
+
+The preset sets F3 from the response peak, coil inductance off, leaked air lost, Absorption "damping + bigger box" and Port sound "from the port's far end". Air stays standard, and losses, Rg and units are kept, as with the other presets. With it, the Enclosure tool and the app agree: sealed and vented f3/f6/f10 within 0.3 Hz (lossy sealed f3 0.5 Hz), group delay within about 0.15 ms, impedance peaks within about 1 %.
+
+**Coil inductance.** VituixCAD's enclosure tool leaves Le out of the SPL: with Le 2 mH its f3/f6/f10 don't move, though its impedance includes Le. The preset turns Le off for the SPL only.
+
+**Absorption (Settings → Box losses → Absorption).** VituixCAD's Qa makes the box act larger, as Vb × (1 + 0.9·Qa^−0.9): +1.4 % at Qa 100, +11.3 % at Qa 10, +48 % at Qa 2. Box volume it reports for 500 L typed:
+
+| Qa | 2 | 5 | 10 | 20 | 50 | 100 | 200 | 500 | 1000 |
+|---|---|---|---|---|---|---|---|---|---|
+| VituixCAD (L) | 741.1 | 605.7 | 556.7 | 530.4 | 513.3 | 507.1 | 503.8 | 501.7 | 500.9 |
+
+The formula matches within VituixCAD's display rounding (0.05 L on 500 L) for any volume and tuning. It is ignored when stuffing is set (stuffing has its own gain). Alignment presets give the slightly smaller typed volume VituixCAD's tables give; they were 1-2 % smaller than ours at Qa 100, which this explains. Bandpass chambers follow too, and exports to WinISD and LTspice carry the volume the box acts as, with a note.
+
+**Port sound (Settings → Ports → Port sound).** A ported box in VituixCAD with the port left next to the driver has its port heard later by the port's length (the physical length, no end correction), at the same level. Found by changing only the port's length at the same box and tuning (Fb 30 Hz, 50 L, and one 10 L box); the group delay peak in ms:
+
+| Port | VituixCAD | App |
+|---|---|---|
+| Ø3 × 2.1 cm | 26.1 | 26.10 |
+| Ø5 × 8.8 cm | 25.9 | 25.95 |
+| Ø7 × 19.6 cm | 25.6 | 25.60 |
+| Ø10 × 43.7 cm | 24.8 | 24.87 |
+| Ø7 × 12 cm, 10 L | 11.9 | 11.93 |
+
+All within 0.07 ms (with the end correction added, the app read 0.08-0.19 ms low). "On the back" or a set distance still wins; bandpass boxes are unchanged.
+
+**Passive radiator boxes.** A PR left next to the driver is heard later by the spacing of their centres side by side, (driver diameter + PR diameter) / 2, which is VituixCAD's rule. Measured in VituixCAD 3 (40 L box, driver Sd 500 cm², the same acoustic PR with only its size changed); the group delay peak in ms:
+
+| PR | VituixCAD | App |
+|---|---|---|
+| Sd 200 cm² | 22.9 | 22.85 |
+| Sd 800 cm² | 22.5 | 22.47 |
+| Two Sd 200 cm² | 21.1 | 21.11 |
+| Sd 200 cm², 10 L | 8.2 | about 8.25 |
+
+Without it the app read 0.3-1 ms higher. The number of PRs doesn't change the spacing rule. F3, F6 and F10 move by 0.1 Hz or less. The other PR checks hold too: f3, f6 and f10 within 0.4 Hz, tuning, PR and cone excursion match, and the Qa volume gain applies to PR boxes as well.
+
+**Bandpass boxes.** The app's bandpass boxes have a leak between the chambers (Qicl 100 by default, as in WinISD and OpenISD); VituixCAD has none. Clear Qicl to compare. Rear 10 L closed, front 35 L, Ø7 × 15 cm port, all Q 1000:
+
+| | VituixCAD | App, Qicl 100 | App, Qicl cleared |
+|---|---|---|---|
+| Highest impedance peak (Ω) | 70.2 | 56.3 | 70.8 |
+| Group delay peak (ms) | 76.3 | 80.1 | 78.55 |
+| f3 / f6 / f10 (Hz) | 34.1 / 32.7 / 30.8 | 33.7 / 32.5 / 30.7 | 33.7 / 32.5 / 30.7 |
+| Port speed (m/s) | 9.7 | 9.66 | 9.69 |
+
+A rear 40 L version agrees the same way (impedance within 1 %, F3 within 0.15 Hz). A small difference remains: F3 0.15-0.4 Hz and group delay up to 3 %; the app's bandpass matches Hornresp to 0.03 dB. The preset doesn't change Qicl: like the other box losses it describes your build, and presets keep losses.
+
+**Air.** VituixCAD's ρc² is about 0.4 % lower than standard air, which is about 0.1 Hz, so the preset leaves air standard.
+
+Tests: `vituixcad.test.ts` (the whole preset against VituixCAD's f3/f6/f10, impedance peaks, group delay and port speed, for sealed, ported and passive radiator boxes) and `qavolume.test.ts` (the Qa volume).
+
 ## Not compared with WinISD or Hornresp
 
 These have no equivalent in either program, so they're checked by their own tests.
@@ -318,6 +387,10 @@ Hornresp's FDD model: the suspension is Rms + 1/(jω(Cms − j·Ams)), with its 
 ### Semi-inductance coil model (Driver → Coil model)
 
 Hornresp's semi-inductance model (Thorborg and Futtrup): Re + jωLeb + (jωLe ∥ Rss ∥ Ke·√(jω)), in place of Le and L2R2. Compared with Hornresp on a sealed box with three parameter sets, one with its own Re′ (see its notes): impedance within 0.3 % up to 20 kHz, the coil's effect on SPL within 0.03 dB. Re′, when set, is the coil's resistance; Bl stays from Re and Qes, as in Hornresp. Checks (`simulate.test.ts`): the closed form at three frequencies, and series isobaric coils doubling it.
+
+### Port and PR position (Box → port or PR card → Position)
+
+A port or passive radiators next to the cone (the default, as WinISD has them), on the back panel (the volume calculator's outside depth, when it's linked to the box) or a set distance away; a parallel 6th-order bandpass box takes the distance between its two openings. Settings → SPL decides how the two add up, as for a line's mouth. In front of the box, the port's sound arrives d/c later at the same level (a far listener on axis). VituixCAD's Enclosure tool hears the port from its far end instead (Settings → Ports → Port sound; see the VituixCAD section), which is where its 2–3 % lower group delay comes from. From radiated power, the two are point sources d apart with their powers summed, |a|² + |b|² + 2·Re(a·b*)·sinc(kd), as Hornresp's Acoustic Path Length: the level changes, the phase doesn't (matched to Hornresp 60.60 on the ported box B2 with the port 25, 50 and 100 cm away and the PR box B3 with the PR 50 cm away: 0.012–0.015 dB on average, as on lines, cases 34–36). The SPICE netlist delays the port's sound with a matched lossless line (ledger #29; cases p01–p03, within 1e-9 dB of the engine); radiated power has no linear-circuit form, so a netlist from that setting says so. Checks: a distance of 0 gives the same numbers bit for bit; impedance, excursion and port speed never change; a 4th-order or series 6th-order bandpass box (one opening to the room) is unaffected. When a distance is set, the Response chart adds the same box with its port side by side, dashed.
 
 ### Max SPL: power rating against real power, amplifier limits
 

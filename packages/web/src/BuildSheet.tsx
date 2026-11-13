@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { braceVolume, cutList, layoutSheets, piecesOf, wedgeCutList, type CutList, type Layout } from "@sbg/engine";
 import { Card, Num, REPO, Select } from "./components.tsx";
-import { cutoutFromSd, lineFoldOf, lineLength, lineSegmentsOf, linkedDesign, prTotal, volumeFor, wedgeDimsOf, type Design } from "./sim.ts";
+import { actingFactor, cutoutFromSd, lineFoldOf, lineLength, lineSegmentsOf, linkedDesign, prTotal, volumeFor, wedgeDimsOf, type Design } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { encodeStateShort, type AppState, type DesignState, type LineDesign } from "./state.ts";
 import { qrSvg } from "./qrDraw.ts";
@@ -236,7 +236,7 @@ export function BuildSheet(props: {
               {d.name.toLowerCase().startsWith(KIND[d.kind].toLowerCase()) ? "" : ` (${KIND[d.kind].toLowerCase()})`} with {drivers} × {props.driverName || "driver"}
               {sim?.result.summary.fb ? `, tuned to ${sim.result.summary.fb.toFixed(1)} Hz` : ""}
               {sim?.result.summary.f3 ? `, F3 ${sim.result.summary.f3.toFixed(1)} Hz` : ""}. Net volume {vol.net_l.toFixed(1)} L
-              {stuffFactor(d) !== 1 ? ` (acts as ${(vol.net_l * stuffFactor(d)).toFixed(1)} L with stuffing)` : ""}.
+              {actingFactor(s, d) !== 1 ? ` (acts as ${(vol.net_l * actingFactor(s, d)).toFixed(1)} L with ${stuffFactor(d) !== 1 ? "stuffing" : "Qa"})` : ""}.
             </>
           ) : (
             <>The box in the volume calculator. Choose a design under “Used by” to add its port or passive radiators.</>

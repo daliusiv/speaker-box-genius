@@ -2,7 +2,7 @@
 title: "Matching an amplifier to your subwoofer: volts, amps and why impedance dips matter"
 description: Read an amp's watt ratings as a voltage limit and a current limit, see how far a "4 Ω" sub's impedance really swings in its box, and find out when a dip runs your amp out of current, with a Crown XLS 1002 and two ported 12s you can open and change.
 path: guides/amp-matching
-image: amp-matching.png
+image: chart:amp-one+amp-parallel+amp-series+amp-bridged/maxspl
 order: 27
 group: start
 ---
@@ -19,8 +19,8 @@ That's what this guide sorts out. We'll turn an amp's watt ratings into the two 
 
 - **An amp's watt ratings hide two limits.** It runs out of **voltage** into high impedances and **current** into low ones. Two of its ratings give you both: the XLS 1002's 350 W into 4 Ω is 37.4 V, its 550 W into 2 Ω is 16.6 A.
 - **Match volts, not watts.** A driver's power rating is a voltage in disguise, worked out over its lowest impedance, about Re [4][5]. This sub's 400 W is 35.2 V. The "350 W" amp makes 37.4 V, which by the sub's own yardstick is 451 W.
-- **A 4 Ω sub isn't 4 Ω.** In its box this one swings from 3.15 Ω to 17.5 Ω. The watts it draws swing with it (70 W to 381 W at the same 35.2 V) while the sound stays within 1.4 dB.
-- **The dips are where current runs out.** Two subs in parallel dip to 1.94 Ω at the tuning and want 17.2 A there. The amp has 16.6 A, so it's the limit from 22 to 25 Hz and again above 79 Hz.
+- **A 4 Ω sub isn't 4 Ω.** In its box this one swings from {{fig:amp-matching/oneMin:2}} Ω to {{fig:amp-matching/oneMax}} Ω. The watts it draws swing with it ({{fig:amp-matching-watts/wMin:0}} W to {{fig:amp-matching-watts/wMax:0}} W at the same 35.2 V) while the sound stays within {{fig:amp-matching-watts/splSpread}} dB.
+- **The dips are where current runs out.** Two subs in parallel dip to {{fig:amp-matching/parZTune:2}} Ω at the tuning and want {{fig:amp-matching/wantTune}} A there. The amp has {{fig:amp-matching/amps}} A, so it's the limit from {{fig:amp-matching/ampFrom:0}} to {{fig:amp-matching/ampTo:0}} Hz and again above {{fig:amp-matching/ampAgain:0}} Hz.
 - **The cheapest fix is wiring.** One sub per channel, or both in series on the bridged amp, and the amp never limits.
 
 ## The setup: two 12s and a Crown
@@ -43,9 +43,9 @@ A power rating into a resistor is a voltage and a current at the same time: V = 
 
 Into high impedances the amp tops out on **voltage**, set by its power supply. Into the lowest load it's rated for, it tops out on **current**, set by its output stage and its protection. So a pair of numbers describes it: **37.4 V and 16.6 A** per channel, **74.8 V and 16.6 A** bridged. Plug those back in and you get 350, 550, 700 and 1100 W.
 
-![The Crown XLS 1002 modelled as a voltage limit and a current limit: the watts it can deliver against load impedance, one channel (solid) and bridged (dashed), with its datasheet ratings as dots. Underneath, how far the subs' impedance swings from 15 to 200 Hz: one sub 3.15–17.5 Ω, two in parallel 1.58–8.8 Ω, two in series 6.3–35 Ω.](img/amp-matching.png)
+![The Crown XLS 1002 modelled as a voltage limit and a current limit: the watts it can deliver against load impedance, one channel (solid) and bridged (dashed), with its datasheet ratings as dots. Underneath, how far the subs' impedance swings from 15 to 200 Hz: one sub {{fig:amp-matching/oneMin:2}}–{{fig:amp-matching/oneMax}} Ω, two in parallel {{fig:amp-matching/parMin:2}}–{{fig:amp-matching/parMax}} Ω, two in series {{fig:amp-matching/serMin}}–{{fig:amp-matching/serMax:0}} Ω.](figure:amp-matching)
 
-Read the curve from the left. Below about 2.3 Ω the amp is **current-limited**: halve the impedance and you halve the watts. Above it, it's **voltage-limited**: double the impedance and you halve the watts. The peak is where the two meet, at 37.4 V ÷ 16.6 A = 2.25 Ω.
+Read the curve from the left. Below about {{fig:amp-matching/knee}} Ω the amp is **current-limited**: halve the impedance and you halve the watts. Above it, it's **voltage-limited**: double the impedance and you halve the watts. The peak is where the two meet, at {{fig:amp-matching/volts}} V ÷ {{fig:amp-matching/amps}} A = {{fig:amp-matching/knee:2}} Ω.
 
 The one dot that sits off the curve is 8 Ω. That's real: a lighter load drags the supply down less, so into 8 Ω the amp manages 41.5 V instead of 37.4. Taking the voltage from the 4 Ω rating is the conservative choice, and subs live near 4 Ω anyway.
 
@@ -57,24 +57,24 @@ One caveat on Crown's numbers: they're **1 kHz** ratings at 0.5% distortion [1].
 
 The sticker says 4 Ω. The coil's DC resistance (Re) is 3.1 Ω. In the box, the impedance does this:
 
-![Impedance of one RSS315HF-4 in 83.5 L at 23.8 Hz, from the app: peaks of 17.3 Ω at 14.6 Hz and 17.5 Ω at 39.5 Hz, a dip of 3.88 Ω at the 23.8 Hz tuning, and the lowest point, 3.15 Ω, around 183 Hz.](img/amp-matching-impedance.png)
+![Impedance of one RSS315HF-4 in 83.5 L at 23.8 Hz, from the app: peaks of {{num:amp-one/1/zlo}} Ω at {{num:amp-one/1/zlof:1}} Hz and {{num:amp-one/1/zpk}} Ω at {{num:amp-one/1/zpkf:1}} Hz, a dip of {{fig:amp-matching/oneZTune:2}} Ω at the 23.8 Hz tuning, and the lowest point, {{fig:amp-matching/oneMin:2}} Ω, around {{fig:amp-matching/oneMinF:0}} Hz.](chart:amp-one/impedance)
 
 Two humps and two valleys:
-- **The peaks (17.3 Ω at 14.6 Hz, 17.5 Ω at 39.5 Hz)** are the box and the cone resonating together. That's the classic vented-box double peak [11].
-- **The valley at the tuning (3.88 Ω at 23.8 Hz)** is where the port does the work and the cone barely moves, so the driver looks almost like its bare coil.
-- **The lowest point (3.15 Ω around 183 Hz)** is where the cone's moving mass and the coil's inductance roughly cancel.
+- **The peaks ({{num:amp-one/1/zlo}} Ω at {{num:amp-one/1/zlof:1}} Hz, {{num:amp-one/1/zpk}} Ω at {{num:amp-one/1/zpkf:1}} Hz)** are the box and the cone resonating together. That's the classic vented-box double peak [11].
+- **The valley at the tuning ({{fig:amp-matching/oneZTune:2}} Ω at 23.8 Hz)** is where the port does the work and the cone barely moves, so the driver looks almost like its bare coil.
+- **The lowest point ({{fig:amp-matching/oneMin:2}} Ω around {{fig:amp-matching/oneMinF:0}} Hz)** is where the cone's moving mass and the coil's inductance roughly cancel.
 
-3.15 Ω is 79% of 4 Ω. The loudspeaker standard IEC 60268-5 asks that a speaker's impedance never fall below 80% of its rated value in its working range [3], so this sub sits just below the line. That's common for subs, and it's why "4 Ω" is a label, not a load.
+{{fig:amp-matching/oneMin:2}} Ω is {{fig:amp-matching/oneMinPct:0}}% of 4 Ω. The loudspeaker standard IEC 60268-5 asks that a speaker's impedance never fall below 80% of its rated value in its working range [3], so this sub sits just below the line. That's common for subs, and it's why "4 Ω" is a label, not a load.
 
 ## The watts follow the impedance, the sound doesn't
 
 Here's where the car-audio crowd's **"box rise"** comes from. Hold the sub at its rated 35.2 V and measure what the amp delivers:
 
-![One sub at its rated 35.2 V. Left: its impedance. Right: the watts the amp delivers, 293 W at 25 Hz, down to 70 W at the 39.5 Hz peak, back up to 376 W at 150 Hz.](img/amp-matching-watts.png)
+![One sub at its rated 35.2 V: its impedance, and the watts the amp delivers, {{fig:amp-matching-watts/w25:0}} W at 25 Hz, down to {{fig:amp-matching-watts/w40:0}} W at the 39.5 Hz peak, back up to {{fig:amp-matching-watts/w150:0}} W at 150 Hz.](figure:amp-matching-watts)
 
-Look at the right-hand chart: **293 W at 25 Hz, 70 W at 40 Hz, 320 W at 100 Hz, 376 W at 150 Hz**. Same voltage, a fivefold swing in watts, mirroring the impedance on the left.
+Look at the watts: **{{fig:amp-matching-watts/w25:0}} W at 25 Hz, {{fig:amp-matching-watts/w40:0}} W at 40 Hz, {{fig:amp-matching-watts/w100:0}} W at 100 Hz, {{fig:amp-matching-watts/w150:0}} W at 150 Hz**. Same voltage, a fivefold swing in watts, mirroring the impedance.
 
-And the sound? Between 30 and 200 Hz the SPL at that voltage stays within 1.4 dB. At the impedance peak the box is doing its job: the sub needs very little power there to play just as loud.
+And the sound? Between 30 and 200 Hz the SPL at that voltage stays within {{fig:amp-matching-watts/splSpread}} dB. At the impedance peak the box is doing its job: the sub needs very little power there to play just as loud.
 
 > **Common trap: "box rise means my 1000 W amp only makes 300 W."** That's true of the watts [9], but it doesn't cost you output. What sets the SPL is the **voltage** the amp can swing, and the voltage limit doesn't care about the impedance. Fewer watts at the peaks is a free lunch, not a loss.
 
@@ -94,35 +94,35 @@ Now the amp. "350 W into 4 Ω" is 37.4 V. Square that over the sub's Re and you 
 
 Here's where the impedance curve earns its keep. Two subs on one XLS 1002, four ways:
 
-![Maximum SPL on one Crown XLS 1002: one sub on one channel (orange), two in parallel on one channel (blue), two in series on one channel (purple), two in series on the bridged amp (green, dashed).](img/amp-matching-wirings.png)
+![Maximum SPL on one Crown XLS 1002: one sub on one channel ({{color:amp-one+amp-parallel+amp-series+amp-bridged/1}}), two in parallel on one channel ({{color:amp-one+amp-parallel+amp-series+amp-bridged/2}}), two in series on one channel ({{color:amp-one+amp-parallel+amp-series+amp-bridged/3}}), two in series on the bridged amp ({{color:amp-one+amp-parallel+amp-series+amp-bridged/4}}).](chart:amp-one+amp-parallel+amp-series+amp-bridged/maxspl)
 
 | Wiring | Load | Max SPL at 30 Hz | at 100 Hz | Peak current | What limits it |
 |---|---|---|---|---|---|
-| One sub, one channel | 3.15–17.5 Ω | 111.3 dB | 112.5 dB | 10.8 A | the sub (400 W) |
-| Two in parallel, one channel | 1.58–8.8 Ω | 117.2 dB | 117.2 dB | 16.6 A (wants 21) | the amp's **current** at 22–25 Hz and above 79 Hz |
-| Two in series, one channel | 6.3–35 Ω | 111.9 dB | 113.2 dB | 5.8 A | the amp's **voltage**, everywhere |
-| Two in series, bridged | 6.3–35 Ω | 117.4 dB | 118.7 dB | 11.0 A | the subs (400 W each) |
+| One sub, one channel | {{fig:amp-matching/oneMin:2}}–{{fig:amp-matching/oneMax}} Ω | {{num:amp-one/1/max@30}} dB | {{num:amp-one/1/max@100}} dB | {{fig:amp-matching/peakOne}} A | the sub (400 W) |
+| Two in parallel, one channel | {{fig:amp-matching/parMin:2}}–{{fig:amp-matching/parMax}} Ω | {{num:amp-parallel/1/max@30}} dB | {{num:amp-parallel/1/max@100}} dB | {{fig:amp-matching/peakPar}} A (wants {{fig:amp-matching/wantPeak:0}}) | the amp's **current** at {{fig:amp-matching/ampFrom:0}}–{{fig:amp-matching/ampTo:0}} Hz and above {{fig:amp-matching/ampAgain:0}} Hz |
+| Two in series, one channel | {{fig:amp-matching/serMin}}–{{fig:amp-matching/serMax:0}} Ω | {{num:amp-series/1/max@30}} dB | {{num:amp-series/1/max@100}} dB | {{fig:amp-matching/peakSer}} A | the amp's **voltage**, everywhere |
+| Two in series, bridged | {{fig:amp-matching/serMin}}–{{fig:amp-matching/serMax:0}} Ω | {{num:amp-bridged/1/max@30}} dB | {{num:amp-bridged/1/max@100}} dB | {{fig:amp-matching/peakBri}} A | the subs (400 W each) |
 
 Each wiring hits a different wall:
-- **Series on one channel** splits 37.4 V between two subs: 18.7 V each where they could take 35.2. That's 5.5 dB short at 30 Hz, and barely louder than one sub alone.
-- **Bridged series** gives each sub its full 35.2 V with voltage to spare. It reaches the subs' own limits everywhere, with only 11.0 A of current at most.
+- **Series on one channel** splits 37.4 V between two subs: 18.7 V each where they could take 35.2. That's {{diff:amp-bridged/1/amp-series/1/max@30}} dB short at 30 Hz, and barely louder than one sub alone.
+- **Bridged series** gives each sub its full 35.2 V with voltage to spare. It reaches the subs' own limits everywhere, with only {{fig:amp-matching/peakBri}} A of current at most.
 - **Parallel on one channel** is the interesting one. Most of the time it matches bridged, but not everywhere.
 
 ## Where the dips bite
 
 Two "4 Ω" subs in parallel are a "2 Ω" load, and the XLS 1002 is rated for 2 Ω. Job done? Here's the current the amp would need to drive them to their limits, from the app's Max SPL chart in its **Amps** view:
 
-![From the app: the amplifier current needed for maximum SPL with two subs in parallel on one channel. The curve climbs to the dashed 16.6 A line around the 24 Hz tuning and again from 79 Hz up, where the band underneath turns amplifier blue.](img/amp-matching-current.png)
+![From the app: the amplifier current needed for maximum SPL with two subs in parallel on one channel. The curve climbs to the dashed {{fig:amp-matching/amps}} A line around the 24 Hz tuning and again from {{fig:amp-matching/ampAgain:0}} Hz up, where the band underneath turns amplifier blue.](chart:amp-parallel/maxamps)
 
 Follow the orange line. It climbs to the dashed **16.6 A** line twice:
-- **Around the tuning (22–25 Hz).** The load dips to 1.94 Ω at 23.8 Hz, and the subs would like 17.2 A there. The amp gives 16.6, so the output is 0.3 dB short (115.1 dB instead of 115.4).
-- **From 79 Hz up.** The load keeps falling, to 1.76 Ω at 100 Hz and 1.58 Ω near 180 Hz. The output is 1.2 dB short at 100 Hz and 2.0 dB short at 150 Hz.
+- **Around the tuning ({{fig:amp-matching/ampFrom:0}}–{{fig:amp-matching/ampTo:0}} Hz).** The load dips to {{fig:amp-matching/parZTune:2}} Ω at 23.8 Hz, and the subs would like {{fig:amp-matching/wantTune}} A there. The amp gives {{fig:amp-matching/amps}}, so the output is {{fig:amp-matching/shortTune}} dB short ({{fig:amp-matching/maxTune}} dB instead of {{fig:amp-matching/maxTuneFree}}).
+- **From {{fig:amp-matching/ampAgain:0}} Hz up.** The load keeps falling, to {{fig:amp-matching/parZ100:2}} Ω at 100 Hz and {{fig:amp-matching/parMin:2}} Ω near {{fig:amp-matching/parMinF:0}} Hz. The output is {{fig:amp-matching/short100}} dB short at 100 Hz and {{fig:amp-matching/short150}} dB short at 150 Hz.
 
 The coloured band under the chart shows the same thing: blue (amplifier) where current runs out, grey (the sub's rating) in between.
 
-None of this is a disaster: 0.7 dB at the tuning is barely audible. But the shortfall lands at the deepest notes this box plays, so it's exactly the one you wanted.
+None of this is a disaster: {{fig:amp-matching/shortNearTuning}} dB at the tuning is barely audible. But the shortfall lands at the deepest notes this box plays, so it's exactly the one you wanted.
 
-It also explains the "2 Ω stable" fine print. Two 4 Ω subs in parallel never present 2 Ω. They present 1.58 to 8.8 Ω, and the low end of that range is what the amp has to survive.
+It also explains the "2 Ω stable" fine print. Two 4 Ω subs in parallel never present 2 Ω. They present {{fig:amp-matching/parMin:2}} to {{fig:amp-matching/parMax}} Ω, and the low end of that range is what the amp has to survive.
 
 > **Common trap: wiring to the amp's lowest rated load to "get the most watts".** You do get more watts on paper. But the dips go below the rating, and one of them sits right at the tuning, where the port does the deepest work. Here one sub per channel would have given both subs their full output without the amp ever limiting.
 
@@ -130,7 +130,7 @@ It also explains the "2 Ω stable" fine print. Two 4 Ω subs in parallel never p
 
 Ohms are only half the load. The other half is **phase**, the angle between the voltage and the current:
 
-![From the app: impedance phase of one sub, swinging between about +47° and −45°, crossing zero at each impedance peak, at the tuning and at the 183 Hz minimum.](img/amp-matching-phase.png)
+![From the app: impedance phase of one sub, swinging between about +47° and −45°, crossing zero at each impedance peak, at the tuning and at the 183 Hz minimum.](chart:amp-one/phase)
 
 At 50 Hz the sub is 7.84 Ω, which sounds easy, but at **−45°**. When voltage and current are out of step like that, a linear (class AB) output stage burns far more heat for each watt it delivers. Keith Howard's EPDR measure turns this into "the resistor that would heat the amp as much", and near 45° it can be well under the impedance [8].
 

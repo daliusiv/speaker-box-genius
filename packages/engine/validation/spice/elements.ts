@@ -56,6 +56,7 @@
  * | 28 | Flared round ports | each flared end (a quarter-circle round-over of radius r on a tube of radius a) counts as ∫ S0/S(x) dx of throat-area tube, by the 64-point midpoint rule; the straight part is L − ends·r; each end's correction is k/2 × its own diameter, referred to the throat by (a/(a+r))²; air speed is at the throat, or at the mouths (radius a + r) when both ends are flared. A convention mirrored from the engine, not an independent result | model.ts `portEffectiveLength` | v08, v09, app export |
  * | 27 | Passive parts | a ladder after Rg: branch 1 in line, 2 across, 3 in line, 4 across; each R, L, C all in series or all in parallel; impedance seen from the amplifier side of the ladder (Rg excluded); with parts fitted, WinISD's watts don't fold Rg into the driver | passive.ts; simulate.ts `fold` | chain cases |
  * | 25 | Bandpass sound | only the openings to the room (front vent; rear vent of a parallel 6th order) and both chambers' leaks ("heard"); not the cone, not a series box's inner port, not Qicl; phase not turned round | simulate.ts `flows.radiated`, `unwrapped` | bandpass cases |
+ * | 29 | Port / PR position | ventDistance_cm d > 0: the port, leak and PRs (a parallel 6th order: the rear chamber's port or PRs) radiate d/c later, same level (far field, on axis): a matched lossless line T (Z0 = 1, Td = d/c) behind a unity buffer; radiated power (Hornresp's Path) has no linear-circuit form and isn't written | simulate.ts `combineAtDistance` | v-pos cases |
  */
 import type { BandpassInput, DriverInput, PassiveRadiatorInput, PortInput } from "../../src/model.ts";
 import type { SimulationOptions } from "../../src/simulate.ts";
@@ -79,6 +80,7 @@ export type CaseBox =
       ql?: number | null;
       qa?: number | null;
       qp?: number | null;
+      ventDistance_cm?: number;
     }
   | {
       kind: "passive-radiator";
@@ -89,6 +91,7 @@ export type CaseBox =
       extraPrs?: { pr: PassiveRadiatorInput; count: number; addedMass_g?: number }[];
       ql?: number | null;
       qa?: number | null;
+      ventDistance_cm?: number;
     };
 
 export interface CaseOptions {

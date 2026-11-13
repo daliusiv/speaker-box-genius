@@ -2,7 +2,7 @@
 title: "Hofmann's Iron Law: PA subwoofer vs home subwoofer"
 description: Efficiency, bass extension and box size, pick two. A B&C PA 18″ against a Dayton home 18″, in each other's boxes, at 1 W and at full power, worked out from Thiele/Small parameters with charts you can open and change.
 path: guides/hofmann-iron-law
-image: iron-law.png
+image: chart:iron-law/spl
 order: 24
 group: start
 ---
@@ -81,7 +81,7 @@ In their **Qtc 0.707 sealed** boxes (43.5 L and 90 L), kη is 0.92 and 0.77 × 1
 
 Now swap boxes. Each driver goes into its maker's recommended ported box, and then into the other's: B&C's **150 L tuned to 35 Hz** [12], and Parts Express's **5 ft³ (141.6 L)** for the SS18-22, with an F3 of 26 Hz [13] (tuned here to 21 Hz; the listing doesn't give a tuning). Both boxes use a 20 cm port, behind an 18 Hz subsonic filter. At 21 Hz that port is 135 cm long, so a real build would use a folded slot or a passive radiator; it doesn't change the comparison. Both at 1 W:
 
-![Both drivers at 1 W in the PA box (left) and the home box (right). Below about 40 Hz the curves sit on top of each other; the B&C (orange) is 4–6 dB louder from 60 Hz up.](img/iron-law.png)
+![Both drivers at 1 W in the PA box and the home box. Below about 40 Hz the curves sit on top of each other; the B&C (solid) is 4–6 dB louder than the Dayton (dashed) from 60 Hz up.](chart:iron-law:1,3/spl|iron-law:2,4/spl "PA box: 150 L at 35 Hz|Home box: 141.6 L at 21 Hz")
 
 | SPL at 1 W, 1 m | 25 Hz | 30 Hz | 40 Hz | 100 Hz | 150 Hz |
 |---|---|---|---|---|---|
@@ -101,7 +101,7 @@ What each maker's box shows:
 
 The Iron Law is about efficiency at small signals. How loud a sub can play is set by how much power it can take, how much air it can move (displacement, Sd × Xmax) and the port. At each driver's power rating:
 
-![Maximum SPL at each driver's power rating. Left: the 141.6 L ported box, where the two are within 0.6 dB from 18 to 40 Hz and the B&C is ahead above. Right: 141.6 L sealed, where the Dayton's longer throw puts it ahead below about 40 Hz.](img/iron-law-maxspl.png)
+![Maximum SPL at each driver's power rating, the B&C solid and the Dayton dashed. Ported, the two are within 0.6 dB from 18 to 40 Hz and the B&C is ahead above. Sealed, the Dayton's longer throw puts it ahead below about 40 Hz.](chart:iron-law:2,4/maxspl|iron-law-sealed/maxspl "Home box: 141.6 L ported at 21 Hz|141.6 L sealed")
 
 - **In the ported home box**, from 18 to 40 Hz both are within 0.6 dB: the port does most of the work near its tuning, and at 20 Hz its air speed is the limit for both (112.3 dB). From 50 Hz up the B&C pulls ahead, by 2.9 dB at 60 Hz and 5.4 dB at 100 Hz. That's its 5.9 dB of efficiency and its higher power rating.
 - **Sealed, the cone moves all the air**, and the Dayton's 26 mm of travel counts: **+4.6 dB at 15 Hz, +3.8 dB at 20 Hz** and +1.9 dB at 30 Hz. The B&C hits its Xmax first; the Dayton reaches its power rating first. From about 40 Hz up the B&C is ahead again.

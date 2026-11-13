@@ -2,7 +2,7 @@
 title: "Car subwoofer box design: sealed or ported?"
 description: One 10-inch sub at its full 350 W in a 28 L sealed box and two 45 L ported boxes, in the car and out of it. What cabin gain does to each, which one runs out of cone first, and what the forum rules of thumb get wrong.
 path: guides/car-subwoofer
-image: car-spl.png
+image: chart:car-example/response
 order: 8
 group: start
 ---
@@ -28,13 +28,13 @@ Below the frequency whose half wavelength fits the cabin's longest inside dimens
 
 Twelve dB per octave is also how fast a sealed box rolls off below its resonance. So in a car, a sealed box's falling bass and the cabin's rising boost cancel, and a box with an F3 of 43 Hz on paper plays flat into the low 20s [2][3].
 
-![Box + cabin = what you hear: on the left, the sealed box on its own (grey) falls away below 50 Hz, the cabin gain (dashed) rises below 69 Hz, and the sum (blue) stays within a few dB down to about 25 Hz. On the right, the ported box on its own is already flat lower down, so the same cabin gain stacks on top of it into a 9 dB hump at 37 Hz.](img/car-cabin-sum.png)
+![Box + cabin = what you hear: the sealed box on its own (grey) falls away below 50 Hz, the cabin gain (dashed) rises below {{fig:car-cabin-sum/sealedGainStart:0}} Hz, and the sum ({{color:car-example/1}}) stays within a few dB down to about 25 Hz. The ported box on its own is already flat lower down, so the same cabin gain stacks on top of it into a {{fig:car-cabin-sum/portedRipple:0}} dB hump at {{fig:car-cabin-sum/portedHumpF:0}} Hz.](figure:car-cabin-sum)
 
-The left panel is the whole reason small sealed boxes are popular in cars: the grey curve (the box alone) is 9 dB down at 30 Hz, the dashed cabin gain is 13 dB up there, and the blue sum lands a few dB above flat. On the right, the ported box doesn't need the help. Its own response (grey) holds up to 33 Hz, so adding the cabin gain lifts 30–50 Hz well above the rest.
+The sealed panel is the whole reason small sealed boxes are popular in cars: the grey curve (the box alone) is {{fig:car-cabin-sum/sealedBoxAt30:0}} dB down at 30 Hz, the dashed cabin gain is {{fig:car-cabin-sum/sealedGainAt30:0}} dB up there, and the {{color:car-example/1}} sum lands a few dB above flat. The ported box doesn't need the help. Its own response (grey) holds up to 33 Hz, so adding the cabin gain lifts 30–50 Hz well above the rest.
 
 > **Common trap: "cabin gain is 12 dB/octave from 80 Hz."** That's a ceiling for a sealed, small cabin, not a constant. Builders who measure their own cars often find 8–9 dB/octave [4], and it falls apart with the windows down or a convertible top open [2][3]. The bigger the cabin, the lower it starts, and the less it gives you at 30 Hz.
 
-![Smaller cabin, more lift: the app's cabin gain for cabins 1.8, 2.5, 3.5 and 4.5 m long. At 30 Hz the lift is 15.9, 12.9, 8.6 and 5.3 dB.](img/car-cabin-length.png)
+![Smaller cabin, more lift: the app's cabin gain for cabins 1.8, 2.5, 3.5 and 4.5 m long. At 30 Hz the lift is {{fig:car-cabin-length/at30_180}}, {{fig:car-cabin-length/at30_250}}, {{fig:car-cabin-length/at30_350}} and {{fig:car-cabin-length/at30_450}} dB.](figure:car-cabin-length)
 
 The chart above is the app's model for four cabin lengths. Going from a 1.8 m hatchback to a 4.5 m van costs you about **10 dB at 30 Hz**, which is why the same sub can sound huge in a small car and polite in an SUV.
 

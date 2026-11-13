@@ -120,16 +120,18 @@ const groups = (prs: { pr: PassiveRadiatorInput; count: number; addedMass_g?: nu
 function boxDesign(input: EnclosureInput, name: string): { design: DesignState; losses: { ql: number; qa: number; qp: number } } | null {
   const i = input as EnclosureInput & { ql?: number; qa?: number; qp?: number };
   const losses = { ql: q(i.ql), qa: q(i.qa), qp: q(i.qp) };
+  // A port or PR some way from the cone (Hornresp's Acoustic Path Length).
+  const at = (input.kind === "vented" || input.kind === "passive-radiator") && (input.ventDistance_cm ?? 0) > 0 ? { ventAt: "custom" as const, ventDistance_cm: input.ventDistance_cm } : {};
   switch (input.kind) {
     case "sealed":
       return { design: { ...newDesign("sealed", []), name, vb_l: input.vb_l }, losses };
     case "vented": {
       const v = newDesign("vented", []) as VentedDesign;
-      return { design: { ...v, ...portFields(input.port, input.portCount ?? 1, v), name, vb_l: input.vb_l, targetFb: v.targetFb }, losses };
+      return { design: { ...v, ...portFields(input.port, input.portCount ?? 1, v), name, vb_l: input.vb_l, targetFb: v.targetFb, ...at }, losses };
     }
     case "passive-radiator": {
       const p = newDesign("pr", []) as PrDesign;
-      return { design: { ...p, name, vb_l: input.vb_l, prName: "Dayton Audio DSA270-PR", count: input.prCount ?? 1, addedMass_g: input.addedMass_g ?? 0, params: prParams(input.pr), extra: [] }, losses };
+      return { design: { ...p, name, vb_l: input.vb_l, prName: "Dayton Audio DSA270-PR", count: input.prCount ?? 1, addedMass_g: input.addedMass_g ?? 0, params: prParams(input.pr), extra: [], ...at }, losses };
     }
     case "bandpass": {
       const b = newDesign("bandpass", []) as BandpassDesign;

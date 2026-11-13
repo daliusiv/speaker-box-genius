@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Sparkle } from "./Logo.tsx";
 import {
   portEffectiveLength,
@@ -71,7 +71,37 @@ interface CommonProps<D extends DesignState> {
   /** Solved driver for alignment presets; null while parameters are incomplete. */
   align: AlignmentDriver | null;
   drivers: number;
+  /** The volume calculator's outside depth when it's linked to this box (a port on the back is that far from the cone). */
+  backDepth_cm: number | null;
   onChange: (d: D) => void;
+}
+
+const PATH_HELP =
+  "In front of the box (Settings → SPL), a port further away arrives later and adds up differently with the cone; from radiated power it's how far apart the two are, as Hornresp's Acoustic Path Length. It shows above about c / (4 × distance): 20 cm → about 430 Hz on axis, a little lower in phase and group delay.";
+
+/** Where a box's port or passive radiators sit relative to the cone: next to it, on the back, or a set distance away. */
+function VentPosition(p: { at: VentedDesign["ventAt"]; distance_cm: number | undefined; what: "port" | "PRs"; backDepth_cm: number | null; onChange: (patch: Pick<VentedDesign, "ventAt" | "ventDistance_cm">) => void }) {
+  const value = p.at ?? "front";
+  const back = p.backDepth_cm !== null ? ` (${Math.round(p.backDepth_cm)} cm further)` : "";
+  return (
+    <>
+      <Select<"front" | "back" | "custom">
+        help={`Where the ${p.what} sit${p.what === "port" ? "s" : ""} relative to the driver. ${PATH_HELP}`}
+        label="Position"
+        value={value}
+        options={[
+          { value: "front", text: "Next to the driver" },
+          { value: "back", text: `On the back${back}` },
+          { value: "custom", text: "Further away by…" },
+        ]}
+        onChange={(at) => p.onChange(at === "front" ? { ventAt: undefined } : at === "custom" ? { ventAt: at, ventDistance_cm: p.distance_cm ?? (p.backDepth_cm !== null ? Math.round(p.backDepth_cm) : 30) } : { ventAt: at })}
+      />
+      {value === "custom" && (
+        <Num label="Distance" q="len" value={p.distance_cm ?? 0} min={0} title={`How far the ${p.what} ${p.what === "port" ? "is" : "are"} from the cone. ${PATH_HELP}`} onChange={(x) => p.onChange({ ventAt: "custom", ventDistance_cm: x })} />
+      )}
+      {value === "back" && p.backDepth_cm === null && <p className="hint full">On the back: link the volume calculator (box or wedge) to this design for its depth, or use “Further away by…”. Until then it counts as next to the driver.</p>}
+    </>
+  );
 }
 
 /** The volume to build for a preset's (acting) volume, to 0.1 L. */
@@ -115,7 +145,7 @@ function DesignShell(props: {
   const g = props.glance;
   const open = d.on && !props.folded;
   return (
-    <section className={`card design${d.on ? "" : " off"}${props.folded ? " folded" : ""}`} data-design={d.id}>
+    <section className={`card design${d.on ? "" : " off"}${props.folded ? " folded" : ""}`} data-design={d.id} data-kind={d.kind}>
       <div className="design-head">
         {d.on && (
           <button
@@ -523,6 +553,7 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext; pickP
         <Num help="Physical length of the port (tube or slot). Longer tunes lower; end corrections are added automatically." label="Length" q="len" value={v.length_cm} min={0} onChange={(x) => set({ length_cm: x })} />
         <Num help="Number of identical ports. Two ports have twice the area: half the air speed, but each needs to be longer for the same tuning." label="Ports" value={v.count} onChange={(x) => set({ count: Math.max(1, Math.round(x)) })} />
         <Fixed label="Fb" unit="Hz" value={f1(fb)} title="Box tuning frequency" />
+        <VentPosition at={v.ventAt} distance_cm={v.ventDistance_cm} what="port" backDepth_cm={p.backDepth_cm} onChange={set} />
       </div>
       <TuneRow target={v.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set port length" onApply={tune} />
       {msg && <p className="warn">{msg}</p>}
@@ -589,63 +620,70 @@ function PrBody(
 
   return (
     <>
-      {/* Presets and Best tuning first: you usually pick one, then fine-tune the numbers below. */}
-      <Presets note={p.linked ? LINKED_NOTE : undefined}>
-        <button
-          className="chip"
-          disabled={!p.align || p.linked}
-          title={flatPresetHelp(p.align, true)}
-          onClick={() => {
-            const a = p.align && ventedAlignmentFor(p.align, p.drivers);
-            if (!a) {
-              setMsg("This driver's Qts is above about 0.6: it suits a sealed box better than a vented one.");
-              return;
+      {/* The box in its own panel, like the passive radiator's below it. Presets and Best tuning
+          first: you usually pick one, then fine-tune the numbers below. */}
+      <section className="pr-card pr-box-card" aria-label="Box">
+        <div className="pr-card-head">
+          <h3>Box</h3>
+        </div>
+        <Presets note={p.linked ? LINKED_NOTE : undefined}>
+          <button
+            className="chip"
+            disabled={!p.align || p.linked}
+            title={flatPresetHelp(p.align, true)}
+            onClick={() => {
+              const a = p.align && ventedAlignmentFor(p.align, p.drivers);
+              if (!a) {
+                setMsg("This driver's Qts is above about 0.6: it suits a sealed box better than a vented one.");
+                return;
+              }
+              applyPrAlignment(a);
+            }}
+          >
+            {alignLabel(p.align, p.drivers)}
+          </button>
+          {!p.linked &&
+            p.align &&
+            moreVentedFor(p.align, p.drivers).map((a) => (
+              <button key={a.name} className="chip" title={`${alignmentHelp(a)} Reached with added mass.`} onClick={() => applyPrAlignment(a)}>
+                {a.name}
+              </button>
+            ))}
+        </Presets>
+        <div className="row finder-row-button">
+          <PrTuning ctx={p.finder} design={pr} vb_l={p.vb_l} linked={p.linked} onApply={(patch, summary) => p.onFound(patch, summary)} />
+        </div>
+        {/* The box: its volume, how many PRs and the mass on each, and the tuning they give. */}
+        <div className="fields">
+          <VbField vb_l={p.built_l} value={pr.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
+          <Num help="Number of identical passive radiators. More PRs means more cone area: less excursion each." label="PRs" value={pr.count} onChange={(v) => set({ count: Math.max(1, Math.round(v)) })} />
+          <Num help="Mass glued onto the PR cone (grams). More mass tunes the box lower." label="Added mass" unit="g" value={pr.addedMass_g} min={0} onChange={(v) => set({ addedMass_g: v })} />
+          <Fixed
+            label={t.mixed ? "Fb ≈" : "Fb"}
+            unit="Hz"
+            value={f1(t.fb)}
+            title={
+              t.mixed
+                ? "Approximate tuning of all the PRs together. With different PRs the response has more than one resonance; this sits between them. The charts show the real behaviour."
+                : "Box tuning frequency with the added mass"
             }
-            applyPrAlignment(a);
-          }}
-        >
-          {alignLabel(p.align, p.drivers)}
-        </button>
-        {!p.linked &&
-          p.align &&
-          moreVentedFor(p.align, p.drivers).map((a) => (
-            <button key={a.name} className="chip" title={`${alignmentHelp(a)} Reached with added mass.`} onClick={() => applyPrAlignment(a)}>
-              {a.name}
-            </button>
-          ))}
-      </Presets>
-      <div className="row finder-row-button">
-        <PrTuning ctx={p.finder} design={pr} vb_l={p.vb_l} linked={p.linked} onApply={(patch, summary) => p.onFound(patch, summary)} />
-      </div>
-      {/* The box: its volume, how many PRs and the mass on each, and the tuning they give. */}
-      <div className="fields">
-        <VbField vb_l={p.built_l} value={pr.vb_l} linked={p.linked} onChange={(vb_l) => set({ vb_l })} />
-        <Num help="Number of identical passive radiators. More PRs means more cone area: less excursion each." label="PRs" value={pr.count} onChange={(v) => set({ count: Math.max(1, Math.round(v)) })} />
-        <Num help="Mass glued onto the PR cone (grams). More mass tunes the box lower." label="Added mass" unit="g" value={pr.addedMass_g} min={0} onChange={(v) => set({ addedMass_g: v })} />
-        <Fixed
-          label={t.mixed ? "Fb ≈" : "Fb"}
-          unit="Hz"
-          value={f1(t.fb)}
-          title={
-            t.mixed
-              ? "Approximate tuning of all the PRs together. With different PRs the response has more than one resonance; this sits between them. The charts show the real behaviour."
-              : "Box tuning frequency with the added mass"
-          }
+          />
+          <VentPosition at={pr.ventAt} distance_cm={pr.ventDistance_cm} what="PRs" backDepth_cm={p.backDepth_cm} onChange={set} />
+        </div>
+        <TuneRow
+          target={pr.targetFb}
+          onTarget={(x) => set({ targetFb: x })}
+          button="Set added mass"
+          title={t.mixed ? "Sets the added mass on group 1's PRs; the other groups stay as they are" : undefined}
+          onApply={tune}
         />
-      </div>
-      <TuneRow
-        target={pr.targetFb}
-        onTarget={(x) => set({ targetFb: x })}
-        button="Set added mass"
-        title={t.mixed ? "Sets the added mass on group 1's PRs; the other groups stay as they are" : undefined}
-        onApply={tune}
-      />
-      {msg && <p className="warn">{msg}</p>}
-      <p className="hint">
-        Added mass is per passive radiator.
-        {t.mixed &&
-          " PRs and Added mass here are group 1's. With mixed PRs each group gets its own excursion curve and Xmax line; the tuning helpers adjust group 1's added mass."}
-      </p>
+        {msg && <p className="warn">{msg}</p>}
+        <p className="hint">
+          Added mass is per passive radiator.
+          {t.mixed &&
+            " PRs and Added mass here are group 1's. With mixed PRs each group gets its own excursion curve and Xmax line; the tuning helpers adjust group 1's added mass."}
+        </p>
+      </section>
 
       {/* Which passive radiator: the model and its datasheet parameters. */}
       <PrCard title={t.mixed ? "Passive radiator group 1" : "Passive radiator"} name={pr.prName} params={pr.params} onParams={setP}>
@@ -993,7 +1031,7 @@ function BandpassLossesEditor(p: {
           </div>
           <p className="hint">
             Q values at each chamber's tuning: lower means more loss. Stuffing one chamber lowers its Qa; a leaky rear
-            chamber lowers its Ql. Baffle Q is the leak between the chambers, around the driver and through the baffle (WinISD's default 100).
+            chamber lowers its Ql. Baffle Q is the leak between the chambers, around the driver and through the baffle (WinISD's default 100). VituixCAD has no leak between the chambers: clear it to compare.
           </p>
         </>
       )}
@@ -1057,6 +1095,16 @@ function BandpassBody(p: CommonProps<BandpassDesign> & { portCtx: PortContext; d
           <h3>Rear chamber ({into})</h3>
           <div className="fields">
             <Select help="How this chamber opens: through a port, or through passive radiators." label="Opening" value={b.rearOpening} options={OPENINGS} onChange={(rearOpening) => set({ rearOpening })} />
+            {b.order === "6p" && (
+              <Num
+                label="Apart"
+                q="len"
+                value={b.ventDistance_cm ?? 0}
+                min={0}
+                help={`How far this chamber's opening is from the front chamber's (0 = side by side). ${PATH_HELP}`}
+                onChange={(x) => set({ ventDistance_cm: x > 0 ? x : undefined })}
+              />
+            )}
           </div>
           {b.rearOpening === "port" ? (
             <>
@@ -1143,13 +1191,16 @@ export function DesignCard(props: {
   /** Transmission lines: all the drivers' displacement (L) and the wall thickness (mm). */
   driverDisp_l?: number;
   wall_mm?: number;
+  /** The volume calculator's outside depth when it's linked to this design (box or wedge), for a port on the back. */
+  backDepth_cm?: number | null;
   /** Folded to its header and a one-line summary (phones and desktop alike). */
   folded?: boolean;
   onFold?: (folded: boolean) => void;
   glance?: DesignGlance;
 }) {
   const d = props.design;
-  const fill = stuffFactor(d);
+  // What the box acts as over what is built: stuffing, or Qa's volume gain.
+  const fill = props.built_l > 0 ? props.vb_l / props.built_l : stuffFactor(d);
   const common = {
     color: props.color,
     vb_l: props.vb_l,
@@ -1160,6 +1211,7 @@ export function DesignCard(props: {
     ec: props.ec,
     align: props.align,
     drivers: props.drivers,
+    backDepth_cm: props.backDepth_cm ?? null,
   };
   return (
     <DesignShell
@@ -1272,6 +1324,28 @@ export function AddBoxMenu(props: { designs: DesignState[]; max: number; onAdd: 
       removeEventListener("keydown", onKey);
     };
   }, [open]);
+  // Desktop: the side panel is a scroll box that clipped the menu (all boxes folded left too little
+  // room under the button). Pin the menu to the window under the button, as tall as fits.
+  const [place, setPlace] = useState<CSSProperties | undefined>();
+  useLayoutEffect(() => {
+    if (!open || !matchMedia("(min-width: 861px)").matches) {
+      setPlace(undefined);
+      return;
+    }
+    const fit = () => {
+      const b = ref.current?.querySelector("button")?.getBoundingClientRect();
+      if (!b) return;
+      const top = b.bottom + 6;
+      setPlace({ position: "fixed", left: b.left, top, maxHeight: Math.max(160, innerHeight - top - 12), overflowY: "auto" });
+    };
+    fit();
+    addEventListener("scroll", fit, true);
+    addEventListener("resize", fit);
+    return () => {
+      removeEventListener("scroll", fit, true);
+      removeEventListener("resize", fit);
+    };
+  }, [open]);
   // The colour the next box of each kind gets (the same rule as the charts: the kind's next shade).
   const nextColor = (k: DesignKind) => {
     const shades = KIND_COLORS[k];
@@ -1291,7 +1365,7 @@ export function AddBoxMenu(props: { designs: DesignState[]; max: number; onAdd: 
         + Add a box
       </button>
       {open && (
-        <div className="share-menu menu-left add-box-menu" role="menu" aria-label="Box type">
+        <div className="share-menu menu-left add-box-menu" role="menu" aria-label="Box type" style={place}>
           {ADD_KINDS.map(({ kind, what }) => (
             <button
               key={kind}

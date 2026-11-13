@@ -2,7 +2,7 @@
 title: "Power compression: why doubling your amplifier's watts doesn't give you +3 dB"
 description: What a hot voice coil does to a subwoofer, how much output it costs at 120 °C and 180 °C, why the bass shape changes, what it does (and doesn't do) to cone excursion, and how much a bigger amplifier really gains.
 path: guides/power-compression
-image: power-compression.png
+image: chart:coil-20+coil-120+coil-180/spl
 order: 21
 group: measuring
 ---
@@ -59,7 +59,7 @@ The same table answers the amplifier question directly: going from half power to
 
 The example: a **Dayton Audio RSS315HF-4** 12″ in a flat ported box (Keele's alignment, 83.5 L tuned to 23.8 Hz, 12.5 cm port), driven at the same **25 V** with the coil at 20, 120 and 180 °C. Turn on the temperature in **Settings → Voice coil °C**; the app's model matches Hornresp's Power Compression tool at 120 °C (see the [validation page](/validation/)).
 
-![The RSS315HF-4 ported box at the same 25 V with the coil at 20 °C (blue), 120 °C (orange) and 180 °C (red): the level drops, and the shape gains a hump around 40–45 Hz.](img/power-compression.png)
+![The RSS315HF-4 ported box at the same 25 V with the coil at 20 °C ({{color:coil-20+coil-120+coil-180/1}}), 120 °C ({{color:coil-20+coil-120+coil-180/2}}) and 180 °C ({{color:coil-20+coil-120+coil-180/3}}): the level drops, and the shape gains a hump around 40–45 Hz.](chart:coil-20+coil-120+coil-180/spl|coil-20+coil-120+coil-180/response "SPL|Shape: relative response")
 
 **Loss at the same 25 V**
 

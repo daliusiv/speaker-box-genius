@@ -80,3 +80,16 @@ test("the 1 W note: about 1 W in watts or volts, well under the rating, and not 
   // No rating: still a note, without the button.
   assert.deepEqual(lowDrive({ ...base, pe_w: 0 }), { watts: 1, rated: 0 });
 });
+
+test("the phone drive sheet reads typed values and keeps them in the slider's range", async () => {
+  const { parseDrive, roundDrive } = await import("../src/driveInput.ts");
+  assert.equal(parseDrive("12,5"), 12.5);
+  assert.equal(parseDrive("100 W"), 100);
+  assert.equal(parseDrive(""), null);
+  assert.equal(parseDrive("0"), null);
+  assert.equal(roundDrive("watts", 0.2), 1);
+  assert.equal(roundDrive("watts", 123.456), 123.5);
+  assert.equal(roundDrive("watts", 50000), 10000);
+  assert.equal(roundDrive("volts", 2.8284), 2.83);
+  assert.equal(roundDrive("volts", 500), 100);
+});

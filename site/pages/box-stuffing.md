@@ -2,7 +2,7 @@
 title: "Polyfill and box stuffing: does it really make a box bigger?"
 description: What polyfill and other stuffing really do inside a speaker box, how much bigger they make it act (measured), how much to use in sealed and ported boxes, how to model it in a simulator and how to measure it.
 path: guides/box-stuffing
-image: stuffing-sealed-spl.png
+image: chart:stuffing-sealed/response
 order: 16
 group: measuring
 ---
@@ -98,15 +98,15 @@ The example: a **Dayton Audio RSS265HF-4** 10″ subwoofer, whose textbook seale
 
 | Box | Acts like | Qtc | F3 | At 30 Hz | Hump |
 |---|---|---|---|---|---|
-| 18 L, empty | 18 L | 0.92 | 44.9 Hz | −9.6 dB | +1.1 dB at 92 Hz |
-| 18 L, stuffed (volume only) | 22.5 L | 0.85 | 43.3 Hz | −8.5 dB | +0.8 dB |
-| 18 L, stuffed (volume and losses, Qa 20) | 22.5 L | 0.82 | 44.3 Hz | −8.7 dB | +0.7 dB |
-| 18 L, overstuffed (Qa 20) | 15.5 L | 0.93 | 47.2 Hz | −10.5 dB | +1.1 dB |
-| 37.3 L, empty | 37.3 L | 0.72 | 41.2 Hz | −6.9 dB | +0.4 dB |
+| 18 L, empty | 18 L | {{num:stuffing-sealed/1/qtc}} | {{num:stuffing-sealed/1/f3}} Hz | {{num:stuffing-sealed/1/rel@30}} dB | +{{num:stuffing-sealed/1/rise}} dB at {{num:stuffing-sealed/1/risef}} Hz |
+| 18 L, stuffed (volume only) | 22.5 L | {{num:stuffing-sealed/2/qtc}} | {{num:stuffing-sealed/2/f3}} Hz | {{num:stuffing-sealed/2/rel@30}} dB | +{{num:stuffing-sealed/2/rise}} dB |
+| 18 L, stuffed (volume and losses, Qa 20) | 22.5 L | {{num:stuffing-sealed-losses/1/qtc}} | {{num:stuffing-sealed-losses/1/f3}} Hz | {{num:stuffing-sealed-losses/1/rel@30}} dB | +{{num:stuffing-sealed-losses/1/rise}} dB |
+| 18 L, overstuffed (Qa 20) | 15.5 L | {{num:stuffing-sealed-losses/2/qtc}} | {{num:stuffing-sealed-losses/2/f3}} Hz | {{num:stuffing-sealed-losses/2/rel@30}} dB | +{{num:stuffing-sealed-losses/2/rise}} dB |
+| 37.3 L, empty | 37.3 L | {{num:stuffing-sealed/3/qtc}} | {{num:stuffing-sealed/3/f3}} Hz | {{num:stuffing-sealed/3/rel@30}} dB | +{{num:stuffing-sealed/3/rise}} dB |
 
-![The RSS265HF-4: 18 L empty (blue), 18 L stuffed and acting as 22.5 L (orange), and the full-size 37.3 L box (green).](img/stuffing-sealed-spl.png)
+![The RSS265HF-4: 18 L empty ({{color:stuffing-sealed/1}}), 18 L stuffed and acting as 22.5 L ({{color:stuffing-sealed/2}}), and the full-size 37.3 L box ({{color:stuffing-sealed/3}}).](chart:stuffing-sealed/response)
 
-Stuffing the 18 L box closes only part of the gap to the full-size box: the F3 drops by under 1 Hz once the losses are counted, the response at 30 Hz improves by about 1 dB, and the hump above the passband shrinks from 1.1 dB to 0.7 dB. That matches what people hear: the bass gets a little **smoother and less boomy**, not much **deeper**. (Qtc and resonance are explained in the [Thiele/Small parameters guide](/guides/thiele-small-parameters/).)
+Stuffing the 18 L box closes only part of the gap to the full-size box: the F3 drops by {{diff:stuffing-sealed/1/stuffing-sealed-losses/1/f3}} Hz once the losses are counted, the response at 30 Hz improves by {{diff:stuffing-sealed-losses/1/stuffing-sealed/1/rel@30}} dB, and the hump above the passband shrinks from {{num:stuffing-sealed/1/rise}} dB to {{num:stuffing-sealed-losses/1/rise}} dB. That matches what people hear: the bass gets a little **smoother and less boomy**, not much **deeper**. (Qtc and resonance are explained in the [Thiele/Small parameters guide](/guides/thiele-small-parameters/).)
 
 So:
 
@@ -124,16 +124,16 @@ A ported box works because the air in the box and the air in the port resonate t
 - **The box acts bigger, so the tuning drops.** Same port, more effective volume, lower Fb [1].
 - **The losses damp the resonance,** so the port does less. A ported box relies on that resonance; damping it is the reason behind "never stuff a ported box" [6].
 
-The example: a **Dayton Audio DSA215-8** in its QB3 box, 16.2 L with a 5 cm port tuned to 39.8 Hz, driven at 2.83 V. Filled, it's simulated as 20 % bigger (19.4 L) with a heavy absorption loss (Qa 10).
+The example: a **Dayton Audio DSA215-8** in its QB3 box, 16.2 L with a 5 cm port tuned to {{num:stuffing-ported-empty/1/fb}} Hz, driven at 2.83 V. Filled, it's simulated as 20 % bigger (19.4 L) with a heavy absorption loss (Qa 10).
 
 | Box | Tuning | F3 | At 30 Hz | At 40 Hz | At 60 Hz | Upper impedance peak |
 |---|---|---|---|---|---|---|
-| Empty | 39.8 Hz | 50.6 Hz | −12.7 dB | −6.4 dB | −1.5 dB | 26.9 Ω |
-| Filled | 36.3 Hz | 58.9 Hz | −11.2 dB | −6.3 dB | −2.9 dB | 20.7 Ω |
+| Empty | {{num:stuffing-ported-empty/1/fb}} Hz | {{num:stuffing-ported-empty/1/f3}} Hz | {{num:stuffing-ported-empty/1/rel@30}} dB | {{num:stuffing-ported-empty/1/rel@40}} dB | {{num:stuffing-ported-empty/1/rel@60}} dB | {{num:stuffing-ported-empty/1/zpk}} Ω |
+| Filled | {{num:stuffing-ported-filled/1/fb}} Hz | {{num:stuffing-ported-filled/1/f3}} Hz | {{num:stuffing-ported-filled/1/rel@30}} dB | {{num:stuffing-ported-filled/1/rel@40}} dB | {{num:stuffing-ported-filled/1/rel@60}} dB | {{num:stuffing-ported-filled/1/zpk}} Ω |
 
-![The DSA215-8's ported box empty (blue) and filled (orange): the filled box tunes lower and gains a little at the very bottom, but loses the port's lift above the tuning, and its upper impedance peak drops.](img/stuffing-ported-spl.png)
+![The DSA215-8's ported box empty ({{color:stuffing-ported-empty+stuffing-ported-filled/1}}) and filled ({{color:stuffing-ported-empty+stuffing-ported-filled/2}}): the filled box tunes lower and gains a little at the very bottom, but loses the port's lift above the tuning, and its upper impedance peak drops.](chart:stuffing-ported-empty+stuffing-ported-filled/response|stuffing-ported-empty+stuffing-ported-filled/impedance "Response|Impedance")
 
-Filling the box doesn't kill the bass, but it **reshapes** it: the tuning drops 3.5 Hz and the very bottom gains 1.5 dB, while 50–60 Hz loses 1–1.5 dB. The −3 dB point actually *rises* by 8 Hz because the response becomes a long, soft slope instead of a shelf. Some people like that (it's a classic fix for a boomy box tuned too high); it's not what the box was designed to do.
+Filling the box doesn't kill the bass, but it **reshapes** it: the tuning drops {{diff:stuffing-ported-empty/1/stuffing-ported-filled/1/fb}} Hz and the very bottom gains {{diff:stuffing-ported-filled/1/stuffing-ported-empty/1/rel@30}} dB at 30 Hz, while 60 Hz loses {{diff:stuffing-ported-empty/1/stuffing-ported-filled/1/rel@60}} dB. The −3 dB point actually *rises* by {{diff:stuffing-ported-filled/1/stuffing-ported-empty/1/f3:0}} Hz because the response becomes a long, soft slope instead of a shelf. Some people like that (it's a classic fix for a boomy box tuned too high); it's not what the box was designed to do.
 
 In practice:
 

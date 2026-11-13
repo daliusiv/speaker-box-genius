@@ -119,6 +119,10 @@ def parse(path):
                     elems.append((k, name, t[1].lower(), t[2].lower(), val, False))
             elif k in "eg":
                 elems.append((k, name, t[1].lower(), t[2].lower(), t[3].lower(), t[4].lower(), parse_value(t[5])))
+            elif k == "t":
+                # Lossless line: Tname n1 n2 n3 n4 Z0=z Td=t
+                kv = {x.split("=")[0].lower(): parse_value(x.split("=")[1]) for x in t[5:]}
+                elems.append(("t", name, t[1].lower(), t[2].lower(), t[3].lower(), t[4].lower(), kv["z0"], kv["td"]))
             elif k in "fh":
                 elems.append((k, name, t[1].lower(), t[2].lower(), t[3].lower(), parse_value(t[4])))
             else:
@@ -202,7 +206,7 @@ def run(path, all_out=False):
         for nd in e[2:4]:
             if nd != "0" and nd not in nodes:
                 nodes[nd] = len(nodes)
-        if e[0] in "ega":
+        if e[0] in "egat":
             for nd in e[4:6]:
                 if nd != "0" and nd not in nodes:
                     nodes[nd] = len(nodes)
@@ -295,6 +299,22 @@ def run(path, all_out=False):
                     A[br][p] -= h
                 if q is not None:
                     A[br][q] += h
+            elif k == "t":
+                # Two-port admittances of a lossless line, θ = ω·Td: Y11 = Y22 = −j·cot θ / Z0, Y12 = Y21 = j / (Z0·sin θ).
+                th = w * e[7]
+                y11 = -1j / (e[6] * math.tan(th))
+                y12 = 1j / (e[6] * math.sin(th))
+                ports = ((idx(e[2]), idx(e[3])), (idx(e[4]), idx(e[5])))
+                ys = ((y11, y12), (y12, y11))
+                for pi, (pa, pb) in enumerate(ports):
+                    for qi, (qa, qb) in enumerate(ports):
+                        y = ys[pi][qi]
+                        for row, rs in ((pa, 1), (pb, -1)):
+                            if row is None:
+                                continue
+                            for col, cs in ((qa, 1), (qb, -1)):
+                                if col is not None:
+                                    A[row][col] += rs * cs * y
             elif k == "g":
                 a, c = idx(e[2]), idx(e[3])
                 p, q = idx(e[4]), idx(e[5])

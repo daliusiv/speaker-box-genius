@@ -2,7 +2,7 @@
 title: How to design a transmission line speaker
 description: Line types, length and tuning, stuffing and folding, with a worked example that compares a classic TL, an offset TL and a mass-loaded line in your browser.
 path: guides/transmission-line
-image: tl-spl.png
+image: chart:tl-example/response
 order: 3
 group: lines
 ---
@@ -40,20 +40,20 @@ The example uses a **Dayton Audio DSA215-8**, an 8″ woofer (Fs 35 Hz, Qts 0.33
 
 | | Classic TL | Offset TL | MLTL |
 |---|---|---|---|
-| Line length | 170 cm | 225 cm | 86 cm |
-| Volume | 37 L | 71 L | 24 L |
-| Tuning | 35.1 Hz | 35.1 Hz | 40.0 Hz |
-| F3 | 50.7 Hz | 34.2 Hz | 40.2 Hz |
-| Ripple above F3 | 10.7 dB | 17.3 dB | 3.7 dB |
-| Peak cone excursion | 3.0 mm | 4.4 mm | 5.1 mm |
+| Line length | {{num:tl-example/1/linelen}} cm | {{num:tl-example/2/linelen}} cm | {{num:tl-example/3/linelen}} cm |
+| Volume | {{num:tl-example/1/vol}} L | {{num:tl-example/2/vol}} L | {{num:tl-example/3/vol}} L |
+| Tuning | {{num:tl-example/1/fb}} Hz | {{num:tl-example/2/fb}} Hz | {{num:tl-example/3/fb}} Hz |
+| F3 | {{num:tl-example/1/f3}} Hz | {{num:tl-example/2/f3}} Hz | {{num:tl-example/3/f3}} Hz |
+| Ripple above F3 | {{num:tl-example/1/ripple}} dB | {{num:tl-example/2/ripple}} dB | {{num:tl-example/3/ripple}} dB |
+| Peak cone excursion | {{num:tl-example/1/x}} mm | {{num:tl-example/2/x}} mm | {{num:tl-example/3/x}} mm |
 
-![The three lines: the offset TL (light pink) goes deepest, the MLTL (dark pink) is the smoothest, and the classic TL (pink) gives up bass for a small, well-damped line.](img/tl-spl.png)
+![The three lines: the offset TL ({{color:tl-example/2}}) goes deepest, the MLTL ({{color:tl-example/3}}) is the smoothest, and the classic TL ({{color:tl-example/1}}) gives up bass for a small, well-damped line.](chart:tl-example/response)
 
 The offset TL goes deepest but is the biggest box. The MLTL is smaller than even the classic TL, and much smoother, because its port does the low-frequency work and the line mostly needs to stay quiet. The [MLTL guide](/guides/mltl/) takes this one further: its port, driver position and stuffing, and why a ported-box calculator gets a tall tower wrong. The classic TL, stuffed for two thirds of its length, is well damped but heavily stuffed lines give up bass.
 
 ## Step 1: length sets the tuning
 
-A line resonates first where it's a quarter of a wavelength long. For this driver's Fs of 35 Hz, that's about **245 cm**. Real lines are shorter than that: a narrowing line and stuffing both lower the tuning, so the classic TL above tunes to 35.1 Hz in **170 cm**.
+A line resonates first where it's a quarter of a wavelength long. For this driver's Fs of 35 Hz, that's about **245 cm**. Real lines are shorter than that: a narrowing line and stuffing both lower the tuning, so the classic TL above tunes to {{num:tl-example/1/fb}} Hz in **{{num:tl-example/1/linelen}} cm**.
 
 There's no need to work this out by hand. Type the tuning you want and press **Set line length** (or **Set port length** for an MLTL): the app scales the line, the driver position and the stuffed section until the simulation tunes where you asked.
 
@@ -61,12 +61,12 @@ There's no need to work this out by hand. Type the tuning you want and press **S
 
 The stuffing's job is to damp the line's higher resonances without killing the fundamental. For the offset TL in the example, stuffing the part behind the driver:
 
-| Stuffing | F3 | Ripple above F3 |
+| Stuffing | F3 (no filter) | Ripple above F3 |
 |---|---|---|
-| None | 31.1 Hz | 38.7 dB |
-| 3 kg/m³ | 31.4 Hz | 22.0 dB |
-| 6 kg/m³ | 32.2 Hz | 17.3 dB |
-| 10 kg/m³ | 33.8 Hz | 13.6 dB |
+| None | {{num:tl-stuff-0/1/f3line}} Hz | {{num:tl-stuff-0/1/ripple}} dB |
+| 3 kg/m³ | {{num:tl-stuff-3/1/f3line}} Hz | {{num:tl-stuff-3/1/ripple}} dB |
+| 6 kg/m³ | {{num:tl-example/2/f3line}} Hz | {{num:tl-example/2/ripple}} dB |
+| 10 kg/m³ | {{num:tl-stuff-10/1/f3line}} Hz | {{num:tl-stuff-10/1/ripple}} dB |
 
 An empty line is a mess of peaks and dips. A little stuffing does most of the work; more keeps smoothing it, but costs bass. In the app, stuffing is set per section, in kg/m³ (light polyester fibre is around 4–8 kg/m³). Why fibre slows sound and makes air act springier is explained in the [box stuffing guide](/guides/box-stuffing/). **Best line** searches the driver position and the stuffing for the smoothest response or the deepest bass, then retunes the length.
 
@@ -83,7 +83,7 @@ The **Line load (Za)** chart shows the line's acoustic impedance as Hornresp doe
 
 Below its tuning a line stops holding the cone back, much like a ported box, so check the cone excursion at your real power with a high-pass filter in place. In the example, all three lines stay under the 5.5 mm Xmax at 25 W behind the 28 Hz filter.
 
-For a mass-loaded line, the port has the same air-speed limit as any port (about 17 m/s before it chuffs). The MLTL preset sizes its port for your power: here, 7.3 cm across.
+For a mass-loaded line, the port has the same air-speed limit as any port (about 17 m/s before it chuffs). The MLTL preset sizes its port for your power: here, {{num:tl-example/3/portd}} cm across.
 
 ## Step 5: fold it and build it
 

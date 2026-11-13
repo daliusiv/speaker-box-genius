@@ -7,6 +7,8 @@ export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line";
  * pyramid"; the id stays so old links open); "wedge" is the car wedge with one sloped panel.
  */
 export type ShapeKind = "box" | "wedge" | "cylinder" | "sphere" | "frustum";
+/** Where a box's port or passive radiators sit: see VentedDesign.ventAt. */
+export type VentAt = "back" | "custom";
 export type PrParams = Required<Pick<PassiveRadiatorInput, "mms_g" | "sd_cm2" | "xmax_mm" | "qms" | "vas_l">>;
 
 interface DesignBase {
@@ -40,6 +42,14 @@ export interface VentedDesign extends DesignBase {
   targetFb: number;
   /** Round ports: round-over radius at both ends (cm), 0 = straight. */
   flare_cm: number;
+  /**
+   * Where the port (or PRs) is relative to the cone. Absent = side by side (on the baffle, as WinISD has it);
+   * "back": on the back panel, the volume calculator's outside depth away (when it's linked to this box);
+   * "custom": ventDistance_cm away.
+   */
+  ventAt?: VentAt;
+  /** With ventAt "custom": how far the port or PRs is from the cone (cm). */
+  ventDistance_cm?: number;
 }
 
 /** A further group of passive radiators in the same box (a different model, or the same with other added mass). */
@@ -59,6 +69,14 @@ export interface PrDesign extends DesignBase {
   params: PrParams;
   /** Mixed passive radiators: groups after the first. */
   extra: PrGroupState[];
+  /**
+   * Where the port (or PRs) is relative to the cone. Absent = side by side (on the baffle, as WinISD has it);
+   * "back": on the back panel, the volume calculator's outside depth away (when it's linked to this box);
+   * "custom": ventDistance_cm away.
+   */
+  ventAt?: VentAt;
+  /** With ventAt "custom": how far the port or PRs is from the cone (cm). */
+  ventDistance_cm?: number;
 }
 
 /** A port's size and count, shared by ported and bandpass designs. */
@@ -99,6 +117,8 @@ export interface BandpassDesign extends DesignBase {
   rearPrs: PrGroupState[];
   /** Box losses for each chamber, or null to use the ones in Settings (and WinISD's 100 between the chambers). */
   losses: BandpassLosses | null;
+  /** 6th order (parallel): how far the rear chamber's opening is from the front one's (cm). Absent = side by side. */
+  ventDistance_cm?: number;
 }
 
 export interface ChamberLosses {
@@ -242,6 +262,12 @@ export interface Settings {
   airInMaxSpl: boolean;
   /** Box fill for the air distortion: fill makes the air's compression less adiabatic (empty = worst case). */
   airFill: "empty" | "lined" | "filled" | "packed";
+  /** Where box F3/F6/F10 are measured from: the passband (a plain cone's level, like WinISD) or the response's bass peak (like VituixCAD). Lines and bandpass boxes keep their own rules. */
+  f3From: "passband" | "peak";
+  /** Absorption (Qa) also makes the box act bigger, as VituixCAD does: × (1 + 0.9·Qa^−0.9), +1.4 % at Qa 100. Off (default, like WinISD and Hornresp): Qa is damping only. Ignored for a box with stuffing (its own gain covers it). */
+  qaVolume: boolean;
+  /** Where a ported box's port is heard from: "own" (default) = each box's Position setting; "portLength" (like VituixCAD) = a box left side by side has its port's sound delayed by the port's physical length, as VituixCAD does. */
+  ventPlacement: "own" | "portLength";
 }
 
 /** Everything needed to reproduce a simulation. Stored in the URL hash for sharing. */
@@ -544,6 +570,9 @@ export const DEFAULT_STATE: AppState = {
     airLimit_pct: 10,
     airInMaxSpl: false,
     airFill: "empty",
+    f3From: "passband",
+    qaVolume: false,
+    ventPlacement: "own",
   },
   eq: [],
   measured: [],
@@ -915,6 +944,15 @@ function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
     merged.rearPrs = rp.length ? rp : b.rearPrs;
     merged.losses = bandpassLossesOf(d.losses);
   }
+  if (merged.kind === "vented" || merged.kind === "pr") {
+    // Side by side is the default and is left out, so links without a position stay as they were.
+    if (merged.ventAt !== "back" && merged.ventAt !== "custom") delete merged.ventAt;
+  }
+  if (merged.kind === "vented" || merged.kind === "pr" || merged.kind === "bandpass") {
+    const dist = merged.ventDistance_cm;
+    if (!(typeof dist === "number" && Number.isFinite(dist) && dist > 0)) delete merged.ventDistance_cm;
+    else merged.ventDistance_cm = Math.min(dist, 1000);
+  }
   if (typeof merged.id !== "string" || all.some((x) => x.id === merged.id)) merged.id = base.id;
   // Older versions put the preset in the name ("Ported QB3"): move it to the tag.
   const old = / (Qtc [\d.]+|QB3|B4|Keele)$/.exec(merged.name ?? "");
@@ -1064,6 +1102,9 @@ export function decodeState(hash: string): AppState | null {
         airLimit_pct: Number.isFinite(raw.settings?.airLimit_pct) ? Math.min(30, Math.max(1, raw.settings!.airLimit_pct!)) : d.settings.airLimit_pct,
         airInMaxSpl: raw.settings?.airInMaxSpl === true,
         airFill: (["empty", "lined", "filled", "packed"] as const).find((x) => x === raw.settings?.airFill) ?? "empty",
+        f3From: raw.settings?.f3From === "peak" ? "peak" : "passband",
+        qaVolume: raw.settings?.qaVolume === true,
+        ventPlacement: raw.settings?.ventPlacement === "portLength" ? "portLength" : "own",
       },
       eq: Array.isArray(raw.eq)
         ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf", "highshelf"].includes(e.type)).slice(0, 12)

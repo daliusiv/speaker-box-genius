@@ -923,6 +923,12 @@ label.full {
   grid-template-columns: 3.6rem 1fr;
 }
 
+/* A note under a control that needs the whole row (e.g. port Position) */
+.fields > p.hint.full {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
 input.entered {
   padding-right: 1.3rem;
 }
@@ -1157,6 +1163,20 @@ button:disabled {
 .presets .hint {
   flex-basis: 100%;
   margin: 0;
+}
+
+/* Presets above the fields (ported, PR): room before the first field. */
+.presets + .fields {
+  margin-top: 0.75rem;
+}
+
+/* The PR box's own panel: its presets sit right under the panel's heading. */
+.pr-box-card {
+  margin-top: 0.6rem;
+}
+
+.pr-box-card > .presets {
+  margin-top: 0;
 }
 
 .calc-offer {
@@ -1568,7 +1588,9 @@ button.icon:disabled {
     position: sticky;
     top: 1rem;
     align-self: start;
-    max-height: calc(100vh - 2rem);
+    /* --panel-max (usePanelFit): the room under the panel's top edge, so its end stays reachable
+       before the page has scrolled past the header. */
+    max-height: var(--panel-max, calc(100vh - 2rem));
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
@@ -1992,6 +2014,11 @@ button.check-fix {
   margin: 0;
 }
 
+/* Under a box's fields (bandpass): clear of the inputs above. */
+.fields + .size-all {
+  margin-top: 0.75rem;
+}
+
 .size-report {
   padding: 0.6rem 0.9rem;
   border: 1px solid var(--border);
@@ -2025,7 +2052,8 @@ button.check-fix {
   z-index: 2;
   display: grid;
   gap: 0.15rem;
-  max-width: min(26rem, 70%);
+  /* Wide enough for the legend's columns (Peak, Limited by…); a long note wraps before it overflows. */
+  max-width: min(44rem, 94%);
   padding: 0.5rem 0.7rem;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -2067,6 +2095,61 @@ button.check-fix {
 .tip-table tr.part th {
   padding-left: 0.8rem;
   color: var(--muted);
+}
+
+.tip-table td.legend-note {
+  white-space: normal;
+  min-width: 7rem;
+}
+
+/* Numbers right-aligned, so their digits line up and a column never shifts when one value is
+   shorter (0.0 dB) or carries the ▲/▼ mark (drawn in a fixed slot at the cell's end). */
+.tip-table td.legend-val,
+.tip-table td.tip-peak,
+.tip-table td.legend-note.num {
+  text-align: right;
+}
+
+.tip-table td.legend-val {
+  position: relative;
+  padding-right: 1.1rem;
+}
+
+.tip-table td.legend-val .lead {
+  position: absolute;
+  right: 0.35rem;
+}
+
+.tip-table td.legend-note.num {
+  min-width: 0;
+}
+
+/* Room between right-aligned columns that sit side by side. */
+.tip-table td.tip-peak,
+.tip-table td.legend-note.num,
+.tip-table thead th.num {
+  padding-left: 0.9rem;
+}
+
+.tip-table thead th.num {
+  text-align: right;
+}
+
+.tip-table thead th.legend-at {
+  text-align: right;
+  padding-right: 1.1rem;
+}
+
+.tip-table .tip-peak .muted {
+  font-size: 0.7rem;
+}
+
+/* Desktop: the hover values box carries the legend's columns (Peak too), so the table under the
+   chart goes, leaving the chart more height. Phones (no hover box) keep it; so do still images. */
+@media (min-width: 861px) {
+  .legend-below {
+    display: none;
+  }
 }
 
 /* T/S fields: room for the clear button so digits never hide under it */
@@ -2370,6 +2453,7 @@ dialog.finder .lib-inner {
 }
 .tuning-target {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
   grid-template-columns: none;
@@ -3293,9 +3377,25 @@ label.full.long {
   grid-template-columns: 8.5rem 1fr;
 }
 
+/* A group with one long select label: every select in it uses the wide label column, so they line up. */
+@media (min-width: 641px) {
+  /* (Bandpass cards have their own column below.) */
+  .fields:not(.design[data-kind="bandpass"] .fields):has(> label.full.long) > label.full {
+    grid-template-columns: 8.5rem 1fr;
+  }
+}
+
+/* Bandpass: one label column for every select (Type, Opening, Port…), so they line up. */
+.design[data-kind="bandpass"] label.full,
+.design[data-kind="bandpass"] label.full.long {
+  grid-template-columns: 5.2rem 1fr;
+}
+
 @media (max-width: 640px) {
   label.full,
-  label.full.long {
+  label.full.long,
+  .design[data-kind="bandpass"] label.full,
+  .design[data-kind="bandpass"] label.full.long {
     grid-template-columns: 1fr;
     row-gap: 0.2rem;
   }
@@ -4380,12 +4480,6 @@ button.new-btn > span:first-child {
   white-space: nowrap;
 }
 
-.desktop-tabs .tab-settings {
-  border-left: 1px solid var(--border);
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
 @media (max-width: 400px) {
   .top {
     gap: 0.35rem;
@@ -5347,7 +5441,8 @@ button.menu-button {
   border-radius: 0;
 }
 
-.legend-caret {
+/* Two classes: .chart svg (full width) must not stretch it. */
+.legend-name .legend-caret {
   flex: none;
   width: 12px;
   height: 12px;
@@ -5443,4 +5538,125 @@ button.menu-button {
     z-index: 1;
     background: var(--card);
   }
+}
+
+/* Phones: Settings selects meet the 44 px touch target. */
+@media (max-width: 767px) {
+  .compat .unit-switch {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    width: 100%;
+  }
+
+  .compat .unit-switch button {
+    min-height: 44px;
+  }
+
+  .fields select,
+  .fields input:not([type="checkbox"]):not([type="radio"]) {
+    min-height: 44px;
+  }
+}
+
+/* ---- Phones (< 768 px): one-row drive bar; the value opens a bottom sheet ---- */
+.drive-bar button.drive-chip {
+  flex: none;
+  min-width: 4.5rem;
+  min-height: 44px;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--well);
+  color: var(--fg);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.drive-bar button.drive-chip:hover {
+  border-color: var(--accent);
+}
+
+@media (max-width: 767px) {
+  .drive-bar {
+    flex-wrap: nowrap;
+  }
+
+  .drive-bar input[type="range"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  /* A bottom sheet, not full screen: the charts stay in view above it. */
+  dialog.sheet.drive-sheet {
+    inset: auto 0 0 0;
+    height: auto;
+    max-height: calc(100dvh - 4rem);
+    border-top: 1px solid var(--border);
+    border-radius: 14px 14px 0 0;
+  }
+
+  dialog.sheet.drive-sheet .sheet-inner {
+    height: auto;
+    padding-top: 0;
+  }
+}
+
+.drive-sheet-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.drive-sheet-value {
+  display: flex;
+  flex: 1 1 8rem;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+.drive-sheet-value input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.drive-sheet .unit-switch button {
+  min-width: 4.5rem;
+  min-height: 40px;
+}
+
+.drive-sheet .hint {
+  margin: 0.6rem 0 0;
+}
+
+.drive-sheet-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.drive-sheet-quick button.chip {
+  min-height: 44px;
+  padding-inline: 1rem;
+}
+
+.drive-sheet-quick button.chip[aria-pressed="true"] {
+  background: var(--accent-soft);
+}
+
+.drive-sheet-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.drive-sheet-actions button {
+  min-height: 44px;
+  min-width: 6rem;
 }

@@ -4,23 +4,28 @@ import type { Settings } from "./state.ts";
  * Simulation conventions that differ between WinISD and Hornresp, set together by the
  * Settings presets. Units, the amplifier, box losses, coil temperature and the chuffing line
  * aren't conventions (they describe your build), so presets leave them alone. Hornresp's
- * values are the ones the validation against its exports uses (packages/engine/validation).
+ * values are the ones the validation against its exports uses (packages/engine/validation);
+ * VituixCAD's come from comparing its Enclosure tool.
  */
-export type CompatKey = "air" | "inductance" | "thermalLimit" | "driveModel" | "leakage" | "coneLoad" | "portModel" | "portCompression" | "lineSpl";
-export type CompatPreset = "default" | "winisd" | "hornresp";
+export type CompatKey = "air" | "inductance" | "thermalLimit" | "driveModel" | "leakage" | "coneLoad" | "portModel" | "portCompression" | "lineSpl" | "f3From" | "qaVolume" | "ventPlacement";
+export type CompatPreset = "default" | "winisd" | "hornresp" | "vituixcad";
 
 export const COMPAT: Record<CompatPreset, { label: string; values: Pick<Settings, CompatKey> }> = {
   default: {
     label: "Default",
-    values: { air: "standard", inductance: true, thermalLimit: "nominal", driveModel: "circuit", leakage: "radiates", coneLoad: "mass", portModel: "lumped", portCompression: false, lineSpl: "on-axis" },
+    values: { air: "standard", inductance: true, thermalLimit: "nominal", driveModel: "circuit", leakage: "radiates", coneLoad: "mass", portModel: "lumped", portCompression: false, lineSpl: "on-axis", f3From: "passband", qaVolume: false, ventPlacement: "own" },
   },
   winisd: {
     label: "WinISD",
-    values: { air: "winisd", inductance: false, thermalLimit: "nominal", driveModel: "winisd", leakage: "radiates", coneLoad: "mass", portModel: "lumped", portCompression: false, lineSpl: "on-axis" },
+    values: { air: "winisd", inductance: false, thermalLimit: "nominal", driveModel: "winisd", leakage: "radiates", coneLoad: "mass", portModel: "lumped", portCompression: false, lineSpl: "on-axis", f3From: "passband", qaVolume: false, ventPlacement: "own" },
   },
   hornresp: {
     label: "Hornresp",
-    values: { air: "hornresp", inductance: true, thermalLimit: "real", driveModel: "circuit", leakage: "absorbed", coneLoad: "piston", portModel: "pipe", portCompression: false, lineSpl: "power" },
+    values: { air: "hornresp", inductance: true, thermalLimit: "real", driveModel: "circuit", leakage: "absorbed", coneLoad: "piston", portModel: "pipe", portCompression: false, lineSpl: "power", f3From: "passband", qaVolume: false, ventPlacement: "own" },
+  },
+  vituixcad: {
+    label: "VituixCAD",
+    values: { air: "standard", inductance: false, thermalLimit: "nominal", driveModel: "circuit", leakage: "absorbed", coneLoad: "mass", portModel: "lumped", portCompression: false, lineSpl: "on-axis", f3From: "peak", qaVolume: true, ventPlacement: "portLength" },
   },
 };
 
@@ -46,6 +51,9 @@ export const COMPAT_NAMES: Record<CompatKey, string> = {
   portModel: "Ports",
   portCompression: "Port compression",
   lineSpl: "SPL",
+  f3From: "F3 from",
+  qaVolume: "Absorption",
+  ventPlacement: "Port sound",
 };
 
 /** The preset the settings are closest to, and the settings that differ from it. */

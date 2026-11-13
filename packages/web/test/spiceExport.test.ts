@@ -12,7 +12,7 @@ const LINK = "https://speakerboxgenius.com/#s=test";
 /** The app's own result for a design at the given frequencies (as runDesigns builds it). */
 function app(s: AppState, d: DesignState, frequencies: number[]) {
   const eq = s.eq.filter((e) => e.on && (e.target === "all" || e.target === d.id)).map(({ id: _i, on: _o, target: _t, ...st }) => st as EqStage);
-  return simulate(driverInputOf(s, solveDriver(s)), enclosureOf(d, builtVbOf(s, d) * stuffFactor(d), lossesFor(s, d), s.volume.wall_mm), { ...simOptionsOf(s), eq, frequencies });
+  return simulate(driverInputOf(s, solveDriver(s)), enclosureOf(d, builtVbOf(s, d) * stuffFactor(d), lossesFor(s, d), s.volume.wall_mm, s.volume), { ...simOptionsOf(s), eq, frequencies });
 }
 
 /** Every box design of a state, exported, solved by the test solver (mna.py), against the app. */

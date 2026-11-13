@@ -11,7 +11,7 @@
 - Up to four sections, each with its own taper and stuffing density.
 - Fb is the impedance minimum between the first two peaks. When stuffing damps the lower peak into a shoulder, Fb is the shoulder (where the impedance rises least steeply). F3 is the low-frequency edge, because lines ripple above their tuning.
 - Tapped horns: the driver's rear and front both open into the line (rear at one point, front at the tap), solved as two nodes; only the mouth radiates.
-- Mouth position: when the mouth is further from the listener than the cone (on the back of a folded box, or a custom distance), its output is delayed and scaled by distance.
+- Mouth position: when the mouth is further from the listener than the cone (on the back of a folded box, or a custom distance), its output arrives d/c later in front of the box, at the same level (a far listener on axis, like the 1 m SPL itself and a box's port position). A 1/r drop for the extra distance is left out: below the line's tuning the cone and mouth nearly cancel, and a level mismatch there would show bass a far listener doesn't get. With SPL from radiated power the distance is how far apart the two sources are, as Hornresp's Acoustic Path Length: their powers are added over all directions, |M|² + |C|² + 2·Re(M·C*)·sin(kd)/(kd), and the phase stays that of the two side by side (Hornresp's does too). The Hornresp export writes the distance as the Path and the import reads it back.
 - The cone's mass: in a line or horn the air on both sides of the cone is modelled explicitly, so the cone carries its bare mass Mmd = Mms − 16ρa³/3 (as in Hornresp). An open line adds the front's radiation load (a baffled piston); the rear's comes from the line. Using Mms here counted the rear air mass twice and made impedance peaks up to 10 % low.
 - An MLTL's port can be flared, and port compression (Settings) applies to it like a ported box's.
 
@@ -57,7 +57,7 @@ Tries driver positions (0–40 % along) against stuffing (none, or the first 1�
 
 ## Validation against Hornresp
 
-Results (Hornresp 60.60, re-run on 60.70 on 10 Nov 2026 with identical exports; records 01–07 were first run in 55.30 with the same results; 20–32 added with 60.70). DSA215-8 unless noted, 2.83 V, half space, Hornresp's air c = 344 m/s, ρ = 1.205 kg/m³, SPL from radiated power as Hornresp does, every exported point from 10 Hz to 1 kHz. Each case is a permanent test in `packages/engine/test/hornresp.test.ts`, with Hornresp's exported table (`hornresp.txt`: SPL, Ze and its phase, excursion, Za, group delay) under `test/fixtures/hornresp/`; the [validation page](https://speakerboxgenius.com/validation/#hornresp) shows every case with both curves:
+Results (Hornresp 60.60, re-run on 60.70 on 10 Nov 2026 with identical exports; records 01–07 were first run in 55.30 with the same results; 20–32 added with 60.70; 34–36 (Acoustic Path Length) run on 60.60 on 12 Nov 2026). DSA215-8 unless noted, 2.83 V, half space, Hornresp's air c = 344 m/s, ρ = 1.205 kg/m³, SPL from radiated power as Hornresp does, every exported point from 10 Hz to 1 kHz. Each case is a permanent test in `packages/engine/test/hornresp.test.ts`, with Hornresp's exported table (`hornresp.txt`: SPL, Ze and its phase, excursion, Za, group delay) under `test/fixtures/hornresp/`; the [validation page](https://speakerboxgenius.com/validation/#hornresp) shows every case with both curves:
 
 | Case | SPL, mean | Impedance, mean | Cone excursion, mean | Group delay, 95 % | Line load (Za), mean |
 |---|---|---|---|---|---|
@@ -85,12 +85,16 @@ Results (Hornresp 60.60, re-run on 60.70 on 10 Nov 2026 with identical exports; 
 | 29 Subwoofer front horn, Par + Exp | 0.03 dB | 0.16 % | 0.24 % | 0.13 ms | 0.04 dB |
 | 30 Straight line, two drivers | 0.03 dB | 0.14 % | 0.24 % | 0.06 ms | 0.00 dB |
 | 32 Subwoofer TQWT | 0.03 dB | 0.15 % | 0.25 % | 0.58 ms | 0.02 dB |
+| 34 Straight line, mouth 50 cm away | 0.02 dB | 0.14 % | 0.25 % | 0.07 ms | 0.00 dB |
+| 35 Straight line, mouth 100 cm away | 0.02 dB | 0.14 % | 0.25 % | 0.07 ms | 0.00 dB |
+| 36 Mass-loaded line, port 50 cm away | 0.02 dB | 0.16 % | 0.27 % | 0.08 ms | 0.01 dB |
 
 Group delay is compared away from deep nulls (within 10 dB of the response's highest point a third of an octave either side), where it swings by tens of milliseconds in both. The MLTLs' port output alone (Hornresp's "Horn" output) is compared too: within 0.05 dB, so the port's air speed matches (peaks of 5.0 m/s at 40 Hz in case 05 and 4.5 m/s at 32 Hz in case 11, in both). Hornresp counts drivers with their wiring (OD = 2P or 2S; a bare 2 is read as one), and case 15 is case 05 with two drivers in parallel. Hornresp treats side-by-side cones as one piston of their total area, so each cone's front carries √2 × one cone's air and their output beams like the bigger piston; the app's lines do the same (each cone sees n × the impedance of a piston of n·Sd), and case 15 matches within 0.03 dB and 0.2 %. Before that change the impedance was 0.8 % out and the SPL up to 1.2 dB high at 1 kHz.
 
 What the comparison found and fixed:
 - The cone's mass in lines and horns (see Model): impedance peaks had been up to 10 % low.
 - SPL: Hornresp works SPL out from the power each opening radiates (a baffled piston's radiation resistance), not from on-axis pressure. The two agree at low frequency and part once the mouth is large next to the wavelength: about 1.7 dB at 500 Hz for an 850 cm² mouth. The app shows on-axis SPL; the engine option `splFrom: "power"` gives Hornresp's.
+- Acoustic Path Length (cases 34–36): Hornresp treats the cone and the mouth as two point sources that far apart and sums their powers; its level changes, its phase and group delay don't. The app's on-axis model (in front of the box) is a different thing and was 4–5 dB from it on average, so with SPL from radiated power the app now does the same as Hornresp: within 0.03 dB.
 - Za's definition: for an offset driver, Hornresp charts the line ahead of it only ("Offset Throat S2"); for a tapped horn, the rear tap's pressure over the air going on into the horn ("Tapped Throat S2"); always normalised by ρc over the exact area there (the first slice's average had read 3 % high at a horn's throat).
 - Export: Hornresp drops the rear chamber and lets the back of the cone radiate when Lrc = 0, so front horns are now exported with Lrc set (the depth of a cube of that volume; with chamber resonances masked it changes nothing else). Stuffing in Hornresp's records was also exported in the wrong unit (rayls/cm; Hornresp reads Fr1–Fr4 as mks rayls/m).
 

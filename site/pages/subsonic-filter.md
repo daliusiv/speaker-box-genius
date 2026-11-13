@@ -2,7 +2,7 @@
 title: "Subsonic filter: what frequency and slope?"
 description: Why ported and passive radiator boxes need a high-pass filter below their tuning, and how to choose its frequency and slope, with a worked 12-inch subwoofer example.
 path: guides/subsonic-filter
-image: subsonic-on.png
+image: chart:subsonic-on/excursion
 order: 7
 group: ported
 ---
@@ -23,21 +23,21 @@ A **sealed box** is much less exposed, because the air in the box keeps holding 
 
 ## The worked example
 
-The 12″ **Dayton Audio RSS315HF-4** from the [port guide](/guides/port-chuffing/), in Keele's flat alignment (83.5 L, tuned to 23.8 Hz, with a 5 × 30 cm slot port), at **300 W**. Its Xmax is **14.3 mm**.
+The 12″ **Dayton Audio RSS315HF-4** from the [port guide](/guides/port-chuffing/), in Keele's flat alignment (83.5 L, tuned to {{num:subsonic-off/1/fb}} Hz, with a 5 × 30 cm slot port), at **300 W**. Its Xmax is **14.3 mm**.
 
 | High-pass filter | Peak cone excursion | F3 | Output at 20 Hz |
 |---|---|---|---|
-| None | **35.0 mm** at 10 Hz: 2.4 × Xmax | 23.2 Hz | −6.6 dB |
-| 12 dB/oct at 20 Hz | 12.9 mm at 16 Hz | 25.6 Hz | −9.7 dB |
-| 24 dB/oct at 15 Hz | 18.9 mm at 16 Hz: over Xmax | 23.4 Hz | −7.1 dB |
-| 24 dB/oct at 18 Hz | 13.4 mm at 17 Hz | 23.8 Hz | −8.2 dB |
-| **24 dB/oct at 20 Hz** | **10.6 mm** at 34 Hz | 24.4 Hz | −9.7 dB |
+| None | **{{num:subsonic-off/1/x}} mm** at {{num:subsonic-off/1/xf}} Hz: {{num:subsonic-off/1/xr}} × Xmax | {{num:subsonic-off/1/f3}} Hz | {{num:subsonic-off/1/rel@20}} dB |
+| 12 dB/oct at 20 Hz | {{num:subsonic-12-20/1/x}} mm at {{num:subsonic-12-20/1/xf}} Hz | {{num:subsonic-12-20/1/f3}} Hz | {{num:subsonic-12-20/1/rel@20}} dB |
+| 24 dB/oct at 15 Hz | {{num:subsonic-24-15/1/x}} mm at {{num:subsonic-24-15/1/xf}} Hz: over Xmax | {{num:subsonic-24-15/1/f3}} Hz | {{num:subsonic-24-15/1/rel@20}} dB |
+| 24 dB/oct at 18 Hz | {{num:subsonic-24-18/1/x}} mm at {{num:subsonic-24-18/1/xf}} Hz | {{num:subsonic-24-18/1/f3}} Hz | {{num:subsonic-24-18/1/rel@20}} dB |
+| **24 dB/oct at 20 Hz** | **{{num:subsonic-on/1/x}} mm** at {{num:subsonic-on/1/xf}} Hz | {{num:subsonic-on/1/f3}} Hz | {{num:subsonic-on/1/rel@20}} dB |
 
-![Cone excursion with no filter: under Xmax across the useful range, then far past it below 20 Hz.](img/subsonic-off.png)
+![Cone excursion with no filter: under Xmax across the useful range, then far past it below 20 Hz.](chart:subsonic-off/excursion)
 
-![The same sub with a 24 dB/oct filter at 20 Hz: the cone stays inside its Xmax at every frequency.](img/subsonic-on.png)
+![The same sub with a 24 dB/oct filter at 20 Hz: the cone stays inside its Xmax at every frequency.](chart:subsonic-on/excursion)
 
-With no filter, the cone is fine down to about 20 Hz and then shoots past its Xmax. A 24 dB/oct filter at 20 Hz keeps it within 10.6 mm, and costs just over a hertz of F3.
+With no filter, the cone is fine down to about 20 Hz and then shoots past its Xmax. A 24 dB/oct filter at 20 Hz keeps it within {{num:subsonic-on/1/x}} mm, and costs {{diff:subsonic-on/1/subsonic-off/1/f3}} Hz of F3.
 
 [[Open the example with the filter|subsonic-on]]
 
@@ -49,7 +49,7 @@ Speakers on an ordinary stereo amplifier or AV receiver usually have no subsonic
 - Below it, down to 20 Hz, it may reach **2 × Xmax** (the usual margin before damage). Past Xmax there shows in **amber**, with the power that keeps it within, not as a red ⚠.
 - Below 20 Hz there's no music to check.
 
-![A ported 8″ woofer (B&C 8NDL51, 20 L at 59.3 Hz) at 55 W with no filter: the cone passes its 7 mm Xmax only in the shaded deep-bass zone, peaking at 7.3 mm, well under the 2 × Xmax line.](img/deep-bass-zone.png)
+![A ported 8″ woofer (B&C 8NDL51, 20 L at 59.3 Hz) at 55 W with no filter: the cone passes its 7 mm Xmax only in the shaded deep-bass zone, peaking at 7.3 mm, well under the 2 × Xmax line.](chart:deep-bass-example/excursion)
 
 That's fine for most listening. For bass-heavy music or films at full power, and for subwoofers, fit a filter: with one switched on, the app checks everything from 10 Hz. (The 12″ sub above is tuned so low that its deep-bass zone would start below 20 Hz, so it has none.)
 
@@ -65,7 +65,7 @@ Start **a little below the box's tuning**, about 0.8 times Fb (19 Hz for this su
 
 Butterworth filters are flat to the corner; Linkwitz–Riley filters start rolling off earlier (−6 dB at the corner frequency) and protect a little more for the same setting.
 
-A steep filter adds some **group delay** (in the example, from 25 ms to 44 ms at 25 Hz with the 24 dB/oct filter). That's well below what people notice at those frequencies (see the [group delay guide](/guides/group-delay/)).
+A steep filter adds some **group delay** (in the example, from {{num:subsonic-off/1/gd@25:0}} ms to {{num:subsonic-on/1/gd@25:0}} ms at 25 Hz with the 24 dB/oct filter). That's well below what people notice at those frequencies (see the [group delay guide](/guides/group-delay/)).
 
 ## Where the filter lives
 

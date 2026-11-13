@@ -2,7 +2,7 @@
 title: "Linkwitz Transform: deep bass from a small sealed box, and what it really costs"
 description: How the Linkwitz Transform works, how to choose f0, Q0, fp and Qp, how much boost, excursion and amplifier power it needs, and why it doesn't raise maximum output, with a worked 10-inch example.
 path: guides/linkwitz-transform
-image: lt-spl.png
+image: chart:lt-example/response
 order: 14
 group: sealed
 ---
@@ -15,25 +15,25 @@ The Linkwitz Transform (LT) is an equaliser that makes a small sealed box behave
 
 ## What it does
 
-A sealed box behaves like a second-order high-pass filter: flat above its resonance fc (often written f0) and falling at 12 dB/oct below it, with its Q (Qtc, or Q0) setting the shape of the corner. Siegfried Linkwitz's circuit is a biquad filter whose zeros cancel the box's own poles (f0, Q0) and whose poles put in new ones (fp, Qp) that you choose [1][2][3]. The result is the response of a sealed box with resonance fp and Q Qp, for example 25 Hz at Q 0.707, from a box whose own resonance is 49 Hz.
+A sealed box behaves like a second-order high-pass filter: flat above its resonance fc (often written f0) and falling at 12 dB/oct below it, with its Q (Qtc, or Q0) setting the shape of the corner. Siegfried Linkwitz's circuit is a biquad filter whose zeros cancel the box's own poles (f0, Q0) and whose poles put in new ones (fp, Qp) that you choose [1][2][3]. The result is the response of a sealed box with resonance fp and Q Qp, for example 25 Hz at Q 0.707, from a box whose own resonance is {{num:lt-example/2/fc:0}} Hz.
 
 Because it replaces a second-order response with another second-order response, it's for **sealed boxes** (and open baffles). A ported box rolls off at 24 dB/oct, and an LT won't fit it [4].
 
 ## The worked example
 
-A **Dayton Audio RSS265HF-4** 10″ subwoofer in a **20 L** sealed box: about half the size of its textbook Qtc 0.707 box (37 L). On its own the 20 L box has fc 49.2 Hz and Qtc 0.88, so it rolls off early with a slight hump. An LT takes it to **fp 25 Hz, Qp 0.707**. All three run at **40 W** behind a 24 dB/oct high-pass filter at 18 Hz:
+A **Dayton Audio RSS265HF-4** 10″ subwoofer in a **20 L** sealed box: about half the size of its textbook Qtc 0.707 box (37 L). On its own the 20 L box has fc {{num:lt-example/2/fc}} Hz and Qtc {{num:lt-example/2/qtc}}, so it rolls off early with a slight hump. An LT takes it to **fp 25 Hz, Qp 0.707**. All three run at **40 W** behind a 24 dB/oct high-pass filter at 18 Hz:
 
 | | 20 L + LT | 20 L, no EQ | 37 L, no EQ |
 |---|---|---|---|
-| F3 | **28.9 Hz** | 44.0 Hz | 41.2 Hz |
-| Output at 25 Hz (40 W) | 95.9 dB | 87.7 dB | 90.4 dB |
-| Peak cone excursion (40 W) | 11.4 mm | 4.3 mm | 5.6 mm |
-| **Maximum SPL at 25 Hz** | **97.1 dB** | **97.1 dB** | **97.2 dB** |
-| Amplifier needed at 25 Hz to reach that maximum | 34 V, 6.9 A | 34 V, 6.9 A | 25 V, 3.9 A |
+| F3 | **{{num:lt-example/1/f3}} Hz** | {{num:lt-example/2/f3}} Hz | {{num:lt-example/3/f3}} Hz |
+| Output at 25 Hz (40 W) | {{num:lt-example/1/spl@25}} dB | {{num:lt-example/2/spl@25}} dB | {{num:lt-example/3/spl@25}} dB |
+| Peak cone excursion (40 W) | {{num:lt-example/1/x}} mm | {{num:lt-example/2/x}} mm | {{num:lt-example/3/x}} mm |
+| **Maximum SPL at 25 Hz** | **{{num:lt-example/1/max@25}} dB** | **{{num:lt-example/2/max@25}} dB** | **{{num:lt-example/3/max@25}} dB** |
+| Amplifier needed at 25 Hz to reach that maximum | {{num:lt-example/1/volts@25:0}} V, {{num:lt-example/1/amps@25}} A | {{num:lt-example/2/volts@25:0}} V, {{num:lt-example/2/amps@25}} A | {{num:lt-example/3/volts@25:0}} V, {{num:lt-example/3/amps@25}} A |
 
-![Response at 40 W: the 20 L box with the LT (blue) is flat to about 30 Hz; the same box without EQ (light blue) and the 37 L box (indigo) roll off from the mid 40s.](img/lt-spl.png)
+![Response at 40 W: the 20 L box with the LT ({{color:lt-example/1}}) is flat to about 30 Hz; the same box without EQ ({{color:lt-example/2}}) and the 37 L box ({{color:lt-example/3}}) roll off from the mid 40s.](chart:lt-example/response)
 
-The LT box goes **12 Hz deeper** than the box twice its size. But look at the maximum SPL: **all three boxes reach the same level** (within 0.1 dB) at 25 Hz before the cone hits its Xmax (12.3 mm). The LT doesn't make the sub louder, and the small box needs more amplifier power at the bottom than the big one. That's [Hofmann's Iron Law](/guides/hofmann-iron-law/) at work: depth from a small box is paid for in efficiency.
+The LT box goes **{{diff:lt-example/3/1/f3:0}} Hz deeper** than the box twice its size. But look at the maximum SPL: **all three boxes reach the same level** (within 0.1 dB) at 25 Hz before the cone hits its Xmax (12.3 mm). The LT doesn't make the sub louder, and the small box needs more amplifier power at the bottom than the big one. That's [Hofmann's Iron Law](/guides/hofmann-iron-law/) at work: depth from a small box is paid for in efficiency.
 
 ## Why it doesn't raise the maximum output
 
@@ -41,12 +41,12 @@ In a sealed box, the bottom-octave output is limited by how much air the cone ca
 
 So the LT trades amplifier power for box size. To drive the cone to its Xmax at 25 Hz, the amplifier has to deliver:
 
-- for the 37 L box, **25 V and 3.9 A** (about 76 W into the speaker);
-- for the 20 L box, **34 V and 6.9 A** (about 203 W), **with or without the LT**. The same box needs the same voltage to move the cone the same distance.
+- for the 37 L box, **{{num:lt-example/3/volts@25:0}} V and {{num:lt-example/3/amps@25}} A** (about {{num:lt-example/3/pw@25}} W into the speaker);
+- for the 20 L box, **{{num:lt-example/2/volts@25:0}} V and {{num:lt-example/2/amps@25}} A** (about {{num:lt-example/2/pw@25}} W), **with or without the LT**. The same box needs the same voltage to move the cone the same distance.
 
-In the "watts" that amplifiers and simulators usually quote (V² ÷ Re), that's 349 W for the small box against 191 W for the big one: close to the driver's 350 W rating.
+In the "watts" that amplifiers and simulators usually quote (V² ÷ Re), that's {{num:lt-example/2/vw@25}} W for the small box against {{num:lt-example/3/vw@25}} W for the big one: close to the driver's 350 W rating.
 
-What the LT changes is that the extra voltage arrives automatically: its boost is in the signal. In the example, a 40 W setting is 11.8 V, but after the LT (and the high-pass filter) the amplifier is putting out **29 V** at 25 Hz, about 8 dB more, and the cone is at 11.4 mm. So the amplifier must be sized for the boosted bass, not for the passband. The app shows exactly what it needs: switch the **Max SPL** chart to **Volts** or **Amps**.
+What the LT changes is that the extra voltage arrives automatically: its boost is in the signal. In the example, a 40 W setting is {{num:lt-example/1/vset}} V, but after the LT (and the high-pass filter) the amplifier is putting out **{{num:lt-example/1/vout@25}} V** at 25 Hz, and the cone is at {{num:lt-example/1/x}} mm. So the amplifier must be sized for the boosted bass, not for the passband. The app shows exactly what it needs: switch the **Max SPL** chart to **Volts** or **Amps**.
 
 ## How much boost, and how much power
 
@@ -54,15 +54,15 @@ The LT's boost at very low frequencies is **(f0 / fp)²**, or **40 × log10(f0 /
 
 | f0 → fp | Boost |
 |---|---|
-| 49.2 → 30 Hz | 8.6 dB |
-| 49.2 → 25 Hz | **11.8 dB** |
-| 49.2 → 20 Hz | 15.7 dB |
+| {{num:lt-example/2/fc}} → 30 Hz | {{num:lt-example/2/boost@30}} dB |
+| {{num:lt-example/2/fc}} → 25 Hz | **{{num:lt-example/2/boost@25}} dB** |
+| {{num:lt-example/2/fc}} → 20 Hz | {{num:lt-example/2/boost@20}} dB |
 
-Every 6 dB of boost needs **four times** the amplifier power and **twice** the cone excursion at those frequencies. An 11.8 dB boost needs about 15 times the power at the bottom of the range. A common limit is to keep the boost under about **12 dB** [6]: beyond that, the amplifier power and the excursion grow faster than the bass you gain.
+Every 6 dB of boost needs **four times** the amplifier power and **twice** the cone excursion at those frequencies. A boost of {{num:lt-example/2/boost@25}} dB needs about {{num:lt-example/2/boostx@25}} times the power at the bottom of the range. A common limit is to keep the boost under about **12 dB** [6]: beyond that, the amplifier power and the excursion grow faster than the bass you gain.
 
 ## You need a subsonic filter
 
-An LT boosts everything below fp, all the way down, so without a filter, rumble and subsonic content drive the cone far past its Xmax. Always put a **high-pass filter** below fp. In the example, the 24 dB/oct filter at 18 Hz keeps the cone at 11.4 mm at 40 W. See [the subsonic filter guide](/guides/subsonic-filter/).
+An LT boosts everything below fp, all the way down, so without a filter, rumble and subsonic content drive the cone far past its Xmax. Always put a **high-pass filter** below fp. In the example, the 24 dB/oct filter at 18 Hz keeps the cone at {{num:lt-example/1/x}} mm at 40 W. See [the subsonic filter guide](/guides/subsonic-filter/).
 
 ## Choosing f0, Q0, fp and Qp
 
@@ -78,7 +78,7 @@ An LT boosts everything below fp, all the way down, so without a filter, rumble 
 
 ## Group delay
 
-The LT changes the timing of the bass. In the example, group delay at 20 Hz rises from about 5 ms to 11 ms, while at 40 Hz it falls from 6 ms to 4 ms. The peak delay is higher, but over the range that matters for music it's often improved, because the response is flatter there [2]. Either way, a few milliseconds at these frequencies is far below the delays shown to be audible in listening tests [10]. The [group delay guide](/guides/group-delay/) puts these numbers next to sealed and ported boxes.
+The LT changes the timing of the bass. In the example, group delay at 20 Hz rises from {{num:lt-example/2/gd@20:0}} ms to {{num:lt-example/1/gd@20:0}} ms, while at 40 Hz it falls from {{num:lt-example/2/gd@40:0}} ms to {{num:lt-example/1/gd@40:0}} ms (both with the 18 Hz high-pass filter, which adds most of the delay at 20 Hz). The peak delay is higher, but over the range that matters for music it's often improved, because the response is flatter there [2]. Either way, the LT's change of a few milliseconds at these frequencies is far below the delays shown to be audible in listening tests [10]. The [group delay guide](/guides/group-delay/) puts these numbers next to sealed and ported boxes.
 
 ## How to build one
 

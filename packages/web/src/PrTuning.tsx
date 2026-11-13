@@ -33,6 +33,8 @@ export function PrTuning(props: {
   const [now, setNow] = useState<TuningPoint | null>(null);
   const [result, setResult] = useState<PrTuningResult | null>(null);
   const [error, setError] = useState("");
+  /** Set on each open: the next measurement of the design seeds the "smallest" target. */
+  const seed = useRef(true);
   const { ctx, design } = props;
   const mixed = design.extra.length > 0;
   const usable = ctx.driver !== null && !mixed;
@@ -47,13 +49,17 @@ export function PrTuning(props: {
   };
   const key = JSON.stringify([opts, design.addedMass_g, goal, targetF3]);
 
-  // The design as it is now, and the default target for "smallest": a bit deeper than now.
+  // The design as it is now. On open, "smallest" targets the F3 it has now: the smallest box
+  // that keeps the bass extension you already get.
   useEffect(() => {
     if (!isOpen || !ctx.driver || mixed) return;
     try {
       const p = evaluateTuning(ctx.driver, opts, props.vb_l, design.addedMass_g);
       setNow(p);
-      if (targetF3 === null && p.f3 !== null) setTargetF3(Math.max(10, Math.round(p.f3) - 3));
+      if (seed.current && p.f3 !== null) {
+        seed.current = false;
+        setTargetF3(Math.round(p.f3 * 10) / 10);
+      }
     } catch {
       setNow(null);
     }
@@ -79,6 +85,7 @@ export function PrTuning(props: {
   }, [isOpen, key]);
 
   const open = () => {
+    seed.current = true;
     setIsOpen(true);
     if (props.linked && goal === "smallest") setGoal("flat");
     dlg.current?.showModal();
@@ -165,7 +172,7 @@ export function PrTuning(props: {
           </div>
           <p className="hint tuning-goal">{GOALS.find((g) => g.id === goal)!.hint}.</p>
           {goal === "smallest" && (
-            <label className="tuning-target" data-help="The lowest −3 dB point the smallest box must still reach.">
+            <label className="tuning-target" data-help="The −3 dB point (F3, not the tuning Fb) the smallest box must still reach. Starts at this design's F3 now; lower it for deeper bass in a bigger box.">
               <span>Reach F3 of</span>
               <input
                 type="number"
@@ -176,6 +183,7 @@ export function PrTuning(props: {
                 onChange={(e) => setTargetF3(e.currentTarget.value === "" ? null : Number(e.currentTarget.value))}
               />
               <span className="unit">Hz</span>
+              {now?.f3 != null && <span className="tuning-was">now {f1(now.f3)} Hz</span>}
             </label>
           )}
 

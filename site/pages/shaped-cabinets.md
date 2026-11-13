@@ -19,7 +19,7 @@ A box simulator only needs one number from your cabinet: the **net internal volu
 - **Get the inside right:**
   - **Sonotube** is sold by its **inside** diameter, and the end caps are usually two layers of MDF while the tube wall is about 6 mm. Enter the outside diameter and both thicknesses.
   - **Sloping walls** are wider across than the board is thick (18 mm at 45° takes 25.5 mm), and the inside of a steep pyramid closes before its top.
-  - **A wedge** (top and bottom different shapes) needs the prismoidal formula. The common frustum formula is up to 33% low.
+  - **A wedge** (top and bottom different shapes) needs the prismoidal formula. The common frustum formula is up to {{fig:shaped-cabinets-shortcuts/wedgeMin:0}}% low.
 - **Shape moves standing waves; it doesn't remove them.** A sphere's lowest is 32% higher than a box of the same inside length would have; a long tube's is along its length. Non-parallel walls shift and spread them [7][8].
 - **In the app:** **Build → Volume calculator** handles all four shapes (and the car wedge, below), takes off everything inside, sizes the cabinet for a target volume and feeds the result straight into the design.
 
@@ -85,7 +85,7 @@ A tube needs little or no bracing. The pressure inside pulls the wall in tension
 
 Enter the bottom and top width and depth and the height. Two shortcuts give the wrong answer:
 
-![Error of two shortcuts against the exact inside volume, by the size of the top as a percentage of the bottom: taking 18 mm walls off as if they were upright (orange) is up to 19% high for a near-pyramid; the similar-bases frustum formula on a wedge (blue) is up to 33% low.](img/shaped-cabinets-shortcuts.png)
+![Error of two shortcuts against the exact inside volume, by the size of the top as a percentage of the bottom: taking 18 mm walls off as if they were upright (orange) is up to {{fig:shaped-cabinets-shortcuts/uprightMax:0}}% high for a near-pyramid; the similar-bases frustum formula on a wedge (blue) is up to {{fig:shaped-cabinets-shortcuts/wedgeMin:0}}% low.](figure:shaped-cabinets-shortcuts)
 
 1. **The frustum formula.** `V = h/3 (A₁ + A₂ + √(A₁A₂))` is exact only when the top and bottom are similar rectangles, the same shape scaled [13]. A wedge, where only the depth tapers, isn't. The formula that works for any rectangular top and bottom is the **prismoidal formula** [12][13]:
    - `V = h/6 (A₁ + 4M + A₂)`, where M is the area halfway up.

@@ -2,7 +2,7 @@
 title: "Round port vs slot port: why your slot tunes lower and chuffs sooner"
 description: A 4″ flared round port against an 8:1 slot of the same area in the same box: why a slot along the box walls tunes lower than calculators say, why it gets noisy sooner, and the pipe resonance every port has. Charts and live examples you can open and change.
 path: guides/round-vs-slot-port
-image: port-shape.png
+image: chart:port-shape/port
 order: 23
 group: ported
 ---
@@ -38,7 +38,7 @@ The flared tube is longer than the slot for the same tuning because its flared e
 
 The red port is the orange slot as it may behave when built along the box walls, with the forums' worst-case K. The end correction is one setting for every port, so to show both in one project the extra end correction is entered as extra length: (2.227 − 0.732) × 10.16 cm = 15.2 cm, on a plain tube of the same area, which tunes, moves air and resonates the same in the model. The orange slot's own **Along the walls** note gives the likelier range, 32.5–34.4 Hz.
 
-![The three ports at 350 W. Left: impedance. Both peaks, and the dip between them that marks the tuning, move down about 4 Hz for the slot with K = 2.227 (red), while the round port and the slot as calculated (blue and orange) overlap. Right: port air speed. The slot (orange) peaks at 21.6 m/s, over the 17 m/s line; the flared port (blue), measured at its mouths, peaks at 11.0 m/s.](img/port-shape.png)
+![The three ports at 350 W. In the impedance, both peaks, and the dip between them that marks the tuning, move down about 4 Hz for the slot with K = 2.227 ({{color:port-shape/3}}), while the round port and the slot as calculated ({{color:port-shape/1}} and {{color:port-shape/2}}) overlap. In port air speed, the slot ({{color:port-shape/2}}) peaks at {{num:port-shape/2/port}} m/s, over the 17 m/s line; the flared port ({{color:port-shape/1}}), measured at its mouths, peaks at {{num:port-shape/1/port}} m/s.](chart:port-shape/impedance|port-shape/port "Impedance|Port air speed")
 
 ## Why a slot along the walls tunes lower
 
@@ -102,11 +102,11 @@ The air in a port is a slug of mass at the tuning frequency, but higher up it's 
 
 Sound from inside the box comes out of the port as a peak there [14][15].
 
-![SPL at 350 W with no low-pass filter, with the ports as air masses (grey) and as pipes. Left: the round port's resonance at about 347 Hz, up to 2.4 dB above the lumped curve. Right: the red slot, modelled 15 cm longer: about 268 Hz, up to 4.3 dB above.](img/port-shape-pipe.png)
+![SPL at 350 W with no low-pass filter, each port as an air mass ({{color:port-shape:1+port-shape-pipes:1/1}}) and as a pipe ({{color:port-shape:1+port-shape-pipes:1/2}}). The round port's resonance at about {{fig:port-shape-pipe/roundF:0}} Hz, up to {{fig:port-shape-pipe/roundDb}} dB above the lumped curve. The slot's stand-in, modelled 15 cm longer: about {{fig:port-shape-pipe/slotF:0}} Hz, up to {{fig:port-shape-pipe/slotDb}} dB above.](figure:port-shape-pipe)
 
 - **Same tuning, same pipe resonance.** The round port and the slot have the same effective length (49.4 and 49.3 cm), so both resonate at about **347 Hz**. Port shape doesn't change it much; length does.
 - **The 500–700 Hz figure comes from short ports.** Straight 4″ tubes resonate at about 765 Hz at 15 cm, 625 Hz at 20 cm, 513 Hz at 26 cm and 458 Hz at 30 cm. One diyAudio member measured a high-Q peak at about 540 Hz from his port, only 5 dB below its bass output [14].
-- **Long ports bring it down into the bass's range.** The [chuffing guide](/guides/port-chuffing/)'s 85 cm slot sits near 200 Hz. The red port here, modelled longer, is at about 268 Hz. That modelled shift is only approximate: the extra air at a wall-backed end isn't quite the same as extra pipe.
+- **Long ports bring it down into the bass's range.** The [chuffing guide](/guides/port-chuffing/)'s 85 cm slot sits near 200 Hz. The slot's stand-in here, modelled longer, is at about {{fig:port-shape-pipe/slotF:0}} Hz. That modelled shift is only approximate: the extra air at a wall-backed end isn't quite the same as extra pipe.
 - **For a subwoofer crossed over at 80 Hz** with 24 dB/octave, 347 Hz is about 50 dB down: harmless.
 - **For a ported woofer that plays to 300 Hz or more** (a two-way bookshelf, a PA box), it's audible. The usual fixes are a shorter, narrower port, a port lined or loosely stuffed with damping, or a [passive radiator](/guides/passive-radiator-box/) instead [14][15].
 - **The app shows it.** **Settings → Ports → Pipe, like Hornresp** draws it on the SPL chart, and every port gets a **Pipe resonance** note with its frequency. That note warns when it falls below 300 Hz, or near the box's own lowest standing wave (which the app doesn't simulate).

@@ -74,6 +74,15 @@ export function stuffFactor(d: { kind: string; stuffing?: Stuffing }): number {
   return Math.max(0.5, 1 + stuffingEffect(d.stuffing, d.kind).gain_pct / 100);
 }
 
+/**
+ * VituixCAD's isothermal fill effect: the box acts Vb · (1 + 0.9 · Qa^-0.9) bigger for a box
+ * Qa (measured in VituixCAD 3: exact for Qa 2…1000, independent of volume and tuning).
+ * Lossless (infinite or absent) Qa gives 1.
+ */
+export function qaGain(qa: number): number {
+  return Number.isFinite(qa) && qa > 0 ? 1 + 0.9 * qa ** -0.9 : 1;
+}
+
 /** Fibre to weigh out for a filled box (grams), or null when the mode isn't "fill". */
 export function fillGrams(st: Stuffing | undefined, net_l: number): number | null {
   if (st?.mode !== "fill" || !(net_l > 0)) return null;

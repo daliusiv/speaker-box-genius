@@ -2,7 +2,7 @@
 title: "1 Ω vs 2 Ω vs 4 Ω: does DVC wiring change how a subwoofer sounds?"
 description: The same dual voice coil subwoofer wired in series (4 Ω) and in parallel (1 Ω), with 0.15 Ω of amplifier and cable resistance, on a real 1 Ω amplifier. SPL, impedance, Q and maximum output worked out, with charts you can open and change.
 path: guides/dvc-wiring
-image: dvc-wiring.png
+image: chart:dvc-watts:1,3/impedance
 order: 22
 group: start
 ---
@@ -66,14 +66,14 @@ and part of the amplifier's output warms the wire instead of the coil [3]. With 
 
 A small correction to the forum version of this: 0.15 Ω takes 12.5 % of the power at 1 Ω and raises Qes by 14 %, not 13 % of both. The share is 0.15 / (1.05 + 0.15); the rise is 0.15 / 1.05.
 
-![The UMII12-22 in a 28.3 L sealed box at 300 W either way: SPL (the series and no-resistance curves overlap), the impedance the amplifier sees (4.2–16.3 Ω in series, 1.06–4.07 Ω in parallel), and what the 0.15 Ω costs each wiring in the sealed box and the 70.8 L ported box.](img/dvc-wiring.png)
+![The UMII12-22 in a 28.3 L sealed box at 300 W either way: SPL (the series and no-resistance curves overlap), the impedance the amplifier sees ({{fig:dvc-wiring/zSeriesMin}}–{{fig:dvc-wiring/zSeriesMax}} Ω in series, {{fig:dvc-wiring/zParallelMin:2}}–{{fig:dvc-wiring/zParallelMax:2}} Ω in parallel), and what the 0.15 Ω costs each wiring (series solid, parallel dashed) in the sealed box and the 70.8 L ported box.](figure:dvc-wiring)
 
 What the chart shows:
 
-- **Grey, no resistance:** series and parallel give exactly the same curve at the same power. It's hidden under the blue one.
-- **Blue, series with 0.15 Ω:** 0.1–0.3 dB less, almost the same shape.
-- **Orange, parallel with 0.15 Ω:** about 1 dB less where the impedance is near Re (up top, and at the port tuning in the ported box), but only 0.3 dB less at the impedance peak. A loss that is smaller at resonance is a small bass bump: the rise in Q.
-- **The impedance** has the same shape both ways, a quarter of the size in parallel. Note that a "1 Ω" load is only 1 Ω near Re: 4.07 Ω at the sealed box's resonance (52.7 Hz).
+- **No resistance ({{color:dvc-watts-norg:1+dvc-watts:1,3/1}}):** series and parallel give exactly the same curve at the same power. It's hidden under the series one.
+- **Series with 0.15 Ω ({{color:dvc-watts-norg:1+dvc-watts:1,3/2}}, solid):** 0.1–{{fig:dvc-wiring/sealedSeriesMax}} dB less, almost the same shape.
+- **Parallel with 0.15 Ω (dashed):** about {{fig:dvc-wiring/sealedParallelMax:0}} dB less where the impedance is near Re (up top, and at the port tuning in the ported box), but only {{fig:dvc-wiring/sealedParallelMin}} dB less at the impedance peak. A loss that is smaller at resonance is a small bass bump: the rise in Q.
+- **The impedance** has the same shape both ways, a quarter of the size in parallel. Note that a "1 Ω" load is only 1 Ω near Re: {{fig:dvc-wiring/zParallelMax:2}} Ω at the sealed box's resonance (52.7 Hz).
 
 How much does a Qtc of 1.07 instead of 0.99 matter? Dick Pierce worked through it for a 0.707 sealed box. A damping factor of 10 at the coil raises its Qtc to 0.77 and adds about a tenth of a dB of peak. The decay after a note stops lengthens by a few milliseconds, nothing like the "overhang" forums describe [5]. Here the half-dB bump is measurable and in the bass. A [DSP](/guides/linkwitz-transform/) or a slightly bigger box takes it out. It isn't the difference between "tight" and "boomy".
 
@@ -91,7 +91,7 @@ The amplifier's damping-factor rating is measured at its own terminals into a no
 
 Most forum A/B tests swap the wiring and leave the gain alone. Then the comparison isn't fair:
 
-![Left: the same 20 V from the amplifier into the ported box: parallel is about 5.5 dB louder (6 dB without the 0.15 Ω). Right: maximum SPL on a Kicker CXA1200.1: parallel is up to 1.2 dB louder above 30 Hz, and the same at 20–25 Hz, where the port is the limit.](img/dvc-wiring-maxspl.png)
+![The ported box, wired in series (solid) and parallel (dashed). At the same 20 V from the amplifier, parallel is about 5.5 dB louder (6 dB without the 0.15 Ω). On a Kicker CXA1200.1's maximum, parallel is up to 1.2 dB louder above 30 Hz, and the same at 20–25 Hz, where the port is the limit.](chart:dvc-volts:2,4/spl|dvc-watts:2,4/maxspl "The same 20 V from the amplifier|Maximum SPL on a Kicker CXA1200.1")
 
 - **At the same voltage**, the parallel sub takes four times the power and plays 6 dB louder (5.2–5.8 dB with the 0.15 Ω). BestCarAudio measured a 10-inch DVC sub both ways on the same amplifier settings and found just under 6 dB [8]. The louder one usually sounds punchier on a quick swap, so match the levels before you judge.
 - **At the same power** (the first chart), the two wirings are identical with no resistance and within 1 dB with 0.15 Ω.

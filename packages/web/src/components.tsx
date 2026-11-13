@@ -140,8 +140,7 @@ export function Select<T extends string | number>(props: {
 }
 
 /** True on phones and narrow tablets (the layout with the bottom tab bar); follows rotation and resizing. */
-export function useNarrow(): boolean {
-  const q = "(max-width: 860px)";
+export function useNarrow(q = "(max-width: 860px)"): boolean {
   const [narrow, setNarrow] = useState(() => (typeof window !== "undefined" && window.matchMedia ? window.matchMedia(q).matches : false));
   useEffect(() => {
     if (!window.matchMedia) return;
@@ -149,7 +148,7 @@ export function useNarrow(): boolean {
     const on = () => setNarrow(m.matches);
     m.addEventListener("change", on);
     return () => m.removeEventListener("change", on);
-  }, []);
+  }, [q]);
   return narrow;
 }
 

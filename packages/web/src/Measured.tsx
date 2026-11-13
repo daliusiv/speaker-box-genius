@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { levelMatch, parseCurve, resampleCurve, thinCurve, type CurveKind } from "@sbg/engine";
 import { Card, Num, Select } from "./components.tsx";
+import { relRefOf } from "./chartProps.ts";
 import type { Series } from "./LogChart.tsx";
 import type { Design } from "./sim.ts";
 import { MAX_MEASURED, type MeasuredCurve } from "./state.ts";
@@ -29,7 +30,7 @@ export function measuredSeries(all: MeasuredCurve[], kind: CurveKind, freq: Floa
     .map((m) => {
       const y = resampleCurve(m, freq);
       if (kind === "spl") {
-        const ref = relative ? ((designs.find((d) => d.design.id === m.matchTo) ?? designs[0])?.result.summary.referenceSpl ?? 0) : 0;
+        const ref = relative ? ((() => { const d = designs.find((x) => x.design.id === m.matchTo) ?? designs[0]; return d ? relRefOf(d.result) : 0; })()) : 0;
         for (let i = 0; i < y.length; i++) y[i] = y[i]! + m.offset_db - ref;
       }
       return { label: `${m.name} (measured)`, color: measuredColor(all, m.id), dash: DASH, y, noRank: true };

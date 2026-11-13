@@ -144,15 +144,18 @@ export class Rasterizer {
 
   private size = { width: CARD_W, height: CARD_H };
 
-  /** The SVG as an image: a share card by default (1200 × 630 JPEG, a third the size of a PNG). */
-  async image(svg: string, o: { width?: number; height?: number; format?: "jpeg" | "png" } = {}): Promise<Buffer> {
+  /**
+   * The SVG (or, with `html`, a whole HTML page) as an image: a share card by default
+   * (1200 × 630 JPEG, a third the size of a PNG).
+   */
+  async image(svg: string, o: { width?: number; height?: number; format?: "jpeg" | "png"; html?: boolean } = {}): Promise<Buffer> {
     const width = o.width ?? CARD_W;
     const height = o.height ?? CARD_H;
     if (width !== this.size.width || height !== this.size.height) {
       await this.send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: false });
       this.size = { width, height };
     }
-    const file = join(this.dir, "card.svg");
+    const file = join(this.dir, o.html ? "card.html" : "card.svg");
     writeFileSync(file, svg);
     const loaded = new Promise<void>((ok) => (this.loaded = ok));
     await this.send("Page.navigate", { url: `file://${file}?${this.id}` });

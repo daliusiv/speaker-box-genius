@@ -44,12 +44,16 @@ const more: [string, string, typeof driver, number, Partial<LineDesign>][] = [
   ["29-sub-front-par", "12-inch sub, front horn Par 350 -> 1200 cm2 100 cm + Exp -> 5000 cm2 150 cm, Vrc 60 L, Vtc 0.5 L", SUB, 1, { end: "horn", closedArea_cm2: 350, driverAt_cm: 0, sections: [sec(100, 1200), sec(150, 5000, "exponential")], rearChamber_l: 60, throatChamber_l: 0.5 }],
   ["30-tl-2p", "Straight TL 400 cm2, 160 cm, two drivers in parallel at the closed end", driver, 2, { end: "open", closedArea_cm2: 400, driverAt_cm: 0, sections: [sec(160, 400)] }],
   ["32-sub-tqwt", "12-inch sub, TQWT (Con) 80 -> 900 cm2, 240 cm, driver at 80 cm", SUB, 1, { end: "open", closedArea_cm2: 80, driverAt_cm: 80, sections: [sec(240, 900, "conical")] }],
+  // Acoustic Path Length (the mouth's extra distance), 12 Nov 2026.
+  ["34-tl-path-50", "01 with the mouth 50 cm further than the cone (Acoustic Path Length 50 cm)", driver, 1, { end: "open", closedArea_cm2: 200, driverAt_cm: 0, sections: [sec(150, 200)], mouth: "custom", mouthDistance_cm: 50 }],
+  ["35-tl-path-100", "01 with Acoustic Path Length 100 cm", driver, 1, { end: "open", closedArea_cm2: 200, driverAt_cm: 0, sections: [sec(150, 200)], mouth: "custom", mouthDistance_cm: 100 }],
+  ["36-mltl-path-50", "05 with Acoustic Path Length 50 cm", driver, 1, { end: "port", closedArea_cm2: 220, driverAt_cm: 27.5, sections: [sec(27.5, 220), sec(82.5, 220)], portDiameter_cm: 6, portLength_cm: 12, portFlare_cm: 0, mouth: "custom", mouthDistance_cm: 50 }],
   ["19-sub-front-horn", "12-inch sub, front horn Con 300 -> 900 cm2 60 cm + Exp -> 6000 cm2 200 cm, Vrc 40 L, Vtc 2 L", SUB, 1, { end: "horn", closedArea_cm2: 300, driverAt_cm: 0, sections: [sec(60, 900, "conical"), sec(200, 6000, "exponential")], rearChamber_l: 40, throatChamber_l: 2 }],
 ];
 mkdirSync(new URL("./records", import.meta.url), { recursive: true });
 const index: string[] = [];
 for (const [id, title, drv, n, patch] of [...cases.map(([id, title, patch]) => [id, title, driver, 1, patch] as const), ...more]) {
-  const d = { ...base, ...patch, mouth: "front" as const, name: `SBG ${id}` } as LineDesign;
+  const d = { ...base, mouth: "front" as const, ...patch, name: `SBG ${id}` } as LineDesign;
   const out = toHornresp(d, drv as any, { eg: 2.83, drivers: n, name: `SBG ${id}`, pmax: drv.pe_w, xmax_mm: drv.xmax_mm });
   if (typeof out === "string") { console.log(id, "ERROR", out); continue; }
   writeFileSync(new URL(`./records/${id}.txt`, import.meta.url), out.text);
