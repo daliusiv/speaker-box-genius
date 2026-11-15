@@ -6,7 +6,7 @@
  * SVG, salted with og.ts's own source (how the SVG becomes a JPEG): when a driver's data, the
  * engine or the card's look changes, the SVG or the salt changes and that card is drawn again;
  * otherwise the JPEG from the last deploy is reused. The deploy workflow keeps the folder with
- * actions/cache.
+ * actions/cache; self-hosted runners keep it on their own disk.
  */
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";

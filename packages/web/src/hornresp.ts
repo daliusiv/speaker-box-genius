@@ -433,7 +433,7 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
   if (path > 0) {
     design.mouth = "custom";
     design.mouthDistance_cm = Math.round(path * 10) / 10;
-    warnings.push(`Acoustic Path Length ${design.mouthDistance_cm} cm is the mouth's extra distance; it matches Hornresp with SPL from radiated power (Settings → Line/horn SPL).`);
+    warnings.push(`Acoustic Path Length ${design.mouthDistance_cm} cm is the mouth's extra distance; it matches Hornresp with SPL from radiated power (Settings → SPL).`);
   }
   if ((get("Ap1") ?? 0) > 0 || (get("Ap") ?? 0) > 0) warnings.push("The record has a port in a chamber (Ap1/Lp), which isn't modelled here.");
   const ang = pairs.find(([k]) => k.toLowerCase() === "ang")?.[1];

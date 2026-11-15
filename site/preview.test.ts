@@ -1,13 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { GOATCOUNTER } from "./build.ts";
 import { makePreview, MAX_FILE_BYTES } from "./preview.ts";
+import { tempDir } from "./tempDir.ts";
 
 function fakeDist(): string {
-  const d = mkdtempSync(join(tmpdir(), "sbg-preview-"));
+  const d = tempDir("sbg-preview-");
   mkdirSync(join(d, "guides", "x"), { recursive: true });
   writeFileSync(join(d, "index.html"), `<head>\n    ${GOATCOUNTER}\n</head>`);
   writeFileSync(join(d, "guides", "x", "index.html"), `<body>${GOATCOUNTER}</body>`);

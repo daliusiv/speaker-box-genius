@@ -8,6 +8,11 @@ on:
 permissions:
   contents: read
 
+# A new push to a pull request cancels its run still going; pushes to main each run to the end.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
     # Private dev repo: the self-hosted runner. The public mirror (this file is synced there)
@@ -21,9 +26,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
+          # GitHub's runners download the pnpm store; a self-hosted runner keeps its own on disk
+          # (store-dir below).
+          cache: ${{ !github.event.repository.private && 'pnpm' || '' }}
 
-      - run: pnpm install --frozen-lockfile
+      # Self-hosted: the pnpm store lives in the runner's tool cache, which survives between jobs
+      # (the work folder doesn't), so installs reuse packages and an npm outage only matters when
+      # the lockfile changes. --prefer-offline skips re-checking packages already there.
+      - name: Keep the pnpm store on the runner
+        if: github.event.repository.private
+        run: echo "npm_config_store_dir=$RUNNER_TOOL_CACHE/pnpm-store" >> "$GITHUB_ENV"
+
+      - run: pnpm install --frozen-lockfile --prefer-offline
+
+      # The store keeps old versions after dependency updates: past 2 GB, drop the ones nothing uses.
+      - name: Prune the runner's pnpm store
+        if: github.event.repository.private
+        run: |
+          s="$RUNNER_TOOL_CACHE/pnpm-store"
+          if [ "$(du -sm "$s" | cut -f1)" -gt 2048 ]; then pnpm store prune; fi
 
       - name: Validate driver database
         run: pnpm validate:db
@@ -35,8 +56,10 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Lint (tokens fresh, Stylelint on src/ui and migrated styles)
+        run: pnpm lint
+
       - name: Build
-        run: pnpm build
-        env:
-          # Driver pages' share cards are drawn with Chrome at deploy; skip them here.
-          SBG_CARDS: "0"
+        # The database bundle and the app. The site pages (`pnpm build:site`) are already built by
+        # the Tests step (site/build.test.ts), and in full by the deploy and preview workflows.
+        run: pnpm build:db && pnpm --filter @sbg/web build

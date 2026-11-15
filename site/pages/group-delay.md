@@ -139,8 +139,8 @@ The box tuned high is the one to avoid if you want tight bass: if you need a sma
 3. Look at the **Relative response** chart for a peak above the tuning: that's the boom.
 4. Open **Impulse / step** and choose **Step** to see how long each box rings.
 5. Turn on the **high-pass filter** in **Signal** if you'll use one, and check again: it adds delay.
-6. VituixCAD reads a ported box's group delay 2–3 % lower because it hears the port from its far end. Settings → Ports → Port sound, or Settings → Match → VituixCAD, does the same.
-6. A box tuned away from its design changes all of this; see [why a port tunes higher or lower](/guides/port-tuning/).
+6. VituixCAD reads a ported box's group delay 2–3 % lower because it hears the port from its far end. **Settings → Simulation → Ports → Port sound**, or **Settings → General → Match → VituixCAD**, does the same.
+7. A box tuned away from its design changes all of this; see [why a port tunes higher or lower](/guides/port-tuning/).
 
 ## The forum claims, checked
 

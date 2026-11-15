@@ -1,4 +1,6 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { Icon } from "./Icon.tsx";
+import type { IconName } from "./iconPaths.ts";
+import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useUnits, type Quantity } from "./units.ts";
 
 export const REPO = "https://github.com/daliusiv/speaker-box-genius";
@@ -30,6 +32,15 @@ export function Card(props: {
 }
 
 /**
+ * Inside <KitFields>, Num, Fixed and Select draw as UI-kit rows (label | control, the unit
+ * inside the box, one control width), so a screen moved onto the kit keeps its field logic.
+ */
+const KitContext = createContext(false);
+export function KitFields(props: { children: ReactNode }) {
+  return <KitContext.Provider value={true}>{props.children}</KitContext.Provider>;
+}
+
+/**
  * Labels too long for the narrow label column sit above their input instead, so they never
  * wrap or get cut off ("Coil inductance", "Added mass"). Short ones ("Fs", "Vas") stay beside it.
  */
@@ -48,7 +59,7 @@ export function Num(props: {
   q?: Quantity;
   value: number;
   min?: number;
-  /** What the field is and does: shown in the help strip when it has focus (or is hovered). */
+  /** What the field is and does: listed in its row's (or card's) ⓘ help sheet. */
   help?: string;
   /** Older name for help. */
   title?: string;
@@ -57,6 +68,8 @@ export function Num(props: {
   zeroText?: string;
   /** Where a very large value means "none" (a loss Q): from `at` up the box is blank with `text` as its placeholder, and clearing it sets `at`. */
   none?: { text: string; at: number };
+  /** Inside <KitFields>: an icon before the label (a part's schematic symbol), with this name as its title. */
+  icon?: { name: IconName; title: string };
 }) {
   const units = useUnits();
   const u = props.q ? units.unit(props.q) : { unit: props.unit ?? "", k: 1 };
@@ -76,22 +89,47 @@ export function Num(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown]);
   const min = (props.min ?? Number.MIN_VALUE) * u.k;
+  const kit = useContext(KitContext);
+  const id = useId();
+  const input = (
+    <input
+      id={kit ? id : undefined}
+      inputMode="decimal"
+      value={text}
+      placeholder={props.zeroText ?? props.none?.text}
+      onChange={(e) => {
+        const t = e.currentTarget.value;
+        setText(t);
+        const v = Number(t.replace(",", "."));
+        if (t.trim() === "" && props.zeroText !== undefined) props.onChange(0);
+        else if (t.trim() === "" && props.none !== undefined) props.onChange(props.none.at);
+        else if (t.trim() !== "" && Number.isFinite(v) && v >= min) props.onChange(v / u.k);
+      }}
+    />
+  );
+  if (kit)
+    return (
+      <div className="ui-field" data-help={props.help ?? props.title} data-help-title={props.help ?? props.title ? props.label : undefined}>
+        <label className="ui-field-label" htmlFor={id} title={props.icon?.title}>
+          {props.icon ? (
+            <span className="ui-field-label-icon">
+              <Icon name={props.icon.name} />
+              {props.label}
+            </span>
+          ) : (
+            props.label
+          )}
+        </label>
+        <span className="ui-number" data-state="plain">
+          {input}
+          {u.unit && <span className="ui-number-unit">{u.unit}</span>}
+        </span>
+      </div>
+    );
   return (
     <label className={stackClass(props.label)} data-help={props.help ?? props.title}>
       <span>{props.label}</span>
-      <input
-        inputMode="decimal"
-        value={text}
-        placeholder={props.zeroText ?? props.none?.text}
-        onChange={(e) => {
-          const t = e.currentTarget.value;
-          setText(t);
-          const v = Number(t.replace(",", "."));
-          if (t.trim() === "" && props.zeroText !== undefined) props.onChange(0);
-          else if (t.trim() === "" && props.none !== undefined) props.onChange(props.none.at);
-          else if (t.trim() !== "" && Number.isFinite(v) && v >= min) props.onChange(v / u.k);
-        }}
-      />
+      {input}
       <span className="unit">{u.unit}</span>
     </label>
   );
@@ -102,8 +140,19 @@ export function Fixed(props: { label: string; unit?: string; value?: string; num
   const units = useUnits();
   const u = props.q ? units.unit(props.q) : null;
   const text = props.num !== undefined && u ? (props.num * u.k).toFixed(u.digits) : (props.value ?? "–");
+  const unit = u ? u.unit : (props.unit ?? "");
+  if (useContext(KitContext))
+    return (
+      <div className="ui-field ui-readout" data-wide data-help={props.help ?? props.title} data-help-title={props.help ?? props.title ? props.label : undefined}>
+        <span className="ui-field-label">{props.label}</span>
+        <output>
+          {text}
+          {unit && text !== "–" ? ` ${unit}` : ""}
+        </output>
+      </div>
+    );
   return (
-    <label className={stackClass(props.label)} data-help={props.help ?? props.title} tabIndex={props.help ?? props.title ? 0 : undefined}>
+    <label className={stackClass(props.label)} data-help={props.help ?? props.title}>
       <span>{props.label}</span>
       <output className="fixed">{text}</output>
       <span className="unit">{u ? u.unit : (props.unit ?? "")}</span>
@@ -115,26 +164,42 @@ export function Select<T extends string | number>(props: {
   label: string;
   value: T;
   options: { value: T; text: string }[];
-  /** What the choice does: shown in the help strip when it has focus (or is hovered). */
+  /** What the choice does: listed in its row's (or card's) ⓘ help sheet. */
   help?: string;
   onChange: (v: T) => void;
 }) {
+  const kit = useContext(KitContext);
+  const id = useId();
+  const select = (
+    <select
+      id={kit ? id : undefined}
+      className={kit ? "ui-select" : undefined}
+      value={String(props.value)}
+      onChange={(e) => {
+        const o = props.options.find((x) => String(x.value) === e.currentTarget.value);
+        if (o) props.onChange(o.value);
+      }}
+    >
+      {props.options.map((o) => (
+        <option key={String(o.value)} value={String(o.value)}>
+          {o.text}
+        </option>
+      ))}
+    </select>
+  );
+  if (kit)
+    return (
+      <div className="ui-field" data-help={props.help} data-help-title={props.help ? props.label : undefined}>
+        <label className="ui-field-label" htmlFor={id}>
+          {props.label}
+        </label>
+        {select}
+      </div>
+    );
   return (
     <label className={`full${props.label.length > 6 ? " long" : ""}`} data-help={props.help}>
       <span>{props.label}</span>
-      <select
-        value={String(props.value)}
-        onChange={(e) => {
-          const o = props.options.find((x) => String(x.value) === e.currentTarget.value);
-          if (o) props.onChange(o.value);
-        }}
-      >
-        {props.options.map((o) => (
-          <option key={String(o.value)} value={String(o.value)}>
-            {o.text}
-          </option>
-        ))}
-      </select>
+      {select}
     </label>
   );
 }

@@ -43,6 +43,18 @@ pnpm dev
 - `packages/web`: the app.
 - `site/`: the content pages built next to the app: guides (`site/pages/*.md`), calculators (`site/calculators/`, sums in `packages/web/src/calculators/`), the validation page, and a page per driver (`site/drivers.ts`, share cards in `site/og.ts`). `pnpm build:site` builds them; set `SBG_CARDS=0` to skip the share cards, which need Chrome. A guide's charts and numbers come from its example at build instead of screenshots: see [Writing a guide](#writing-a-guide).
 
+### UI kit (`packages/web/src/ui/`)
+
+New and reworked UI is built from the kit, so spacing, sizes and controls stay consistent:
+
+- **Tokens** live in `src/ui/tokens.json`: a 4 px space grid, six text sizes, four radii, control and row heights, layers and motion. Sizes switch on the input, not the width: with a mouse every control is 32 px tall with 13 px text; on a touch screen (`pointer: coarse`) controls look 40 px tall and take taps across 44 px (`--size-tap`), and inputs use 16 px text so iOS doesn't zoom in. Every control in a field row is one width (`--size-col-control`), so right edges line up. Run `pnpm tokens` after editing it; `tokens.css` is generated. Colours still sit in `styles.css :root`, and a test keeps both lists equal.
+- **Components** (`Button`, `ButtonLink`, `FileButton`, `HelpButton`, `HelpSheet`, `FieldRow`, `NumberField`, `InlineText`, `Disclosure`, `Stepper`, `Select`, `Segmented`, `RadioCards`, `Switch`, `Section`, `Menu` (rich items with a line, numbers and a tick; a field-style trigger; pinned lists), `MenuItemButton`, `MiniResponse`, `Sheet`, `Tooltip`, `Chip`, `Card`, `Notice`, `Readout`) take variants as props and style through `src/ui/ui.css`. One primary button per screen; icon-only buttons need a `label`.
+- **Help**: give a field a `help` text (Num, Select, Fixed, FieldRow); it shows in its row's ⓘ sheet, never on focus or hover. An open `Section` shows the ⓘ and lists its fields' help when opened; pass `Section help` (`helpEntries`) for fields that only appear after a choice. A `Card` with fields outside its rows gets an ⓘ in its title row for those.
+- **Numbers**: every numeric input and readout uses tabular figures (`inputmode="decimal"` / `"numeric"`, `<output>`, `data-numeric`, `.tnum`), so digits line up.
+- **The catalogue** at `/ui/` (`pnpm dev`, then open `/ui/`) shows every component in every state.
+- **Lint**: `pnpm lint` fails on a raw size, space, radius, layer or colour in any stylesheet except the legacy `styles.css`, which is baselined until its screens move onto the kit. Screens listed in `packages/web/lint-migrated.json` must use kit components, not raw `<button>`, `<input>`, `<select>` or `<textarea>` (checked by `pnpm test`). The driver card (`src/DriverCard.tsx`, `src/driver-card.css`) the Boxes tab's cards (`src/Designs.tsx`, `src/boxes.css`) and the Signal tab (`src/HighPass.tsx`, `Eq.tsx`, `Passive.tsx`, `RoomGain.tsx`, `BafflePanel.tsx`, `DspExport.tsx`, `src/signal.css`) and the Build tab (`src/VolumePanel.tsx`, `BuildSheet.tsx`, `WedgeFields.tsx`, `src/build.css`) and the Settings tab (`src/SettingsPanel.tsx`, `AmpFromRatings.tsx`, `src/settings.css`) are on the kit. Older forms move over by wrapping them in `<KitFields>` (`src/components.tsx`): its `Num`, `Fixed` and `Select` then draw as kit rows (`Num` takes an `icon` for a part's symbol).
+- **Visual tests**: `pnpm test:ui` compares screenshots of `/ui/` at 390 and 1280 px (Chromium, animations disabled) with the Linux baselines in `packages/web/e2e/__screenshots__`. Fonts render a little differently on each machine, so the baselines come from CI: after an intended change, push a commit whose message contains `[update-ui-baselines]`; CI rewrites the PNGs and commits them to the branch, then push again (or re-run CI) to check. `pnpm test:ui:update` does the same locally. On a pull request the visual tests run only when something that can change the app's look changes (`packages/`, the driver data, dependencies). First run: `pnpm --filter @sbg/web exec playwright install chromium`.
+
 ### Writing a guide
 
 A guide's charts and numbers come from the simulation when the site is built, so they never go stale. A new guide:
@@ -57,7 +69,7 @@ When you change the engine or a chart, the guides follow on the next build. If a
 
 Keep PRs small and focused. For anything large, open an issue first so we can agree on the approach.
 
-**Changelog:** if your change is something users would notice (a feature, a fix, new driver data), add a line under `## Unreleased` in `CHANGELOG.md`, under `### Added`, `### Changed` or `### Fixed`. Write it for users, not developers, and leave out PR and issue numbers. The entries are dated when the site next updates and appear at [/changelog/](https://speakerboxgenius.com/changelog/).
+**Changelog:** if your change is something users would notice (a feature, a fix, new driver data), add a line under `## Unreleased` at the top of `CHANGELOG.md` (add that heading if it isn't there: it goes away each time the site updates), under `### Added`, `### Changed` or `### Fixed` (`### Breaking` for a change that stops old projects, links or files from working as before). Write it for users, not developers, and leave out PR and issue numbers. When the site next updates, the entries become its next version and appear at [/changelog/](https://speakerboxgenius.com/changelog/): `### Breaking` makes it the next major version (2.0.0), `### Added` the next minor (1.1.0), and otherwise the next patch (1.0.1).
 
 ## Licence of contributions and the CLA
 

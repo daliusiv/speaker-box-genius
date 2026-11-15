@@ -51,7 +51,7 @@ Three things stand out.
 
 **F3 hardly moves.** From Qtc 0.5 to 0.9 the box shrinks from 33 L to 5.7 L, yet the F3 stays between 56 and 59 Hz. The F3 alone hides the difference: the low-Q boxes start rolling off earlier but fall more gently, so an octave further down they're far louder. At 25 Hz the Qtc 0.5 box is 3.4 dB ahead of the Qtc 0.707 box and 10.3 dB ahead of the Qtc 1.1 box.
 
-The F3 here is read from the passband, as WinISD does. For a box with a hump (a high Qtc), Settings → SPL → F3 from "Response peak" reads it from the highest point instead, as VituixCAD does, and gives a higher F3.
+The F3 here is read from the passband, as WinISD does. For a box with a hump (a high Qtc), Settings → Simulation → SPL → F3 from "Response peak" reads it from the highest point instead, as VituixCAD does, and gives a higher F3.
 
 **Maximum output is set by the cone, not the box.** At 30 Hz the three bigger boxes all reach the same 100.2 dB, where the cone hits its Xmax. The smaller of them needs almost twice the power to get there (577 W against 327 W). The two smallest boxes run out of the driver's 600 W rating first, a few dB short. A small box doesn't lower the ceiling; it makes the amplifier and the voice coil work harder to reach it. The same holds for EQ: see the [Linkwitz Transform guide](/guides/linkwitz-transform/).
 
@@ -82,8 +82,8 @@ Stuffing makes a box act a little bigger, which lowers its Qtc a little; the [bo
 ## Doing it in the app
 
 1. Load your driver, and open the sealed design on the **Boxes** tab.
-2. Press a preset (**Qtc 0.5**, **0.577** or **0.707**) to size the box, or type any volume: the summary above the charts shows the Qtc and fc it gives.
-3. Duplicate the design to compare two boxes on the same charts, and set **Space** to **Room** (or **Car cabin**) on the **Signal** tab to see them in a room.
+2. Choose a **Preset** (**Qtc 0.5**, **0.577** or **0.707**) to size the box, or type any volume: the summary above the charts shows the Qtc and fc it gives.
+3. Duplicate the design (its ⋯ menu) to compare two boxes on the same charts, and set **Space** to **Room** (or **Car cabin**) on the **Signal** tab to see them in a room.
 4. Check the **Max SPL** chart at the power you'll use, and its **Volts** view for what the amplifier must deliver.
 
 [[Open the worked example|qtc-example]]

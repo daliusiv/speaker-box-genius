@@ -1,22 +1,22 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, readdirSync, existsSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { build, GOATCOUNTER, markdown, parsePage, resolveExamples } from "./build.ts";
-import { cardData, designDriver, driverContent, driverState, driverTitle, loadDb, PAGE_MAX_L, prCandidate } from "./drivers.ts";
+import { cardData, designDriver, driverContent, driverState, driverTitle, hubSizes, loadDb, PAGE_MAX_L, prCandidate, SIZE_HUB_MIN, sizeLabel, sizePath, sizeSlug, type DriverPage } from "./drivers.ts";
 import { chart } from "./chart.ts";
 import { cardSvg } from "./og.ts";
+import { tempDir } from "./tempDir.ts";
 
 // One build for every test below (it takes a while: a page per driver). Share cards need
 // Chrome and are tested on their own.
 process.env.SBG_CARDS = "0";
 // Sitemap dates: a fixed build date, and the saved state in a temporary folder, not .cache/.
 process.env.SBG_BUILD_DATE = "2026-11-09";
-process.env.SBG_LASTMOD_STATE = join(mkdtempSync(join(tmpdir(), "lastmod-")), "lastmod.json");
+process.env.SBG_LASTMOD_STATE = join(tempDir("lastmod-"), "lastmod.json");
 let builtOnce: Promise<{ out: string; paths: string[] }> | null = null;
 const built = () => (builtOnce ??= (async () => {
-  const out = mkdtempSync(join(tmpdir(), "site-"));
+  const out = tempDir("site-");
   return { out, paths: await build(out) };
 })());
 
@@ -85,7 +85,10 @@ test("builds every guide, the index, sitemap and robots.txt, with live example l
   // sitemap.xml is an index of one sitemap per kind of page, so Search Console reports each apart.
   const index = readFileSync(join(out, "sitemap.xml"), "utf8");
   assert.match(index, /<sitemapindex /);
-  for (const g of ["pages", "guides", "drivers"]) assert.match(index, new RegExp(`<loc>https://speakerboxgenius.com/sitemap-${g}.xml</loc><lastmod>2026-11-09</lastmod>`));
+  for (const g of ["pages", "guides", "drivers", "drivers-dayton-audio"]) assert.match(index, new RegExp(`<loc>https://speakerboxgenius.com/sitemap-${g}.xml</loc><lastmod>2026-11-09</lastmod>`));
+  // The index lists every sitemap file written, and nothing else.
+  const files = readdirSync(out).filter((f) => /^sitemap-.*\.xml$/.test(f)).sort();
+  assert.deepEqual([...index.matchAll(/sitemap-[\w-]+\.xml/g)].map((m) => m[0]).sort(), files);
   const site = (g: string) => readFileSync(join(out, `sitemap-${g}.xml`), "utf8");
   assert.match(site("pages"), /<loc>https:\/\/speakerboxgenius.com\/<\/loc><lastmod>2026-11-09<\/lastmod>/);
   assert.match(site("pages"), /\/about\/</);
@@ -94,8 +97,10 @@ test("builds every guide, the index, sitemap and robots.txt, with live example l
   assert.match(site("guides"), /\/guides\/passive-radiator-box\/</);
   assert.doesNotMatch(site("guides"), /\/drivers\//);
   assert.doesNotMatch(site("pages"), /\/guides\/|\/drivers\//);
+  assert.match(site("drivers"), /<loc>https:\/\/speakerboxgenius.com\/drivers\/<\/loc>/);
+  assert.doesNotMatch(site("drivers"), /\/drivers\/dayton-audio\//);
   // Every built page is in exactly one sitemap.
-  const locs = ["pages", "guides", "drivers"].flatMap((g) => [...site(g).matchAll(/<loc>https:\/\/speakerboxgenius\.com([^<]*)<\/loc>/g)].map((m) => m[1]));
+  const locs = files.flatMap((f) => [...readFileSync(join(out, f), "utf8").matchAll(/<loc>https:\/\/speakerboxgenius\.com([^<]*)<\/loc>/g)].map((m) => m[1]));
   assert.equal(locs.length, new Set(locs).size);
   assert.deepEqual(new Set(locs), new Set(["/", ...paths]));
   assert.match(readFileSync(join(out, "robots.txt"), "utf8"), /Sitemap: https:\/\/speakerboxgenius.com\/sitemap.xml/);
@@ -200,7 +205,9 @@ test("driver pages: suggested boxes, charts, share link and brand indexes", asyn
   assert.match(html, /<a href="\/drivers\/" aria-current="page">Drivers<\/a>/);
   assert.doesNotMatch(html, /More guides/);
   assert.match(readFileSync(join(out, "drivers/dayton-audio/index.html"), "utf8"), /href="\/drivers\/dayton-audio\/dsa215-8\/"/);
-  assert.match(readFileSync(join(out, "sitemap-drivers.xml"), "utf8"), /\/drivers\/dayton-audio\/dsa215-8\//);
+  const brandMap = readFileSync(join(out, "sitemap-drivers-dayton-audio.xml"), "utf8");
+  assert.match(brandMap, /\/drivers\/dayton-audio\/dsa215-8\//);
+  assert.match(brandMap, /\/drivers\/dayton-audio\/<\/loc>/);
   assert.doesNotMatch(html, /class="note flag"/);
 });
 
@@ -321,7 +328,7 @@ test("every page counts visits the same way, and the privacy page says what that
   const app = readFileSync(new URL("../packages/web/index.html", import.meta.url), "utf8");
   assert.ok(app.includes(GOATCOUNTER.replace("></script>", "")), "the app's index.html has the same counter");
   assert.ok(paths.includes("/changelog/"));
-  assert.match(readFileSync(join(out, "changelog/index.html"), "utf8"), /<h2[^>]*>Unreleased<\/h2>/);
+  assert.match(readFileSync(join(out, "changelog/index.html"), "utf8"), /<h2[^>]*>(Unreleased|\d+\.\d+\.\d+ \(\d{4}-\d{2}-\d{2}\))<\/h2>/);
   const privacy = readFileSync(join(out, "privacy/index.html"), "utf8");
   assert.match(privacy, /GoatCounter/);
   assert.match(privacy, /no cookies/i);
@@ -432,7 +439,7 @@ test("passive radiator calculator page: form, worked example that matches its te
 
 test("calculators: the script is found through Vite's manifest", async () => {
   const { viteScript } = await import("./calculators.ts");
-  const dir = mkdtempSync(join(tmpdir(), "vite-"));
+  const dir = tempDir("vite-");
   assert.equal(viteScript(dir, "src/calculators/portLength.ts"), null);
   const { mkdirSync, writeFileSync } = await import("node:fs");
   mkdirSync(join(dir, ".vite"));
@@ -451,4 +458,143 @@ test("the validation page has no duplicate ids", async () => {
   assert.doesNotMatch(html, /class="n">[^<]*;/);
   // Relative circuit-check differences carry % like their tolerances.
   assert.match(html, /<a href="#spice">Impedance<\/a><\/td><td>\d+<\/td><td>[^<]*<sup>[^<]*<\/sup>&nbsp;%<\/td><td>0\.1 %/);
+});
+
+test("driver pages: versions link each other and the opening line says what differs", async () => {
+  const { out, paths } = await built();
+  const html = readFileSync(join(out, "drivers/18-sound/18nlw4100-8ohm/index.html"), "utf8");
+  assert.match(html, /<ul class="chips">/);
+  assert.match(html, /<a href="\/drivers\/18-sound\/18nlw4100-4ohm\/">4 Ω<\/a>/);
+  assert.match(html, /aria-current="page">8 Ω</);
+  assert.match(html, /Re 4\.9 Ω \(4 Ω version 2\.5 Ω\)/);
+  assert.match(html, /≈ 96 dB at 2\.83 V \(≈ 99\.6 dB\)/);
+  assert.match(html, /a 97\.3 L ported box \(62\.2 L\)/);
+  // The version has its chip; the similar list doesn't repeat it.
+  const similar = html.slice(html.indexOf('id="similar"'));
+  assert.doesNotMatch(similar.slice(0, similar.indexOf("</ul>")), /18nlw4100-4ohm/);
+
+  // A driver with one version keeps the old page.
+  const single = readFileSync(join(out, "drivers/dayton-audio/dsa215-8/index.html"), "utf8");
+  assert.doesNotMatch(single, /class="chips"/);
+  assert.match(single, /Suggested .* boxes worked out from its Thiele\/Small parameters/);
+
+  // Every chip leads to a page that was built.
+  const pathSet = new Set(paths);
+  let chips = 0;
+  for (const p of paths.filter((x) => /^\/?drivers\/[^/]+\/[^/]+\/(index\.html)?$/.test(x)).slice(0, 4000)) {
+    const page = readFileSync(join(out, p.endsWith("index.html") ? p : join(p, "index.html")), "utf8");
+    for (const m of page.matchAll(/<ul class="chips">(.*?)<\/ul>/g)) {
+      for (const h of m[1]!.matchAll(/href="([^"]+)"/g)) {
+        chips++;
+        assert.ok(pathSet.has(h[1]!) || pathSet.has(`${h[1]}index.html`) || pathSet.has(h[1]!.slice(1)) || pathSet.has(`${h[1]!.slice(1)}index.html`), `chip link ${h[1]} was not built`);
+      }
+    }
+  }
+  assert.ok(chips > 100);
+});
+
+test("size names: slug and label keep up to two decimals", () => {
+  assert.deepEqual([12, 6.5, 5.25, 8, 10].map(sizeSlug), ["12-inch", "6.5-inch", "5.25-inch", "8-inch", "10-inch"]);
+  assert.deepEqual([12, 6.5, 5.25, 3.5].map(sizeLabel), ["12″", "6.5″", "5.25″", "3.5″"]);
+  assert.equal(sizePath(6.5), "/drivers/6.5-inch/");
+});
+
+const readPage = (out: string, path: string) => readFileSync(join(out, path, "index.html"), "utf8");
+/** The driver pages, as the build makes them (to count what the size pages should list). Simulated once and shared, like `built()`. */
+let pagesOnce: DriverPage[] | null = null;
+const allPages = () => (pagesOnce ??= (() => {
+  const db = loadDb();
+  const prs = db.passiveRadiators.map(prCandidate);
+  return db.drivers.map((e) => designDriver(e, prs)).filter((p): p is DriverPage => p !== null);
+})());
+
+test("size pages: one per size with enough drivers, listing each driver once", async () => {
+  const { out, paths } = await built();
+  const pages = allPages();
+  const hubs = hubSizes(pages);
+  assert.ok(hubs.length >= 10);
+  assert.ok(hubs.every((h) => h.count >= SIZE_HUB_MIN));
+  for (const h of hubs) assert.ok(paths.includes(sizePath(h.inches)), `${sizePath(h.inches)} built`);
+  // Sizes below the minimum have no page.
+  const small = new Set(pages.map((p) => p.rec.size_in).filter((z): z is number => z !== undefined));
+  for (const z of small) if (!hubs.some((h) => h.inches === z)) assert.ok(!paths.includes(sizePath(z)), `${sizePath(z)} not built`);
+  for (const path of ["/drivers/12-inch/", "/drivers/6.5-inch/", "/drivers/5.25-inch/"]) assert.ok(paths.includes(path), path);
+
+  const twelve = pages.filter((p) => p.rec.size_in === 12);
+  const brands = new Set(twelve.map((p) => p.brandSlug)).size;
+  const html = readPage(out, "drivers/12-inch");
+  assert.match(html, /<h1>12-inch drivers: box designs<\/h1>/);
+  assert.match(html, new RegExp(`<p class="lede">Suggested sealed, ported and passive radiator boxes for ${twelve.length} 12-inch drivers from ${brands} brands, .* Sorted by Fs\\.</p>`));
+  const rowLinks = [...html.matchAll(/<tr><td><a href="(\/drivers\/[^"]+)">/g)].map((m) => m[1]!);
+  assert.equal(rowLinks.length, twelve.length);
+  assert.equal(new Set(rowLinks).size, rowLinks.length);
+  for (const p of twelve) assert.ok(rowLinks.includes(`/drivers/${p.id}/`));
+  for (const l of rowLinks) assert.ok(paths.includes(l), `${l} built`);
+  // A chip for each kind, in the order of its section.
+  const chipIds = [...html.matchAll(/<li><a href="#([\w-]+)">/g)].map((m) => m[1]!);
+  assert.deepEqual(chipIds, [...html.matchAll(/<h2 id="([\w-]+)">/g)].map((m) => m[1]!));
+  assert.ok(chipIds.includes("woofer"));
+  assert.match(html, /<small>\d+<\/small>/);
+  // Sorted by Fs within a kind.
+  const woofers = html.slice(html.indexOf('id="woofer"'), html.indexOf("</table>", html.indexOf('id="woofer"')));
+  const fs = [...woofers.matchAll(/<td class="n">([\d.]+) Hz<\/td>/g)].map((m) => Number(m[1]));
+  assert.deepEqual(fs, [...fs].sort((a, b) => a - b));
+  assert.match(html, /Other sizes: <a href="\/drivers\/2.5-inch\/">2.5″<\/a> · /);
+  assert.doesNotMatch(html.slice(html.indexOf("Other sizes")), /href="\/drivers\/12-inch\/"/);
+  assert.match(html, /"@type":"ItemList"/);
+});
+
+test("driver list: sizes by size and by brand, smallest first", async () => {
+  const { out } = await built();
+  const hubs = hubSizes(allPages());
+  const html = readPage(out, "drivers");
+  assert.match(html, /<h2 id="sizes">By size<\/h2><ul class="chips sizes">/);
+  assert.match(html, /<h2 id="brands">By brand<\/h2><ul class="brands">/);
+  const links = [...html.matchAll(/<li><a href="(\/drivers\/[\d.]+-inch\/)">/g)].map((m) => m[1]);
+  assert.deepEqual(links, hubs.map((h) => sizePath(h.inches)));
+});
+
+test("driver pages: the opening line and similar drivers link the size page, and list at least four", async () => {
+  const { out, paths } = await built();
+  const html = readPage(out, "drivers/18-sound/18nlw4100-8ohm");
+  assert.match(html, /<p class="lede"><a href="\/drivers\/18-inch\/">18-inch subwoofer<\/a>, 8 Ω\. The 8 Ω version/);
+  assert.match(html, /<p class="more"><a href="\/drivers\/18-inch\/">All 18-inch drivers →<\/a><\/p>/);
+  const single = readPage(out, "drivers/dayton-audio/dsa215-8");
+  assert.match(single, /<p class="lede"><a href="\/drivers\/\d+-inch\/">/);
+
+  const few: string[] = [];
+  for (const p of paths.filter((x) => /^\/drivers\/[^/]+\/[^/]+\/$/.test(x))) {
+    const page = readPage(out, p);
+    const similar = page.slice(page.indexOf('id="similar"'));
+    const n = (similar.slice(0, similar.indexOf("</ul>")).match(/<li>/g) ?? []).length;
+    if (n < 4) few.push(`${p} (${n})`);
+  }
+  // Allowed only for a size with fewer than four drivers from other brands.
+  const pages = allPages();
+  const fewer = few.filter((f) => {
+    const id = f.slice("/drivers/".length, f.indexOf("/ ("));
+    const d = pages.find((p) => p.id === id)!;
+    return pages.filter((p) => p.rec.size_in === d.rec.size_in && p.brandSlug !== d.brandSlug).length >= 4 || !d.rec.size_in;
+  });
+  assert.deepEqual(fewer, []);
+  console.log(`${few.length} driver pages list fewer than four similar drivers`);
+});
+
+test("brand pages: the size links its page, and 5.25 is not rounded", async () => {
+  const { out } = await built();
+  const pages = allPages();
+  const brand = pages.find((p) => p.rec.size_in === 5.25)!.brandSlug;
+  const html = readPage(out, `drivers/${brand}`);
+  assert.match(html, /<td><a href="\/drivers\/5.25-inch\/">5.25″<\/a><\/td>/);
+  assert.doesNotMatch(html, /5\.3″/);
+  const small = pages.find((p) => p.rec.size_in && !hubSizes(pages).some((h) => h.inches === p.rec.size_in));
+  if (small) assert.match(readPage(out, `drivers/${small.brandSlug}`), new RegExp(`<td>${sizeLabel(small.rec.size_in!)}</td>`));
+});
+
+test("PR candidates keep a maker's Xmech as Xmech (so the driver pages' redlines say so)", () => {
+  const db = loadDb();
+  const mech = db.passiveRadiators.find((x) => x.data.params.xmax_mm === undefined && x.data.params.xmech_mm !== undefined)!;
+  assert.equal((prCandidate(mech).params as { xmech?: boolean }).xmech, true);
+  const lin = db.passiveRadiators.find((x) => x.data.params.xmax_mm !== undefined)!;
+  assert.equal((prCandidate(lin).params as { xmech?: boolean }).xmech, undefined);
 });

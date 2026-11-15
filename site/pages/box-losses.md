@@ -70,7 +70,7 @@ The losses show up most clearly in the **impedance** curve: more loss means **lo
 
 1. Measure your box's impedance (DATS, REW, ARTA or similar) at a low level, after measuring the driver's own T/S parameters.
 2. Load the measurement into the app with the **Measured** card (`.zma`), and look at the **Impedance** chart.
-3. Adjust **Leak Ql** in **Settings** until the simulated peaks are the same height as the measured ones. If the upper peak is too high and the lower one about right, lower **Absorb Qa** instead; if it's the lower peak, lower **Port Qp**.
+3. Adjust **Leak Ql** in **Settings → Simulation → Box** until the simulated peaks are the same height as the measured ones. If the upper peak is too high and the lower one about right, lower **Absorb Qa** instead; if it's the lower peak, lower **Port Qp**.
 4. Keep those values for that box: the simulation now includes its real losses.
 
 Fit the driver's parameters first: an error in the driver's Qms looks just like box losses on an impedance curve.
@@ -79,7 +79,7 @@ Fit the driver's parameters first: an error in the driver's Qms looks just like 
 
 A sealed box can't use a port's resonance, so its losses matter less, but they're not zero: leakage lowers its output at the bottom a little. In the app the same Ql applies: for the DSA215-8's sealed box, Ql 10 instead of 100 moves the F3 from {{num:losses-sealed-ql100/1/f3:0}} Hz to {{num:losses-sealed-ql10/1/f3:0}} Hz. Stuffing in a sealed box mostly makes it act a little larger (and raises its losses), which is why stuffed sealed boxes are often simulated as larger than they are. How much larger, and how to model and measure it, is in the [box stuffing guide](/guides/box-stuffing/).
 
-VituixCAD's Qa also makes the box act larger (+1.4 % at Qa 100, +11.3 % at Qa 10). Settings → Box losses → Absorption, or Settings → Match → VituixCAD, does the same.
+VituixCAD's Qa also makes the box act larger (+1.4 % at Qa 100, +11.3 % at Qa 10). Settings → Simulation → Box → Absorption, or Settings → General → Match → VituixCAD, does the same.
 
 ## What to use
 

@@ -4,7 +4,7 @@
  * site build (src/ssr/guideCharts.tsx). The app adds its controls (actions, handles, editor).
  */
 import type { LogChartProps, Series } from "./LogChart.tsx";
-import { baffleDbFor, checkFromHz, coilLabel, DEEP_ALLOW, DEEP_FLOOR_HZ, deepSplitOf, driveLabel, lowEdge, minus3Points, portLimitOf, prGroupLabels, prXmaxes, type Design } from "./sim.ts";
+import { baffleDbFor, checkFromHz, coilLabel, DEEP_ALLOW, DEEP_FLOOR_HZ, deepSplitOf, driveLabel, lowEdge, minus3Points, portLimitOf, prGroupLabels, prLimits, type Design } from "./sim.ts";
 import type { AppState } from "./state.ts";
 import type { SimulationResult } from "@sbg/engine";
 import { GUIDE, LIMIT } from "./palette.ts";
@@ -260,7 +260,9 @@ export function maxSplChart(c: ChartInput, mode: "spl" | "volts" | "amps"): Char
 export function prChart(c: ChartInput): ChartDraw {
   const { state, designs } = c;
   const prDesigns = designs.filter((d) => d.result.prGroups);
-  const limits = [...new Set(prDesigns.flatMap((d) => prXmaxes(d.design)))].map((x) => ({ value: x, label: `PR Xmax ${x} mm`, color: LIMIT.xmax }));
+  const seen = new Map<number, boolean>();
+  for (const l of prDesigns.flatMap((d) => prLimits(d.design))) seen.set(l.mm, (seen.get(l.mm) ?? true) && l.mech);
+  const limits = [...seen].map(([x, mech]) => ({ value: x, label: `PR ${mech ? "Xmech" : "Xmax"} ${x} mm`, color: LIMIT.xmax, mech }));
   // Caution band under each PR Xmax, from the share set in Settings (a rule of thumb: suspensions stiffen there).
   const caution = state.settings.prCaution_pct;
   return {
@@ -285,7 +287,7 @@ export function prChart(c: ChartInput): ChartDraw {
     limits,
     bands:
       caution > 0 && caution < 100
-        ? limits.map((l, i) => ({ from: (l.value * caution) / 100, to: l.value, label: i === 0 ? `Over ${caution} % of PR Xmax: suspension stiffens (rule of thumb)` : "", color: LIMIT.port }))
+        ? limits.map((l, i) => ({ from: (l.value * caution) / 100, to: l.value, label: i === 0 ? `Over ${caution} % of PR ${l.mech ? "Xmech" : "Xmax"}: suspension stiffens (rule of thumb)` : "", color: LIMIT.port }))
         : [],
     yMin: 0,
   };

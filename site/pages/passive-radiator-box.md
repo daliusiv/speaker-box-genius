@@ -37,7 +37,7 @@ The rest of this guide uses a **Dayton Audio DSA215-8**, an 8″ woofer (Fs 35 H
 
 Start as if you were designing a ported box. A flat alignment is a good first try: for this driver, **QB3** gives **18.0 L tuned to 41.7 Hz** (the box WinISD's wizard gives too).
 
-In the app, the passive radiator design has a **QB3** button among its presets: it sets the box volume, the target tuning and the added mass for your driver and PR in one go. You can go bigger for deeper bass or smaller to save space; the charts show what you trade.
+In the app, choose **QB3** from the passive radiator design's **Preset** list: it sets the box volume, the target tuning and the added mass for your driver and PR in one go. You can go bigger for deeper bass or smaller to save space; the charts show what you trade.
 
 ## Step 2: pick a passive radiator that can keep up
 
@@ -83,7 +83,7 @@ This is where PR designs fail. Look at **both** excursion charts at the power yo
 
 At 35 W with the 30 Hz high-pass filter, the woofer peaks at **{{num:pr-example/2/x}} mm** and the PR at **{{num:pr-example/2/prx}} mm**. Both are within their limits.
 
-The PR chart also shades a band from **75 % of the PR's Xmax** up to it (8.25 mm here). A PR's suspension stiffens as it nears its limit, so its travel stops growing in step with the woofer's and its distortion rises; staying under the band leaves that headroom. 75 % is a rule of thumb, not a datasheet figure: change it, or turn it off, with **PR caution** in **Settings**. This design's 7.9 mm is 72 %, under the band.
+The PR chart also shades a band from **75 % of the PR's Xmax** up to it (8.25 mm here). A PR's suspension stiffens as it nears its limit, so its travel stops growing in step with the woofer's and its distortion rises; staying under the band leaves that headroom. 75 % is a rule of thumb, not a datasheet figure: change it, or turn it off, with **PR caution** in **Settings → Limits → Port speed**. This design's 7.9 mm is 72 %, under the band.
 
 ![PR excursion at 35 W with the 30 Hz high-pass filter: {{num:pr-example/2/prx}} mm at most, against an Xmax of 11 mm (the red line).](chart:pr-example/pr)
 

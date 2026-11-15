@@ -143,7 +143,7 @@ export function toHornrespBox(
   lines.push("");
   for (let i = 1; i <= 4; i++) fixed(`Tal${i}`, "100");
   if (o.stuffed) warnings.push("Stuffing is written as the bigger volume it makes the box act as (Vrc); its damping isn't.");
-  warnings.push("Hornresp's ordinary boxes have no leakage or absorption: set Settings → Box losses to none to compare.");
+  warnings.push("Hornresp's ordinary boxes have no leakage or absorption: set Settings → Box → Leak Ql, Absorb Qa and Port Qp to none to compare.");
   lines.push(
     ...HORNRESP_TAIL.map((l) =>
       l === "Semi-Inductance Model Flag = 0" && semi ? "Semi-Inductance Model Flag = 1" : l === "Damping Model Flag = 0" && fdd ? "Damping Model Flag = 1" : l,

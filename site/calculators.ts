@@ -14,6 +14,7 @@ import { fewestThatKeepUp, keepsUp, prCalc, prCheck, type PrCalcInput } from "..
 import { DEFAULT_STATE, newDesign, type VentedDesign } from "../packages/web/src/state.ts";
 import { airOf, limitsOf, PORT_LIMIT, runDesigns, solveDriver } from "../packages/web/src/sim.ts";
 import { driverState, loadDb } from "./drivers.ts";
+import { prTravel } from "../packages/schema/src/index.ts";
 
 const AIR = airOf(DEFAULT_STATE);
 
@@ -162,12 +163,13 @@ export const PR_ROWS = [
   { key: "sb1", prId: "sb-acoustics/sb34nrx-00", count: 1 },
 ] as const;
 
-function prParamsOf(id: string): PrCalcInput["pr"] & { name: string; maxAdded_g?: number } {
+function prParamsOf(id: string): PrCalcInput["pr"] & { name: string; mech: boolean; maxAdded_g?: number } {
   const rec = loadDb().passiveRadiators.find((p) => p.id === id);
   if (!rec) throw new Error(`calculators: ${id} isn't in the database`);
   const p = rec.data.params;
   if (p.vas_l === undefined) throw new Error(`calculators: ${id} has no Vas`);
-  return { name: `${rec.data.brand} ${rec.data.model}`, mms_g: p.mms_g, sd_cm2: p.sd_cm2, xmax_mm: p.xmax_mm, qms: p.qms ?? 10, vas_l: p.vas_l, ...(p.max_added_mass_g ? { maxAdded_g: p.max_added_mass_g } : {}) };
+  const travel = prTravel(p);
+  return { name: `${rec.data.brand} ${rec.data.model}`, mms_g: p.mms_g, sd_cm2: p.sd_cm2, xmax_mm: travel.mm, mech: travel.mechanical, qms: p.qms ?? 10, vas_l: p.vas_l, ...(p.max_added_mass_g ? { maxAdded_g: p.max_added_mass_g } : {}) };
 }
 
 function prExampleState() {
@@ -224,7 +226,7 @@ export function prForm(): string {
     `<label class="calc-field"><span>${label}</span><span class="calc-in"><input id="${id}" type="number" inputmode="decimal" min="0" step="any" value="${value}"${extra}><em${id === "prc-vb" ? ' data-unit="vol"' : ""}>${unit}</em></span></label>`;
   return `<div class="calc">
 <p class="calc-nojs">The calculator needs JavaScript. The worked example below shows what it gives.</p>
-<form id="prc-form" class="calc-form" hidden onsubmit="return false" data-pr-name="${p.name}">
+<form id="prc-form" class="calc-form" hidden onsubmit="return false" data-pr-name="${p.name}"${p.mech ? ' data-pr-mech="1"' : ""}>
 <fieldset class="calc-units"><legend>Units</legend><label><input type="radio" name="prc-units" id="prc-metric" checked> litres, grams</label><label><input type="radio" name="prc-units" id="prc-imperial"> ft³, ounces</label></fieldset>
 <div class="calc-grid">
 ${num("prc-vb", "Net box volume", String(PR_EXAMPLE.vb_l), "L")}
@@ -234,7 +236,7 @@ ${num("prc-fb", "Tuning frequency", String(PR_EXAMPLE.fb), "Hz")}
 ${num("prc-mms", "Moving mass, Mms", String(p.mms_g), "g")}
 ${num("prc-sd", "Cone area, Sd", String(p.sd_cm2), "cm²")}
 ${num("prc-vas", "Compliance volume, Vas", String(p.vas_l), "L", ' title="Vas stays in litres in both unit systems, as on most datasheets"')}
-${num("prc-xmax", "Xmax (one way)", String(p.xmax_mm), "mm")}
+${num("prc-xmax", `<span id="prc-xmax-name">${p.mech ? "Xmech (one way, maker's limit)" : "Xmax (one way)"}</span>`, String(p.xmax_mm), "mm")}
 ${num("prc-qms", "Qms (10 if unknown)", String(p.qms), "")}
 ${num("prc-max", "Maximum added mass (optional)", p.maxAdded_g ? String(p.maxAdded_g) : "", "g", ' placeholder="from the datasheet"')}
 </div>

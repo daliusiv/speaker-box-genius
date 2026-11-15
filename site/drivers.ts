@@ -10,7 +10,7 @@
 import { RHO, C, TS_PARAMS, estimateDriverDisplacement, evaluatePrCandidates, rankPrResults, type PrCandidate, type TsParam, type TsValues } from "../packages/engine/src/index.ts";
 import { loadDatabase, type Entry } from "../packages/db-tools/src/load.ts";
 import { doubtsXmax, type Flag } from "../packages/db-tools/src/plausibility.ts";
-import type { Driver, PassiveRadiator } from "../packages/schema/src/index.ts";
+import { prTravel, type Driver, type PassiveRadiator } from "../packages/schema/src/index.ts";
 import { DEFAULT_STATE, encodeStateShort, type AppState, type DesignState } from "../packages/web/src/state.ts";
 import { SEALED_MAX_VAS, sealedQtc, sizeAllForDriver, withPreset } from "../packages/web/src/presets.ts";
 import { stuffFactor } from "../packages/web/src/stuffing.ts";
@@ -68,7 +68,8 @@ export function prCandidate(e: Entry<PassiveRadiator>): PrCandidate & { params: 
     const cms = p.cms_mm_per_n !== undefined ? p.cms_mm_per_n / 1000 : 1 / ((2 * Math.PI * p.fs!) ** 2 * (p.mms_g / 1000));
     vas = cms * RHO * C * C * sd * sd * 1000;
   }
-  const params = { mms_g: p.mms_g, sd_cm2: p.sd_cm2, xmax_mm: p.xmax_mm, qms: p.qms ?? 10, vas_l: Math.round(vas * 10) / 10 };
+  const travel = prTravel(p);
+  const params = { mms_g: p.mms_g, sd_cm2: p.sd_cm2, xmax_mm: travel.mm, ...(travel.mechanical ? { xmech: true } : {}), qms: p.qms ?? 10, vas_l: Math.round(vas * 10) / 10 };
   const cut = e.data.physical?.cutout_mm;
   return { id: e.id, name: `${e.data.brand} ${e.data.model}`, pr: params, params, od_cm: cut !== undefined ? cut / 10 + 2.5 : undefined };
 }
@@ -182,13 +183,35 @@ const TYPE_LABEL: Record<string, string> = {
   other: "driver",
 };
 
+/** A size without trailing zeros, up to two decimals: 12, 6.5, 5.25. */
+const inchText = (inches: number) => Number(inches.toFixed(2)).toString();
+/** "12-inch", "6.5-inch", "5.25-inch": a size in words, and in the address of its page. */
+export const sizeSlug = (inches: number) => `${inchText(inches)}-inch`;
+/** "12″", "6.5″", "5.25″". */
+export const sizeLabel = (inches: number) => `${inchText(inches)}″`;
+export const sizePath = (inches: number) => `/drivers/${sizeSlug(inches)}/`;
+/** A size gets its own page when at least this many drivers have it. */
+export const SIZE_HUB_MIN = 10;
+
+/** The sizes that get a page, smallest first, with how many drivers each has. */
+export function hubSizes(pages: DriverPage[]): { inches: number; count: number }[] {
+  const n = new Map<number, number>();
+  for (const p of pages) if (p.rec.size_in) n.set(p.rec.size_in, (n.get(p.rec.size_in) ?? 0) + 1);
+  return [...n].filter(([, count]) => count >= SIZE_HUB_MIN).map(([inches, count]) => ({ inches, count })).sort((a, b) => a.inches - b.inches);
+}
+
+/** "12-inch subwoofer": the size and the kind of driver, without the impedance. */
+export function describeKind(rec: Driver): string {
+  const size = rec.size_in ? `${sizeSlug(rec.size_in)} ` : "";
+  return `${size}${TYPE_LABEL[rec.type] ?? "driver"}`;
+}
+
 /** "12-inch subwoofer, 2 × 2 Ω dual voice coil" */
 export function describe(rec: Driver): string {
-  const size = rec.size_in ? `${Number.isInteger(rec.size_in) ? rec.size_in : f1(rec.size_in)}-inch ` : "";
   // DVC: per-coil impedance, as in the app's driver list ("dual 2 Ω voice coils").
   const coil = rec.voice_coils === 2 ? (rec.ts_wiring === "series" ? rec.nominal_ohms / 2 : rec.nominal_ohms * 2) : 0;
   const ohms = coil ? `dual ${f1(coil)} Ω voice coils` : `${f1(rec.nominal_ohms)} Ω`;
-  return `${size}${TYPE_LABEL[rec.type] ?? "driver"}, ${ohms}`;
+  return `${describeKind(rec)}, ${ohms}`;
 }
 
 const KIND_NAME = { sealed: "Sealed", vented: "Ported", pr: "Passive radiator" } as const;
@@ -240,13 +263,72 @@ function pts(freq: Float64Array, y: ArrayLike<number>): [number, number][] {
   return out;
 }
 
+/** One version of a driver (another impedance or voice coil) for the chips and the opening line. */
+export interface VariantLink {
+  id: string;
+  /** "8 Ω", "DVC 2+2 Ω" */
+  label: string;
+  /** DC resistance (Ω). */
+  re: number;
+  /** Sensitivity at 2.83 V (dB), from sens283. */
+  sens: number;
+  /** Dual voice coils: how they were wired for the published T/S (and Re). */
+  wiring?: "series" | "parallel";
+  /** The suggested box's net volume (L) per kind. */
+  boxes: Partial<Record<"vented" | "sealed" | "pr", number>>;
+}
+
 export interface PageLinks {
   /** Share link opening every design. */
   all: string;
+  /** The driver's other versions and the page itself, in family order (two or more, or none). */
+  variants?: VariantLink[];
   related: { id: string; label: string }[];
+  /** The driver's size has a page of its own (sizePath), which the opening line and the similar drivers link to. */
+  sizeHub?: boolean;
 }
 
 /** Structured data for a page (schema.org): what it's about, and where it sits (breadcrumbs). */
+/** The wording for each box kind in the opening line. */
+const KIND_WORD = { vented: "ported", sealed: "sealed", pr: "passive radiator" } as const;
+
+/**
+ * Sensitivity at 2.83 V and 1 m in half space (dB), from the T/S parameters: the reference
+ * efficiency 4π²·Fs³·Vas/(c³·Qes), then 112.1 dB + 10·log10(η0) for 1 W, and 10·log10(8/Re) for 2.83 V.
+ */
+export function sens283(rec: Driver): number {
+  const t = rec.ts;
+  const eta0 = (4 * Math.PI ** 2 * t.fs ** 3 * (t.vas_l / 1000)) / (C ** 3 * t.qes);
+  return 112.1 + 10 * Math.log10(eta0) + 10 * Math.log10(8 / t.re);
+}
+
+/**
+ * A driver page's opening line. With other versions it says what changes between them: Re,
+ * sensitivity and, when every version has one, the suggested box of the same kind.
+ */
+/** A version's Re; a dual-coil driver's as its T/S were measured (coils in series or parallel). */
+const reOf = (v: VariantLink) => `${f1(v.re)} Ω${v.wiring ? ` in ${v.wiring}` : ""}`;
+
+export function ledeText(rec: Driver, kindList: string, variants: VariantLink[] | undefined, id: string, hub = false): string {
+  // "18-inch subwoofer" links to the page of its size when there is one.
+  const what = esc(describeKind(rec));
+  const base = `${hub && rec.size_in ? `<a href="${sizePath(rec.size_in)}">${what}</a>` : what}${esc(describe(rec).slice(describeKind(rec).length))}.`;
+  const me = variants && variants.length >= 2 ? variants.find((v) => v.id === id) : undefined;
+  if (!variants || !me) return `${base} Suggested ${kindList} boxes worked out from its Thiele/Small parameters, ready to open and change in Speaker Box Genius.`;
+  const others = variants.filter((v) => v !== me);
+  const list = (f: (v: VariantLink) => string) => others.map(f).join(", ");
+  const kind = (["vented", "sealed", "pr"] as const).find((k) => me.boxes[k] !== undefined && others.every((o) => o.boxes[k] !== undefined));
+  const box = kind ? ` and a ${f1(me.boxes[kind]!)} L ${KIND_WORD[kind]} box (${list((o) => `${f1(o.boxes[kind]!)} L`)})` : "";
+  return `${base} ${esc(`The ${me.label} version: Re ${reOf(me)} (${list((o) => `${o.label} version ${reOf(o)}`)}), ≈ ${f1(me.sens)} dB at 2.83 V (${list((o) => `≈ ${f1(o.sens)} dB`)})${box}.`)}`;
+}
+
+/** "Also available:" chips linking a driver's other versions; the page's own is marked. */
+export function variantChips(variants: VariantLink[] | undefined, id: string): string {
+  if (!variants || variants.length < 2) return "";
+  const items = variants.map((v) => `<li>${v.id === id ? `<span class="on" aria-current="page">${esc(v.label)}</span>` : `<a href="${driverPath(v.id)}">${esc(v.label)}</a>`}</li>`).join("");
+  return `<ul class="chips"><li class="lbl">Also available:</li>${items}</ul>`;
+}
+
 export interface PageLd {
   about?: Record<string, unknown>;
   crumbs?: { name: string; path?: string }[];
@@ -332,12 +414,13 @@ export function driverContent(p: DriverPage, links: PageLinks, chart: typeof imp
 
   const notes = p.notes.length ? `<p class="muted">Not shown: ${p.notes.map(esc).join("; ")}.</p>` : "";
   const related = links.related.length
-    ? `<h2 id="similar">Similar drivers</h2><ul class="related">${links.related.map((r) => `<li><a href="${driverPath(r.id)}">${esc(r.label)}</a></li>`).join("")}</ul>`
+    ? `<h2 id="similar">Similar drivers</h2><ul class="related">${links.related.map((r) => `<li><a href="${driverPath(r.id)}">${esc(r.label)}</a></li>`).join("")}</ul>${links.sizeHub && p.rec.size_in ? `<p class="more"><a href="${sizePath(p.rec.size_in)}">All ${sizeSlug(p.rec.size_in)} drivers →</a></p>` : ""}`
     : "";
 
   const content = `<nav class="crumbs"><a href="/drivers/">Drivers</a> › <a href="${brandPath(p.brandSlug)}">${esc(p.brand)}</a></nav>
 <h1>${esc(name)}: box design</h1>
-<p class="lede">${esc(describe(p.rec))}. Suggested ${kindList} boxes worked out from its Thiele/Small parameters, ready to open and change in Speaker Box Genius.</p>
+<p class="lede">${ledeText(p.rec, kindList, links.variants, p.id, links.sizeHub)}</p>
+${variantChips(links.variants, p.id)}
 <p class="cta"><a class="button" href="${esc(links.all)}">Open these designs in the app →</a></p>
 ${p.rec.ts.pe_w ? `<p class="muted">They open at its ${Math.round(p.rec.ts.pe_w)} W power rating; the app's 1 W button (as WinISD and Hornresp start) is next to it.</p>` : ""}
 ${flagNote}
@@ -397,6 +480,15 @@ td small{color:var(--muted)}
 .sw{display:inline-block;width:.7rem;height:.7rem;margin-right:.45rem;border-radius:.2rem;vertical-align:baseline}
 .key span::before{border-top-color:var(--c)}
 .related{columns:2 14rem;padding-left:1.1rem}
+.chips{display:flex;flex-wrap:wrap;gap:.45rem;align-items:center;margin:.2rem 0 1rem;padding:0;list-style:none}
+.chips .lbl{color:var(--muted);font-size:.92rem;margin-right:.15rem}
+.chips a,.chips span.on{display:inline-flex;align-items:center;min-height:2.1rem;padding:0 .8rem;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--fg);text-decoration:none;font-weight:600;font-size:.92rem}
+.chips span.on{border-color:var(--accent);color:var(--accent)}
+.chips a:hover{border-color:var(--accent)}
+@media (max-width:767px){.chips a,.chips span.on{min-height:44px;padding:0 1rem}}
+.chips small{color:var(--muted);font-weight:500;margin-left:.35rem}
+.sizes{margin:.4rem 0 1.4rem}
+.more{margin-top:.6rem}
 .brands{display:grid;gap:.6rem;grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr));padding:0;list-style:none}
 .brands li{padding:.7rem .9rem;border:1px solid var(--border);border-radius:.7rem;background:var(--card)}
 .brands a{font-weight:650;text-decoration:none}
@@ -404,22 +496,42 @@ td small{color:var(--muted)}
 @media (max-width:600px){.cmp{font-size:.84rem}.cmp th,.cmp td{padding:.4rem .3rem}.cmp td.n .alt{display:block;font-size:.85em}.hide-s{display:none}}
 `;
 
-/** Up to 8 other drivers of the same brand and nearest size, then the same size from other brands. */
-export function relatedDrivers(p: DriverPage, all: DriverPage[]): PageLinks["related"] {
+/** Fewest similar drivers a page lists, when there are enough. */
+const RELATED_MIN = 4;
+
+/**
+ * Up to 6 other drivers of the same brand and nearest size, then the same size and type from other
+ * brands. Short of 4, the same size of any type from other brands fills up (by name).
+ * `exclude` (the driver's other versions, which have their own chips) are left out.
+ */
+export function relatedDrivers(p: DriverPage, all: DriverPage[], exclude?: Set<string>): PageLinks["related"] {
+  all = exclude ? all.filter((x) => !exclude.has(x.id)) : all;
   const size = p.rec.size_in ?? 0;
   const near = (x: DriverPage) => Math.abs((x.rec.size_in ?? 0) - size);
   const same = all.filter((x) => x.brandSlug === p.brandSlug && x.id !== p.id).sort((a, b) => near(a) - near(b) || a.model.localeCompare(b.model)).slice(0, 6);
-  const other = all.filter((x) => x.brandSlug !== p.brandSlug && x.rec.size_in === p.rec.size_in && x.rec.type === p.rec.type).slice(0, 4);
-  return [...same, ...other].map((x) => ({ id: x.id, label: `${x.brand} ${x.model}` }));
+  // Other brands: the same size and type, closest Fs first (database order said nothing).
+  const other = all
+    .filter((x) => x.brandSlug !== p.brandSlug && x.rec.size_in === p.rec.size_in && x.rec.type === p.rec.type)
+    .sort((a, b) => Math.abs(a.rec.ts.fs - p.rec.ts.fs) - Math.abs(b.rec.ts.fs - p.rec.ts.fs) || `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`, "en", { numeric: true }))
+    .slice(0, 4);
+  const picked = [...same, ...other];
+  if (picked.length < RELATED_MIN && p.rec.size_in) {
+    const listed = new Set(picked);
+    const rest = all
+      .filter((x) => x.brandSlug !== p.brandSlug && x.rec.size_in === p.rec.size_in && !listed.has(x))
+      .sort((a, b) => `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`, "en", { numeric: true }));
+    picked.push(...rest.slice(0, RELATED_MIN - picked.length));
+  }
+  return picked.map((x) => ({ id: x.id, label: `${x.brand} ${x.model}` }));
 }
 
 /** /drivers/<brand>/: a table of the brand's drivers that have pages. */
-export function brandContent(brand: string, pages: DriverPage[]): string {
+export function brandContent(brand: string, pages: DriverPage[], hubs: ReadonlySet<number> = new Set()): string {
   const rows = [...pages]
     .sort((a, b) => (a.rec.size_in ?? 0) - (b.rec.size_in ?? 0) || a.model.localeCompare(b.model, "en", { numeric: true }))
     .map((p) => {
       const t = p.rec.ts;
-      return `<tr><td><a href="${driverPath(p.id)}">${esc(p.model)}</a></td><td>${p.rec.size_in ? `${f1(p.rec.size_in)}″` : "–"}</td><td class="hide-s">${esc(TYPE_LABEL[p.rec.type] ?? "")}</td><td class="n">${f1(t.fs)} Hz</td><td class="n">${(t.qts ?? solveDriver(p.state).values.qts!).toFixed(2)}</td><td class="n">${f1(t.vas_l)} L</td><td class="n hide-s">${t.xmax_mm !== undefined ? `${f1(t.xmax_mm)} mm` : "–"}</td></tr>`;
+      return `<tr><td><a href="${driverPath(p.id)}">${esc(p.model)}</a></td><td>${p.rec.size_in ? (hubs.has(p.rec.size_in) ? `<a href="${sizePath(p.rec.size_in)}">${sizeLabel(p.rec.size_in)}</a>` : sizeLabel(p.rec.size_in)) : "–"}</td><td class="hide-s">${esc(TYPE_LABEL[p.rec.type] ?? "")}</td><td class="n">${f1(t.fs)} Hz</td><td class="n">${(t.qts ?? solveDriver(p.state).values.qts!).toFixed(2)}</td><td class="n">${f1(t.vas_l)} L</td><td class="n hide-s">${t.xmax_mm !== undefined ? `${f1(t.xmax_mm)} mm` : "–"}</td></tr>`;
     })
     .join("");
   return `<nav class="crumbs"><a href="/drivers/">Drivers</a></nav>
@@ -428,12 +540,45 @@ export function brandContent(brand: string, pages: DriverPage[]): string {
 <div class="table"><table class="cmp"><thead><tr><th>Model</th><th>Size</th><th class="hide-s">Type</th><th>Fs</th><th>Qts</th><th>Vas</th><th class="hide-s">Xmax</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
-/** /drivers/: every brand. */
-export function driversIndexContent(byBrand: { slug: string; name: string; pages: DriverPage[] }[]): string {
+/** How the size pages group drivers, biggest group first: the four common kinds, then the rest. */
+const SIZE_GROUPS: Record<string, string> = { woofer: "Woofers", subwoofer: "Subwoofers", "full-range": "Full-range", midbass: "Midbass", other: "Other" };
+const groupOf = (type: string) => (type in SIZE_GROUPS ? type : "other");
+
+/** /drivers/<size>-inch/: every driver of one size by kind, sorted by Fs, with its suggested ported box. */
+export function sizeContent(inches: number, pages: DriverPage[], allSizes: { inches: number; count: number }[]): string {
+  const words = sizeSlug(inches);
+  const groups = new Map<string, DriverPage[]>();
+  for (const p of pages) groups.set(groupOf(p.rec.type), [...(groups.get(groupOf(p.rec.type)) ?? []), p]);
+  const ordered = [...groups].sort((a, b) => b[1].length - a[1].length || SIZE_GROUPS[a[0]]!.localeCompare(SIZE_GROUPS[b[0]]!));
+  const chips = ordered.map(([id, g]) => `<li><a href="#${id}">${SIZE_GROUPS[id]} <small>${g.length}</small></a></li>`).join("");
+  const sections = ordered
+    .map(([id, g]) => {
+      const rows = [...g]
+        .sort((a, b) => a.rec.ts.fs - b.rec.ts.fs || `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`, "en", { numeric: true }))
+        .map((p) => {
+          const t = p.rec.ts;
+          const ported = p.designs.find((d) => d.design.kind === "vented");
+          return `<tr><td><a href="${driverPath(p.id)}">${esc(`${p.brand} ${p.model}`)}</a></td><td class="n">${f1(t.fs)} Hz</td><td class="n">${(t.qts ?? solveDriver(p.state).values.qts!).toFixed(2)}</td><td class="n">${f1(t.vas_l)} L</td><td class="n hide-s">${t.xmax_mm !== undefined ? `${f1(t.xmax_mm)} mm` : "–"}</td><td class="n">${ported ? `${f1(ported.vb_l)} L` : "–"}</td></tr>`;
+        })
+        .join("");
+      return `<h2 id="${id}">${SIZE_GROUPS[id]}</h2><div class="table"><table class="cmp"><thead><tr><th>Model</th><th>Fs</th><th>Qts</th><th>Vas</th><th class="hide-s">Xmax</th><th>Ported box</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    })
+    .join("");
+  const others = allSizes.filter((s) => s.inches !== inches).map((s) => `<a href="${sizePath(s.inches)}">${sizeLabel(s.inches)}</a>`).join(" · ");
+  const brands = new Set(pages.map((p) => p.brandSlug)).size;
+  return `<nav class="crumbs"><a href="/drivers/">Drivers</a></nav>
+<h1>${words} drivers: box designs</h1>
+<p class="lede">Suggested sealed, ported and passive radiator boxes for ${pages.length} ${words} drivers from ${brands} brands, worked out from their Thiele/Small parameters. Sorted by Fs.</p>
+<ul class="chips">${chips}</ul>${sections}
+<p class="muted">Other sizes: ${others}. Or browse <a href="/drivers/">by brand</a>.</p>`;
+}
+
+/** /drivers/: every size with a page, and every brand. */
+export function driversIndexContent(byBrand: { slug: string; name: string; pages: DriverPage[] }[], sizes: { inches: number; count: number }[] = []): string {
   const total = byBrand.reduce((n, b) => n + b.pages.length, 0);
   return `<h1>Box designs for ${total.toLocaleString("en-GB")} drivers</h1>
 <p class="lede">Pick a driver to see the sealed, ported and passive radiator boxes that suit it, with their response and maximum output, and open any of them in Speaker Box Genius to change it.</p>
-<ul class="brands">${byBrand.map((b) => `<li><a href="${brandPath(b.slug)}">${esc(b.name)}</a><small>${b.pages.length} drivers</small></li>`).join("")}</ul>
+${sizes.length ? `<h2 id="sizes">By size</h2><ul class="chips sizes">${sizes.map((z) => `<li><a href="${sizePath(z.inches)}">${sizeLabel(z.inches)} <small>${z.count}</small></a></li>`).join("")}</ul>\n` : ""}<h2 id="brands">By brand</h2><ul class="brands">${byBrand.map((b) => `<li><a href="${brandPath(b.slug)}">${esc(b.name)}</a><small>${b.pages.length} drivers</small></li>`).join("")}</ul>
 <p class="muted">The parameters come from the <a href="${REPO}/tree/main/drivers">open driver database</a> in the project's repository. Missing a driver? <a href="${REPO}/issues/new?template=new-driver.yml">Add it</a>, or enter its parameters in the app.</p>`;
 }
 

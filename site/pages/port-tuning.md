@@ -20,7 +20,7 @@ You cut the port to the calculated length, measured the box's impedance, and the
 
 A port and a box form a Helmholtz resonator: the air in the port is a mass, and the air in the box is a spring. The tuning frequency Fb depends on the box's volume and on the port's **acoustic mass**, which grows with its length and shrinks with its area. Air also moves just beyond each end of the port, so the port behaves as if it were longer than it really is. That extra length is the **end correction**, and it's where many of the surprises come from.
 
-The textbook end corrections are from Beranek: **0.85 × radius** for an end set in a flat panel (flanged), and **0.61 × radius** for an end in free space (unflanged) [1]. A typical port, flush with the baffle on the outside and open in the box on the inside, gets about 1.46 × radius in total, or **0.732 × diameter**. That's the value this app, WinISD and most calculators use by default [2]. If you know your ports act differently (from your own measurements, or to match another program), change it in **Settings → Ports → End correction K**.
+The textbook end corrections are from Beranek: **0.85 × radius** for an end set in a flat panel (flanged), and **0.61 × radius** for an end in free space (unflanged) [1]. A typical port, flush with the baffle on the outside and open in the box on the inside, gets about 1.46 × radius in total, or **0.732 × diameter**. That's the value this app, WinISD and most calculators use by default [2]. If you know your ports act differently (from your own measurements, or to match another program), change it in **Settings → Simulation → Ports → End correction K**.
 
 ## Why it tunes high
 

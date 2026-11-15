@@ -95,7 +95,7 @@ A 2 m line has to be folded to fit in a cabinet. Under **Fold it into a box**, s
 2. Set the tuning with **Set line length** (or **Set port length** for an MLTL).
 3. Stuff the line until the ripple is under control; use **Best line** to fine-tune.
 4. Check the cone excursion (and an MLTL's port speed) at your real power, with a high-pass filter.
-5. Fold it, check the side view, and print the cut list.
+5. Fold it, check the side view, and print the cut list (**Build → Export → PDF**).
 
 [[Open the worked example|tl-example]]
 

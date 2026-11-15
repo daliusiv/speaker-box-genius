@@ -46,7 +46,7 @@ How much does that matter? Take the worked example: a **Dayton Audio DSA215-8** 
 
 A driver that's within its tolerance can move the F3 of a ported box by more than 10 Hz. Small, tuned boxes like this QB3 alignment are the most sensitive; a big sealed box barely notices.
 
-**How to close it:** measure your own driver. Under **Driver tools**, **Measure from an impedance sweep…** fits the T/S parameters from a free-air sweep made with DATS, REW, ARTA or similar, and a second sweep with a known added mass gives Vas. Measure after a few hours of use, at a low level, with the driver held firmly and well away from walls. To see how sensitive your design is, add your measured (or a ±15 %) driver with **Compare** and look at both curves at once.
+**How to close it:** measure your own driver. Under **Driver → Edit T/S → Fill from**, **Measure from an impedance sweep…** fits the T/S parameters from a free-air sweep made with DATS, REW, ARTA or similar, and a second sweep with a known added mass gives Vas. Measure after a few hours of use, at a low level, with the driver held firmly and well away from walls. To see how sensitive your design is, add your measured (or a ±15 %) driver with **Compare** and look at both curves at once.
 
 ## 2. Baffle step: the simulation is in half space
 
@@ -113,7 +113,7 @@ For a subwoofer this barely matters. For a woofer crossed over at a few hundred 
 1. Measure your driver's T/S parameters, and use them.
 2. Enter the **net** volume, from the volume calculator.
 3. Measure the box's impedance and check that the tuning (the dip between the two peaks) matches the simulation; see [the port tuning guide](/guides/port-tuning/).
-4. Fit the losses: adjust **Leak Ql** until the simulated impedance peaks match the measured ones.
+4. Fit the losses: adjust **Leak Ql** (**Settings → Simulation → Box**) until the simulated impedance peaks match the measured ones.
 5. Measure the response in the near field at 2.83 V, and compare it with the simulation **without** baffle step.
 6. Then turn on baffle step (and room gain) to predict what you'll hear in the room.
 

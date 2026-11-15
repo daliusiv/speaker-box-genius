@@ -69,7 +69,7 @@ Every design is simulated at your power and graded exactly as the app grades it,
 
 ![The example's cone travel at 300 W: within the 14 mm Xmax from 20 Hz up in all three boxes, but below 20 Hz the PR ({{color:assistant-example/1}}) and ported ({{color:assistant-example/2}}) cones unload and pass it.](chart:assistant-example/excursion)
 
-> **Common trap: "within its limits" means safe with any signal.** The grade ignores everything below 20 Hz, but your amplifier doesn't. On the excursion chart the PR box's cone reaches **{{num:assistant-example/1/x@15}} mm at 15 Hz** (Xmax 14), and the card says it's only safe to 80 W down there. Turn on **Signal → High-pass filter**, 24 dB/oct at 18 Hz, and that drops to **9.1 mm**, for an F3 of 25.5 Hz instead of 24.9. The sealed box doesn't need it: its cone tops out at 11.3 mm, even at 10 Hz. See the [subsonic filter guide](/guides/subsonic-filter/).
+> **Common trap: "within its limits" means safe with any signal.** The grade ignores everything below 20 Hz, but your amplifier doesn't. On the excursion chart the PR box's cone reaches **{{num:assistant-example/1/x@15}} mm at 15 Hz** (Xmax 14), and the card says it's only safe to 80 W down there. Turn on **Signal → High-pass**, 24 dB/oct at 18 Hz, and that drops to **9.1 mm**, for an F3 of 25.5 Hz instead of 24.9. The sealed box doesn't need it: its cone tops out at 11.3 mm, even at 10 Hz. See the [subsonic filter guide](/guides/subsonic-filter/).
 
 On a box tuned higher, the deep-bass zone is shaded on the excursion chart, with its own 2 × Xmax line:
 
@@ -85,10 +85,10 @@ On a box tuned higher, the deep-bass zone is shaded on the excursion chart, with
 ## What it tries
 
 - **Sealed:** sized for a Qtc of 0.707 as WinISD sizes it, or as big as your limit allows.
-- **Ported:** the flat QB3 alignment, sized as WinISD sizes it (or the textbook one, if **Settings → Box presets** says so), capped at your limit; in a smaller box, the tuning with the lowest F3 that stays flat. The port is the simplest that fits straight inside the box and stays under the chuffing line at your power: a plain tube, then a flared tube, then a slot along a wall. If none does both, it gets the one that fits and is graded over the limit, as in the example.
+- **Ported:** the flat QB3 alignment, sized as WinISD sizes it (or the textbook one, if **Settings → Simulation → Box → Box presets** says so), capped at your limit; in a smaller box, the tuning with the lowest F3 that stays flat. The port is the simplest that fits straight inside the box and stays under the chuffing line at your power: a plain tube, then a flared tube, then a slot along a wall. If none does both, it gets the one that fits and is graded over the limit, as in the example.
 - **Passive radiator boxes** (on by default for home subs, bookshelf woofers and towers; tick **Passive radiator** for the others): the ported box's size and tuning with the database's PRs instead of a port. The app's PR finder picks them, in groups of 1, 2 or 4, tuned with added mass. The finder sizes them so they don't run out of travel before the driver reaches its Xmax (from 20 Hz up), which is why a 12″ driver can end up with four 10″ PRs. A PR that runs out of travel first, or needs more than 3 × its own mass added, is ruled out. With **My space**, one that won't fit a face of the space is ruled out too. Without it, the card notes when the driver and PRs won't all fit the panels of a cube-shaped box of that volume, such as an 18″ PR on an 80 L box, so you can plan the box around them.
 - **Transmission lines** (bookshelf, tower and "something else"): a mass-loaded line (MLTL) and a classic tapered line from the app's line presets. Each is narrowed to your volume, tuned, and folded with the app's fold tool into a cabinet at most 125 cm tall, 50 cm deep and 45 cm wide. Lines longer than 3 m, or narrower on average than 0.8 × the cone, are left out.
-- **Bandpass boxes** (car, home and "something else" subwoofers): 4th order (sealed rear, ported front) and 6th order (both ported), found by a search within your volume. A bandpass box only plays a band, so its band (−3 dB from its own peak) has to reach at least 80 Hz to cross over to your main speakers. The same search is the **Size for a flat band** button on any bandpass design.
+- **Bandpass boxes** (car, home and "something else" subwoofers): 4th order (sealed rear, ported front) and 6th order (both ported), found by a search within your volume. A bandpass box only plays a band, so its band (−3 dB from its own peak) has to reach at least 80 Hz to cross over to your main speakers. The same search is the **Size this bandpass** button on any bandpass design.
 
 Passive radiators, lines and bandpass boxes take longer to work out, so they're tried after the plain boxes. PRs are tried for 20 drivers, lines for 10 and bandpass boxes for 30. Half of each set are the best drivers from the plain boxes, half the ones whose parameters suit that box best. They appear when that search finishes, or earlier with **Show them now**.
 
@@ -132,7 +132,7 @@ When filling the space reaches at least 3 % lower F3 than the flat alignment, a 
 
 ## Good to know
 
-- **The chuffing line** (17 m/s by default, peak) is the same setting as **Settings → Ports**. Car SPL builds often accept 25–30 m/s; see the [port chuffing guide](/guides/port-chuffing/).
+- **The chuffing line** (17 m/s by default, peak) is the same setting as **Settings → Limits → Port speed → Chuffing line**. Car SPL builds often accept 25–30 m/s; see the [port chuffing guide](/guides/port-chuffing/).
 - **DVC drivers are wired for your amplifier.** A dual voice coil driver's coils are wired to suit the lowest load you gave, and the card says how: "Coils in series: 8 Ω" above.
 - **Driver data comes from the manufacturers' published figures** [1][2]. Check the datasheet before you buy, and [measure your driver](/guides/thiele-small-parameters/) if the box matters.
 - **The assistant starts a project; it doesn't add to the one you have.** When the current project is in use, it opens in a new tab.

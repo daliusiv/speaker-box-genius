@@ -57,7 +57,7 @@ The same table answers the amplifier question directly: going from half power to
 
 ## What a hot coil does to a ported subwoofer
 
-The example: a **Dayton Audio RSS315HF-4** 12″ in a flat ported box (Keele's alignment, 83.5 L tuned to 23.8 Hz, 12.5 cm port), driven at the same **25 V** with the coil at 20, 120 and 180 °C. Turn on the temperature in **Settings → Voice coil °C**; the app's model matches Hornresp's Power Compression tool at 120 °C (see the [validation page](/validation/)).
+The example: a **Dayton Audio RSS315HF-4** 12″ in a flat ported box (Keele's alignment, 83.5 L tuned to 23.8 Hz, 12.5 cm port), driven at the same **25 V** with the coil at 20, 120 and 180 °C. Turn on the temperature in **Settings → Simulation → Voice coil**; the app's model matches Hornresp's Power Compression tool at 120 °C (see the [validation page](/validation/)).
 
 ![The RSS315HF-4 ported box at the same 25 V with the coil at 20 °C ({{color:coil-20+coil-120+coil-180/1}}), 120 °C ({{color:coil-20+coil-120+coil-180/2}}) and 180 °C ({{color:coil-20+coil-120+coil-180/3}}): the level drops, and the shape gains a hump around 40–45 Hz.](chart:coil-20+coil-120+coil-180/spl|coil-20+coil-120+coil-180/response "SPL|Shape: relative response")
 
@@ -120,7 +120,7 @@ But past a point, more watts mostly make heat. For sustained output, these help 
 ## Modelling it in the app
 
 1. Design your box as usual (the app's default, 20 °C, is the datasheet's cold values, as WinISD uses).
-2. In **Settings → Voice coil °C**, enter 100–130 °C for a subwoofer played hard at its rating, more for a driver pushed past it.
+2. In **Settings → Simulation → Voice coil**, set the **Voice coil** temperature to 100–130 °C for a subwoofer played hard at its rating, more for a driver pushed past it.
 3. Look at the response (the shape, not just the level), and at the **Impedance** chart to see where the loss will be largest: where the impedance is lowest.
 4. For a box that will be played hard for long periods, check it at both temperatures. A slightly lower-Q box when cold can sound right when hot.
 5. A measurement that doesn't match after loud playing may simply be a warm coil; see [why a measurement doesn't match the simulation](/guides/simulation-vs-measurement/).

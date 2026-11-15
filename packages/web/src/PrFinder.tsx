@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
+import { Button } from "./ui/index.ts";
 import {
   largestPrFor,
   rankPrResults,
@@ -12,6 +13,7 @@ import {
 } from "@sbg/engine";
 import { DRIVER_AS_PR, loadDriverAsPassiveRadiator, loadPassiveRadiator, type DbIndex } from "./library.ts";
 import { ventedAlignmentFor } from "./presets.ts";
+import { useUnits } from "./units.ts";
 import { startSearch } from "./search.ts";
 import type { PrDesign, PrParams } from "./state.ts";
 
@@ -115,12 +117,13 @@ export function PrFinder(props: {
   const stopRef = useRef<(() => void) | null>(null);
   const [rerun, setRerun] = useState(0);
   const { ctx } = props;
+  const { fmt } = useUnits();
 
   const alignment = ctx.align ? ventedAlignmentFor(ctx.align, ctx.drivers) : null;
   const useAlign = mode === "align" && alignment !== null && !props.linked;
   const target = useAlign
-    ? { vb_l: alignment.vb_l, fb: alignment.fb, label: `${alignment.vb_l.toFixed(1)} L tuned to ${alignment.fb.toFixed(1)} Hz (${alignment.name})` }
-    : { vb_l: props.vb_l, fb: props.design.targetFb, label: `your ${props.vb_l.toFixed(1)} L box tuned to ${props.design.targetFb} Hz` };
+    ? { vb_l: alignment.vb_l, fb: alignment.fb, label: `${fmt(alignment.vb_l, "vol")} tuned to ${alignment.fb.toFixed(1)} Hz (${alignment.name})` }
+    : { vb_l: props.vb_l, fb: props.design.targetFb, label: `your ${fmt(props.vb_l, "vol")} box tuned to ${props.design.targetFb} Hz` };
 
   // Drivers worth trying as PRs here: enough cone area to keep up, and a frame that fits the box.
   const driverRows = (props.db?.drivers ?? []).filter((d) => {
@@ -255,16 +258,15 @@ export function PrFinder(props: {
 
   return (
     <>
-      <button
-        type="button"
-        className="secondary"
+      <Button
+        variant="ghost"
         onClick={open}
         disabled={!ctx.driver || !props.db}
         title={ctx.driver ? "Try every passive radiator in the database for this driver and box" : "Enter the driver's parameters and Xmax first"}
       >
         <Sparkle />
         Find a PR for this driver…
-      </button>
+      </Button>
       <dialog
         ref={dlg}
         className="library finder"

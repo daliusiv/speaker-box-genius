@@ -121,11 +121,11 @@ Other amplifiers change the picture:
 
 ## Doing it in the app
 
-1. **Driver tab:** pick the driver, then set **Voice coils** to **Dual (DVC)**. Library drivers set this for you.
+1. **Driver tab:** pick the driver, then open **Wiring** and set **Voice coils** to **Dual**. Library drivers set this for you.
 2. **Values are for:** say how the datasheet measured the parameters. Dayton's are for **Both coils in series**. Getting this wrong scales Re and Bl by four.
 3. **Coils wired:** choose **In series** or **In parallel**. The impedance chart shows what the amplifier will see.
-4. **Settings → Amp + cable:** enter your amplifier and wire resistance. **Amp max volts** and **Amp max current** set the amplifier's limits on the Max SPL chart.
-5. **Compare with another driver:** pick the same driver again and wire it the other way. The examples above do this: the solid curves are the main driver wired in series, and the dashed "(compare)" curves are parallel.
+4. **Settings → Simulation → Amplifier & cable:** enter your amplifier and wire resistance in **Amp + cable**. **Settings → Limits → Amplifier**, **Max volts** and **Max current**, set the amplifier's limits on the Max SPL chart.
+5. **Compare:** pick the same driver again and wire it the other way. The examples above do this: the solid curves are the main driver wired in series, and the dashed "(compare)" curves are parallel.
 6. **W or V:** in **W** both wirings get the same rated power, which shows the driver is unchanged. In **V** both get the same voltage, as with an unchanged gain knob.
 
 Set **Amp + cable** to 0 and the two wirings' SPL curves land on top of each other.

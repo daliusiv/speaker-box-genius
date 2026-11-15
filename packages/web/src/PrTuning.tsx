@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
+import { Button } from "./ui/index.ts";
 import { BUMP_LIMIT, bestPrTuning, evaluateTuning, type Fix, type PrTuningResult, type TuningGoal, type TuningPoint } from "@sbg/engine";
 import type { FinderContext } from "./PrFinder.tsx";
 import type { PrDesign } from "./state.ts";
@@ -122,9 +123,8 @@ export function PrTuning(props: {
 
   return (
     <>
-      <button
-        type="button"
-        className="secondary"
+      <Button
+        variant="ghost"
         onClick={open}
         disabled={!usable}
         title={
@@ -137,7 +137,7 @@ export function PrTuning(props: {
       >
         <Sparkle />
         Best tuning…
-      </button>
+      </Button>
       <dialog
         ref={dlg}
         className="library finder tuning"

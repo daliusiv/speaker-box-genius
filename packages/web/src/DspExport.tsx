@@ -1,7 +1,10 @@
 import { useState } from "react";
-import { Card, Select } from "./components.tsx";
+import { Select } from "./components.tsx";
+import { Button, Card } from "./ui/index.ts";
 import { DSP_FORMATS, DSP_RATES, dspFileFor, dspFiltersFor, type DspFormat } from "./dspExport.ts";
 import type { AppState } from "./state.ts";
+
+const capital = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 /** Download the high-pass and EQ as biquads for a DSP or PC equaliser. */
 export function DspExportPanel(props: { state: AppState; notify: (msg: string) => void }) {
@@ -27,8 +30,8 @@ export function DspExportPanel(props: { state: AppState; notify: (msg: string) =
   };
 
   return (
-    <Card title="Export to DSP">
-      <div className="fields">
+    <Card title="Export to DSP" flush>
+      <div className="sg-body">
         {designs.length > 1 && (
           <Select<string> help="EQ can be aimed at one design, so the filters are exported per design."
             label="Design"
@@ -44,15 +47,17 @@ export function DspExportPanel(props: { state: AppState; notify: (msg: string) =
           options={DSP_RATES.map((r) => ({ value: r, text: `${r / 1000} kHz` }))}
           onChange={setFs}
         />
-      </div>
       <p className="hint">
         {hp || eq.length > 0
-          ? `${[hp ? "the high-pass" : "", eq.length ? `${eq.length} EQ stage${eq.length > 1 ? "s" : ""}` : ""].filter(Boolean).join(" and ")} as biquads. ${format === "apo" || format === "camilla" ? "A gain cut in front keeps any boost from clipping. " : ""}Not in it: the passive crossover (that's parts, not DSP), and room gain and baffle step (the room and cabinet do those).`
+          ? `${capital([hp ? "the high-pass" : "", eq.length ? `${eq.length} EQ stage${eq.length > 1 ? "s" : ""}` : ""].filter(Boolean).join(" and "))} as biquads. ${format === "apo" || format === "camilla" ? "A gain cut in front keeps any boost from clipping. " : ""}Not in it: the passive crossover (that's parts, not DSP), and room gain and baffle step (the room and cabinet do those).`
           : "Turn on the high-pass or add EQ above to export it."}
       </p>
-      <button disabled={!hp && eq.length === 0} onClick={download}>
-        Download
-      </button>
+      <div className="sg-actions">
+        <Button variant="primary" icon="download" disabled={!hp && eq.length === 0} onClick={download}>
+          Download
+        </Button>
+      </div>
+      </div>
     </Card>
   );
 }

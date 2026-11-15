@@ -102,7 +102,7 @@ export function GettingStarted(props: { onDismiss: () => void; onAssistant?: () 
       <ol>
         <li>
           <b>Load your driver.</b> In <i>Driver</i>, use <i>Browse drivers</i>{driverCountText(props.drivers)} or type the
-          parameters in; <i>Driver tools</i> pastes from a datasheet or imports a WinISD file. Values you type are never
+          parameters in; <i>Edit T/S → Fill from</i> pastes from a datasheet or imports a WinISD file. Values you type are never
           overwritten; the rest are calculated.
         </li>
         <li>

@@ -174,7 +174,7 @@ The sealed figures follow Nousaine's rules of thumb: about 1.5 lb/ft³ for boxes
 
 ## Modelling stuffing in the app
 
-Each sealed, ported and passive radiator design has a **Stuffing** setting under its box fields. The **Vb** you enter stays the real net volume; the app simulates the volume the stuffing makes the box act as, with the absorption loss (Qa) it adds:
+Each sealed, ported and passive radiator design has a **Stuffing** row on its card. The **Vb** you enter stays the real net volume; the app simulates the volume the stuffing makes the box act as, with the absorption loss (Qa) it adds:
 
 | Stuffing | What the app uses | When |
 |---|---|---|
@@ -187,7 +187,7 @@ The filled values are typical, read from the measurements above, not a predictio
 
 With **Filled**, the card also shows how much fibre to weigh out for the box's net volume, and the build sheet repeats it. For a ported or PR box it shows how far the fill lowers the tuning. The presets (Qtc 0.707, QB3 and the others) size a stuffed box so that it *acts* as the alignment's volume, so you build a smaller box.
 
-Because each design has its own stuffing, you can compare an empty box with a stuffed one on the same charts: duplicate the design and set **Stuffing** on the copy. Settings' **Absorb Qa** still applies to every design without stuffing. Don't subtract the fill in the **Volume** calculator; it takes up only 1–2 % of the box.
+Because each design has its own stuffing, you can compare an empty box with a stuffed one on the same charts: duplicate the design and set **Stuffing** on the copy. Settings' **Absorb Qa** still applies to every design without stuffing. Don't subtract the fill in the **Build** tab's net volume; it takes up only 1–2 % of the box.
 
 ## How to measure what your stuffing did
 
@@ -195,7 +195,8 @@ The surest way to know how big your stuffed box acts is to measure it, the way N
 
 1. Measure the driver's own **Fs** and **Vas** first (see the [Thiele/Small parameters guide](/guides/thiele-small-parameters/); the app can fit them from a free-air impedance sweep). The result below is only as good as these.
 2. Measure the box's impedance with the stuffing in place (DATS, REW, ARTA or similar) and save it as a `.zma` file.
-3. On the design's card, open **Fit to a measured impedance sweep** under **Stuffing**, load the sweep and press **Fit**. The app compares its simulation of your driver in the box with the measurement around the resonance peaks and finds the volume the box acts as and its **Qa**. **Match** says how close the fitted simulation gets. More than about 15 % off, or a result stuck at the ends of the search (a box 40 % bigger, almost no Qa), means something besides the stuffing differs (the driver's parameters, a leak, the port): the app says what to check and doesn't offer the values. A free-air sweep of the driver is recognised and sent to the right place instead (its peak sits at the driver's Fs, not the box's resonance).
+3. On the design's card, open **Stuffing** and then **Fit to a measured impedance sweep**, load the sweep and press **Fit**. The app compares its simulation of your driver in the box with the measurement around the resonance peaks and finds the volume the box acts as and its **Qa**. **Match** says how close the fitted simulation gets. More than about 15 % off, or a result stuck at the ends of the search (a box 40 % bigger, almost no Qa), means something besides the stuffing differs (the driver's parameters, a leak, the port): the app says what to check and doesn't offer the values. A free-air sweep of the driver is recognised and sent to the right place instead (its peak sits at the driver's Fs, not the box's resonance).
+   Under the result, **Likely … L and Qa …** says how far to trust it. The app refits with each of the driver's Vas, Fs, Qes and Qms nudged up and down by how far it could be off, adds how flat the fit itself is, and combines them (root-sum-square). Your own values (typed in or measured) are allowed Vas ±10 %, Fs ±2 %, Qes ±5 %, Qms ±10 %; a database driver's untouched datasheet values Vas ±25 %, Fs ±15 %, Qes ±15 %, Qms ±20 %, since production drivers vary that much. In a sealed box Vas and Fs move it most (the box's peak only tells the volume relative to the driver's own compliance); a ported box's two peaks pin the volume down better. When the range is wide (the volume ±15 % or more, or Qa varying more than 2.5 times), the app says several sizes fit about as well: measure the driver first, then fit again.
 4. **Use these values** sets the design's stuffing to **Custom** with them and shows the impedance chart, with your sweep drawn over the simulation.
 
 To check by hand, the box resonance **fc** is the impedance peak, and the box volume the driver sees is:
@@ -204,7 +205,7 @@ To check by hand, the box resonance **fc** is the impedance peak, and the box vo
 Vb(effective) = Vas / ((fc / Fs)² − 1)
 ```
 
-For the RSS265HF-4 (Fs 25.6 Hz, Vas 54 L), the empty 18 L box peaks at 51.2 Hz. If the stuffed box peaks at 47.4 Hz, it's acting like 54 / ((47.4 / 25.6)² − 1) = **22.2 L**, about 23 % bigger. That formula ignores the voice coil's inductance and the box's losses; the app's fit uses the whole curve and includes both. Either way, treat the result as within about 10 %. For a ported box, the fit works on both impedance peaks; [why a measurement doesn't match the simulation](/guides/simulation-vs-measurement/) covers the other usual causes of a mismatch, and the [box losses guide](/guides/box-losses/) explains the loss Qs.
+For the RSS265HF-4 (Fs 25.6 Hz, Vas 54 L), the empty 18 L box peaks at 51.2 Hz. If the stuffed box peaks at 47.4 Hz, it's acting like 54 / ((47.4 / 25.6)² − 1) = **22.2 L**, about 23 % bigger. That formula ignores the voice coil's inductance and the box's losses; the app's fit uses the whole curve and includes both. Either way, the result is only as close as the driver's Vas: the app's **Likely** range shows how close. For a ported box, the fit works on both impedance peaks; [why a measurement doesn't match the simulation](/guides/simulation-vs-measurement/) covers the other usual causes of a mismatch, and the [box losses guide](/guides/box-losses/) explains the loss Qs.
 
 ## The forum claims, checked
 

@@ -1,4 +1,5 @@
 import { REPO } from "./components.tsx";
+import { plainName } from "./driverName.ts";
 import type { AppState } from "./state.ts";
 
 /**
@@ -9,7 +10,7 @@ import type { AppState } from "./state.ts";
 export function submitDriverUrl(s: AppState): string {
   const t = s.ts;
   const v = (x: number | undefined) => (x === undefined ? "" : String(x));
-  const name = s.driverName.replace(/\s*\((measured|fictional)\)\s*$/i, "").trim();
+  const name = plainName(s.driverName);
   const brand = s.driverBrand && name.startsWith(s.driverBrand) ? s.driverBrand : "";
   const model = name.slice(brand.length).trim();
   const ts = [

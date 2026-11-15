@@ -93,7 +93,7 @@ test("coaxial: the woofer block only", () => {
   assert.match(r.driver!.notes!, /Coaxial/);
 });
 
-test("passive radiator: Xmech used for Xmax, said so", () => {
+test("passive radiator: with no Xmax, Xmech is kept as the mechanical limit", () => {
   const items = [
     "Effective piston area, Sd 210 cm2", "Free air resonance, Fs 19 Hz", "Compliance, Cms 0.5 mm/N", "Moving mass incl. air,Mms 141 g",
     "Maximum mechanical cone excursion,Xmech ± 19mm", "Mechanical loss, Rms 1.1 kg/s", "Mechanical Q-factor, Qms 15.3",
@@ -103,9 +103,9 @@ test("passive radiator: Xmech used for Xmax, said so", () => {
   assert.equal(r.kind, "passive-radiator", r.reason ?? "");
   const pr = r.pr!;
   assert.deepEqual(validatePassiveRadiator(pr), []);
-  assert.deepEqual(pr.params, { mms_g: 141, sd_cm2: 210, xmax_mm: 19, fs: 19, qms: 15.3, vas_l: 31.2, cms_mm_per_n: 0.5 });
+  assert.deepEqual(pr.params, { mms_g: 141, sd_cm2: 210, xmech_mm: 19, fs: 19, qms: 15.3, vas_l: 31.2, cms_mm_per_n: 0.5 });
   assert.equal(pr.size_in, 8);
-  assert.match(pr.notes!, /Xmech/);
+  assert.equal(pr.notes, undefined);
 });
 
 test("missing values: skipped with the reason", () => {
@@ -118,5 +118,6 @@ test("passive radiator: the 'Max Mechanical Cone Excursion' label too", () => {
   const items = ["Effective piston area, Sd 506 cm2", "Free air resonance, Fs 14 Hz", "Moving mass incl. air, Mms 294 g", "Max Mechanical Cone Excursion, Xmech ±17 mm", "Mechanical Q-factor, Qms 8.62", "Equivalent volume, Vas 160 liters"];
   const r = parseProduct(product("12″ SB34NRX-00 / Norex", ["passive-radiators"]), page(items), "2026-11-04");
   assert.equal(r.kind, "passive-radiator", r.reason ?? "");
-  assert.equal(r.pr!.params.xmax_mm, 17);
+  assert.equal(r.pr!.params.xmax_mm, undefined);
+  assert.equal(r.pr!.params.xmech_mm, 17);
 });

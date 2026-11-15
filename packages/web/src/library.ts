@@ -21,7 +21,7 @@ export interface DbIndex {
     pe_w?: number;
     sd_cm2?: number;
   } & DataQuality)[];
-  passiveRadiators: ({ id: string; brand: string; model: string; size_in?: number; sd_cm2?: number; xmax_mm?: number } & DataQuality)[];
+  passiveRadiators: ({ id: string; brand: string; model: string; size_in?: number; sd_cm2?: number; xmax_mm?: number; xmech?: boolean } & DataQuality)[];
 }
 
 /** Where an entry's values came from, and anything that needs checking (packages/db-tools/src/plausibility.ts). */
@@ -68,7 +68,9 @@ interface PrRecord {
   params: {
     mms_g: number;
     sd_cm2: number;
-    xmax_mm: number;
+    /** One of the two, or both: linear Xmax, or only the mechanical limit. */
+    xmax_mm?: number;
+    xmech_mm?: number;
     qms?: number;
     vas_l?: number;
     cms_mm_per_n?: number;
@@ -192,7 +194,14 @@ export async function loadPassiveRadiator(
   }
   return {
     name: `${rec.brand} ${rec.model}`,
-    params: { mms_g: p.mms_g, sd_cm2: p.sd_cm2, xmax_mm: p.xmax_mm, qms: p.qms ?? 10, vas_l: Math.round(vas * 10) / 10 },
+    params: {
+      mms_g: p.mms_g,
+      sd_cm2: p.sd_cm2,
+      xmax_mm: p.xmax_mm ?? p.xmech_mm!,
+      qms: p.qms ?? 10,
+      vas_l: Math.round(vas * 10) / 10,
+      ...(p.xmax_mm === undefined ? { xmech: true } : {}),
+    },
     displacement_l: displacementOf(rec.physical),
     cutout_mm: rec.physical?.cutout_mm,
     ...(p.max_added_mass_g !== undefined ? { maxAdded_g: p.max_added_mass_g } : {}),

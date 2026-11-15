@@ -545,7 +545,7 @@ export function LineBody(p: {
           label="Mouth"
           value={d.mouth}
           options={[
-            { value: "front", text: "Next to the driver" },
+            { value: "front", text: "Beside driver" },
             ...(horn ? [] : [{ value: "back" as const, text: `On the back${fold ? ` (${Math.round(fold.outside.depth / 10)} cm further)` : ""}` }]),
             { value: "custom", text: "Further away by…" },
           ]}

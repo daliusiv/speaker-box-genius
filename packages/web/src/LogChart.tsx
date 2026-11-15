@@ -17,10 +17,11 @@ const Crosshair = createContext<{ f: number | null; set: (f: number | null) => v
 export function CrosshairProvider({ children }: { children: ReactNode }) {
   const [f, set] = useState<number | null>(null);
   // On touch screens the values stay after a tap; tapping anywhere outside a chart clears them.
+  // The legend table counts as the chart: on a phone it scrolls sideways to show the cursor's columns.
   useEffect(() => {
     if (f === null) return;
     const clear = (e: globalThis.PointerEvent) => {
-      if (!(e.target instanceof Element) || !e.target.closest("figure.chart svg")) set(null);
+      if (!(e.target instanceof Element) || !e.target.closest("figure.chart svg, figure.chart .legend-wrap")) set(null);
     };
     addEventListener("pointerdown", clear);
     return () => removeEventListener("pointerdown", clear);
@@ -51,6 +52,8 @@ export interface Series {
   cols?: readonly (readonly string[])[];
   /** Left out when marking the leader (e.g. a measurement, which isn't a box to choose). */
   noRank?: boolean;
+  /** Drawn faint (opacity 0.35) but still in the legend: a reference or inactive curve. */
+  fade?: boolean;
 }
 
 /**
@@ -64,6 +67,8 @@ export interface Ribbon {
   kinds: readonly string[];
   /** A comparison curve's row: an outlined marker, as its curve is dashed. */
   hollow?: boolean;
+  /** Draw the label as text in the row's left margin (instead of a swatch). */
+  showLabel?: boolean;
 }
 
 export { OVER_RED } from "./palette.ts";
@@ -148,8 +153,12 @@ interface Props {
   forum?: boolean;
   /** Edit mode: these handles can be dragged, and the hover readout pauses. */
   handles?: ChartHandle[];
-  /** A line under the caption (edit mode's hint and buttons). */
+  /** A line under the caption (before the plot). */
   below?: ReactNode;
+  /** Edit mode's controls: right after the plot and its limits strip, before the legend table. */
+  after?: ReactNode;
+  /** Edit mode: caption, plot and `after` sit together in a tinted, outlined zone inside the card. */
+  zone?: boolean;
   /** Notes and caveats, behind an (i) button beside the title instead of text under the chart. */
   info?: ReactNode;
   /** The chart's own legend columns (each series' `cols`, at the cursor), after Peak. */
@@ -164,6 +173,10 @@ interface Props {
   onSelect?: (id: string | null) => void;
   /** The picked handle, drawn ringed. */
   selected?: string | null;
+  /** Edit mode: the plot itself was tapped (no handle near), at this frequency and value. */
+  onPlotTap?: (f: number, y: number) => void;
+  /** Least number of ribbon rows to leave room for, so the chart doesn't jump as ribbons come and go. */
+  ribbonReserve?: number;
   /**
    * Drawn once, not live (a guide page, built ahead of time): sized for this many screen pixels
    * across instead of measuring itself, no hover hint, and a cursor only where `at` puts it.
@@ -177,7 +190,7 @@ export interface ChartHandle {
   f: number;
   y: number;
   color: string;
-  shape: "diamond" | "dot";
+  shape: "diamond" | "dot" | "triangle";
   /** "x": slides along the frequency axis only; "xy": anywhere. */
   axes: "x" | "xy";
   /** What it is, for screen readers and the bubble ("Ported: tuning"). */
@@ -248,6 +261,8 @@ export function LogChart({
   forum,
   handles = [],
   below,
+  after,
+  zone,
   info,
   columns = [],
   noteLabel = "Note",
@@ -255,6 +270,8 @@ export function LogChart({
   noPeak = false,
   onSelect,
   selected,
+  onPlotTap,
+  ribbonReserve = 0,
   still,
 }: Props) {
   const clipId = useId();
@@ -324,7 +341,10 @@ export function LogChart({
   const editing = handles.length > 0;
   // The handle being dragged (or focused from the keyboard): its bubble shows.
   const [active, setActive] = useState<string | null>(null);
+  // A handle focused from the keyboard (not by a tap or click): its readout shows, as when dragging.
+  const [keyFocus, setKeyFocus] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
+  const readout = dragging ?? keyFocus;
   const movedRef = useRef(false);
   // The wheel over a handle (EQ: its Q) mustn't scroll the page too, which needs a
   // non-passive listener; React's onWheel can't prevent the scroll.
@@ -475,7 +495,8 @@ export function LogChart({
   // Limit strip under the plot: one row per design, then a legend of the kinds shown.
   const ROW = 11 * k;
   const usedKinds = Object.keys(ribbonKinds).filter((kind) => ribbons.some((r) => r.kinds.includes(kind)));
-  const ribbonH = ribbons.length > 0 ? 8 * k + ribbons.length * ROW + 20 * k : 0;
+  const ribbonRows = ribbonReserve > 0 ? Math.max(ribbons.length, ribbonReserve) : ribbons.length;
+  const ribbonH = ribbonRows > 0 ? 8 * k + ribbonRows * ROW + 20 * k : 0;
   ribbonsHeight = ribbonH;
   const edge = (i: number) =>
     i <= 0 ? PAD.l : i >= freq.length ? W - PAD.r : (xOf(freq[i - 1]!) + xOf(freq[i]!)) / 2;
@@ -493,6 +514,7 @@ export function LogChart({
 
   return (
     <figure className={`chart${editing ? " editing" : ""}`} hidden={hidden} data-chart={chartId} data-forum={forum ? "" : undefined}>
+      <div className={zone ? "edit-zone" : "chart-main"}>
       <figcaption>
         <span className="chart-head">
         {!still && tall && shortTitle && shortTitle !== title && info ? (
@@ -519,16 +541,20 @@ export function LogChart({
       </figcaption>
       {below}
       {editing && (
-        // What the handle being dragged is set to, on its own line above the plot: over the
-        // plot it covered the very curve (and handle) being dragged.
+        // What the handle being dragged (or focused from the keyboard) is set to, on its own line
+        // above the plot: over the plot it covered the very curve (and handle) being dragged.
+        // The line is always there in edit mode and never wraps, so the plot doesn't move
+        // under the finger when a drag starts or the text gets longer.
         <div className="handle-readout" role="status">
-          {handles
-            .filter((h) => h.id === (dragging ?? active))
-            .map((h) => (
-              <span key={h.id}>
-                <b>{h.label}</b> {h.text}
-              </span>
-            ))}
+          {readout !== null &&
+            handles
+              .filter((h) => h.id === readout)
+              .map((h) => (
+                <span key={h.id} className="handle-readout-row">
+                  <b>{h.label}</b>
+                  <span className="handle-readout-value">{h.text}</span>
+                </span>
+              ))}
         </div>
       )}
       {/* The values float over the plot, on the side away from the cursor, so nothing
@@ -630,6 +656,10 @@ export function LogChart({
           }
           if (!best) {
             onSelect?.(null);
+            if (onPlotTap) {
+              const p = toData(e, e.currentTarget);
+              onPlotTap(p.f, p.y);
+            }
             return;
           }
           onSelect?.(best.id);
@@ -641,6 +671,7 @@ export function LogChart({
         }}
         onPointerUp={() => setDragging(null)}
         onPointerCancel={() => setDragging(null)}
+        style={ribbons.some((r) => r.showLabel) ? { overflow: "visible" } : undefined}
         // A finger lifting also "leaves"; keep the values up after a tap (a tap elsewhere clears them).
         onPointerLeave={(e) => e.pointerType === "mouse" && setHoverF(null)}
       >
@@ -723,9 +754,9 @@ export function LogChart({
               <text
                 className={limitStyle === "guide" ? "limit-label guide-label" : "limit-label"}
                 // Guides alternate ends so labels of nearby levels (−3 / −6 dB) don't overlap.
-                x={limitStyle === "guide" && li % 2 === 0 ? PAD.l + 4 : W - PAD.r - 4}
+                x={limitStyle === "guide" && li % 2 === 0 && !editing ? PAD.l + 4 : W - PAD.r - 4}
                 y={yOf(l.value) - 4}
-                textAnchor={limitStyle === "guide" && li % 2 === 0 ? "start" : "end"}
+                textAnchor={limitStyle === "guide" && li % 2 === 0 && !editing ? "start" : "end"}
                 fill={l.color}
                 {...fs(11)}
               >
@@ -763,6 +794,7 @@ export function LogChart({
             return (
               <path
                 key={s.label}
+                className={s.fade ? "fade" : undefined}
                 d={pathOf(s.y!)}
                 fill="none"
                 stroke={s.color}
@@ -826,11 +858,15 @@ export function LogChart({
                 role="slider"
                 aria-label={h.label}
                 aria-valuetext={h.text}
-                onFocus={() => {
+                onFocus={(e) => {
                   setActive(h.id);
+                  if (e.currentTarget.matches(":focus-visible")) setKeyFocus(h.id);
                   onSelect?.(h.id);
                 }}
-                onBlur={() => setActive((a) => (a === h.id ? null : a))}
+                onBlur={() => {
+                  setActive((a) => (a === h.id ? null : a));
+                  setKeyFocus((a) => (a === h.id ? null : a));
+                }}
                 onKeyDown={(e) => {
                   if ((e.key === "Delete" || e.key === "Backspace") && h.onRemove) {
                     e.preventDefault();
@@ -851,7 +887,9 @@ export function LogChart({
                 {/* A finger-sized target around a small mark. */}
                 <circle className="handle-hit" cx={x} cy={y} r={22 * k} />
                 {h.axes === "xy" && <line className="handle-stem" x1={x} x2={x} y1={yOf(Math.min(hi, Math.max(lo, 0)))} y2={y} stroke={h.color} {...sw(1.5)} />}
-                {h.shape === "diamond" ? (
+                {h.shape === "triangle" ? (
+                  <path className="handle-mark" d={`M${x} ${y - r * 1.3}L${x + r * 1.3} ${y + r * 1}L${x - r * 1.3} ${y + r * 1}Z`} fill={h.color} {...sw(2)} />
+                ) : h.shape === "diamond" ? (
                   <path className="handle-mark" d={`M${x} ${y - r * 1.3}L${x + r * 1.3} ${y}L${x} ${y + r * 1.3}L${x - r * 1.3} ${y}Z`} fill={h.color} {...sw(2)} />
                 ) : (
                   <circle className="handle-mark" cx={x} cy={y} r={r} fill={h.color} {...sw(2)} />
@@ -867,7 +905,11 @@ export function LogChart({
               return (
                 <g key={r.label}>
                   <title>{r.label}</title>
-                  {r.hollow ? (
+                  {r.showLabel ? (
+                    <text className="tick ribbon-label" x={PAD.l - 4 * k} y={y + 7 * k} textAnchor="end" {...fs(9)}>
+                      {r.label}
+                    </text>
+                  ) : r.hollow ? (
                     <rect x={PAD.l - 11.4 * k} y={y + 0.6 * k} width={5.8 * k} height={5.8 * k} rx={1.2 * k} fill="none" stroke={r.color} strokeWidth={1.2 * k} />
                   ) : (
                     <rect x={PAD.l - 12 * k} y={y} width={7 * k} height={7 * k} rx={1.5 * k} fill={r.color} />
@@ -889,7 +931,7 @@ export function LogChart({
               const x = legendX;
               const { label, color } = ribbonKinds[kind]!;
               legendX += 16 * k + label.length * 6.2 * k + 14 * k;
-              const y = H + 6 * k + ribbons.length * ROW + 10 * k;
+              const y = H + 6 * k + ribbonRows * ROW + 10 * k;
               return (
                 <g key={kind}>
                   <rect x={x} y={y - 7 * k} width={9 * k} height={9 * k} rx={1.5 * k} fill={color} />
@@ -902,6 +944,8 @@ export function LogChart({
           </g>
         )}
       </svg>
+      </div>
+      {after}
       </div>
       {/* The legend: every curve, its value at the cursor, its peak and the chart's own columns. */}
       <div className={still ? undefined : "legend-below"} role="status" aria-live="off">

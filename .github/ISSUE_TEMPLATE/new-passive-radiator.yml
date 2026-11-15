@@ -35,6 +35,7 @@ body:
         Cms (mm/N):
         Sd (cm²):
         Xmax (mm, one way):
+        Xmech (mm, one way, only if no Xmax):
         Maximum added mass (g):
     validations:
       required: true

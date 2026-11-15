@@ -56,7 +56,7 @@ You can check a datasheet with these. For the DSA215-8, 2π × 35 × 0.0346 × 5
 - about 0.4 to 0.6: either (the RSS210HF-4, at 0.57, near the top);
 - over about 0.6: sealed, or open baffle.
 
-**EBP**, Fs ÷ Qes, says the same thing another way: under 50 leans sealed, over 100 leans ported, in between either [4]. The DSA215-8's 88 leans ported; the RSS210HF-4's 43 says sealed. The app's **Driver** tab puts both rules in one line under the parameters: "Box type: EBP 88 (Fs/Qes), Qts 0.33: leans ported, sealed can work too."
+**EBP**, Fs ÷ Qes, says the same thing another way: under 50 leans sealed, over 100 leans ported, in between either [4]. The DSA215-8's 88 leans ported; the RSS210HF-4's 43 says sealed. The app's **Driver → Edit T/S** puts both rules under the parameters: "Box: leans ported, sealed can work too", with "EBP 88 · Qts 0.33".
 
 **Vas and Qts together decide the box size.** For a sealed box with Qtc 0.707, Vb = Vas / ((0.707/Qts)² − 1) [5]. A low Qts shrinks the box fast:
 
@@ -124,9 +124,9 @@ Any complete set describes the driver, and the rest follows. In Speaker Box Geni
 
 - **What you type is never changed.** Your values are bold with a cyan edge; what the app works out is grey. Type them in any order. Above, six pasted values give Mms 35.00 g and Bl 10.66 T·m, within about 1 % of the datasheet's 34.6 g and 10.6 T·m.
 - **Contradictions are flagged.** If you type more values than needed and they disagree by more than 3 %, the app says which ones and lets you use the calculated value. The simulation always uses Fs, Qms, Qes, Vas, Re and Sd.
-- **Paste the datasheet.** **Driver → Paste datasheet** (or **Driver tools → Paste from datasheet…**) picks the values out of a pasted spec table and converts units: "1.32 ft.³" as Dayton writes it, "1.9 ft3", "35630 mm²", "33 in²". A number with a unit it can't read is left out, and it says which line to type by hand.
+- **Paste the datasheet.** **Driver → Edit T/S → Fill from → Paste from datasheet…** picks the values out of a pasted spec table and converts units: "1.32 ft.³" as Dayton writes it, "1.9 ft3", "35630 mm²", "33 in²". A number with a unit it can't read is left out, and it says which line to type by hand.
 - **Or pick the driver** from the database of about 1,610 drivers. Each also has [its own page](/drivers/) with its parameters and suggested boxes.
-- **Measure your own.** **Driver tools → Measure from an impedance sweep…** fits the T/S parameters to a DATS, REW or ARTA sweep (.zma), and a second sweep with a known added mass gives Vas. A mass that drops Fs by roughly 10–30 % works well [10].
+- **Measure your own.** **Driver → Edit T/S → Fill from → Measure from an impedance sweep…** fits the T/S parameters to a DATS, REW or ARTA sweep (.zma), and a second sweep with a known added mass gives Vas. A mass that drops Fs by roughly 10–30 % works well [10].
 
 [[Open the worked example|ts-example]]
 

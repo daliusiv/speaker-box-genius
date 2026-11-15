@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { REPO_ROOT } from "../packages/db-tools/src/load.ts";
+import { tempDir } from "./tempDir.ts";
 
 /**
  * scripts/sync-public.sh against throwaway repos: a bare "dev" and "public" remote, a
@@ -23,7 +23,7 @@ function git(cwd: string, ...args: string[]): string {
 }
 
 function setup() {
-  const root = mkdtempSync(join(tmpdir(), "sbg-sync-"));
+  const root = tempDir("sbg-sync-");
   const dev = join(root, "dev.git"), pub = join(root, "public.git");
   git(root, "init", "-q", "--bare", "-b", "main", dev);
   git(root, "init", "-q", "--bare", "-b", "main", pub);
@@ -68,7 +68,7 @@ test("sync: dev changes are published as one snapshot commit", () => {
   assert.equal(r.status, 0, r.log);
   assert.equal(r.outputs.published, "true");
   assert.equal(read(s.pub, "main", "a.txt"), "one\nTWO\nthree");
-  assert.equal(git(s.pub, "log", "-1", "--format=%s|%an", "main"), "Sync from dev, 2026-11-11|github-actions[bot]");
+  assert.equal(git(s.pub, "log", "-1", "--format=%s|%an", "main"), "Release 2026-11-11|github-actions[bot]");
   assert.ok(!git(s.pub, "log", "--format=%B", "main").includes("secret-ish"), "no dev commit messages on public");
   // Running again changes nothing.
   const again = run(s.sync);
@@ -135,24 +135,56 @@ test("sync: publishing can be held by the checks gate", () => {
   assert.match(r.log, /checks aren't all green/);
 });
 
-test("sync: changelog entries are dated on dev main and become the public commit's description", () => {
+test("sync: changelog entries become the next version on dev main, the public commit's description and a tag", () => {
   const s = setup();
-  const log = (body: string) => `# Changelog\n\nIntro.\n\n## Unreleased\n${body}\n## Earlier\n\nOlder.\n`;
+  const log = (body: string) => `# Changelog\n\nIntro.\n\n${body ? `## Unreleased\n${body}\n` : ""}## Earlier\n\nOlder.\n`;
   commit(s.devWork, "CHANGELOG.md", log(""), "add changelog");
-  run(s.sync); // publishes the empty changelog, no notes
+  const first = run(s.sync); // publishes a changelog with nothing unreleased: no notes, no version, no tag
+  assert.equal(first.outputs.version, undefined, first.log);
+  assert.equal(git(s.pub, "tag"), "");
   commit(s.devWork, "CHANGELOG.md", log("\n### Added\n- Box volume calculator.\n"), "feature with entry");
   const r = run(s.sync);
   assert.equal(r.outputs.published, "true", r.log);
-  // Dev main got the dating commit, and public has the same file.
-  assert.equal(git(s.dev, "log", "-1", "--format=%s|%an", "main"), "Changelog: published 2026-11-11|github-actions[bot]");
+  assert.equal(r.outputs.version, "1.0.0", r.log);
+  // Dev main got the release commit, and public has the same file.
+  assert.equal(git(s.dev, "log", "-1", "--format=%s|%an", "main"), "Changelog: v1.0.0 (2026-11-11)|github-actions[bot]");
   const dated = read(s.dev, "main", "CHANGELOG.md");
-  assert.match(dated, /## Unreleased\n\n## 2026-11-11\n\n### Added\n- Box volume calculator\./);
+  assert.match(dated, /Intro\.\n\n## 1\.0\.0 \(2026-11-11\)\n\n### Added\n- Box volume calculator\./);
+  assert.doesNotMatch(dated, /Unreleased/);
   assert.equal(read(s.pub, "main", "CHANGELOG.md"), dated);
-  assert.equal(git(s.pub, "log", "-1", "--format=%B", "main"), "Sync from dev, 2026-11-11\n\n2026-11-11\n\n### Added\n- Box volume calculator.");
-  // Next night with nothing new: nothing to publish, nothing re-dated.
+  assert.equal(git(s.pub, "log", "-1", "--format=%B", "main"), "Release v1.0.0\n\n1.0.0 (2026-11-11)\n\n### Added\n- Box volume calculator.");
+  assert.equal(git(s.pub, "rev-parse", "v1.0.0"), git(s.pub, "rev-parse", "main"), "public commit tagged v1.0.0");
+  // Next night with nothing new: nothing to publish, no new version.
   const again = run(s.sync, { SYNC_DATE: "2026-11-12" });
   assert.equal(again.outputs.published, "false", again.log);
-  assert.equal(git(s.dev, "log", "-1", "--format=%s", "main"), "Changelog: published 2026-11-11");
+  assert.equal(git(s.dev, "log", "-1", "--format=%s", "main"), "Changelog: v1.0.0 (2026-11-11)");
+  // A fix only: the next patch.
+  commit(s.devWork, "CHANGELOG.md", read(s.dev, "main", "CHANGELOG.md").replace("## 1.0.0", "## Unreleased\n\n### Fixed\n- Port length with two slots.\n\n## 1.0.0"), "fix with entry");
+  const patch = run(s.sync, { SYNC_DATE: "2026-11-13" });
+  assert.equal(patch.outputs.version, "1.0.1", patch.log);
+  assert.equal(git(s.pub, "tag"), "v1.0.0\nv1.0.1");
+  assert.match(git(s.pub, "log", "-1", "--format=%s", "main"), /^Release v1\.0\.1$/);
+});
+
+test("sync: an older \"Sync from dev\" commit on public still counts as the last release", () => {
+  const s = setup();
+  commit(s.devWork, "b.txt", "dev file\n", "dev adds b");
+  // Public main as an older version of the script left it: dev's files in a "Sync from dev" commit.
+  git(s.pubWork, "pull", "-q");
+  git(s.pubWork, "fetch", "-q", s.dev, "main");
+  const tree = git(s.pubWork, "rev-parse", "FETCH_HEAD^{tree}");
+  const old = execFileSync("git", ["commit-tree", tree, "-p", "HEAD", "-m", "Sync from dev, 2026-11-10: v1.0.0"], {
+    cwd: s.pubWork, encoding: "utf8",
+    env: { ...ENV, GIT_AUTHOR_NAME: "github-actions[bot]", GIT_AUTHOR_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com" },
+  }).trim();
+  git(s.pubWork, "push", "-q", "origin", `${old}:refs/heads/main`);
+  commit(s.devWork, "a.txt", "one\ntwo\nfour\n", "dev change");
+  const r = run(s.sync);
+  assert.equal(r.status, 0, r.log);
+  assert.equal(r.outputs.incoming, "false", "nothing on public after the old sync commit to bring back");
+  assert.ok(r.log.includes(`last sync point \`${old.slice(0, 7)}\``), r.log);
+  assert.equal(r.outputs.published, "true", r.log);
+  assert.equal(git(s.pub, "log", "-1", "--format=%s", "main"), "Release 2026-11-11");
 });
 
 test("sync: a public repo with its own history starts from the public commit whose files match dev", () => {

@@ -133,9 +133,9 @@ Our 10″ is the interesting one. EBP 48 says sealed, but Qts 0.45 is comfortabl
 
 ## Doing it in the app
 
-1. **Driver:** pick yours from the database or type in its parameters. Under the parameters, **Box type** shows its EBP, its Qts and which box they point to.
-2. **Boxes:** add a sealed, a ported and a passive radiator design, or press **Size all boxes for this driver**. Each card's preset buttons resize it: **Qtc 0.707** on sealed; **QB3** on ported and PR; all sized as WinISD sizes them. The other families that suit the driver (**C4** and **BB4** for this one) are there too: hover one to see its box and tuning. (**Settings → Box presets → Textbook** switches to the lossless textbook alignments.)
-3. **Power slider:** set it to what you'll use (**Rated** jumps to the driver's rating), and turn on **Signal → High-pass filter**.
+1. **Driver:** pick yours from the database or type in its parameters. Under the parameters (**Edit T/S**), a box hint shows its EBP, its Qts and which box they point to.
+2. **Boxes:** add a sealed, a ported and a passive radiator design, or press **Size all**. Each card's **Preset** choice resizes it: **Qtc 0.707** on sealed; **QB3** on ported and PR; all sized as WinISD sizes them. The other families that suit the driver (**C4** and **BB4** for this one) are in the same list, each with its box, a line on what it does and a small response curve. (**Settings → Simulation → Box → Box presets → Textbook** switches to the lossless textbook alignments.)
+3. **Power slider:** set it to what you'll use (**Rated** jumps to the driver's rating), and turn on **Signal → High-pass**.
 4. **Charts:**
    - **Response:** depth (F3).
    - **Cone excursion:** against the red Xmax line.

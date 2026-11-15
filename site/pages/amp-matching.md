@@ -150,11 +150,11 @@ So the danger isn't "too small an amp", it's an amp of any size driven past its 
 
 ## Doing it in the app
 
-![The app's Settings: Amp max volts and Amp max current, and the helper that works them out from two ratings (350 W into 4 Ω and 550 W into 2 Ω give 37.4 V and 16.6 A).](img/amp-matching-settings.png)
+![Settings → Limits → Amplifier: Max volts and Max current, and From the amp's ratings, which works them out from two ratings (350 W into 4 Ω and 550 W into 2 Ω give 37.4 V and 16.6 A).](img/amp-matching-settings.png)
 
 1. **Driver → Drivers and Wiring:** set how many subs and how they're wired. The line underneath says what the amp sees, nominally and at its lowest (here "2 Ω nominal (Re 1.55 Ω), dipping to 1.58 Ω").
-2. **Settings → Work these out from the amp's ratings:** enter two of its ratings (the 4 Ω one and its lowest) and press **Use**. That fills in **Amp max volts** and **Amp max current**. Use the bridged ratings if you'll bridge it.
-3. **Settings → Power rating vs:** leave it on V²/Re (like WinISD), which matches how drivers are rated. **Real power** lets the sub take more voltage at its impedance peaks, as Hornresp does.
+2. **Settings → Limits → Amplifier → From the amp's ratings:** enter two of its ratings (the 4 Ω one and its lowest) and press **Use … V and … A**. That fills in **Max volts** and **Max current**. Use the bridged ratings if you'll bridge it.
+3. **Settings → Simulation → Amplifier & cable → Power rating vs:** leave it on V²/Re (WinISD's way), which matches how drivers are rated. **Real power** lets the sub take more voltage at its impedance peaks, as Hornresp does.
 4. **Max SPL chart:** the band underneath shows what limits each frequency, and blue means the amplifier. Switch to **Volts** or **Amps** to see what the amp has to deliver, with its own limit as a dashed line.
 5. **Impedance chart:** switch between **Ω** and **Phase** to see how hard a load the boxes are.
 

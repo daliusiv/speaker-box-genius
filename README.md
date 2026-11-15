@@ -6,11 +6,9 @@ Design sealed, ported, passive radiator, bandpass and transmission line boxes fo
 
 **Try it: https://speakerboxgenius.com**
 
-![Dragging a ported box's tuning on the response chart: the port air speed passes the chuffing line and glows red, then Share offers a link, Reddit and diyAudio text, and a forum image](docs/img/hero.gif)
+![Sealed, ported and passive radiator boxes on one chart: at 100 W the ported and PR cones pass Xmax and turn red, a 24 dB/oct high-pass at 20 Hz brings them back under it, the Build tab's 3D view takes the box apart, then Share gives a link, a forum image and Reddit and diyAudio text](docs/img/hero.gif)
 
 Everything runs in your browser. There's nothing to install, no account and no server, and it keeps working offline. It works on phones as well as computers.
-
-> 🚧 **Early preview.** It's usable and tested, but still changing quickly. See [What's next](#whats-next).
 
 ## Features
 
@@ -29,16 +27,16 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 - **SPL**, relative or absolute (dB SPL), with each design's **F3** marked
 - **Cone excursion** with an **Xmax redline**, and **passive radiator excursion** with each PR's own Xmax and a shaded caution band below it (75 % of Xmax by default, a rule of thumb)
-- **Port air velocity** with a **chuffing-risk line** (peak or RMS; 17 m/s by default, your own in Settings → Ports, used by every check and the design assistant)
+- **Port air velocity** with a **chuffing-risk line** (peak or RMS; 17 m/s by default, your own in Settings → Limits → Port speed, used by every check and the design assistant)
 - **Box pressure**: the peak sound pressure inside the box (both chambers of a bandpass), the load on the cone and the walls; matches Hornresp's diaphragm pressure chart
-- **Air distortion**: the 2nd harmonic a box's air spring adds when a big cone squeezes a small box (sealed, ported, PR and bandpass), and that builds up along a line or horn as the wave steepens (checked against Thuras 1935), in % or dBc, at the power set or at max SPL, with each box's peak in the summary and your own limit (Settings → Air distortion); it can also count as a Max SPL limit. The air only: the driver's own distortion isn't modelled
+- **Air distortion**: the 2nd harmonic a box's air spring adds when a big cone squeezes a small box (sealed, ported, PR and bandpass), and that builds up along a line or horn as the wave steepens (checked against Thuras 1935), in % or dBc, at the power set or at max SPL, with each box's peak in the summary and your own limit (Settings → Limits → Air distortion); it can also count as a Max SPL limit. The air only: the driver's own distortion isn't modelled
 - **Maximum SPL**: the loudest each box can play at every frequency, with a band showing what limits it there (Xmax, PR Xmax, port speed or thermal power), and the **amplifier voltage and current** needed to reach it, after the filter and EQ, against your amplifier's limits (typed in, or worked out from its watt ratings)
 - **Impedance** (magnitude or phase, with the lowest load the amplifier sees), **group delay**, and **line load (Za)** for lines and horns
 - For lines: the **cone and mouth** contributions on their own, and **pressure and air speed along the line** at any frequency, showing where stuffing does the most
-- **Edit on the chart:** drag a ported or PR box's tuning, or an EQ point (frequency, gain; tap it for Q and Remove), on the response chart, with mouse, finger or keyboard; Cancel puts everything back as it was
+- **Edit on the chart:** ✎ Edit lets you drag a ported or PR box's tuning, or an EQ point (frequency, gain; tap its chip under the chart for its fields, type, ✓ / ✕ and delete), with mouse, finger or keyboard. Tap the chart and "+ Add" puts a parametric EQ, low or high shelf, high-pass or Linkwitz Transform (sealed boxes) at that frequency, at 0 dB until you drag it. The high-pass is a ▲ handle on its corner (−3 dB, or −6 dB for Linkwitz-Riley; 5–200 Hz; Delete turns it off), a dashed curve shows the EQ chain on its own, and a Limits strip marks where Xmax, PR Xmax, port speed or air distortion is near or passed, with a one-tap "Cut to …" fix (the gain that just fits, or a Linkwitz Transform's fp). Cancel puts everything back as it was
 - Over-limit parts of a curve glow red; hover or tap for the values of every curve at that frequency, with the **leading curve marked** (highest SPL, lowest excursion, and so on)
 - Phone-friendly: tall charts, a legend under each chart, one chart at a time, and a strip of every box's F3 and limits pinned above the controls
-- Every warning leads somewhere: tap "over a limit" (or a red value) to jump to the chart that shows it, or a port warning to the field that fixes it
+- Every warning leads somewhere: tap "⚠ over" (or a red value) to jump to the chart that shows it, or a port warning to the field that fixes it
 
 ### Drivers
 
@@ -55,7 +53,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 ### Sizing and tuning
 
-- **Alignment presets sized like WinISD's wizard**: Qtc 0.5, 0.577 and 0.707 for sealed boxes; QB3, plus C4/SC4 and BB4/SBB4, for ported and PR boxes, giving the same boxes as WinISD (counting its 0.1 Ω amplifier resistance and the box's losses). Settings → Box presets → Textbook gives the lossless textbook alignments instead (QB3/B4, Keele, SQB3, C4/SC4, BB4/SBB4). One tap sizes every box for the driver (sealed at Qtc 0.707, or twice Vas when Qts is so close to 0.707 that the box would run away) and picks each port: the simplest that fits and stays under the chuffing line at the driver's rated power. A single preset keeps your port when its new length fits the box, and otherwise picks one the same way
+- **Alignment presets sized like WinISD's wizard**: Qtc 0.5, 0.577 and 0.707 for sealed boxes; QB3, plus C4/SC4 and BB4/SBB4, for ported and PR boxes, giving the same boxes as WinISD (counting its 0.1 Ω amplifier resistance and the box's losses). Settings → Simulation → Box → Box presets → Textbook gives the lossless textbook alignments instead (QB3/B4, Keele, SQB3, C4/SC4, BB4/SBB4). One tap sizes every box for the driver (sealed at Qtc 0.707, or twice Vas when Qts is so close to 0.707 that the box would run away) and picks each port: the simplest that fits and stays under the chuffing line at the driver's rated power. A single preset keeps your port when its new length fits the box, and otherwise picks one the same way
 - **Find a passive radiator**: tries every PR in the database (and, optionally, woofers used as PRs) in groups of 1, 2 or 4, tunes each with added mass and ranks them by bass extension and spare travel. Also a stand-alone [passive radiator calculator](https://speakerboxgenius.com/calculators/passive-radiator/): the added mass for any box, tuning and PR, and whether the PRs keep up with your driver
 - **Best PR tuning**: the added mass for the flattest response, the deepest bass or the smallest box for a target F3
 - **Port fit checks**: the port length for a tuning, whether it fits inside the box, round or slot ports, flared ends, your own end correction (K), the likely tuning range of a slot along a wall, and an option to model ports as pipes (with their own resonances). Also a stand-alone [port length calculator](https://speakerboxgenius.com/calculators/port-length/)
@@ -73,7 +71,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 - **Real-world net volume calculator** for boxes, car wedges (single slope, exact, with a double-baffle option, a side-view drawing, saw angles and a driver-motor clearance check), cylinders (with their own end-cap thickness), spheres and tapered boxes (all sides; walls taken square to each sloping face), with the shape's lowest standing wave, minus the drivers, passive radiators, ports, bracing and crossover board, linked to a design so its volume follows the calculator
 - **3D take-apart view** of every volume-calculator shape (box, car wedge, tube, sphere, tapered box): turn it round, pull it apart piece by piece, tap a panel for its cut size; drawn by a small built-in renderer, loaded only when opened
-- **Build sheet**: panel sizes, cutouts, port and braces, a **cut list laid out on stock sheets**, metric or imperial (to 1/16″), a print view and a **FreeCAD macro** that builds every panel as a solid, with the air inside checked against the app's volume
+- **Build sheet**: panel sizes, cutouts, port and braces, a **cut list laid out on stock sheets**, metric or imperial (to 1/16″), a PDF export and a **FreeCAD macro** that builds every panel as a solid, with the air inside checked against the app's volume
 
 ### Sharing and projects
 
@@ -83,13 +81,13 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **Hornresp import and export** for transmission lines, horns and sealed, ported and passive radiator boxes (Save & Export, and Open)
 - **Projects** saved in your browser, or as a `.sbgenius` project file you can keep or send (older `.json` saves still open; on desktop the installed app opens `.sbgenius` files with a double-click) (with **New project**, which starts in the design assistant, in a new tab if the current project is in use)
 - **Open / Import** window (☰ menu): your latest browser saves, and one drop zone for project, WinISD, OpenISD and measurement files; or drop a file anywhere on the page. An impedance sweep asks whether to measure the driver or show it on the charts
-- Undo and redo, and help on every input field (hover its label, or select the field)
+- Undo and redo, and help for every setting: the ⓘ on an open row explains its fields, and each card has one for the rest
 - Installable as an app on phones and computers
 
 ### Settings
 
 - **Metric or imperial** units
-- **WinISD** and **Hornresp** presets that set each program's conventions together (air constants, coil inductance, how watts are counted; for Hornresp also the cone's air load, ports as pipes, leaked air and SPL from radiated power), for like-for-like comparisons. Opening a WinISD project sets the WinISD one
+- **Match** WinISD, Hornresp or VituixCAD: one choice sets that program's conventions together (air constants, coil inductance, how watts are counted; for Hornresp also the cone's air load, ports as pipes, leaked air and SPL from radiated power; for VituixCAD its stuffing gain, port sound and F3), for like-for-like comparisons. Opening a WinISD project sets the WinISD one
 - **Your own air**: temperature, humidity and pressure (for altitude or a hot car), which set the air's density and speed of sound
 - Box losses (Ql, Qa, Qp), amplifier and cable resistance (0.1 Ω by default, as WinISD), peak or RMS port speed and the chuffing line
 
@@ -122,20 +120,26 @@ pnpm install
 pnpm validate:db   # check every driver / PR file
 pnpm db:review     # list values that look implausible, with datasheet links
 pnpm test          # engine, database and app tests
-pnpm dev           # run the web app locally
+pnpm dev           # run the web app locally (the UI kit is at /ui/)
+pnpm lint          # tokens up to date, Stylelint on the UI kit
+pnpm test:ui       # screenshots of /ui/ at 390 and 1280 px (Playwright, Chromium)
 pnpm build         # production build (what GitHub Pages serves)
 ```
 
-`pnpm build` also builds the content pages (`site/`): the guides, the validation page and a page per driver. Each driver page gets a share card drawn with headless Chrome, found at `CHROME_PATH` or the usual install paths; set `SBG_CARDS=0` to skip them (CI does). Cards are kept in `.cache/cards` (or `SBG_CARD_CACHE`) and only redrawn when a driver's card changes.
+`pnpm build` also builds the content pages (`site/`): the guides, the validation page and a page per driver. Each driver page gets a share card drawn with headless Chrome, found at `CHROME_PATH` or the usual install paths; set `SBG_CARDS=0` to skip them (the tests do). Cards are kept in `.cache/cards` (or `SBG_CARD_CACHE`) and only redrawn when a driver's card changes.
 
 Merging to `main` builds and deploys to GitHub Pages automatically.
 
 ## What's next
 
-- More manufacturer data (several brands have given permission)
-- A box volume calculator page
-- More cross-checks against other programs
+- More manufacturer data, with where each driver's data comes from shown
+- Similar drivers: substitutes for any driver, simulated in your box
+- More ported and passive radiator alignments, and the tapped-horn preset back
+- A low-pass filter, included in the DSP export
+- A tolerance band on the charts
+- A box volume calculator page on the site, with all the calculators on one page
 - CAD drawings of the build sheet (SVG/DXF)
+- Checks against real, measured boxes
 
 Ideas and requests: [open an issue](../../issues).
 

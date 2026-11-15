@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { REPO } from "./components.tsx";
 import { DRIVER_AS_PR, doubtsXmax, flagText, type DataQuality, type DbIndex } from "./library.ts";
 import { useUnits } from "./units.ts";
+import { Icon } from "./Icon.tsx";
+import { Button, ButtonLink, Chip, Select, TextField } from "./ui/index.ts";
 
 /**
  * Database browser: a button that opens a modal with search, filters and a
@@ -51,15 +53,22 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
   count?: number;
   /** What's chosen now: the button shows it (like a dropdown) instead of `button`. */
   current?: string;
-  /** Shown in the dialog above the search (e.g. renaming the current driver). */
-  extra?: ReactNode;
+  /** Phones: the row's numbers on one line under its name (the table's columns are hidden). */
+  summary: (r: R) => ReactNode;
+  /** The chosen item in two parts on the button: the model bold, then brand · Ω · size, muted. */
+  chosen?: { model: string; meta?: string };
+  /** What the rows are ("drivers"): the search box then says how many there are. */
+  noun?: string;
+  /** No count badge on the button (the search box carries the count). */
+  noCount?: boolean;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const searchBox = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [filters, setFilters] = useState<Filters>(props.initialFilters ?? {});
-  // Phones: the filters fold away behind a button (wide screens always show them).
+  // The filters fold away behind a button, on every screen size.
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersId = useId();
   const filterCount = Object.values(filters).reduce((n, v) => n + v.length, 0);
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 }>({ key: "name", dir: 1 });
   const [cursor, setCursor] = useState(0);
@@ -114,16 +123,39 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
 
   const active = query.trim() !== "" || Object.values(filters).some((v) => v.length > 0);
 
+  // Phones have no column headers to tap, so the sort is a choice at the top of the filters.
+  const sortOptions = props.columns
+    .filter((c) => c.sort || c.key === "name")
+    .flatMap((c) =>
+      c.key === "name"
+        ? [
+            { value: "name:1", label: "Name (A–Z)" },
+            { value: "name:-1", label: "Name (Z–A)" },
+          ]
+        : [
+            { value: `${c.key}:1`, label: `${c.label} (low first)` },
+            { value: `${c.key}:-1`, label: `${c.label} (high first)` },
+          ],
+    );
+
   return (
     <div className="picker">
-      {props.current ? (
+      {props.current && props.chosen ? (
+        <button type="button" className="browse chosen rich" onClick={open} disabled={props.rows.length === 0} title={`${props.current}: tap to choose another`}>
+          <span className="chosen-model">{props.chosen.model}</span>
+          {props.chosen.meta && <span className="chosen-meta">{props.chosen.meta}</span>}
+          <span className="caret" aria-hidden="true">
+            <Icon name="chevronDown" />
+          </span>
+        </button>
+      ) : props.current ? (
         <button type="button" className="browse chosen" onClick={open} disabled={props.rows.length === 0} title={`${props.current}: tap to choose another`}>
           <span className="chosen-name">{props.current.replace(/ \(([^)]*)\)/g, (_, x: string) => `\u00a0(${x.replace(/ /g, "\u00a0")})`)}</span>
           <span className="caret" aria-hidden="true">▾</span>
         </button>
       ) : (
         <button type="button" className="browse" onClick={open} disabled={props.rows.length === 0}>
-          {props.button} <span className="count">{props.count ?? props.rows.length}</span>
+          {props.button} {!props.noCount && <span className="count">{props.count ?? props.rows.length}</span>}
         </button>
       )}
       <dialog
@@ -137,85 +169,72 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
         <div className="lib-inner">
           <header>
             <h2>{props.title}</h2>
-            <a
-              className="icon missing"
-              href={`${REPO}/blob/main/CONTRIBUTING.md`}
-              target="_blank"
-              rel="noopener"
-              title="Missing one? Add it to the database"
-              aria-label="Missing one? Add it to the database"
-            >
-              +
-            </a>
-            <button type="button" className="icon" onClick={close} aria-label="Close">
-              ×
-            </button>
+            <ButtonLink icon="plus" label="Missing one? Add it to the database" href={`${REPO}/blob/main/CONTRIBUTING.md`} target="_blank" />
+            <Button variant="ghost" icon="close" label="Close" onClick={close} />
           </header>
-          {props.extra}
           <div className="lib-searchrow">
-          <input
-            ref={searchBox}
-            type="search"
-            className="lib-search"
-            placeholder="Search, e.g. rss315 or scan 30w"
-            value={query}
-            onChange={(e) => setQuery(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                setCursor((c) => Math.min(c + 1, shown.length - 1));
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                setCursor((c) => Math.max(c - 1, 0));
-              } else if (e.key === "Enter" && shown[cursor]) {
-                e.preventDefault();
-                pick(shown[cursor].id);
-              }
-            }}
-            aria-label="Search"
-          />
-            <button
-              type="button"
-              className={`secondary lib-filter-toggle${filterCount > 0 ? " has-filters" : ""}`}
+            <TextField
+              ref={searchBox}
+              type="search"
+              icon="search"
+              className="lib-search"
+              placeholder={props.noun ? `Search ${props.rows.length.toLocaleString("en")} ${props.noun}` : "Search, e.g. rss315 or scan 30w"}
+              value={query}
+              onChange={(e) => setQuery(e.currentTarget.value)}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setCursor((c) => Math.min(c + 1, shown.length - 1));
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setCursor((c) => Math.max(c - 1, 0));
+                } else if (e.key === "Enter" && shown[cursor]) {
+                  e.preventDefault();
+                  pick(shown[cursor].id);
+                }
+              }}
+              aria-label="Search"
+            />
+            <Button
+              className="lib-filter-toggle"
+              data-active={filterCount > 0 || undefined}
               aria-expanded={filtersOpen}
-              aria-controls="lib-filters"
+              aria-controls={filtersId}
+              aria-label={filterCount > 0 ? `Filters, ${filterCount} on` : "Filters"}
               onClick={() => setFiltersOpen(!filtersOpen)}
             >
-              Filters{filterCount > 0 ? ` (${filterCount})` : ""} {filtersOpen ? "▴" : "▾"}
-            </button>
+              Filters
+              {filterCount > 0 && <Chip tone="accent">{filterCount}</Chip>}
+              <span aria-hidden="true">{filtersOpen ? "▴" : "▾"}</span>
+            </Button>
           </div>
-          <div className={`lib-filters${filtersOpen ? " open" : ""}`} id="lib-filters">
+          <div className={`lib-filters${filtersOpen ? " open" : ""}`} id={filtersId}>
+            <label className="lib-filter lib-sort">
+              <span>Sort by</span>
+              <Select value={`${sort.key}:${sort.dir}`} options={sortOptions} onChange={(v) => {
+                const [key, dir] = v.split(":");
+                setSort({ key: key!, dir: Number(dir) as 1 | -1 });
+              }} />
+            </label>
             {props.filters.map((f) =>
               f.kind === "select" ? (
                 <label key={f.key} className="lib-filter">
                   <span>{f.label}</span>
-                  <select value={filters[f.key]?.[0] ?? ""} onChange={(e) => toggle(f.key, e.currentTarget.value, false)}>
-                    <option value="">All</option>
-                    {f.options.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.text}
-                      </option>
-                    ))}
-                  </select>
+                  <Select
+                    value={filters[f.key]?.[0] ?? ""}
+                    options={[{ value: "", label: "All" }, ...f.options.map((o) => ({ value: o.value, label: o.text }))]}
+                    onChange={(v) => toggle(f.key, v, false)}
+                  />
                 </label>
               ) : (
                 <div key={f.key} className="lib-filter" role="group" aria-label={f.label} title={f.hint}>
                   <span>{f.label}</span>
-                  <div className="chips">
-                    {f.options.map((o) => {
-                      const on = filters[f.key]?.includes(o.value) ?? false;
-                      return (
-                        <button
-                          key={o.value}
-                          type="button"
-                          className={`chip${on ? " on" : ""}`}
-                          aria-pressed={on}
-                          onClick={() => toggle(f.key, o.value, true)}
-                        >
-                          {o.text}
-                        </button>
-                      );
-                    })}
+                  <div className="lib-chips">
+                    {f.options.map((o) => (
+                      <Chip key={o.value} pressed={filters[f.key]?.includes(o.value) ?? false} onClick={() => toggle(f.key, o.value, true)}>
+                        {o.text}
+                      </Chip>
+                    ))}
                   </div>
                 </div>
               ),
@@ -278,6 +297,7 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
                     {props.columns.map((c) => (
                       <td key={c.key} className={`${c.num ? "num" : ""}${c.wide ? " wide" : ""}`}>
                         {c.cell(r)}
+                        {c.key === "name" && <span className="lib-summary">{props.summary(r)}</span>}
                       </td>
                     ))}
                   </tr>
@@ -341,6 +361,17 @@ function xmaxCell(r: { xmax_mm?: number } & DataQuality) {
   );
 }
 
+/** A PR's travel: marked M when the maker publishes only the mechanical limit (Xmech). */
+function prXmaxCell(r: { xmax_mm?: number; xmech?: boolean } & DataQuality) {
+  if (!r.xmech) return xmaxCell(r);
+  return (
+    <span className="lib-mech" title="Mechanical limit (Xmech): no linear Xmax is published">
+      {xmaxCell(r)}
+      <span className="lib-tag">M</span>
+    </span>
+  );
+}
+
 function brandFilter<R extends { brand: string }>(rows: R[]): ChipFilter<R> {
   return {
     key: "brand",
@@ -375,7 +406,8 @@ export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onP
   button?: string;
   title?: string;
   current?: string;
-  extra?: ReactNode;
+  chosen?: { model: string; meta?: string };
+  noCount?: boolean;
 }) {
   const units = useUnits();
   const vol = units.unit("vol");
@@ -449,7 +481,14 @@ export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onP
       button={props.button ?? "Browse drivers"}
       title={props.title ?? "Driver database"}
       current={props.current}
-      extra={props.extra}
+      chosen={props.chosen}
+      noCount={props.noCount}
+      noun="drivers"
+      summary={(r) => (
+        <>
+          {r.size_in ? `${r.size_in}"` : "–"} · {ohmsText(r)} Ω · Fs <b>{fmt(r.fs)}</b> · Qts <b>{fmt(r.qts, 2)}</b> · Xmax <b>{xmaxCell(r)}</b>
+        </>
+      )}
       rows={rows}
       columns={columns}
       filters={filters}
@@ -468,6 +507,8 @@ type PrChoiceRow = PrRow & { kind: "pr" | "driver" };
 export function PassiveRadiatorBrowser(props: {
   rows: DbIndex["passiveRadiators"] | undefined;
   drivers?: DbIndex["drivers"];
+  /** The chosen PR's name: the button shows it, like a dropdown. */
+  current?: string;
   onPick: (id: string) => void;
 }) {
   const rows = useMemo<PrChoiceRow[]>(() => {
@@ -510,12 +551,20 @@ export function PassiveRadiatorBrowser(props: {
       },
       { key: "size", label: "Size", sort: (r) => r.size_in, cell: (r) => (r.size_in ? `${r.size_in}"` : "–"), num: true },
       { key: "sd", label: "Sd cm²", sort: (r) => r.sd_cm2, cell: (r) => fmt(r.sd_cm2, 0), num: true },
-      { key: "xmax", label: "Xmax", sort: (r) => r.xmax_mm, cell: xmaxCell, num: true },
+      { key: "xmax", label: "Xmax", sort: (r) => r.xmax_mm, cell: prXmaxCell, num: true, title: "One-way linear excursion, mm (M: only the mechanical limit, Xmech, is published)" },
     ],
     [],
   );
   return (
     <Browser
+      current={props.current}
+      chosen={props.current ? { model: props.current } : undefined}
+      noun="passive radiators"
+      summary={(r) => (
+        <>
+          {r.size_in ? `${r.size_in}"` : "–"} · Sd <b>{fmt(r.sd_cm2, 0)}</b> cm² · Xmax <b>{prXmaxCell(r)}</b>
+        </>
+      )}
       button="Browse passive radiators"
       title="Passive radiator database"
       rows={rows}

@@ -1,0 +1,45 @@
+/*
+ * The Signal tab: three cards (Signal, Listening space, Export to DSP) whose settings are
+ * section rows that show their values while closed. Tokens only (Stylelint).
+ */
+.sg-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.sg-list .ui-card {
+  overflow: visible;
+}
+
+.sg-list .ui-section-body,
+.sg-body {
+  display: grid;
+}
+
+.sg-body {
+  padding: 0 var(--space-4) var(--space-3);
+}
+
+.sg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-1) 0 var(--space-2);
+}
+
+.sg-actions.sg-start {
+  justify-content: flex-start;
+}
+
+.sg-list .hint,
+.sg-list .warn {
+  margin: var(--space-1) 0 var(--space-2);
+  font-size: var(--text-sm);
+}
+
+/* The last section's open body follows the card's rounded corners. */
+.sg-list .ui-card > .ui-section:last-child > .ui-section-body {
+  border-bottom-right-radius: var(--radius-lg);
+  border-bottom-left-radius: var(--radius-lg);
+}

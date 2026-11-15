@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   import:
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
 
       # pdftotext reads the datasheets; tesseract reads the ones whose table is an image.
       - name: Install pdftotext and tesseract
-        run: sudo apt-get update -q && sudo apt-get install -yq poppler-utils tesseract-ocr
+        run: command -v pdftotext >/dev/null && command -v tesseract >/dev/null || (sudo apt-get update -q && sudo apt-get install -yq poppler-utils tesseract-ocr)
 
       # seas.no doesn't send its intermediate certificate. Fetch it from the address the
       # site's own certificate names (AIA "CA Issuers"), check the chain, and trust it.

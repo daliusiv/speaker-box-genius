@@ -29,6 +29,14 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ENTITY[c]!);
 let index: DbIndex | null = null;
 let driver: LoadedDriver | null = null;
 let prName = "your passive radiator";
+/** The PR's travel is the maker's mechanical limit (Xmech), not a linear Xmax. */
+let prMech = false;
+const XMAX_LABEL = "Xmax (one way)";
+const XMECH_LABEL = "Xmech (one way, maker's limit)";
+function showTravelKind() {
+  const el = document.getElementById("prc-xmax-name");
+  if (el) el.textContent = prMech ? XMECH_LABEL : XMAX_LABEL;
+}
 
 function readInput(): PrCalcInput {
   const pr: PrParams = { mms_g: val("prc-mms"), sd_cm2: val("prc-sd"), vas_l: val("prc-vas"), xmax_mm: val("prc-xmax"), qms: val("prc-qms") > 0 ? val("prc-qms") : 10 };
@@ -88,7 +96,7 @@ function keepUpHtml(i: PrCalcInput, r: PrCalcResult): string {
   let html =
     `<p class="calc-speed ${runsOut ? "over" : "ok"}">${runsOut ? `<strong>${many ? "The PRs run" : "The PR runs"} out of travel first.</strong> ` : ""}When the cone reaches its Xmax, ${many ? "the PRs use" : "the PR uses"} <strong>${pct(c.prUse)}</strong> of ${many ? "their" : "its"} travel` +
     `${runsOut ? `: ${many ? "they hit their" : "it hits its"} ${c.prXmax} mm limit with the cone at ${pct(1 / c.prUse)} of its own` : caution ? `, past the ${pct(CAUTION)} where a PR's suspension starts to stiffen (rule of thumb)` : ""}.` +
-    ` At ${w} W the cone peaks at ${c.x.toFixed(1)} mm (Xmax ${c.xmax} mm) and ${the} at ${c.pr.toFixed(1)} mm (Xmax ${c.prXmax} mm), from 20 Hz up.` +
+    ` At ${w} W the cone peaks at ${c.x.toFixed(1)} mm (Xmax ${c.xmax} mm) and ${the} at ${c.pr.toFixed(1)} mm (${prMech ? "Xmech" : "Xmax"} ${c.prXmax} mm), from 20 Hz up.` +
     (c.f3 ? ` F3 ${c.f3.toFixed(1)} Hz.` : "") +
     `</p>`;
   if (Number.isFinite(c.vdRatio))
@@ -185,6 +193,8 @@ async function pickPr(text: string) {
     set("prc-sd", pr.params.sd_cm2);
     set("prc-vas", pr.params.vas_l);
     set("prc-xmax", pr.params.xmax_mm);
+    prMech = !!pr.params.xmech;
+    showTravelKind();
     set("prc-qms", pr.params.qms);
     set("prc-max", pr.maxAdded_g);
     if (status) status.textContent = `Values from the database${pr.maxAdded_g ? "" : " (no maximum added mass published)"}.`;
@@ -219,11 +229,18 @@ export function start() {
   const form = $("prc-form");
   if (!form) return;
   if (form.dataset.prName) prName = form.dataset.prName;
+  prMech = form.dataset.prMech === "1";
   form.addEventListener("input", (e) => {
     const id = (e.target as HTMLElement).id;
     if (id === "prc-driver" || id === "prc-pr") return;
     // Typed PR values are no longer the database PR's.
-    if (["prc-mms", "prc-sd", "prc-vas", "prc-xmax", "prc-qms"].includes(id)) prName = "your passive radiator";
+    if (["prc-mms", "prc-sd", "prc-vas", "prc-xmax", "prc-qms"].includes(id)) {
+      prName = "your passive radiator";
+      if (prMech) {
+        prMech = false;
+        showTravelKind();
+      }
+    }
     schedule();
   });
   $<HTMLInputElement>("prc-imperial")?.addEventListener("change", () => {

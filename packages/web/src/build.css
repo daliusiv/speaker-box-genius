@@ -1,0 +1,92 @@
+/*
+ * The Build tab: the Box and Cut list cards, whose settings are section rows that show their
+ * values while closed. Tokens only (Stylelint).
+ */
+.bd-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.bd-list .ui-card {
+  overflow: visible;
+}
+
+.bd-list .ui-section-body,
+.bd-body,
+.bd-rows {
+  display: grid;
+}
+
+.bd-body {
+  padding: 0 var(--space-4) var(--space-3);
+}
+
+.bd-switch {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.bd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-1) 0 var(--space-2);
+}
+
+.bd-actions.bd-start {
+  justify-content: flex-start;
+}
+
+/* Size box: as wide as the fields above it. */
+.bd-size .ui-button {
+  justify-content: center;
+  width: var(--size-col-control);
+}
+
+.bd-foot {
+  padding-top: var(--space-2);
+  border-top: var(--border-hairline) solid var(--divider);
+}
+
+.bd-list .hint,
+.bd-list .warn {
+  margin: var(--space-1) 0 var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.bd-list .build-summary {
+  margin: var(--space-2) 0 var(--space-1);
+  font-size: var(--text-md);
+}
+
+.bd-list .cut-table,
+.bd-list .build-list,
+.bd-list .breakdown {
+  margin: var(--space-2) 0;
+  font-size: var(--text-md);
+}
+
+.bd-list .build-warn {
+  margin: 0;
+}
+
+.bd-drawing {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2) 0;
+}
+
+.bd-drawing.is-3d {
+  display: block;
+}
+
+.bd-list .ui-disclosure {
+  margin-bottom: var(--space-2);
+}
+
+/* The last section's open body follows the card's rounded corners. */
+.bd-list .ui-card > .ui-section:last-child > .ui-section-body {
+  border-bottom-right-radius: var(--radius-lg);
+  border-bottom-left-radius: var(--radius-lg);
+}

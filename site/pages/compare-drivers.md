@@ -113,12 +113,12 @@ In the 30 L sealed box the two have **the same ceiling** within 0.2 dB, because 
 Shortlisting? Each driver's [page](/drivers/) shows its suggested boxes, so you can narrow the list first.
 
 1. Pick the first driver on the **Driver** tab and add the boxes you can build on the **Boxes** tab.
-2. Next to **Compare**, pick the second driver. It shows in every box as a dashed curve in the same colour, on every chart. If its database entry has no Xmax or power rating, the message says it's borrowing the main driver's: swap to enter its own.
+2. Open **Compare** and pick the second driver. It shows in every box as a dashed curve in the same colour, on every chart. If its database entry has no Xmax or power rating, the message says it's borrowing the main driver's: swap to enter its own.
 3. Set the power to what your amplifier gives. If the two drivers' impedances differ, switch the drive to **volts**, since an amplifier gives both the same voltage, not the same watts.
 4. Switch the response chart to **dB SPL**. **Relative** puts each curve's own passband at 0 dB, which hides a sensitivity difference.
 5. Read the summary table: each box has a second row for the comparison driver, with its F3 and peak excursion and port speed, in red when over a limit.
 6. Check **Excursion**, then **Max SPL**: its bars show what stops each driver, and **Volts** shows the amplifier each one needs.
-7. Press **Swap** (⇅) to make the second driver the main one, for example to **Size all** for it, then swap back.
+7. Press **⇅ Swap with main** to make the second driver the main one, for example to **Size all** for it, then swap back.
 
 The comparison driver uses the same number of drivers, wiring, filter and settings as the main one. Its voice coil wiring is its own, so you can compare one dual voice coil sub with itself wired the other way, as the [DVC wiring guide](/guides/dvc-wiring/) does. For one big driver against two smaller ones, see [one 15″ or two 10″](/guides/one-15-vs-two-10s/).
 

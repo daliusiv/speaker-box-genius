@@ -75,8 +75,8 @@ On a PC (Equalizer APO), a Raspberry Pi (CamillaDSP) or a miniDSP, the app can w
 
 ## Doing it in the app
 
-1. Set the power you'll use on the Power bar above the charts.
-2. On the **Signal** tab, under **High-pass filter**, pick a filter type, then its slope and frequency.
+1. Set the power you'll use on the Power bar (above the charts; on a phone, under the response chart).
+2. On the **Signal** tab, open **High-pass** and pick a filter type, then its slope and frequency.
 3. Check the **Cone excursion** chart (and the **PR excursion** chart for a PR box): every curve should stay under its red Xmax line.
 4. Check the response: the filter's cost in bass shows straight away.
 

@@ -1,18 +1,20 @@
 #!/usr/bin/env bash
-# Two-way sync between the private dev repo and the public repo (run nightly by
+# Two-way sync between the private dev repo and the public repo (run by hand from
 # .github/workflows/sync-public.yml; can be run by hand in any clone).
 #
 # Needs two remotes in the current repo: $DEV_REMOTE (default "dev") and $PUBLIC_REMOTE
 # (default "public"), both with a `main` branch.
 #
-# 1. Public → dev: commits merged on public main since the last "Sync from dev" commit are
+# 1. Public → dev: commits merged on public main since the last release commit are
 #    cherry-picked (authors kept) onto a branch from dev main, pushed to dev as
 #    $INCOMING_BRANCH, for a PR in dev. A conflict stops the run (exit 3).
 # 2. Dev → public: dev main's files are published as one new commit on public main
-#    ("Sync from dev, <date>", parent = public main), but only when every public change is
+#    ("Release v<version>", or "Release <date>" with no new version; parent = public main),
+#    but only when every public change is
 #    already in dev main, so nothing on public is ever lost. Otherwise publishing waits.
-#    CHANGELOG.md's Unreleased entries are first dated on dev main (one commit there) and
-#    become the public commit's description (scripts/changelog.ts).
+#    CHANGELOG.md's Unreleased entries first become the next release on dev main (one commit
+#    there, "## 1.1.0 (<date>)"), then the public commit's description; the public commit is
+#    tagged v<version> (scripts/changelog.ts). With no Unreleased entries: no new version, no tag.
 #
 # Env: DRY_RUN=1 (no pushes), PUBLISH_ALLOWED=0 (skip step 2, e.g. dev checks not green),
 # SYNC_DATE (default: today, UTC). Writes key=value to $GITHUB_OUTPUT and Markdown to
@@ -29,8 +31,11 @@ PUBLISH_ALLOWED=${PUBLISH_ALLOWED:-1}
 SYNC_DATE=${SYNC_DATE:-$(date -u +%F)}
 BOT_NAME="github-actions[bot]"
 BOT_EMAIL="41898282+github-actions[bot]@users.noreply.github.com"
-PREFIX="Sync from dev, "
-BOT_RE="41898282+github-actions\\[bot\\]"
+# Public commits made by this script: "Release …" (older ones: "Sync from dev, <date>…").
+PREFIX="Release "
+SNAPSHOT_RE="^(Release |Sync from dev, )"
+# Extended regex (git log --extended-regexp below): the "+" needs escaping.
+BOT_RE="41898282\\+github-actions\\[bot\\]"
 
 out() { [ -n "${GITHUB_OUTPUT:-}" ] && echo "$1=$2" >> "$GITHUB_OUTPUT"; return 0; }
 say() { echo "$*"; [ -n "${GITHUB_STEP_SUMMARY:-}" ] && echo "$*" >> "$GITHUB_STEP_SUMMARY"; return 0; }
@@ -46,7 +51,7 @@ dev_tree=$(git rev-parse "$dev^{tree}")
 pub_tree=$(git rev-parse "$pub^{tree}")
 
 # The last snapshot on public (first-parent), or the commit both repos share before any sync.
-base=$(git log --first-parent -n1 --format=%H --author="$BOT_RE" --grep="^$PREFIX" "$pub")
+base=$(git log --first-parent -n1 --format=%H --author="$BOT_RE" --extended-regexp --grep="$SNAPSHOT_RE" "$pub")
 if [ -z "$base" ] && ! base=$(git merge-base "$dev" "$pub"); then
   # No shared history (the public repo was re-created or squashed by another tool): start from
   # the newest public commit whose files equal some dev commit's files.
@@ -109,33 +114,42 @@ elif [ "$PUBLISH_ALLOWED" != 1 ]; then
   say "- **Not publishing:** dev main's checks aren't all green."
   out published false
 else
-  # Changelog: move CHANGELOG.md's Unreleased entries under tonight's date, as a commit on
-  # dev main, so dev and public keep the same file. The new dated sections become the
-  # public commit's description.
+  # Changelog: turn CHANGELOG.md's Unreleased section into the next release ("## 1.1.0 (date)";
+  # scripts/changelog.ts picks the number; the Unreleased heading goes), as a commit on dev main,
+  # so dev and public keep the same file. The new release sections become the public commit's description, and the public
+  # commit is tagged v<version>.
   notes=""
+  version=""
   if git cat-file -e "$dev:CHANGELOG.md" 2>/dev/null; then
     tmp=$(mktemp -d)
     git show "$dev:CHANGELOG.md" > "$tmp/new.md"
-    node --experimental-strip-types --disable-warning=ExperimentalWarning "$HERE/changelog.ts" release "$tmp/new.md" "$SYNC_DATE"
+    version=$(node --experimental-strip-types --disable-warning=ExperimentalWarning "$HERE/changelog.ts" release "$tmp/new.md" "$SYNC_DATE")
     if ! git show "$dev:CHANGELOG.md" | cmp -s - "$tmp/new.md"; then
       blob=$(git hash-object -w "$tmp/new.md")
       GIT_INDEX_FILE="$tmp/index" git read-tree "$dev"
       GIT_INDEX_FILE="$tmp/index" git update-index --cacheinfo "100644,$blob,CHANGELOG.md"
       dev_tree=$(GIT_INDEX_FILE="$tmp/index" git write-tree)
-      dated=$(bot git commit-tree "$dev_tree" -p "$dev" -m "Changelog: published ${SYNC_DATE}")
+      if [ -n "$version" ]; then what="v${version} (${SYNC_DATE})"; else what="empty Unreleased heading removed"; fi
+      dated=$(bot git commit-tree "$dev_tree" -p "$dev" -m "Changelog: $what")
       push "$DEV_REMOTE" "$dated:refs/heads/main"
-      say "- Changelog: Unreleased moved under ${SYNC_DATE} on dev main (\`${dated:0:7}\`)$([ "$DRY_RUN" = 1 ] && echo ", not pushed: dry run")."
+      say "- Changelog: $([ -n "$version" ] && echo "Unreleased released as v${version}" || echo "empty Unreleased heading removed") on dev main (\`${dated:0:7}\`)$([ "$DRY_RUN" = 1 ] && echo ", not pushed: dry run")."
     fi
     if git cat-file -e "$pub:CHANGELOG.md" 2>/dev/null; then git show "$pub:CHANGELOG.md" > "$tmp/old.md"; else : > "$tmp/old.md"; fi
     notes=$(node --experimental-strip-types --disable-warning=ExperimentalWarning "$HERE/changelog.ts" notes "$tmp/new.md" "$tmp/old.md")
     rm -rf "$tmp"
   fi
-  msg="${PREFIX}${SYNC_DATE}"
+  if [ -n "$version" ]; then msg="${PREFIX}v${version}"; else msg="${PREFIX}${SYNC_DATE}"; fi
   [ -n "$notes" ] && msg="$msg
 
 $notes"
   snap=$(bot git commit-tree "$dev_tree" -p "$pub" -m "$msg")
   push "$PUBLIC_REMOTE" "$snap:refs/heads/main"
   if [ "$DRY_RUN" = 1 ]; then say "- Would publish dev main to public main as \`${snap:0:7}\`."; else say "- Published dev main to public main as \`${snap:0:7}\`."; fi
+  if [ -n "$version" ]; then
+    # Lightweight tag on the public commit; the sync's token can push tags but makes no Releases.
+    push "$PUBLIC_REMOTE" "$snap:refs/tags/v$version"
+    say "- Tagged it \`v$version\` on public$([ "$DRY_RUN" = 1 ] && echo " (dry run: not pushed)")."
+    out version "$version"
+  fi
   out published true
 fi

@@ -1,0 +1,245 @@
+/*
+ * The Driver tab's card (DriverCard.tsx), on the UI kit: one inset, rows on the field grid,
+ * sections with full-width dividers. Tokens only (Stylelint).
+ */
+.dv-card {
+  overflow: hidden;
+}
+
+.dv-body {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+}
+
+.dv-body + .dv-body,
+.dv-ts + .dv-body {
+  padding-top: var(--space-2);
+}
+
+/* Room under the last row before the sections' dividers. */
+.dv-body:has(+ .ui-section) {
+  padding-bottom: var(--space-2);
+}
+
+/* The picker: model bold · brand, Ω and size muted · chevron, the full width. */
+.dv-body .picker {
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-md);
+}
+
+button.browse.chosen.rich {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+  min-height: var(--size-control);
+  padding: 0 var(--space-3);
+  border-color: var(--input-border);
+  border-radius: var(--radius-md);
+  background: var(--well);
+}
+
+button.browse.chosen.rich .chosen-model {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--fg);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.browse.chosen.rich .chosen-meta {
+  flex: 0 10 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  font-variant-numeric: var(--font-numeric);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.browse.chosen.rich .caret {
+  display: inline-flex;
+  margin-left: auto;
+  color: var(--muted);
+}
+
+/* T/S: an inset well under the picker (wide screens) or the sheet (phones). */
+.dv-ts {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: var(--border-hairline) solid var(--divider);
+  border-bottom: var(--border-hairline) solid var(--divider);
+  background: var(--well);
+}
+
+.dv-ts-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-3);
+}
+
+.dv-ts-tools .ui-button {
+  padding-inline: var(--space-3);
+}
+
+.dv-ts-tools .dv-clear {
+  margin-left: auto;
+  padding: 0;
+}
+
+/* Name: first in Edit T/S; the field takes the row's width after its label. */
+.dv-name.ui-field,
+.dv-name .ui-field {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.dv-name {
+  margin: 0 0 var(--space-2);
+}
+
+.dv-name .ui-text input {
+  font-weight: var(--weight-semibold);
+}
+
+.dv-name .ui-field-hint {
+  margin: var(--space-1) 0 0;
+}
+
+/* A database driver's name: plain text, with where it came from. */
+.dv-name-fixed {
+  min-width: 0;
+  font-size: var(--text-field);
+}
+
+.dv-name-fixed b {
+  font-weight: var(--weight-semibold);
+}
+
+.dv-name-fixed span {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+/* The T/S grid: two columns of label | value, the unit inside the box. */
+.ts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+}
+
+.ts-grid > label {
+  display: grid;
+  grid-template-columns: var(--size-col-label) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+}
+
+.ts-grid .ts-input {
+  position: relative;
+}
+
+.ts-grid .ts-input input {
+  width: 100%;
+  min-height: var(--size-control);
+  font-size: var(--text-field);
+  padding-right: var(--space-12);
+  text-align: right;
+}
+
+.ts-grid .ts-input .unit {
+  position: absolute;
+  top: 50%;
+  right: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+/* The clear × shows while the value is being edited, in place of the unit. */
+.ts-grid .ts-input.has-clear button.clear {
+  display: none;
+  min-width: var(--space-8);
+  min-height: var(--space-8);
+}
+
+.ts-grid .ts-input.has-clear:focus-within button.clear {
+  display: block;
+}
+
+.ts-grid .ts-input.has-clear:focus-within .unit {
+  visibility: hidden;
+}
+
+@media (max-width: 359px) {
+  .ts-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ts-editor .ts-legend {
+  margin: var(--space-3) 0 0;
+}
+
+.ts-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+}
+
+.dv-note {
+  margin: var(--space-1) 0 var(--space-2);
+}
+
+.dv-compare .picker {
+  margin: var(--space-2) 0;
+}
+
+/* The empty picker (Compare): the same box as the chosen one, the prompt left and muted. */
+.dv-card button.browse:not(.chosen) {
+  justify-content: flex-start;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--size-control);
+  padding: 0 var(--space-3);
+  border-color: var(--input-border);
+  border-radius: var(--radius-md);
+  background: var(--well);
+  color: var(--muted);
+  font-size: var(--text-md);
+  font-weight: var(--weight-regular);
+}
+
+.dv-card button.browse:not(.chosen)::before {
+  margin: 0;
+}
+
+/* Both pickers take taps across --size-tap, like the kit's buttons. */
+.dv-card button.browse {
+  position: relative;
+}
+
+.dv-card button.browse::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc((100% - var(--size-tap)) / 2));
+}
+
+.dv-compare-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

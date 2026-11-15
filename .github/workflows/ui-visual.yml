@@ -1,0 +1,96 @@
+name: UI visual
+
+# Screenshot tests of the app (packages/web/e2e). On a pull request they run only when something
+# that can change how the app looks has changed; pushes to main always run them.
+on:
+  pull_request:
+    paths:
+      - "packages/**"
+      - "drivers/**"
+      - "passive-radiators/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "tsconfig.base.json"
+      - ".github/workflows/ui-visual.yml"
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# A new push to a pull request cancels its run still going; pushes to main each run to the end.
+concurrency:
+  group: ui-visual-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ui-visual:
+    # Screenshots of the UI kit (/ui/) at 390 and 1280 px against the committed Linux baselines.
+    # A pull request whose latest commit message contains [update-ui-baselines] instead rewrites the
+    # baselines on the runner and commits them to the branch (fonts render a little differently per
+    # machine, so the baselines must come from these runners). Push again to run the check.
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The branch itself (not the merge commit), so updated baselines can be pushed to it.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          # GitHub's runners download the pnpm store; a self-hosted runner keeps its own on disk
+          # (store-dir below).
+          cache: ${{ !github.event.repository.private && 'pnpm' || '' }}
+
+      # Self-hosted: the pnpm store lives in the runner's tool cache, which survives between jobs
+      # (the work folder doesn't), so installs reuse packages and an npm outage only matters when
+      # the lockfile changes. --prefer-offline skips re-checking packages already there.
+      - name: Keep the pnpm store on the runner
+        if: github.event.repository.private
+        run: echo "npm_config_store_dir=$RUNNER_TOOL_CACHE/pnpm-store" >> "$GITHUB_ENV"
+
+      - run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Install Chromium
+        # The self-hosted runners have no sudo: Chromium's system libraries are installed there by
+        # root (apt). GitHub's runners use --with-deps.
+        run: pnpm --filter @sbg/web exec playwright install ${{ github.event.repository.private && 'chromium' || '--with-deps chromium' }}
+
+      - name: Update baselines?
+        id: mode
+        run: |
+          if git log -1 --format=%B | grep -q '\[update-ui-baselines\]' && [ -n "${{ github.head_ref }}" ] && [ "${{ github.event.pull_request.head.repo.full_name }}" = "${{ github.repository }}" ]; then
+            echo "update=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Visual tests
+        if: steps.mode.outputs.update != 'true'
+        run: pnpm test:ui
+        env:
+          CI: "1"
+
+      - name: Rewrite and commit the baselines
+        if: steps.mode.outputs.update == 'true'
+        run: |
+          pnpm test:ui:update
+          git add packages/web/e2e/__screenshots__
+          if git diff --cached --quiet; then echo "Baselines unchanged."; exit 0; fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "UI baselines from the CI runner"
+          git push origin "HEAD:${{ github.head_ref }}"
+        env:
+          CI: "1"
+
+      - name: Upload the diff report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: packages/web/playwright-report
+          retention-days: 7

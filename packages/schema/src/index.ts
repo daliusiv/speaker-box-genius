@@ -98,8 +98,19 @@ export interface PassiveRadiatorParams {
   mms_g: number; // no added mass
   cms_mm_per_n?: number;
   sd_cm2: number;
-  xmax_mm: number;
+  /** One-way linear excursion, as published. */
+  xmax_mm?: number;
+  /**
+   * One-way mechanical limit (where it bottoms out), when that's the only travel figure
+   * published (SB Acoustics, Purifi). Give xmax_mm, xmech_mm or both.
+   */
+  xmech_mm?: number;
   max_added_mass_g?: number;
+}
+
+/** The travel the simulation checks a passive radiator against: Xmax, or Xmech when no Xmax is published. */
+export function prTravel(p: Pick<PassiveRadiatorParams, "xmax_mm" | "xmech_mm">): { mm: number; mechanical: boolean } {
+  return p.xmax_mm !== undefined ? { mm: p.xmax_mm, mechanical: false } : { mm: p.xmech_mm!, mechanical: true };
 }
 
 export interface PassiveRadiator {
@@ -147,6 +158,7 @@ const RANGES: Record<string, [number, number]> = {
   mms_g: [0.05, 2000],
   sd_cm2: [1, 10000],
   xmax_mm: [0.05, 100],
+  xmech_mm: [0.05, 100],
   pe_w: [0.1, 20000],
   nominal_ohms: [0.5, 64],
   size_in: [0.5, 30],
@@ -289,13 +301,19 @@ export function validatePassiveRadiator(data: unknown): Errors {
   if (!isObj(p)) {
     errors.push("params: required object");
   } else {
-    const required = ["mms_g", "sd_cm2", "xmax_mm"];
-    const optional = ["fs", "qms", "vas_l", "cms_mm_per_n", "max_added_mass_g"];
+    const required = ["mms_g", "sd_cm2"];
+    const optional = ["xmax_mm", "xmech_mm", "fs", "qms", "vas_l", "cms_mm_per_n", "max_added_mass_g"];
     checkKeys(p, [...required, ...optional], "params", errors);
     for (const k of required) num(p, k, "params", errors, true);
     for (const k of optional) num(p, k, "params", errors, false);
     if (p.fs === undefined && p.vas_l === undefined && p.cms_mm_per_n === undefined) {
       errors.push("params: give at least one of fs, vas_l or cms_mm_per_n so compliance can be calculated");
+    }
+    if (p.xmax_mm === undefined && p.xmech_mm === undefined) {
+      errors.push("params: give xmax_mm (linear excursion), xmech_mm (mechanical limit) or both");
+    }
+    if (typeof p.xmax_mm === "number" && typeof p.xmech_mm === "number" && p.xmech_mm < p.xmax_mm) {
+      errors.push("params.xmech_mm: the mechanical limit can't be smaller than xmax_mm");
     }
   }
   return errors.map((e) => e.replace(/^\./, ""));

@@ -1,6 +1,7 @@
 import { boxSuits } from "./boxType.ts";
 import { useEffect, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
+import { Chip } from "./ui/Chip.tsx";
 import {
   fixConflict,
   readDatasheet,
@@ -112,7 +113,7 @@ export function TsEditor(props: {
 
   return (
     <div className="ts-editor">
-      <div className="fields">
+      <div className="ts-grid">
         {ORDER.map((p) => (
           <TsField
             key={p}
@@ -125,9 +126,8 @@ export function TsEditor(props: {
         ))}
       </div>
 
-      <p className="hint">
-        <b>Bold, cyan edge</b> = what you typed (never changed). <span className="derived-sample">Grey, dashed</span> = calculated. Units
-        like “1.9 ft³” or “35630 mm²” are converted.
+      <p className="hint ts-legend">
+        <b>Bold, cyan edge</b> = typed (never changed) · <span className="derived-sample">dashed</span> = calculated. Units like “1.9 ft³” convert.
       </p>
 
       {(() => {
@@ -135,8 +135,11 @@ export function TsEditor(props: {
         const v = solved.values;
         const b = v.fs && v.qes && v.qms ? boxSuits(v.fs, v.qes, v.qms) : null;
         return b ? (
-          <p className="hint box-suits">
-            <b>Box type:</b> EBP {b.ebp.toFixed(0)} (Fs/Qes), Qts {b.qts.toFixed(2)}: {b.text}.{" "}
+          <p className="ts-chips box-suits">
+            <Chip>Box: {b.text}</Chip>
+            <Chip>
+              EBP {b.ebp.toFixed(0)} · Qts {b.qts.toFixed(2)}
+            </Chip>
             <a href="/guides/sealed-vs-ported/" target="_blank" rel="noopener">
               Sealed, ported or PR?
             </a>
@@ -280,8 +283,8 @@ function TsField(props: {
             ×
           </button>
         )}
+        {meta.unit && <span className="unit">{meta.unit}</span>}
       </span>
-      <span className="unit">{meta.unit}</span>
     </label>
   );
 }

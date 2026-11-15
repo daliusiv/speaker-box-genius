@@ -1,0 +1,180 @@
+/*
+ * The Boxes tab (Designs.tsx), on the UI kit: a top row (+ Box, Size all, fold all), then one
+ * card per box: a head, the key rows, and sections that show their values while closed.
+ * Tokens only (Stylelint).
+ */
+.bx-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--size-row);
+  margin: 0 0 var(--space-2);
+}
+
+.bx-top .bx-foldall {
+  margin-left: auto;
+}
+
+.bx-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* + Box: the kinds, each with the colour its new box gets. */
+.bx-add .ui-menu-item svg {
+  color: var(--bx-color);
+}
+
+.bx-add .ui-menu-list {
+  z-index: var(--z-menu);
+}
+
+.bx-card {
+  overflow: visible;
+}
+
+.bx-card[data-off] > .bx-head {
+  opacity: 0.6;
+}
+
+.bx-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--size-row);
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-1);
+}
+
+.bx-head .ui-button[data-variant="ghost"][aria-pressed="true"],
+.bx-head .bx-fold[aria-expanded="true"] {
+  background: transparent;
+}
+
+.bx-head .bx-eye[aria-pressed="true"] {
+  color: var(--accent);
+}
+
+.bx-fold svg {
+  transition: transform var(--motion-fast) var(--motion-ease);
+}
+
+.bx-fold[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+
+.bx-swatch {
+  flex: none;
+  width: var(--space-3);
+  height: var(--space-3);
+  border-radius: var(--radius-pill);
+}
+
+.bx-name {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.bx-sub {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: var(--font-numeric);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bx-ok {
+  color: var(--accent);
+}
+
+.bx-over {
+  color: var(--over);
+}
+
+/* Key rows, and the rows inside each section. */
+.bx-body {
+  display: grid;
+  padding: 0 var(--space-4) var(--space-2);
+}
+
+.bx-card .ui-section-body {
+  display: grid;
+}
+
+/* Legacy field wrappers inside a box lay their (kit) rows out in one column. */
+.bx-card .fields,
+.bx-card .stuffing {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.bx-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-1) 0 var(--space-2);
+}
+
+.bx-div {
+  margin: var(--space-2) 0;
+  border: 0;
+  border-top: var(--border-hairline) solid var(--divider);
+}
+
+.bx-card .hint,
+.bx-card .warn {
+  margin: var(--space-1) 0 var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.bx-picker {
+  margin: var(--space-2) 0;
+}
+
+/* Extra PR groups: a bordered block inside the section. */
+.bx-group {
+  margin: var(--space-1) 0 var(--space-2);
+  padding: 0 var(--space-3) var(--space-2);
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.bx-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--size-control);
+  color: var(--fg);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+}
+
+/* Port checks: chips under the port's rows. */
+.bx-card .check-chips {
+  padding: var(--space-1) 0 var(--space-2);
+}
+
+/* A transmission line keeps its own layout: its "Tune to" row stacks the field over its button. */
+.bx-card .tune {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1);
+}
+
+.bx-card .tune > button {
+  justify-self: end;
+}
+
+/* Size all's report: a notice without an icon, so its lists use the full width. */
+.ui-notice.bx-report {
+  display: block;
+  margin: 0 0 var(--space-3);
+}
+
+.bx-report ul {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-5);
+}

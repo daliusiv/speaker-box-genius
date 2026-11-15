@@ -1,0 +1,65 @@
+/* Generated from tokens.json by packages/web/scripts/tokens.ts (`pnpm tokens`). Do not edit. */
+:root {
+  /* Space: a 4 px grid */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  /* Type */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-base: 15px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-field: 13px;
+  --text-control: 13px;
+  --leading-tight: 1.25;
+  --leading-base: 1.45;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --font-numeric: tabular-nums;
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+  /* Sizes (touch values below) */
+  --size-control: 32px;
+  --size-tap: 32px;
+  --size-row: 40px;
+  --size-icon: 18px;
+  --size-col-control: 136px;
+  --size-col-label: 40px;
+  /* Borders */
+  --border-hairline: 1px;
+  --border-accent: 3px;
+  /* Layers */
+  --z-raised: 10;
+  --z-strip: 30;
+  --z-nav: 40;
+  --z-menu: 45;
+  --z-toast: 50;
+  --z-help: 55;
+  /* Motion */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (pointer: coarse) {
+  :root {
+    --text-field: 16px;
+    --text-control: 14px;
+    --size-control: 40px;
+    --size-tap: 44px;
+    --size-row: 52px;
+    --size-icon: 20px;
+  }
+}

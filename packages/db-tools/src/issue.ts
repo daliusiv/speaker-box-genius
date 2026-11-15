@@ -155,6 +155,8 @@ export function parseIssue(body: string, opts: { issue: number; author: string; 
     cms_mm_per_n: p.cms_mm_per_n,
     sd_cm2: p.sd_cm2,
     xmax_mm: p.xmax_mm,
+    // The maker's mechanical limit, only when no linear Xmax is given (prTravel uses it then).
+    xmech_mm: p.xmax_mm === undefined ? labelled(paramText, /^xmech/, "length") : undefined,
     max_added_mass_g: labelled(paramText, /^maximum added mass/),
   });
   return {

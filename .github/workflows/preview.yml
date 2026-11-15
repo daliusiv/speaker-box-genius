@@ -5,24 +5,32 @@ name: Preview on Cloudflare
 # Cloudflare's limits, and Wrangler uploads it to a Worker (.github/cloudflare/wrangler.jsonc) named by
 # the repo variable CF_WORKER_NAME. main → the Worker's workers.dev URL; PR n → a preview version with
 # the alias pr-n. The URLs are listed in the run summary; both sit behind Cloudflare Access.
+# A pull request gets a preview only while it has the `preview` label (adding the label starts one),
+# so most pushes keep the self-hosted runners free for CI.
 
 on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: preview-${{ github.head_ref || github.ref_name }}
+  # Adding some other label to a pull request starts a run that does nothing: give it a group of its
+  # own so it can't cancel a preview that's building.
+  group: preview-${{ (github.event.action == 'labeled' && github.event.label.name != 'preview') && github.run_id || github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
   preview:
-    if: ${{ github.event.repository.private == true }}
-    runs-on: ubuntu-latest
+    if: >-
+      ${{ github.event.repository.private == true && (github.event_name != 'pull_request' ||
+      (contains(github.event.pull_request.labels.*.name, 'preview') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'preview'))) }}
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -33,7 +41,14 @@ jobs:
           node-version: 22
           # Add `cache: pnpm` here once pnpm-lock.yaml is committed.
 
-      - run: pnpm install --no-frozen-lockfile
+      # Self-hosted: the pnpm store lives in the runner's tool cache, which survives between jobs
+      # (the work folder doesn't), so installs reuse packages and an npm outage only matters when
+      # the lockfile changes. --prefer-offline skips re-checking packages already there.
+      - name: Keep the pnpm store on the runner
+        if: github.event.repository.private
+        run: echo "npm_config_store_dir=$RUNNER_TOOL_CACHE/pnpm-store" >> "$GITHUB_ENV"
+
+      - run: pnpm install --no-frozen-lockfile --prefer-offline
 
       - name: Validate and bundle driver database
         run: pnpm validate:db && pnpm build:db
@@ -41,10 +56,28 @@ jobs:
       - name: Build web app
         run: pnpm --filter @sbg/web build
 
+      # Self-hosted runners (private dev repo) keep the share cards and sitemap dates on their own
+      # disk, which is much faster than actions/cache; preview.yml writes them back after a build of
+      # main. A runner that has none yet takes them from actions/cache, as GitHub's runners do.
+      - name: Restore share cards and sitemap dates from the runner
+        id: keep
+        if: ${{ github.event.repository.private }}
+        run: |
+          keep="$RUNNER_TOOL_CACHE/sbg-site-cache"
+          if [ -d "$keep/cards" ]; then
+            mkdir -p .cache "$keep/sitemap" && rm -rf .cache/cards .cache/sitemap
+            cp -a "$keep/cards" "$keep/sitemap" .cache/
+            echo "$(ls .cache/cards | wc -l) share cards from the runner"
+          else
+            echo "empty=true" >> "$GITHUB_OUTPUT"
+          fi
+
       # Driver share cards from the last deploy: only changed ones are drawn again (site/cardCache.ts).
-      # A new key each run saves the updated set; restore-keys picks up the latest one.
+      # Restore only: deploy-pages.yml saves the updated set under a new key after the build (so a
+      # preview never spends time uploading); restore-keys picks up the latest one.
       - name: Restore share cards
-        uses: actions/cache@v4
+        if: ${{ !github.event.repository.private || steps.keep.outputs.empty == 'true' }}
+        uses: actions/cache/restore@v4
         with:
           path: .cache/cards
           key: share-cards-${{ github.run_id }}
@@ -53,14 +86,28 @@ jobs:
       # Each page's content hash and lastmod date from the last deploy (site/sitemap.ts), so a
       # sitemap date only moves when that page really changed.
       - name: Restore sitemap dates
-        uses: actions/cache@v4
+        if: ${{ !github.event.repository.private || steps.keep.outputs.empty == 'true' }}
+        uses: actions/cache/restore@v4
         with:
           path: .cache/sitemap
           key: sitemap-lastmod-${{ github.run_id }}
           restore-keys: sitemap-lastmod-
 
+      # No cache (expired or evicted): take the dates the live site serves, so pages keep them.
+      - name: Fetch sitemap dates from the live site (no cache)
+        run: test -f .cache/sitemap/lastmod.json || (mkdir -p .cache/sitemap && curl -fsSL --max-time 30 https://speakerboxgenius.com/sitemap-state.json -o .cache/sitemap/lastmod.json || rm -f .cache/sitemap/lastmod.json)
+
       - name: Build guide pages, sitemaps and robots.txt
         run: pnpm build:site
+
+      # main's cards and dates become the runner's copy (a pull request's build never writes it).
+      - name: Keep share cards and sitemap dates on the runner
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: |
+          keep="$RUNNER_TOOL_CACHE/sbg-site-cache"
+          mkdir -p .cache/cards .cache/sitemap "$(dirname "$keep")"
+          rm -rf "$keep.new" && cp -a .cache "$keep.new" && rm -rf "$keep" && mv "$keep.new" "$keep"
+          echo "$(ls "$keep/cards" | wc -l) share cards kept"
 
       - name: Make it a preview (no analytics, noindex) and check Cloudflare's limits
         run: node --experimental-strip-types --disable-warning=ExperimentalWarning site/preview.ts packages/web/dist

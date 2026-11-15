@@ -1,0 +1,140 @@
+/* Database browser (driver and passive radiator databases): the search, its Filters and the list.
+   The dialog, header and table base still live in styles.css. */
+
+.lib-inner header {
+  gap: var(--space-1);
+}
+
+.lib-inner header h2 {
+  margin-right: auto;
+}
+
+/* Search and the Filters button share one row, at the control height. */
+.lib-searchrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.lib-searchrow .lib-search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.lib-filter-toggle.ui-button {
+  flex: none;
+}
+
+/* Filters on: the button carries the count and the accent edge. */
+.lib-filter-toggle[data-active] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.lib-filter-toggle .ui-chip {
+  min-height: 0;
+  padding: 0 var(--space-2);
+  font-variant-numeric: var(--font-numeric);
+}
+
+/* The filters fold away behind the button on every screen. */
+.lib-filters:not(.open) {
+  display: none;
+}
+
+.lib-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3) var(--space-6);
+  padding: var(--space-3);
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--well);
+}
+
+.lib-filter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.lib-filter > span {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+/* flex: none overrides the legacy select rule (flex: 1), which squashes it in this column. */
+.lib-filter .ui-select {
+  flex: none;
+  width: calc(var(--size-col-control) * 1.6);
+}
+
+.lib-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+/* Sort by: phones only (wider screens sort by the column headers). */
+.lib-sort {
+  display: none;
+}
+
+.lib-status {
+  display: flex;
+  gap: var(--space-4);
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+/* The row's numbers under its name: phones only. */
+.lib-summary {
+  display: none;
+}
+
+/* Phones: two-line rows instead of columns, and Sort by inside the filters. */
+@media (max-width: 767px) {
+  .lib-filters {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+
+  .lib-filter,
+  .lib-filter .ui-select {
+    width: 100%;
+  }
+
+  .lib-sort {
+    display: flex;
+  }
+
+  .lib-table thead,
+  .lib-table td:not(:first-child) {
+    display: none;
+  }
+
+  .lib-table td:first-child {
+    padding: var(--space-2) var(--space-4);
+    white-space: normal;
+    font-size: var(--text-md);
+  }
+
+  .lib-summary {
+    display: block;
+    overflow: hidden;
+    margin-top: var(--space-1);
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-variant-numeric: var(--font-numeric);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .lib-summary b {
+    color: var(--fg);
+    font-weight: var(--weight-semibold);
+  }
+}

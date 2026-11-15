@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Sparkle } from "./Logo.tsx";
-import { ventedFb, type Air } from "@sbg/engine";
+import { ventedFb, type Air, type TsValues } from "@sbg/engine";
 import { Fixed, Num, Select } from "./components.tsx";
 import { readMeasured } from "./Measured.tsx";
-import { fitStuffing, type StuffingFit } from "./stuffingFit.ts";
+import { fitStuffing, type DriverTolerance, type StuffingFit } from "./stuffingFit.ts";
+import { isUntouched } from "./datasheetCheck.ts";
 import { prTuning } from "./presets.ts";
 import { portOf } from "./sim.ts";
 import { MAX_MEASURED, type AppState, type DesignState, type MeasuredCurve } from "./state.ts";
@@ -28,6 +29,39 @@ export interface StuffingFitContext {
   onShowImpedance: () => void;
   /** Undo the last change (the app's undo). */
   onUndo: () => void;
+  /** The driver's values as published in the database, while it's that driver: untouched values get datasheet tolerances. */
+  published?: TsValues;
+}
+
+const TOL_NAMES: [keyof DriverTolerance, string][] = [
+  ["vas", "Vas"],
+  ["fs", "Fs"],
+  ["qes", "Qes"],
+  ["qms", "Qms"],
+];
+
+/** "Likely 43.0–55.4 L and Qa 12–27, allowing for …": how far to trust the fit. */
+function FitRange(props: { fit: StuffingFit }) {
+  const { unit } = useUnits();
+  const f = props.fit;
+  const u = unit("vol");
+  const vol = (x: number) => (x * u.k).toFixed(u.digits);
+  const tols = TOL_NAMES.map(([k, n]) => `${n} ±${Math.round(f.tolerance[k] * 100)}\u00a0%`).join(", ");
+  const from = f.spread_by === "fit" ? "the fit itself" : (TOL_NAMES.find(([k]) => k === f.spread_by)?.[1] ?? f.spread_by);
+  return (
+    <p className="hint fit-range">
+      Likely{" "}
+      <b>
+        {vol(f.acting_range_l[0])}–{vol(f.acting_range_l[1])} {u.unit}
+      </b>{" "}
+      and Qa{" "}
+      <b>
+        {f.qa_range[0]}–{f.qa_range[1]}
+      </b>
+      , allowing for {f.source === "datasheet" ? `datasheet values: production drivers vary by ${tols}` : `your driver values being off by ${tols}`}. Most of the spread is from{" "}
+      {from}.
+    </p>
+  );
 }
 
 const MODES: { value: StuffingMode; text: string }[] = [
@@ -169,6 +203,7 @@ function FitFromMeasurement(props: { design: DesignState & { kind: StuffableKind
   const [result, setResult] = useState<{ key: string; fit: StuffingFit | string } | null>(null);
   const [msg, setMsg] = useState("");
   const [done, setDone] = useState("");
+  const [busy, setBusy] = useState(false);
   // A result belongs to one sweep and one version of the design and driver: drop it when they change.
   const key = JSON.stringify([chosen?.id, props.design, state.ts, state.drivers, state.wiring, state.isobaric, state.dvc, state.settings.losses, state.settings.air]);
   const shown = result?.key === key ? result.fit : null;
@@ -177,7 +212,18 @@ function FitFromMeasurement(props: { design: DesignState & { kind: StuffableKind
     if (!m) return;
     setMsg("");
     setDone("");
-    setResult({ key: JSON.stringify([m.id, props.design, s.ts, s.drivers, s.wiring, s.isobaric, s.dvc, s.settings.losses, s.settings.air]), fit: fitStuffing(s, props.design, m) });
+    setBusy(true);
+    const source = isUntouched(s.ts, props.ctx.published) ? "datasheet" : "yours";
+    // The fit takes a moment (it refits for each driver tolerance): let "Fitting…" paint first.
+    requestAnimationFrame(() =>
+      setTimeout(() => {
+        try {
+          setResult({ key: JSON.stringify([m.id, props.design, s.ts, s.drivers, s.wiring, s.isobaric, s.dvc, s.settings.losses, s.settings.air]), fit: fitStuffing(s, props.design, m, { source }) });
+        } finally {
+          setBusy(false);
+        }
+      }, 0),
+    );
   };
 
   const use = (f: StuffingFit) => {
@@ -244,9 +290,15 @@ function FitFromMeasurement(props: { design: DesignState & { kind: StuffableKind
           />
         </label>
         {sweeps.length > 0 && (
-          <button type="button" className="secondary" onClick={() => run(chosen, state)}>
-<Sparkle />
-            Fit
+          <button type="button" className="secondary" disabled={busy} aria-busy={busy} onClick={() => run(chosen, state)}>
+            {busy ? (
+              "Fitting…"
+            ) : (
+              <>
+                <Sparkle />
+                Fit
+              </>
+            )}
           </button>
         )}
       </div>
@@ -275,6 +327,12 @@ function FitFromMeasurement(props: { design: DesignState & { kind: StuffableKind
             <Fixed label="Qa" value={String(shown.qa)} help="Absorption loss that matches the measured peaks." />
             <Fixed label="Match" unit="%" value={`±${shown.error_pct}`} help={`RMS difference between the fitted simulation and the measurement, ${Math.round(shown.band[0])}–${Math.round(shown.band[1])} Hz.`} />
           </div>
+          <FitRange fit={shown} />
+          {shown.ambiguous && (
+            <p className="warn">
+              Several box sizes fit about as well. Measure this driver in free air (Driver → Edit T/S → Fill from → Measure from an impedance sweep), then fit again.
+            </p>
+          )}
           {shown.warnings.map((w) => (
             <p key={w} className="warn">
               {w}

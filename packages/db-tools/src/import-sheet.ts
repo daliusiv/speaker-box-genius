@@ -438,21 +438,16 @@ function toPassiveRadiator(
     mms = round(1 / ((2 * Math.PI * fs) ** 2 * (cms / 1000)) * 1000, 1);
     notes.push(`Mms ${mms} g calculated from the published Fs and Cms.`);
   }
-  if (xmax === undefined) {
-    const xmech = num(row, "xmech");
-    if (xmech !== undefined) {
-      xmax = xmech;
-      notes.push(`Xmax is the published mechanical limit (Xmech ${xmech} mm); there's no separate linear figure.`);
-    }
-  }
-  const missing = Object.entries({ mms, sd, xmax })
+  // No linear Xmax published: keep the mechanical limit as what it is.
+  const xmech = xmax === undefined ? num(row, "xmech") : undefined;
+  const missing = Object.entries({ mms, sd, "xmax or xmech": xmax ?? xmech })
     .filter(([, v]) => v === undefined)
     .map(([k]) => k);
   if (missing.length) return { kind: "skip", model, reason: `passive radiator missing ${missing.join(", ")}` };
 
   const sizeMm = num(row, "size");
   const size_in = sizeInches(sizeMm);
-  const params: PassiveRadiator["params"] = { mms_g: mms!, sd_cm2: sd!, xmax_mm: xmax! };
+  const params: PassiveRadiator["params"] = { mms_g: mms!, sd_cm2: sd!, ...(xmax !== undefined ? { xmax_mm: xmax } : { xmech_mm: xmech! }) };
   const opt: [keyof PassiveRadiator["params"], number | undefined][] = [
     ["fs", fs],
     ["qms", num(row, "qms")],

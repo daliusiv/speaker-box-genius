@@ -6,7 +6,7 @@
   "params": {
     "mms_g": 505,
     "sd_cm2": 312,
-    "xmax_mm": 17,
+    "xmech_mm": 17,
     "fs": 10.2,
     "qms": 10.8,
     "vas_l": 66,
@@ -26,6 +26,5 @@
       "note": "SB Acoustics datasheet (PDF)."
     }
   ],
-  "status": "community",
-  "notes": "Xmax is the published maximum mechanical excursion (Xmech ±17 mm), not a linear limit."
+  "status": "community"
 }

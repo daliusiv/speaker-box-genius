@@ -6,7 +6,7 @@
   "params": {
     "mms_g": 132,
     "sd_cm2": 235.1,
-    "xmax_mm": 15,
+    "xmech_mm": 15,
     "fs": 14,
     "qms": 9.4,
     "vas_l": 72.8,
@@ -22,5 +22,5 @@
     }
   ],
   "status": "community",
-  "notes": "Xmax is the published mechanical limit (Xmech 15 mm); there's no separate linear figure. Maximum added mass from Purifi (email, 11 Nov 2026): total moving mass up to 2–2.5× the PR's own, so added mass up to 1.5× Mms; Purifi gives 325 g total for this model."
+  "notes": "Maximum added mass from Purifi (email, 11 Nov 2026): total moving mass up to 2–2.5× the PR's own, so added mass up to 1.5× Mms; Purifi gives 325 g total for this model."
 }

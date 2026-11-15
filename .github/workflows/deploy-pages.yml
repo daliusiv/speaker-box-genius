@@ -30,7 +30,14 @@ jobs:
           node-version: 22
           # Add `cache: pnpm` here once pnpm-lock.yaml is committed.
 
-      - run: pnpm install --no-frozen-lockfile
+      # Self-hosted: the pnpm store lives in the runner's tool cache, which survives between jobs
+      # (the work folder doesn't), so installs reuse packages and an npm outage only matters when
+      # the lockfile changes. --prefer-offline skips re-checking packages already there.
+      - name: Keep the pnpm store on the runner
+        if: github.event.repository.private
+        run: echo "npm_config_store_dir=$RUNNER_TOOL_CACHE/pnpm-store" >> "$GITHUB_ENV"
+
+      - run: pnpm install --no-frozen-lockfile --prefer-offline
 
       - name: Validate and bundle driver database
         run: pnpm validate:db && pnpm build:db
@@ -38,10 +45,28 @@ jobs:
       - name: Build web app
         run: pnpm --filter @sbg/web build
 
+      # Self-hosted runners (private dev repo) keep the share cards and sitemap dates on their own
+      # disk, which is much faster than actions/cache; preview.yml writes them back after a build of
+      # main. A runner that has none yet takes them from actions/cache, as GitHub's runners do.
+      - name: Restore share cards and sitemap dates from the runner
+        id: keep
+        if: ${{ github.event.repository.private }}
+        run: |
+          keep="$RUNNER_TOOL_CACHE/sbg-site-cache"
+          if [ -d "$keep/cards" ]; then
+            mkdir -p .cache "$keep/sitemap" && rm -rf .cache/cards .cache/sitemap
+            cp -a "$keep/cards" "$keep/sitemap" .cache/
+            echo "$(ls .cache/cards | wc -l) share cards from the runner"
+          else
+            echo "empty=true" >> "$GITHUB_OUTPUT"
+          fi
+
       # Driver share cards from the last deploy: only changed ones are drawn again (site/cardCache.ts).
-      # A new key each run saves the updated set; restore-keys picks up the latest one.
+      # Restore only: deploy-pages.yml saves the updated set under a new key after the build (so a
+      # preview never spends time uploading); restore-keys picks up the latest one.
       - name: Restore share cards
-        uses: actions/cache@v4
+        if: ${{ !github.event.repository.private || steps.keep.outputs.empty == 'true' }}
+        uses: actions/cache/restore@v4
         with:
           path: .cache/cards
           key: share-cards-${{ github.run_id }}
@@ -50,14 +75,31 @@ jobs:
       # Each page's content hash and lastmod date from the last deploy (site/sitemap.ts), so a
       # sitemap date only moves when that page really changed.
       - name: Restore sitemap dates
-        uses: actions/cache@v4
+        if: ${{ !github.event.repository.private || steps.keep.outputs.empty == 'true' }}
+        uses: actions/cache/restore@v4
         with:
           path: .cache/sitemap
           key: sitemap-lastmod-${{ github.run_id }}
           restore-keys: sitemap-lastmod-
 
+      # No cache (expired or evicted): take the dates the live site serves, so pages keep them.
+      - name: Fetch sitemap dates from the live site (no cache)
+        run: test -f .cache/sitemap/lastmod.json || (mkdir -p .cache/sitemap && curl -fsSL --max-time 30 https://speakerboxgenius.com/sitemap-state.json -o .cache/sitemap/lastmod.json || rm -f .cache/sitemap/lastmod.json)
+
       - name: Build guide pages, sitemaps and robots.txt
         run: pnpm build:site
+
+      - name: Save share cards
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/cards
+          key: share-cards-${{ github.run_id }}
+
+      - name: Save sitemap dates
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/sitemap
+          key: sitemap-lastmod-${{ github.run_id }}
 
       - uses: actions/configure-pages@v5
 

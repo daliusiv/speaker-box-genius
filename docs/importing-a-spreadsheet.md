@@ -38,7 +38,7 @@ What it understands without help: common column names in English (Fs, Qts, Vas, 
 
 Every row goes through the same checks and repairs as the driver-base import (`convertRecord` in `driverbase.ts`): Qes from Qts and Qms, Vas from Cms, Vas published in cubic feet, Sd that can't fit the frame, values that disagree with each other, implausible cutouts and depths. Anything changed is written in the entry's `notes` and listed under **Adjusted** in the report; anything it can't fix is **Skipped** with the reason.
 
-Tweeters and compression drivers are skipped. Passive radiators need Mms, Sd and Xmax (Mms is worked out from Fs and Cms if needed; Xmech is used when there's no Xmax, and the notes say so).
+Tweeters and compression drivers are skipped. Passive radiators need Mms, Sd and Xmax or Xmech (Mms is worked out from Fs and Cms if needed; with no Xmax, Xmech is stored as `xmech_mm` and the app labels the PR's limit Xmech).
 
 ## Existing entries
 

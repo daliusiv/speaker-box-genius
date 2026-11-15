@@ -4,6 +4,14 @@ import { App } from "./App.tsx";
 import { decodeStateAny } from "./state.ts";
 import "@fontsource-variable/inter";
 import "./styles.css";
+import "./ui/tokens.css";
+import "./ui/ui.css";
+import "./driver-card.css";
+import "./boxes.css";
+import "./signal.css";
+import "./build.css";
+import "./settings.css";
+import "./library.css";
 
 // A short link is compressed, and decompressing is asynchronous: read it before the first
 // render so a shared design never flashes the defaults first.

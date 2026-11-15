@@ -21,7 +21,7 @@ A box simulator only needs one number from your cabinet: the **net internal volu
   - **Sloping walls** are wider across than the board is thick (18 mm at 45° takes 25.5 mm), and the inside of a steep pyramid closes before its top.
   - **A wedge** (top and bottom different shapes) needs the prismoidal formula. The common frustum formula is up to {{fig:shaped-cabinets-shortcuts/wedgeMin:0}}% low.
 - **Shape moves standing waves; it doesn't remove them.** A sphere's lowest is 32% higher than a box of the same inside length would have; a long tube's is along its length. Non-parallel walls shift and spread them [7][8].
-- **In the app:** **Build → Volume calculator** handles all four shapes (and the car wedge, below), takes off everything inside, sizes the cabinet for a target volume and feeds the result straight into the design.
+- **In the app:** **Build → Box** handles all four shapes (and the car wedge, below), takes off everything inside, sizes the cabinet for a target volume and feeds the result straight into the design.
 
 ## The example: one sub, four cabinets
 
@@ -72,7 +72,7 @@ Getting it wrong by one of these is about 7% of the volume on this tube:
 
 A tube needs little or no bracing. The pressure inside pulls the wall in tension around its circumference, where a flat panel would bow [9][10]. The **end caps** are the flat panels in a tube sub, and the place builders report vibration [5].
 
-**Sizing:** tubes come in set diameters, so **Size the box** on a cylinder keeps the diameter and finds the length. (Choose **Keep the current proportions** to scale both.)
+**Sizing:** tubes come in set diameters, so **Size box** on a cylinder keeps the diameter and finds the length. (Choose **Keep shape** to scale both.)
 
 ### Sphere
 
@@ -126,17 +126,17 @@ The port's own pipe resonance (here 346 Hz) and the cabinet's lowest mode are bo
 
 ## Doing it in the app
 
-![The volume calculator for the Sonotube: 36.8 cm outside, 98.5 cm long, 6 mm wall, 38 mm end caps, the driver and port taken off: 83.45 L net.](img/shaped-cabinets-app.png)
+![The Build tab's Box card for the Sonotube: 36.8 cm outside, 98.5 cm long, 6 mm wall, 38 mm end caps, the driver and port taken off: 83.45 L net.](img/shaped-cabinets-app.png)
 
-1. **Build → Volume calculator → Used by:** pick the design. Its volume now follows the calculator.
-2. **Shape:** pick Box, Car wedge (single slope), Cylinder (sonotube), Sphere or Tapered (all sides), then enter the **outside** sizes.
-3. **Walls:** enter the wall thickness. For a tube, also enter **End caps** (it follows the wall until you change it).
-4. **Takes up space inside:** check the driver's displacement (from the database, or estimated), **Bracing** and **Other**. The design's ports or passive radiators are taken off automatically; **Port wall** and **Each PR** only show when it has them.
-5. **Size the box → Target:** enter the net volume you want and press **Size the box**. A box can use golden-ratio proportions; a tube keeps its diameter and finds its length.
-6. **3D view** (for a car wedge, **3D** above its drawing): turn the cabinet round and slide **Take apart** to see how its pieces go together (a tube's end caps lift off, a sphere's halves part, a tapered box's walls come off square to their faces). Tap a piece for its size.
+1. **Build → Box → Used by:** pick the design. Its volume now follows the calculator.
+2. **Shape:** pick Box, Car wedge, Cylinder, Sphere or Tapered, then enter the **outside** sizes under **Outside size**.
+3. **Walls** (in Outside size): enter the wall thickness. For a tube, also enter **End caps** (it follows the wall until you change it).
+4. **Inside parts:** check the driver's displacement (from the database, or estimated), **Bracing** and **Other**. The design's ports or passive radiators are taken off automatically; **Port wall** and **Each PR** only show when it has them.
+5. **Net volume** shows what's left, line by line. To aim for a volume, open **Size for a volume**, enter the **Target** and press **Size box**. A box can use golden-ratio proportions; a tube keeps its diameter and finds its length.
+6. **3D view** (in Outside size; for a car wedge, **Drawing → 3D**): turn the cabinet round and slide **Take apart** to see how its pieces go together (a tube's end caps lift off, a sphere's halves part, a tapered box's walls come off square to their faces). Tap a piece for its size.
 7. **Boxes → the design's port:** **Port too long to fit** uses the shape's longest straight run, and **Pipe resonance** shows the cabinet's lowest standing wave.
 
-The **Cut list** builds boxes and car wedges (with the wedge's bevel or miter angles on each panel). **FreeCAD macro** downloads any of the shapes as a FreeCAD script: the panels (or the tube, caps or shell) as solids and the air inside, whose volume the script checks against the app's.
+The **Cut list** builds boxes and car wedges (with the wedge's bevel or miter angles on each panel); **Holes** holds the cutouts and **Sheet layout** the sheet size and kerf. **Export → FreeCAD macro** downloads any of the shapes as a FreeCAD script: the panels (or the tube, caps or shell) as solids and the air inside, whose volume the script checks against the app's.
 
 ## The forum claims, checked
 

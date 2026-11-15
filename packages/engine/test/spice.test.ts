@@ -2,6 +2,7 @@
 // (docs/validation.md "Independent circuit check (SPICE)").
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import test from "node:test";
 import { buildSpiceReport, readSpiceReport, sameSpiceReport } from "../validation/spice-report.ts";
 import { formatStat } from "../validation/spice/compare.ts";
@@ -65,4 +66,13 @@ test("SPICE: the LTspice dialect (Laplace sources, Rser=0) solves the same as th
     const worst = Math.max(...x.spl.map((v, i) => Math.abs(v - y.spl[i]!)), ...x.impedanceOhm.map((v, i) => Math.abs(v / y.impedanceOhm[i]! - 1)));
     assert.ok(worst < 1e-9, `${c.id}: ${worst}`);
   });
+});
+
+test("SPICE: docs/validation.md states the case counts in docs/validation/spice.json", () => {
+  const rep = readSpiceReport();
+  const md = readFileSync(join(import.meta.dirname, "..", "..", "..", "docs", "validation.md"), "utf8");
+  const m = md.match(/What's covered \((\d+) cases, every one compared on every output; a (\d+)\w\w,/);
+  assert.ok(m, "the SPICE coverage line in docs/validation.md has changed shape");
+  assert.equal(Number(m[1]), rep.compared, "compared cases");
+  assert.equal(Number(m[2]), rep.cases, "all cases");
 });

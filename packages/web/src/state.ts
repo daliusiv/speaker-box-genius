@@ -9,7 +9,10 @@ export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line";
 export type ShapeKind = "box" | "wedge" | "cylinder" | "sphere" | "frustum";
 /** Where a box's port or passive radiators sit: see VentedDesign.ventAt. */
 export type VentAt = "back" | "custom";
-export type PrParams = Required<Pick<PassiveRadiatorInput, "mms_g" | "sd_cm2" | "xmax_mm" | "qms" | "vas_l">>;
+export type PrParams = Required<Pick<PassiveRadiatorInput, "mms_g" | "sd_cm2" | "xmax_mm" | "qms" | "vas_l">> & {
+  /** xmax_mm is the maker's mechanical limit (Xmech): no linear Xmax is published. Changes only the labels. */
+  xmech?: boolean;
+};
 
 interface DesignBase {
   /** Stable id, used by the volume calculator link and as React key. */

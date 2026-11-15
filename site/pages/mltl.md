@@ -97,7 +97,7 @@ Below its tuning an MLTL lets go of the cone like any ported box, so check the *
 3. Put the driver 20–35 % of the way along the line, or let **Best line** choose.
 4. Stuff the section behind the driver; leave the rest open.
 5. Check the excursion and the port speed at your real power, with a high-pass filter.
-6. Fold it if you need to (an MLTL is usually built straight), and print the cut list from the **Build** tab.
+6. Fold it if you need to (an MLTL is usually built straight), and print the cut list from the **Build** tab (**Export → PDF**).
 
 [[Open the worked example|mltl-example]]
 

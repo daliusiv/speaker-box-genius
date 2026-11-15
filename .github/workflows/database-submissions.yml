@@ -22,7 +22,7 @@ jobs:
       github.event.issue.state == 'open' &&
       (contains(github.event.issue.labels.*.name, 'new-driver') ||
        contains(github.event.issue.labels.*.name, 'new-passive-radiator'))
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
 

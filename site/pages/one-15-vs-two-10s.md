@@ -63,7 +63,7 @@ The 15″ is the main driver. The two 10″ are the **comparison driver** with t
 - a **100 L sealed box**;
 - a **150 L ported box tuned to 22 Hz**, with a 15 cm port 61.6 cm long. That's too long to fit straight in 150 L (the app flags it), so it needs an elbow or a run along the long wall.
 
-A **24 dB/octave subsonic filter at 18 Hz** protects both. The amplifier is one channel of a **Crown XLS 1002**, rated 350 W into 4 Ω and 550 W into 2 Ω [8]. In **Settings → Work these out from the amp's ratings** that's **37.4 V** and **16.6 A**. The charts run at **28.3 V** (2.83 V + 20 dB), enough to show the limits without going past the amplifier.
+A **24 dB/octave subsonic filter at 18 Hz** protects both. The amplifier is one channel of a **Crown XLS 1002**, rated 350 W into 4 Ω and 550 W into 2 Ω [8]. In **Settings → Limits → Amplifier → From the amp's ratings** that's **37.4 V** and **16.6 A**. The charts run at **28.3 V** (2.83 V + 20 dB), enough to show the limits without going past the amplifier.
 
 ![Both at 28.3 V in dB SPL: the 15″ solid, the two 10″ dashed; blue the 100 L sealed box, orange the 150 L ported box. The pair is about 2 dB louder at 80 Hz in either box.](chart:subs-example/spl)
 
@@ -156,10 +156,10 @@ In a car, cabin gain lifts the deep bass, which can make the pair's upper-bass a
 ## Doing it in the app
 
 1. Pick the 15″ on the **Driver** tab and add the boxes you can build on **Boxes**.
-2. Next to **Compare**, pick the 10″. Then set **Compare: drivers** to **2** and **Compare: wiring** to **In parallel**. The summary and every chart label say "2 × RSS265HF-4". **Same as main** puts it back to a like-for-like count.
-3. In **Settings**, open **Work these out from the amp's ratings** and enter your amplifier's two ratings (here 350 W into 4 Ω, 550 W into 2 Ω). That fills **Amp max volts** and **Amp max current**.
+2. Open **Compare** and pick the 10″. Then set **Its drivers** to **2** and **Its wiring** to **In parallel**. The summary and every chart label say "2 × RSS265HF-4". **Same as main** puts it back to a like-for-like count.
+3. In **Settings → Limits → Amplifier**, open **From the amp's ratings**, enter your amplifier's two ratings (here 350 W into 4 Ω, 550 W into 2 Ω) and press **Use**. That fills **Max volts** and **Max current**.
 4. Open **Max SPL**. The bars name the first limit for each box and each driver; **Volts** and **Amps** show what the amplifier has to deliver.
-5. **Swap** (⇅) makes the pair the main driver, with its count, for example to **Size all** for it.
+5. **⇅ Swap with main** makes the pair the main driver, with its count, for example to **Size all** for it.
 
 To compare two drivers in the same count, see the [compare drivers guide](/guides/compare-drivers/). For what Sd, Xmax and Vas mean, see the [Thiele/Small parameters guide](/guides/thiele-small-parameters/).
 

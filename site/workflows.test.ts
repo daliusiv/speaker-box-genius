@@ -26,7 +26,8 @@ test("each deploy workflow runs in one repo only", () => {
   const pages = readFileSync(join(REPO_ROOT, ".github", "workflows", "deploy-pages.yml"), "utf8");
   const preview = readFileSync(join(REPO_ROOT, ".github", "workflows", "preview.yml"), "utf8");
   assert.ok(pages.includes("if: ${{ github.event.repository.private != true }}"));
-  assert.ok(preview.includes("if: ${{ github.event.repository.private == true }}"));
+  assert.match(preview, /\$\{\{ github\.event\.repository\.private == true && /, "preview: private repo only");
+  assert.ok(preview.includes("contains(github.event.pull_request.labels.*.name, 'preview')"), "a pull request needs the preview label");
   assert.ok(preview.includes("site/preview.ts packages/web/dist"));
 });
 

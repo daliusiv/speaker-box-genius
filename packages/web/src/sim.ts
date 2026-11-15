@@ -517,6 +517,37 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
   ];
 }
 
+/** A box's response for a preset preview: relative SPL (dB, 0 = its passband) from 10 to 200 Hz and its F3. */
+export interface PresetPreview {
+  freq: number[];
+  db: number[];
+  f3: number | null;
+}
+
+/**
+ * The response a design would have, for the Preset picker's mini curves: the same simulation as
+ * the charts (this driver, Settings), but the box alone — no EQ, high-pass, passive parts, baffle step or room
+ * gain — so the curves compare the boxes themselves. Null while the driver is incomplete.
+ */
+export function presetPreview(s: AppState, solved: SolveResult, d: DesignState): PresetPreview | null {
+  if (solved.missing.length > 0) return null;
+  const vb = builtVbOf(s, d) * actingFactor(s, d);
+  if (!(vb > 0)) return null;
+  try {
+    const r = simulate(driverInputOf(s, solved), enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm, s.volume, enclosureOptsOf(s)), { ...simOptionsOf(s), eq: [], highPass: null, passive: null });
+    const freq: number[] = [];
+    const db: number[] = [];
+    r.freq.forEach((f, i) => {
+      if (f < 10 || f > 200) return;
+      freq.push(f);
+      db.push(r.spl[i]! - r.summary.f3RefSpl);
+    });
+    return { freq, db, f3: r.summary.f3 };
+  } catch {
+    return null;
+  }
+}
+
 /** One design's impulse and step response (peak scaled to ±1), for the time chart. */
 export interface Transient {
   label: string;
@@ -661,14 +692,20 @@ export function prGroupLabels(d: DesignState): string[] {
   return out;
 }
 
+/** Every PR travel limit used by a design, for redlines (`mech`: the maker's Xmech, no linear Xmax published). */
+export function prLimits(d: DesignState): { mm: number; mech: boolean }[] {
+  const ps =
+    d.kind === "pr"
+      ? [d.params, ...d.extra.map((g) => g.params)]
+      : d.kind === "bandpass"
+        ? [...(d.frontOpening === "pr" ? d.frontPrs : []), ...(d.order !== "4" && d.rearOpening === "pr" ? d.rearPrs : [])].map((g) => g.params)
+        : [];
+  return ps.map((p) => ({ mm: p.xmax_mm, mech: !!p.xmech }));
+}
+
 /** Every PR Xmax used by a design, for redlines. */
 export function prXmaxes(d: DesignState): number[] {
-  if (d.kind === "pr") return [d.params.xmax_mm, ...d.extra.map((g) => g.params.xmax_mm)];
-  if (d.kind !== "bandpass") return [];
-  return [
-    ...(d.frontOpening === "pr" ? d.frontPrs : []),
-    ...(d.order !== "4" && d.rearOpening === "pr" ? d.rearPrs : []),
-  ].map((g) => g.params.xmax_mm);
+  return prLimits(d).map((l) => l.mm);
 }
 
 /** PR groups of a design in engine form (first group + extras). */

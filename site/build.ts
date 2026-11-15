@@ -38,7 +38,8 @@ import { cardSvg, findChrome, Rasterizer } from "./og.ts";
 import { CardCache, cardSalt } from "./cardCache.ts";
 import { CALC_STYLE, fillCalc, portExampleValues, portForm, prExampleValues, prForm, viteScript } from "./calculators.ts";
 import { LastmodStore, sitemapFiles, type SitemapEntry, type SitemapGroup } from "./sitemap.ts";
-import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, loadDb, prCandidate, relatedDrivers, shareLink, type DriverPage, type PageLd } from "./drivers.ts";
+import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, hubSizes, loadDb, prCandidate, relatedDrivers, sens283, shareLink, sizeContent, sizeLabel, sizePath, sizeSlug, type DriverPage, type PageLd, type VariantLink } from "./drivers.ts";
+import { variantFamilies, variantLabels } from "../packages/db-tools/src/variants.ts";
 
 export const SITE = "https://speakerboxgenius.com";
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -386,8 +387,24 @@ async function buildDriverPages(write: (path: string, html: string) => void, gui
   const prs = db.passiveRadiators.map(prCandidate);
   const pages = db.drivers.map((e) => designDriver(e, prs)).filter((p): p is DriverPage => p !== null);
   const style = CHART_STYLE + DRIVERS_STYLE;
+  // Other impedances and voice coils of each driver, among the drivers that got a page.
+  const byId = new Map(pages.map((p) => [p.id, p]));
+  const families = variantFamilies(db.drivers.filter((e) => byId.has(e.id)));
+  const variantsOf = (id: string): VariantLink[] | undefined => {
+    const ids = families.get(id);
+    if (!ids) return undefined;
+    const members = ids.map((i) => byId.get(i)!);
+    const labels = variantLabels(members.map((m) => m.rec));
+    return members.map((m, i) => ({ id: m.id, label: labels[i]!, re: m.rec.ts.re, sens: sens283(m.rec), wiring: m.rec.voice_coils === 2 ? (m.rec.ts_wiring ?? "parallel") : undefined, boxes: Object.fromEntries(m.designs.map((d) => [d.design.kind, d.vb_l])) }));
+  };
+  // Sizes with enough drivers get a page; a size's address must not be a brand's.
+  const hubs = hubSizes(pages);
+  const hubSet = new Set(hubs.map((h) => h.inches));
+  const brandSlugs = new Set(pages.map((p) => p.brandSlug));
+  for (const h of hubs) if (brandSlugs.has(sizeSlug(h.inches))) throw new Error(`Size page /drivers/${sizeSlug(h.inches)}/ has a brand's address`);
   for (const p of pages) {
-    const page = driverContent(p, { all: await shareLink(SITE, p.state), related: relatedDrivers(p, pages) }, chart);
+    const family = families.get(p.id);
+    const page = driverContent(p, { all: await shareLink(SITE, p.state), variants: variantsOf(p.id), sizeHub: p.rec.size_in !== undefined && hubSet.has(p.rec.size_in), related: relatedDrivers(p, pages, family && new Set(family)) }, chart);
     // The page's share card, next to it; pages without one keep the site's card.
     let imagePath: string | undefined;
     const jpg = await cards.jpeg(cardSvg(cardData(p)));
@@ -402,9 +419,23 @@ async function buildDriverPages(write: (path: string, html: string) => void, gui
     .map((slug) => ({ slug, name: db.brands.get(slug)?.name ?? pages.find((p) => p.brandSlug === slug)!.brand, pages: pages.filter((p) => p.brandSlug === slug) }))
     .sort((a, b) => a.name.localeCompare(b.name));
   for (const b of byBrand) {
-    write(brandPath(b.slug), layout({ ld: { crumbs: [{ name: "Drivers", path: "/drivers/" }, { name: b.name }] }, title: `${b.name} drivers: box sizes and T/S parameters`, description: `Suggested sealed, ported and passive radiator boxes for ${b.pages.length} ${b.name} drivers.`, path: brandPath(b.slug), content: brandContent(b.name, b.pages), guides, style }));
+    write(brandPath(b.slug), layout({ ld: { crumbs: [{ name: "Drivers", path: "/drivers/" }, { name: b.name }] }, title: `${b.name} drivers: box sizes and T/S parameters`, description: `Suggested sealed, ported and passive radiator boxes for ${b.pages.length} ${b.name} drivers.`, path: brandPath(b.slug), content: brandContent(b.name, b.pages, hubSet), guides, style }));
   }
-  write("/drivers/", layout({ title: "Driver box designs", description: `Suggested sealed, ported and passive radiator boxes for ${pages.length} drivers, with charts and live designs to open and change.`, path: "/drivers/", content: driversIndexContent(byBrand), guides, style }));
+  for (const h of hubs) {
+    const group = pages.filter((p) => p.rec.size_in === h.inches);
+    const words = sizeSlug(h.inches);
+    const rows = [...group].sort((a, b) => a.rec.ts.fs - b.rec.ts.fs || `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`, "en", { numeric: true }));
+    write(sizePath(h.inches), layout({
+      ld: { crumbs: [{ name: "Drivers", path: "/drivers/" }, { name: words }], list: rows.map((p) => ({ name: `${p.brand} ${p.model}`, path: driverPath(p.id) })) },
+      title: `${words} drivers: box sizes and T/S parameters`,
+      description: `Suggested sealed, ported and passive radiator boxes for ${group.length} ${words} drivers, with their Thiele/Small parameters.`,
+      path: sizePath(h.inches),
+      content: sizeContent(h.inches, group, hubs),
+      guides,
+      style,
+    }));
+  }
+  write("/drivers/", layout({ title: "Driver box designs", description: `Suggested sealed, ported and passive radiator boxes for ${pages.length} drivers, with charts and live designs to open and change.`, path: "/drivers/", content: driversIndexContent(byBrand, hubs), guides, style }));
 }
 
 /**
@@ -483,9 +514,18 @@ export async function build(outDir: string): Promise<string[]> {
   const links = await exampleLinks(SITE);
   const written: string[] = [];
   const today = process.env.SBG_BUILD_DATE ?? new Date().toISOString().slice(0, 10);
-  const lastmods = new LastmodStore(process.env.SBG_LASTMOD_STATE ?? join(HERE, "..", ".cache", "sitemap", "lastmod.json"), today);
+  const lastmods = new LastmodStore(process.env.SBG_LASTMOD_STATE ?? join(HERE, "..", ".cache", "sitemap", "lastmod.json"), today, SITE);
   const guidePaths = new Set(["/guides/", ...guides.map((g) => g.path)]);
-  const groupOf = (path: string): SitemapGroup => (path.startsWith("/drivers/") ? "drivers" : guidePaths.has(path) ? "guides" : "pages");
+  const brandSlugs = new Set(loadDb().brands.keys());
+  // Driver pages go in one sitemap per brand (Search Console then shows each brand's index rate);
+  // the drivers list and any other /drivers/ page (size lists) share "drivers".
+  const groupOf = (path: string): SitemapGroup => {
+    if (path.startsWith("/drivers/")) {
+      const brand = path.split("/")[2];
+      return brand && brandSlugs.has(brand) ? `drivers-${brand}` : "drivers";
+    }
+    return guidePaths.has(path) ? "guides" : "pages";
+  };
   const entries: SitemapEntry[] = [];
   const write = (path: string, html: string) => {
     const dir = join(outDir, path);
@@ -627,9 +667,9 @@ export async function build(outDir: string): Promise<string[]> {
   const appIndex = join(outDir, "index.html");
   entries.unshift({ path: "/", group: "pages", lastmod: existsSync(appIndex) ? lastmods.date("/", readFileSync(appIndex, "utf8")) : today });
   for (const [name, xml] of Object.entries(sitemapFiles(SITE, entries))) writeFileSync(join(outDir, name), xml);
-  lastmods.save();
+  lastmods.save(join(outDir, "sitemap-state.json"));
   console.log(`Sitemaps: ${entries.length} URLs, ${lastmods.changed} new or changed since the last saved build`);
-  writeFileSync(join(outDir, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
+  writeFileSync(join(outDir, "robots.txt"), `User-agent: *\nAllow: /\nDisallow: /sitemap-state.json\n\nSitemap: ${SITE}/sitemap.xml\n`);
   return written;
 }
 

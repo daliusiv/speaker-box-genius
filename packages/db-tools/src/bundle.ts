@@ -9,7 +9,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { loadDatabase, REPO_ROOT } from "./load.ts";
-import type { Source } from "../../schema/src/index.ts";
+import { prTravel, type Source } from "../../schema/src/index.ts";
 
 /** Where the values came from, for the app's badges: measured beats datasheet beats community. */
 const sourceKind = (sources: Source[]) =>
@@ -60,7 +60,9 @@ const index = {
     model: p.model,
     size_in: p.size_in,
     sd_cm2: p.params.sd_cm2,
-    xmax_mm: p.params.xmax_mm,
+    xmax_mm: prTravel(p.params).mm,
+    // No linear Xmax published: the figure is the mechanical limit.
+    xmech: prTravel(p.params).mechanical || undefined,
     status: p.status,
     source: sourceKind(p.sources),
     flags: flags.length ? flags.map((f) => f.code) : undefined,

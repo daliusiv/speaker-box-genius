@@ -60,11 +60,11 @@ For like-for-like comparisons, set **Air** to **WinISD defaults** in Settings, a
 
 ## Moving over from WinISD
 
-1. **Bring your drivers and projects.** On the Driver tab, open **Driver tools** and choose **Import WinISD or OpenISD file…**. A `.wpr` (or OpenISD `.owpr`) project brings its box and its settings too, including a port end correction you changed from WinISD's 0.732 (**Settings → Ports → End correction K**).
+1. **Bring your drivers and projects.** On the Driver tab, open **Edit T/S → Fill from** and choose **WinISD or OpenISD file…** (exporting a driver as `.wdr` is in **Save & Export**). A `.wpr` (or OpenISD `.owpr`) project brings its box and its settings too, including a port end correction you changed from WinISD's 0.732 (**Settings → Simulation → Ports → End correction K**).
 2. **Or pick a driver from the database.** Press **Browse drivers** and search by brand, model or size.
-3. **Add boxes** on the Boxes tab, and press a preset (Qtc 0.707, QB3 and others) to size each one for the driver: they give the same box as WinISD's wizard.
+3. **Add boxes** on the Boxes tab, and choose a **Preset** (Qtc 0.707, QB3 and others) to size each one for the driver: they give the same box as WinISD's wizard.
 4. **Share it:** the **Share** button gives you the link, a forum image and posts ready to paste.
-5. **Check it in WinISD if you like:** under **Share**, **Open in WinISD** saves a box as a `.wpr` project with the driver and settings, and says what WinISD can't hold (EQ, passive parts, baffle step, room gain).
+5. **Check it in WinISD if you like:** **Save & Export → WinISD project** (☰ menu) saves a box as a `.wpr` project with the driver and settings, and says what WinISD can't hold (EQ, passive parts, baffle step, room gain).
 
 [[Open the example|winisd-example]]
 

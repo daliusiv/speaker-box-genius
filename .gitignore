@@ -21,3 +21,7 @@ issue-error.md
 
 # Guide charts built for the site build (packages/web/vite.ssr.config.ts)
 packages/web/ssr-dist/
+
+# Playwright runs (pnpm test:ui); the baselines in packages/web/e2e/__screenshots__ are committed
+packages/web/test-results/
+packages/web/playwright-report/

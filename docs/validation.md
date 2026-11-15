@@ -35,7 +35,7 @@ amplifier resistance (Rg, 0.1 Ω by default) in series with Re: Qes' = Qes·(Re 
 `winisdAlignments.ts` holds the curves, read from WinISD for synthetic drivers (Fs 30 Hz,
 Qms 5, Vas 50 L, Re 6 Ω, Qts 0.14 to 0.76 in steps of 0.02) and interpolated (monotone cubic).
 Against 19 drivers that aren't in that sweep (Re 3–6.5 Ω, Qts 0.20–0.70) they agree within
-WinISD's two-decimal display. Settings → Box presets → Textbook gives the lossless
+WinISD's two-decimal display. Settings → Simulation → Box → Box presets → Textbook gives the lossless
 equations instead (QB3/B4, Keele's alignment above B4, SQB3, C4/SC4, BB4/SBB4).
 
 To add a check: load the driver's `.wdr` in WinISD's new-project wizard, choose Vented and the
@@ -66,7 +66,7 @@ can be lost) and values the OCR passes disagreed on were dropped. What isn't com
 few leftover differences, are listed in `winisd-run.ts` and on the page.
 
 What the run settled about how WinISD computes. The box losses and the bandpass phase are now the
-app's for everyone; WinISD's watts are Settings → Watts "Into coil + cable (like WinISD)", which
+app's for everyone; WinISD's watts are Settings → Simulation → Amplifier & cable → Watts "Into coil + cable", which
 the WinISD preset and opening a WinISD project set (the default stays the amplifier's view):
 
 - **Watts.** WinISD's watts go into the voice coil and
@@ -117,7 +117,7 @@ The builder never imports the engine's model code: a wrong formula on either sid
 difference. Tolerances: SPL 0.01 dB (95th percentile), impedance, excursion, port speed and box
 pressure 0.1 %, phase 0.1°; in practice the engine and the circuit agree to about 1e-9.
 
-What's covered (439 cases, every one compared on every output):
+What's covered (441 cases, every one compared on every output; a 442nd, the driver in free air, is checked against closed forms only):
 
 - **Sealed, ported, passive radiator and bandpass boxes:** 60 generated cases of each kind (bandpass:
   4th order, 6th order parallel, 6th order series) plus hand-made ones. The generator
@@ -200,7 +200,7 @@ in `packages/engine/test/fixtures/crosscheck/`, compared by `crosscheck.test.ts`
 
 | What | Program | Result |
 |---|---|---|
-| DSP filters (Settings → Export to DSP) | REW 5.31.3, Generic EQ: peak, Butterworth high-pass, low and high shelf with Q, Linkwitz transform, saved as 48 kHz coefficients | Coefficients equal to rounding (1e-15); the Linkwitz transform within 2e-9 (prewarped at a slightly different point), 2e-5 dB |
+| DSP filters (Signal → Export to DSP) | REW 5.31.3, Generic EQ: peak, Butterworth high-pass, low and high shelf with Q, Linkwitz transform, saved as 48 kHz coefficients | Coefficients equal to rounding (1e-15); the Linkwitz transform within 2e-9 (prewarped at a slightly different point), 2e-5 dB |
 | T/S fit from an impedance file | REW 5.31.3, Thiele-Small parameters, on three files the engine wrote (plain Le, L2R2 coil, one with ±1 % noise) | Fs, Qms and Qes within 0.3 % of REW and of the true values; the L2R2 file is fitted exactly with the L2R2 coil model |
 | Passive parts | XSim 4: coil + resistance in line, capacitor across, resistor in line, Zobel across, in front of a driver's impedance file | Response within 0.045 dB and 0.16°, impedance within 0.09 % from 6 Hz to 20 kHz (XSim interpolates the files on its own grid) |
 | Volume calculator | FreeCAD 1.0: walled box, cylinder with end caps, sphere, truncated pyramids (gentle and steep), a port tube | Equal (1e-6). A wedge with one vertical face equals the car wedge shape exactly; entered as tapered (all sides) it reads 0.31 % high |
@@ -209,7 +209,7 @@ in `packages/engine/test/fixtures/crosscheck/`, compared by `crosscheck.test.ts`
 WinISD's voice-coil connection (Parallel/Series) on a two-coil driver changes nothing in its
 simulation: the driver's values are taken as already wired, which is how the app imports them.
 
-### VituixCAD (Settings → Match → VituixCAD)
+### VituixCAD (Settings → General → Match → VituixCAD)
 
 **F3.** WinISD reads F3 from the passband, VituixCAD from the curve's maximum. The app does either; peak mode
 searches the bass up to 5 × the box's Fc or Fb, and uses the passband if the response is still
@@ -232,7 +232,7 @@ The preset sets F3 from the response peak, coil inductance off, leaked air lost,
 
 **Coil inductance.** VituixCAD's enclosure tool leaves Le out of the SPL: with Le 2 mH its f3/f6/f10 don't move, though its impedance includes Le. The preset turns Le off for the SPL only.
 
-**Absorption (Settings → Box losses → Absorption).** VituixCAD's Qa makes the box act larger, as Vb × (1 + 0.9·Qa^−0.9): +1.4 % at Qa 100, +11.3 % at Qa 10, +48 % at Qa 2. Box volume it reports for 500 L typed:
+**Absorption (Settings → Simulation → Box → Absorption).** VituixCAD's Qa makes the box act larger, as Vb × (1 + 0.9·Qa^−0.9): +1.4 % at Qa 100, +11.3 % at Qa 10, +48 % at Qa 2. Box volume it reports for 500 L typed:
 
 | Qa | 2 | 5 | 10 | 20 | 50 | 100 | 200 | 500 | 1000 |
 |---|---|---|---|---|---|---|---|---|---|
@@ -240,7 +240,7 @@ The preset sets F3 from the response peak, coil inductance off, leaked air lost,
 
 The formula matches within VituixCAD's display rounding (0.05 L on 500 L) for any volume and tuning. It is ignored when stuffing is set (stuffing has its own gain). Alignment presets give the slightly smaller typed volume VituixCAD's tables give; they were 1-2 % smaller than ours at Qa 100, which this explains. Bandpass chambers follow too, and exports to WinISD and LTspice carry the volume the box acts as, with a note.
 
-**Port sound (Settings → Ports → Port sound).** A ported box in VituixCAD with the port left next to the driver has its port heard later by the port's length (the physical length, no end correction), at the same level. Found by changing only the port's length at the same box and tuning (Fb 30 Hz, 50 L, and one 10 L box); the group delay peak in ms:
+**Port sound (Settings → Simulation → Ports → Port sound).** A ported box in VituixCAD with the port left next to the driver has its port heard later by the port's length (the physical length, no end correction), at the same level. Found by changing only the port's length at the same box and tuning (Fb 30 Hz, 50 L, and one 10 L box); the group delay peak in ms:
 
 | Port | VituixCAD | App |
 |---|---|---|
@@ -323,31 +323,31 @@ aren't kept in the repository.
 
 WinISD takes a volume, not a shape, and Hornresp has no wedge, so the car wedge is checked against geometry. Its inside is a trapezoidal prism with the sloped panel taking its thickness ÷ sin θ across the horizontal; `wedge.test.ts` and `shapeCrosscheck.test.ts` (cases in `fixtures/crosscheck/shapes.json`) compare the closed form with an independent shoelace sum of the inside polygon (the worked example, 800 × 380 mm, 400/250 mm deep, 18 mm walls: 75.5986 L), check that every panel of the panel table plus the inside fills the outside exactly (butt and mitred, slope front and rear, double baffle), that equal depths give the box, the solver's round trips, the saw angles and a hand-worked motor-clearance case at 60°. FreeCAD 1.1.4 agrees to six decimals on five wedges, three with a double-thickness sloped baffle (`fixtures/crosscheck/wedge_check.py` cuts each wall out of the outside shape as a slab, so no inside formula is shared; readings in `freecad-wedge.json`). The FreeCAD wedge in the cross-checks above (one vertical face, 18 mm walls) equals the wedge shape exactly (it read 0.31 % high as a tapered shape). Other calculators usually take `(W − 2T)(H − 2T)(D_avg − 2T)`: 0.47 % high on the example, more with a double baffle or a steeper slope. The tapered (all sides) shape reads a one-slope wedge about 0.2 % high (it splits the taper between front and back); its own model is unchanged.
 
-### FreeCAD macro export (Build → Cut list → FreeCAD macro)
+### FreeCAD macro export (Build → Cut list → Export → FreeCAD macro)
 
 The macro is generated from the same panel table as the cut list (`packages/engine/src/freecad.ts`) and checks itself when it runs: it builds the air inside as a hidden `Cavity` solid and raises an error if FreeCAD's volume of it differs from the app's inside volume by more than 1 part in 10⁶, and likewise for the panels (before their holes are cut) plus the cavity against the outside volume. A CAD kernel thereby re-measures every design that is exported, not only the fixed cases in `vol.py`. Without FreeCAD in CI, `freecad.test.ts` reads the polygons and extrusions back out of the generated macros for every wedge (slope front and rear, butt and mitred, double baffle) and box, and checks that panels plus cavity equal the outside and the cavity the inside (within 10⁻⁸; coordinates are written to 10⁻⁶ mm), one cylinder per baffle hole starting 1 mm outside the face, and that every macro parses as Python (`ast.parse`, skipped when python3 is missing). Cylinders, spheres and tapered boxes are written as FreeCAD primitives (`makeCylinder`, `makeSphere`, a ruled loft between two rectangles) with the same check against the calculator's gross volume. A box is modelled with the wedge's joinery (the sides cover the outside), not the cut list's; the inside is the same. **Run in FreeCAD 1.1.4 (11 Nov 2026):** nine exported macros (wedge slope front and rear, butt and mitred, double baffle; a box with two driver holes; cylinder; sphere; tapered box) all ran, every self-check passed (worst 1.2 × 10⁻⁹) and every solid is valid; the holes sit on the baffle and nothing is mirrored. Log: `packages/engine/test/fixtures/freecad-run/results.txt` (made by `run_all.py` there).
 
-### Ports as pipes (Settings → Ports → Pipe)
+### Ports as pipes (Settings → Simulation → Ports → Pipe)
 
 Not in WinISD, so not part of the WinISD comparison (the default, "Air mass", is what's compared). It is how Hornresp models ports, so the Hornresp box cases use it: the ported box matches within 0.3 % in impedance and 0.02 dB in the port's own output. A port is modelled as a uniform pipe of its throat's area and its effective length (end corrections included, so it tunes the box exactly as the air-mass port), radiating at its outer end: it adds the pipe's resonances at about c / 2L, 2c / 2L, … Checks (`portflare.test.ts`): within 0.35 dB of the air-mass port below 60 Hz (the pipe's air is slightly springy, which the air-mass model leaves out), and the port's air speed peaks within 5 % of c / 2L. Not modelled: the box's own standing waves, which drive the port hardest when they coincide (the port card warns when they do), and wall losses in the port. Bandpass ports are pipes too: those to the outside like a vented box's, and a series box's rear port as a pipe joining the two chambers (`portflare.test.ts`: within 0.5 dB of air-mass ports below 60 Hz).
 
-### High-pass filter (Settings → High-pass filter)
+### High-pass filter (Signal → High-pass)
 
 Butterworth (orders 1–4) and Linkwitz-Riley, applied to the voltage before the amplifier. Compared with Hornresp's Active Filter Wizard on the ported box at 25 Hz (2nd- and 3rd-order Butterworth, 4th-order Linkwitz-Riley): the filtered voltage agrees within 0.0005 %, and SPL, excursion, impedance and group delay as closely as without the filter (see the Hornresp notes, case B12).
 
-### Leaked air (Settings → Box losses → Leaked air)
+### Leaked air (Settings → Simulation → Box → Leaked air)
 
-A box's leak (Ql) takes energy out; "Heard (like WinISD)", the default, also counts the air that escapes as sound, as through a real gap, and "Lost (like Hornresp)" leaves it out. Hornresp's QL is the second kind: with it, the bandpass cases match within 0.03 dB (4th-order port, parallel 6th-order), 0.05 dB (series 6th-order) and 0.1 dB (4th-order with a passive radiator) at the 95th percentile, where the parallel 6th-order box had differed by up to 1.3 dB. Impedance and excursion don't change. Hornresp has no QL for ordinary sealed, ported and PR boxes (their records have no leak), so there the setting is checked only against itself. Checks (`bandpass.test.ts`): only the output changes, the leak's share grows above a bandpass box's passband, nothing changes without a leak.
+A box's leak (Ql) takes energy out; "Heard" (WinISD's way), the default, also counts the air that escapes as sound, as through a real gap, and "Lost" (Hornresp's way) leaves it out. Hornresp's QL is the second kind: with it, the bandpass cases match within 0.03 dB (4th-order port, parallel 6th-order), 0.05 dB (series 6th-order) and 0.1 dB (4th-order with a passive radiator) at the 95th percentile, where the parallel 6th-order box had differed by up to 1.3 dB. Impedance and excursion don't change. Hornresp has no QL for ordinary sealed, ported and PR boxes (their records have no leak), so there the setting is checked only against itself. Checks (`bandpass.test.ts`): only the output changes, the leak's share grows above a bandpass box's passband, nothing changes without a leak.
 
-### Cone air load (Settings → Box losses → Cone air load)
+### Cone air load (Settings → Simulation → Box → Cone air load)
 
-Sealed, ported and PR boxes. "Fixed mass (like WinISD)", the default, keeps the air in front of the cone in Mms. "Piston, like Hornresp" takes that air (8ρa³/3) out of Mms and loads the cone with a baffled piston's radiation impedance instead, n × that of a piston of n·Sd for n drivers side by side. Compared with Hornresp (see the notes): two drivers in one box (B7, B11) and two identical boxes side by side (Tools → Multiple Speakers, B17: one box of twice the volume with twice the drivers) within 0.04 dB and 0.25 % in impedance (the SPL compared from radiated power, as Hornresp gives it; the app's box charts are on-axis, which is within 0.17 dB of it here). With it, a sealed box's Fc, Qtc and F3 use the piston's bass mass (√n × one cone's front air). Checks (`simulate.test.ts`): the same in the deep bass, a lighter cone up high, two drivers' resonance lower, bandpass boxes unchanged.
+Sealed, ported and PR boxes. "Fixed mass" (WinISD's way), the default, keeps the air in front of the cone in Mms. "Piston" (Hornresp's way) takes that air (8ρa³/3) out of Mms and loads the cone with a baffled piston's radiation impedance instead, n × that of a piston of n·Sd for n drivers side by side. Compared with Hornresp (see the notes): two drivers in one box (B7, B11) and two identical boxes side by side (Tools → Multiple Speakers, B17: one box of twice the volume with twice the drivers) within 0.04 dB and 0.25 % in impedance (the SPL compared from radiated power, as Hornresp gives it; the app's box charts are on-axis, which is within 0.17 dB of it here). With it, a sealed box's Fc, Qtc and F3 use the piston's bass mass (√n × one cone's front air). Checks (`simulate.test.ts`): the same in the deep bass, a lighter cone up high, two drivers' resonance lower, bandpass boxes unchanged.
 
 ### Box pressure (chart "Box pressure")
 
 The peak sound pressure inside the box: the chamber pressure the network solves for, per frequency (both chambers of a bandpass box). Compared with Hornresp's Tools → Diaphragm Pressure → Rear Chamber Side (screenshots, as it can't be exported; `boxpressure-hornresp.test.ts`): the sealed box (B1) within 2 Pa of its 267 Pa in the bass, the ported box (B2) peaking at 342 Pa at 44 Hz against Hornresp's 340 Pa at about 44 Hz. Checks: in the bass a sealed box's pressure is its air spring's, ρc²·Sd·x / V.
 
-### Air distortion (Air distortion chart; limit and box fill in Settings → Air distortion)
+### Air distortion (Air distortion chart; limit and box fill in Settings → Limits → Air distortion)
 
 The box's air is a spring that stiffens more when squeezed than it softens when stretched (P·Vⁿ = const, n = 1.4 for an empty box, 1.3 / 1.2 / 1.1 for the fill settings). Solved as a 2nd-order perturbation: the box pressure P at f (the linear model's) gives a pressure source n(n+1)/4 · P₀ · (P/ρc²)² at 2f in series with the air spring, which drives the same circuit at 2f with the amplifier silent (its source resistance still damps the cone); HD2 is the radiated 2f over the radiated f, at the frequency of the note that makes it. Ports, passive radiators, pipes, leaks and both chambers of a bandpass box are in the circuit as for the response, so near a ported or PR box's tuning, where the cone barely moves but the box pressure peaks, it isn't the cone's excursion that counts. Neither WinISD nor Hornresp models it. Checks (`airspring.test.ts`): against a direct time-domain solution of the nonlinear equations (sealed and PR boxes, 6 and 7 frequencies, 15–100 Hz) within 1 % (3 % where the air is squeezed by more than 5 %); a sealed box against its closed form (γ+1)·(Sd·x/Vb)·kb/|kt − (2ω)²M + j2ωR| within 0.5 %; HD2 ∝ √power and ∝ n(n+1); at max SPL with the limit counted, HD2 equals the limit; a bandpass box with a transparent front chamber gives its sealed box's. Every other result is the same with or without it (it counts in Max SPL only when set to). Where the cone squeezes the air by more than 10 % of the box the chart calls it a rough estimate (the perturbation reads about 0.7 % high there, and higher harmonics grow), past 20 % outside the model. The driver's own nonlinearity (Bl, suspension) isn't included.
 
@@ -390,12 +390,12 @@ Hornresp's semi-inductance model (Thorborg and Futtrup): Re + jωLeb + (jωLe �
 
 ### Port and PR position (Box → port or PR card → Position)
 
-A port or passive radiators next to the cone (the default, as WinISD has them), on the back panel (the volume calculator's outside depth, when it's linked to the box) or a set distance away; a parallel 6th-order bandpass box takes the distance between its two openings. Settings → SPL decides how the two add up, as for a line's mouth. In front of the box, the port's sound arrives d/c later at the same level (a far listener on axis). VituixCAD's Enclosure tool hears the port from its far end instead (Settings → Ports → Port sound; see the VituixCAD section), which is where its 2–3 % lower group delay comes from. From radiated power, the two are point sources d apart with their powers summed, |a|² + |b|² + 2·Re(a·b*)·sinc(kd), as Hornresp's Acoustic Path Length: the level changes, the phase doesn't (matched to Hornresp 60.60 on the ported box B2 with the port 25, 50 and 100 cm away and the PR box B3 with the PR 50 cm away: 0.012–0.015 dB on average, as on lines, cases 34–36). The SPICE netlist delays the port's sound with a matched lossless line (ledger #29; cases p01–p03, within 1e-9 dB of the engine); radiated power has no linear-circuit form, so a netlist from that setting says so. Checks: a distance of 0 gives the same numbers bit for bit; impedance, excursion and port speed never change; a 4th-order or series 6th-order bandpass box (one opening to the room) is unaffected. When a distance is set, the Response chart adds the same box with its port side by side, dashed.
+A port or passive radiators next to the cone (the default, as WinISD has them), on the back panel (the volume calculator's outside depth, when it's linked to the box) or a set distance away; a parallel 6th-order bandpass box takes the distance between its two openings. Settings → Simulation → SPL decides how the two add up, as for a line's mouth. In front of the box, the port's sound arrives d/c later at the same level (a far listener on axis). VituixCAD's Enclosure tool hears the port from its far end instead (Settings → Simulation → Ports → Port sound; see the VituixCAD section), which is where its 2–3 % lower group delay comes from. From radiated power, the two are point sources d apart with their powers summed, |a|² + |b|² + 2·Re(a·b*)·sinc(kd), as Hornresp's Acoustic Path Length: the level changes, the phase doesn't (matched to Hornresp 60.60 on the ported box B2 with the port 25, 50 and 100 cm away and the PR box B3 with the PR 50 cm away: 0.012–0.015 dB on average, as on lines, cases 34–36). The SPICE netlist delays the port's sound with a matched lossless line (ledger #29; cases p01–p03, within 1e-9 dB of the engine); radiated power has no linear-circuit form, so a netlist from that setting says so. Checks: a distance of 0 gives the same numbers bit for bit; impedance, excursion and port speed never change; a 4th-order or series 6th-order bandpass box (one opening to the room) is unaffected. When a distance is set, the Response chart adds the same box with its port side by side, dashed.
 
 ### Max SPL: power rating against real power, amplifier limits
 
 The default holds Pe against V²/Re, as WinISD does (that's what the WinISD cases compare). Settings → "Power rating vs" → "Real power" holds it against the real power the driver takes, V·I·cos φ, as Hornresp's Maximum SPL does; "Amp max volts" and "Amp max current" add the amplifier's own limits (shown as "Amplifier" in the limit strip). Both are compared with Hornresp (see its notes): maximum SPL within 0.03 dB on average for a sealed and a ported box, an MLTL and a tapped horn, also with the amplifier at 25 V. Checks (`simulate.test.ts`): at a thermally limited point the driver takes exactly Pe; never below the V²/Re maximum; volts and amps never exceed the amplifier's limits and each sets the maximum somewhere.
 
-### Hot voice coil (Settings → Voice coil °C)
+### Hot voice coil (Settings → Simulation → Voice coil)
 
-WinISD's "voice coil temperature rise" (compared in the full WinISD run: same results at +60 °C) and Hornresp's Power Compression, compared at 120 °C for a sealed box and an MLTL (see its notes: within 0.05 dB and 0.5 %). Re(T) = Re · (1 + 0.00393 (T − 20)), Bl, suspension and Le unchanged. With Settings → Watts "Into coil + cable" (WinISD's way, set by the WinISD preset) the watts go into the hot coil; with "Amp volts from cold Re" (Hornresp's way and the default, and with a drive set in volts) the volts stay and the hot coil takes less power, which the thermal limit counts. Checks (`simulate.test.ts`): factor 1.3144 at 100 °C; above the bass the output falls towards 20·log of the Re ratio (2.37 dB at 100 °C; 0.13 dB short of it at 10 × fs with Qes 0.4, where the motor's damping still counts); less loss near resonance (higher Q); impedance minimum up by the Re ratio. Relative view: referred to the hot driver (shape and F3); dB SPL view: the lost output.
+WinISD's "voice coil temperature rise" (compared in the full WinISD run: same results at +60 °C) and Hornresp's Power Compression, compared at 120 °C for a sealed box and an MLTL (see its notes: within 0.05 dB and 0.5 %). Re(T) = Re · (1 + 0.00393 (T − 20)), Bl, suspension and Le unchanged. With Settings → Simulation → Amplifier & cable → Watts "Into coil + cable" (WinISD's way, set by the WinISD preset) the watts go into the hot coil; with "Amp volts from cold Re" (Hornresp's way and the default, and with a drive set in volts) the volts stay and the hot coil takes less power, which the thermal limit counts. Checks (`simulate.test.ts`): factor 1.3144 at 100 °C; above the bass the output falls towards 20·log of the Re ratio (2.37 dB at 100 °C; 0.13 dB short of it at 10 × fs with Qes 0.4, where the motor's damping still counts); less loss near resonance (higher Q); impedance minimum up by the Re ratio. Relative view: referred to the hot driver (shape and F3); dB SPL view: the lost output.

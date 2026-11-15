@@ -1,0 +1,139 @@
+/* Layout of the /ui catalogue only (not shipped to the app). Tokens only, like ui.css. */
+.cat {
+  max-width: calc(var(--size-col-control) * 9);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4) var(--space-12);
+}
+
+.cat-head h1 {
+  font-size: var(--text-xl);
+}
+
+.cat-head p,
+.cat-note {
+  margin: var(--space-2) 0 0;
+  color: var(--muted);
+  font-size: var(--text-md);
+}
+
+.cat-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-md);
+}
+
+.cat-block {
+  margin: var(--space-12) 0 0;
+}
+
+.cat-block > h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.cat-grid {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-4) 0 0;
+}
+
+@media (min-width: 768px) {
+  .cat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.cat-specimen {
+  padding: var(--space-4);
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.cat-specimen > h3 {
+  margin: 0 0 var(--space-3);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cat-specimen-body {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.cat-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cat-token {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--space-6);
+}
+
+.cat-token code,
+.cat-swatch code,
+.cat-radius code {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.cat-bar {
+  display: block;
+  height: var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+}
+
+.cat-radius {
+  display: inline-grid;
+  place-items: center;
+  width: var(--space-12);
+  height: var(--space-12);
+  border: var(--border-hairline) solid var(--accent);
+}
+
+.cat-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--size-col-control) * 0.9), 1fr));
+  gap: var(--space-2);
+}
+
+.cat-swatch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cat-swatch > span {
+  width: var(--space-5);
+  height: var(--space-5);
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.cat-flush {
+  margin: 0 calc(var(--space-4) * -1) calc(var(--space-4) * -1);
+}
+
+.cat-menu-room {
+  min-height: calc(var(--size-control) * 5);
+}
+
+.cat-recipe {
+  max-width: calc(var(--size-col-control) * 3);
+}
+
+.cat-pad {
+  padding: 0 var(--space-4);
+}

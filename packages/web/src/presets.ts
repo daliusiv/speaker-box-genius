@@ -82,7 +82,7 @@ export function flatPresetHelp(a: AlignmentDriver | null, pr: boolean): string {
   const tail = pr ? ", reached with added mass" : "";
   return a && !asWinisd(a)
     ? `${how}: QB3 (B4 at Qts ≈ 0.38) for low-Qts drivers, Keele's alignment for Qts 0.38–0.6${tail} (textbook presets, set in Settings)`
-    : `${how}: QB3 as WinISD's wizard sizes it, for Qts up to about 0.62${tail} (Settings → Alignment presets)`;
+    : `${how}: QB3 as WinISD's wizard sizes it, for Qts up to about 0.62${tail} (Settings → Box → Box presets)`;
 }
 
 /** What a family's preset does, for its chip's tooltip. */

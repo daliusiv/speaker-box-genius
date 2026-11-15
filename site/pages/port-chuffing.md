@@ -22,7 +22,7 @@ Around the box's tuning frequency, most of the bass comes out of the port, and t
 
 The usual rule is to keep the **peak air speed under about 17 m/s**, about 5 % of the speed of sound. That's where the app draws its **chuffing-risk line** on the Port speed chart. Ports with well-rounded (flared) ends tolerate more.
 
-How much port noise you accept is up to you: car SPL builds often run 25–30 m/s at full power. Set your own line in **Settings → Ports → Chuffing line**; the chart, the summary's ⚠ and the [design assistant](/guides/design-assistant/) all use it.
+How much port noise you accept is up to you: car SPL builds often run 25–30 m/s at full power. Set your own line in **Settings → Limits → Port speed → Chuffing line**; the chart, the summary's ⚠ and the [design assistant](/guides/design-assistant/) all use it.
 
 ## Area against length
 
@@ -63,11 +63,11 @@ The [design assistant](/guides/design-assistant/) works through the same choices
 
 ## Long ports have their own resonance
 
-A long port is also a pipe, with its own resonance at about the speed of sound divided by twice its length: around **200 Hz** for the {{num:port-sizes/5/len:0}} cm slot. For a subwoofer crossed over at 80 Hz, that's harmless. For a ported speaker that plays higher, it can show up as a peak in the midrange. Set **Settings → Ports → Pipe** to see a port's pipe resonances on the charts.
+A long port is also a pipe, with its own resonance at about the speed of sound divided by twice its length: around **200 Hz** for the {{num:port-sizes/5/len:0}} cm slot. For a subwoofer crossed over at 80 Hz, that's harmless. For a ported speaker that plays higher, it can show up as a peak in the midrange. Set **Settings → Simulation → Ports → Pipe** to see a port's pipe resonances on the charts.
 
 ## Checklist
 
-1. Keep the peak port speed under about 17 m/s at your real power (the red line on the Port speed chart), or the line you've set in Settings.
+1. Keep the peak port speed under about 17 m/s at your real power (the red line on the Port speed chart), or the line you've set in **Settings → Limits → Port speed**.
 2. Make the port bigger before anything else; press **Set port length** to recut it for the tuning.
 3. If it won't fit, use a slot along a wall, bend it, or flare its ends.
 4. Check a long port's pipe resonance if the speaker plays above about 100 Hz.
@@ -75,4 +75,4 @@ A long port is also a pipe, with its own resonance at about the speed of sound d
 
 [[Open the worked example|port-example]]
 
-> **Port compression:** at high air speeds a port also loses output. **Settings → Port compression** estimates that loss at your power level, so you can see what a fast port costs you as well as how it sounds.
+> **Port compression:** at high air speeds a port also loses output. **Settings → Simulation → Ports → Port compression** estimates that loss at your power level, so you can see what a fast port costs you as well as how it sounds.

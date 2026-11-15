@@ -467,7 +467,7 @@ button.browse .count {
 
 dialog.library {
   width: min(960px, calc(100vw - 2rem));
-  height: min(760px, calc(100vh - 2rem));
+  height: min(760px, calc(100dvh - 2rem));
   max-width: none;
   max-height: none;
   padding: 0;
@@ -510,73 +510,6 @@ dialog.library.assistant::backdrop {
 .lib-inner button.icon {
   font-size: 1.3rem;
   line-height: 1;
-}
-
-input.lib-search {
-  width: 100%;
-  padding: 0.55rem 0.7rem;
-  font: inherit;
-  font-size: 1rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
-  color: var(--fg);
-}
-
-input.lib-search:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: -1px;
-}
-
-.lib-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem 1.4rem;
-  align-items: flex-start;
-}
-
-.lib-filter,
-label.lib-filter {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-  font-size: 0.8rem;
-}
-
-.lib-filter > span {
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.lib-filter select {
-  min-width: 10rem;
-}
-
-.lib-filter .chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-.lib-filter button.chip {
-  color: var(--fg);
-  border-color: var(--border);
-  font-weight: 500;
-}
-
-.lib-filter button.chip.on {
-  background: var(--accent-soft);
-  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
-  color: var(--accent);
-}
-
-.lib-status {
-  display: flex;
-  gap: 1rem;
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.8rem;
 }
 
 .lib-table {
@@ -688,12 +621,6 @@ label.lib-filter {
   .lib-table td:last-child {
     padding-right: 0.8rem;
   }
-
-  /* Brand above model so the numbers fit on a phone. */
-  .lib-table .lib-brand {
-    display: block;
-    font-size: 0.75rem;
-  }
 }
 
 /* One kind of passive radiator in a box: its own card under the box's fields. */
@@ -787,10 +714,6 @@ output.fixed::before {
   color: var(--warn);
   font-size: 0.85rem;
 }
-.driver-flag {
-  margin: 8px 0 0;
-}
-
 .conflicts {
   margin-top: 0.6rem;
   padding: 0.5rem 0.7rem;
@@ -1194,23 +1117,6 @@ button:disabled {
 
 .calc-offer button.chip {
   min-height: 2rem;
-}
-
-.quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0.5rem 0 0.75rem;
-}
-
-.quick-actions button.chip {
-  min-height: 2rem;
-  padding-inline: 0.8rem;
-}
-
-.amp-load {
-  margin: 0.6rem 0 0.2rem;
-  font-size: 0.9rem;
 }
 
 details.why > summary {
@@ -2158,21 +2064,6 @@ button.check-fix {
 }
 
 @media (max-width: 640px) {
-  /* Narrower label and unit columns give the numbers more room. */
-  .ts-editor .fields {
-    gap: 0.5rem 0.6rem;
-  }
-
-  .ts-editor label {
-    grid-template-columns: 2.7rem 1fr 2.3rem;
-    gap: 0.3rem;
-  }
-
-  .ts-editor .unit {
-    min-width: 0;
-    font-size: 0.75rem;
-  }
-
   /* The clear button shows only while editing the field (emptying the field clears it too). */
   .ts-input.has-clear button.clear {
     display: none;
@@ -2188,49 +2079,6 @@ button.check-fix {
 
   .ts-input.has-clear:focus-within input {
     padding-right: 1.5rem;
-  }
-}
-
-@media (max-width: 359px) {
-  /* The smallest phones: one parameter per row, so every value has room. */
-  .ts-editor .fields {
-    grid-template-columns: 1fr;
-  }
-
-  .ts-editor label {
-    grid-template-columns: 3.2rem 1fr 2.6rem;
-  }
-}
-
-/* Database browser: search with a Filters button that folds the filters away on phones */
-.lib-searchrow {
-  display: flex;
-  gap: 0.5rem;
-  align-items: stretch;
-}
-
-.lib-searchrow input.lib-search {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.lib-filter-toggle {
-  display: none;
-  white-space: nowrap;
-}
-
-.lib-filter-toggle.has-filters {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-@media (max-width: 640px) {
-  .lib-filter-toggle {
-    display: inline-block;
-  }
-
-  .lib-filters:not(.open) {
-    display: none;
   }
 }
 
@@ -2414,6 +2262,13 @@ dialog.finder .lib-inner {
   font-size: 11px;
   color: var(--muted);
   vertical-align: 1px;
+}
+.lib-mech {
+  white-space: nowrap;
+}
+.lib-mech .lib-tag {
+  margin-left: 3px;
+  padding: 0 3px;
 }
 .lib-tag-ok {
   border-color: color-mix(in srgb, var(--fg) 40%, transparent);
@@ -2984,98 +2839,6 @@ body.print-build #print-root .fold-chamber {
   stroke-width: 2;
 }
 
-/* Help strip for the field in focus (or under the mouse) */
-.help-dock {
-  position: fixed;
-  left: 50%;
-  top: 0;
-  z-index: 60;
-  transform: translateX(-50%);
-  width: min(40rem, calc(100vw - 1.5rem));
-  padding: 0.55rem 0.8rem;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--draw);
-  border-radius: 10px;
-  background: var(--card);
-  color: var(--fg);
-  font-size: 0.88rem;
-  line-height: 1.4;
-  box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
-  pointer-events: none;
-  animation: help-in 0.12s ease-out;
-}
-.help-dock b {
-  color: var(--draw);
-}
-@keyframes help-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 6px);
-  }
-}
-@media print {
-  .help-dock {
-    display: none;
-  }
-}
-/* A field with help: its label reads as explainable on computers. */
-@media (hover: hover) and (pointer: fine) {
-  [data-help] > span:first-child {
-    text-decoration: underline dotted color-mix(in srgb, var(--muted) 60%, transparent);
-    text-underline-offset: 3px;
-    cursor: help;
-  }
-}
-
-/* Driver card: the main driver and the comparison, as two aligned dropdown-like pickers */
-.driver-pickers {
-  display: grid;
-  gap: 0.5rem;
-  margin-bottom: 0.9rem;
-}
-.dp-row {
-  display: grid;
-  grid-template-columns: 4.3rem minmax(0, 1fr) 4.6rem;
-  align-items: center;
-  gap: 0.5rem;
-}
-.dp-row .picker {
-  margin: 0;
-  min-width: 0;
-  width: 100%;
-}
-.dp-row .picker button.browse {
-  width: 100%;
-  min-width: 0;
-}
-.dp-label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-.dp-dash {
-  width: 1.4rem;
-  height: 0.4rem;
-}
-.dp-icons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 0.15rem;
-}
-.dp-icons .icon {
-  min-width: 2.3rem;
-  min-height: 2.3rem;
-  display: inline-grid;
-  place-items: center;
-  padding: 0;
-  color: var(--muted);
-  border-radius: 6px;
-}
-.dp-icons a.icon:hover {
-  color: var(--fg);
-}
 button.browse.chosen {
   gap: 0.4rem;
   min-height: 2.6rem;
@@ -3095,37 +2858,6 @@ button.browse.chosen .chosen-name {
 button.browse.chosen .caret {
   margin-left: auto;
   color: var(--muted);
-}
-.dp-row button.browse:not(.chosen) {
-  min-height: 2.6rem;
-  color: var(--muted);
-}
-/* In the database dialog: "missing one?" as an icon by the close button, and renaming the driver. */
-.lib-inner header h2 {
-  margin-right: auto;
-}
-.lib-inner a.icon.missing {
-  display: inline-grid;
-  place-items: center;
-  min-width: 2.2rem;
-  min-height: 2.2rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--accent);
-  font-size: 1.3rem;
-  text-decoration: none;
-}
-.lib-inner label.lib-rename {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.25rem;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-.lib-inner label.lib-rename input.name {
-  width: 100%;
-  margin: 0;
 }
 .summary-vs {
   opacity: 0.6;
@@ -3424,6 +3156,14 @@ details.more summary {
   padding: 0.35rem 0;
 }
 
+/* Touch screens: these "more" links are full-height tap targets. */
+@media (pointer: coarse) {
+  details.why > summary,
+  details.more summary {
+    padding-block: max(0px, calc((var(--size-tap) - 1lh) / 2));
+  }
+}
+
 details.more .hint {
   margin-top: 0.2rem;
 }
@@ -3474,7 +3214,11 @@ details.more .hint {
 }
 
 /* The drive readout: looks like text, tap it to type a value. */
+/* Fixed width for the longest value, so the slider beside it doesn't resize while dragging. */
 .power button.drive-value {
+  flex: none;
+  min-width: calc(8.5ch + 0.4rem);
+  text-align: right;
   padding: 0.35rem 0.2rem;
   background: none;
   color: var(--fg);
@@ -3507,7 +3251,7 @@ button.summary-jump {
   border-radius: 999px;
   background: color-mix(in srgb, var(--over) 15%, transparent);
   color: var(--over);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -3662,36 +3406,59 @@ button.over-link.deep,
 }
 
 /* In a top corner of the plot, away from the handle (and the finger on it). */
-/* Edit mode: the dragged handle's value, on a line of its own above the plot (never over it). */
+/* Edit mode: the dragged handle's value, on a line of its own above the plot (never over it).
+   The line keeps its height while empty and never wraps: a long name is cut short, the value never. */
 .handle-readout {
-  min-height: 1.5em;
   margin: 0.35rem 0 0.1rem;
   font-size: 0.85rem;
+  line-height: 1.35;
+  min-height: 1.35em;
+  overflow: hidden;
   font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
 
+.handle-readout-row {
+  display: flex;
+  gap: 0.35em;
+  min-width: 0;
+  white-space: nowrap;
+}
+
 .handle-readout b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--fg);
 }
 
-@media (max-width: 860px) {
-  /* Room for two lines, so a long readout doesn't push the chart down mid-drag. */
-  .handle-readout {
-    min-height: 2.6em;
-  }
+.handle-readout-value {
+  flex: none;
+}
+
+.chart .fade {
+  opacity: 0.35;
 }
 
 .chart.editing svg {
   cursor: default;
 }
 
+/* Edit mode: caption, plot, limits strip and the filter controls in one tinted, outlined zone inside the card. */
+.edit-zone {
+  margin: -0.4rem -0.5rem 0.6rem;
+  padding: 0.6rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 50%, var(--well));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
 .edit-bar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem 0.75rem;
-  margin: 0.1rem 0 0.4rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+  margin: 0.6rem 0 0;
   font-size: 0.85rem;
   color: var(--muted);
 }
@@ -3701,46 +3468,271 @@ button.over-link.deep,
   font-size: 0.85rem;
 }
 
+/* Cancel / Done: right-aligned, last on phones (thumb reach), at the end of the chips row on desktop. */
 .edit-bar .edit-actions {
+  order: 9;
   display: flex;
-  gap: 0.4rem;
-  margin-left: auto;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
 
-/* The picked EQ point's own controls: Q and remove. */
-.edit-point {
+/* One line, muted: what the Limits strip says. */
+.edit-limits {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* One chip per filter: scrolls sideways rather than wrapping. */
+.edit-chips {
+  order: 1;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-wrap: nowrap;
   gap: 0.4rem;
-  flex-basis: 100%;
-  padding: 0.35rem 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  max-width: 100%;
+  padding-bottom: 0.15rem;
+}
+
+.edit-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fg);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.edit-chip[aria-pressed="true"],
+.edit-chip.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.edit-chip.off {
+  color: var(--muted);
+}
+
+.edit-chip.add {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.edit-chip .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* The filter types, inline under the chips (not a popover). */
+.edit-add {
+  order: 2;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.4rem;
+  color: var(--fg);
+}
+
+.edit-add > b {
+  font-weight: 600;
+}
+
+.edit-add button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  text-align: left;
+}
+
+.edit-add button .muted {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* The picked filter's panel: type and delete / keep / cancel on top, one row of fields, the fit. */
+.edit-point {
+  order: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--well);
   color: var(--fg);
 }
 
-.edit-point .q {
-  min-width: 3.4rem;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
+.edit-point-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
 }
 
-.edit-point button.icon {
-  min-width: 2.4rem;
-  min-height: 2.2rem;
-  border: 1px solid var(--input-border);
+.edit-point-head .hd-left,
+.edit-point-head .hd-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.edit-point-head .hd-right {
+  gap: 0;
+}
+
+.edit-point-head select {
+  font-weight: 600;
+}
+
+.edit-point-head button.ib {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+}
+
+/* Two classes: .chart svg (full width) must not stretch the icons. */
+.edit-point-head button.ib svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* The −3 / −6 dB labels sit at the plot's right end, where curves pass: lift them off the lines. */
+.chart.editing .guide-label {
+  paint-order: stroke;
+  stroke: color-mix(in srgb, var(--card) 50%, var(--well));
+  stroke-width: 3px;
+}
+
+.edit-point-head button.ib.ok {
+  color: var(--accent);
+}
+
+.edit-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.4rem 0.75rem;
+}
+
+.edit-point .edit-fields label {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 0.2rem 0.4rem;
+  width: auto;
+  margin: 0;
+}
+
+.edit-point .edit-fields label > span:first-child {
+  grid-column: 1 / -1;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.edit-point .edit-fields input {
+  width: 4.6rem;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.edit-point .edit-fields select {
+  width: auto;
+}
+
+.edit-point .edit-fields .unit:empty {
+  display: none;
+}
+
+/* The picked filter pushes a box past a limit: why, and the button that cuts it back. */
+.edit-fit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--over) 15%, transparent);
   color: var(--fg);
 }
-
-.edit-point .remove {
-  margin-left: auto;
+/* Solid, so it reads as a button on the red tint. */
+.edit-fit button.edit-fix {
+  background: var(--card);
+  border: 1px solid var(--faint);
+  color: var(--fg);
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  min-height: 2.15rem;
+}
+.edit-hint {
+  margin: 0;
+}
+@media (max-width: 767.98px) {
+  .edit-fit button.edit-fix {
+    width: 100%;
+    min-height: 44px;
+  }
+  .edit-hint {
+    display: none;
+  }
 }
 
-@media (max-width: 480px) {
-  .edit-point .wide-only {
-    display: none;
+@media (min-width: 768px) {
+  .edit-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+  .edit-chips {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .edit-bar .edit-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .edit-add,
+  .edit-point {
+    grid-column: 1 / -1;
+  }
+  .edit-add {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .edit-add > b {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 767px) {
+  .edit-bar button,
+  .edit-chip,
+  .edit-point-head select {
+    min-height: 44px;
+  }
+  .edit-point-head button.ib {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .edit-point .edit-fields input {
+    min-height: 44px;
+  }
+  .edit-point .edit-fields select {
+    min-height: 44px;
   }
 }
 
@@ -3791,7 +3783,7 @@ button.menu-button[aria-expanded="true"] {
   display: flex;
   flex-direction: column;
   width: 18rem;
-  max-height: calc(100vh - 6rem);
+  max-height: calc(100dvh - 6rem);
   overflow-y: auto;
   padding: 0.4rem;
   border: 1px solid var(--border);
@@ -4228,13 +4220,13 @@ dialog.assistant .lib-inner:focus {
   /* Anchored near the top, not centred: its header stays put as the steps change height. */
   dialog.library.assistant {
     height: fit-content;
-    max-height: 86vh;
-    margin: 7vh auto auto;
+    max-height: 86dvh;
+    margin: 7dvh auto auto;
   }
 
   dialog.assistant .lib-inner {
     height: auto;
-    max-height: 86vh;
+    max-height: 86dvh;
   }
 }
 
@@ -4477,6 +4469,9 @@ button.new-btn > span:first-child {
 }
 
 .summary-count {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -5318,19 +5313,29 @@ button.menu-button {
     flex-wrap: wrap;
   }
 
+  /* Phones: the switches share the title row when they fit (a row of their own only when not),
+     40 px visible with taps across 44 px. */
   .chart figcaption .chart-actions {
-    flex-basis: 100%;
+    flex: 0 1 auto;
     flex-wrap: nowrap;
-    margin-left: 0;
+    margin-left: auto;
   }
 
   .chart figcaption .chart-actions .unit-switch {
-    flex: 1 1 auto;
+    flex: none;
   }
 
   .chart figcaption .chart-actions .unit-switch button {
-    flex: 1 1 0;
-    min-height: 40px;
+    position: relative;
+    flex: none;
+    min-height: 34px;
+    padding-block: 0;
+  }
+
+  .chart figcaption .chart-actions .unit-switch button::after {
+    position: absolute;
+    inset: -5px 0;
+    content: "";
   }
 }
 
@@ -5540,6 +5545,31 @@ button.menu-button {
   }
 }
 
+/* Phones: compact legend rows. Only rows that fold open (a button) keep the 44 px tap target. */
+@media (max-width: 767px) {
+  .legend tbody tr {
+    height: auto;
+  }
+
+  .legend tbody th,
+  .legend tbody td {
+    padding-block: 0.3rem;
+    line-height: 1.2;
+  }
+
+  .legend-name {
+    min-height: 0;
+  }
+
+  button.legend-name {
+    min-height: 2.75rem;
+  }
+
+  .legend-sub {
+    line-height: 1.1;
+  }
+}
+
 /* Phones: Settings selects meet the 44 px touch target. */
 @media (max-width: 767px) {
   .compat .unit-switch {
@@ -5559,9 +5589,11 @@ button.menu-button {
 }
 
 /* ---- Phones (< 768 px): one-row drive bar; the value opens a bottom sheet ---- */
+/* Fixed width for the longest value ("1234.5 W"), so the slider beside it doesn't resize while dragging. */
 .drive-bar button.drive-chip {
   flex: none;
-  min-width: 4.5rem;
+  width: calc(8.5ch + 1.4rem + 2px);
+  text-align: center;
   min-height: 44px;
   padding: 0.35rem 0.7rem;
   border: 1px solid var(--border);
@@ -5577,8 +5609,12 @@ button.menu-button {
 }
 
 @media (max-width: 767px) {
+  /* Between the response chart and the other charts, in the flow (not sticky). */
   .drive-bar {
+    position: static;
     flex-wrap: nowrap;
+    backdrop-filter: none;
+    background: var(--card);
   }
 
   .drive-bar input[type="range"] {

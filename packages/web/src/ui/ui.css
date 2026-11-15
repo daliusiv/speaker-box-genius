@@ -1,0 +1,1045 @@
+/*
+ * Components in src/ui/. Every size, space, radius, layer and colour here is a token
+ * (tokens.css, styles.css :root): Stylelint fails the build on a raw value in this file.
+ * Variants are data attributes: [data-variant], [data-size], [data-tone].
+ */
+
+/* ---- Button ---- */
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--size-control);
+  padding: 0 var(--space-4);
+  border: var(--border-hairline) solid var(--input-border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-control);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease);
+}
+
+.ui-button:is(a) {
+  text-decoration: none;
+}
+
+.ui-button:hover {
+  border-color: var(--faint);
+}
+
+.ui-button[data-variant="primary"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.ui-button[data-variant="ghost"] {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  font-weight: var(--weight-medium);
+}
+
+.ui-button[data-variant="ghost"]:hover,
+.ui-button[data-variant="ghost"][aria-expanded="true"],
+.ui-button[data-variant="ghost"][aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--fg);
+}
+
+.ui-button[data-variant="danger"] {
+  border-color: var(--over);
+  color: var(--over);
+}
+
+.ui-button[data-size="sm"] {
+  min-height: var(--space-8);
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.ui-button[data-icon-only] {
+  min-width: var(--size-control);
+  padding: 0;
+}
+
+.ui-button[data-size="sm"][data-icon-only] {
+  min-width: var(--space-8);
+}
+
+.ui-button:disabled {
+  border-color: var(--border);
+  background: transparent;
+  color: var(--faint);
+  cursor: not-allowed;
+}
+
+.ui-button svg {
+  flex: none;
+  width: var(--size-icon);
+  height: var(--size-icon);
+}
+
+/* ---- Tap area ----
+ * On touch screens a control looks --size-control tall but takes taps across --size-tap
+ * (44 px): buttons grow an invisible ::after, inputs are taller than their box
+ * (--tap-overhang, a negative margin that keeps the box's height). On a mouse both are equal.
+ */
+:root {
+  --tap-overhang: calc((var(--size-control) - 2 * var(--border-hairline) - var(--size-tap)) / 2);
+}
+
+.ui-button,
+.ui-segmented button,
+.ui-stepper button,
+button.ui-chip {
+  position: relative;
+}
+
+.ui-switch::before,
+.ui-button::after,
+.ui-segmented button::after,
+.ui-stepper button::after,
+button.ui-chip::after {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc((100% - var(--size-tap)) / 2));
+}
+
+/* ---- Inline text: a name edited in place ---- */
+.ui-inline-text {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+@media (pointer: coarse) {
+  .ui-inline-text {
+    min-height: var(--size-control);
+  }
+}
+
+.ui-inline-text:focus {
+  outline: none;
+  box-shadow: inset 0 calc(-1 * var(--border-hairline)) 0 var(--accent);
+}
+
+/* ---- Disclosure: a bordered row that shows its values while closed ---- */
+.ui-disclosure {
+  margin: var(--space-1) 0 var(--space-2);
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.ui-disclosure[data-off] > summary .ui-disclosure-title {
+  color: var(--muted);
+}
+
+.ui-disclosure > summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) var(--size-icon);
+  align-items: center;
+  column-gap: var(--space-3);
+  min-height: var(--size-control);
+  padding: 0 var(--space-3);
+  color: var(--fg);
+  font-size: var(--text-md);
+  list-style: none;
+  cursor: pointer;
+}
+
+.ui-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ui-disclosure-value {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-disclosure[open] > summary .ui-disclosure-value {
+  visibility: hidden;
+}
+
+.ui-disclosure-chevron {
+  justify-self: end;
+  color: var(--muted);
+  transition: transform var(--motion-fast) var(--motion-ease);
+}
+
+.ui-disclosure[open] > summary .ui-disclosure-chevron {
+  transform: rotate(180deg);
+}
+
+.ui-disclosure-body {
+  display: grid;
+  padding: 0 var(--space-3) var(--space-2);
+  border-top: var(--border-hairline) solid var(--divider);
+}
+
+/* ---- Field row: label | control, one right edge ---- */
+.ui-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--size-col-control);
+  align-items: center;
+  column-gap: var(--space-3);
+  min-height: var(--size-row);
+}
+
+.ui-field[data-wide] {
+  grid-template-columns: minmax(0, 1fr) minmax(var(--size-col-control), auto);
+}
+
+.ui-field-label {
+  /* Not the legacy `label` grid in styles.css. */
+  display: block;
+  color: var(--fg);
+  font-size: var(--text-md);
+}
+
+/* A label with an icon before its text (a part's schematic symbol). */
+.ui-field-label-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ui-field-label-icon > svg {
+  flex: none;
+  color: var(--muted);
+}
+
+.ui-field-hint {
+  grid-column: 1 / -1;
+  margin: 0 0 var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+/* ---- Number field: right-aligned number, unit inside the box ---- */
+.ui-number {
+  display: flex;
+  align-items: center;
+  height: var(--size-control);
+  border: var(--border-hairline) solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--well);
+}
+
+.ui-number:focus-within {
+  border-color: var(--accent);
+}
+
+.ui-number input {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  /* Taller than the box by the tap margin, so a tap just above or below still lands. */
+  height: var(--size-tap);
+  margin-block: var(--tap-overhang);
+  padding: 0 var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-field);
+  font-variant-numeric: var(--font-numeric);
+  text-align: right;
+  outline: none;
+}
+
+.ui-number-unit {
+  padding-right: var(--space-3);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.ui-number[data-state="typed"] {
+  border-left: var(--border-accent) solid var(--accent);
+}
+
+.ui-number[data-state="typed"] input {
+  font-weight: var(--weight-bold);
+}
+
+.ui-number[data-state="calculated"] {
+  border-style: dashed;
+  background: transparent;
+}
+
+.ui-number[data-state="calculated"] input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.ui-number[data-invalid] {
+  border-color: var(--over);
+}
+
+/* ---- Text field: a name or a search, left-aligned; an optional icon inside the box ---- */
+.ui-text {
+  display: flex;
+  align-items: center;
+  height: var(--size-control);
+  border: var(--border-hairline) solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--well);
+}
+
+.ui-text:focus-within {
+  border-color: var(--accent);
+}
+
+.ui-text > .icon-svg {
+  flex: none;
+  margin-left: var(--space-3);
+  color: var(--muted);
+}
+
+.ui-text input {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  /* Taller than the box by the tap margin, like the number field. */
+  height: var(--size-tap);
+  margin-block: var(--tap-overhang);
+  padding: 0 var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-field);
+  outline: none;
+}
+
+.ui-text > .icon-svg + input {
+  padding-left: var(--space-2);
+}
+
+.ui-text input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+/* ---- Select ---- */
+.ui-select {
+  width: 100%;
+  /* The box is the tap area; transparent top and bottom borders shrink what shows to
+     --size-control, and the visible edge is an inset shadow. */
+  height: var(--size-tap);
+  padding: 0 var(--space-3);
+  border: 0 solid transparent;
+  border-block-width: calc((var(--size-tap) - var(--size-control)) / 2);
+  border-radius: var(--radius-sm);
+  background: var(--well) padding-box;
+  box-shadow: inset 0 0 0 var(--border-hairline) var(--input-border);
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-field);
+}
+
+.ui-select:focus-visible {
+  box-shadow: inset 0 0 0 var(--border-hairline) var(--accent);
+}
+
+/* ---- Segmented: two to four choices side by side ---- */
+.ui-segmented {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: var(--space-1);
+  height: var(--size-control);
+  padding: calc(var(--space-1) - var(--border-hairline));
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--well);
+}
+
+.ui-segmented button {
+  min-width: 0;
+  min-height: 0;
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--text-control);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ui-segmented button[aria-checked="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: var(--weight-semibold);
+}
+
+/* Touch screens: each choice at least 40 px tall, the group as tall as a field. */
+@media (pointer: coarse) {
+  .ui-segmented {
+    height: var(--size-tap);
+    padding: var(--border-hairline);
+  }
+}
+
+/* ---- Radio cards: a choice with a line of explanation ---- */
+.ui-radio-cards {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) 0;
+  border: 0;
+}
+
+.ui-radio-cards legend {
+  padding: 0 0 var(--space-2);
+  color: var(--fg);
+  font-size: var(--text-base);
+}
+
+.ui-radio-card {
+  display: grid;
+  grid-template-columns: var(--size-icon) minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  min-height: var(--size-row);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+
+.ui-radio-card:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.ui-radio-card:has(input:focus-visible) {
+  outline: var(--border-accent) solid var(--accent);
+  outline-offset: var(--border-hairline);
+}
+
+.ui-radio-card input {
+  width: var(--size-icon);
+  height: var(--size-icon);
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.ui-radio-card-text {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.ui-radio-card-title {
+  color: var(--fg);
+  font-weight: var(--weight-semibold);
+}
+
+.ui-radio-card-desc {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.ui-radio-card-aside {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+/* ---- Switch ---- */
+.ui-switch {
+  position: relative;
+  display: inline-block;
+  justify-self: end;
+  width: calc(var(--space-12) + var(--space-1));
+  height: var(--space-6);
+  padding: 0;
+  border: var(--border-hairline) solid var(--input-border);
+  border-radius: var(--radius-pill);
+  background: var(--well);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--motion-ease);
+}
+
+.ui-switch::after {
+  position: absolute;
+  top: calc(var(--space-1) - var(--border-hairline));
+  left: var(--space-1);
+  width: var(--space-4);
+  height: var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--muted);
+  content: "";
+  transition: transform var(--motion-fast) var(--motion-ease);
+}
+
+.ui-switch[aria-checked="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.ui-switch[aria-checked="true"]::after {
+  background: var(--accent);
+  transform: translateX(var(--space-6));
+}
+
+/* ---- Stepper: − n + ---- */
+.ui-stepper {
+  display: grid;
+  grid-template-columns: var(--size-control) minmax(0, 1fr) var(--size-control);
+  align-items: center;
+  height: var(--size-control);
+  border: var(--border-hairline) solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--well);
+}
+
+.ui-stepper button {
+  display: inline-grid;
+  place-items: center;
+  align-self: stretch;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+@media (pointer: coarse) {
+  .ui-stepper {
+    height: var(--size-tap);
+  }
+}
+
+.ui-stepper button:hover {
+  color: var(--fg);
+}
+
+.ui-stepper button:disabled {
+  color: var(--faint);
+  cursor: not-allowed;
+}
+
+.ui-stepper input {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: var(--size-tap);
+  margin-block: var(--tap-overhang);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-field);
+  font-variant-numeric: var(--font-numeric);
+  text-align: center;
+  outline: none;
+}
+
+/* ---- Section: one collapsible row (icon · title · value · chevron) ---- */
+.ui-section {
+  border-top: var(--border-hairline) solid var(--divider);
+}
+
+.ui-section > summary {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--size-icon) auto minmax(0, 1fr) var(--size-icon);
+  align-items: center;
+  column-gap: var(--space-3);
+  min-height: var(--size-row);
+  padding: 0 var(--space-4);
+  color: var(--muted);
+  list-style: none;
+  cursor: pointer;
+}
+
+.ui-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ui-section-title {
+  color: var(--fg);
+  font-weight: var(--weight-medium);
+}
+
+.ui-section-value {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-section-chevron {
+  justify-self: end;
+  transition: transform var(--motion-fast) var(--motion-ease);
+}
+
+.ui-section[open] > summary {
+  color: var(--fg);
+}
+
+.ui-section[open] > summary::before {
+  position: absolute;
+  top: var(--space-3);
+  bottom: var(--space-3);
+  left: 0;
+  width: var(--border-accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--accent);
+  content: "";
+}
+
+.ui-section[open] .ui-section-chevron {
+  transform: rotate(180deg);
+}
+
+.ui-section[open] .ui-section-value {
+  visibility: hidden;
+}
+
+/* An open row's ⓘ: in the header, beside the chevron, where the closed value was. */
+.ui-section {
+  position: relative;
+}
+
+.ui-section > .ui-section-help {
+  position: absolute;
+  top: calc((var(--size-row) - var(--size-control)) / 2);
+  right: calc(var(--space-4) + var(--size-icon) + var(--space-1));
+}
+
+.ui-section-body {
+  padding: var(--space-1) var(--space-4) var(--space-3);
+  border-top: var(--border-hairline) solid var(--divider);
+}
+
+/* ---- Menu ---- */
+.ui-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.ui-menu-list {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  z-index: var(--z-menu);
+  display: flex;
+  flex-direction: column;
+  min-width: calc(var(--size-col-control) * 2);
+  padding: var(--space-1);
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.ui-menu[data-align="end"] .ui-menu-list {
+  right: 0;
+  left: auto;
+}
+
+.ui-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--size-control);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-md);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ui-menu-item:hover,
+.ui-menu-item:focus-visible {
+  background: var(--accent-soft);
+  outline: none;
+}
+
+.ui-menu-sep {
+  margin: var(--space-1) 0;
+  border: 0;
+  border-top: var(--border-hairline) solid var(--divider);
+}
+
+/* A menu of choices with a line each (a preset, a type): wider, items in a grid. */
+.ui-menu-list:has(.ui-menu-item-rich) {
+  width: min(calc(var(--size-col-control) * 2.5), calc(100vw - var(--space-8)));
+}
+
+.ui-menu-item-rich {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) var(--size-icon);
+  gap: var(--space-3);
+  min-height: var(--size-row);
+  padding: var(--space-2) var(--space-3);
+}
+
+.ui-menu-item-rich[aria-checked="true"] {
+  background: var(--accent-soft);
+}
+
+.ui-menu-item-text {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.ui-menu-item-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--space-2);
+  font-weight: var(--weight-semibold);
+}
+
+.ui-menu-item-detail {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  font-variant-numeric: tabular-nums;
+}
+
+.ui-menu-item-desc {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+}
+
+.ui-menu-item-check {
+  display: flex;
+  color: var(--accent);
+}
+
+.ui-menu-foot {
+  margin: var(--space-1) 0 0;
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  border-top: var(--border-hairline) solid var(--divider);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+/* ---- MiniResponse: a tiny response curve ---- */
+.ui-mini-response {
+  display: block;
+  overflow: visible;
+  border-radius: var(--radius-sm);
+  background: var(--well);
+  color: var(--accent);
+}
+
+.ui-mini-response-ref {
+  stroke: var(--divider);
+  stroke-width: var(--border-hairline);
+}
+
+.ui-mini-response-ref[data-dashed] {
+  stroke-dasharray: 2 2;
+}
+
+.ui-mini-response-line {
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* A menu trigger that looks like a field (a select): the well, the input edge, a chevron. */
+.ui-button.ui-menu-field {
+  justify-content: space-between;
+  width: var(--size-col-control);
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border-color: transparent;
+  border-radius: var(--radius-sm);
+  background: var(--well);
+  box-shadow: inset 0 0 0 var(--border-hairline) var(--input-border);
+  font-size: var(--text-field);
+  font-weight: var(--weight-regular);
+}
+
+.ui-menu-field .icon-svg {
+  color: var(--muted);
+}
+
+.ui-menu-field-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Sheet: full screen on phones, a dialog on wider screens ---- */
+.ui-sheet {
+  width: min(calc(var(--size-col-control) * 4), calc(100vw - var(--space-8)));
+  max-width: none;
+  max-height: calc(100dvh - var(--space-8));
+  padding: 0;
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--fg);
+}
+
+.ui-sheet[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.ui-sheet::backdrop {
+  background: var(--well);
+  opacity: 0.7;
+}
+
+.ui-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: var(--size-row);
+  padding: 0 var(--space-2) 0 var(--space-4);
+  border-bottom: var(--border-hairline) solid var(--divider);
+}
+
+.ui-sheet-head h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.ui-sheet-body {
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ---- Help sheet: one row's (or card's) fields and what they do ---- */
+.ui-help-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.ui-help-list dt {
+  color: var(--fg);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.ui-help-list dd {
+  margin: var(--space-1) 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-base);
+}
+
+.ui-help-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.ui-sheet-actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.ui-sheet-head h2 .icon-svg {
+  color: var(--muted);
+}
+
+.ui-sheet-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: var(--border-hairline) solid var(--divider);
+}
+
+@media (max-width: 767.98px) {
+  .ui-sheet {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+}
+
+/* ---- Tooltip: an (i) that opens a short note ---- */
+.ui-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.ui-tooltip-pop {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: var(--z-help);
+  width: calc(var(--size-col-control) * 2);
+  padding: var(--space-3);
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  color: var(--fg);
+  font-size: var(--text-sm);
+  line-height: var(--leading-base);
+}
+
+/* ---- Chip ---- */
+.ui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--space-6);
+  padding: 0 var(--space-3);
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--text-xs);
+}
+
+button.ui-chip {
+  min-height: var(--space-8);
+  cursor: pointer;
+}
+
+.ui-chip[aria-pressed="true"],
+.ui-chip[data-tone="accent"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ui-chip[data-tone="warn"] {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.ui-chip[data-tone="over"] {
+  border-color: var(--over);
+  color: var(--over);
+}
+
+/* ---- Card ---- */
+.ui-card {
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.ui-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--size-row);
+  padding: 0 var(--space-2) 0 var(--space-4);
+}
+
+.ui-card-title {
+  margin: 0 auto 0 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ui-card-body {
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+/* ---- Notice ---- */
+.ui-notice {
+  display: grid;
+  grid-template-columns: var(--size-icon) minmax(0, 1fr);
+  column-gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-hairline) solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--fg);
+  font-size: var(--text-md);
+  line-height: var(--leading-base);
+}
+
+.ui-notice[data-tone="info"] {
+  border-color: var(--accent);
+}
+
+.ui-notice[data-tone="warn"] {
+  border-color: var(--warn);
+}
+
+.ui-notice[data-tone="over"] {
+  border-color: var(--over);
+}
+
+.ui-notice-icon {
+  color: var(--muted);
+}
+
+.ui-notice[data-tone="warn"] .ui-notice-icon {
+  color: var(--warn);
+}
+
+.ui-notice[data-tone="over"] .ui-notice-icon {
+  color: var(--over);
+}
+
+/* ---- Readout: a calculated value, right-aligned ---- */
+.ui-readout output {
+  justify-self: end;
+  color: var(--fg);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+.ui-readout[data-tone="over"] output {
+  color: var(--over);
+}
+
+/* ---- Numbers: tabular figures for every acoustic value, typed or read ----
+   Last in the file: a `font: inherit` earlier would otherwise reset it. */
+input[inputmode="decimal"],
+input[inputmode="numeric"],
+output,
+td.num,
+th.num,
+.tnum,
+[data-numeric] {
+  font-variant-numeric: var(--font-numeric);
+}

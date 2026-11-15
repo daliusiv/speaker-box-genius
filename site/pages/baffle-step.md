@@ -88,7 +88,7 @@ John Murphy's advice is to compensate the diffraction loss fully, and treat the 
 
 ### Active: a low shelf
 
-A **low shelf** boosts everything below the step. In the app, **Signal → Baffle step** has two buttons that add one at the step frequency: **Compensate +3 dB (near a wall)** and **+6 dB (free-standing)**.
+A **low shelf** boosts everything below the step. In the app, **Signal → Baffle step** has a **Compensate** menu that adds one at the step frequency: **+3 dB (near a wall)** or **+6 dB (free-standing)**.
 
 - **+3 dB** lifts the bass to 84.4 dB at 40 Hz, leaving a 3 dB tilt for the room to fill.
 - **The cost is power and excursion.** At 2.83 V, the cone moves 1.54 mm at 40 Hz with no shelf, 2.16 mm with +3 dB and 3.03 mm with +6 dB. For the same bass level as the infinite-baffle simulation you need **4 times the amplifier power** below the step. It doesn't raise the maximum output: the cone and the voice coil hit their limits at the same bass level as before, just at a lower volume setting.
@@ -117,10 +117,10 @@ The baffle step also lowers the **maximum** bass. On an infinite baffle the app'
 
 ## Doing it in the app
 
-1. **Signal → Baffle step:** choose **Free-standing, with baffle step**.
-2. **Size:** under **Baffle size**, take it from the **Volume calculator's box** (its outside width and height) or **Enter it here**, then the woofer's position (**From left**, **From top**). **Step at** shows where the step is half done.
+1. **Signal → Baffle step:** choose **Free-standing**.
+2. **Size:** under **Baffle size**, take it **From the box** (the volume calculator's outside width and height) or **Enter here**, then the woofer's position (**From left**, **From top**). **Step at** shows where the step is half done.
 3. **SPL and Max SPL charts** then include the step, up to 1 kHz. The summary's F3 stays the infinite-baffle one.
-4. **Compensate:** **Compensate +3 dB (near a wall)** or **+6 dB (free-standing)** adds a low shelf in **EQ**; or build the passive network in **Passive parts**.
+4. **Compensate:** **Compensate → +3 dB (near a wall)** or **+6 dB (free-standing)** adds a low shelf in **EQ**; or build the passive network in **Passive parts**.
 5. **Measure:** a near-field measurement doesn't include the baffle step, so compare it with the simulation *without* it; a far-field or in-room one, with it (see [simulation vs measurement](/guides/simulation-vs-measurement/)).
 
 ## The forum claims, checked

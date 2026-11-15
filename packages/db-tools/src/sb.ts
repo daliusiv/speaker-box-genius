@@ -169,8 +169,7 @@ export function parseProduct(p: StoreProduct, html: string, retrieved: string): 
 
   if (k.kind === "passive-radiator") {
     const xmech = firstNumber(s.xmech?.replace(/±/g, ""));
-    const xmax = xmaxStated ?? xmech;
-    if (mms === undefined || sd === undefined || xmax === undefined) {
+    if (mms === undefined || sd === undefined || (xmaxStated === undefined && xmech === undefined)) {
       const near = items.filter((t) => /excursion|x\s?m(ax|ech)|travel|stroke/i.test(t) && t.length < 80);
       return {
         kind: "skip",
@@ -178,8 +177,8 @@ export function parseProduct(p: StoreProduct, html: string, retrieved: string): 
         ...base,
       };
     }
-    if (xmaxStated === undefined) notes.push(`Xmax is the published maximum mechanical excursion (Xmech ±${xmech} mm), not a linear limit.`);
-    const params: PassiveRadiator["params"] = { mms_g: mms, sd_cm2: sd, xmax_mm: xmax };
+    // No linear Xmax published: keep the mechanical limit as what it is.
+    const params: PassiveRadiator["params"] = { mms_g: mms, sd_cm2: sd, ...(xmaxStated !== undefined ? { xmax_mm: xmaxStated } : { xmech_mm: xmech }) };
     if (fs !== undefined) params.fs = fs;
     if (qms !== undefined) params.qms = qms;
     if (vas !== undefined) params.vas_l = vas;

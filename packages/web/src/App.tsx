@@ -1,8 +1,6 @@
 import { compareWith, compareMessage } from "./compareDriver.ts";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  coilHeatFactor,
-  DEFAULT_END_CORRECTION,
   impedanceMagnitude,
   insideLongest_cm,
   lowestMode_hz,
@@ -14,10 +12,12 @@ import {
   type HighPassType,
   type SimulationResult,
   type TsValues,
+  TS_PARAMS,
 } from "@sbg/engine";
+import { Icon } from "./Icon.tsx";
 import { ChartEmphasis, CrosshairProvider, LogChart, shortName, type ChartHandle, type Series } from "./LogChart.tsx";
 import { TimeChart } from "./TimeChart.tsx";
-import { draggableEq, eqQ, moveEq, retune, tunable } from "./chartEdit.ts";
+import { addFilterAt, applyFit, changeFilterType, combineLanes, draggableEq, eqOnlyDb, eqQ, excursionLane, fitToLimits, moveEq, moveHighPass, retune, tunable, worstLimit, type AddType, type Fit, type SealedRef } from "./chartEdit.ts";
 import { useUndoable } from "./useUndoable.ts";
 import { bestVentedPort, sizeAllForDriver, sizeBandpassDesign } from "./presets.ts";
 import { loadCandidates, type FinderContext } from "./PrFinder.tsx";
@@ -28,7 +28,6 @@ import {
   decodeStateAny,
   encodeState,
   encodeStateShort,
-  END_CORRECTION_MAX,
   MAX_DESIGNS,
   newDesign,
   newId,
@@ -36,20 +35,25 @@ import {
   type AppState,
   type BandpassDesign,
   type DesignState,
+  type EqItem,
   type Settings,
-  NO_LOSS,
   qText,
 } from "./state.ts";
 import { applyOwpr, withOpenisdDriver } from "./owprImport.ts";
 import { applyWpr } from "./wprImport.ts";
 import { flagText, loadDriver, loadIndex, type DbIndex } from "./library.ts";
-import { Card, DriveValue, Num, REPO, Select, useNarrow } from "./components.tsx";
-import { AmpFromRatings } from "./AmpFromRatings.tsx";
+import { Card, DriveValue, KitFields, Num, REPO, Select, useNarrow } from "./components.tsx";
+import { SettingsPanel } from "./SettingsPanel.tsx";
 import { DriverBrowser } from "./Library.tsx";
 import { PwaStatus, usePwa } from "./Pwa.tsx";
 import { GettingStarted, LinkNote, useWelcome } from "./Welcome.tsx";
 import { TsEditor } from "./TsEditor.tsx";
-import { DriverMenu } from "./DriverMenu.tsx";
+import { DriverCard } from "./DriverCard.tsx";
+import { Button, Card as KitCard, Notice } from "./ui/index.ts";
+
+/** What Size all does: its button's tooltip and help. */
+const SIZE_ALL_HELP =
+  "Sizes every box for this driver: sealed Qtc 0.707 (for a Qts near 0.707, where that box runs away, twice Vas and a higher Qtc); ported and PR the flat vented preset (QB3); both sized like WinISD unless Settings says textbook; ported with the simplest port that fits and stays quiet at the driver's rating; bandpass the lowest flat band in its volume. Undo takes it back.";
 import { VolumePanel } from "./VolumePanel.tsx";
 import { BuildSheet } from "./BuildSheet.tsx";
 import { DriveSheet } from "./DriveSheet.tsx";
@@ -64,7 +68,6 @@ import {
   alignmentDriver,
   colorOf,
   dvcFactors,
-  PORT_LIMIT,
   prGroupLabels,
   prXmaxes,
   dimensionsFor,
@@ -85,6 +88,7 @@ import {
   limitsOf,
   checkFromHz,
   portLimitOf,
+  presetPreview,
   airLimitOf,
   AIR_COMPRESSION_CAUTION,
   driveAt,
@@ -97,19 +101,18 @@ import {
   type Design,
   type LimitKind,
 } from "./sim.ts";
-import { RoomGainPanel } from "./RoomGain.tsx";
-import { BafflePanel } from "./BafflePanel.tsx";
+import { RoomGainSection } from "./RoomGain.tsx";
+import { BaffleSection } from "./BafflePanel.tsx";
+import { HighPassSection } from "./HighPass.tsx";
 import { AirChart } from "./AirChart.tsx";
 import { AddBoxMenu, DesignCard } from "./Designs.tsx";
 import { useFolded } from "./fold.ts";
 import { usePanelFit } from "./panelFit.ts";
-import { COMPAT, COMPAT_NAMES, compatOf, nearestCompat, withCompat, type CompatPreset } from "./compat.ts";
 import { addMeasured, MeasuredCard, measuredSeries } from "./Measured.tsx";
-import { HelpDock } from "./HelpDock.tsx";
 import { reportUrl, ShareButton } from "./Share.tsx";
 import { DspExportPanel } from "./DspExport.tsx";
-import { EqPanel } from "./Eq.tsx";
-import { PassivePanel } from "./Passive.tsx";
+import { EqSection } from "./Eq.tsx";
+import { PassiveSection } from "./Passive.tsx";
 import { measurementOf, MeasurePanel, type Measurement } from "./Measure.tsx";
 import { fmtQ, UnitsContext } from "./units.ts";
 import { AppMenu } from "./AppMenu.tsx";
@@ -124,11 +127,24 @@ import { ASSISTANT_HASH, SHARED_LINK, SHARED_RESULTS, START_IN_ASSISTANT, untouc
 import { DesignAssistant } from "./DesignAssistant.tsx";
 import { Logo, Sparkle } from "./Logo.tsx";
 import { submitDriverUrl } from "./submit.ts";
+import { fromDatabase, nameAfterTsEdit, nameKind } from "./driverName.ts";
 import { EQ_HANDLE, GUIDE, GUIDE_DIM, LIMIT } from "./palette.ts";
 import { delayChart, excursionChart, impedanceChart, maxSplChart, portChart, prChart, pressureChart, relRefOf, responseChart, valueAt, zaChart, type ChartInput } from "./chartProps.ts";
 
 const LIMIT_RED = LIMIT.xmax;
 type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay" | "transient" | "pressure" | "air";
+
+/** The picker's two-part label: the model bold, then brand · nominal Ω · size from the database row. */
+function chosenOf(
+  s: AppState,
+  source: { name: string; id?: string } | null,
+  db: DbIndex | null | undefined,
+): { model: string; meta?: string } {
+  const row = source && fromDatabase(s.driverName, source) && source.id ? db?.drivers.find((r) => r.id === source.id) : undefined;
+  if (!row) return { model: s.driverName.trim() || "Unnamed driver", meta: `${s.nominal_ohms} Ω` };
+  const ohms = row.coil_ohms ? `${row.coil_ohms}+${row.coil_ohms} Ω` : `${row.ohms} Ω`;
+  return { model: row.model, meta: [row.brand, ohms, row.size_in ? `${row.size_in}″` : null].filter(Boolean).join(" · ") };
+}
 
 export function App(props: { initial: AppState | null }) {
   const { state, setState, undo, redo, canUndo, canRedo } = useUndoable<AppState>(() => props.initial ?? DEFAULT_STATE);
@@ -225,6 +241,9 @@ export function App(props: { initial: AppState | null }) {
   const wdrInput = useRef<HTMLInputElement>(null);
   const [pasting, setPasting] = useState(false);
   const [measureOpen, setMeasureOpen] = useState(false);
+  // Driver card: Edit T/S and which setting rows are open (for the session).
+  const [tsOpen, setTsOpen] = useState<boolean | null>(null);
+  const [openSections, setOpenSections] = useState<ReadonlySet<string>>(() => new Set());
   /** Save & Export window: null closed, "" the last format, else the format to show. */
   const [exportFor, setExportFor] = useState<string | null>(null);
   /** Open / Import window, and a measurement file waiting for "use as…". */
@@ -312,10 +331,12 @@ export function App(props: { initial: AppState | null }) {
   // Edit mode on the response chart: drag a box's tuning or an EQ point (relative view only).
   const [editing, setEditingRaw] = useState(false);
   // What the boxes and EQ were when the editor opened (Cancel puts them back), and the picked handle.
-  const [editFrom, setEditFrom] = useState<{ designs: AppState["designs"]; eq: AppState["eq"] } | null>(null);
+  const [editFrom, setEditFrom] = useState<{ designs: AppState["designs"]; eq: AppState["eq"]; highPass: AppState["highPass"] } | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
+  // Where the user tapped on the plot: the frequency a new filter goes at.
+  const [editAt, setEditAt] = useState<number | null>(null);
   const openEditor = () => {
-    setEditFrom({ designs: latest.current.designs, eq: latest.current.eq });
+    setEditFrom({ designs: latest.current.designs, eq: latest.current.eq, highPass: latest.current.highPass });
     setPicked(null);
     setEditingRaw(true);
   };
@@ -327,6 +348,8 @@ export function App(props: { initial: AppState | null }) {
     setEditingRaw(false);
     setEditFrom(null);
     setPicked(null);
+    setEditAt(null);
+    setAddOpen(false);
   };
   const chooseSplMode = (m: "relative" | "absolute") => {
     if (m === "absolute") closeEditor();
@@ -760,28 +783,117 @@ export function App(props: { initial: AppState | null }) {
             onRemove: () => removeEq(e.id),
           }),
         ),
+        ...(state.highPass.on
+          ? [
+              {
+                id: "hp",
+                f: state.highPass.freq,
+                y: state.highPass.type === "linkwitz-riley" ? -6 : -3,
+                color: EQ_HANDLE,
+                shape: "triangle",
+                axes: "x",
+                label: "High-pass",
+                text: `${state.highPass.freq} Hz · ${state.highPass.order * 6} dB/oct`,
+                onDrag: (f: number, _y: number, start?: boolean) => setState((s) => moveHighPass(s, f), start ? { start: true } : { hold: true }),
+                onRemove: () => {
+                  setStep((s) => ({ ...s, highPass: { ...s.highPass, on: false } }));
+                  setPicked(null);
+                },
+              } as ChartHandle,
+            ]
+          : []),
       ];
-  const addEqPoint = () => {
-    const id = newId(state.eq);
-    setStep((s) => ({ ...s, eq: [...s.eq, { id, on: true, target: "all", type: "peak", freq: 40, gain_db: -3, q: 2 }] }));
-    setPicked(`eq-${id}`);
+  // Adds a filter at the tapped frequency (40 Hz without a tap) as one undo step.
+  // A sealed main design a Linkwitz Transform can correct.
+  const sealedRef = useMemo(() => {
+    const sd = mainDesigns.find((d) => d.design.kind === "sealed" && d.result.summary.fc !== undefined && d.result.summary.qtc !== undefined);
+    return sd ? { id: sd.design.id, fc: sd.result.summary.fc!, qtc: sd.result.summary.qtc! } : null;
+  }, [mainDesigns]);
+  // The sealed box a filter with this target can become a Linkwitz Transform for: its own box when
+  // sealed, or for "all" the only sealed box (with two, which one would be a guess).
+  const sealedOf = (target: string | null): SealedRef | null => {
+    const ds = mainDesigns.filter(
+      (d) => (target === null || target === "all" || d.design.id === target) && d.design.kind === "sealed" && d.result.summary.fc !== undefined && d.result.summary.qtc !== undefined,
+    );
+    const sd = ds.length === 1 ? ds[0]! : null;
+    return sd ? { id: sd.design.id, fc: sd.result.summary.fc!, qtc: sd.result.summary.qtc! } : null;
   };
+  const addAt = (type: AddType) => {
+    const { state: next, picked: pk } = addFilterAt(latest.current, type, editAt ?? 40, sealedRef);
+    if (next !== latest.current) setStep(() => next);
+    setPicked(pk);
+    setEditAt(null);
+    setAddOpen(false);
+  };
+  const atLabel = editAt === null ? "" : `${editAt < 100 ? editAt.toFixed(1) : Math.round(editAt)} Hz`;
   const removeEq = (id: string) => {
     setStep((s) => ({ ...s, eq: s.eq.filter((x) => x.id !== id) }));
     setPicked(null);
   };
   // Cancel: the boxes and EQ as they were when the editor opened (one undo step), then close.
-  const editChanged = editFrom !== null && (editFrom.designs !== state.designs || editFrom.eq !== state.eq);
+  const editChanged = editFrom !== null && (editFrom.designs !== state.designs || editFrom.eq !== state.eq || editFrom.highPass !== state.highPass);
   const cancelEdit = () => {
     if (editFrom && editChanged) {
       const from = editFrom;
-      setStep((s) => ({ ...s, designs: from.designs, eq: from.eq }));
+      setStep((s) => ({ ...s, designs: from.designs, eq: from.eq, highPass: from.highPass }));
       notify("Chart edits cancelled.");
     }
     closeEditor();
   };
-  const pickedEq = picked?.startsWith("eq-") ? state.eq.find((e) => `eq-${e.id}` === picked && draggableEq(e)) : undefined;
-
+  // Any picked EQ item (chips can pick Linkwitz and items that are off, which have no chart handle).
+  const pickedItem = picked?.startsWith("eq-") ? state.eq.find((e) => `eq-${e.id}` === picked) : undefined;
+  // "+ Add" opens the filter types inline; it closes on any pick, add, Done or Cancel.
+  const [addOpen, setAddOpen] = useState(false);
+  // A field edit on an EQ item: typing a number in quick keystrokes merges into one undo step.
+  const patchEq = (id: string, patch: Record<string, number>) =>
+    setState((s) => ({ ...s, eq: s.eq.map((x) => (x.id === id ? ({ ...x, ...patch } as EqItem) : x)) }));
+  // The EQ and high-pass as they were when a filter was picked: the cross puts them back, even
+  // after a type change (which can touch both). Retyping keeps the snapshot it started from.
+  const pickSnap = useRef<{ eq: AppState["eq"]; highPass: AppState["highPass"] } | null>(null);
+  const retyped = useRef(false);
+  useEffect(() => {
+    if (retyped.current) {
+      retyped.current = false;
+      return;
+    }
+    pickSnap.current = picked ? { eq: latest.current.eq, highPass: latest.current.highPass } : null;
+  }, [picked]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Tick: keep the filter exactly as it is and close the panel.
+  const keepPicked = () => setPicked(null);
+  // "Cut to …": apply the offered fix (one step); the panel stays open.
+  const fixPicked = () => {
+    if (!pickedItem || !pickedFix) return;
+    const id = pickedItem.id;
+    const fit = pickedFix.fit;
+    setStep((s) => applyFit(s, id, fit));
+  };
+  // Cross: back to how the EQ and high-pass were when picked, in one step, and close.
+  const revertPicked = () => {
+    const snap = pickSnap.current;
+    if (snap) setStep((s) => ({ ...s, eq: snap.eq, highPass: snap.highPass }));
+    setPicked(null);
+  };
+  const deletePicked = () => {
+    if (pickedItem) removeEq(pickedItem.id);
+    else {
+      setStep((s) => ({ ...s, highPass: { ...s.highPass, on: false } }));
+      setPicked(null);
+    }
+  };
+  // The type menu: change the picked filter in place, as one step.
+  const changeType = (to: AddType) => {
+    if (!picked) return;
+    const { state: next, picked: pk } = changeFilterType(latest.current, picked, to, sealedOf(pickedTarget));
+    if (next === latest.current) return;
+    setStep(() => next);
+    if (pk !== picked) retyped.current = true;
+    setPicked(pk);
+  };
+  const pickChip = (id: string) => {
+    setPicked(id);
+    setEditAt(null);
+    setAddOpen(false);
+  };
 
   // Passive radiator finder and the other box tools: the main driver and drive as the charts use them.
   const finderCtx = useMemo<FinderContext>(
@@ -814,11 +926,163 @@ export function App(props: { initial: AppState | null }) {
     measured: (relative) => measuredSeries(state.measured, "spl", freq, mainDesigns, relative),
   };
 
+  // Edit mode: new filters and the cursor go to one box, the picked EQ item's, else the first.
+  const pickedTarget = pickedItem?.target ?? null;
+  const editTarget = (pickedTarget && mainDesigns.some((d) => d.design.id === pickedTarget) ? pickedTarget : mainDesigns[0]?.design.id) ?? "";
+  // The EQ on its own (dashed), so its gain shares the relative axis with the curves.
+  const eqOnly = useMemo(
+    () => (editing && (state.highPass.on || state.eq.some((e) => e.on)) ? eqOnlyDb(state.eq, state.highPass, freq, editTarget) : null),
+    [editing, state.eq, state.highPass, freq, editTarget],
+  );
+  // Limit lane: where the boxes being edited are near or past a limit (all boxes when the pick targets "all").
+  const limitLane = useMemo(() => {
+    if (!editing) return null;
+    const ds = !picked || pickedTarget === "all" || pickedTarget === null ? mainDesigns : mainDesigns.filter((d) => d.design.id === editTarget);
+    return combineLanes(ds.map((d) => excursionLane(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state), 0.8, airLimitOf(state))));
+  }, [editing, picked, pickedTarget, mainDesigns, editTarget, state]);
+  // The lane's label: the first box past a limit (and how many more), else near, else fine.
+  const limitsText = useMemo(() => {
+    if (!editing || !limitLane) return "";
+    const ds = !picked || pickedTarget === "all" || pickedTarget === null ? mainDesigns : mainDesigns.filter((d) => d.design.id === editTarget);
+    const over = ds
+      .map((d) => ({ d, w: worstLimit(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state), airLimitOf(state)) }))
+      .filter((x): x is { d: Design; w: NonNullable<typeof x.w> } => x.w !== null && x.w.ratio > 1);
+    if (over.length > 0) {
+      const { d, w } = over[0]!;
+      return `${d.label}: ${LIMIT_NAME[w.kind]} ${Math.round(w.ratio * 100)} % at ${w.f < 100 ? w.f.toFixed(1) : Math.round(w.f)} Hz${over.length > 1 ? ` · ${over.length - 1} more` : ""}`;
+    }
+    return limitLane.includes("near") ? "Near a limit (80 %+)" : "Within limits";
+  }, [editing, limitLane, picked, pickedTarget, mainDesigns, editTarget, state]);
+  // Fix for the picked filter: the most restrictive fit over the boxes it applies to, and the
+  // worst limit it is past now (the reason shown beside the button).
+  const pickedFix = useMemo(() => {
+    const it = pickedItem;
+    if (!editing || !it || !it.on || (it.type !== "peak" && it.type !== "lowshelf" && it.type !== "highshelf" && it.type !== "linkwitz")) return null;
+    const ds = it.target === "all" ? mainDesigns : mainDesigns.filter((d) => d.design.id === it.target);
+    const fits = ds.map((d) => fitToLimits(d.result, it, state.xmax_mm, state.highPass.on, portLimitOf(state), airLimitOf(state))).filter((f): f is Fit => f !== null);
+    if (fits.length === 0) return null;
+    const fit = fits.reduce((a, b) => ("gain_db" in a && "gain_db" in b ? (b.gain_db < a.gain_db ? b : a) : "fp" in a && "fp" in b ? (b.fp > a.fp ? b : a) : a));
+    const worst = ds
+      .map((d) => worstLimit(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state), airLimitOf(state)))
+      .reduce<ReturnType<typeof worstLimit>>((w, x) => (x && (!w || x.ratio > w.ratio) ? x : w), null);
+    return { fit, worst };
+  }, [editing, pickedItem, mainDesigns, state]);
+  const responseProps = useMemo(() => {
+    const rc = responseChart(chartInput, splMode);
+    if (!editing) return rc;
+    const target = mainDesigns.find((d) => d.design.id === editTarget);
+    // With several boxes, the ones not being edited fade back (a box's own parts stay full).
+    const fadeOthers = mainDesigns.length > 1 && target;
+    const series: Series[] = rc.series.map((x) =>
+      fadeOthers && x.label !== target.label && !x.label.startsWith(`${target.label} · `) ? { ...x, fade: true } : x,
+    );
+    if (eqOnly) series.push({ label: "EQ", color: EQ_HANDLE, dash: "6 4", y: eqOnly, noRank: true });
+    const markers = editAt !== null ? [...(rc.markers ?? []), { f: editAt, label: atLabel, color: "var(--accent)" }] : rc.markers;
+    return {
+      ...rc,
+      series,
+      markers,
+      ribbons: [{ label: "Limits", color: "var(--muted)", kinds: limitLane ?? [], showLabel: true }],
+      ribbonKinds: { near: { label: "Near a limit", color: LIMIT.deepBass }, over: { label: "Past a limit", color: LIMIT_RED } },
+      ribbonReserve: 1,
+    };
+  }, [chartInput, splMode, editing, mainDesigns, editTarget, eqOnly, editAt, atLabel, limitLane]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const signalOn = (state.highPass.on ? 1 : 0) + (state.passive.on ? 1 : 0) + state.eq.filter((e) => e.on).length + (state.roomGain.mode !== "off" ? 1 : 0);
   const tabBadges: Partial<Record<PanelId, string>> = {
     boxes: String(state.designs.filter((d) => d.on).length),
     ...(signalOn > 0 ? { signal: String(signalOn) } : {}),
   };
+
+  /* The drive for every chart. Desktop: sticky right above the charts, so it stays in reach while
+     scrolling. Phones: in the flow between the response chart and the other charts, so it takes no
+     screen height while reading them. */
+  const driveBar = (
+    <div
+      className="power drive-bar"
+      data-help-title={state.drive === "volts" ? "Voltage" : "Power"}
+      data-help="The drive for every chart: amplifier power in watts (turned into volts with Re), or a voltage. Excursion, port speed and the limits all follow it."
+      title="The drive for every chart: amplifier power in watts (turned into volts with Re), or a voltage. Excursion, port speed and the limits all follow it."
+    >
+      <span id="drive-label">{state.drive === "volts" ? "Voltage" : "Power"}</span>
+      {state.drive === "volts" ? (
+        <input
+          type="range"
+          aria-labelledby="drive-label"
+          min={-1}
+          max={2}
+          step={0.005}
+          value={Math.log10(state.volts)}
+          onChange={(e) => set("volts", Number((10 ** e.currentTarget.valueAsNumber).toPrecision(3)))}
+        />
+      ) : (
+        <input
+          type="range"
+          aria-labelledby="drive-label"
+          min={0}
+          max={4}
+          step={0.01}
+          value={Math.log10(state.power)}
+          onChange={(e) => set("power", Math.round(10 ** e.currentTarget.valueAsNumber * 10) / 10)}
+        />
+      )}
+      {phone ? (
+        <button
+          type="button"
+          className="drive-chip"
+          aria-haspopup="dialog"
+          aria-label={`${driveLabel(state)}: change the drive`}
+          onClick={() => setDriveSheet(true)}
+        >
+          {driveLabel(state)}
+        </button>
+      ) : (
+        <>
+          {state.drive === "volts" ? (
+            <DriveValue value={state.volts} unit="V" min={0.1} max={100} onChange={(volts) => set("volts", Number(volts.toPrecision(3)))} />
+          ) : (
+            <DriveValue value={state.power} unit="W" min={1} max={10000} onChange={(power) => set("power", Math.round(power * 10) / 10)} />
+          )}
+          <div
+            className="unit-switch"
+            role="group"
+            aria-label="Drive by"
+            title="Watts: V = √(P·Re), like WinISD. Volts: a fixed voltage, like the 2.83 V datasheets quote."
+          >
+            <button aria-pressed={state.drive === "watts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "watts") }))}>
+              W
+            </button>
+            <button aria-pressed={state.drive === "volts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "volts") }))}>
+              V
+            </button>
+          </div>
+          {/* One tap between WinISD's and Hornresp's 1 W (2.83 V into 8 Ω) and what the driver is rated for. */}
+          <div className="drive-quick" role="group" aria-label="Quick drive">
+            <button
+              type="button"
+              className="chip"
+              aria-pressed={state.drive === "watts" && state.power === 1}
+              title="1 W, as WinISD and Hornresp start: the response reads as the driver's sensitivity"
+              onClick={() => setStep((s) => ({ ...s, drive: "watts", power: 1 }))}
+            >
+              1 W
+            </button>
+            {ratedPowerOf(state) > 0 && (
+              <button
+                type="button"
+                className="chip"
+                aria-pressed={state.drive === "watts" && state.power === ratedPowerOf(state)}
+                title={`The power rating (Pe${state.drivers > 1 ? ` × ${state.drivers} drivers` : ""}): see where it runs out of excursion or the port chuffs`}
+                onClick={() => setStep((s) => ({ ...s, drive: "watts", power: ratedPowerOf(s) }))}
+              >
+                Rated {ratedPowerOf(state)} W
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <UnitsContext.Provider value={state.settings.units}>
@@ -828,7 +1092,6 @@ export function App(props: { initial: AppState | null }) {
           <Logo />
           <div>
             <h1>Speaker Box Genius</h1>
-            <p className="muted">Early preview</p>
           </div>
         </div>
         <div className="top-actions">
@@ -924,29 +1187,41 @@ export function App(props: { initial: AppState | null }) {
               />
               </div>
             )}
-            <Card title="Driver">
-              {/* Two dropdown-like pickers: the main driver, and an optional one to compare with. */}
-              <div className="driver-pickers">
-                <div
-                  className="dp-row"
-                  data-help-title="Driver"
-                  data-help="The driver every box is simulated with. Tap to pick another from the database (or rename this one). Its parameters are below."
-                >
-                  <span className="dp-label">Main</span>
+            {(() => {
+              const fromDb = fromDatabase(state.driverName, driverSource);
+              // A database driver whose values look implausible (db-tools plausibility checks).
+              const flag = fromDb && driverSource!.id ? flagText(db?.drivers.find((r) => r.id === driverSource!.id)) : undefined;
+              const attention = pasting
+                ? "Pasting from a datasheet."
+                : solved.missing.length > 0
+                  ? `Still needed to simulate: ${solved.missing.map((p) => TS_PARAMS[p].label).join(", ")}.`
+                  : solved.conflicts.length > 0 && !fromDb
+                    ? "Some T/S values disagree."
+                    : undefined;
+              const load = amplifierLoad(state, solved);
+              let low: { z: number; f: number; name?: string } | undefined;
+              if (load)
+                for (const d of mainDesigns) {
+                  const z = d.result.impedanceOhm;
+                  for (let i = 0; i < z.length; i++) if (z[i]! > 0 && (!low || z[i]! < low.z)) low = { z: z[i]!, f: d.result.freq[i]!, name: mainDesigns.length > 1 ? d.design.name : undefined };
+                }
+              const openMeasure = () => {
+                setTsOpen(false);
+                setMeasureOpen(true);
+                showMeasurePanel();
+              };
+              return (
+                <>
+                  <DriverCard
+                    state={state}
+                    set={set}
+                    phone={phone}
+                    specs={fromDb && driverSource!.url ? { url: driverSource!.url, title: driverSource!.via === "driver-base" ? "Manufacturer's specs (values via driver-base, CC BY 4.0)" : "Manufacturer's specs" } : undefined}
+                    picker={
                   <DriverBrowser
                     rows={db?.drivers}
                     current={state.driverName.trim() || "Unnamed driver"}
-                    extra={
-                      <label className="lib-rename">
-                        <span>Name of the current driver</span>
-                        <input
-                          className="name"
-                          value={state.driverName}
-                          onChange={(e) => set("driverName", e.currentTarget.value)}
-                          aria-label="Driver name"
-                        />
-                      </label>
-                    }
+                    chosen={chosenOf(state, driverSource, db)}
                     onPick={(id) => {
                       // From the assistant's "I have a speaker driver": the project is still the untouched
                       // example, so every box is sized for the new driver (with a port and a PR to suit)
@@ -976,103 +1251,22 @@ export function App(props: { initial: AppState | null }) {
                       );
                     }}
                   />
-                  <span className="dp-icons">
-                    {driverSource && driverSource.name === state.driverName && driverSource.url && (
-                      <a
-                        className="icon"
-                        href={driverSource.url}
-                        target="_blank"
-                        rel="noopener"
-                        title={driverSource.via === "driver-base" ? "Manufacturer's specs (values via driver-base, CC BY 4.0)" : "Manufacturer's specs"}
-                        aria-label="Manufacturer's specs"
-                      >
-                        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-                          <path d="M4 1.5h5.5L13 5v9.5H4z M9.5 1.5V5H13 M6 8h5 M6 10.5h5 M6 13h3" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-                        </svg>
-                      </a>
-                    )}
-                  </span>
-                </div>
-                <div
-                  className="dp-row"
-                  data-help-title="Compare with another driver"
-                  data-help="Shows a second driver in every box as faint dashed curves, with the same settings and, unless you give it its own (Compare: drivers, below), the same number of drivers and wiring. Swap makes it the main driver (to edit it or size boxes for it)."
-                >
-                  <span className="dp-label">
-                    Compare
-                    <svg className="dp-dash" viewBox="0 0 22 6" aria-hidden="true">
-                      <line x1="1" y1="3" x2="21" y2="3" stroke="currentColor" strokeWidth="2.5" strokeDasharray="5 3" />
-                    </svg>
-                  </span>
-                  <DriverBrowser
-                    rows={db?.drivers}
-                    button="Pick one…"
-                    current={state.compare?.driverName}
-                    title="Compare with another driver"
-                    onPick={(id) =>
-                      loadDriver(id).then(
-                        (d) => {
-                          const { compare, borrowed } = compareWith(latest.current, d);
-                          // A new comparison driver keeps the count the last one was given.
-                          setStep((s) => ({ ...s, compare: { ...compare, ...(s.compare?.drivers !== undefined ? { drivers: s.compare.drivers, wiring: s.compare.wiring } : {}) } }));
-                          notify(compareMessage(d.name, borrowed, flagText(db?.drivers.find((r) => r.id === id))));
-                        },
-                        () => alert("Couldn't load that driver."),
-                      )
                     }
-                  />
-                  <span className="dp-icons">
-                    {state.compare && (
-                      <>
-                        <button
-                          type="button"
-                          className="icon"
-                          title="Swap: make it the main driver"
-                          aria-label="Swap with the main driver"
-                          onClick={() => {
-                            setStep((s) => swapCompare(s));
-                            notify(`${state.compare!.driverName} is now the main driver; ${state.driverName} is the comparison.`);
-                          }}
-                        >
-                          ⇅
-                        </button>
-                        <button type="button" className="icon" aria-label="Stop comparing" title="Stop comparing" onClick={() => setStep((s) => ({ ...s, compare: null }))}>
-                          ✕
-                        </button>
-                      </>
-                    )}
-                  </span>
-                </div>
-              </div>
-              {/* The two most-used driver tools, one tap from the picker (all of them stay in Driver tools). */}
-              <div className="quick-actions">
-                <button type="button" className={`chip${pasting ? " on" : ""}`} onClick={() => setPasting(!pasting)} aria-pressed={pasting}>
-                  {pasting ? "Cancel paste" : "Paste datasheet"}
-                </button>
-                <button
-                  type="button"
-                  className="chip"
-                  onClick={() => {
-                    setMeasureOpen(true);
-                    showMeasurePanel();
-                  }}
-                >
-                  <Sparkle />
-                  Measure from a .zma
-                </button>
-              </div>
-              {(() => {
-                // A database driver whose values look implausible (db-tools plausibility checks).
-                const id = driverSource && driverSource.name === state.driverName ? driverSource.id : undefined;
-                const flag = id ? flagText(db?.drivers.find((r) => r.id === id)) : undefined;
-                return flag ? <p className="warn driver-flag">⚠ {flag}</p> : null;
-              })()}
+                    notes={flag ? <Notice tone="warn">{flag}</Notice> : undefined}
+                    name={{ kind: driverSource ? nameKind(state.driverName, driverSource.name) : "own", onChange: (v) => set("driverName", v) }}
+                    ts={{
+                      editor: (
               <TsEditor
                 entered={state.ts}
                 solved={solved}
                 air={airOf(state)}
-                published={driverSource && driverSource.name === state.driverName ? driverSource.ts : undefined}
-                onChange={(ts) => set("ts", ts)}
+                published={fromDb ? driverSource!.ts : undefined}
+                onChange={(ts) => {
+                  // A database driver's first hand edit renames it "… (edited)", in the same undo step.
+                  const name = nameAfterTsEdit(state.driverName, driverSource, ts);
+                  if (name === state.driverName) set("ts", ts);
+                  else setStep((s) => ({ ...s, ts, driverName: name }));
+                }}
                 pasting={pasting}
                 onPastingChange={setPasting}
                 onPaste={(ts, x) => {
@@ -1093,295 +1287,129 @@ export function App(props: { initial: AppState | null }) {
                   }));
                 }}
               />
-              <div className="row">
-                <DriverMenu
-                  onMeasure={() => {
-                    setMeasureOpen(true);
-                    showMeasurePanel();
-                  }}
-                  pasting={pasting}
-                  onPaste={() => setPasting(!pasting)}
-                  onClear={() => {
-                    setStep((s) => ({ ...s, ts: {} }));
-                    notify("Cleared the T/S values.");
-                  }}
-                  onImport={() => wdrInput.current?.click()}
-                  onExport={() => setExportFor("wdr")}
-                  submitUrl={submitDriverUrl(state)}
-                />
-                <input
-                  ref={wdrInput}
-                  type="file"
-                  accept=".wdr,.wpr,.owpr,.owdr,.txt,.json"
-                  hidden
-                  onChange={(e) => {
-                    const f = e.currentTarget.files?.[0];
-                    if (f) importWdr(f);
-                    e.currentTarget.value = "";
-                  }}
-                />
-              </div>
-              {wdrMsg && <p className="hint">{wdrMsg}</p>}
-              <h3>Large signal and system</h3>
-              <div className="fields">
-                <Num help="Nominal impedance printed on the driver (4, 8 Ω…). Only used when the drive is set as watts into the nominal impedance; the simulation itself uses Re." label="Znom" unit="Ω" value={state.nominal_ohms} onChange={(v) => set("nominal_ohms", v)} />
-                <Num help="Voice-coil inductance from the datasheet. It makes the impedance rise with frequency and rolls off the top end; Settings can leave it out, like WinISD." label="Le" unit="mH" value={state.le_mh} min={0} onChange={(v) => set("le_mh", v)} />
-                <Select<"le" | "semi"> help="How the voice coil's inductance is modelled. Le (with the optional L2 and R2) is the usual datasheet way. Semi-inductance is Hornresp's model (Thorborg and Futtrup): Re + Leb + (Le ∥ Rss ∥ Ke·√jω), which follows a real coil's impedance from a measured sweep more closely; its values come from fitting tools or forum posts."
-                  label="Coil model"
-                  value={state.semi ? "semi" : "le"}
-                  options={[
-                    { value: "le", text: "Le (+ L2/R2)" },
-                    { value: "semi", text: "Semi-inductance (like Hornresp)" },
-                  ]}
-                  onChange={(m) => set("semi", m === "semi" ? (state.semi ?? { leb_mh: 0, le_mh: state.le_mh, ke: 0, rss_ohm: 0 }) : undefined)}
-                />
-                {state.semi ? (
-                  <>
-                    <Num
-                      label="Re′"
-                      unit="Ω"
-                      value={state.semi.re_ohm ?? 0}
-                      min={0}
-                      title="Semi-inductance model: the coil's resistance in this model (Hornresp's Re′), when fitted apart from Re. 0 = Re. Bl stays as the T/S give it."
-                      onChange={(v) => set("semi", { ...state.semi!, re_ohm: Math.max(0, v) })}
-                    />
-                    <Num
-                      label="Leb"
-                      unit="mH"
-                      value={state.semi.leb_mh}
-                      min={0}
-                      title="Semi-inductance model: the coil's inductance outside the pole piece, in series with the rest."
-                      onChange={(v) => set("semi", { ...state.semi!, leb_mh: Math.max(0, v) })}
-                    />
-                    <Num
-                      label="Le (semi)"
-                      unit="mH"
-                      value={state.semi.le_mh}
-                      min={0}
-                      title="Semi-inductance model: the inductance in parallel with Rss and Ke. Not the datasheet Le, which this model replaces."
-                      onChange={(v) => set("semi", { ...state.semi!, le_mh: Math.max(0, v) })}
-                    />
-                    <Num
-                      label="Ke"
-                      unit="sH"
-                      value={state.semi.ke}
-                      min={0}
-                      title="Semi-inductance model: the semi-inductance (eddy currents in the pole piece), in semi-henries. 0 = none."
-                      onChange={(v) => set("semi", { ...state.semi!, ke: Math.max(0, v) })}
-                    />
-                    <Num
-                      label="Rss"
-                      unit="Ω"
-                      value={state.semi.rss_ohm}
-                      min={0}
-                      title="Semi-inductance model: losses from a shorting ring, in parallel with Le and Ke. 0 = none."
-                      onChange={(v) => set("semi", { ...state.semi!, rss_ohm: Math.max(0, v) })}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <Num
-                      label="L2"
-                      unit="mH"
-                      value={state.l2_mh}
-                      min={0}
-                      title="Optional: second, lossy inductance (L2R2 coil model). 0 = plain Le. Fill in from a measured sweep."
-                      onChange={(v) => set("l2_mh", v)}
-                    />
-                    <Num
-                      label="R2"
-                      unit="Ω"
-                      value={state.r2_ohm}
-                      min={0}
-                      title="Optional: resistance across L2 (eddy-current losses). Used only when L2 is also set."
-                      onChange={(v) => set("r2_ohm", v)}
-                    />
-                  </>
-                )}
-                <Select<"qms" | "fdd"> help="How the suspension's losses are modelled. From Qms: one resistance (Rms), the usual T/S way. Frequency-dependent damping is Hornresp's FDD model: the suspension's compliance becomes complex (Cms − j·Ams), a loss that stays the same fraction of its stiffness at every frequency, as rubber and foam surrounds behave, plus its own Rms. It mostly changes the impedance peak and the response near Fs."
-                  label="Suspension losses"
-                  value={state.fdd ? "fdd" : "qms"}
-                  options={[
-                    { value: "qms", text: "From Qms" },
-                    { value: "fdd", text: "Frequency-dependent (like Hornresp)" },
-                  ]}
-                  onChange={(m) => set("fdd", m === "fdd" ? (state.fdd ?? { rms: 0, ams_mm_per_n: 0 }) : undefined)}
-                />
-                {state.fdd && (
-                  <>
-                    <Num
-                      label="Rms (FDD)"
-                      unit="N·s/m"
-                      value={state.fdd.rms}
-                      min={0}
-                      title="FDD model: the suspension's viscous resistance, in place of the Rms from Qms."
-                      onChange={(v) => set("fdd", { ...state.fdd!, rms: Math.max(0, v) })}
-                    />
-                    <Num
-                      label="Ams"
-                      unit="mm/N"
-                      value={state.fdd.ams_mm_per_n}
-                      min={0}
-                      title="FDD model: the lossy part of the compliance (Hornresp shows it in m/N: 3.00E-04 m/N is 0.3 mm/N). Ams ÷ Cms is the loss factor. 0 = off."
-                      onChange={(v) => set("fdd", { ...state.fdd!, ams_mm_per_n: Math.max(0, v) })}
-                    />
-                  </>
-                )}
-                <Num help="Maximum one-way excursion the cone can make while staying linear (from the datasheet). The excursion chart turns red above it." label="Xmax" unit="mm" value={state.xmax_mm} onChange={(v) => set("xmax_mm", v)} />
-                <Num help="Thermal power rating: how much power the voice coil can take continuously. Sets the thermal limit in the Max SPL chart." label="Pe" unit="W" value={state.pe_w} onChange={(v) => set("pe_w", v)} />
-                <Num help="How many drivers (or isobaric pairs) share the box. More drivers move more air; the box volume is shared between them."
-                  label={state.isobaric ? "Pairs" : "Drivers"}
-                  value={state.drivers}
-                  onChange={(v) => set("drivers", Math.max(1, Math.round(v)))}
-                />
-                <Select<"standard" | "isobaric"> help="Standard: each driver faces out. Isobaric: two drivers work as one (face to face or front to back), needing half the box for the same bass but 3 dB less efficiency."
-                  label="Loading"
-                  value={state.isobaric ? "isobaric" : "standard"}
-                  options={[
-                    { value: "standard", text: "Standard" },
-                    { value: "isobaric", text: "Isobaric pairs" },
-                  ]}
-                  onChange={(x) => set("isobaric", x === "isobaric")}
-                />
-                {state.isobaric && (
-                  <Select<"series" | "parallel"> help="How the two coils of each isobaric pair are wired together: parallel halves the impedance, series doubles it."
-                    label="Pair coils"
-                    value={state.isoCoils}
-                    options={[
-                      { value: "parallel", text: "Parallel (half the impedance)" },
-                      { value: "series", text: "Series (double the impedance)" },
-                    ]}
-                    onChange={(x) => set("isoCoils", x)}
+                      ),
+                      // Open by itself on wider screens for a driver you typed, or when something needs a look; your choice wins.
+                      open: tsOpen ?? (!phone && (!fromDb || !!attention)),
+                      onOpenChange: (o) => {
+                        setTsOpen(o);
+                        if (!o) setPasting(false);
+                      },
+                      attention,
+                      fill: [
+                        {
+                          label: pasting ? "Cancel paste" : "Paste from datasheet…",
+                          onSelect: () => {
+                            setPasting(!pasting);
+                            setTsOpen(true);
+                          },
+                        },
+                        { label: "Measure from an impedance sweep (.zma)…", icon: <Sparkle />, onSelect: openMeasure },
+                        { kind: "separator" },
+                        { label: "WinISD or OpenISD file…", onSelect: () => wdrInput.current?.click() },
+                      ],
+                      submitUrl: submitDriverUrl(state),
+                      onClear: () => {
+                        setStep((s) => ({ ...s, ts: {} }));
+                        notify("Cleared the T/S values.", { label: "Undo", run: undo });
+                      },
+                    }}
+                    sections={{
+                      open: openSections,
+                      onToggle: (key, o) =>
+                        setOpenSections((cur) => {
+                          const next = new Set(cur);
+                          if (o) next.add(key);
+                          else next.delete(key);
+                          return next;
+                        }),
+                    }}
+                    compare={{
+                      picker: (
+                  <DriverBrowser
+                    rows={db?.drivers}
+                    button="Pick a driver to compare…"
+                    noCount
+                    current={state.compare?.driverName}
+                    title="Compare with another driver"
+                    onPick={(id) =>
+                      loadDriver(id).then(
+                        (d) => {
+                          const { compare, borrowed } = compareWith(latest.current, d);
+                          // A new comparison driver keeps the count the last one was given.
+                          setStep((s) => ({ ...s, compare: { ...compare, ...(s.compare?.drivers !== undefined ? { drivers: s.compare.drivers, wiring: s.compare.wiring } : {}) } }));
+                          notify(compareMessage(d.name, borrowed, flagText(db?.drivers.find((r) => r.id === id))));
+                        },
+                        () => alert("Couldn't load that driver."),
+                      )
+                    }
                   />
-                )}
-                <Select<"single" | "dual"> help="Dual voice coil (DVC) drivers have two coils you can wire in series or parallel. Choose Dual to get those options."
-                  label="Voice coils"
-                  value={state.dvc.on ? "dual" : "single"}
-                  options={[
-                    { value: "single", text: "Single" },
-                    { value: "dual", text: "Dual (DVC)" },
-                  ]}
-                  onChange={(x) => set("dvc", { ...state.dvc, on: x === "dual" })}
-                />
-                {state.dvc.on && (
-                  <>
-                    <Select<"one" | "parallel" | "series"> help="Datasheets for DVC drivers give T/S values for one coil or for both coils wired a certain way. Say which, so the wiring below is calculated correctly."
-                      label="Values are for"
-                      value={state.dvc.entered}
-                      options={[
-                        { value: "parallel", text: "Both coils in parallel" },
-                        { value: "series", text: "Both coils in series" },
-                        { value: "one", text: "One coil" },
-                      ]}
-                      onChange={(entered) => set("dvc", { ...state.dvc, entered })}
-                    />
-                    <Select<"parallel" | "series"> help="How you will wire the two voice coils: series doubles the impedance, parallel halves it. It changes the load on the amplifier, not the bass shape."
-                      label="Coils wired"
-                      value={state.dvc.wired}
-                      options={[
-                        { value: "parallel", text: "In parallel" },
-                        { value: "series", text: "In series" },
-                      ]}
-                      onChange={(wired) => set("dvc", { ...state.dvc, wired })}
-                    />
-                  </>
-                )}
-                {state.drivers > 1 && (
-                  <Select<"parallel" | "series"> help="How several drivers (or pairs) are wired to the amplifier: parallel lowers the impedance, series raises it."
-                    label="Wiring"
-                    value={state.wiring}
-                    options={[
-                      { value: "parallel", text: `${state.isobaric ? "Pairs" : "Drivers"} in parallel` },
-                      { value: "series", text: `${state.isobaric ? "Pairs" : "Drivers"} in series` },
-                    ]}
-                    onChange={(x) => set("wiring", x)}
+                      ),
+                      onSwap: () => {
+                        setStep((s) => swapCompare(s));
+                        notify(`${state.compare!.driverName} is now the main driver; ${state.driverName} is the comparison.`);
+                      },
+                      onStop: () => setStep((s) => ({ ...s, compare: null })),
+                    }}
+                    amp={load ? { ...load, low } : null}
+                    dvcNote={
+                      state.dvc.on && solved.missing.length === 0
+                        ? `As wired: Re ${(solved.values.re! * dvcFactors(state).re).toFixed(2)} Ω, Qes ${(solved.values.qes! * dvcFactors(state).qes).toFixed(3)}. Wiring only changes the impedance (and how much the cable resistance matters); the response at a given power stays the same.`
+                        : undefined
+                    }
                   />
-                )}
-                {state.compare && (
-                  <>
-                    <Select<string> help="How many of the comparison driver share each box: the same as the main driver (like for like), or its own number, to compare one 15″ with two 10″."
-                      label="Compare: drivers"
-                      value={state.compare.drivers === undefined ? "same" : String(state.compare.drivers)}
-                      options={[
-                        { value: "same", text: `Same as main (${state.drivers})` },
-                        ...[1, 2, 3, 4, 6, 8].map((n) => ({ value: String(n), text: `${n}` })),
-                        ...(state.compare.drivers !== undefined && ![1, 2, 3, 4, 6, 8].includes(state.compare.drivers) ? [{ value: String(state.compare.drivers), text: String(state.compare.drivers) }] : []),
-                      ]}
-                      onChange={(x) => {
-                        const c = state.compare!;
-                        const { drivers: _d, wiring: _w, ...rest } = c;
-                        set("compare", x === "same" ? rest : { ...rest, drivers: Number(x), wiring: c.wiring ?? state.wiring });
-                      }}
-                    />
-                    {state.compare.drivers !== undefined && state.compare.drivers > 1 && (
-                      <Select<"parallel" | "series"> help="How the comparison drivers are wired to the amplifier: parallel lowers the impedance, series raises it."
-                        label="Compare: wiring"
-                        value={state.compare.wiring ?? state.wiring}
-                        options={[
-                          { value: "parallel", text: "In parallel" },
-                          { value: "series", text: "In series" },
-                        ]}
-                        onChange={(wiring) => set("compare", { ...state.compare!, wiring })}
-                      />
-                    )}
-                  </>
-                )}
-              </div>
-              {state.dvc.on && solved.missing.length === 0 && (
-                <p className="hint">
-                  As wired: Re {(solved.values.re! * dvcFactors(state).re).toFixed(2)} Ω, Qes{" "}
-                  {(solved.values.qes! * dvcFactors(state).qes).toFixed(3)}. Wiring only changes the impedance (and how much the
-                  cable resistance matters); the response at a given power stays the same.
-                </p>
-              )}
-              {(() => {
-                const load = amplifierLoad(state, solved);
-                const ohms = (x: number) => (x >= 10 ? x.toFixed(0) : Number(x.toPrecision(2)).toString());
-                return load ? (
-                  <p className="amp-load">
-                    Amplifier sees <strong>{ohms(load.nominal)} Ω</strong> nominal <span className="muted">(Re {load.re.toFixed(2)} Ω)</span>
-                    {(() => {
-                      // The lowest it really gets in the boxes: what the amplifier's current has to cope with.
-                      let low: { z: number; f: number; name: string } | null = null;
-                      for (const d of mainDesigns) {
-                        const z = d.result.impedanceOhm;
-                        for (let i = 0; i < z.length; i++) if (z[i]! > 0 && (!low || z[i]! < low.z)) low = { z: z[i]!, f: d.result.freq[i]!, name: d.design.name };
-                      }
-                      return low ? (
-                        <>
-                          , dipping to <strong>{low.z.toFixed(2)} Ω</strong> at {low.f < 100 ? low.f.toFixed(1) : low.f.toFixed(0)} Hz
-                          {mainDesigns.length > 1 ? ` (${low.name})` : ""}
-                        </>
-                      ) : null;
-                    })()}
-                  </p>
-                ) : null;
-              })()}
-              <details className="why">
-                <summary>How wiring works</summary>
-                <p className="hint">
-                  {state.isobaric
-                    ? `Each pair is two drivers working as one (face to face or one behind the other): same Fs and Qts, half the Vas, so about half the box. ${state.drivers * 2} drivers in total. `
-                    : "Multiple drivers share each box. "}
-                  Wiring changes the impedance the amplifier sees and the voltage each driver gets; power is what the amplifier
-                  delivers into the whole set.
-                </p>
-              </details>
-            </Card>
+                  <input
+                    ref={wdrInput}
+                    type="file"
+                    accept=".wdr,.wpr,.owpr,.owdr,.txt,.json"
+                    hidden
+                    onChange={(e) => {
+                      const f = e.currentTarget.files?.[0];
+                      if (f) importWdr(f);
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                  {wdrMsg && <p className="hint">{wdrMsg}</p>}
+                </>
+              );
+            })()}
 
           </div>
         )}
         {panel === "boxes" && (
           <div className="tab-panel" role="tabpanel" id="panel-boxes" aria-labelledby="tab-boxes">
-            <div className="size-all">
-              <button className="secondary" onClick={sizeBoxes} disabled={solved.missing.length > 0}>
-                <Sparkle />
-                Size all boxes for this driver
-              </button>
-              <span className="hint">Sealed Qtc 0.707 (for a Qts near 0.707, where that box runs away, twice Vas and a higher Qtc); ported and PR the flat vented preset (QB3); both sized like WinISD unless Settings says textbook; ported with the simplest port that fits and stays quiet at the driver's rating; bandpass the lowest flat band in its volume. Undo takes it back.</span>
-            </div>
+            {(() => {
+              // + Box, Size all, and one button that folds or opens every box.
+              const shown = state.designs.filter((d) => d.on).map((d) => d.id);
+              const allFolded = shown.length > 0 && shown.every((id) => folds.isFolded(id));
+              return (
+                <div className="bx-top">
+                  <AddBoxMenu designs={state.designs} max={MAX_DESIGNS} onAdd={addDesign} />
+                  <Button
+                    variant="ghost"
+                    onClick={sizeBoxes}
+                    disabled={solved.missing.length > 0}
+                    data-help-title="Size all"
+                    data-help={SIZE_ALL_HELP}
+                    title={SIZE_ALL_HELP}
+                  >
+                    <Sparkle />
+                    Size all
+                  </Button>
+                  {state.designs.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      className="bx-foldall"
+                      icon={allFolded ? "openAll" : "foldAll"}
+                      label={allFolded ? "Open all boxes" : "Fold all boxes"}
+                      title={allFolded ? "Open all" : "Fold all"}
+                      onClick={() => folds.foldAll(shown, !allFolded)}
+                    />
+                  )}
+                </div>
+              );
+            })()}
             {sizeReport && (
-              <div className="size-report">
+              <div className="size-report ui-notice bx-report" data-tone="info">
                 {sizeReport.changed.length > 0 && (
                   <ul>
                     {sizeReport.changed.map((c) => (
@@ -1401,21 +1429,7 @@ export function App(props: { initial: AppState | null }) {
                 </button>
               </div>
             )}
-            {(() => {
-              // Fold or open every box at once; the add buttons are at the bottom of the list.
-              const shown = state.designs.filter((d) => d.on).map((d) => d.id);
-              const allFolded = shown.length > 0 && shown.every((id) => folds.isFolded(id));
-              return (
-                <div className="designs-bar">
-                  <AddBoxMenu designs={state.designs} max={MAX_DESIGNS} onAdd={addDesign} />
-                  {state.designs.length > 1 && (
-                    <button type="button" className="secondary" onClick={() => folds.foldAll(shown, !allFolded)}>
-                      {allFolded ? "Open all" : "Fold all"}
-                    </button>
-                  )}
-                </div>
-              );
-            })()}
+            <div className="bx-list">
             {state.designs.map((d) => (
               <DesignCard
                 key={d.id}
@@ -1437,6 +1451,7 @@ export function App(props: { initial: AppState | null }) {
                 built_l={builtVbOf(state, d)}
                 linked={state.volume.link === d.id}
                 backDepth_cm={backDepthOf(d, state.volume)}
+                preview={(x) => presetPreview(state, solved, x)}
                 onSizeBandpass={d.kind === "bandpass" ? () => sizeOneBandpass(d) : undefined}
                 pickPort={d.kind === "vented" ? (x, vb, fb) => bestVentedPort(state, x, vb, fb) : undefined}
                 lineFb={d.kind === "line" ? (designs.find((x) => x.design.id === d.id)?.result.summary.fb ?? null) : undefined}
@@ -1480,6 +1495,7 @@ export function App(props: { initial: AppState | null }) {
                   onMeasured: (measured) => setStep((s) => ({ ...s, measured })),
                   onShowImpedance: () => showChart("impedance", [d.id]),
                   onUndo: undo,
+                  published: fromDatabase(state.driverName, driverSource) ? driverSource!.ts : undefined,
                 }}
                 onChange={updateDesign}
                 onDuplicate={() => duplicateDesign(d)}
@@ -1512,571 +1528,75 @@ export function App(props: { initial: AppState | null }) {
                 }
               />
             ))}
+            </div>
           </div>
         )}
         {panel === "signal" && (
           <div className="tab-panel" role="tabpanel" id="panel-signal" aria-labelledby="tab-signal">
-            <Card title="High-pass filter">
-              <div className="fields">
-                <Select<HighPassType | "off"> help="A high-pass (subsonic) filter in front of the amplifier. Butterworth is maximally flat; Linkwitz-Riley is the usual crossover shape (−6 dB at the corner)."
-                  label="Filter"
-                  value={hp.on ? hp.type : "off"}
-                  options={[
-                    { value: "off", text: "Off" },
-                    { value: "butterworth", text: "Butterworth" },
-                    { value: "linkwitz-riley", text: "Linkwitz-Riley" },
-                  ]}
-                  onChange={(type) =>
-                    set(
-                      "highPass",
-                      type === "off"
-                        ? { ...hp, on: false }
-                        : { ...hp, on: true, type, order: type === "linkwitz-riley" && hp.order % 2 ? hp.order + 1 : hp.order },
-                    )
-                  }
-                />
-                {hp.on && (
-                  <>
-                    <Select<number> help="How steeply the filter cuts below its frequency: 12 dB/oct is gentle, 24 dB/oct protects a ported box much better."
-                      label="Slope"
-                      value={hp.order}
-                      options={(hp.type === "butterworth" ? [1, 2, 3, 4] : [2, 4]).map((o) => ({
-                        value: o,
-                        text: `${o * 6} dB/oct`,
-                      }))}
-                      onChange={(order) => set("highPass", { ...hp, order })}
-                    />
-                    <Num help="Corner frequency of the high-pass (subsonic) filter. A few Hz below a ported box's tuning keeps the cone from flapping below it." label="Freq" unit="Hz" value={hp.freq} onChange={(freq) => set("highPass", { ...hp, freq })} />
-                  </>
-                )}
+            <KitFields>
+              <div className="sg-list">
+                <KitCard title="Signal" flush>
+                  <HighPassSection value={hp} onChange={(v) => set("highPass", v)} />
+                  <EqSection
+                    state={state}
+                    designs={designs}
+                    onChange={(eq) => set("eq", eq)}
+                    onClear={() => {
+                      setStep((s) => ({ ...s, eq: [] }));
+                      notify("EQ cleared.");
+                    }}
+                  />
+                  <PassiveSection value={state.passive} re={state.ts.re ?? 6} le_mh={state.le_mh} onChange={(p) => set("passive", p)} />
+                </KitCard>
+                <KitCard title="Listening space" flush>
+                  <RoomGainSection value={state.roomGain} room={roomGainOf(state)} onChange={(r) => set("roomGain", r)} />
+                  <BaffleSection
+                    state={state}
+                    sd_cm2={finderCtx.driver?.sd_cm2}
+                    onChange={(b) => set("baffle", b)}
+                    onAddEq={(item) => {
+                      setStep((st) => ({ ...st, eq: [...st.eq, item] }));
+                      notify(`Added a +${"gain_db" in item ? item.gain_db : 0} dB low shelf at ${"freq" in item ? item.freq : ""} Hz (EQ, all designs).`);
+                    }}
+                  />
+                </KitCard>
+                <DspExportPanel state={state} notify={notify} />
               </div>
-              <p className="hint">
-                {hp.on
-                  ? `${hp.order * 6} dB/oct ${hp.type === "butterworth" ? "Butterworth" : "Linkwitz-Riley"} at ${hp.freq} Hz, on every design.`
-                  : "A subsonic filter protects ported and PR boxes from over-excursion below tuning."}
-              </p>
-            </Card>
-
-            <PassivePanel value={state.passive} re={state.ts.re ?? 6} le_mh={state.le_mh} onChange={(p) => set("passive", p)} />
-
-            <EqPanel
-              state={state}
-              designs={designs}
-              onChange={(eq) => set("eq", eq)}
-              onClear={() => {
-                setStep((s) => ({ ...s, eq: [] }));
-                notify("EQ cleared.");
-              }}
-            />
-
-            <RoomGainPanel value={state.roomGain} room={roomGainOf(state)} onChange={(r) => set("roomGain", r)} />
-
-            <BafflePanel
-              state={state}
-              sd_cm2={finderCtx.driver?.sd_cm2}
-              onChange={(b) => set("baffle", b)}
-              onAddEq={(item) => {
-                setStep((st) => ({ ...st, eq: [...st.eq, item] }));
-                notify(`Added a +${"gain_db" in item ? item.gain_db : 0} dB low shelf at ${"freq" in item ? item.freq : ""} Hz (EQ, all designs).`);
-              }}
-            />
-
-            <DspExportPanel state={state} notify={notify} />
+            </KitFields>
           </div>
         )}
         {panel === "build" && (
           <div className="tab-panel" role="tabpanel" id="panel-build" aria-labelledby="tab-build">
-            <VolumePanel state={state} onChange={(v) => set("volume", v)} />
-            <BuildSheet
-              state={state}
-              designs={designs}
-              driverName={state.driverName}
-              driverSd_cm2={finderCtx.driver?.sd_cm2}
-              onChange={(v) => set("volume", v)}
-            />
+            <KitFields>
+              <div className="bd-list">
+                <VolumePanel state={state} onChange={(v) => set("volume", v)} />
+                <BuildSheet
+                  state={state}
+                  designs={designs}
+                  driverName={state.driverName}
+                  driverSd_cm2={finderCtx.driver?.sd_cm2}
+                  onChange={(v) => set("volume", v)}
+                />
+              </div>
+            </KitFields>
           </div>
         )}
         {panel === "settings" && (
           <div className="tab-panel" role="tabpanel" id="panel-settings" aria-labelledby="tab-settings">
-            <Card title="Settings">
-              {(() => {
-                // Match WinISD or Hornresp in one tap: the conventions that differ between them.
-                const now = compatOf(state.settings);
-                const near = now ? null : nearestCompat(state.settings);
-                return (
-                  <div className="compat" data-help="Set the conventions that differ between programs in one go (air, coil inductance, power rating, leaked air, cone air load, ports, line SPL, F3 reference, absorption volume, port sound), to compare like for like. Your units, amplifier, box losses and coil temperature are kept. Each setting stays editable below.">
-                    <span className="compat-label">Match</span>
-                    <div className="unit-switch" role="group" aria-label="Match a program's conventions">
-                      {(Object.keys(COMPAT) as CompatPreset[]).map((id) => (
-                        <button key={id} type="button" aria-pressed={now === id} onClick={() => set("settings", withCompat(state.settings, id))}>
-                          {COMPAT[id].label}
-                        </button>
-                      ))}
-                    </div>
-                    {near && (
-                      <span className="hint compat-custom">
-                        Custom: {COMPAT[near.id].label} except {near.differ.map((k) => COMPAT_NAMES[k]).join(", ")}
-                      </span>
-                    )}
-                  </div>
-                );
-              })()}
-              <div className="fields">
-                <Select<"metric" | "imperial"> help="Show lengths and volumes in metric (cm, L) or imperial (inches, ft³). Values are kept the same, only the display changes."
-                  label="Units"
-                  value={state.settings.units}
-                  options={[
-                    { value: "metric", text: "Metric (L, cm)" },
-                    { value: "imperial", text: "Imperial (ft³, in)" },
-                  ]}
-                  onChange={(units) => set("settings", { ...state.settings, units })}
-                />
-                <Select<Settings["air"]> help="Air density and speed of sound. Standard is 20 °C; pick WinISD's or Hornresp's values to compare results like for like, or your own temperature, humidity and pressure (a cold garage, a hot car, a house high up)."
-                  label="Air"
-                  value={state.settings.air}
-                  options={[
-                    { value: "standard", text: "Standard (20 °C, ρ 1.204, c 343.2)" },
-                    { value: "winisd", text: "WinISD defaults (ρ 1.201, c 343.7)" },
-                    { value: "hornresp", text: "Hornresp defaults (ρ 1.205, c 344)" },
-                    { value: "custom", text: "My conditions (°C, humidity, hPa)" },
-                  ]}
-                  onChange={(air) => set("settings", { ...state.settings, air })}
-                />
-                {state.settings.air === "custom" &&
-                  (() => {
-                    const ac = state.settings.airConditions;
-                    const setAc = (patch: Partial<typeof ac>) => set("settings", { ...state.settings, airConditions: { ...ac, ...patch } });
-                    const a = airOf(state);
-                    return (
-                      <>
-                        <Num help="Air temperature where the speaker plays. Colder air is denser and carries sound more slowly: the box acts a little bigger and the tuning drops." label="Temperature" unit="°C" value={ac.temp_C} min={-40} onChange={(temp_C) => setAc({ temp_C: Math.min(60, temp_C) })} />
-                        <Num help="Relative humidity. Damp air is slightly lighter, with slightly faster sound: a small effect." label="Humidity" unit="%" value={ac.humidity_pct} min={0} onChange={(humidity_pct) => setAc({ humidity_pct: Math.min(100, humidity_pct) })} />
-                        <Num help="Air pressure: 1013 hPa at sea level, about 12 hPa less for every 100 m up (a weather app shows today's). Thinner air carries less sound." label="Pressure" unit="hPa" value={ac.pressure_hPa} min={500} onChange={(pressure_hPa) => setAc({ pressure_hPa: Math.min(1100, pressure_hPa) })} />
-                        <p className="hint">
-                          ρ {a.rho.toFixed(3)} kg/m³, c {a.c.toFixed(1)} m/s
-                        </p>
-                      </>
-                    );
-                  })()}
-                <Num help="Resistance of the amplifier output plus the speaker cable. It adds to Re: a little less output and a slightly higher Q. 0.1 Ω by default, as WinISD assumes, so responses and presets match it."
-                  label="Amp + cable"
-                  unit="Ω"
-                  value={state.settings.rg}
-                  min={0}
-                  onChange={(rg) => set("settings", { ...state.settings, rg })}
-                />
-                <Select<"winisd" | "circuit"> help="What the power setting means. Like WinISD: the watts go into the coil and the amp + cable resistance together, and a hot coil (Settings → coil temperature) takes the same watts. Like Hornresp: the watts set the amplifier's volts from the cold Re, and the amp + cable resistance takes its share of them. They differ by a few hundredths of a dB with 0.1 Ω, and by the coil's heating when it's hot. A drive set in volts is always the amplifier's volts."
-                  label="Watts"
-                  value={state.settings.driveModel}
-                  options={[
-                    { value: "winisd", text: "Into coil + cable (like WinISD)" },
-                    { value: "circuit", text: "Amp volts from cold Re (like Hornresp)" },
-                  ]}
-                  onChange={(driveModel) => set("settings", { ...state.settings, driveModel })}
-                />
-                <Select<"nominal" | "real"> help="What the driver's power rating (Pe) is held against on the Max SPL chart. V²/Re is WinISD's way. Real power counts what the driver actually takes, which is less wherever its impedance rises above Re (around resonance and up high), so it allows more voltage there, as Hornresp does."
-                  label="Power rating vs"
-                  value={state.settings.thermalLimit}
-                  options={[
-                    { value: "nominal", text: "V²/Re (like WinISD)" },
-                    { value: "real", text: "Real power (like Hornresp)" },
-                  ]}
-                  onChange={(thermalLimit) => set("settings", { ...state.settings, thermalLimit })}
-                />
-                <Num help="The amplifier's maximum output voltage (RMS), as a limit on the Max SPL chart. Leave it blank for no limit."
-                  label="Amp max volts"
-                  zeroText="No limit"
-                  unit="V"
-                  value={state.settings.ampVolts}
-                  min={0}
-                  onChange={(ampVolts) => set("settings", { ...state.settings, ampVolts: Math.max(0, ampVolts) })}
-                />
-                <Num help="The amplifier's maximum output current (RMS), as a limit on the Max SPL chart. Leave it blank for no limit."
-                  label="Amp max current"
-                  zeroText="No limit"
-                  unit="A"
-                  value={state.settings.ampAmps}
-                  min={0}
-                  onChange={(ampAmps) => set("settings", { ...state.settings, ampAmps: Math.max(0, ampAmps) })}
-                />
-                <AmpFromRatings onUse={(l) => set("settings", { ...state.settings, ampVolts: l.volts, ampAmps: l.amps })} />
-                {winisdWatts && (
-                  <p className="hint">
-                    The power is in watts as WinISD counts them (Settings → Watts: into the coil and the amp + cable together, with a hot coil's Re), not an amplifier's rated watts. These limits are the amplifier's real volts and amps.
-                  </p>
-                )}
-                <Select<"yes" | "no"> help="Whether the simulation includes the voice-coil inductance (Le, and L2/R2 when given). WinISD leaves it out by default."
-                  label="Coil inductance"
-                  value={state.settings.inductance ? "yes" : "no"}
-                  options={[
-                    {
-                      value: "yes",
-                      text: state.semi ? "Semi-inductance (most realistic)" : state.l2_mh > 0 && state.r2_ohm > 0 ? "Le + L2/R2 (most realistic)" : "Le (more realistic above ~100 Hz)",
-                    },
-                    { value: "no", text: "Off (WinISD's default)" },
-                  ]}
-                  onChange={(x) => set("settings", { ...state.settings, inductance: x === "yes" })}
-                />
-              </div>
-
-              <h3 className="set-head">Alignment presets</h3>
-              <div className="fields">
-                <Select<"winisd" | "textbook"> help="How the presets size the box. Like WinISD: the boxes WinISD's new-project wizard gives. Its ported and passive radiator alignments (QB3, BB4/SBB4, C4/SC4) allow for a box that leaks a little; its sealed ones (Qtc 0.5, 0.577, 0.707) for the box's damping; both for its 0.1 Ω amplifier resistance. Textbook: Thiele's and Small's lossless equations (QB3 up to B4, Keele's alignment above it, and SQB3; Vb = Vas / ((Qtc/Qts)² − 1) sealed); their boxes come out a few per cent smaller (up to about 10 % ported, C4 much more at high Qts)."
-                  label="Box presets"
-                  value={state.settings.alignments}
-                  options={[
-                    { value: "winisd", text: "Like WinISD" },
-                    { value: "textbook", text: "Textbook (lossless)" },
-                  ]}
-                  onChange={(alignments) => set("settings", { ...state.settings, alignments })}
-                />
-              </div>
-
-              <h3 className="set-head">Box losses</h3>
-              <div className="fields">
-                <Num help="Box leakage loss as a Q at the tuning frequency: lower means a leakier box. 10 is WinISD's default (a typical well-built box). Clear it for no leak."
-                  label="Leak Ql"
-                  value={state.settings.losses.ql}
-                  min={1}
-                  none={NO_LOSS}
-                  onChange={(ql) => set("settings", { ...state.settings, losses: { ...state.settings.losses, ql } })}
-                />
-                <Select<"radiates" | "absorbed"> help="Where the air that leaks out goes. Heard (like WinISD): it radiates as sound, as through a real gap. Lost (like Hornresp): a pure loss. It matters mostly for bandpass boxes away from their passband, where the leak's sound can be as loud as the port's."
-                  label="Leaked air"
-                  value={state.settings.leakage}
-                  options={[
-                    { value: "radiates", text: "Heard (like WinISD)" },
-                    { value: "absorbed", text: "Lost (like Hornresp, VituixCAD)" },
-                  ]}
-                  onChange={(leakage) => set("settings", { ...state.settings, leakage })}
-                />
-                <Select<"damping" | "volume"> help="What the absorption Qa does. Damping only: a loss, the box's volume unchanged. Bigger box (like VituixCAD): the filling also makes the air act as a bigger box, +1.4 % at Qa 100, +11 % at Qa 10. Ignored for a box with stuffing set, which has its own gain."
-                  label="Absorption"
-                  value={state.settings.qaVolume ? "volume" : "damping"}
-                  options={[
-                    { value: "damping", text: "Damping only (like WinISD, Hornresp)" },
-                    { value: "volume", text: "Damping + bigger box (like VituixCAD)" },
-                  ]}
-                  onChange={(x) => set("settings", { ...state.settings, qaVolume: x === "volume" })}
-                />
-                <Select<"mass" | "piston"> help="The air in front of the cone. Fixed mass (like WinISD): part of Mms at every frequency. Piston (like Hornresp): a baffled piston's radiation load, the same in the deep bass but lighter and lossier higher up, and with two or more drivers side by side (or identical boxes side by side: double the volume and the drivers) they push one bigger piston together, which adds a little air to each. Sealed, ported and passive radiator boxes."
-                  label="Cone air load"
-                  value={state.settings.coneLoad}
-                  options={[
-                    { value: "mass", text: "Fixed mass (like WinISD)" },
-                    { value: "piston", text: "Piston, like Hornresp" },
-                  ]}
-                  onChange={(coneLoad) => set("settings", { ...state.settings, coneLoad })}
-                />
-                <Num help="Absorption loss (stuffing, wall flex) as a Q: lower means more loss. 100 is WinISD's default (little stuffing). A design with its own Stuffing setting uses that setting's Qa instead. Clear it for no absorption."
-                  label="Absorb Qa"
-                  value={state.settings.losses.qa}
-                  min={1}
-                  none={NO_LOSS}
-                  onChange={(qa) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qa } })}
-                />
-                <Num help="Port friction loss as a Q: lower means a lossier port. 100 is WinISD's default. Clear it for no port loss."
-                  label="Port Qp"
-                  value={state.settings.losses.qp}
-                  min={1}
-                  none={NO_LOSS}
-                  onChange={(qp) => set("settings", { ...state.settings, losses: { ...state.settings.losses, qp } })}
-                />
-              </div>
-              <details className="more">
-                <summary>About box losses</summary>
-                <p className="hint">
-                  Box losses are Q values at the tuning frequency: lower means more loss. 10 / 100 / 100 matches WinISD&rsquo;s
-                  defaults. A bandpass can also set its own losses for each chamber, and a sealed, ported or passive radiator design with Stuffing set uses that stuffing&rsquo;s Qa. For like-for-like checks against WinISD,
-                  choose its air values (Amp + cable is already WinISD&rsquo;s 0.1 &Omega;) and leave out Le, or simply import the WinISD
-                  project (.wpr). OpenISD projects (.owpr) import too, with their own air and losses.
-                </p>
-              </details>
-
-              <h3 className="set-head">Voice coil</h3>
-              <div className="fields">
-                <Num
-                  label="Voice coil"
-                  unit="°C"
-                  value={state.settings.coilTemp_C}
-                  min={20}
-                  title="Voice-coil temperature: 20 °C = the datasheet's cold values (like WinISD). A hot coil has a higher Re: less output, higher Q."
-                  onChange={(t) => set("settings", { ...state.settings, coilTemp_C: Math.min(250, Math.max(20, t)) })}
-                />
-              </div>
-              {state.settings.coilTemp_C > 20 && (
-                <p className="hint">
-                  At {state.settings.coilTemp_C} °C the coil&rsquo;s resistance is {Math.round((coilHeatFactor(state.settings.coilTemp_C) - 1) * 100)}% higher
-                  {solved.values.re !== undefined ? ` (Re ${(solved.values.re * dvcFactors(state).re).toFixed(2)} → ${(solved.values.re * dvcFactors(state).re * coilHeatFactor(state.settings.coilTemp_C)).toFixed(2)} Ω)` : ""}, so the
-                  same amplifier voltage gives about {(20 * Math.log10(coilHeatFactor(state.settings.coilTemp_C))).toFixed(1)}&nbsp;dB less above the bass,
-                  and Qes (so the box&rsquo;s Q) rises by the same ratio, propping up the response near resonance.
-                </p>
-              )}
-              <details className="more">
-                <summary>About a hot voice coil</summary>
-                <p className="hint">
-                  20 °C uses the datasheet&rsquo;s cold values. Coils heat with sustained power, only a little at moderate levels
-                  but to 150&nbsp;°C or more near their rated power. Copper and aluminium both rise about 0.4&nbsp;% per °C. This is
-                  power compression: the dB SPL view shows the lost output, the Relative view the change in shape (and F3).
-                </p>
-              </details>
-
-              <h3 className="set-head">Ports</h3>
-              <div className="fields">
-                <Select<"lumped" | "pipe"> help="Air mass (like WinISD) treats a port as a slug of air. Pipe (like Hornresp) also shows the port's own pipe resonances higher up (vented and bandpass boxes)."
-                  label="Ports"
-                  value={state.settings.portModel}
-                  options={[
-                    { value: "lumped", text: "Air mass (like WinISD)" },
-                    { value: "pipe", text: "Pipe, like Hornresp" },
-                  ]}
-                  onChange={(portModel) => set("settings", { ...state.settings, portModel })}
-                />
-                <Select<"off" | "on"> help="Port compression: at high air speed a port loses output to turbulence. On estimates that loss at the current power (approximate)."
-                  label="Port compression"
-                  value={state.settings.portCompression ? "on" : "off"}
-                  options={[
-                    { value: "off", text: "Off (like WinISD)" },
-                    { value: "on", text: "On (approximate, at this power)" },
-                  ]}
-                  onChange={(x) => set("settings", { ...state.settings, portCompression: x === "on" })}
-                />
-                <Select<"own" | "portLength"> help="Where a ported or passive radiator box's opening is heard from. Where each box puts it: its Position (next to the driver unless set). From the port's far end (like VituixCAD): a port left next to the driver is heard from its far end, so its sound arrives later by the port's length; its group delay drops a little. A passive radiator left next to the driver is heard later by the spacing of the driver's and the PR's centres side by side. On the back or a set distance still win. Bandpass boxes are unchanged."
-                  label="Port sound"
-                  value={state.settings.ventPlacement}
-                  options={[
-                    { value: "own", text: "Where each box puts it" },
-                    { value: "portLength", text: "From the port's far end (like VituixCAD)" },
-                  ]}
-                  onChange={(ventPlacement) => set("settings", { ...state.settings, ventPlacement })}
-                />
-                <Select<"peak" | "rms"> help="Port air speed shown as the peak value or as RMS (peak ÷ 1.41). The chuffing line moves with it."
-                  label="Port speed"
-                  value={state.settings.velocity}
-                  options={[
-                    { value: "peak", text: "Peak" },
-                    { value: "rms", text: "RMS" },
-                  ]}
-                  onChange={(velocity) => set("settings", { ...state.settings, velocity })}
-                />
-                <Num
-                  help="How much longer than its physical length a port acts, as K × its diameter (a slot: the diameter of a circle of the same area). 0.732 is one end in the baffle and one free inside the box, like WinISD; 0.85 both ends flanged. A slot built along the box walls acts longer still, by an amount nobody can calculate well: leave 0.732 and use the slot's tuning range, or enter the K you measured on your own builds. Used for the ports of ported and bandpass boxes: their tuning, Set port length and sizing (transmission lines model their port ends themselves)."
-                  label="End correction K"
-                  unit="× Ø"
-                  value={state.settings.endCorrection}
-                  min={0}
-                  onChange={(v) => set("settings", { ...state.settings, endCorrection: Number.isFinite(v) && v >= 0 ? Math.min(END_CORRECTION_MAX, v) : DEFAULT_END_CORRECTION })}
-                />
-                <Num
-                  help="Port air speed above this counts as chuffing (the red line on the Port speed chart, the ⚠ in the summary, and the design assistant's checks). 17 m/s is the usual guide for a quiet hi-fi port; car SPL builds often accept 25–30."
-                  label="Chuffing line"
-                  unit="m/s"
-                  value={portLimitOf(state)}
-                  min={5}
-                  onChange={(v) => set("settings", { ...state.settings, portLimit_ms: v > 0 ? v : PORT_LIMIT })}
-                />
-                <Num
-                  help="Passive radiators: the PR excursion chart shades a caution band from this share of the PR's Xmax up to it. A PR's suspension stiffens and its distortion rises as it nears Xmax; 70–80 % is a common rule of thumb, not a datasheet figure. Clear it for no band."
-                  label="PR caution"
-                  unit="% Xmax"
-                  value={state.settings.prCaution_pct}
-                  min={10}
-                  zeroText="Off"
-                  onChange={(v) => set("settings", { ...state.settings, prCaution_pct: Math.min(99, Math.round(v)) })}
-                />
-              </div>
-              <details className="more">
-                <summary>About ports as pipes and port speed</summary>
-                <p className="hint">
-                  A port is also a pipe open at both ends, resonating at about c&nbsp;/&nbsp;2L (a 40&nbsp;cm port near 380&nbsp;Hz) and
-                  letting midrange out as a narrow peak. &ldquo;Pipe&rdquo; draws those resonances (charts then run to 1&nbsp;kHz); in the
-                  bass it matches the air-mass model within a few tenths of a dB. Vented boxes only; the box&rsquo;s own standing
-                  waves, which drive the port hardest when they coincide, aren&rsquo;t simulated. The chuffing line (17&nbsp;m/s by default) applies to whichever port-speed convention you pick.
-                  17&nbsp;m/s peak keeps a hi-fi port quiet; flared ports tolerate more, and car SPL builds often accept 25&ndash;30&nbsp;m/s
-                  for a little port noise at full power.
-                </p>
-              </details>
-
-              <h3 className="set-head">Air distortion</h3>
-              <div className="fields">
-                <Num
-                  help="2nd harmonic (HD2) from the air (in a box, or along a line or horn) above this counts as too much: the line on the Air distortion chart, the summary's red value and, if counted, a Max SPL limit. Bass hides harmonic distortion well; 10 % is a common guide for subwoofers, 3 % for hi-fi."
-                  label="Limit"
-                  unit="% HD2"
-                  value={airLimitOf(state)}
-                  min={1}
-                  onChange={(v) => set("settings", { ...state.settings, airLimit_pct: Math.min(30, Math.max(1, v > 0 ? v : 10)) })}
-                />
-                <Select<"off" | "on">
-                  help="Count the air distortion limit on the Max SPL chart, with Xmax, port speed and the rest. Off keeps Max SPL as WinISD and Hornresp show it (neither models the air's distortion)."
-                  label="In Max SPL"
-                  value={state.settings.airInMaxSpl ? "on" : "off"}
-                  options={[
-                    { value: "off", text: "Off (like WinISD)" },
-                    { value: "on", text: "Count it" },
-                  ]}
-                  onChange={(x) => set("settings", { ...state.settings, airInMaxSpl: x === "on" })}
-                />
-                <Select<Settings["airFill"]>
-                  help="Fill (wool, polyester) lets the air exchange heat with the fibres, so it compresses less adiabatically and distorts a little less. Empty is the worst case. Changes the air distortion only, not the response. Boxes only: lines and horns use the path model."
-                  label="Box fill"
-                  value={state.settings.airFill}
-                  options={[
-                    { value: "empty", text: "Empty (worst case)" },
-                    { value: "lined", text: "Walls lined" },
-                    { value: "filled", text: "Filled" },
-                    { value: "packed", text: "Packed" },
-                  ]}
-                  onChange={(airFill) => set("settings", { ...state.settings, airFill })}
-                />
-              </div>
-              <details className="more">
-                <summary>About air distortion</summary>
-                <p className="hint">
-                  The air in a box is a spring that stiffens more when squeezed than it softens when stretched, so a big cone in a small box adds
-                  2nd harmonic. The Air distortion chart shows it for sealed, ported, passive radiator and bandpass boxes, at the frequency of the
-                  note that makes it. It's a 2nd-order estimate from the box pressure, checked against a direct solution of the nonlinear
-                  equations; it's mostly 2nd harmonic, so it reads as THD too. Where the cone squeezes the air by more than 10 % of the box it's
-                  a rough estimate, and past 20 % outside the model.
-                </p>
-                <p className="hint">
-                  It's the air only. The driver's own distortion (Bl and suspension non-linearity) isn't modelled and is usually larger,
-                  so a low figure here doesn't mean a clean box.
-                </p>
-                <p className="hint">
-                  Lines and horns: a strong wave steepens as it travels, so the air adds 2nd harmonic that grows with pressure, path length and
-                  frequency (Thuras, Jenkins and O&rsquo;Neil, 1935). The chart shows it at the mouth, from the pressure along the path from the
-                  driver (or a tapped horn&rsquo;s rear tap) on; it matches their tube and horn measurements. Inside a line the pressure is a
-                  standing wave, so it&rsquo;s an estimate; above 25 % it&rsquo;s rough, and past 50 % outside the model. Lines are taken as lossless
-                  inside, so in a long, narrow line it reads a little high.
-                </p>
-              </details>
-
-              <h3 className="set-head">SPL</h3>
-              <div className="fields">
-                <Select<"on-axis" | "power"> help="How SPL is worked out, for every box: in front of it, adding the cone, ports and mouths as point sources (as WinISD does), or from the power each one radiates (as Hornresp does)."
-                  label="SPL"
-                  value={state.settings.lineSpl}
-                  options={[
-                    { value: "on-axis", text: "In front of the box (like WinISD)" },
-                    { value: "power", text: "From radiated power (like Hornresp)" },
-                  ]}
-                  onChange={(lineSpl) => set("settings", { ...state.settings, lineSpl })}
-                />
-                <Select<"passband" | "peak"> help="Where F3, F6 and F10 are measured from. Passband (like WinISD): a plain cone's level, so a hump in the response doesn't move F3. Response peak (like VituixCAD): the highest point in the bass, so a box with a hump or a high Q gets a higher F3. Lines use their low-frequency edge and bandpass boxes their band's peak either way."
-                  label="F3 from"
-                  value={state.settings.f3From}
-                  options={[
-                    { value: "passband", text: "Passband (like WinISD)" },
-                    { value: "peak", text: "Response peak (like VituixCAD)" },
-                  ]}
-                  onChange={(f3From) => set("settings", { ...state.settings, f3From })}
-                />
-              </div>
-              <details className="more">
-                <summary>About the two ways</summary>
-                <p className="hint">
-                  Hornresp works SPL out from the power each cone, port or mouth radiates. That matches the in-front-of-the-box
-                  SPL in the bass and reads lower once a source is large next to the wavelength: for a 10″ cone about 0.2 dB at
-                  300 Hz and 0.6 dB at 500 Hz, twice that for two side by side, and about 1.5 dB at 500 Hz for an 850 cm² horn
-                  mouth. WinISD uses the in-front SPL.
-                  A line&rsquo;s mouth distance and a box&rsquo;s port or PR position follow the same choice: in front of the box their
-                  sound arrives later than the cone&rsquo;s, at the same level (phase and group delay too, as VituixCAD shows a rear port); from radiated
-                  power it&rsquo;s the distance between the two, as Hornresp&rsquo;s Acoustic Path Length (level only).
-                  For like-for-like checks against Hornresp, pick its air and &ldquo;From radiated power&rdquo; (or the Hornresp
-                  preset), and set the drive to 2.83 V.
-                </p>
-              </details>
-            </Card>
+            <KitFields>
+              <SettingsPanel
+                state={state}
+                onChange={(v) => set("settings", v)}
+                re={solved.values.re !== undefined ? solved.values.re * dvcFactors(state).re : undefined}
+                winisdWatts={winisdWatts}
+              />
+            </KitFields>
           </div>
         )}
       </aside>
 
       <main className="charts">
-        {/* The drive for every chart, right above them: sticky, so it stays in reach while scrolling. */}
-        <div
-          className="power drive-bar"
-          data-help-title={state.drive === "volts" ? "Voltage" : "Power"}
-          data-help="The drive for every chart: amplifier power in watts (turned into volts with Re), or a voltage. Excursion, port speed and the limits all follow it."
-        >
-          <span id="drive-label">{state.drive === "volts" ? "Voltage" : "Power"}</span>
-          {state.drive === "volts" ? (
-            <input
-              type="range"
-              aria-labelledby="drive-label"
-              min={-1}
-              max={2}
-              step={0.005}
-              value={Math.log10(state.volts)}
-              onChange={(e) => set("volts", Number((10 ** e.currentTarget.valueAsNumber).toPrecision(3)))}
-            />
-          ) : (
-            <input
-              type="range"
-              aria-labelledby="drive-label"
-              min={0}
-              max={4}
-              step={0.01}
-              value={Math.log10(state.power)}
-              onChange={(e) => set("power", Math.round(10 ** e.currentTarget.valueAsNumber * 10) / 10)}
-            />
-          )}
-          {phone ? (
-            <button
-              type="button"
-              className="drive-chip"
-              aria-haspopup="dialog"
-              aria-label={`${driveLabel(state)}: change the drive`}
-              onClick={() => setDriveSheet(true)}
-            >
-              {driveLabel(state)}
-            </button>
-          ) : (
-            <>
-              {state.drive === "volts" ? (
-                <DriveValue value={state.volts} unit="V" min={0.1} max={100} onChange={(volts) => set("volts", Number(volts.toPrecision(3)))} />
-              ) : (
-                <DriveValue value={state.power} unit="W" min={1} max={10000} onChange={(power) => set("power", Math.round(power * 10) / 10)} />
-              )}
-              <div
-                className="unit-switch"
-                role="group"
-                aria-label="Drive by"
-                title="Watts: V = √(P·Re), like WinISD. Volts: a fixed voltage, like the 2.83 V datasheets quote."
-              >
-                <button aria-pressed={state.drive === "watts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "watts") }))}>
-                  W
-                </button>
-                <button aria-pressed={state.drive === "volts"} onClick={() => setStep((s) => ({ ...s, ...switchDrive(s, "volts") }))}>
-                  V
-                </button>
-              </div>
-              {/* One tap between WinISD's and Hornresp's 1 W (2.83 V into 8 Ω) and what the driver is rated for. */}
-              <div className="drive-quick" role="group" aria-label="Quick drive">
-                <button
-                  type="button"
-                  className="chip"
-                  aria-pressed={state.drive === "watts" && state.power === 1}
-                  title="1 W, as WinISD and Hornresp start: the response reads as the driver's sensitivity"
-                  onClick={() => setStep((s) => ({ ...s, drive: "watts", power: 1 }))}
-                >
-                  1 W
-                </button>
-                {ratedPowerOf(state) > 0 && (
-                  <button
-                    type="button"
-                    className="chip"
-                    aria-pressed={state.drive === "watts" && state.power === ratedPowerOf(state)}
-                    title={`The power rating (Pe${state.drivers > 1 ? ` × ${state.drivers} drivers` : ""}): see where it runs out of excursion or the port chuffs`}
-                    onClick={() => setStep((s) => ({ ...s, drive: "watts", power: ratedPowerOf(s) }))}
-                  >
-                    Rated {ratedPowerOf(state)} W
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-        </div>
+        {!phone && driveBar}
         {phone && (
           <DriveSheet
             open={driveSheet}
@@ -2099,52 +1619,154 @@ export function App(props: { initial: AppState | null }) {
           <CrosshairProvider>
             <LogChart
               forum
-              {...responseChart(chartInput, splMode)}
+              {...responseProps}
               handles={chartHandles}
-              onSelect={setPicked}
+              onSelect={(id) => {
+                if (id !== null) {
+                  setEditAt(null);
+                  setAddOpen(false);
+                }
+                setPicked(id);
+              }}
+              onPlotTap={editing ? (f) => setEditAt(f) : undefined}
               selected={picked}
-              below={
+              zone={editing}
+              after={
                 editing ? (
-                  <div className="edit-bar">
-                    <span>
-                      {chartHandles.length > 0
-                        ? `Drag ◆ to retune a ported or PR box, ● to move an EQ point${narrow ? " (tap it for Q and Remove)" : " (click it for Q and Remove, or scroll on it for Q)"}.`
-                        : "Add a ported or passive radiator box, or an EQ point, to drag it here."}
-                    </span>
-                    <span className="edit-actions">
-                      <button type="button" className="secondary" onClick={addEqPoint}>
-                        + EQ point
-                      </button>
-                      <button type="button" className="secondary" onClick={cancelEdit} disabled={!editChanged} title="Put the boxes and EQ back as they were when you opened the editor">
-                        Cancel
-                      </button>
-                      <button type="button" onClick={closeEditor}>
-                        Done
-                      </button>
-                    </span>
-                    {pickedEq && draggableEq(pickedEq) && (
-                      <div className="edit-point" role="group" aria-label="EQ point">
-                        <b>
-                          EQ {state.eq.filter(draggableEq).indexOf(pickedEq) + 1}
-                        </b>
-                        <span className="muted">
-                          {pickedEq.freq} Hz · {pickedEq.gain_db > 0 ? "+" : ""}
-                          {pickedEq.gain_db} dB
-                        </span>
-                        <span className="muted">Q</span>
-                        <button type="button" className="icon" aria-label="Wider (lower Q)" onClick={() => setState((s) => eqQ(s, pickedEq.id, false))}>
-                          −
-                        </button>
-                        <span className="q">{pickedEq.q}</span>
-                        <button type="button" className="icon" aria-label="Narrower (higher Q)" onClick={() => setState((s) => eqQ(s, pickedEq.id, true))}>
-                          +
-                        </button>
-                        <button type="button" className="secondary remove" aria-label="Remove this EQ point" title="Remove this EQ point (Delete)" onClick={() => removeEq(pickedEq.id)}>
-                          ✕<span className="wide-only"> Remove</span>
+                  <>
+                    <p className="edit-limits" role="status">
+                      {limitsText}
+                    </p>
+                    <div className="edit-bar">
+                      <div className="edit-chips" role="group" aria-label="Filters">
+                        {[
+                          ...(state.highPass.on ? [{ key: "hp", id: "hp", text: `HP ${state.highPass.freq} Hz`, target: "all", off: false }] : []),
+                          ...state.eq.map((e) => ({
+                            key: e.id,
+                            id: `eq-${e.id}`,
+                            text: `${e.type === "peak" ? "PEQ" : e.type === "lowshelf" ? "LS" : e.type === "highshelf" ? "HS" : "LT"} ${e.type === "linkwitz" ? e.fp : e.freq} Hz`,
+                            target: e.target,
+                            off: !e.on,
+                          })),
+                        ].map((c) => (
+                          <button
+                            key={c.key}
+                            type="button"
+                            className={`edit-chip${c.off ? " off" : ""}`}
+                            aria-pressed={picked === c.id}
+                            onClick={() => pickChip(c.id)}
+                          >
+                            <span className="dot" style={{ background: mainDesigns.find((d) => d.design.id === c.target)?.color ?? "var(--muted)" }} aria-hidden="true" />
+                            {c.text}
+                          </button>
+                        ))}
+                        <button type="button" className="edit-chip add" aria-expanded={addOpen} onClick={() => setAddOpen((o) => !o)}>
+                          {editAt !== null ? `+ Add at ${atLabel}` : "+ Add"}
                         </button>
                       </div>
-                    )}
-                  </div>
+                      {addOpen && (
+                        <div className="edit-add" role="group" aria-label="Add a filter">
+                          <b>{editAt !== null ? `Add at ${atLabel}` : "Add at 40 Hz (tap the chart to choose)"}</b>
+                          {(
+                            [
+                              ["peak", "Parametric EQ", "Boost or cut around a frequency"],
+                              ["lowshelf", "Low shelf", "Raise or lower everything below"],
+                              ["highshelf", "High shelf", "Raise or lower everything above"],
+                              ["highpass", state.highPass.on ? "Move the high-pass here" : "High-pass", "Protect the cone below the cut-off"],
+                              ...(mainDesigns.some((d) => d.design.kind === "sealed" && d.result.summary.fc !== undefined && d.result.summary.qtc !== undefined)
+                                ? [["linkwitz", "Linkwitz Transform", "Retune a sealed box's response"]]
+                                : []),
+                            ] as [AddType, string, string][]
+                          ).map(([type, title, text]) => (
+                            <button key={type} type="button" className="secondary" onClick={() => addAt(type)}>
+                              <span>{title}</span>
+                              <span className="muted">{text}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <span className="edit-actions">
+                        <button type="button" className="secondary" onClick={cancelEdit} disabled={!editChanged} title="Put the boxes and EQ back as they were when you opened the editor">
+                          Cancel
+                        </button>
+                        <button type="button" onClick={closeEditor}>
+                          Done
+                        </button>
+                      </span>
+                      {(pickedItem || (picked === "hp" && state.highPass.on)) && (
+                        <div className="edit-point" role="group" aria-label="Filter settings">
+                          <div className="edit-point-head">
+                            <span className="hd-left">
+                              <button type="button" className="ib" aria-label="Delete filter" title="Delete this filter" onClick={deletePicked}>
+                                <Icon name="trash" size={20} />
+                              </button>
+                              <select
+                                aria-label="Filter type"
+                                value={pickedItem ? pickedItem.type : "highpass"}
+                                onChange={(e) => changeType(e.currentTarget.value as AddType)}
+                              >
+                                <option value="peak">Parametric EQ</option>
+                                <option value="lowshelf">Low shelf</option>
+                                <option value="highshelf">High shelf</option>
+                                <option value="highpass" disabled={!!pickedItem && state.highPass.on}>
+                                  {pickedItem && state.highPass.on ? "High-pass (already on)" : "High-pass"}
+                                </option>
+                                <option value="linkwitz" disabled={pickedItem?.type !== "linkwitz" && !sealedOf(pickedTarget)}>
+                                  Linkwitz Transform
+                                </option>
+                              </select>
+                            </span>
+                            <span className="hd-right">
+                              <button type="button" className="ib ok" aria-label="Keep changes" title="Keep changes" onClick={keepPicked}>
+                                <Icon name="check" size={20} />
+                              </button>
+                              <button type="button" className="ib" aria-label="Cancel changes" title="Cancel changes" onClick={revertPicked}>
+                                <Icon name="close" size={20} />
+                              </button>
+                            </span>
+                          </div>
+                          <div className="edit-fields">
+                            {pickedItem && pickedItem.type === "linkwitz" ? (
+                              <>
+                                <Num help="Linkwitz Transform: the resonance you want instead. Lower extends the bass (and needs more excursion and power)." label="fp" unit="Hz" value={pickedItem.fp} onChange={(fp) => patchEq(pickedItem.id, { fp: Math.round(Math.min(pickedItem.f0, Math.max(5, fp)) * 10) / 10 })} />
+                                <Num help="Linkwitz Transform: the Q you want. 0.707 is flat (Butterworth); 0.5 is tighter, more gradual." label="Qp" value={pickedItem.qp} onChange={(qp) => patchEq(pickedItem.id, { qp })} />
+                              </>
+                            ) : pickedItem ? (
+                              <>
+                                <Num help="Centre (or corner) frequency of this EQ band." label="Freq" unit="Hz" value={pickedItem.freq} onChange={(freq) => patchEq(pickedItem.id, { freq: Math.min(500, Math.max(10, freq)) })} />
+                                <Num help="Boost (+) or cut (−) in dB. Every +6 dB needs four times the power and doubles the excursion." label="Gain" unit="dB" value={pickedItem.gain_db} min={-24} onChange={(gain_db) => patchEq(pickedItem.id, { gain_db: Math.min(24, gain_db) })} />
+                                <Num help="Width of the band: higher Q is narrower. About 0.7 for broad shaping, 2–5 to fix a peak." label="Q" value={pickedItem.q} onChange={(q) => patchEq(pickedItem.id, { q })} />
+                              </>
+                            ) : (
+                              <>
+                                <Num help="Corner frequency of the high-pass (subsonic) filter. A few Hz below a ported box's tuning keeps the cone from flapping below it." label="Freq" unit="Hz" value={hp.freq} onChange={(freq) => setState((s) => moveHighPass(s, freq))} />
+                                <Select<number>
+                                  help="How steeply the filter cuts below its frequency: 12 dB/oct is gentle, 24 dB/oct protects a ported box much better."
+                                  label="Slope"
+                                  value={hp.order}
+                                  options={(hp.type === "butterworth" ? [1, 2, 3, 4] : [2, 4]).map((o) => ({ value: o, text: `${o * 6} dB/oct` }))}
+                                  onChange={(order) => setStep((s) => ({ ...s, highPass: { ...s.highPass, order } }))}
+                                />
+                              </>
+                            )}
+                          </div>
+                          <p className="hint edit-hint">Drag its handle on the chart to move it. Delete removes it.</p>
+                          {pickedItem && pickedFix && (
+                            <div className="edit-fit" role="alert">
+                              <span>
+                                {pickedFix.worst && pickedFix.worst.ratio > 1
+                                  ? `Over ${pickedFix.worst.kind === "xmax" || pickedFix.worst.kind === "pr" ? LIMIT_NAME[pickedFix.worst.kind] : LIMIT_NAME[pickedFix.worst.kind].toLowerCase()} (${Math.round(pickedFix.worst.ratio * 100)} %) at ${pickedFix.worst.f < 100 ? pickedFix.worst.f.toFixed(1) : Math.round(pickedFix.worst.f)} Hz with this ${pickedItem.type === "linkwitz" ? "filter" : pickedItem.gain_db > 0 ? "boost" : "setting"}.`
+                                  : "Past a limit with this filter."}
+                              </span>
+                              <button type="button" className="secondary edit-fix" onClick={fixPicked}>
+                                {"gain_db" in pickedFix.fit ? `Cut to ${pickedFix.fit.gain_db > 0 ? "+" : ""}${pickedFix.fit.gain_db.toFixed(1)} dB` : `Raise fp to ${pickedFix.fit.fp.toFixed(1)} Hz`}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </>
                 ) : undefined
               }
               actions={
@@ -2187,6 +1809,7 @@ export function App(props: { initial: AppState | null }) {
                 </>
               }
             />
+            {phone && driveBar}
             {narrow && (
               <TabRow<ChartId>
                 tabs={chartTabs}
@@ -2348,7 +1971,11 @@ export function App(props: { initial: AppState | null }) {
               <h3>Project</h3>
               <ul>
                 <li><a href="/about/">About</a></li>
-                <li><a href="/changelog/">Changelog</a></li>
+                <li>
+                  <a href="/changelog/">
+                    Changelog{import.meta.env.VITE_APP_VERSION ? ` · v${import.meta.env.VITE_APP_VERSION}` : ""}
+                  </a>
+                </li>
                 <li><a href={REPO}>GitHub</a></li>
                 <li><a href={`${REPO}/blob/main/LICENSE`}>Licence</a></li>
                 <li><a href="/privacy/">Privacy</a></li>
@@ -2391,7 +2018,7 @@ export function App(props: { initial: AppState | null }) {
           // Straight into the driver database's search, as soon as its list has loaded (a few seconds at most).
           const started = Date.now();
           const openSearch = () => {
-            const b = document.querySelector<HTMLButtonElement>("#panel-driver .dp-row .browse:not(:disabled)");
+            const b = document.querySelector<HTMLButtonElement>("#panel-driver .dv-body .browse:not(:disabled)");
             if (b) b.click();
             else if (Date.now() - started < 5000) setTimeout(openSearch, 150);
           };
@@ -2440,7 +2067,6 @@ export function App(props: { initial: AppState | null }) {
           idPrefix="ptab-"
         />
       </nav>
-      <HelpDock />
       {toast && (
         <div className="toast" role="status" key={toast.id}>
           <span>{toast.text}</span>
@@ -2637,8 +2263,9 @@ function Summary({
               className="summary-jump"
               onClick={() => onJump?.(firstKind, overs.filter((x) => x.over.includes(firstKind)).map((x) => x.id))}
               title={`Show the ${LIMIT_NAME[firstKind]} chart`}
+              aria-label={`${overCount} ${overCount === 1 ? "box" : "boxes"} over a limit: show the ${LIMIT_NAME[firstKind]} chart`}
             >
-              ⚠ {overCount} over a limit ›
+              ⚠ {overCount} over ›
             </button>
           )}
           {!overCount && deeps.length > 0 && (

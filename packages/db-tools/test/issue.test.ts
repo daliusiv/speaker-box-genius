@@ -119,6 +119,39 @@ https://www.example.com/dsa215-pr
   assert.deepEqual(p, { fs: 30, qms: 6.1, vas_l: 40, mms_g: 45, sd_cm2: 214, xmax_mm: 9, max_added_mass_g: 150 });
 });
 
+test("a passive radiator issue with only Xmech keeps it as Xmech", () => {
+  const body = `### Brand
+
+Dayton Audio
+
+### Model
+
+DSA215-PR
+
+### Parameters
+
+Fs (Hz, with no added mass): 30
+Qms: 6.1
+Vas (L): 40
+Mms (g, with no added mass): 45
+Sd (cm²): 214
+Xmax (mm, one way):
+Xmech (mm, one way, only if no Xmax): 12
+
+### Datasheet link
+
+https://www.example.com/dsa215-pr
+
+### Confirmation
+
+- [X] yes`;
+  const r = parseIssue(body, opts);
+  assert.deepEqual(validatePassiveRadiator(r.record), []);
+  const p = r.record.params as Record<string, number>;
+  assert.equal(p.xmech_mm, 12);
+  assert.equal(p.xmax_mm, undefined);
+});
+
 test("own measurements become a second source", () => {
   const r = parseIssue(DRIVER_BODY.replace("_No response_", "DATS v3, added mass 20 g"), opts);
   const src = r.record.sources as Record<string, string>[];

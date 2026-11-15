@@ -13,7 +13,7 @@
  * Sd): Xmax / effective cone diameter is 0.004–0.11 for drivers (long-throw 4–8 inch
  * drivers sit at the top) and up to 0.17 for passive radiators.
  */
-import type { Driver, PassiveRadiator } from "../../schema/src/index.ts";
+import { prTravel, type Driver, type PassiveRadiator } from "../../schema/src/index.ts";
 
 export type FlagCode = "xmax-high" | "xmax-low" | "size-sd";
 
@@ -74,7 +74,7 @@ export function driverFlags(d: Driver): Flag[] {
 
 export function passiveRadiatorFlags(p: PassiveRadiator): Flag[] {
   if (p.plausibility_note) return [];
-  return check("pr", p.params.xmax_mm, p.params.sd_cm2, p.size_in, "passive-radiator");
+  return check("pr", prTravel(p.params).mm, p.params.sd_cm2, p.size_in, "passive-radiator");
 }
 
 /** True when a flag puts the Xmax itself in doubt (the design assistant leaves those drivers out). */
