@@ -1,0 +1,26 @@
+{
+  "brand": "Example Audio",
+  "model": "EX10-4",
+  "type": "other",
+  "nominal_ohms": 4,
+  "ts": {
+    "fs": 30,
+    "qms": 5.2,
+    "qes": 0.4,
+    "vas_l": 50,
+    "re": 3.4,
+    "le_mh": 1.2,
+    "sd_cm2": 330,
+    "xmax_mm": 12,
+    "pe_w": 250
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://test.test",
+      "retrieved": "2026-11-18",
+      "note": "Submitted on the website form."
+    }
+  ],
+  "status": "community"
+}
