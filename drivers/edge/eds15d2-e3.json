@@ -1,8 +1,8 @@
 {
-  "brand": "edge",
-  "model": "eds15d2-e3",
+  "brand": "EDGE",
+  "model": "EDS15D2-E3",
   "type": "subwoofer",
-  "nominal_ohms": 2,
+  "nominal_ohms": 4,
   "size_in": 15,
   "ts": {
     "fs": 36,
@@ -15,16 +15,22 @@
     "bl": 19.6,
     "mms_g": 283,
     "sd_cm2": 295,
-    "xmax_mm": 28.5,
     "pe_w": 1850
+  },
+  "physical": {
+    "depth_mm": 205
   },
   "sources": [
     {
       "kind": "datasheet",
       "url": "https://edgecaraudio.com/products/edge-street-series-eds15d2-e0-subwoofer",
       "retrieved": "2026-11-18",
-      "note": "Submitted in issue #214 by @theoakeken-netizen."
+      "note": "Submitted in issue #214 by @theoakeken-netizen; checked against EDGE's product page (Street Series EDS15D2-E3)."
     }
   ],
-  "status": "community"
+  "status": "community",
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "notes": "Dual 2 Ω coils. EDGE lists Re as 2 × 1.8 Ω, so the published T/S values are for the coils in series (4 Ω). Xmax isn't on EDGE's page, so it's left out.",
+  "plausibility_note": "Sd 295 cm² is low for a 15-inch cone, but it's what EDGE's page lists and it agrees with the published Vas, Cms (65.9 µm/N) and Fs, so it's kept as published."
 }
