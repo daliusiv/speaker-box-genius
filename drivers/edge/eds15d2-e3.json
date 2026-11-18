@@ -1,0 +1,30 @@
+{
+  "brand": "edge",
+  "model": "eds15d2-e3",
+  "type": "subwoofer",
+  "nominal_ohms": 2,
+  "size_in": 15,
+  "ts": {
+    "fs": 36,
+    "qms": 4.122,
+    "qes": 0.612,
+    "qts": 0.533,
+    "vas_l": 8.187,
+    "re": 3.6,
+    "le_mh": 2.4,
+    "bl": 19.6,
+    "mms_g": 283,
+    "sd_cm2": 295,
+    "xmax_mm": 28.5,
+    "pe_w": 1850
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://edgecaraudio.com/products/edge-street-series-eds15d2-e0-subwoofer",
+      "retrieved": "2026-11-18",
+      "note": "Submitted in issue #214 by @theoakeken-netizen."
+    }
+  ],
+  "status": "community"
+}
