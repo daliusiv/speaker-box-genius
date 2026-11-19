@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "15 S 3 PL",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 33,
+    "qms": 14.1,
+    "qes": 0.39,
+    "vas_l": 230,
+    "re": 5.2,
+    "sd_cm2": 855.3,
+    "qts": 0.38,
+    "le_mh": 1.15,
+    "bl": 17.1,
+    "mms_g": 105,
+    "xmax_mm": 8,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 161
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/15-s-3-pl/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

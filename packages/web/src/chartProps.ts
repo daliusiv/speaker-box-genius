@@ -4,17 +4,20 @@
  * site build (src/ssr/guideCharts.tsx). The app adds its controls (actions, handles, editor).
  */
 import type { LogChartProps, Series } from "./LogChart.tsx";
-import { baffleDbFor, checkFromHz, coilLabel, DEEP_ALLOW, DEEP_FLOOR_HZ, deepSplitOf, driveLabel, lowEdge, minus3Points, portLimitOf, prGroupLabels, prLimits, type Design } from "./sim.ts";
+import { baffleDbFor, checkFromHz, coilLabel, DEEP_ALLOW, DEEP_FLOOR_HZ, deepSplitOf, driveLabel, lowEdge, minus3Points, portLimitOf, prAreas, prGroupLabels, prLimits, type Design } from "./sim.ts";
 import type { AppState } from "./state.ts";
 import type { SimulationResult } from "@sbg/engine";
+import { unitOf, type UnitSystem } from "./units.ts";
 import { GUIDE, LIMIT } from "./palette.ts";
+import { crestOf, fmtCrest, fmtHeadroom, headroomTone, programOf, type DesignProgram, type SideHeadroom } from "./programSignal.ts";
+import type { SummaryCell } from "./LogChart.tsx";
 
 /** What sets the maximum SPL at each frequency, as shown in the strip under the Max SPL chart. */
 export const LIMIT_KINDS: Record<string, { label: string; short: string; color: string }> = {
   xmax: { label: "Cone Xmax", short: "cone Xmax", color: LIMIT.xmax },
   "pr-xmax": { label: "PR Xmax", short: "PR Xmax", color: LIMIT.prXmax },
   port: { label: "Port speed", short: "port speed", color: LIMIT.port },
-  thermal: { label: "Power (Pe)", short: "power handling", color: LIMIT.thermal },
+  thermal: { label: "Driver power (Pe)", short: "driver power rating", color: LIMIT.thermal },
   amp: { label: "Amplifier", short: "amplifier limit", color: LIMIT.amp },
   air: { label: "Air distortion", short: "air distortion", color: LIMIT.air },
 };
@@ -22,8 +25,158 @@ export const LIMIT_KINDS: Record<string, { label: string; short: string; color: 
 /** The props a chart builder fills in; the rest (controls, handles) are the app's. */
 export type ChartDraw = Pick<
   LogChartProps,
-  "chartId" | "title" | "shortTitle" | "unit" | "freq" | "series" | "limits" | "limitStyle" | "yStep" | "yMin" | "yMax" | "points" | "zones" | "bands" | "markers" | "ribbons" | "ribbonKinds" | "best" | "noteLabel" | "digits"
+  "chartId" | "title" | "shortTitle" | "unit" | "freq" | "series" | "limits" | "limitStyle" | "yStep" | "yMin" | "yMax" | "points" | "zones" | "bands" | "markers" | "ribbons" | "ribbonKinds" | "best" | "noteLabel" | "digits" | "sig" | "summary" | "worst"
 >;
+
+/**
+ * What the excursion charts show: excursion (in the Settings units), as % of Xmax, as the air it
+ * moves (Sd × excursion), or the velocity, acceleration or force that goes with it.
+ */
+export type XView = "x" | "pct" | "vol" | "v" | "a" | "f";
+export const XVIEW_ORDER: readonly XView[] = ["x", "pct", "vol", "v", "a", "f"];
+export const XVIEWS: Record<XView, { name: string; hint: string }> = {
+  x: { name: "Excursion", hint: "Excursion" },
+  pct: { name: "% of Xmax", hint: "Excursion as a share of Xmax" },
+  vol: { name: "Air moved", hint: "Air moved: Sd × excursion" },
+  v: { name: "Velocity", hint: "Velocity (peak, m/s)" },
+  a: { name: "Acceleration", hint: "Acceleration (g = 9.81 m/s²)" },
+  f: { name: "Force", hint: "Force: moving mass × acceleration (N)" },
+};
+const G0 = 9.80665;
+
+/** How excursion is shown (Settings → Port speed & excursion): one way peak, peak-to-peak or RMS. */
+export const excursionFactor = (e: AppState["settings"]["excursion"]) => (e === "pp" ? 2 : e === "rms" ? Math.SQRT1_2 : 1);
+const kindText = (e: AppState["settings"]["excursion"], oneWay = false) => (e === "pp" ? "peak-to-peak" : e === "rms" ? "RMS" : oneWay ? "peak, one way" : "peak");
+const kindTag = (e: AppState["settings"]["excursion"]) => (e === "pp" ? " p-p" : e === "rms" ? " RMS" : "");
+
+/** The unit a view shows in, in the Settings units. */
+export function xviewUnit(view: XView, units: UnitSystem): string {
+  return view === "x" ? unitOf(units, "mm").unit : view === "pct" ? "%" : view === "vol" ? unitOf(units, "disp").unit : view === "v" ? "m/s" : view === "a" ? "g" : "N";
+}
+
+/** One way peak excursion (mm) as shown, in the Settings units and peak / p-p / RMS. */
+export function excursionText(x_mm: number | null | undefined, state: AppState): string {
+  if (x_mm === null || x_mm === undefined || !Number.isFinite(x_mm)) return "–";
+  const u = unitOf(state.settings.units, "mm");
+  const v = x_mm * excursionFactor(state.settings.excursion) * u.k;
+  const digits = u.unit === "mm" ? (v < 10 ? 1 : 0) : 3;
+  return `${v.toFixed(digits)} ${u.unit}${kindTag(state.settings.excursion)}`;
+}
+
+interface Radiator {
+  /** Moving mass (kg), for the force view. */
+  mass: number | null;
+  /** Radiating area (cm²), for the air-moved view. */
+  sd_cm2: number | null;
+}
+
+/**
+ * An excursion chart (one way peak, mm) in another view. Every curve becomes x × a factor of its
+ * own (a units/peak factor, 100 / its Xmax, its Sd, or ω, ω² or its mass × ω²), still judged on its
+ * excursion so the glow marks the same frequencies; its limits, deep-bass zone and caution bands get
+ * the same factor (horizontal lines stay lines; ones that change with frequency become curves).
+ */
+function asView(draw: ChartDraw, view: XView, rads: (Radiator | null)[], state: AppState, what: "Cone" | "Passive radiator"): ChartDraw {
+  const ex = state.settings.excursion;
+  const units = state.settings.units;
+  const k = view === "pct" ? 1 : excursionFactor(ex);
+  if (view === "x" && k === 1 && units === "metric") return draw;
+  const { freq } = draw;
+  const ku = unitOf(units, "mm").k;
+  const kd = unitOf(units, "disp").k;
+  const w = (i: number) => 2 * Math.PI * freq[i]!;
+  // The factor for series n at point i (null: can't be shown in this view), and a key to tell factors apart.
+  const factorOf = (n: number): { key: string; flat: number | null; at: (i: number) => number } | null => {
+    const s = draw.series[n]!;
+    const r = rads[n];
+    switch (view) {
+      case "x":
+        return { key: "x", flat: k * ku, at: () => k * ku };
+      case "pct":
+        return s.over ? { key: `p${s.over}`, flat: 100 / s.over, at: () => 100 / s.over! } : null;
+      case "vol":
+        return r?.sd_cm2 ? { key: `s${r.sd_cm2}`, flat: (r.sd_cm2 / 10) * k * kd, at: () => (r.sd_cm2! / 10) * k * kd } : null;
+      case "v":
+        return { key: "v", flat: null, at: (i) => (w(i) / 1000) * k };
+      case "a":
+        return { key: "a", flat: null, at: (i) => (w(i) ** 2 / 1000 / G0) * k };
+      case "f":
+        return r?.mass ? { key: `m${r.mass}`, flat: null, at: (i) => ((r.mass! * w(i) ** 2) / 1000) * k } : null;
+    }
+  };
+  const factors = draw.series.map((_, n) => factorOf(n));
+  const xmaxNote = (x: number, xmax: number | undefined) => `${excursionText(x, state)}${xmax ? ` · ${Math.round((100 * x) / xmax)} % Xmax` : ""}`;
+  const series = draw.series.map((s, n) => {
+    const f = factors[n];
+    if (!s.y || !f) return { ...s, y: null };
+    return {
+      ...s,
+      y: Float64Array.from(s.y, (x, i) => x * f.at(i)),
+      judge: s.y,
+      ...(view === "x" ? {} : { notes: Array.from(s.y, (x) => (view === "pct" ? excursionText(x, state) : xmaxNote(x, s.over))) }),
+    };
+  });
+  // The factors of the curves a limit (mm) belongs to: one line or curve each.
+  const factorsFor = (mm: number, pick: (s: Series) => number | undefined) => {
+    const out = new Map<string, { f: NonNullable<(typeof factors)[number]>; label: string }>();
+    draw.series.forEach((s, n) => {
+      const f = factors[n];
+      if (f && s.y && pick(s) === mm && !out.has(f.key)) out.set(f.key, { f, label: s.label });
+    });
+    if (out.size === 0) {
+      const n = factors.findIndex((f, i) => f && draw.series[i]!.y);
+      if (n >= 0) out.set(factors[n]!.key, { f: factors[n]!, label: draw.series[n]!.label });
+    }
+    return [...out.values()];
+  };
+  const scaled = (mm: number, f: NonNullable<(typeof factors)[number]>) =>
+    f.flat !== null ? { value: mm * f.flat } : { value: 0, curve: Float64Array.from(freq, (_, i) => mm * f.at(i)) };
+  const u = xviewUnit(view, units);
+  // In the excursion view a limit's own number is converted too ("Xmax 12 mm" → "Xmax 24 mm p-p").
+  const relabel = (label: string) =>
+    view === "x" ? label.replace(/(\d+(?:\.\d+)?) mm/g, (_, n: string) => excursionText(Number(n), state)) : label;
+  const lower = XVIEWS[view].name.toLowerCase();
+  const title =
+    view === "x"
+      ? `${what} excursion (${kindText(ex, true)})`
+      : view === "pct"
+        ? `${what} excursion (% of Xmax, peak)`
+        : view === "vol"
+          ? `Air moved by the ${what === "Cone" ? "cone" : "passive radiator"} (Sd × excursion, ${kindText(ex)})`
+          : `${what} ${lower} (${kindText(ex)})${view === "f" ? ": moving mass × acceleration" : ""}`;
+  const short = what === "Cone" ? "Cone" : "PR";
+  return {
+    ...draw,
+    title,
+    shortTitle: view === "x" ? draw.shortTitle : view === "pct" ? `${short} % Xmax` : view === "vol" ? `${short} air moved` : `${short} ${lower}`,
+    unit: u,
+    ...(view === "pct" ? { digits: 0, sig: undefined } : view === "x" && units === "metric" ? {} : { digits: 1, sig: 3 }),
+    ...(view === "x" ? {} : { noteLabel: "Excursion" }),
+    series,
+    limits: (draw.limits ?? []).flatMap((l) => {
+      const fs = factorsFor(l.value, (s) => s.over);
+      // A caution band under this limit says so in the limit's label when it's drawn as a curve (its own label would sit on the curves).
+      const band = (draw.bands ?? []).find((b) => b.to === l.value && b.label);
+      const curved = fs.some((x) => x.f.flat === null);
+      const tail = band && curved ? ` · caution from ${Math.round((100 * band.from) / band.to)} %` : "";
+      return fs.map(({ f, label }) => ({ ...l, ...scaled(l.value, f), label: l.label ? `${relabel(l.label)}${fs.length > 1 ? ` · ${label}` : ""}${tail}` : l.label }));
+    }),
+    zones: (draw.zones ?? []).map((z) => {
+      const f = factorsFor(z.value, (s) => s.deepOver)[0]?.f;
+      return f ? { ...z, ...scaled(z.value, f) } : z;
+    }),
+    bands: (draw.bands ?? []).flatMap((b) =>
+      factorsFor(b.to, (s) => s.over).map(({ f }) => {
+        const lo = scaled(b.from, f);
+        const hi = scaled(b.to, f);
+        return f.flat !== null
+          ? { ...b, from: lo.value, to: hi.value }
+          : { ...b, label: "", fromCurve: (lo as { curve: Float64Array }).curve, toCurve: (hi as { curve: Float64Array }).curve };
+      }),
+    ),
+    yMin: 0,
+  };
+}
 
 export interface ChartInput {
   state: AppState;
@@ -172,7 +325,8 @@ export function responseChart(c: ChartInput, mode: "relative" | "absolute"): Cha
   };
 }
 
-export function excursionChart(c: ChartInput): ChartDraw {
+/** Cone excursion (or, by `view`, the cone's velocity, acceleration or force). */
+export function excursionChart(c: ChartInput, view: XView = "x"): ChartDraw {
   const { state, designs } = c;
   const fadedLabels = designs.filter((d) => d.compare).map((d) => d.label);
   const twoXmax = state.compare && fadedLabels.length > 0 && state.compare.xmax_mm !== state.xmax_mm;
@@ -181,7 +335,7 @@ export function excursionChart(c: ChartInput): ChartDraw {
     .filter((d) => !d.compare)
     .map((d) => deepSplitOf(d.result, state.highPass.on))
     .filter((v): v is number => v !== null);
-  return {
+  const draw: ChartDraw = {
     chartId: "excursion",
     best: "low",
     shortTitle: "Cone excursion",
@@ -196,68 +350,152 @@ export function excursionChart(c: ChartInput): ChartDraw {
         color: d.color,
         dash: d.dash,
         y: d.result.excursionMm,
-        over: xmax,
+        // Xmax 0 = not known: no redline or glow.
+        ...(xmax > 0 ? { over: xmax } : {}),
         // No glow below where the limits are checked (the same floor for every box).
-        ...(split ? { deepBelow: split, deepOver: DEEP_ALLOW * xmax, deepFloor: DEEP_FLOOR_HZ } : { deepFloor: checkFromHz(state.highPass.on, d.result.summary.f3) }),
+        ...(split && xmax > 0 ? { deepBelow: split, deepOver: DEEP_ALLOW * xmax, deepFloor: DEEP_FLOOR_HZ } : { deepFloor: checkFromHz(state.highPass.on, d.result.summary.f3) }),
       };
     }),
-    zones: splits.length ? [{ below: Math.max(...splits), value: DEEP_ALLOW * state.xmax_mm, label: `Deep bass: ${DEEP_ALLOW} × Xmax`, color: LIMIT.deepBass }] : [],
+    zones: splits.length && state.xmax_mm > 0 ? [{ below: Math.max(...splits), value: DEEP_ALLOW * state.xmax_mm, label: `Deep bass: ${DEEP_ALLOW} × Xmax`, color: LIMIT.deepBass }] : [],
     limits: [
-      { value: state.xmax_mm, label: twoXmax ? `Xmax ${state.xmax_mm} · vs ${state.compare!.xmax_mm} mm` : `Xmax ${state.xmax_mm} mm`, color: LIMIT.xmax },
-      ...(twoXmax ? [{ value: state.compare!.xmax_mm, label: "", color: LIMIT.xmax }] : []),
+      ...(state.xmax_mm > 0 ? [{ value: state.xmax_mm, label: twoXmax ? `Xmax ${state.xmax_mm} · vs ${state.compare!.xmax_mm} mm` : `Xmax ${state.xmax_mm} mm`, color: LIMIT.xmax }] : []),
+      ...(twoXmax && state.compare!.xmax_mm > 0 ? [{ value: state.compare!.xmax_mm, label: state.xmax_mm > 0 ? "" : `vs Xmax ${state.compare!.xmax_mm} mm`, color: LIMIT.xmax }] : []),
     ],
     yMin: 0,
   };
+  return asView(
+    draw,
+    view,
+    designs.map((d) => ({ mass: d.result.coneMotion.mass_kg, sd_cm2: (d.compare && state.compare ? state.compare.ts.sd_cm2 : state.ts.sd_cm2) ?? null })),
+    state,
+    "Cone",
+  );
 }
 
-export function maxSplChart(c: ChartInput, mode: "spl" | "volts" | "amps"): ChartDraw {
+/** What the Max SPL chart shows: the SPL itself, or the amplifier volts, current or power it takes to get there. */
+export type MaxMode = "spl" | "volts" | "amps" | "watts";
+export const MAX_MODES: readonly MaxMode[] = ["spl", "volts", "amps", "watts"];
+export const MAX_MODE_INFO: Record<MaxMode, { label: string; unit: string; name: string; hint: string }> = {
+  spl: { label: "SPL", unit: "dB", name: "Max SPL", hint: "The loudest each design can play, and what limits it" },
+  volts: { label: "Volts", unit: "V", name: "Amp volts", hint: "The amplifier's output voltage (RMS) needed to reach that maximum SPL, after the high-pass filter and EQ" },
+  amps: { label: "Amps", unit: "A", name: "Amp current", hint: "The current (RMS) the amplifier must deliver into the speaker's impedance to reach that maximum SPL" },
+  watts: { label: "Watts", unit: "W", name: "Amp power", hint: "The power (RMS) the amplifier must deliver into the speaker's impedance to reach that maximum SPL" },
+};
+/** Which of the amplifier's limits, as the tooltip names it. */
+const AMP_LIMIT_SHORT = { volts: "amp volts", amps: "amp current", watts: "amp power" } as const;
+
+/** A design's program envelope and headroom with the Max SPL chart's signal (F3 in the room when room gain is on). */
+export function designProgram(d: Design, signal: AppState["settings"]["signal"]): DesignProgram {
+  return programOf(d.result, d.f3Room !== undefined ? d.f3Room : d.result.summary.f3, crestOf(signal), signal.target_dB);
+}
+
+/** A limit's short name with the side it holds ("port speed on peaks"); "Pe" where space is tight. */
+export function sideLimitText(kind: string, side: "avg" | "peak" | null, tight = false): string {
+  const name = kind === "amp" ? (side === "avg" ? "amp power" : "amp volts / current") : kind === "thermal" && tight ? "Pe" : (LIMIT_KINDS[kind]?.short ?? "");
+  return tight || !side ? name : `${name} ${side === "peak" ? "on peaks" : "on average"}`;
+}
+
+/** A side's headroom as a legend / hover cell. */
+export function headroomCell(h: SideHeadroom): SummaryCell | undefined {
+  if (!h) return undefined;
+  const hz = `@ ${h.f.toFixed(h.f < 10 ? 1 : 0)} Hz`;
+  return { main: fmtHeadroom(h.db), at: hz, why: sideLimitText(h.kind, null, true), tone: headroomTone(h.db) };
+}
+
+export function maxSplChart(c: ChartInput, mode: MaxMode): ChartDraw {
   const { state, designs } = c;
   const n1 = (v: number) => (Number.isFinite(v) ? (v < 10 ? v.toFixed(1) : v.toFixed(0)) : "–");
+  const ampMax = (v: number, unit: string) => [{ value: v, label: `Amp max ${v} ${unit}`, color: LIMIT_KINDS.amp!.color }];
+  const s = state.settings;
+  const sig = s.signal;
+  const on = sig.program;
+  const crest = crestOf(sig);
+  const progs = on ? designs.map((d) => designProgram(d, sig)) : [];
+  // The least headroom of all the boxes: ringed on the plot.
+  const worst = on && mode === "spl"
+    ? progs.reduce<DesignProgram["overall"]>((w, p) => (p.overall && (!w || p.overall.db < w.db) ? p.overall : w), null)
+    : null;
+  const target = sig.target_dB;
   return {
     chartId: "maxspl",
     noteLabel: "Limited by",
     best: mode === "spl" ? "high" : "low",
-    shortTitle: mode === "spl" ? "Max SPL" : mode === "volts" ? "Amp volts for max SPL" : "Amp current for max SPL",
+    shortTitle: mode === "spl" ? "Max SPL" : `${MAX_MODE_INFO[mode].name} for max SPL`,
     title:
       mode === "spl"
-        ? "Maximum SPL (first limit reached)"
+        ? on
+          ? "Maximum SPL on program (first limit reached)"
+          : "Maximum SPL (first limit reached)"
         : mode === "volts"
-          ? "Amplifier voltage needed for maximum SPL (RMS, at the amplifier's terminals)"
-          : "Amplifier current needed for maximum SPL (RMS)",
-    unit: mode === "spl" ? "dB" : mode === "volts" ? "V" : "A",
+          ? `Amplifier voltage needed for maximum SPL${on ? " on program" : ""} (RMS, at the amplifier's terminals)`
+          : mode === "amps"
+            ? `Amplifier current needed for maximum SPL${on ? " on program" : ""} (RMS)`
+            : `Amplifier power needed for maximum SPL${on ? " on program" : ""} (RMS, into the speaker's impedance)`,
+    unit: mode === "spl" ? "dB" : mode === "volts" ? "V" : mode === "amps" ? "A" : "W",
     freq: freqOf(designs),
     yMin: mode === "spl" ? undefined : 0,
-    series: designs.map((d) => {
+    series: designs.map((d, di) => {
       const a = d.result.ampAtMax;
-      const limit = (i: number) => LIMIT_KINDS[d.result.limitedBy[i]!]?.short ?? "";
+      const p = on ? progs[di]! : null;
+      // On a program the amp runs this much below its sine maximum (volts and amps scale with it, watts with its square).
+      const g = (i: number) => (p ? 10 ** ((p.spl[i]! - d.result.maxSpl[i]!) / 20) : 1);
+      const volts = (i: number) => a.volts[i]! * g(i);
+      const amps = (i: number) => a.amps[i]! * g(i);
+      const watts = (i: number) => a.watts[i]! * g(i) ** 2;
+      const pk = (i: number) => (p ? `, ${n1(volts(i) * 10 ** (crest / 20))} V pk` : "");
+      const limit = (i: number) => {
+        if (p) return sideLimitText(p.kind[i]!, p.side[i]!);
+        const by = d.result.ampLimitBy[i];
+        return by ? AMP_LIMIT_SHORT[by] : (LIMIT_KINDS[d.result.limitedBy[i]!]?.short ?? "");
+      };
+      const y = (arr: Float64Array, f: (i: number) => number) => (p ? Float64Array.from(arr, (_, i) => f(i)) : arr);
       return {
         label: d.label,
         color: d.color,
         dash: d.dash,
-        y: mode === "spl" ? d.result.maxSpl : mode === "volts" ? a.volts : a.amps,
+        y: mode === "spl" ? (p ? p.spl : d.result.maxSpl) : mode === "volts" ? y(a.volts, volts) : mode === "amps" ? y(a.amps, amps) : y(a.watts, watts),
         notes: Array.from(d.result.maxSpl, (_, i) =>
           mode === "spl"
-            ? `${limit(i)} · amp ${n1(a.volts[i]!)} V, ${n1(a.amps[i]!)} A`
+            ? `${limit(i)} · amp ${n1(volts(i))} V${p ? " RMS" : ""}${pk(i)}, ${n1(amps(i))} A${s.ampWatts > 0 ? `, ${n1(watts(i))} W` : ""}`
             : mode === "volts"
-              ? `${n1(a.amps[i]!)} A, ${n1(a.watts[i]!)} W · ${limit(i)}`
-              : `${n1(a.volts[i]!)} V, ${n1(a.watts[i]!)} W · ${limit(i)}`,
+              ? `${n1(amps(i))} A, ${n1(watts(i))} W${pk(i)} · ${limit(i)}`
+              : mode === "amps"
+                ? `${n1(volts(i))} V${pk(i)}, ${n1(watts(i))} W · ${limit(i)}`
+                : `${n1(volts(i))} V${pk(i)}, ${n1(amps(i))} A · ${limit(i)}`,
         ),
+        ...(p ? { summary: [headroomCell(p.peak), headroomCell(p.avg)].map((x) => x ?? { main: "–" }) } : {}),
       };
     }),
-    // Each box's first limit, then the comparison driver's in the same box (outlined marker).
-    ribbons: designs.map((d) => ({ label: d.label, color: d.color, kinds: d.result.limitedBy, ...(d.compare ? { hollow: true } : {}) })),
+    // Each box's first limit (on the program, when on), then the comparison driver's in the same box (outlined marker).
+    ribbons: designs.map((d, di) => ({ label: d.label, color: d.color, kinds: on ? progs[di]!.kind : d.result.limitedBy, ...(d.compare ? { hollow: true } : {}) })),
     ribbonKinds: LIMIT_KINDS,
+    ...(on
+      ? {
+          summary: {
+            headings: ["On peaks", "On average"],
+            tipHeadings: ["Headroom on peaks", "on average"],
+            caption: `Headroom vs ${target !== null ? `${fmtCrest(target)} dB` : "drive"}, from each box's F3 up`,
+          },
+        }
+      : {}),
+    ...(worst
+      ? { worst: { f: worst.f, y: worst.y, label: `${fmtHeadroom(worst.db)} @ ${worst.f.toFixed(0)} Hz`, tone: headroomTone(worst.db) } }
+      : {}),
     limits:
-      mode === "volts" && state.settings.ampVolts > 0
-        ? [{ value: state.settings.ampVolts, label: `Amp max ${state.settings.ampVolts} V`, color: LIMIT_KINDS.amp!.color }]
-        : mode === "amps" && state.settings.ampAmps > 0
-          ? [{ value: state.settings.ampAmps, label: `Amp max ${state.settings.ampAmps} A`, color: LIMIT_KINDS.amp!.color }]
-          : undefined,
+      mode === "spl" && on && target !== null
+        ? [{ value: target, label: `Target ${fmtCrest(target)} dB avg · ${fmtCrest(target + crest)} peak`, color: LIMIT.target }]
+        : mode === "volts" && s.ampVolts > 0
+          ? ampMax(s.ampVolts, "V")
+          : mode === "amps" && s.ampAmps > 0
+            ? ampMax(s.ampAmps, "A")
+            : mode === "watts" && s.ampWatts > 0
+              ? ampMax(s.ampWatts, "W")
+              : undefined,
   };
 }
 
 /** Every design with passive radiators (PR boxes, and bandpass chambers that use them): one curve per PR group. */
-export function prChart(c: ChartInput): ChartDraw {
+export function prChart(c: ChartInput, view: XView = "x"): ChartDraw {
   const { state, designs } = c;
   const prDesigns = designs.filter((d) => d.result.prGroups);
   const seen = new Map<number, boolean>();
@@ -265,7 +503,7 @@ export function prChart(c: ChartInput): ChartDraw {
   const limits = [...seen].map(([x, mech]) => ({ value: x, label: `PR ${mech ? "Xmech" : "Xmax"} ${x} mm`, color: LIMIT.xmax, mech }));
   // Caution band under each PR Xmax, from the share set in Settings (a rule of thumb: suspensions stiffen there).
   const caution = state.settings.prCaution_pct;
-  return {
+  const draw: ChartDraw = {
     chartId: "pr",
     best: "low",
     shortTitle: "PR excursion",
@@ -291,6 +529,16 @@ export function prChart(c: ChartInput): ChartDraw {
         : [],
     yMin: 0,
   };
+  return asView(
+    draw,
+    view,
+    prDesigns.flatMap((d) => {
+      const areas = prAreas(d.design);
+      return (d.result.prGroups ?? []).map((g, k) => ({ mass: g.motion.mass_kg, sd_cm2: areas[k] ?? null }));
+    }),
+    state,
+    "Passive radiator",
+  );
 }
 
 export function portChart(c: ChartInput): ChartDraw {
@@ -323,12 +571,15 @@ export function pressureChart(c: ChartInput): ChartDraw {
     unit: "Pa",
     freq: freqOf(designs),
     series: [
-      ...designs.map((d) => ({ label: d.design.kind === "bandpass" ? `${d.label} (rear chamber)` : d.label, color: d.color, dash: d.dash, y: d.result.boxPressurePa })),
+      // An infinite baffle with an open rear has no air behind the cone: nothing to draw.
+      ...designs.map((d) => ({ label: d.design.kind === "bandpass" ? `${d.label} (rear chamber)` : d.label, color: d.color, dash: d.dash, y: openRear(d) ? null : d.result.boxPressurePa })),
       ...designs.map((d) => ({ label: `${d.label} (front chamber)`, color: d.color, dash: "5 3", y: d.result.frontChamberPressurePa })),
     ].filter((s) => s.y),
     yMin: 0,
   };
 }
+
+const openRear = (d: Design) => d.design.kind === "ib" && d.design.rear === "open";
 
 const each = (designs: Design[], pick: (r: SimulationResult) => Float64Array | null): Series[] =>
   designs.map((d) => ({ label: d.label, color: d.color, dash: d.dash, y: pick(d.result) }));

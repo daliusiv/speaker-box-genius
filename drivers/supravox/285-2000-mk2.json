@@ -1,0 +1,35 @@
+{
+  "brand": "Supravox",
+  "model": "285-2000 MK2",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 47,
+    "qms": 7.3,
+    "qes": 0.22,
+    "vas_l": 159,
+    "re": 6.5,
+    "sd_cm2": 442.6,
+    "qts": 0.21,
+    "le_mh": 0.71,
+    "bl": 13.26,
+    "mms_g": 20,
+    "xmax_mm": 3.5,
+    "pe_w": 35
+  },
+  "physical": {
+    "cutout_mm": 275,
+    "depth_mm": 177
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://supravox.fr/products/285-2000-mk2-haut-parleur-grave-medium-45w-101-5db-8-ohms",
+      "retrieved": "2026-11-17",
+      "note": "Values from the technical specifications on Supravox's product pages (supravox.fr), used with Supravox's permission (17 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Supravox's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "The product title says 45 W; the technical specifications say 35 W max RMS, which is used here."
+}

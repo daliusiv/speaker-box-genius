@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "12 PFS 3",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 43,
+    "qms": 5.35,
+    "qes": 0.51,
+    "vas_l": 58.5,
+    "re": 5.1,
+    "sd_cm2": 530.9,
+    "qts": 0.47,
+    "le_mh": 1.07,
+    "bl": 15.89,
+    "mms_g": 93.7,
+    "xmax_mm": 7,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 284,
+    "depth_mm": 141.3
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/12-pfs-3/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

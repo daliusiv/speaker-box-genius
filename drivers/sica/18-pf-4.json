@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "18 PF 4",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 38,
+    "qms": 6.46,
+    "qes": 0.47,
+    "vas_l": 147.3,
+    "re": 5.2,
+    "sd_cm2": 1164.2,
+    "qts": 0.43,
+    "le_mh": 1.85,
+    "bl": 24.6,
+    "mms_g": 229.2,
+    "xmax_mm": 8,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 417,
+    "depth_mm": 209.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/18-pf-4/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

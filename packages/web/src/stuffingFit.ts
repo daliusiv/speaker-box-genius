@@ -2,7 +2,7 @@
  * Fit a box's stuffing to a measured impedance sweep of the finished box: the volume it
  * really acts as and its absorption loss (Qa), so the simulation matches the box.
  *
- * The simulated impedance (this driver, Settings' air, leakage and port losses) is compared
+ * The simulated impedance (this driver, Settings' air and port loss, the box's leakage) is compared
  * with the measurement around the box's resonance peaks, on a log scale, and a grid search
  * then a pattern search find the gain and Qa with the smallest error. It's the guide's
  * Vb = Vas / ((fc/Fs)² − 1) and "lower Qa until the peak matches", done over the whole curve
@@ -118,13 +118,15 @@ export function fitStuffing(
   if (!(hi > lo * 2)) return "The measurement doesn't cover enough of the range around the box's resonance.";
 
   const driver = driverInputOf(s, solved);
+  // Settings' losses with this box's own leakage, if it has one (the fit finds Qa).
+  const base = d.ql !== undefined ? { ...s.settings.losses, ql: d.ql } : s.settings.losses;
   const simOpts = { ...simOptionsOf(s, true), fMin: lo, fMax: hi, points: POINTS, highPass: null, eq: [] };
 
   // A free-air sweep of the driver (its peak at about Fs) can't be fitted to a box, whose peak
   // sits well away from Fs: say so instead of fitting nonsense.
   const fs = driver.fs;
   try {
-    const empty = simulate(driver, enclosureOf(d, built, s.settings.losses, s.volume.wall_mm), { ...simOptionsOf(s, true), fMin: 5, fMax: 600, points: 240, highPass: null, eq: [] });
+    const empty = simulate(driver, enclosureOf(d, built, base, s.volume.wall_mm), { ...simOptionsOf(s, true), fMin: 5, fMax: 600, points: 240, highPass: null, eq: [] });
     const fBox = mainPeak([...empty.freq], [...empty.impedanceOhm]);
     if (Math.abs(fpk / fs - 1) < 0.1 && fBox !== null && Math.abs(fBox / fs - 1) > 0.15) {
       return (
@@ -137,7 +139,7 @@ export function fitStuffing(
   }
   const target = { v: null as Float64Array | null };
   const costFor = (drv: DriverInput) => (gain: number, qa: number): number => {
-    const losses = { ...s.settings.losses, qa };
+    const losses = { ...base, qa };
     try {
       const r = simulate(drv, enclosureOf(d, built * (1 + gain / 100), losses, s.volume.wall_mm), simOpts);
       target.v ??= resampleCurve(measured, r.freq);

@@ -5,7 +5,7 @@ export function Segmented<T extends string>(props: {
   id?: string;
   label: string;
   value: T;
-  options: readonly { value: T; label: string }[];
+  options: readonly { value: T; label: string; /** What a short label (a unit) stands for: the tooltip and the accessible name. */ title?: string }[];
   onChange: (v: T) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -26,6 +26,8 @@ export function Segmented<T extends string>(props: {
           type="button"
           role="radio"
           aria-checked={i === index}
+          title={o.title}
+          aria-label={o.title}
           tabIndex={i === index || (index < 0 && i === 0) ? 0 : -1}
           onClick={() => props.onChange(o.value)}
         >

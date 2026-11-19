@@ -1,0 +1,34 @@
+{
+  "brand": "Supravox",
+  "model": "165-2000 MK2",
+  "type": "full-range",
+  "nominal_ohms": 6,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 76.5,
+    "qms": 6.2,
+    "qes": 0.79,
+    "vas_l": 25.8,
+    "re": 4.1,
+    "sd_cm2": 144.7,
+    "qts": 0.7,
+    "le_mh": 0.09,
+    "bl": 3.53,
+    "mms_g": 5,
+    "xmax_mm": 2.9,
+    "pe_w": 35
+  },
+  "physical": {
+    "cutout_mm": 156,
+    "depth_mm": 128
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://supravox.fr/products/165-2000-mk2-haut-parleur-large-bande-35w-96-5db-6-ohms",
+      "retrieved": "2026-11-17",
+      "note": "Values from the technical specifications on Supravox's product pages (supravox.fr), used with Supravox's permission (17 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Supravox's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

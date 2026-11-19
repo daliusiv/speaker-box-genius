@@ -149,3 +149,44 @@ test("11: PR 40 l, Sd 200 / 46 g, 2 PRs", () => {
   near("Zmax f", r.zF, 56.6, 1.5);
 });
 test("12: PR 10 l, Sd 200 / 46 g, 1 PR", () => { prCase("9d", 10, 200, 46, 1, 40, 8.2, 80, [71.3, 63.5, 55]); });
+
+// Peak force (VituixCAD's Excursion chart, N axis), read off the chart at a voltage that puts the peak near the top.
+const atVolts = (s: AppState, volts: number): AppState => ({ ...s, volts });
+function forces(s: AppState) {
+  const d = s.designs[0]!;
+  const r = simulate(driverInputOf(s, solveDriver(s)), enclosureOf(d, vbOf(s, d), lossesFor(s, d), s.volume.wall_mm, s.volume, enclosureOptsOf(s)), { ...simOptionsOf(s), fMin: 5, fMax: 2000, points: 4000 });
+  const max = (a: Float64Array, below = Infinity) => a.reduce((m, v, i) => (r.freq[i]! < below ? Math.max(m, v) : m), 0);
+  return { cone: max(r.coneMotion.forceN), coneBump: max(r.coneMotion.forceN, 40), pr: r.prGroups ? max(r.prGroups[0]!.motion.forceN) : NaN };
+}
+
+test("13: peak force, sealed 20 l at 1.8 V", () => {
+  const f = forces(atVolts(sealed(base("vituixcad", 1000, 1000, 1000), 20), 1.8));
+  near("cone force peak", f.cone, 9.58, 9.58 * 0.02);
+});
+
+test("14: peak force, PR 40 l, 2 PRs (Sd 200 / 46 g): VituixCAD shows both PRs together", () => {
+  const s = prBox(base("vituixcad", 1000, 1000, 1000), 40, 200, 46, 2);
+  near("cone force bump at 5 V", forces(atVolts(s, 5)).coneBump, 9.39, 9.39 * 0.02);
+  near("PR force peak at 2.2 V, two PRs", 2 * forces(atVolts(s, 2.2)).pr, 9.58, 9.58 * 0.02);
+  near("PR force peak at 1.8 V, two PRs", 2 * forces(atVolts(s, 1.8)).pr, 7.83, 7.83 * 0.02);
+});
+
+// Bandpass (type 1: closed rear, ported front 35 l, Ø7 × 15 cm), all Q 1000, Qicl cleared. VituixCAD's
+// f3/f6/f10 labels are points on its grid: these are interpolated from its exported SPL curve.
+function bandpass(rear_l: number) {
+  const s0 = base("vituixcad", 1000, 1000, 1000);
+  const nd = newDesign("bandpass", []) as Extract<DesignState, { kind: "bandpass" }>;
+  const L = { ql: 1000, qa: 1000, qp: 1000 };
+  const d = { ...nd, id: "d", vb_l: rear_l, frontVb_l: 35, front: { ...nd.front, diameter_cm: 7, length_cm: 15 }, losses: { front: L, rear: L, qicl: Infinity } } as DesignState;
+  const s = { ...s0, designs: [d] };
+  return simulate(driverInputOf(s, solveDriver(s)), enclosureOf(d, vbOf(s, d), lossesFor(s, d), s.volume.wall_mm, s.volume, enclosureOptsOf(s)), { ...simOptionsOf(s), fMin: 5, fMax: 500, points: 4000 }).summary;
+}
+
+test("15: bandpass, rear 10 l and 40 l: f3/f6/f10 within 0.3 % of VituixCAD's curve", () => {
+  for (const [rear, want] of [[10, [33.77, 32.56, 30.75]], [40, [29.44, 26.15, 22.41]]] as const) {
+    const r = bandpass(rear);
+    near(`${rear} l f3`, r.f3, want[0], want[0] * 0.004);
+    near(`${rear} l f6`, r.f6, want[1], want[1] * 0.004);
+    near(`${rear} l f10`, r.f10, want[2], want[2] * 0.004);
+  }
+});

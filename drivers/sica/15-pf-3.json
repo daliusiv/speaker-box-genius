@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "15 PF 3",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 45,
+    "qms": 5.56,
+    "qes": 0.33,
+    "vas_l": 117.6,
+    "re": 5.1,
+    "sd_cm2": 855.3,
+    "qts": 0.31,
+    "le_mh": 1.02,
+    "bl": 21.95,
+    "mms_g": 110.5,
+    "xmax_mm": 8,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 169
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/15-pf-3/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

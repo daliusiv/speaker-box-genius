@@ -324,7 +324,7 @@ const TAPER: Record<string, LineSection["taper"]> = { par: "linear", con: "conic
 export interface HornrespImport {
   design: Partial<LineDesign>;
   /** The record's driver, when it has one. */
-  driver?: { ts: TsValues; le_mh: number; xmax_mm?: number; name: string; semi?: SemiInductance; fdd?: { rms: number; ams_mm_per_n: number } };
+  driver?: { ts: TsValues; le_mh: number; xmax_mm?: number; pe_w?: number; name: string; semi?: SemiInductance; fdd?: { rms: number; ams_mm_per_n: number } };
   /** How many drivers the record has, and their wiring ("2P" / "2S"). */
   drivers?: { count: number; wiring: "parallel" | "series" };
   /** The record's amplifier + cable resistance (Rg, Ω), when it isn't 0. */
@@ -488,6 +488,7 @@ export function fromHornresp(text: string, base: LineDesign): HornrespImport | s
       ts: tsFromMechanical({ sd_cm2: sd, bl, cms, rms, mmd_g: mmd, re: reV }),
       le_mh: get("Le") ?? 0,
       ...(get("Xmax") ? { xmax_mm: get("Xmax")! } : {}),
+      ...(get("Pmax") ? { pe_w: get("Pmax")! } : {}),
       ...semiOf(),
       ...fddOf(),
       name: comment ? `Hornresp: ${comment.slice(0, 50)}` : "Driver from a Hornresp record",

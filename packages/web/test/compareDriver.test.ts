@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DEFAULT_STATE, COMPARE_KEYS, swapCompare } from "../src/state.ts";
+import { DEFAULT_STATE, COMPARE_KEYS, asCompare, swapCompare } from "../src/state.ts";
 import { compareWith, compareMessage } from "../src/compareDriver.ts";
 import type { LoadedDriver } from "../src/library.ts";
 
@@ -77,4 +77,19 @@ test("a comparison driver can have its own count and wiring: one 15″ against t
   assert.equal(decodeState(encodeState(follow))!.compare!.drivers, undefined);
   assert.equal(swapCompare(follow).drivers, 3);
   assert.equal(swapCompare(follow).compare!.drivers, undefined);
+});
+
+test("the same model as main and comparison driver: each legend label keeps its own name note", async () => {
+  const { runDesigns, solveDriver } = await import("../src/sim.ts");
+  const ts = { fs: 25.6, qms: 3.06, qes: 0.53, vas_l: 54, re: 3.5, sd_cm2: 356.3 };
+  const s = { ...DEFAULT_STATE, driverName: "Dayton Audio RSS265HF-4", driverBrand: "Dayton Audio", ts };
+  const labels = (main: string, cmp: string) => {
+    const st = { ...s, driverName: main, compare: { ...asCompare(s), driverName: cmp, ts: { ...ts, fs: 29.4 } } };
+    const d = runDesigns(st, solveDriver(st));
+    return [d[0]!.label.split(" · ")[1], d[d.length / 2]!.label.split(" · ")[1]];
+  };
+  assert.deepEqual(labels("Dayton Audio RSS265HF-4", "Dayton Audio RSS265HF-4"), ["RSS265HF-4", "RSS265HF-4 (compare)"]);
+  assert.deepEqual(labels("Dayton Audio RSS265HF-4", "Dayton Audio RSS265HF-4 (Fs +15 %)"), ["RSS265HF-4", "RSS265HF-4 (Fs +15 %)"]);
+  assert.deepEqual(labels("Dayton Audio RSS265HF-4 (edited)", "Dayton Audio RSS265HF-4"), ["RSS265HF-4 (edited)", "RSS265HF-4 (compare)"]);
+  assert.deepEqual(labels("Dayton Audio RSS265HF-4 (measured)", "Dayton Audio RSS265HF-4 (measured)"), ["RSS265HF-4", "RSS265HF-4 (compare)"]);
 });

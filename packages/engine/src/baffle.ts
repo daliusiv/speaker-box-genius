@@ -8,11 +8,13 @@
  * sign, delayed by the extra path. Each piece of the perimeter is weighted by the angle
  * it takes up as seen from the driver, so the whole edge has weight 1:
  *
- *   H(f) = 1 − ½ · Σ wᵢ · e^(−jk·(dᵢ + √(dᵢ² + r²) − r))
+ *   H(f) = 1 − ½ · Σ wᵢ · (r / Rᵢ) · e^(−jk·(dᵢ + Rᵢ − r)),   Rᵢ = √(dᵢ² + r²)
  *
- * where dᵢ is the distance from the driver to that bit of edge and r the listening
- * distance. At low frequencies H → ½ (−6 dB: the cabinet radiates into full space
- * instead of the half space of an infinite baffle); well above the step H → 1, with
+ * where dᵢ is the distance from the driver to that bit of edge, r the listening distance
+ * and Rᵢ the distance from the edge to the listener (the edge's sound spreads over Rᵢ, the
+ * direct sound over r, as in The Edge). At low frequencies H → ½ (−6 dB: the cabinet radiates
+ * into full space instead of the half space of an infinite baffle; a little less close up,
+ * where the farther edges sound weaker); well above the step H → 1, with
  * ripples whose size depends on how evenly the edges sit around the driver. The result
  * is averaged over the cone (a point source exaggerates the ripples).
  *
@@ -78,10 +80,11 @@ function sourcePoints(b: Baffle): [number, number][] {
 }
 
 /**
- * On-axis gain (dB) of the baffle relative to an infinite baffle (half space), at each
- * frequency. About −6 dB well below the step, 0 dB well above it, with diffraction ripple.
+ * On-axis transfer of the baffle relative to an infinite baffle (half space), as a complex
+ * number at each frequency: H = 1 − ½·Σ wᵢ·e^(−jk·pathᵢ), averaged over the cone. Phase follows
+ * the e^(jωt) convention (a delay is a negative angle), as REW, VituixCAD and XSim read .frd files.
  */
-export function baffleStepDb(freqs: ArrayLike<number>, b: Baffle): Float64Array {
+export function baffleTransfer(freqs: ArrayLike<number>, b: Baffle): { re: Float64Array; im: Float64Array } {
   if (!(b.width > 0 && b.height > 0)) throw new Error("Baffle size must be positive");
   const r = b.distance ?? 1;
   const c = b.c ?? 343;
@@ -89,9 +92,13 @@ export function baffleStepDb(freqs: ArrayLike<number>, b: Baffle): Float64Array 
     // Keep each source point on the baffle.
     const x = Math.min(b.width - 1e-4, Math.max(1e-4, sx));
     const y = Math.min(b.height - 1e-4, Math.max(1e-4, sy));
-    return edges(b, x, y).map((e) => ({ w: e.w, path: e.d + Math.sqrt(e.d * e.d + r * r) - r }));
+    return edges(b, x, y).map((e) => {
+      const R = Math.sqrt(e.d * e.d + r * r);
+      return { w: (e.w * r) / R, path: e.d + R - r };
+    });
   });
-  const out = new Float64Array(freqs.length);
+  const outRe = new Float64Array(freqs.length);
+  const outIm = new Float64Array(freqs.length);
   for (let i = 0; i < freqs.length; i++) {
     const k = (2 * Math.PI * freqs[i]!) / c;
     let re = 0;
@@ -106,11 +113,30 @@ export function baffleStepDb(freqs: ArrayLike<number>, b: Baffle): Float64Array 
       re += 1 - 0.5 * dr;
       im += -0.5 * di;
     }
-    re /= sources.length;
-    im /= sources.length;
-    out[i] = 10 * Math.log10(re * re + im * im);
+    outRe[i] = re / sources.length;
+    outIm[i] = im / sources.length;
   }
-  return out;
+  return { re: outRe, im: outIm };
+}
+
+/**
+ * On-axis gain (dB) of the baffle relative to an infinite baffle (half space), at each
+ * frequency. About −6 dB well below the step, 0 dB well above it, with diffraction ripple.
+ */
+export function baffleStepDb(freqs: ArrayLike<number>, b: Baffle): Float64Array {
+  const { re, im } = baffleTransfer(freqs, b);
+  return re.map((x, i) => 10 * Math.log10(x * x + im[i]! * im[i]!));
+}
+
+/**
+ * Above this frequency the model is only approximate: the cone is averaged over a few points
+ * and its beaming (less sound sent along the baffle to the edges) isn't modelled. Taken where
+ * the cone's ka = 2, at most 5 kHz; without a cone size, 5 kHz.
+ */
+export function baffleTrustedTo(b: Baffle): number {
+  if (!(b.sd_cm2! > 0)) return 5000;
+  const a = Math.sqrt(b.sd_cm2! / 1e4 / Math.PI);
+  return Math.min(5000, (2 * (b.c ?? 343)) / (2 * Math.PI * a));
 }
 
 /**

@@ -11,8 +11,8 @@ import { WedgeFit, WedgeSize } from "./WedgeFields.tsx";
 import { Preview3D } from "./Preview3D.tsx";
 
 const SHAPES: { value: ShapeKind; title: string; description: string; aside?: ReactNode }[] = [
-  { value: "box", title: "Box", description: "Six flat panels", aside: <Chip>usual</Chip> },
-  { value: "wedge", title: "Car wedge", description: "One sloped panel, for a car boot or behind a seat" },
+  { value: "box", title: "Box", description: "Six flat panels", aside: <Chip>Default</Chip> },
+  { value: "wedge", title: "Car wedge", description: "One sloped panel, optional upright lip, for a car boot or behind a seat" },
   { value: "cylinder", title: "Cylinder", description: "A tube with two end caps, like a Sonotube" },
   { value: "sphere", title: "Sphere", description: "A ball: no parallel walls" },
   // Was "Truncated pyramid": the id stays "frustum" so older links still open.
@@ -33,7 +33,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
   const hasPort = !target || target.kind === "vented" || rearOf(target) === "port";
   const linkOptions: { value: string; text: string }[] = [
     { value: "none", text: "No design" },
-    ...s.designs.filter((d) => d.kind !== "line").map((d) => ({ value: d.id, text: d.name || d.id })),
+    ...s.designs.filter((d) => d.kind !== "line" && d.kind !== "ib").map((d) => ({ value: d.id, text: d.name || d.id })),
   ];
 
   // Find dimensions for a target volume (what the box volume will be in the simulation).
@@ -58,6 +58,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
               { value: "height", text: "Height" },
               { value: "topDepth", text: "Top depth" },
               { value: "bottomDepth", text: "Bottom depth" },
+              { value: "lip", text: "Lip height" },
             ]
           : [{ value: "keep", text: "Keep shape" }];
   // The choice in force for this shape (a tube defaults to keeping its diameter: tubes come in set sizes).
@@ -102,7 +103,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
     v.shape === "box"
       ? `${lenText(v.width_cm)} × ${lenText(v.height_cm)} × ${lenText(v.depth_cm)} ${lenUnit}`
       : v.shape === "wedge"
-        ? `${lenText(v.width_cm)} × ${lenText(v.height_cm)} × ${lenText(v.topDepth_cm)}/${lenText(v.depth_cm)} ${lenUnit}`
+        ? `${lenText(v.width_cm)} × ${lenText(v.height_cm)} × ${lenText(v.topDepth_cm)}/${lenText(v.depth_cm)} ${lenUnit}${v.lip_cm > 0 ? ` · lip ${lenText(v.lip_cm)}` : ""}`
         : v.shape === "cylinder"
           ? `⌀ ${lenText(v.diameter_cm)} × ${lenText(v.height_cm)} ${lenUnit}`
           : v.shape === "sphere"
@@ -244,7 +245,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
 }
 
 /** How Size the box changes the shape: scale it (or, for a box, to the golden ratio; a tube's length only), or solve one wedge dimension. */
-type Sizing = "keep" | "golden" | "length" | "width" | "height" | "topDepth" | "bottomDepth";
+type Sizing = "keep" | "golden" | "length" | "width" | "height" | "topDepth" | "bottomDepth" | "lip";
 
 /** "40 × 50 × 45 cm box" style summary of the outside size. */
 function describe(v: AppState["volume"], fmt: (x: number, q: "len", digits?: number) => string): string {
@@ -256,7 +257,7 @@ function describe(v: AppState["volume"], fmt: (x: number, q: "len", digits?: num
     case "sphere":
       return `a sphere ${fmt(v.diameter_cm, "len", 1)} across`;
     case "wedge":
-      return `a wedge ${fmt(v.width_cm, "len", 1)} wide, ${fmt(v.height_cm, "len", 1)} tall, ${fmt(v.topDepth_cm, "len", 1)} deep at the top and ${fmt(v.depth_cm, "len", 1)} at the bottom`;
+      return `a wedge ${fmt(v.width_cm, "len", 1)} wide, ${fmt(v.height_cm, "len", 1)} tall, ${fmt(v.topDepth_cm, "len", 1)} deep at the top and ${fmt(v.depth_cm, "len", 1)} at the bottom${v.lip_cm > 0 ? `, with a ${fmt(v.lip_cm, "len", 1)} lip` : ""}`;
     case "frustum":
       return `a tapered box ${fmt(v.width_cm, "len", 1)} × ${fmt(v.depth_cm, "len", 1)} at the base, ${fmt(v.topWidth_cm, "len", 1)} × ${fmt(v.topDepth_cm, "len", 1)} at the top, ${fmt(v.height_cm, "len", 1)} tall`;
   }

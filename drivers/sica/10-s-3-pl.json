@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "10 S 3 PL",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 43,
+    "qms": 4.8,
+    "qes": 0.28,
+    "vas_l": 39.9,
+    "re": 5.1,
+    "sd_cm2": 346.4,
+    "qts": 0.27,
+    "le_mh": 1.18,
+    "bl": 16.86,
+    "mms_g": 58.5,
+    "xmax_mm": 7,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 232,
+    "depth_mm": 120.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/10-s-3-pl/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

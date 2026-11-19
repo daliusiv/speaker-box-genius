@@ -7,7 +7,8 @@
 #
 # 1. Public → dev: commits merged on public main since the last release commit are
 #    cherry-picked (authors kept) onto a branch from dev main, pushed to dev as
-#    $INCOMING_BRANCH, for a PR in dev. A conflict stops the run (exit 3).
+#    $INCOMING_BRANCH, for a PR in dev. A conflict stops the run (exit 3); once the commits are
+#    copied into dev main by hand with `git cherry-pick -x`, the next run counts them as in.
 # 2. Dev → public: dev main's files are published as one new commit on public main
 #    ("Release v<version>", or "Release <date>" with no new version; parent = public main),
 #    but only when every public change is
@@ -79,6 +80,15 @@ if merged=$(git merge-tree --write-tree --merge-base="$base" "$dev" "$pub" 2>/de
   [ "$merged" = "$dev_tree" ] && absorbed=1
 fi
 
+# Or were they copied into dev by hand after a conflict (git cherry-pick -x, as the conflict message
+# says)? Every incoming commit then appears in dev main as a "cherry picked from commit" line.
+if [ "$absorbed" = 0 ] && [ -n "$incoming" ]; then
+  picked=$(git log --format=%B "$dev" | sed -n 's/^(cherry picked from commit \([0-9a-f]\{40\}\))$/\1/p')
+  absorbed=1
+  for c in $incoming; do grep -qx "$c" <<<"$picked" || { absorbed=0; break; }; done
+  [ "$absorbed" = 1 ] && say "- Public's commits were copied into dev by hand (cherry-pick -x): nothing more to bring in"
+fi
+
 # 1. Public → dev
 out incoming false
 if [ "$absorbed" = 0 ] && [ -n "$incoming" ]; then
@@ -88,7 +98,7 @@ if [ "$absorbed" = 0 ] && [ -n "$incoming" ]; then
     say "  - \`${c:0:7}\` $(git log -1 --format='%s (%an)' "$c")"
     if ! git cherry-pick -x --allow-empty "$c" >/dev/null 2>&1; then
       if [ -n "$(git diff --name-only --diff-filter=U)" ]; then
-        say "- **Conflict** copying \`${c:0:7}\`: resolve by hand (cherry-pick it onto a branch from dev main, open a PR in dev)."
+        say "- **Conflict** copying \`${c:0:7}\`: resolve by hand (`git cherry-pick -x` it onto a branch from dev main, open a PR in dev; after it merges the next run sees it)."
         git cherry-pick --abort
         out conflict true
         exit 3

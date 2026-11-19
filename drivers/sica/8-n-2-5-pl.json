@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "8 N 2.5 PL",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 77,
+    "qms": 4.21,
+    "qes": 0.33,
+    "vas_l": 13.7,
+    "re": 5.6,
+    "sd_cm2": 213.8,
+    "qts": 0.3,
+    "le_mh": 0.37,
+    "bl": 12.95,
+    "mms_g": 20.3,
+    "xmax_mm": 3.5,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 184,
+    "depth_mm": 90
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/8-n-2-5-pl/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

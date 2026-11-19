@@ -13,6 +13,8 @@ A box simulator only needs one number from your cabinet: the **net internal volu
 
 [[Open the box|shape-box]] [[Open the Sonotube|shape-tube]] [[Open the sphere|shape-sphere]] [[Open the tapered box|shape-wedge]]
 
+> **Calculator:** the [box volume calculator](/calculators/box-volume/) gives the net volume of a box, car wedge, cylinder, sphere or tapered box from its outside size, or the size for the net volume you want, without opening the simulator.
+
 ## The short answer
 
 - **For the bass, only the net volume matters.** Box, tube, sphere or wedge with the same net volume and port give the same simulated response. The shape matters for how the cabinet is built, how much room it takes and where its internal standing waves fall.
@@ -103,6 +105,8 @@ The box that sits behind a car's rear seat: upright back, flat top and bottom, a
 `V = (W − 2t)(H − 2t) · [(D_top + D_bottom)/2 − t − t_baffle / sin θ]`
 
 For an 800 mm wide, 380 mm tall wedge, 400 mm deep at the bottom and 250 mm at the top, in 18 mm MDF, that's **75.60 L**. The usual shortcut, `(W − 2t)(H − 2t)(D_avg − 2t)`, gives 75.95 L, **0.47% high**; on a double baffle or a steeper slope the gap grows. The calculator also gives the saw angles (one bevel of 90° − θ for butt joints, 21.5° here), draws the side view, solves any one dimension for a target volume, and checks that the driver's motor clears the back and the bottom (it needs the driver's mounting depth). The slope can go on the back instead, with an upright baffle.
+
+**With a lip.** Many car wedges have an upright strip at the foot of the slope, so the box stands square on the boot floor and the driver sits higher. Enter its outside height as **Lip height** (0 = sloped all the way down). The slope then rises only H − L, so it is steeper, and the inside is the upright part plus the sloped part: the inside depth at each height is the smaller of the lip's and the slope's, which the calculator integrates exactly. The same 40 × 50 cm box, 45 cm deep at the bottom and 30 at the top, in 18 mm MDF, holds 57.1 L sloped all the way down and **61.1 L** with a 15 cm lip (θ 66.8° instead of 73.3°). The cut list adds the lip panel; its joint with the baffle runs from the outside corner to the inside one, half of 90° − θ on each piece (11.6° here) for butt or mitred joints alike.
 
 ## Standing waves: what the shape changes
 

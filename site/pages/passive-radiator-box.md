@@ -83,13 +83,15 @@ This is where PR designs fail. Look at **both** excursion charts at the power yo
 
 At 35 W with the 30 Hz high-pass filter, the woofer peaks at **{{num:pr-example/2/x}} mm** and the PR at **{{num:pr-example/2/prx}} mm**. Both are within their limits.
 
-The PR chart also shades a band from **75 % of the PR's Xmax** up to it (8.25 mm here). A PR's suspension stiffens as it nears its limit, so its travel stops growing in step with the woofer's and its distortion rises; staying under the band leaves that headroom. 75 % is a rule of thumb, not a datasheet figure: change it, or turn it off, with **PR caution** in **Settings → Limits → Port speed**. This design's 7.9 mm is 72 %, under the band.
+The PR chart also shades a band from **75 % of the PR's Xmax** up to it (8.25 mm here). A PR's suspension stiffens as it nears its limit, so its travel stops growing in step with the woofer's and its distortion rises; staying under the band leaves that headroom. 75 % is a rule of thumb, not a datasheet figure: change it, or turn it off, with **PR caution** in **Settings → Limits → Port speed & excursion**. This design's 7.9 mm is 72 %, under the band.
 
 ![PR excursion at 35 W with the 30 Hz high-pass filter: {{num:pr-example/2/prx}} mm at most, against an Xmax of 11 mm (the red line).](chart:pr-example/pr)
 
 Without the high-pass filter, the same 35 W pushes the woofer to 12 mm (more than twice its Xmax) down at 15 Hz, where the PR no longer holds it back. A PR box almost always needs a high-pass filter (a "subsonic" filter) just below the tuning.
 
 The **Max SPL** chart puts it together: the loudest the box can play at each frequency, and whether the woofer, the PR or the amplifier's power is the limit there. Switch it to **Volts** or **Amps** to see what the amplifier must deliver to get there.
+
+The cone excursion chart's **mm · % · cm³ · m/s · g · N** switch (a menu on phones; both excursion charts follow it) shows the same motion as a share of each one's Xmax (**%**, so the woofer and the PR read on one scale), as the air each moves (**cm³**, Sd × excursion), or as velocity, acceleration or **force**: moving mass × acceleration, the push each cone or PR puts into the box (with the PR's added mass). **Settings → Limits → Port speed & excursion → Excursion** shows it as the peak one way (the default, as datasheets give Xmax), peak-to-peak or RMS. The PR's force peaks near the tuning, where it moves most: mount PRs on a stiff panel, or two facing opposite ways so their pushes cancel. The red marking and the dashed Xmax curve still show excursion, so the limits read the same in every unit.
 
 ## Step 5: compare it with a port
 

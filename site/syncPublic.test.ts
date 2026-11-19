@@ -127,6 +127,31 @@ test("sync: a conflicting public change stops the run without publishing", () =>
   assert.equal(git(s.pub, "rev-parse", "main"), before);
 });
 
+test("sync: a conflicting public change copied into dev by hand (cherry-pick -x) lets the next run publish", () => {
+  const s = setup();
+  commit(s.devWork, "b.txt", "dev file\n", "dev adds b");
+  run(s.sync); // first snapshot
+  commit(s.pubWork, "a.txt", "one\nPUBLIC\nthree\n", "contributor edits line 2", "Ann <ann@example.com>");
+  commit(s.devWork, "a.txt", "one\nDEV\nthree\n", "dev edits line 2");
+  assert.equal(run(s.sync).status, 3);
+
+  // Maintainer copies it by hand, keeping dev's line, and merges that into dev main.
+  const pubCommit = git(s.pub, "rev-parse", "main");
+  git(s.devWork, "pull", "-q");
+  git(s.devWork, "fetch", "-q", s.pub, "main");
+  spawnSync("git", ["cherry-pick", "-x", pubCommit], { cwd: s.devWork, env: ENV });
+  writeFileSync(join(s.devWork, "a.txt"), "one\nDEV\nthree\n");
+  git(s.devWork, "add", "a.txt");
+  git(s.devWork, "commit", "-q", "--allow-empty", "--no-edit"); // keeps the "(cherry picked from commit …)" line
+  git(s.devWork, "push", "-q");
+
+  const ok = run(s.sync);
+  assert.equal(ok.status, 0, ok.log);
+  assert.match(ok.log, /copied into dev by hand/);
+  assert.equal(ok.outputs.published, "true", ok.log);
+  assert.equal(read(s.pub, "main", "a.txt"), "one\nDEV\nthree", "dev's version wins");
+});
+
 test("sync: publishing can be held by the checks gate", () => {
   const s = setup();
   commit(s.devWork, "a.txt", "y\n", "dev change");

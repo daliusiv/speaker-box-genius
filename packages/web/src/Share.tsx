@@ -6,10 +6,12 @@ import { safeName } from "./formats/types.ts";
 import { Icon, type IconName } from "./Icon.tsx";
 import { Sheet } from "./Sheet.tsx";
 import { foldShapes } from "./foldShapes.ts";
-import { REPO } from "./components.tsx";
+import { JobProgress, REPO } from "./components.tsx";
 import { fmtQ } from "./units.ts";
+import { excursionText } from "./chartProps.ts";
 import { encodeStateShort, type AppState } from "./state.ts";
 import { drawQr } from "./qrDraw.ts";
+import { track } from "./telemetry.ts";
 
 const SITE = "speakerboxgenius.com";
 
@@ -40,7 +42,7 @@ function summaryRows(state: AppState, designs: Design[]): Row[] {
     return {
       name: label,
       color,
-      cells: [vol, n(r.summary.fb ?? r.summary.fc, "Hz"), n(r.summary.f3, "Hz"), lim.deep ? `${n(x, "mm")} (${lim.deep.x_mm.toFixed(1)} below ${lim.deep.below_hz.toFixed(0)} Hz)` : n(x, "mm"), n(xpr?.mm, "mm"), n(vp, "m/s")],
+      cells: [vol, n(r.summary.fb ?? r.summary.fc, "Hz"), n(r.summary.f3, "Hz"), lim.deep ? `${excursionText(x, state)} (${excursionText(lim.deep.x_mm, state)} below ${lim.deep.below_hz.toFixed(0)} Hz)` : excursionText(x, state), excursionText(xpr?.mm, state), n(vp, "m/s")],
       over: [
         false,
         false,
@@ -418,6 +420,7 @@ function ShareBody(props: { state: AppState; designs: Design[]; shareUrl: () => 
   };
 
   const copy = async (key: string, text: string, what: string) => {
+    track("share_used", { action: key === "md" ? "markdown" : key === "bb" ? "bbcode" : "link" });
     try {
       await navigator.clipboard.writeText(text);
       flash(key);
@@ -427,6 +430,7 @@ function ShareBody(props: { state: AppState; designs: Design[]; shareUrl: () => 
   };
 
   const copyImage = async () => {
+    track("share_used", { action: "image_copy" });
     if (!png) return;
     try {
       await navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);
@@ -437,6 +441,7 @@ function ShareBody(props: { state: AppState; designs: Design[]; shareUrl: () => 
   };
 
   const nativeShare = async () => {
+    track("share_used", { action: "native" });
     const text = `${state.driverName}: box simulation in Speaker Box Genius`;
     const file = png ? new File([png], `${name}.png`, { type: "image/png" }) : null;
     const withFile = file && navigator.canShare?.({ files: [file] }) ? { files: [file] } : {};
@@ -477,10 +482,14 @@ function ShareBody(props: { state: AppState; designs: Design[]; shareUrl: () => 
       <section className="sheet-section">
         <p className="menu-label">Forum image</p>
         <div className="share-preview">
-          {preview ? <img src={preview} alt="The image to post: summary table, charts and a QR code to the live design" /> : <span className="hint">{imgError || "Drawing the image…"}</span>}
+          {preview ? <img src={preview} alt="The image to post: summary table, charts and a QR code to the live design" /> : imgError ? <span className="hint">{imgError}</span> : <JobProgress label="Drawing the image" done={0} total={0} />}
         </div>
         <div className="share-grid">
-          <button type="button" className="secondary" disabled={!png} onClick={() => png && downloadBlob(png, `${name}.png`)}>
+          <button type="button" className="secondary" disabled={!png} onClick={() => {
+              if (!png) return;
+              track("share_used", { action: "image_download" });
+              downloadBlob(png, `${name}.png`);
+            }}>
             <Icon name="download" />
             Download PNG
           </button>

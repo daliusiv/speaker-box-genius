@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "5 F 1.5 CP",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 61,
+    "qms": 4.23,
+    "qes": 0.33,
+    "vas_l": 6.8,
+    "re": 5.6,
+    "sd_cm2": 78.5,
+    "qts": 0.3,
+    "le_mh": 0.48,
+    "bl": 7.57,
+    "mms_g": 8.7,
+    "xmax_mm": 3.5,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 113,
+    "depth_mm": 65.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/5-f-1-5-cp/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

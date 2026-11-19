@@ -32,7 +32,7 @@ Not sure which driver to buy, or which box to put it in? The design assistant as
 
 ## A worked run: the home-subwoofer defaults
 
-Leave everything at **Home subwoofer**'s defaults and the assistant tries **760** of the database's drivers (the rest are outside the size range, aren't woofers, resonate above 60 Hz, lack the parameters or can't be wired to the amplifier's minimum load) and returns **1,486 boxes**. **451** are within their limits at 300 W, **78** more only pass Xmax in deep bass (amber, below), and **957** are over a limit. The top of the list, Balanced:
+Leave everything at **Home subwoofer**'s defaults and the assistant tries **854** of the database's drivers (the rest are outside the size range, aren't woofers, resonate above 60 Hz, lack the parameters or can't be wired to the amplifier's minimum load) and returns **1,654 boxes**. **494** are within their limits at 300 W, **80** more only pass Xmax in deep bass (amber, below), and **1,080** are over a limit. The top of the list, Balanced:
 
 ![The home-sub results, best first. The Dayton RSS315HO-44 with two RSS315-PR radiators leads: F3 24.9 Hz, 107 dB at 30 Hz, 43.5 L. Each card gives the F3, the output at your frequency, the box, the grade, and where a subsonic filter is needed.](img/assistant-results.png)
 
@@ -48,13 +48,13 @@ The first result is a **Dayton Audio RSS315HO-44** 12″ (its two 4 Ω coils in 
 | Peak PR travel, 20 Hz up (26 mm) | {{num:assistant-example/1/prx20}} mm | — | — |
 | Port air speed | — | **{{num:assistant-example/2/port}} m/s** | — |
 | Grade | ✓ within limits from 20 Hz up | ⚠ port, safe to about 61 W | ✓ within limits down to 10 Hz |
-| Rank in the list | **1st** | 530th | 3rd |
+| Rank in the list | **1st** | 576th | 3rd |
 
 ![The example's response: the ported box ({{color:assistant-example/2}}) reaches {{num:assistant-example/2/f3}} Hz, the PR box ({{color:assistant-example/1}}) {{num:assistant-example/1/f3}} Hz, the sealed box ({{color:assistant-example/3}}) {{num:assistant-example/3/f3}} Hz.](chart:assistant-example/response)
 
 ![Port air speed in the ported box at 300 W: {{num:assistant-example/2/port}} m/s, more than twice the 17 m/s chuffing line.](chart:assistant-example/port)
 
-The ported box goes only {{diff:assistant-example/1/2/f3}} Hz deeper than the PR box, and it can't be built to play at 300 W. A 43.5 L box tuned to 23 Hz needs a long port. The biggest that fits straight inside is **5 cm** across (flared, {{num:assistant-example/2/len}} cm long), and at 300 W its air moves at **{{num:assistant-example/2/port}} m/s**. That box is only quiet up to about **61 W**. The PR box has no port to chuff, which is why it ranks first and the ported box 530th. That's the trade a passive radiator makes: a hertz or so of F3 and the cost of two radiators, against a port you can't fit.
+The ported box goes only {{diff:assistant-example/1/2/f3}} Hz deeper than the PR box, and it can't be built to play at 300 W. A 43.5 L box tuned to 23 Hz needs a long port. The biggest that fits straight inside is **5 cm** across (flared, {{num:assistant-example/2/len}} cm long), and at 300 W its air moves at **{{num:assistant-example/2/port}} m/s**. That box is only quiet up to about **61 W**. The PR box has no port to chuff, which is why it ranks first and the ported box 576th. That's the trade a passive radiator makes: a hertz or so of F3 and the cost of two radiators, against a port you can't fit.
 
 ## How results are graded
 
@@ -128,11 +128,11 @@ When filling the space reaches at least 3 % lower F3 than the flat alignment, a 
 
 **"Within its limits means I don't need a subsonic filter."** The grade stops at 20 Hz. Below that the example's PR box reaches {{num:assistant-example/1/x@15}} mm at 15 Hz, past its 14 mm Xmax, and its card says so. *Proof: the card's "from 20 Hz up" line, the excursion chart, then Signal → High-pass filter.*
 
-**"Bigger power, louder results."** Only until a limit: at the default 300 W, 957 of the 1,486 home-sub boxes are over one. The card always says what sets its output (the amplifier, the cone, the port) and the power that keeps it within. *Proof: each card's limit line; Max SPL once opened.*
+**"Bigger power, louder results."** Only until a limit: at the default 300 W, 1,033 of the 1,587 home-sub boxes are over one. The card always says what sets its output (the amplifier, the cone, the port) and the power that keeps it within. *Proof: each card's limit line; Max SPL once opened.*
 
 ## Good to know
 
-- **The chuffing line** (17 m/s by default, peak) is the same setting as **Settings → Limits → Port speed → Chuffing line**. Car SPL builds often accept 25–30 m/s; see the [port chuffing guide](/guides/port-chuffing/).
+- **The chuffing line** (17 m/s by default, peak) is the same setting as **Settings → Limits → Port speed & excursion → Chuffing line**. Car SPL builds often accept 25–30 m/s; see the [port chuffing guide](/guides/port-chuffing/).
 - **DVC drivers are wired for your amplifier.** A dual voice coil driver's coils are wired to suit the lowest load you gave, and the card says how: "Coils in series: 8 Ω" above.
 - **Driver data comes from the manufacturers' published figures** [1][2]. Check the datasheet before you buy, and [measure your driver](/guides/thiele-small-parameters/) if the box matters.
 - **The assistant starts a project; it doesn't add to the one you have.** When the current project is in use, it opens in a new tab.

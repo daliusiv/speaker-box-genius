@@ -487,10 +487,28 @@ export interface BandpassInput {
   ventDistance_cm?: number;
 }
 
+/**
+ * Infinite baffle (IB): the driver in a wall, floor, ceiling or rear deck, its back facing a
+ * space isolated from the listening room (attic, garage, next room, car boot). The rear wave is
+ * never heard.
+ * - `rear_l` omitted (or Infinity): an open rear, a true IB. No air spring behind the cone and no
+ *   box losses: the system resonates at the driver's Fs with its Qts.
+ * - `rear_l` finite: the rear space's air springs the cone like a sealed box of that volume, with
+ *   its absorption (Qa). Its leakage (Ql) leads out of the rear space, never into the room, so it
+ *   is always a pure loss (as `leakage: "absorbed"`).
+ */
+export interface InfiniteBaffleInput {
+  kind: "infinite-baffle";
+  rear_l?: number;
+  ql?: number;
+  qa?: number;
+}
+
 export type EnclosureInput =
   | BandpassInput
   | LineInput
   | ({ kind: "sealed"; vb_l: number } & Losses)
+  | InfiniteBaffleInput
   | ({
       kind: "vented";
       vb_l: number;

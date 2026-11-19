@@ -56,6 +56,9 @@ B17 (parallel / series) B1, Calculate, then Tools > Multiple Speakers: 2 in para
 B13a / B13b             B1 with the FDD model (double-click the Cms label, On):
                         Rms 2.00 / Ams 3.00E-04, and Rms 8.00 / Ams 1.00E-03
 
+B16 (passive)           B2 with Tools > Filter Wizard (Passive): branch 1 series R 0.3 ohm,
+                        L 2.2 mH; branch 2 C 47 uF; On, then File > Export in the chart window
+
 B14-bandpass-4th-pr     B4 with a DSA270-PR in place of the front port (Edit,
                         double-click the Ap1 label: it reads PR)       (Wizard)
 
@@ -67,6 +70,9 @@ B15 (peak / lowshelf /   B2 with Tools > Filter Wizard, Equaliser (click the ban
   highshelf)            type label to change it): Peak EQ 40 Hz Q 2.00 -6 dB; Low Shelf
                         30 Hz Q 0.71 +6 dB; High Shelf 150 Hz Q 0.71 -6 dB. On, then
                         File > Export in the chart window
+
+Bandpass records on the laptop: use the "-short" ones for B4-B6 (the plain B4 / B5 / B6
+there are older). B14: Edit, double-click the Ap1 label so it reads PR, before the Wizard.
 
 Impulse response: B1, B2 and 05, the chart window's Impulse Response, Export
 (a 16-bit 48 kHz WAV, t = 0 at sample 10000; masking as Hornresp has it).
@@ -131,6 +137,8 @@ N5-pr-added-mass (+30 g), N6-pr-lossy (Rmp x5), N7-pr-small-box (20 L)
 N8-sub-sealed, N9-sub-ported (also Particle Velocity > Port Outlet)
 N10-fr-ported, N11-ported-all-coil-models (Rg 0.8 + semi B8b + FDD B13b)
 N12-pr-semi, N13-sealed-2p-rg, N14-ported-2s, N15-fr-sealed
+N16-ib-sub, N17-ib-umii: infinite baffle with an open rear
+(Vrc = Lrc = 0: no rear chamber), the N8 12in sub and a Dayton UMII18-22
 
 Maximum SPL with the amplifier's current limit: B13b, Tools > Maximum SPL,
 double-click the current limit's Off to turn it On, 2 A (Hornresp rounds the

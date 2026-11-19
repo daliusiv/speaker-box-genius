@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { SummaryCell } from "./LogChart.tsx";
 
 /** One curve's row in a chart's legend table. */
 export interface LegendRow {
@@ -18,6 +19,8 @@ export interface LegendRow {
   peak?: { main: string; sub?: string; over?: boolean };
   /** The chart's own columns, in the order of `LegendProps.columns`. */
   cols: string[];
+  /** One value each for `LegendProps.summaryHeadings` (not read at the cursor). */
+  summary?: readonly SummaryCell[];
   faint?: boolean;
 }
 
@@ -32,6 +35,12 @@ export interface LegendProps {
   peakHeading?: string;
   columns: string[];
   rows: LegendRow[];
+  /** First column's heading (default "Enclosure"). */
+  rowHeading?: string;
+  /** Columns of one value per row (e.g. headroom on peaks / on average), in place of Peak. */
+  summaryHeadings?: string[];
+  /** A line over the table saying what the summary columns are measured against. */
+  caption?: string;
 }
 
 const Swatch = ({ color, dash }: { color: string; dash?: string }) =>
@@ -54,19 +63,26 @@ export function ChartLegend(p: LegendProps) {
   const top = new Set(p.rows.filter((r) => !r.parent).map((r) => r.label));
   const live = p.atHeading !== null;
   const columns = live ? p.columns : [];
-  const cols = 1 + (live ? 1 : 0) + (hasPeak ? 1 : 0) + columns.length;
+  const sums = p.summaryHeadings ?? [];
+  const cols = 1 + (live ? 1 : 0) + (hasPeak ? 1 : 0) + sums.length + columns.length;
   return (
     <div className={`legend-wrap${cols > 4 ? " wide" : ""}`}>
+      {p.caption && <p className="legend-caption">{p.caption}</p>}
       <table className="legend" style={{ ["--legend-cols" as string]: cols }}>
         <thead>
           <tr>
-            <th scope="col">Enclosure</th>
+            <th scope="col">{p.rowHeading ?? "Enclosure"}</th>
             {live && (
               <th scope="col" className="legend-at on">
                 {p.atHeading}
               </th>
             )}
             {hasPeak && <th scope="col">{p.peakHeading}</th>}
+            {sums.map((h) => (
+              <th scope="col" key={h}>
+                {h}
+              </th>
+            ))}
             {columns.map((c) => (
               <th scope="col" key={c}>
                 {c}
@@ -131,6 +147,21 @@ export function ChartLegend(p: LegendProps) {
                     )}
                   </td>
                 )}
+                {sums.map((h, i) => {
+                  const c = r.summary?.[i];
+                  return (
+                    <td key={h} data-tone={c?.tone}>
+                      {c ? (
+                        <>
+                          <span className="legend-val">{c.main}</span>
+                          {(c.at || c.why) && <span className="legend-sub">{[c.at, c.why].filter(Boolean).join(" · ")}</span>}
+                        </>
+                      ) : (
+                        "–"
+                      )}
+                    </td>
+                  );
+                })}
                 {r.cols.slice(0, columns.length).map((c, i) => (
                   <td key={i} className="legend-note">
                     {c || "–"}

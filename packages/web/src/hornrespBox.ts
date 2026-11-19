@@ -1,8 +1,10 @@
-import { passiveRadiatorModel, portEffectiveLength, semiActive, STANDARD_AIR, type DriverInput, type SimulationOptions } from "@sbg/engine";
+import { DEFAULT_END_CORRECTION, passiveRadiatorModel, portEffectiveLength, portLengthForFb, semiActive, solveTs, STANDARD_AIR, type Assumed, type DriverInput, type SimulationOptions } from "@sbg/engine";
 import { fromHornresp, HORNRESP_TAIL, mechanicalFromTs, signalNotes, type HornrespExport, type HornrespImport } from "./hornresp.ts";
-import { portOf } from "./sim.ts";
 import { withCompat } from "./compat.ts";
-import { MAX_DESIGNS, newDesign, type AppState, type DesignState, type LineDesign, type PrDesign, type SealedDesign, type VentedDesign } from "./state.ts";
+import { driverExtras } from "./importReport.ts";
+import { portOf, solveDriver } from "./sim.ts";
+import { EXAMPLE_PR, MAX_DESIGNS, newDesign, NO_LOSS_Q, type AppState, type DesignState, type IbDesign, type LineDesign, type PrDesign, type SealedDesign, type VentedDesign } from "./state.ts";
+import { stuffable } from "./stuffing.ts";
 
 /**
  * Hornresp records for sealed, ported and passive radiator boxes, both ways.
@@ -11,7 +13,9 @@ import { MAX_DESIGNS, newDesign, type AppState, type DesignState, type LineDesig
  * S2 = the cones' area, 0.01 cm, conical) with the box as its rear chamber (Vrc, Lrc), and a port
  * (Ap, Lpt) or a passive radiator (Sp1, Cmp, Mmp, Rmp) in that chamber. The validation records
  * B1–B3 are written this way and match the app (docs/hornresp-validation/records). Acoustic Path
- * Length is the port's or PR's distance from the cone.
+ * Length is the port's or PR's distance from the cone. An infinite baffle with an open rear is the
+ * same record with no rear chamber (Vrc = Lrc = 0: the driver's back is open); with a closed
+ * space, that space is the rear chamber.
  */
 
 /** Hornresp's air density: its PR mass Mmp leaves out the air in front, which it adds back. */
@@ -21,8 +25,8 @@ const exp2 = (x: number) => x.toExponential(2).toUpperCase().replace(/E([+-])(\d
 /** The air load on one side of a piston of area sd (m²), kg. */
 const oneSideAir = (sd: number) => (8 * HR_RHO * Math.pow(sd / Math.PI, 1.5)) / 3;
 
-export type HornrespBoxDesign = SealedDesign | VentedDesign | PrDesign;
-export const hornrespBoxKind = (d: DesignState): d is HornrespBoxDesign => d.kind === "sealed" || d.kind === "vented" || d.kind === "pr";
+export type HornrespBoxDesign = SealedDesign | VentedDesign | PrDesign | IbDesign;
+export const hornrespBoxKind = (d: DesignState): d is HornrespBoxDesign => d.kind === "sealed" || d.kind === "vented" || d.kind === "pr" || d.kind === "ib";
 
 /**
  * A Hornresp record for a sealed, ported or PR box. `vb_l` is the volume the box acts as (with
@@ -33,7 +37,8 @@ export function toHornrespBox(
   driver: DriverInput,
   o: { vb_l: number; distance_cm: number; eg: number; drivers: number; wiring?: "parallel" | "series"; pmax?: number; xmax_mm?: number; sim?: SimulationOptions; stuffed?: boolean },
 ): HornrespExport | string {
-  if (!(o.vb_l > 0)) return "The box has no volume.";
+  const openRear = d.kind === "ib" && d.rear === "open";
+  if (!openRear && !(o.vb_l > 0)) return "The box has no volume.";
   const warnings: string[] = signalNotes(o.sim);
   const m = mechanicalFromTs(driver);
   const count = Math.max(1, Math.round(o.drivers));
@@ -96,12 +101,22 @@ export function toHornrespBox(
   // n PRs are written as one (below), so it carries all their added mass.
   put("Added Mass", r2(d.kind === "pr" ? d.addedMass_g * d.count : 0), d.kind === "pr" ? (d.count > 1 ? `g, the ${d.count} PRs' added mass` : "g") : "");
   head("CHAMBER PARAMETER VALUES");
-  put("Vrc", r2(o.vb_l), "box, L");
-  // Hornresp needs a depth for the chamber; a cube's, as the validation records use.
-  put("Lrc", r2(Math.cbrt(o.vb_l * 1000)), "box depth, cm (a cube's)");
-  if (d.kind === "sealed") {
+  if (openRear) {
+    // No rear chamber: Hornresp leaves the driver's back open, as an infinite baffle's.
+    put("Vrc", "0.00", "no rear chamber: the driver's back is open (infinite baffle)");
+    put("Lrc", "0.00", "");
+  } else {
+    put("Vrc", r2(o.vb_l), d.kind === "ib" ? "the closed space behind the baffle, L" : "box, L");
+    // Hornresp needs a depth for the chamber; a cube's, as the validation records use.
+    put("Lrc", r2(Math.cbrt(o.vb_l * 1000)), d.kind === "ib" ? "depth, cm (a cube's)" : "box depth, cm (a cube's)");
+  }
+  if (d.kind === "ib" && !openRear) warnings.push("The closed space behind the baffle is written as a sealed rear chamber: its leak, which never reaches the room here, isn't in Hornresp's box.");
+  if (d.kind === "sealed" || d.kind === "ib") {
     fixed("Fr", "0.00");
     fixed("Tal", "0.00");
+    // No throat chamber, but Hornresp 60.70 refuses a record without these two lines.
+    fixed("Vtc", "0.00");
+    fixed("Atc", "0.00");
   } else if (d.kind === "vented") {
     // n identical ports as one of n × the area: the same tuning but for the end corrections.
     const port = portOf(d);
@@ -143,7 +158,12 @@ export function toHornrespBox(
   lines.push("");
   for (let i = 1; i <= 4; i++) fixed(`Tal${i}`, "100");
   if (o.stuffed) warnings.push("Stuffing is written as the bigger volume it makes the box act as (Vrc); its damping isn't.");
-  warnings.push("Hornresp's ordinary boxes have no leakage or absorption: set Settings → Box → Leak Ql, Absorb Qa and Port Qp to none to compare.");
+  const leakFree = "ql" in d && d.ql !== undefined && d.ql >= 1e6;
+  warnings.push(
+    leakFree
+      ? "Hornresp's ordinary boxes have no absorption or port loss: set Settings → Box → Absorb Qa and Port Qp to none to compare."
+      : "Hornresp's ordinary boxes have no leakage or absorption: set this box's Leakage to its own Ql of none, and Settings → Box → Absorb Qa and Port Qp to none, to compare.",
+  );
   lines.push(
     ...HORNRESP_TAIL.map((l) =>
       l === "Semi-Inductance Model Flag = 0" && semi ? "Semi-Inductance Model Flag = 1" : l === "Damping Model Flag = 0" && fdd ? "Damping Model Flag = 1" : l,
@@ -159,13 +179,15 @@ export interface HornrespBoxImport {
   drivers?: HornrespImport["drivers"];
   rg?: number;
   warnings: string[];
+  /** Values the record didn't have, filled in and listed. */
+  assumed: Assumed[];
 }
 
 /**
  * A sealed, ported or PR box from a Hornresp record written as above (a horn of 0.01 cm or less,
  * the box as its rear chamber); null when the record is a real horn or line.
  */
-export function fromHornrespBox(text: string, existing: DesignState[], name: string): HornrespBoxImport | null | string {
+export function fromHornrespBox(text: string, existing: DesignState[], name: string, fallbackFs?: number): HornrespBoxImport | null | string {
   const pairs = [...text.matchAll(/(?:^|[\s|])([A-Za-z][A-Za-z0-9']*(?: [A-Za-z][A-Za-z0-9']*)*)\s*=\s*([-+]?\d(?:[\d.,]*\d)?(?:E[-+]?\d+)?)/gi)].map((m) => [m[1]!.toLowerCase(), m[2]!] as const);
   const get = (k: string) => {
     const v = pairs.find(([key]) => key === k.toLowerCase())?.[1];
@@ -176,7 +198,11 @@ export function fromHornrespBox(text: string, existing: DesignState[], name: str
   const len = ["par", "con", "exp", "l12"].map((k) => get(k)).find((x) => x !== undefined && x > 0);
   const vrc = get("Vrc") ?? 0;
   const s3 = pairs.filter(([k]) => k === "s3").some(([, v]) => Number(v.replace(",", ".")) > 0);
-  if (!(len !== undefined && len <= 0.1 && vrc > 0 && !s3)) return null;
+  const ap = get("Ap") ?? get("Ap1") ?? 0;
+  const sp = get("Sp1") ?? get("Sp") ?? 0;
+  // No rear chamber, port or PR: the driver's back is open, an infinite baffle.
+  const ib = !(vrc > 0) && !(ap > 0) && !(sp > 0);
+  if (!(len !== undefined && len <= 0.1 && (vrc > 0 || ib) && !s3)) return null;
   const line = fromHornresp(text, newDesign("line", existing) as Parameters<typeof fromHornresp>[1]);
   if (typeof line === "string") return line;
   // Keep the driver notes; the line reader's notes about horns, chambers and ports don't apply.
@@ -185,17 +211,26 @@ export function fromHornrespBox(text: string, existing: DesignState[], name: str
   const at = path > 0 ? { ventAt: "custom" as const, ventDistance_cm: Math.round(path * 10) / 10 } : {};
   if (path > 0) warnings.push(`Acoustic Path Length ${at.ventDistance_cm} cm is the port's or PR's distance from the cone; it matches Hornresp with Settings → SPL → From radiated power.`);
   const vb_l = Math.round(vrc * 1000) / 1000;
-  const ap = get("Ap") ?? get("Ap1") ?? 0;
-  const sp = get("Sp1") ?? get("Sp") ?? 0;
+  const assumed: Assumed[] = [];
   let design: HornrespBoxDesign;
-  if (sp > 0) {
-    const cmp = get("Cmp") ?? 0;
-    const mmp = get("Mmp") ?? 0;
+  if (ib) {
+    design = { ...(newDesign("ib", existing) as IbDesign), name, rear: "open" };
+    if (path > 0) warnings.pop();
+  } else if (sp > 0) {
     const rmp = get("Rmp") ?? 0;
-    if (!(cmp > 0 && mmp > 0)) return "The record's passive radiator has no Cmp or Mmp.";
+    // Missing mass or compliance: the example PR's (its Mms, and its Cms at this Sp), listed.
+    const ex = EXAMPLE_PR;
+    const exCms = ex.vas_l / 1000 / (STANDARD_AIR.rho * STANDARD_AIR.c ** 2 * (ex.sd_cm2 / 1e4) ** 2);
+    let cmp = get("Cmp") ?? 0;
+    if (!(cmp > 0)) {
+      cmp = exCms;
+      assumed.push({ field: "PR compliance Cmp", value: `${(cmp * 1000).toPrecision(3)} mm/N`, note: "not in the record: the example PR's" });
+    }
+    const mmp = get("Mmp") ?? 0;
+    if (!(mmp > 0)) assumed.push({ field: "PR moving mass Mmp", value: `${ex.mms_g} g`, note: "not in the record: the example PR's" });
     const base = newDesign("pr", existing) as PrDesign;
     // The app's PR mass includes the air in front, which Hornresp adds to Mmp itself.
-    const m0 = mmp / 1000 + oneSideAir(sp / 1e4);
+    const m0 = mmp > 0 ? mmp / 1000 + oneSideAir(sp / 1e4) : ex.mms_g / 1000;
     const vas = STANDARD_AIR.rho * STANDARD_AIR.c ** 2 * (sp / 1e4) ** 2 * cmp * 1000;
     // Rmp as passiveRadiatorModel derives it from Qms: Rmp = √(M/C) / Qms.
     const qms = rmp > 0 ? Math.sqrt(m0 / cmp) / rmp : 10;
@@ -207,33 +242,40 @@ export function fromHornrespBox(text: string, existing: DesignState[], name: str
       count: 1,
       extra: [],
       addedMass_g: Math.round((get("Added Mass") ?? 0) * 100) / 100,
-      params: { mms_g: Number((m0 * 1000).toFixed(3)), sd_cm2: Number(sp.toFixed(2)), vas_l: Number(vas.toFixed(3)), qms: Number(qms.toPrecision(5)), xmax_mm: base.params.xmax_mm },
+      params: { mms_g: Number((m0 * 1000).toFixed(3)), sd_cm2: Number(sp.toFixed(2)), vas_l: Number(vas.toFixed(3)), qms: Number(qms.toPrecision(5)), xmax_mm: 0 },
       ...at,
     };
-    warnings.push("Hornresp has no PR Xmax: the PR's Xmax is a placeholder, set it from the datasheet.");
+    assumed.push({ field: "PR Xmax", value: "not set", note: "Hornresp has none: no PR redline until you enter it" });
   } else if (ap > 0) {
-    const lpt = get("Lpt") ?? get("Lp") ?? 0;
-    if (!(lpt > 0)) return "The record's port has no length (Lpt).";
+    let lpt = get("Lpt") ?? get("Lp") ?? 0;
+    const diameter_cm = Number((2 * Math.sqrt(ap / Math.PI)).toFixed(2));
+    if (!(lpt > 0)) {
+      // No length: the one that tunes the box to the driver's Fs (a QB3-ish start), listed.
+      const fs = (line.driver ? solveTs(line.driver.ts).values.fs : undefined) ?? fallbackFs ?? 40;
+      lpt = Math.max(1, portLengthForFb(vb_l, { shape: "round", diameter_cm, length_cm: 0 }, fs, 1, DEFAULT_END_CORRECTION, STANDARD_AIR));
+      assumed.push({ field: "Port length Lpt", value: `${lpt.toFixed(1)} cm`, note: `not in the record: tunes the box to ${fs.toFixed(1)} Hz, the driver's Fs` });
+    }
     const base = newDesign("vented", existing) as VentedDesign;
-    design = { ...base, name, vb_l, shape: "round", diameter_cm: Number((2 * Math.sqrt(ap / Math.PI)).toFixed(2)), length_cm: Number(lpt.toFixed(2)), count: 1, flare_cm: 0, ...at };
+    design = { ...base, name, vb_l, shape: "round", diameter_cm, length_cm: Number(lpt.toFixed(2)), count: 1, flare_cm: 0, ...at };
   } else {
     design = { ...(newDesign("sealed", existing) as SealedDesign), name, vb_l };
     if (path > 0) warnings.pop();
   }
-  return { design, ...(line.driver ? { driver: line.driver } : {}), ...(line.drivers ? { drivers: line.drivers } : {}), ...(line.rg ? { rg: line.rg } : {}), warnings };
+  return { design, ...(line.driver ? { driver: line.driver } : {}), ...(line.drivers ? { drivers: line.drivers } : {}), ...(line.rg ? { rg: line.rg } : {}), warnings, assumed };
 }
 
 /**
  * A Hornresp record opened from the Open window: the box (or line) as a new design, the record's
  * driver, and Settings matched to Hornresp's conventions (as a WinISD project sets WinISD's).
  */
-export function applyHornresp(s: AppState, text: string, fileName: string): { state: AppState; message: string } | string {
+export function applyHornresp(s: AppState, text: string, fileName: string): { state: AppState; message: string; assumed: Assumed[] } | string {
   const base = fileName.replace(/\.txt$/i, "");
   const name = `Hornresp: ${base}`.slice(0, 40);
-  const box = fromHornrespBox(text, s.designs, name);
+  const solved = solveDriver(s);
+  const box = fromHornrespBox(text, s.designs, name, solved.missing.length === 0 ? solved.values.fs : undefined);
   if (typeof box === "string") return box;
   let design: DesignState;
-  let imp: { driver?: HornrespImport["driver"]; drivers?: HornrespImport["drivers"]; rg?: number; warnings: string[] };
+  let imp: { driver?: HornrespImport["driver"]; drivers?: HornrespImport["drivers"]; rg?: number; warnings: string[]; assumed?: Assumed[] };
   if (box) {
     design = box.design;
     imp = box;
@@ -245,20 +287,31 @@ export function applyHornresp(s: AppState, text: string, fileName: string): { st
     imp = r;
   }
   if (s.designs.length >= MAX_DESIGNS) return `There are already ${MAX_DESIGNS} designs: delete one to open another.`;
+  // Hornresp's ordinary boxes have no leak: the box gets its own Ql of none (Settings' stays).
+  const leakNote: string[] = [];
+  if (stuffable(design.kind)) {
+    design = { ...design, ql: NO_LOSS_Q };
+    leakNote.push("Ql set to none on this box (Hornresp's boxes have no leak); set Settings → Box → Absorb Qa and Port Qp to none for an exact match.");
+  }
   const x = imp.driver;
+  // Hornresp always has Le; Xmax and Pmax when the record has them; never a nominal impedance.
+  const extras = x ? driverExtras({ le_mh: x.le_mh, xmax_mm: x.xmax_mm, pe_w: x.pe_w }, { le: false }) : null;
   const state: AppState = {
     ...s,
     ...(x
       ? {
           driverName: x.name,
           driverBrand: "",
+          driverOrigin: undefined,
           ts: x.ts,
           le_mh: x.le_mh,
           l2_mh: 0,
           r2_ohm: 0,
           semi: x.semi,
           fdd: x.fdd,
-          ...(x.xmax_mm !== undefined ? { xmax_mm: x.xmax_mm } : {}),
+          xmax_mm: extras!.xmax_mm,
+          pe_w: extras!.pe_w,
+          nominal_ohms: extras!.nominal_ohms,
           dvc: { ...s.dvc, on: false },
         }
       : {}),
@@ -266,7 +319,7 @@ export function applyHornresp(s: AppState, text: string, fileName: string): { st
     settings: { ...withCompat(s.settings, "hornresp"), rg: imp.rg ?? 0 },
     designs: [...s.designs, design],
   };
-  const what = design.kind === "line" ? "line" : design.kind === "pr" ? "passive radiator box" : design.kind === "vented" ? "ported box" : "sealed box";
-  const message = [`Opened ${fileName} as a ${what}${x ? " with its driver" : ""}; Settings now match Hornresp's conventions.`, ...imp.warnings].join(" ");
-  return { state, message };
+  const what = design.kind === "ib" ? "infinite baffle (open rear)" : design.kind === "line" ? "line" : design.kind === "pr" ? "passive radiator box" : design.kind === "vented" ? "ported box" : "sealed box";
+  const message = [`Opened ${fileName} as a ${what}${x ? " with its driver" : ""}; Settings now match Hornresp's conventions.`, ...imp.warnings, ...leakNote].join(" ");
+  return { state, message, assumed: [...(extras?.assumed ?? []), ...(imp.assumed ?? [])] };
 }

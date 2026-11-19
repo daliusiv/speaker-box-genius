@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "3 L 0.8 SL",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 3,
+  "ts": {
+    "fs": 145,
+    "qms": 4.92,
+    "qes": 1.28,
+    "vas_l": 0.8,
+    "re": 5.5,
+    "sd_cm2": 30.2,
+    "qts": 1.01,
+    "le_mh": 0.11,
+    "bl": 2.8,
+    "mms_g": 2,
+    "xmax_mm": 1.5,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 73,
+    "depth_mm": 44.9
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/3-l-08-sl/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

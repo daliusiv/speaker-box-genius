@@ -145,7 +145,7 @@ function limitRatios(r: SimulationResult, xmax_mm: number, highPassOn: boolean, 
         kind = k;
       }
     };
-    if (coneOn && r.excursionMm) take((r.excursionMm[i] ?? 0) / (allow * xmax_mm), "xmax");
+    if (coneOn && r.excursionMm && xmax_mm > 0) take((r.excursionMm[i] ?? 0) / (allow * xmax_mm), "xmax");
     if (coneOn && r.prGroups) for (const g of r.prGroups) if (g.xmax_mm) take((g.excursionMm[i] ?? 0) / (allow * g.xmax_mm), "pr");
     if (f >= fMin) {
       if (r.portVelocity) take((r.portVelocity[i] ?? 0) / portLimit, "port");

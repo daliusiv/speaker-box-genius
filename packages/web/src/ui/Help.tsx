@@ -46,7 +46,8 @@ export function collectHelp(root: Element | null, opts: { skipRows?: boolean; on
       const options = [...el.querySelectorAll(".ui-radio-card")].map((c) => {
         const chip = c.querySelector(".ui-radio-card-aside .ui-chip")?.textContent?.trim();
         const desc = c.querySelector(".ui-radio-card-desc")?.textContent?.trim();
-        return `${c.querySelector(".ui-radio-card-title")?.textContent?.trim()}${chip && chip !== "usual" ? ` (${chip})` : ""}${desc ? `: ${desc}` : ""}`;
+        const title = c.querySelector(".ui-radio-card-title")?.firstChild?.textContent?.trim();
+        return `${title}${chip ? ` (${chip})` : ""}${desc ? `: ${desc}` : ""}`;
       });
       const owner = el.parentElement?.closest("[data-help]");
       const entry = owner && owners.get(owner);

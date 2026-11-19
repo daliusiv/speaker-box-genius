@@ -1,12 +1,21 @@
-import { useRef, type ReactNode } from "react";
+import { useImperativeHandle, useRef, type ReactNode, type Ref } from "react";
 import type { ButtonVariant } from "./Button.tsx";
 
 /**
  * A button that opens the file picker and hands back the chosen file. Looks like a Button;
  * Enter or Space opens the picker from the keyboard.
  */
-export function FileButton(props: { accept?: string; title?: string; variant?: ButtonVariant; onFile: (f: File) => void; children: ReactNode }) {
+export function FileButton(props: {
+  accept?: string;
+  title?: string;
+  variant?: ButtonVariant;
+  onFile: (f: File) => void;
+  /** Opens the same picker from elsewhere (a menu item). */
+  openRef?: Ref<{ open: () => void }>;
+  children: ReactNode;
+}) {
   const input = useRef<HTMLInputElement>(null);
+  useImperativeHandle(props.openRef, () => ({ open: () => input.current?.click() }), []);
   return (
     <label
       className="ui-button"

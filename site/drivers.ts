@@ -579,7 +579,7 @@ export function driversIndexContent(byBrand: { slug: string; name: string; pages
   return `<h1>Box designs for ${total.toLocaleString("en-GB")} drivers</h1>
 <p class="lede">Pick a driver to see the sealed, ported and passive radiator boxes that suit it, with their response and maximum output, and open any of them in Speaker Box Genius to change it.</p>
 ${sizes.length ? `<h2 id="sizes">By size</h2><ul class="chips sizes">${sizes.map((z) => `<li><a href="${sizePath(z.inches)}">${sizeLabel(z.inches)} <small>${z.count}</small></a></li>`).join("")}</ul>\n` : ""}<h2 id="brands">By brand</h2><ul class="brands">${byBrand.map((b) => `<li><a href="${brandPath(b.slug)}">${esc(b.name)}</a><small>${b.pages.length} drivers</small></li>`).join("")}</ul>
-<p class="muted">The parameters come from the <a href="${REPO}/tree/main/drivers">open driver database</a> in the project's repository. Missing a driver? <a href="${REPO}/issues/new?template=new-driver.yml">Add it</a>, or enter its parameters in the app.</p>`;
+<p class="muted">The parameters come from the <a href="${REPO}/tree/main/drivers">open driver database</a> in the project's repository. Missing a driver? Enter its parameters in the <a href="/">app</a> and choose <b>Edit T/S → ⋯ → Submit to database…</b>: no GitHub account needed. (Or use the <a href="${REPO}/issues/new?template=new-driver.yml" rel="nofollow">GitHub form</a>.)</p>`;
 }
 
 if (process.argv[1] && import.meta.filename === process.argv[1]) {

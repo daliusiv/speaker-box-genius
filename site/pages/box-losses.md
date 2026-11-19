@@ -23,7 +23,7 @@ Richard Small's analysis of the vented box describes its losses as three Q value
 
 A **lower Q means more loss.** A Q of 100 is almost lossless; a Q of 5 is very lossy. The three combine like resistors in parallel into the box's total loss, QB: 1/QB = 1/QL + 1/QA + 1/QP.
 
-In the app the three are in **Settings** (**Leak Ql**, **Absorb Qa**, **Port Qp**); clear a field to leave that loss out altogether (it shows "None"), as textbook alignment tables do.
+In the app the three are in **Settings → Simulation → Box** (**Leak Ql**, **Absorb Qa**, **Port Qp**); clear a field to leave that loss out altogether (it shows "None"), as textbook alignment tables do. A sealed, ported or passive radiator box can also have its own leakage: in **Boxes**, open its **Leakage** row and pick **This box**, so a tight box and a leaky one can be compared side by side. Stuffing sets a box's own Qa the same way.
 
 ## What values real boxes have
 

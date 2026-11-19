@@ -1,0 +1,35 @@
+{
+  "brand": "Memphis Audio",
+  "model": "PRXL10FTV (4 Ω)",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 39,
+    "qms": 5.454,
+    "qes": 0.567,
+    "vas_l": 20.59,
+    "re": 3.6,
+    "sd_cm2": 346.4,
+    "qts": 0.514,
+    "bl": 15.2,
+    "mms_g": 137.1,
+    "xmax_mm": 9.017,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 233.68,
+    "depth_mm": 129.54,
+    "displacement_l": 2.747
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.memphiscaraudio.com/car-audio/subwoofers/",
+      "retrieved": "2026-11-16",
+      "note": "Values from Memphis Audio's spec sheets (PDF supplied 16 Nov 2026), used with Memphis Audio's permission (16 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Memphis Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Memphis's sheet repeats the PRXL10FT's Vas for this model, which disagrees with its own Fs, Mms and Cms. Vas 20.59 L calculated from the published Cms and Sd."
+}

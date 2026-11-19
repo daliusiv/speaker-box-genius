@@ -44,7 +44,7 @@ export function RoomGainSection(props: { value: Room; room: RoomGain | RoomGainC
         legend="Space"
         value={g.mode}
         options={[
-          { value: "off", title: "Off (free space)", description: "No room: the response as in an anechoic half space, like WinISD", aside: <Chip>usual</Chip> },
+          { value: "off", title: "Off (free space)", description: "No room: the response as in an anechoic half space, like WinISD", aside: <Chip>Default</Chip> },
           { value: "car", title: "Car cabin", description: "A small sealed space: strong lift below its first mode" },
           { value: "room", title: "Room", description: "A living room: gentler lift, starting lower" },
           { value: "curve", title: "Your own curve", description: "Load a measured or published gain curve (.txt / .frd)" },

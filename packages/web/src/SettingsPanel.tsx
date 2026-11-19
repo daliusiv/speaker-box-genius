@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { coilHeatFactor, DEFAULT_END_CORRECTION } from "@sbg/engine";
 import { AmpFromRatings } from "./AmpFromRatings.tsx";
 import { COMPAT, COMPAT_NAMES, compatOf, nearestCompat, withCompat, type CompatPreset } from "./compat.ts";
@@ -6,6 +6,7 @@ import { Num, Select } from "./components.tsx";
 import { airLimitOf, airOf, PORT_LIMIT, portLimitOf } from "./sim.ts";
 import { END_CORRECTION_MAX, NO_LOSS, qText, type AppState, type Settings } from "./state.ts";
 import { Card, Chip, FieldRow, helpEntries, RadioCards, Section, Segmented, Switch } from "./ui/index.ts";
+import { browserAskedNotToTrack, setUsageStats, track, trackOnce, usageStatsOn } from "./telemetry.ts";
 
 /** My conditions' fields: their help and the Air row's ⓘ sheet (they only show after choosing My conditions). */
 const AIR_HELP: Record<string, string> = {
@@ -17,7 +18,7 @@ const AIR_HELP: Record<string, string> = {
 /** The program a choice matches, as the option card's chip. */
 /** The full "About" texts, as the help of each row's info line. */
 const ABOUT = {
-  box: "Box losses are Q values at the tuning frequency: lower means more loss. 10 / 100 / 100 matches WinISD’s defaults. A bandpass can also set its own losses for each chamber, and a sealed, ported or passive radiator design with Stuffing set uses that stuffing’s Qa. For like-for-like checks against WinISD, choose its air values (Amp + cable is already WinISD’s 0.1 Ω) and leave out Le, or simply import the WinISD project (.wpr). OpenISD projects (.owpr) import too, with their own air and losses.",
+  box: "Box losses are Q values at the tuning frequency: lower means more loss. 10 / 100 / 100 matches WinISD’s defaults. A bandpass can also set its own losses for each chamber; a sealed, ported or passive radiator design can set its own leakage (Leakage) and, with Stuffing set, uses that stuffing’s Qa. For like-for-like checks against WinISD, choose its air values (Amp + cable is already WinISD’s 0.1 Ω) and leave out Le, or simply import the WinISD project (.wpr). OpenISD projects (.owpr) import too, with their own air and losses.",
   port: "A port is also a pipe open at both ends, resonating at about c / 2L (a 40 cm port near 380 Hz) and letting midrange out as a narrow peak. “Pipe” draws those resonances (charts then run to 1 kHz); in the bass it matches the air-mass model within a few tenths of a dB. Vented boxes only; the box’s own standing waves, which drive the port hardest when they coincide, aren’t simulated. The chuffing line (17 m/s by default) applies to whichever port-speed convention you pick. 17 m/s peak keeps a hi-fi port quiet; flared ports tolerate more, and car SPL builds often accept 25–30 m/s for a little port noise at full power.",
   spl: "Hornresp works SPL out from the power each cone, port or mouth radiates. That matches the in-front-of-the-box SPL in the bass and reads lower once a source is large next to the wavelength: for a 10″ cone about 0.2 dB at 300 Hz and 0.6 dB at 500 Hz, twice that for two side by side, and about 1.5 dB at 500 Hz for an 850 cm² horn mouth. WinISD uses the in-front SPL. A line’s mouth distance and a box’s port or PR position follow the same choice: in front of the box their sound arrives later than the cone’s, at the same level (phase and group delay too, as VituixCAD shows a rear port); from radiated power it’s the distance between the two, as Hornresp’s Acoustic Path Length (level only). For like-for-like checks against Hornresp, pick its air and “From radiated power” (or the Hornresp preset), and set the drive to 2.83 V.",
   air: "The air in a box is a spring that stiffens more when squeezed than it softens when stretched, so a big cone in a small box adds 2nd harmonic. The Air distortion chart shows it for sealed, ported, passive radiator and bandpass boxes, at the frequency of the note that makes it. It's a 2nd-order estimate from the box pressure, checked against a direct solution of the nonlinear equations; it's mostly 2nd harmonic, so it reads as THD too. Where the cone squeezes the air by more than 10 % of the box it's a rough estimate, and past 20 % outside the model. It's the air only. The driver's own distortion (Bl and suspension non-linearity) isn't modelled and is usually larger, so a low figure here doesn't mean a clean box. Lines and horns: a strong wave steepens as it travels, so the air adds 2nd harmonic that grows with pressure, path length and frequency (Thuras, Jenkins and O’Neil, 1935). The chart shows it at the mouth, from the pressure along the path from the driver (or a tapped horn’s rear tap) on; it matches their tube and horn measurements. Inside a line the pressure is a standing wave, so it’s an estimate; above 25 % it’s rough, and past 50 % outside the model. Lines are taken as lossless inside, so in a long, narrow line it reads a little high.",
@@ -41,12 +42,12 @@ const MATCH_TEXT: Record<CompatPreset, string> = {
   vituixcad: "No Le, leak lost, Qa grows the box, F3 from the peak",
 };
 
-function SwitchRow(props: { label: string; help: string; checked: boolean; onChange: (on: boolean) => void }) {
+function SwitchRow(props: { label: string; help: string; checked: boolean; onChange: (on: boolean) => void; disabled?: boolean }) {
   return (
     <FieldRow label={props.label} help={props.help}>
       {(id) => (
         <span className="st-switch">
-          <Switch id={id} checked={props.checked} onChange={props.onChange} />
+          <Switch id={id} checked={props.checked} onChange={props.onChange} disabled={props.disabled} />
         </span>
       )}
     </FieldRow>
@@ -65,9 +66,14 @@ export function SettingsPanel(props: {
   re?: number;
   /** Power set in watts the WinISD way: the amp limits get a note. */
   winisdWatts: boolean;
+  /** What the amplifier sees across the driver bank (cold Re and the nominal impedance), for the amp power hint; null when unknown. */
+  ampLoad?: { re: number; nominal: number } | null;
 }) {
   const s = props.state.settings;
-  const set = (patch: Partial<Settings>) => props.onChange({ ...s, ...patch });
+  const set = (patch: Partial<Settings>) => {
+    for (const key of Object.keys(patch) as (keyof Settings)[]) trackOnce(`setting:${key}`, "setting_changed", { key });
+    props.onChange({ ...s, ...patch });
+  };
   const now = compatOf(s);
   const near = now ? null : nearestCompat(s);
   const ac = s.airConditions;
@@ -75,8 +81,15 @@ export function SettingsPanel(props: {
   const st = props.state;
   const le = st.semi ? "Semi-inductance" : st.l2_mh > 0 && st.r2_ohm > 0 ? "Le + L2/R2" : "Le";
   const losses = s.losses;
-  const ampValue =
-    s.ampVolts > 0 && s.ampAmps > 0 ? `${s.ampVolts} V · ${s.ampAmps} A` : s.ampVolts > 0 ? `${s.ampVolts} V` : s.ampAmps > 0 ? `${s.ampAmps} A` : "No limit";
+  const ampValue = [s.ampVolts > 0 ? `${s.ampVolts} V` : "", s.ampAmps > 0 ? `${s.ampAmps} A` : "", s.ampWatts > 0 ? `${s.ampWatts} W` : ""].filter(Boolean).join(" · ") || "No limit";
+  // The amp power limit in volts and amps into the nominal load (or the bank's Re when no nominal is known).
+  const ampHint = (() => {
+    const load = props.ampLoad;
+    if (!(s.ampWatts > 0) || !load) return undefined;
+    const r = load.nominal > 0 ? load.nominal : load.re;
+    const ohms = Number(r.toPrecision(3));
+    return `≈ ${Math.sqrt(s.ampWatts * r).toFixed(1)} V, ${Math.sqrt(s.ampWatts / r).toFixed(1)} A into the ${ohms} Ω ${load.nominal > 0 ? "nominal load" : "bank's Re"}`;
+  })();
   const heat = coilHeatFactor(s.coilTemp_C);
 
   return (
@@ -103,7 +116,11 @@ export function SettingsPanel(props: {
             legend="Match"
             value={now ?? ""}
             options={(Object.keys(COMPAT) as CompatPreset[]).map((id) => ({ value: id, title: COMPAT[id].label, description: MATCH_TEXT[id] }))}
-            onChange={(id) => id && props.onChange(withCompat(s, id))}
+            onChange={(id) => {
+              if (!id) return;
+              track("setting_changed", { key: "match", preset: id });
+              props.onChange(withCompat(s, id));
+            }}
           />
           {near && (
             <p className="hint">
@@ -217,7 +234,7 @@ export function SettingsPanel(props: {
             ]}
             onChange={(alignments) => set({ alignments })}
           />
-          <Num help="Box leakage loss as a Q at the tuning frequency: lower means a leakier box. 10 is WinISD's default (a typical well-built box). Clear it for no leak." label="Leak Ql" value={losses.ql} min={1} none={NO_LOSS} onChange={(ql) => set({ losses: { ...losses, ql } })} />
+          <Num help="Box leakage loss as a Q at the tuning frequency: lower means a leakier box. 10 is WinISD's default (a typical well-built box). It's the leak for every box without its own (a box card's Leakage row can set one). Clear it for no leak." label="Leak Ql" value={losses.ql} min={1} none={NO_LOSS} onChange={(ql) => set({ losses: { ...losses, ql } })} />
           <Num help="Absorption loss (stuffing, wall flex) as a Q: lower means more loss. 100 is WinISD's default (little stuffing). A design with its own Stuffing setting uses that setting's Qa instead. Clear it for no absorption." label="Absorb Qa" value={losses.qa} min={1} none={NO_LOSS} onChange={(qa) => set({ losses: { ...losses, qa } })} />
           <Num help="Port friction loss as a Q: lower means a lossier port. 100 is WinISD's default. Clear it for no port loss." label="Port Qp" value={losses.qp} min={1} none={NO_LOSS} onChange={(qp) => set({ losses: { ...losses, qp } })} />
           <RadioCards<Settings["leakage"]>
@@ -310,13 +327,27 @@ export function SettingsPanel(props: {
         <Section icon="limit" title="Amplifier" value={ampValue}>
           <Num help="The amplifier's maximum output voltage (RMS), as a limit on the Max SPL chart. Leave it blank for no limit." label="Max volts" zeroText="No limit" unit="V" value={s.ampVolts} min={0} onChange={(ampVolts) => set({ ampVolts: Math.max(0, ampVolts) })} />
           <Num help="The amplifier's maximum output current (RMS), as a limit on the Max SPL chart. Leave it blank for no limit." label="Max current" zeroText="No limit" unit="A" value={s.ampAmps} min={0} onChange={(ampAmps) => set({ ampAmps: Math.max(0, ampAmps) })} />
+          <Num
+            help="The amplifier's maximum output power (RMS), into whatever the speaker's impedance is at each frequency. Separate from the volts and current limits: the lowest of the three applies. Leave it blank for no limit."
+            label="Max power"
+            zeroText="No limit"
+            unit="W"
+            value={s.ampWatts}
+            min={0}
+            hint={ampHint}
+            onChange={(w) => set({ ampWatts: !(w > 0) ? 0 : Math.min(10_000, Math.max(0.1, w)) })}
+          />
           <AmpFromRatings onUse={(l) => set({ ampVolts: l.volts, ampAmps: l.amps })} />
           {props.winisdWatts && (
-            <p className="hint">The power is in watts as WinISD counts them (into the coil and the amp + cable together, with a hot coil&rsquo;s Re), not an amplifier&rsquo;s rated watts. These limits are the amplifier&rsquo;s real volts and amps.</p>
+            <p className="hint">The power is in watts as WinISD counts them (into the coil and the amp + cable together, with a hot coil&rsquo;s Re), not an amplifier&rsquo;s rated watts. These limits are the amplifier&rsquo;s real volts, amps and watts.</p>
           )}
         </Section>
 
-        <Section icon="wind" title="Port speed" value={`${portLimitOf(props.state)} m/s ${s.velocity === "rms" ? "RMS" : "peak"} · PR ${s.prCaution_pct > 0 ? `${s.prCaution_pct} %` : "off"}`}>
+        <Section
+          icon="wind"
+          title="Port speed & excursion"
+          value={`${portLimitOf(props.state)} m/s ${s.velocity === "rms" ? "RMS" : "peak"} · excursion ${s.excursion === "pp" ? "p-p" : s.excursion === "rms" ? "RMS" : "peak"} · PR ${s.prCaution_pct > 0 ? `${s.prCaution_pct} %` : "off"}`}
+        >
           <Num
             help="Port air speed above this counts as chuffing (the red line on the Port speed chart, the ⚠ in the summary, and the design assistant's checks). 17 m/s peak is the usual guide for a quiet hi-fi port; flared ports tolerate more, and car SPL builds often accept 25–30."
             label="Chuffing line"
@@ -336,6 +367,24 @@ export function SettingsPanel(props: {
                   { value: "rms", label: "RMS" },
                 ]}
                 onChange={(velocity) => set({ velocity })}
+              />
+            )}
+          </FieldRow>
+          <FieldRow
+            label="Excursion"
+            help="Cone and PR excursion shown as the peak one way (as WinISD and Hornresp, and as datasheets give Xmax), peak-to-peak (twice that) or RMS (peak ÷ 1.41). The Xmax line moves with it, and so do the velocity, acceleration, force and air-moved views. Every limit is still checked on the peak one way, so nothing turns red or clear by switching."
+          >
+            {(id) => (
+              <Segmented<Settings["excursion"]>
+                id={id}
+                label="Excursion"
+                value={s.excursion}
+                options={[
+                  { value: "peak", label: "Peak" },
+                  { value: "pp", label: "P-p", title: "Peak-to-peak (twice the one way peak)" },
+                  { value: "rms", label: "RMS" },
+                ]}
+                onChange={(excursion) => set({ excursion })}
               />
             )}
           </FieldRow>
@@ -375,6 +424,37 @@ export function SettingsPanel(props: {
           <Info help={ABOUT.air}>The air only: the driver&rsquo;s own distortion (Bl and suspension) isn&rsquo;t modelled and is usually larger.</Info>
         </Section>
       </Card>
+      <PrivacyCard />
     </div>
+  );
+}
+
+const USAGE_HELP =
+  "Thank you for keeping this on: it's one of the easiest ways to help Speaker Box Genius get better for everyone. It sends anonymous counts of how the app is used (box types added, imports and exports, tabs and charts opened, warnings shown), where clicks land with all text hidden, and how fast pages load. That shows us what people rely on most and where things get confusing, so we can fix and improve the right things first. It never sends your design, its values, names or files, sets no cookies, and has no ID that follows you between visits. Crash reports are separate and stay on. Your choice is kept in this browser only.";
+
+/** PRIVACY: the anonymous usage stats switch (telemetry.ts). Kept in this browser, not in links or projects. */
+function PrivacyCard() {
+  const [on, setOn] = useState(usageStatsOn);
+  return (
+    <Card title="Privacy" flush>
+      <div className="st-body">
+        <SwitchRow
+          label="Help improve the app"
+          help={USAGE_HELP}
+          checked={on}
+          disabled={browserAskedNotToTrack}
+          onChange={(v) => {
+            setUsageStats(v);
+            setOn(v);
+          }}
+        />
+        <p className="hint">
+          {browserAskedNotToTrack
+            ? "Your browser asked not to be tracked, so nothing is sent. Thanks anyway! "
+            : "Thank you for helping! Anonymous stats show us which features people use and where they get stuck, so we know what to make better next. No cookies, nothing that identifies you. "}
+          <a href="/privacy/">Privacy</a>
+        </p>
+      </div>
+    </Card>
   );
 }

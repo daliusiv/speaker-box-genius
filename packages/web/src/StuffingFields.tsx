@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
 import { ventedFb, type Air, type TsValues } from "@sbg/engine";
-import { Fixed, Num, Select } from "./components.tsx";
+import { Fixed, JobProgress, Num, Select } from "./components.tsx";
 import { readMeasured } from "./Measured.tsx";
-import { fitStuffing, type DriverTolerance, type StuffingFit } from "./stuffingFit.ts";
+import { startSearch } from "./search.ts";
+import { type DriverTolerance, type StuffingFit } from "./stuffingFit.ts";
 import { isUntouched } from "./datasheetCheck.ts";
 import { prTuning } from "./presets.ts";
 import { portOf } from "./sim.ts";
@@ -204,6 +205,8 @@ function FitFromMeasurement(props: { design: DesignState & { kind: StuffableKind
   const [msg, setMsg] = useState("");
   const [done, setDone] = useState("");
   const [busy, setBusy] = useState(false);
+  const stopFit = useRef<(() => void) | null>(null);
+  useEffect(() => () => stopFit.current?.(), []);
   // A result belongs to one sweep and one version of the design and driver: drop it when they change.
   const key = JSON.stringify([chosen?.id, props.design, state.ts, state.drivers, state.wiring, state.isobaric, state.dvc, state.settings.losses, state.settings.air]);
   const shown = result?.key === key ? result.fit : null;
@@ -214,16 +217,29 @@ function FitFromMeasurement(props: { design: DesignState & { kind: StuffableKind
     setDone("");
     setBusy(true);
     const source = isUntouched(s.ts, props.ctx.published) ? "datasheet" : "yours";
-    // The fit takes a moment (it refits for each driver tolerance): let "Fitting…" paint first.
-    requestAnimationFrame(() =>
-      setTimeout(() => {
-        try {
-          setResult({ key: JSON.stringify([m.id, props.design, s.ts, s.drivers, s.wiring, s.isobaric, s.dvc, s.settings.losses, s.settings.air]), fit: fitStuffing(s, props.design, m, { source }) });
-        } finally {
+    // The fit takes a moment (it refits for each driver tolerance): in the worker, with a bar meanwhile.
+    const resultKey = JSON.stringify([m.id, props.design, s.ts, s.drivers, s.wiring, s.isobaric, s.dvc, s.settings.losses, s.settings.air]);
+    stopFit.current?.();
+    stopFit.current = startSearch(
+      { kind: "stuffingFit", state: s, design: props.design, measured: { f: m.f, v: m.v }, source },
+      {
+        step: (st) => st.kind === "stuffingFit" && setResult({ key: resultKey, fit: st.fit }),
+        done: () => {
+          stopFit.current = null;
           setBusy(false);
-        }
-      }, 0),
+        },
+        error: (message) => {
+          stopFit.current = null;
+          setBusy(false);
+          setMsg(`The fit couldn't run: ${message}`);
+        },
+      },
     );
+  };
+  const cancelFit = () => {
+    stopFit.current?.();
+    stopFit.current = null;
+    setBusy(false);
   };
 
   const use = (f: StuffingFit) => {
@@ -291,17 +307,12 @@ function FitFromMeasurement(props: { design: DesignState & { kind: StuffableKind
         </label>
         {sweeps.length > 0 && (
           <button type="button" className="secondary" disabled={busy} aria-busy={busy} onClick={() => run(chosen, state)}>
-            {busy ? (
-              "Fitting…"
-            ) : (
-              <>
-                <Sparkle />
-                Fit
-              </>
-            )}
+            <Sparkle />
+            Fit
           </button>
         )}
       </div>
+      {busy && <JobProgress label="Fitting the stuffing to your sweep" done={0} total={0} onStop={cancelFit} stopTitle="Stop" />}
       {msg && <p className="warn">{msg}</p>}
       {done && !shown && (
         <p className="hint">

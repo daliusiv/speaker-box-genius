@@ -188,7 +188,7 @@ test("export: the exact layout of a Hornresp 55.30 record, CRLF line endings", (
   assert.deepEqual(skeleton(out.text), skeleton(HR));
   assert.ok(out.text.endsWith("\r\n") && !/[^\r]\n/.test(out.text));
   // Same values as Hornresp's own record where the designs agree.
-  const val = (t: string, k: string, n = 0) => [...t.matchAll(new RegExp(`^${k.replace(/[()']/g, "\\$&")} = (.*)$`, "gm"))][n]?.[1]?.trim();
+  const val = (t: string, k: string, n = 0) => [...t.matchAll(new RegExp(`^${k.replace(/[\\()']/g, "\\$&")} = (.*)$`, "gm"))][n]?.[1]?.trim();
   for (const [k, n] of [["S1", 0], ["S2", 0], ["Con", 0], ["S3", 0], ["Exp", 0], ["F23", 0], ["Sd", 0], ["Bl", 0], ["Cms", 0], ["Rms", 0], ["Mmd", 0], ["Re", 0], ["Nd", 0], ["Vrc", 0], ["Vtc", 0], ["Atc", 0]] as const)
     assert.equal(val(out.text, k, n), val(HR, k, n), k);
   // Hornresp drops the rear chamber when Lrc = 0, so a front horn's record must carry a depth.
@@ -332,4 +332,21 @@ test("tapped horn with four segments: the front tap is where the last segment st
   const out = toHornresp(d, driver, { eg: 2.83, drivers: 1, name: "x" });
   assert.equal(typeof out, "string");
   assert.match(out as string, /last segment/);
+});
+
+test("Mmd typed in the T/S editor follows Hornresp's definition (DSA215-8 record)", async () => {
+  const { solveTs } = await import("@sbg/engine");
+  // docs/hornresp-validation/records/N1-sealed-full-space.txt: the driver as Hornresp reads it.
+  const m = { sd_cm2: 211.2, bl: 10.65, cms: 5.91e-4, rms: 4.11, mmd_g: 31.43, re: 5.9 };
+  const fromHornresp = tsFromMechanical(m);
+  const typed = solveTs({ sd_cm2: m.sd_cm2, bl: m.bl, cms_mm_per_n: m.cms * 1000, rms: m.rms, mmd_g: m.mmd_g, re: m.re });
+  assert.deepEqual(typed.missing, []);
+  for (const k of ["fs", "qms", "qes", "vas_l"] as const) {
+    const a = typed.values[k]!;
+    const b = fromHornresp[k]!;
+    assert.ok(Math.abs(a - b) / b < 1e-9, `${k}: typed Mmd ${a} vs Hornresp ${b}`);
+  }
+  // And back: the solver's Mmd is the Mmd the Hornresp export writes.
+  const back = mechanicalFromTs({ ...typed.values } as Parameters<typeof mechanicalFromTs>[0]);
+  assert.ok(Math.abs(back.mmd_g - typed.values.mmd_g!) < 1e-9, `Mmd ${back.mmd_g} vs ${typed.values.mmd_g}`);
 });

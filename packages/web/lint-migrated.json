@@ -1,4 +1,4 @@
 {
   "$comment": "Screens held to the UI-system rules in TSX: no raw <button>, <input>, <select> or <textarea> (test/ui-kit.test.ts). src/ui/ itself wraps them and is exempt. Add a screen's files in the PR that moves it onto src/ui/.",
-  "tsx": ["src/ui/catalog/*.tsx", "src/DriverCard.tsx", "src/Designs.tsx", "src/HighPass.tsx", "src/Eq.tsx", "src/Passive.tsx", "src/RoomGain.tsx", "src/BafflePanel.tsx", "src/DspExport.tsx", "src/VolumePanel.tsx", "src/BuildSheet.tsx", "src/WedgeFields.tsx", "src/SettingsPanel.tsx", "src/AmpFromRatings.tsx"]
+  "tsx": ["src/ui/catalog/*.tsx", "src/DriverCard.tsx", "src/ModifiedLine.tsx", "src/ImportNotice.tsx", "src/Designs.tsx", "src/HighPass.tsx", "src/Eq.tsx", "src/Passive.tsx", "src/RoomGain.tsx", "src/BafflePanel.tsx", "src/BaffleFrd.tsx", "src/DspExport.tsx", "src/VolumePanel.tsx", "src/BuildSheet.tsx", "src/WedgeFields.tsx", "src/SettingsPanel.tsx", "src/AmpFromRatings.tsx", "src/ProgramControl.tsx"]
 }

@@ -10,9 +10,13 @@ import { asCompare, type AppState, type CompareDriver } from "./state.ts";
  */
 export function compareWith(s: AppState, d: LoadedDriver): { compare: CompareDriver; borrowed: string[] } {
   const borrowed: string[] = [];
-  if (d.xmax_mm === undefined) borrowed.push(`Xmax (${s.xmax_mm} mm)`);
-  if (d.pe_w === undefined) borrowed.push(`power rating (${s.pe_w} W)`);
-  return { compare: asCompare(withDriver(s, d)), borrowed };
+  const own = withDriver(s, d);
+  // Borrowed only when the main driver has one to lend (unset is 0).
+  const xmax = d.xmax_mm === undefined && s.xmax_mm > 0;
+  const pe = d.pe_w === undefined && s.pe_w > 0;
+  if (xmax) borrowed.push(`Xmax (${s.xmax_mm} mm)`);
+  if (pe) borrowed.push(`power rating (${s.pe_w} W)`);
+  return { compare: asCompare({ ...own, ...(xmax ? { xmax_mm: s.xmax_mm } : {}), ...(pe ? { pe_w: s.pe_w } : {}) }), borrowed };
 }
 
 /** The message after picking a comparison driver. */

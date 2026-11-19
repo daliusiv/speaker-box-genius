@@ -12,6 +12,8 @@ Every sealed box design starts with one choice: the **Qtc**. It decides the box 
 
 [[Open the worked example|qtc-example]]
 
+Try it: the [sealed box calculator](/calculators/sealed-box/) gives the box volume for any Qtc, with its F3, F10 and cone excursion, for your own driver.
+
 ## What Qtc is
 
 A driver on its own resonates at Fs with a total Q of Qts. Put it in a sealed box and the air inside adds a second spring, so both rise by the same factor: the system resonates at **fc** with a total Q of **Qtc** [1]:
@@ -82,7 +84,7 @@ Stuffing makes a box act a little bigger, which lowers its Qtc a little; the [bo
 ## Doing it in the app
 
 1. Load your driver, and open the sealed design on the **Boxes** tab.
-2. Choose a **Preset** (**Qtc 0.5**, **0.577** or **0.707**) to size the box, or type any volume: the summary above the charts shows the Qtc and fc it gives.
+2. Choose a **Preset** (**Qtc 0.5**, **0.577** or **0.707**) to size the box, or type any volume: the box card shows the Fc and Qtc it gives (next to the driver's Qts) and how big the box is next to Vas, as does the summary above the charts.
 3. Duplicate the design (its ⋯ menu) to compare two boxes on the same charts, and set **Space** to **Room** (or **Car cabin**) on the **Signal** tab to see them in a room.
 4. Check the **Max SPL** chart at the power you'll use, and its **Volts** view for what the amplifier must deliver.
 

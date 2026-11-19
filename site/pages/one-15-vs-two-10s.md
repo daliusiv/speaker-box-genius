@@ -11,6 +11,8 @@ group: start
 
 It's one of the oldest subwoofer arguments. One side says two 10s are "faster" and have "more motor". The other says "there's no replacement for displacement": get the 15. Both are partly right, and which one wins depends on the frequency.
 
+Try it: the [subwoofer box calculator](/calculators/subwoofer-box/) sizes a box for either sub, sealed or ported, at your amplifier's power.
+
 This guide puts one 15″ and two 10″ from the same Dayton Audio Reference series in the same boxes, on the same amplifier, in **one project**. The answer comes down to three numbers: cone displacement, power handling, and what a 2 Ω load asks of the amplifier.
 
 [[Open the worked example|subs-example]] [[The two 10s wired in series|subs-series]]

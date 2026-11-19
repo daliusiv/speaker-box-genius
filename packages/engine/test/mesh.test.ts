@@ -57,6 +57,7 @@ for (const [name, set] of [
   ["butt wedge", buildWedgePanels({ width: 800, height: 380, topDepth: 250, bottomDepth: 400, wall: 18, holes: [{ kind: "driver", diameter: 282 }] })],
   ["mitred wedge, double baffle", buildWedgePanels({ width: 700, height: 400, topDepth: 200, bottomDepth: 420, wall: 18, slopeWall: 36, joinery: "miter" })],
   ["sloped-back wedge", buildWedgePanels({ width: 700, height: 400, topDepth: 200, bottomDepth: 420, wall: 18, slope: "rear", holes: [{ kind: "driver", diameter: 250 }] })],
+  ["wedge with a lip", buildWedgePanels({ width: 700, height: 400, topDepth: 200, bottomDepth: 420, wall: 18, lip: 120, holes: [{ kind: "driver", diameter: 250 }] })],
   ["panel-table box", buildWedgePanels({ width: 400, height: 500, topDepth: 450, bottomDepth: 450, wall: 18 })],
   ["cut-list box", buildBoxCutPanels({ width: 400, height: 500, depth: 450, wall: 18, holes: [{ kind: "driver", diameter: 282 }, { kind: "port", diameter: 110, on: "back" }] })],
 ] as const) {
@@ -66,8 +67,9 @@ for (const [name, set] of [
     close(meshVolume(m.cavity!.faces), set.innerVolume, 1e-9);
     for (const p of m.parts) assertOutward(p);
     assertOutward(m.cavity!);
-    assert.equal(m.parts.length, 6);
-    assert.ok(faceCount(m) <= 7 * 6);
+    assert.equal(m.parts.length, set.panels.length);
+    // A prism has its profile's sides plus two ends (a lip makes the sides and inside pentagons).
+    assert.ok(faceCount(m) <= [...set.panels, set.cavity].reduce((n, p) => n + p.profile.length + 2, 0) + set.panels.length);
     // Each panel comes off away from the middle.
     const mid = m.min.map((x, i) => (x + m.max[i]!) / 2);
     for (const p of m.parts) {

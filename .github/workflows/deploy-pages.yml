@@ -42,7 +42,15 @@ jobs:
       - name: Validate and bundle driver database
         run: pnpm validate:db && pnpm build:db
 
+      # POSTHOG_TOKEN (a repo variable; PostHog's project token is public by design) turns on the
+      # anonymous crash reports (packages/web/src/telemetry.ts). Unset: the app has none.
       - name: Build web app
+        env:
+          VITE_POSTHOG_TOKEN: ${{ vars.POSTHOG_TOKEN }}
+          # SUBMIT_ENDPOINT + TURNSTILE_SITE_KEY (repo variables, both public by design) turn on the
+          # website form for driver submissions; unset, Submit to database links to the GitHub form.
+          VITE_SUBMIT_ENDPOINT: ${{ vars.SUBMIT_ENDPOINT }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
         run: pnpm --filter @sbg/web build
 
       # Self-hosted runners (private dev repo) keep the share cards and sitemap dates on their own

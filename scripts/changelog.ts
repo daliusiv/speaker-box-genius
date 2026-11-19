@@ -114,6 +114,8 @@ export function lint(md: string): string[] {
   for (const [i, line] of md.split("\n").entries()) {
     if (/(^|[\s(])#\d+\b/.test(line)) problems.push(`line ${i + 1}: PR/issue numbers don't mean anything on the public repo`);
     if (/claude|anthropic|co-authored/i.test(line)) problems.push(`line ${i + 1}: tooling notes don't belong in the changelog`);
+    // Also shown on GitHub and in release notes, where a site path like /privacy/ points into the repo and 404s.
+    if (/\]\(\//.test(line)) problems.push(`line ${i + 1}: link to the site with https://speakerboxgenius.com/…, not a bare /path`);
   }
   return problems;
 }

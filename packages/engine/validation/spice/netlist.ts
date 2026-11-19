@@ -191,7 +191,9 @@ export function buildNetlist(c: SpiceCase, o: NetlistOptions = {}): Netlist {
   // --- Cone loops: each unit's motors in series, then its drivers' mechanics ---
   const bp = box.kind === "bandpass";
   const coneFrom = bp ? "br" : "0";
-  const coneTo = box.kind === "free-air" ? "0" : bp ? "bf" : "box";
+  // An infinite baffle's open rear: nothing behind the cone, as in free air.
+  const openRear = box.kind === "infinite-baffle" && !(box.rear_l !== undefined && Number.isFinite(box.rear_l));
+  const coneTo = box.kind === "free-air" || openRear ? "0" : bp ? "bf" : "box";
   unitCoils.forEach((coils, idx) => {
     const u = idx + 1;
     let node = coneFrom;
@@ -315,15 +317,15 @@ export function buildNetlist(c: SpiceCase, o: NetlistOptions = {}): Netlist {
     // Ledger #24: leak between the chambers, referred to the driver (pair values for isobaric).
     const qicl = box.qicl === undefined ? 100 : box.qicl === null || !Number.isFinite(box.qicl) ? Infinity : box.qicl;
     if (Number.isFinite(qicl)) el(`Ricl br bf ${num(qicl / ((1 / Math.sqrt(masEq * casEq)) * casEq))}`);
-  } else if (box.kind !== "free-air") {
+  } else if (box.kind !== "free-air" && !openRear) {
     el(`Rbl_box box 0 ${num(BLEED)}`);
     boxPressure = "box";
-    const cab = airCompliance(box.vb_l, air);
+    const cab = airCompliance(box.kind === "infinite-baffle" ? box.rear_l! : box.vb_l, air);
     const ql = lossQ(box.ql, DEFAULT_Q.ql);
     const qa = lossQ(box.qa, DEFAULT_Q.qa);
     let cAbs = cab;
     let cLeak = cab;
-    if (box.kind === "sealed") {
+    if (box.kind === "sealed" || box.kind === "infinite-baffle") {
       // Ledger #4, #5, #18: Fc = Fs·√(1 + n·Cas′/Cab); Qa against Cab in series with n·Cas′.
       fRef = (1 / (TAU * Math.sqrt(masEq * casEq))) * Math.sqrt(1 + (bank.n * casEq) / cab);
       cAbs = (cab * bank.n * casEq) / (cab + bank.n * casEq);
@@ -380,7 +382,8 @@ export function buildNetlist(c: SpiceCase, o: NetlistOptions = {}): Netlist {
     if (Number.isFinite(ql)) {
       el(`Ral box l1 ${num(ql / (wRef * cLeak))}`);
       el(`Vleak l1 0 0`);
-      leak = "Vleak";
+      // An infinite baffle's rear space leaks somewhere other than the room: not heard.
+      if (box.kind !== "infinite-baffle") leak = "Vleak";
     }
   }
 

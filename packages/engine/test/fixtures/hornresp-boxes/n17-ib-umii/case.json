@@ -1,0 +1,21 @@
+{
+  "title": "Dayton Audio UMII18-22, infinite baffle",
+  "text": "An 18-inch IB driver with an open rear (Vrc 0): the cone's front alone (Output → Horn)",
+  "frontAir": 2,
+  "coneLoad": "piston",
+  "splFrom": "power",
+  "driver": {
+    "fs": 21.9856,
+    "qms": 2.5289,
+    "qes": 0.66954,
+    "vas_l": 249.872,
+    "re": 4.2,
+    "sd_cm2": 1184,
+    "le_mh": 1.15,
+    "xmax_mm": 28,
+    "pe_w": 1000
+  },
+  "input": {
+    "kind": "infinite-baffle"
+  }
+}

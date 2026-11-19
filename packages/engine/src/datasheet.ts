@@ -21,6 +21,8 @@ const PATTERNS: Pattern[] = [
   { field: "re", key: /^(re|rdc|dc resistance)\b/, q: "plain" },
   { field: "le_mh", key: /^(le|voice coil inductance|inductance)\b/, q: "inductance" },
   { field: "sd_cm2", key: /^(sd|effective piston area|surface area of cone|effective area|cone area)/, q: "area" },
+  // Mmd (without the air load) before Mms: "Moving mass without air load" is Mmd, not Mms.
+  { field: "mmd_g", key: /^(mmd\b|(moving|diaphragm) mass,?\s*(without|w\/o|excl(\.|uding)?|excl\.? of)\s+air(\s?load)?)/, q: "mass" },
   { field: "mms_g", key: /^(mms|moving mass|diaphragm mass)/, q: "mass" },
   { field: "cms_mm_per_n", key: /^(cms|compliance|mechanical compliance)/, q: "compliance" },
   { field: "bl", key: /^(bl|force factor|bl product)/, q: "plain" },
@@ -54,7 +56,9 @@ export function readDatasheet(text: string): { values: Partial<Record<DatasheetF
   for (const raw of lines) {
     // "Resonant Frequency (Fs) 25.6Hz" → also try the bracketed symbol as the key.
     const bracket = /\(([A-Za-z]{1,4})\)/.exec(raw);
-    const candidates = [raw, bracket ? bracket[1] + " " + raw.slice(bracket.index + bracket[0].length) : null];
+    const fromBracket = bracket ? bracket[1] + " " + raw.slice(bracket.index + bracket[0].length) : null;
+    // "Moving mass (Mmd) 12 g": the symbol is more specific than "moving mass" (which reads as Mms).
+    const candidates = bracket && /^mmd$/i.test(bracket[1]!) ? [fromBracket, raw] : [raw, fromBracket];
     for (const line of candidates) {
       if (!line) continue;
       const lower = line.toLowerCase();
@@ -85,6 +89,9 @@ export function readDatasheet(text: string): { values: Partial<Record<DatasheetF
       if (v !== null && v > 0) {
         // Linear coil travel quoted peak-to-peak? Only when explicitly labelled.
         if (p.field === "xmax_mm" && /p-?p|peak.to.peak/i.test(line)) v /= 2;
+        // A converted value ("1.32 ft³" = 37.3782… L) keeps 5 significant figures, more than any
+        // datasheet gives, so the field doesn't show a run of float digits.
+        if (v !== Number(m[1]!.replace(",", "."))) v = Number(v.toPrecision(5));
         out[p.field] = v;
         break;
       }

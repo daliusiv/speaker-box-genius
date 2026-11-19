@@ -13,6 +13,8 @@ export interface Curve {
   f: number[];
   /** dB (spl) or ohms (impedance). */
   v: number[];
+  /** Phase (degrees), only when asked for with `parseCurve(…, { phase: true })` and every row has one. */
+  phase?: number[];
 }
 
 /**
@@ -21,8 +23,8 @@ export interface Curve {
  * a number (headers, "*" comments) are skipped. Impedance values must be positive; SPL
  * values may be anything (relative measurements are often negative).
  */
-export function parseCurve(text: string, kind: CurveKind, minRows = 10): Curve {
-  const rows: [number, number][] = [];
+export function parseCurve(text: string, kind: CurveKind, minRows = 10, opts: { phase?: boolean } = {}): Curve {
+  const rows: [number, number, number?][] = [];
   for (const raw of text.split(/\r?\n/)) {
     const line = raw.trim();
     if (!/^[-+]?\.?\d/.test(line)) continue;
@@ -33,11 +35,13 @@ export function parseCurve(text: string, kind: CurveKind, minRows = 10): Curve {
     const nums = tokens.map((t) => Number(t.trim().replace(",", "."))).filter((x) => Number.isFinite(x));
     if (nums.length < 2 || !(nums[0]! > 0)) continue;
     if (kind === "impedance" && !(nums[1]! > 0)) continue;
-    rows.push([nums[0]!, nums[1]!]);
+    rows.push([nums[0]!, nums[1]!, nums[2]]);
   }
   if (rows.length < minRows) throw new Error(`Couldn't find a ${kind === "spl" ? "frequency response" : "impedance sweep"}: need at least ${minRows} lines of frequency and ${kind === "spl" ? "dB" : "ohms"}`);
   rows.sort((a, b) => a[0] - b[0]);
-  return { f: rows.map((r) => r[0]), v: rows.map((r) => r[1]) };
+  const out: Curve = { f: rows.map((r) => r[0]), v: rows.map((r) => r[1]) };
+  if (opts.phase && rows.every((r) => r[2] !== undefined)) out.phase = rows.map((r) => r[2]!);
+  return out;
 }
 
 /**

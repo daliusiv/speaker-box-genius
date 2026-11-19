@@ -1,0 +1,27 @@
+{
+  "id": "i02",
+  "title": "Infinite baffle, 500 L rear space with default losses (leak not heard), UM15-22",
+  "driver": {
+    "fs": 29,
+    "qms": 2.34,
+    "qes": 1,
+    "vas_l": 96,
+    "re": 4.2,
+    "sd_cm2": 791,
+    "le_mh": 0.7
+  },
+  "box": {
+    "kind": "infinite-baffle",
+    "rear_l": 500
+  },
+  "opts": {},
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

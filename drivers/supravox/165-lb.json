@@ -1,0 +1,35 @@
+{
+  "brand": "Supravox",
+  "model": "165 LB",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 74,
+    "qms": 4.2,
+    "qes": 0.97,
+    "vas_l": 26,
+    "re": 6.5,
+    "sd_cm2": 149.6,
+    "qts": 0.79,
+    "le_mh": 0.26,
+    "bl": 4.15,
+    "mms_g": 5.5,
+    "xmax_mm": 2.5,
+    "pe_w": 35
+  },
+  "physical": {
+    "cutout_mm": 156,
+    "depth_mm": 85
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://supravox.fr/products/165-lb-haut-parleur-large-bande-35w-95db-4-ohms",
+      "retrieved": "2026-11-17",
+      "note": "Values from the technical specifications on Supravox's product pages (supravox.fr), used with Supravox's permission (17 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Supravox's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published nominal impedance 4 Ω is below Re 6.5 Ω, so 8 Ω is estimated from Re."
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "4 L 1 SL",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 4,
+  "ts": {
+    "fs": 108.3,
+    "qms": 3.15,
+    "qes": 0.78,
+    "vas_l": 1.2,
+    "re": 6,
+    "sd_cm2": 44.2,
+    "qts": 0.63,
+    "le_mh": 0.37,
+    "bl": 5.1,
+    "mms_g": 5,
+    "xmax_mm": 2.4,
+    "pe_w": 60
+  },
+  "physical": {
+    "cutout_mm": 90,
+    "depth_mm": 46.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/4-l-1-sl/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

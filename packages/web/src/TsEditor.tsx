@@ -24,6 +24,7 @@ const QUANTITY: Record<TsParam, Quantity> = {
   re: "plain",
   sd_cm2: "area",
   mms_g: "mass",
+  mmd_g: "mass",
   cms_mm_per_n: "compliance",
   bl: "plain",
   rms: "plain",
@@ -38,13 +39,19 @@ const TS_HELP: Record<TsParam, string> = {
   vas_l: "Equivalent compliance volume: the air volume as springy as the suspension. Bigger Vas usually needs a bigger box.",
   re: "DC resistance of the voice coil (measure it with a meter). Lower than the nominal impedance.",
   sd_cm2: "Effective cone area (including about a third of the surround). More area moves more air for the same excursion.",
-  mms_g: "Moving mass: cone, coil and the air load moving with them.",
+  mms_g: "Moving mass: cone, coil and the air load moving with them (both sides). Type Mms or Mmd: the other follows from Sd.",
+  mmd_g: "Moving mass without the air load on the cone (Hornresp's Mmd; some datasheets give this one). Type Mms or Mmd: the other follows from Sd.",
   cms_mm_per_n: "Suspension compliance: how far the cone moves per newton of force. The springier, the higher.",
   bl: "Motor strength: force per amp of coil current (tesla-metres). Higher Bl means more control and efficiency.",
-  rms: "Mechanical resistance: the suspension's losses (kg/s). Goes with Qms.",
+  rms: "Mechanical resistance: the suspension's losses, in kg/s (the same unit as N·s/m or mechanical ohms). Goes with Qms.",
 };
 
-const ORDER: TsParam[] = ["fs", "qts", "qms", "qes", "vas_l", "re", "sd_cm2", "mms_g", "cms_mm_per_n", "bl", "rms"];
+const ORDER: TsParam[] = ["fs", "qts", "qms", "qes", "vas_l", "re", "sd_cm2", "mms_g", "mmd_g", "cms_mm_per_n", "bl", "rms"];
+/** The fields in two groups, two to a row: what datasheets lead with, then the motor and moving parts. */
+const GROUPS: { title: string; params: TsParam[] }[] = [
+  { title: "Small signal", params: ["fs", "qts", "qms", "qes", "vas_l", "sd_cm2"] },
+  { title: "Motor and moving parts", params: ["re", "bl", "mms_g", "mmd_g", "cms_mm_per_n", "rms"] },
+];
 
 function fmt(v: number): string {
   if (v >= 1000) return v.toFixed(0);
@@ -113,39 +120,24 @@ export function TsEditor(props: {
 
   return (
     <div className="ts-editor">
-      <div className="ts-grid">
-        {ORDER.map((p) => (
-          <TsField
-            key={p}
-            param={p}
-            entered={props.entered[p]}
-            derived={solved.source[p] === "derived" ? solved.values[p] : undefined}
-            conflict={warn.some((c) => c.param === p)}
-            onChange={(v) => setParam(p, v)}
-          />
-        ))}
-      </div>
+      {GROUPS.map((g) => (
+        <section key={g.title} className="ts-group" aria-label={g.title}>
+          <h3 className="ts-group-title">{g.title}</h3>
+          <div className="ts-grid">
+            {g.params.map((p) => (
+              <TsField
+                key={p}
+                param={p}
+                entered={props.entered[p]}
+                derived={solved.source[p] === "derived" ? solved.values[p] : undefined}
+                conflict={warn.some((c) => c.param === p)}
+                onChange={(v) => setParam(p, v)}
+              />
+            ))}
+          </div>
+        </section>
+      ))}
 
-      <p className="hint ts-legend">
-        <b>Bold, cyan edge</b> = typed (never changed) · <span className="derived-sample">dashed</span> = calculated. Units like “1.9 ft³” convert.
-      </p>
-
-      {(() => {
-        // Which box the driver suits by the usual rules of thumb (EBP and Qts), before simulating.
-        const v = solved.values;
-        const b = v.fs && v.qes && v.qms ? boxSuits(v.fs, v.qes, v.qms) : null;
-        return b ? (
-          <p className="ts-chips box-suits">
-            <Chip>Box: {b.text}</Chip>
-            <Chip>
-              EBP {b.ebp.toFixed(0)} · Qts {b.qts.toFixed(2)}
-            </Chip>
-            <a href="/guides/sealed-vs-ported/" target="_blank" rel="noopener">
-              Sealed, ported or PR?
-            </a>
-          </p>
-        ) : null;
-      })()}
       {solved.missing.length > 0 && (
         <p className="warn">
           Still needed to simulate: {solved.missing.map((p) => TS_PARAMS[p].label).join(", ")} (or enough other
@@ -216,6 +208,23 @@ export function TsEditor(props: {
           {pasteMsg && <p className="warn">{pasteMsg}</p>}
         </div>
       )}
+      {(() => {
+        // Which box the driver suits by the usual rules of thumb (EBP and Qts), before simulating.
+        const v = solved.values;
+        const b = v.fs && v.qes && v.qms ? boxSuits(v.fs, v.qes, v.qms) : null;
+        return b ? (
+          <p className="ts-chips box-suits">
+            <Chip>Box: {b.text}</Chip>
+            <Chip>
+              EBP {b.ebp.toFixed(0)} · Qts {b.qts.toFixed(2)}
+            </Chip>
+            <a href="/guides/sealed-vs-ported/" target="_blank" rel="noopener">
+              Sealed, ported or PR?
+            </a>
+          </p>
+        ) : null;
+      })()}
+      <p className="hint ts-hint">Type any values from the datasheet in any order; the rest are calculated (dashed boxes). Units like “1.9 ft³” convert; Mmd works in place of Mms.</p>
     </div>
   );
 }
@@ -243,48 +252,46 @@ function TsField(props: {
 
   return (
     <label
-      className={props.conflict ? "conflict" : undefined}
-      data-help={`${TS_HELP[props.param]} Type any values from the datasheet in any order; the rest are calculated (grey).`}
+      className={["ts-cell", props.entered !== undefined ? "typed" : "calculated", props.conflict ? "conflict" : "", bad ? "bad" : ""].filter(Boolean).join(" ")}
+      data-help={`${TS_HELP[props.param]} Type any values from the datasheet in any order; the rest are calculated (dashed).`}
+      data-help-title={meta.label}
     >
-      <span>{meta.label}</span>
-      <span className={`ts-input${props.entered !== undefined ? " has-clear" : ""}`}>
-        <input
-          inputMode="decimal"
-          className={`${props.entered !== undefined ? "entered" : "derived"}${bad ? " bad" : ""}`}
-          value={text}
-          placeholder={props.derived !== undefined ? fmt(props.derived) : "–"}
-          onChange={(e) => {
-            const t = e.currentTarget.value;
-            setText(t);
-            if (t.trim() === "") {
-              setBad(false);
-              props.onChange(undefined);
-              return;
-            }
-            const v = parseQuantity(t, QUANTITY[props.param]);
-            const ok = v !== null && v > 0;
-            setBad(!ok);
-            if (ok) props.onChange(v);
-          }}
-        />
-        {props.entered !== undefined && (
-          <button
-            className="clear"
-            title={`Clear ${meta.label} (let it be calculated)`}
-            aria-label={`Clear ${meta.label}`}
-            // Mouse convenience: keyboard users can simply delete the text, so keep it out of the tab order.
-            tabIndex={-1}
-            // Keep focus in the field: on phones the button only shows while the field has focus,
-            // and moving focus away would hide it before the tap lands.
-            onMouseDown={(e) => e.preventDefault()}
-            onPointerDown={(e) => e.preventDefault()}
-            onClick={() => props.onChange(undefined)}
-          >
-            ×
-          </button>
-        )}
-        {meta.unit && <span className="unit">{meta.unit}</span>}
-      </span>
+      <span className="ts-cell-label">{meta.label}</span>
+      <input
+        inputMode="decimal"
+        value={text}
+        placeholder={props.derived !== undefined ? fmt(props.derived) : "–"}
+        onChange={(e) => {
+          const t = e.currentTarget.value;
+          setText(t);
+          if (t.trim() === "") {
+            setBad(false);
+            props.onChange(undefined);
+            return;
+          }
+          const v = parseQuantity(t, QUANTITY[props.param]);
+          const ok = v !== null && v > 0;
+          setBad(!ok);
+          if (ok) props.onChange(v);
+        }}
+      />
+      {props.entered !== undefined && (
+        <button
+          className="clear"
+          title={`Clear ${meta.label} (let it be calculated)`}
+          aria-label={`Clear ${meta.label}`}
+          // Mouse convenience: keyboard users can simply delete the text, so keep it out of the tab order.
+          tabIndex={-1}
+          // Keep focus in the field: on phones the button only shows while the field has focus,
+          // and moving focus away would hide it before the tap lands.
+          onMouseDown={(e) => e.preventDefault()}
+          onPointerDown={(e) => e.preventDefault()}
+          onClick={() => props.onChange(undefined)}
+        >
+          ×
+        </button>
+      )}
+      <span className="ts-cell-unit">{meta.unit}</span>
     </label>
   );
 }

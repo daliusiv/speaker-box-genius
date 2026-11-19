@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "10 H 2 CS",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 30.3,
+    "qms": 4,
+    "qes": 0.41,
+    "vas_l": 84.3,
+    "re": 6.1,
+    "sd_cm2": 339.8,
+    "qts": 0.37,
+    "le_mh": 1.58,
+    "bl": 12.38,
+    "mms_g": 53.7,
+    "xmax_mm": 6,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 237,
+    "depth_mm": 130.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/10-h-2-cs/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

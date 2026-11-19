@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icon.tsx";
 import { Sheet } from "./Sheet.tsx";
 import { bundle, downloadFile } from "./formats/download.ts";
@@ -6,6 +6,8 @@ import { EXPORT_FORMATS, exportFormat } from "./formats/registry.ts";
 import { GROUPS, safeName, type ExportFormat } from "./formats/types.ts";
 import type { Design } from "./sim.ts";
 import type { AppState } from "./state.ts";
+import { track } from "./telemetry.ts";
+import type { EXPORT_FORMAT_IDS } from "./telemetrySchema.ts";
 
 const MEMORY = "speaker-box-genius.export";
 
@@ -41,12 +43,15 @@ export function ExportWindow(props: {
   designs: Design[];
   shareUrl: () => string;
   notify: (m: string) => void;
+  /** A format with `pick`: the file chosen with its button (the window closes; the app opens what uses it). */
+  onPick?: (formatId: string, file: File) => void;
 }) {
   const { state } = props;
   const [formatId, setFormatId] = useState("json");
   const [opts, setOpts] = useState<Record<string, Record<string, string>>>({});
   const [ids, setIds] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const pickInput = useRef<HTMLInputElement>(null);
 
   const f = exportFormat(formatId) ?? EXPORT_FORMATS[0]!;
   const boxes = state.designs.filter((d) => d.on);
@@ -89,6 +94,7 @@ export function ExportWindow(props: {
     remember(f.id, keep);
     const r = f.run({ state, designs: props.designs, shareUrl: props.shareUrl() }, picked, values);
     if (typeof r === "string") return setError(r);
+    track("export_done", { format: f.id as (typeof EXPORT_FORMAT_IDS)[number] });
     if ("message" in r) {
       props.notify(r.message);
       return props.onClose();
@@ -109,8 +115,8 @@ export function ExportWindow(props: {
       title="Save & Export"
       className="export-window"
       footer={
-        <button type="button" className="sheet-action" onClick={run} disabled={f.scope === "designs" && picked.length === 0}>
-          <Icon name={f.action ? "save" : "download"} />
+        <button type="button" className="sheet-action" onClick={f.pick ? () => pickInput.current?.click() : run} disabled={f.scope === "designs" && picked.length === 0}>
+          <Icon name={f.pick ? "open" : f.action ? "save" : "download"} />
           {label}
         </button>
       }
@@ -143,6 +149,20 @@ export function ExportWindow(props: {
             {f.label} <span className="format-ext">{f.ext}</span>
           </h3>
           <p className="hint">{f.help}</p>
+          {f.detail && <p className="hint">{f.detail(state)}</p>}
+          {f.pick && (
+            <input
+              ref={pickInput}
+              type="file"
+              accept={f.pick.accept}
+              hidden
+              onChange={(e) => {
+                const file = e.currentTarget.files?.[0];
+                e.currentTarget.value = "";
+                if (file) props.onPick?.(f.id, file);
+              }}
+            />
+          )}
 
           {f.scope === "designs" && (
             <fieldset className="box-pick">

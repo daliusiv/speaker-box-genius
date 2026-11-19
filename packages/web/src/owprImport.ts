@@ -1,24 +1,28 @@
-import { DEFAULT_END_CORRECTION, portLengthForFb, type OpenisdBox, type OpenisdDriver, type OpenisdPort, type OpenisdProject } from "@sbg/engine";
+import { DEFAULT_END_CORRECTION, portLengthForFb, type Assumed, type OpenisdBox, type OpenisdDriver, type OpenisdPort, type OpenisdProject } from "@sbg/engine";
+import { driverExtras } from "./importReport.ts";
 import { airOf } from "./sim.ts";
 import { MAX_DESIGNS, newDesign, newId, type AppState, type DesignState, type EqItem, type PortFields } from "./state.ts";
+import { stuffable } from "./stuffing.ts";
 
 const r = (x: number, d = 3) => Number(x.toFixed(d));
 
 /** An OpenISD driver into the driver fields (the rest of the project stays as it is). */
 export function withOpenisdDriver(s: AppState, d: OpenisdDriver, fallbackName: string): AppState {
+  const x = driverExtras(d);
   return {
     ...s,
     driverName: [d.brand, d.model].filter(Boolean).join(" ") || fallbackName,
     driverBrand: d.brand,
-    nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
+    driverOrigin: undefined,
+    nominal_ohms: x.nominal_ohms,
     ts: d.ts,
-    le_mh: d.le_mh ?? 0,
+    le_mh: x.le_mh,
     l2_mh: 0,
     r2_ohm: 0,
     semi: undefined,
     fdd: undefined,
-    xmax_mm: d.xmax_mm ?? s.xmax_mm,
-    pe_w: d.pe_w ?? s.pe_w,
+    xmax_mm: x.xmax_mm,
+    pe_w: x.pe_w,
     dvc: { ...s.dvc, on: false },
     volume: { ...s.volume, driverCutout_mm: 0, driverDepth_mm: 0 },
   };
@@ -99,7 +103,7 @@ function designFor(box: OpenisdBox, s: AppState, name: string): DesignState | nu
  * new design and the filters we have. Returns the state and plain-words notes on what changed or
  * couldn't come across.
  */
-export function applyOwpr(s0: AppState, p: OpenisdProject, fileName: string): { state: AppState; notes: string[] } {
+export function applyOwpr(s0: AppState, p: OpenisdProject, fileName: string): { state: AppState; notes: string[]; assumed: Assumed[] } {
   const notes: string[] = [];
   const base = fileName.replace(/\.owpr$/i, "");
   let s = withOpenisdDriver(s0, p.driver, p.name || base);
@@ -148,10 +152,15 @@ export function applyOwpr(s0: AppState, p: OpenisdProject, fileName: string): { 
   const skipped = p.unsupportedFilters + Math.max(0, extraHp);
   if (skipped > 0) notes.push(`${skipped} filter${skipped > 1 ? "s" : ""} couldn't be brought across; add ${skipped > 1 ? "them" : "it"} by hand.`);
   if (p.box) {
-    const design = designFor(p.box, s, `OpenISD: ${p.name || base}`);
+    let design = designFor(p.box, s, `OpenISD: ${p.name || base}`);
+    if (design && s.designs.length < MAX_DESIGNS && stuffable(design.kind)) {
+      // The box keeps the project's leakage as its own Ql; Settings' Ql stays as it was.
+      if (losses.ql !== s0.settings.losses.ql) design = { ...design, ql: losses.ql };
+      s = { ...s, settings: { ...s.settings, losses: { ...s.settings.losses, ql: s0.settings.losses.ql } } };
+    }
     if (design && s.designs.length < MAX_DESIGNS) s = { ...s, designs: [...s.designs, design] };
     else if (design) notes.push(`There are already ${MAX_DESIGNS} boxes, so the project's box wasn't added.`);
   } else notes.push("The project's box type isn't supported yet, so only the driver was imported.");
   if (p.drivers > 1) notes.push(`${p.drivers} drivers wired in ${p.wiring}.`);
-  return { state: s, notes };
+  return { state: s, notes, assumed: [...driverExtras(p.driver).assumed, ...(p.box ? p.assumed : [])] };
 }

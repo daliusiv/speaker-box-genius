@@ -20,6 +20,7 @@ export const TS_PARAMS = {
   re: { label: "Re", unit: "Ω", si: 1 },
   sd_cm2: { label: "Sd", unit: "cm²", si: 1e-4 },
   mms_g: { label: "Mms", unit: "g", si: 1e-3 },
+  mmd_g: { label: "Mmd", unit: "g", si: 1e-3 },
   cms_mm_per_n: { label: "Cms", unit: "mm/N", si: 1e-3 },
   bl: { label: "Bl", unit: "T·m", si: 1 },
   rms: { label: "Rms", unit: "kg/s", si: 1 },
@@ -42,9 +43,11 @@ interface Relation {
    * Qts itself is checked in that relation.
    */
   check?: TsParam[];
-  /** Solve for one variable given all the others (SI units). */
-  /** k = ρc² (air stiffness), needed by the Vas relation. */
-  solve: (v: Required<SiValues>, target: TsParam, k: number) => number;
+  /**
+   * Solve for one variable given all the others (SI units). k = ρc² (air stiffness), needed by
+   * the Vas relation; rho by the air-load relation. NaN: not solved for that variable.
+   */
+  solve: (v: Required<SiValues>, target: TsParam, k: number, rho: number) => number;
 }
 
 const tau = 2 * Math.PI;
@@ -111,6 +114,18 @@ const RELATIONS: Relation[] = [
       }
     },
   },
+  {
+    // Mmd (Hornresp, some datasheets) is the moving mass without the air load on either side of
+    // the cone: a piston in an infinite baffle carries 8ρa³/3 per side.
+    name: "Mms = Mmd + 16ρa³/3",
+    vars: ["mms_g", "mmd_g", "sd_cm2"],
+    // The air load is a few % of Mms: never back-solve or blame Sd from the difference.
+    check: ["mms_g", "mmd_g"],
+    solve: (v, t, _K, rho) => {
+      const air = (16 * rho * (v.sd_cm2 / Math.PI) ** 1.5) / 3;
+      return t === "mms_g" ? v.mmd_g + air : t === "mmd_g" ? v.mms_g - air : NaN;
+    },
+  },
 ];
 
 export interface Conflict {
@@ -161,7 +176,7 @@ export function solveTs(entered: TsValues, tolerance = 0.03, air: Air = STANDARD
       const unknown = r.vars.filter((p) => si[p] === undefined);
       if (unknown.length !== 1) continue;
       const t = unknown[0]!;
-      const val = r.solve(si as Required<SiValues>, t, K);
+      const val = r.solve(si as Required<SiValues>, t, K, air.rho);
       if (Number.isFinite(val) && val > 0) {
         si[t] = val;
         source[t] = "derived";
@@ -182,7 +197,7 @@ export function solveTs(entered: TsValues, tolerance = 0.03, air: Air = STANDARD
       // Solving this relation for p holds the others fixed, which is meaningless when one of them
       // was itself calculated from p (e.g. Mms from Fs, then Fs back from Qes = 2π·Fs·Mms·Re/Bl²).
       if (r.vars.some((q) => q !== p && deps[q]!.has(p))) continue;
-      const implied = r.solve(si as Required<SiValues>, p, K);
+      const implied = r.solve(si as Required<SiValues>, p, K, air.rho);
       const actual = si[p]!;
       const diff = Math.abs(actual - implied) / implied;
       if (!(diff > tolerance)) continue;

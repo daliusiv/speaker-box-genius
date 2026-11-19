@@ -87,6 +87,21 @@ const AIR_VISCOSITY = 1.81e-5;
 
 export type PowerConvention = "re" | "nominal" | "volts";
 
+type AmpLimit = "volts" | "amps" | "watts";
+
+/** What sets the maximum SPL at a frequency (see SimulationResult.limitedBy). */
+export type LimitKind = "thermal" | "xmax" | "pr-xmax" | "port" | "amp" | "air" | "none";
+
+/**
+ * Whether a limit holds the signal's peaks or its average (RMS) power. Excursion, port speed,
+ * air distortion and the amplifier's volts and current follow the waveform, so a signal with a
+ * higher crest factor meets them sooner; the driver's power rating and the amplifier's power
+ * rating hold its average.
+ */
+export function limitSide(kind: LimitKind, amp: AmpLimit | null = null): "peak" | "avg" {
+  return kind === "thermal" || (kind === "amp" && amp === "watts") ? "avg" : "peak";
+}
+
 export interface SimulationOptions {
   /** Input power in watts (or volts if convention is "volts"). Default 1. */
   power?: number;
@@ -116,8 +131,12 @@ export interface SimulationOptions {
    * default 0.732, one end flanged and one free, like WinISD.
    */
   endCorrection?: number;
-  /** Amplifier limits for the max-SPL curve: RMS volts and amps at its output. */
-  amp?: { volts?: number; amps?: number } | null;
+  /**
+   * Amplifier limits for the max-SPL curve, at its output: RMS volts, RMS amps and its maximum
+   * output power (W, RMS) into whatever the speaker's impedance is at each frequency. Each is a
+   * separate ceiling (rail, output stage, supply); the lowest applies.
+   */
+  amp?: { volts?: number; amps?: number; watts?: number } | null;
   /** Port air velocity limit (m/s, peak) used for the max-SPL curve. Default 17. */
   portVelocityLimit?: number;
   /** Electrical high-pass filter ahead of the amplifier (e.g. a subsonic filter). */
@@ -247,6 +266,38 @@ export function isobaricPair(d: ReturnType<typeof driverModel>, coils: "series" 
   };
 }
 
+/** How a cone or passive radiator moves (peak values, per radiator), from its peak excursion. */
+export interface Motion {
+  /** Peak velocity (m/s): ω·x. */
+  velocity_ms: Float64Array;
+  /** Peak acceleration (m/s²): ω²·x. */
+  accel_ms2: Float64Array;
+  /**
+   * Peak force (N) of the moving mass: M·a, with M = Mms (air load included) for a cone or
+   * Mmp (added mass included) for a passive radiator, as VituixCAD's peak force. It is the force
+   * each radiator pushes into the box; how several of them add up on the cabinet isn't modelled here.
+   */
+  forceN: Float64Array;
+  /** The moving mass the force is taken with (kg). */
+  mass_kg: number;
+}
+
+/** Velocity, acceleration and force (M·a) from a peak excursion curve (mm) and the moving mass (kg). */
+export function motionOf(freq: ArrayLike<number>, xMm: ArrayLike<number>, massKg: number): Motion {
+  const n = freq.length;
+  const v = new Float64Array(n);
+  const a = new Float64Array(n);
+  const f = new Float64Array(n);
+  for (let i = 0; i < freq.length; i++) {
+    const w = 2 * Math.PI * freq[i]!;
+    const x = xMm[i]! / 1000;
+    v[i] = w * x;
+    a[i] = w * w * x;
+    f[i] = massKg * a[i]!;
+  }
+  return { velocity_ms: v, accel_ms2: a, forceN: f, mass_kg: massKg };
+}
+
 export interface SimulationResult {
   freq: Float64Array;
   /** Sound pressure level (dB SPL) at the given input power and distance. */
@@ -260,10 +311,12 @@ export interface SimulationResult {
   acousticImpedance: { resistance: Float64Array; reactance: Float64Array; area_cm2: number } | null;
   /** Peak one-way cone excursion per driver (mm). */
   excursionMm: Float64Array;
+  /** Peak cone velocity, acceleration and force (Mms·a) per driver, from excursionMm. Isobaric: the pair. */
+  coneMotion: Motion;
   /** Peak one-way excursion per passive radiator (mm), PR designs only. With mixed PRs: the first group. */
   prExcursionMm: Float64Array | null;
-  /** PR designs: excursion of each group of identical PRs, with its Xmax (mm). Group 0 = prExcursionMm. */
-  prGroups: { excursionMm: Float64Array; xmax_mm: number | null; chamber?: "front" | "rear" }[] | null;
+  /** PR designs: excursion of each group of identical PRs, with its Xmax (mm) and its motion (per PR). Group 0 = prExcursionMm. */
+  prGroups: { excursionMm: Float64Array; xmax_mm: number | null; chamber?: "front" | "rear"; motion: Motion }[] | null;
   /** Peak air velocity per port (m/s), vented designs only. For bandpass: the front chamber's port (null if it has PRs). */
   portVelocity: Float64Array | null;
   /** Bandpass only: peak air velocity in the rear chamber's port (to the outside, or into the front chamber). */
@@ -296,7 +349,17 @@ export interface SimulationResult {
    */
   ampAtMax: { volts: Float64Array; amps: Float64Array; watts: Float64Array };
   /** Which limit sets maxPower at each frequency. */
-  limitedBy: ("thermal" | "xmax" | "pr-xmax" | "port" | "amp" | "air" | "none")[];
+  limitedBy: LimitKind[];
+  /** Where limitedBy is "amp": which of the amplifier's limits it is (ties go volts, then amps, then watts); else null. */
+  ampLimitBy: ("volts" | "amps" | "watts" | null)[];
+  /**
+   * maxSpl split into two sine-equivalent SPL ceilings (dB): the lowest of the limits that hold
+   * the signal's average power (the driver's and the amplifier's power ratings) and the lowest of
+   * those that hold its peaks (excursion, port speed, air distortion, amplifier volts and current).
+   * maxSpl = min(avgSpl, peakSpl). +Infinity and "none" where a side has no limit. A signal with
+   * crest factor C reaches min(avgSpl, peakSpl − (C − 3.01)) on average (programEnvelope).
+   */
+  ceilings: { avgSpl: Float64Array; avgKind: LimitKind[]; peakSpl: Float64Array; peakKind: LimitKind[] };
   /**
    * With `airDistortion`: the air's own 2nd harmonic (%) against the fundamental at this
    * frequency, at the input power (airHd2) and at maxPowerW (airHd2AtMax). Boxes: the box air
@@ -377,8 +440,15 @@ export function voltsPerRootWatt(driverIn: DriverInput, opts: Pick<SimulationOpt
   return Math.sqrt((reVolts * (hotBank + rg)) / hotBank);
 }
 
-export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: SimulationOptions = {}): SimulationResult {
+export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: SimulationOptions = {}): SimulationResult {
   const air = opts.air ?? STANDARD_AIR;
+  // An infinite baffle is a sealed box whose rear space isn't the room: its leak is never heard.
+  // An open rear (or a sealed box of infinite volume) has no box at all: no air spring, no losses.
+  const ib = boxIn.kind === "infinite-baffle";
+  const asSealed = ib ? { kind: "sealed" as const, vb_l: boxIn.rear_l ?? Infinity, ql: boxIn.ql, qa: boxIn.qa } : boxIn;
+  const openRear = asSealed.kind === "sealed" && !Number.isFinite(asSealed.vb_l) && asSealed.vb_l > 0;
+  const box: Exclude<EnclosureInput, { kind: "infinite-baffle" }> = openRear ? { kind: "sealed", vb_l: Infinity, ql: Infinity, qa: Infinity } : asSealed;
+  const leakAbsorbed = opts.leakage === "absorbed" || ib;
   const base = driverModel(driverIn, air);
   const cold = opts.isobaric ? isobaricPair(base, opts.isobaric.coils) : base;
   // A hot voice coil: Re rises, Bl doesn't, so Qes rises and the same voltage drives less current.
@@ -439,9 +509,12 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   // line adds the front's radiation load (a piston in a baffle); the rear's is in the line's load.
   // Cone loaded by a piston's radiation impedance: Mms less one side's air (8ρa³/3), as for lines.
   const pistonLoad = opts.coneLoad === "piston" && !bp && !line;
-  const boxMms = pistonLoad ? Math.max(d.mms - (8 * air.rho * Math.pow(d.sd / Math.PI, 1.5)) / 3, d.mms * 0.05) : d.mms;
+  // An open rear (infinite baffle) radiates from the cone's back too: both sides' air comes out of
+  // Mms and each face gets a baffled piston's load.
+  const pistonFaces = pistonLoad && openRear ? 2 : 1;
+  const boxMms = pistonLoad ? Math.max(d.mms - (pistonFaces * 8 * air.rho * Math.pow(d.sd / Math.PI, 1.5)) / 3, d.mms * 0.05) : d.mms;
   // The moving mass in the bass with a piston load: n cones side by side carry √n × one cone's front air.
-  const mLow = pistonLoad ? boxMms + (Math.sqrt(n) * 8 * air.rho * Math.pow(d.sd / Math.PI, 1.5)) / 3 : d.mms;
+  const mLow = pistonLoad ? boxMms + (pistonFaces * Math.sqrt(n) * 8 * air.rho * Math.pow(d.sd / Math.PI, 1.5)) / 3 : d.mms;
   const lineMmd = line ? Math.max(d.mms - (16 * air.rho * Math.pow(d.sd / Math.PI, 1.5)) / 3, d.mms * 0.05) : 0;
   // Port compression in a mass-loaded line's port (same model as vented boxes).
   let lineNl = 0;
@@ -548,7 +621,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
   let cAbs = cab;
   if (single?.kind === "sealed") {
     const cas = n * d.cms * d.sd * d.sd;
-    cAbs = (cab * cas) / (cab + cas);
+    cAbs = Number.isFinite(cab) ? (cab * cas) / (cab + cas) : cas;
   } else if (single?.kind === "passive-radiator" && prModels) {
     let cap = 0;
     for (const g of prModels) cap += g.count * g.m.cmp * g.m.sd * g.m.sd;
@@ -599,6 +672,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     zaX: line ? new Float64Array(N) : null,
   };
   const limitedBy: SimulationResult["limitedBy"] = [];
+  const ampLimitBy: SimulationResult["ampLimitBy"] = [];
+  const ceilings: SimulationResult["ceilings"] = { avgSpl: new Float64Array(N), avgKind: [], peakSpl: new Float64Array(N), peakKind: [] };
   const unwrapped = new Float64Array(N);
   const sd2 = d.sd * d.sd;
   // The cone's side of the circuit (per driver, acoustic units): the coil through its source, and the suspension.
@@ -610,7 +685,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     const zae = div(cx((d.bl * d.bl) / sd2), ze);
     const susp = suspensionImpedance(d, w);
     let zas = cx(susp.re / sd2, (w * boxMms + susp.im) / sd2);
-    if (pistonLoad) zas = add(zas, scale(baffledPistonImpedance(n * d.sd, w, air), n));
+    if (pistonLoad) zas = add(zas, scale(baffledPistonImpedance(n * d.sd, w, air), n * pistonFaces));
     return { zvc, th, ze, zae, zas };
   };
   // All the cones as one passive branch, the amplifier silent: for the air's 2nd harmonic.
@@ -756,7 +831,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       const zLeak = Number.isFinite(ral) ? cx(ral) : null;
       let zVent = ventZ ? ventZ(w) : null;
       const solve = () => {
-        const zl = parallel(zAir, zLeak, zVent)!;
+        const zl = openRear ? cx(0) : parallel(zAir, zLeak, zVent)!;
         // N identical drivers into one load: each driver sees N × the load impedance.
         const zm = add(zas, scale(zl, n)); // per driver, acoustic units
         const u = div(pg, add(zae, zm));
@@ -790,9 +865,10 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
       out.pbox![i] = Math.SQRT2 * abs(pBox);
 
       // Radiated volume velocity = −(flow into the box air spring).
-      u0 = scale(div(pBox, zAir), -1);
-      // Leakage as a pure loss (like Hornresp): the air leaving through it isn't heard.
-      if (opts.leakage === "absorbed" && Number.isFinite(ral)) u0 = sub(u0, scale(pBox, 1 / ral));
+      // An open rear: nothing behind the cone, so the room gets the cones' front flow.
+      u0 = openRear ? scale(sol.u, -n) : scale(div(pBox, zAir), -1);
+      // Leakage as a pure loss (like Hornresp; always for an infinite baffle's rear space): the air leaving through it isn't heard.
+      if (leakAbsorbed && Number.isFinite(ral)) u0 = sub(u0, scale(pBox, 1 / ral));
       // A port as a pipe: what leaves its outer end differs from what enters from the box.
       let pipeOutEach: Complex | null = null;
       if (ventPipe && zVent) {
@@ -816,7 +892,11 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         u0 = combineAtDistance(cone, vent, ventDist, w, air.c, pathMode);
       }
 
-      if (out.airC) {
+      if (out.airC && openRear) {
+        // No air spring behind the cone: no box air to distort.
+        airHd2Now = 0;
+        out.airC[i] = 0;
+      } else if (out.airC) {
         // The air's 2nd harmonic: a pressure source in series with the air spring, at 2ω, amplifier silent.
         const s1 = scale(pBox, Math.SQRT2 / rhoC2); // peak compression ΔV/Vb (phasor)
         const pnl = scale(mul(s1, s1), airK);
@@ -827,7 +907,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         const zVent2 = ventPortZ && rNlNow > 0 ? scale(add(ventPortZ(w2), cx(rNlNow)), 1 / ventCount) : ventZ ? ventZ(w2) : null;
         const pNode = mul(div(pnl, zAir2), parallel(zAir2, zLeak, zVent2, zd)!);
         let u2 = scale(div(sub(pNode, pnl), zAir2), -1);
-        if (opts.leakage === "absorbed" && Number.isFinite(ral)) u2 = sub(u2, scale(pNode, 1 / ral));
+        if (leakAbsorbed && Number.isFinite(ral)) u2 = sub(u2, scale(pNode, 1 / ral));
         if (ventPipe && zVent2) u2 = add(u2, mul(div(pNode, zVent2), sub(ventPipe(w2).outPerIn, cx(1))));
         if (opts.splFrom === "power" || ventDist > 0) {
           let cone = div(pNode, zd);
@@ -891,7 +971,7 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     out.zph[i] = (arg(zIn) * 180) / Math.PI;
 
     // Power limits: SPL ∝ V², excursion and velocity ∝ V.
-    const limits: [SimulationResult["limitedBy"][number], number][] = [];
+    const limits: [SimulationResult["limitedBy"][number], number, AmpLimit?][] = [];
     // The amplifier's output now, through the filter and EQ, into the bank plus the source resistance.
     const zAmpNow = add(zIn, cx(rgTotal));
     const vAmpNow = ampVolts * Math.sqrt(filterGain2);
@@ -907,8 +987,13 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
         limits.push(["thermal", (d.pe * n * thermalScale) / Math.max(filterGain2 * gNet, 1e-12)]);
       }
     }
-    if (opts.amp?.volts && vAmpNow > 0) limits.push(["amp", pNow * (opts.amp.volts / vAmpNow) ** 2]);
-    if (opts.amp?.amps && vAmpNow > 0) limits.push(["amp", pNow * (opts.amp.amps / (vAmpNow / abs(zAmpNow))) ** 2]);
+    if (opts.amp?.volts && vAmpNow > 0) limits.push(["amp", pNow * (opts.amp.volts / vAmpNow) ** 2, "volts"]);
+    if (opts.amp?.amps && vAmpNow > 0) limits.push(["amp", pNow * (opts.amp.amps / (vAmpNow / abs(zAmpNow))) ** 2, "amps"]);
+    // Output power: real power into the bank and the source resistance, I² · Re(Z), which grows with V².
+    if (opts.amp?.watts && vAmpNow > 0 && zAmpNow.re > 0) {
+      const iNow = vAmpNow / abs(zAmpNow);
+      limits.push(["amp", pNow * (opts.amp.watts / (iNow * iNow * zAmpNow.re)), "watts"]);
+    }
     if (d.xmax !== null) limits.push(["xmax", pNow * (d.xmax / x) ** 2]);
     if (prModels || out.xprGroups) {
       if (Number.isFinite(prLimitPower)) limits.push(["pr-xmax", prLimitPower]);
@@ -917,9 +1002,22 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     if (out.airHd2) out.airHd2[i] = airHd2Now;
     // HD2 grows with the drive's amplitude (∝ √power).
     if (airOpt?.limit && airHd2Now > 0) limits.push(["air", pNow * ((airOpt.threshold * 100) / airHd2Now) ** 2]);
-    let best: [SimulationResult["limitedBy"][number], number] = ["none", Infinity];
-    for (const l of limits) if (l[1] < best[1]) best = l;
+    let best: [SimulationResult["limitedBy"][number], number, AmpLimit?] = ["none", Infinity];
+    let bestAvg: [LimitKind, number] = ["none", Infinity];
+    let bestPeak: [LimitKind, number] = ["none", Infinity];
+    for (const l of limits) {
+      if (l[1] < best[1]) best = l;
+      if (limitSide(l[0], l[2] ?? null) === "avg") {
+        if (l[1] < bestAvg[1]) bestAvg = [l[0], l[1]];
+      } else if (l[1] < bestPeak[1]) bestPeak = [l[0], l[1]];
+    }
     limitedBy.push(best[0]);
+    ampLimitBy.push(best[0] === "amp" ? (best[2] ?? null) : null);
+    // The same sum as splmax below, per side, so min(avgSpl, peakSpl) is maxSpl exactly.
+    ceilings.avgKind.push(bestAvg[0]);
+    ceilings.peakKind.push(bestPeak[0]);
+    ceilings.avgSpl[i] = Number.isFinite(bestAvg[1]) ? out.spl[i]! + 10 * Math.log10(bestAvg[1] / pNow) : Infinity;
+    ceilings.peakSpl[i] = Number.isFinite(bestPeak[1]) ? out.spl[i]! + 10 * Math.log10(bestPeak[1] / pNow) : Infinity;
     out.pmax[i] = best[1];
     out.splmax[i] = Number.isFinite(best[1]) ? out.spl[i]! + 10 * Math.log10(best[1] / pNow) : NaN;
     if (out.airMax) out.airMax[i] = Number.isFinite(best[1]) ? airHd2Now * Math.sqrt(best[1] / pNow) : NaN;
@@ -1029,14 +1127,15 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     groupDelayMs: out.gd,
     acousticImpedance: line ? { resistance: out.zaR!, reactance: out.zaX!, area_cm2: ((air.rho * air.c) / line.zaRef) * 1e4 } : null,
     excursionMm: out.x,
+    coneMotion: motionOf(freq, out.x, d.mms),
     prExcursionMm: out.xpr,
     prGroups: prModels
-      ? prModels.map((g, k) => ({ excursionMm: out.xprGroups![k]!, xmax_mm: g.m.xmax === null ? null : g.m.xmax * 1000 }))
+      ? prModels.map((g, k) => ({ excursionMm: out.xprGroups![k]!, xmax_mm: g.m.xmax === null ? null : g.m.xmax * 1000, motion: motionOf(freq, out.xprGroups![k]!, g.m.mmp) }))
       : bp && out.xprGroups
         ? [
             ...bp.frontPrs.map((g) => ({ chamber: "front" as const, g })),
             ...bp.rearPrs.map((g) => ({ chamber: "rear" as const, g })),
-          ].map(({ chamber, g }, k) => ({ chamber, excursionMm: out.xprGroups![k]!, xmax_mm: g.m.xmax === null ? null : g.m.xmax * 1000 }))
+          ].map(({ chamber, g }, k) => ({ chamber, excursionMm: out.xprGroups![k]!, xmax_mm: g.m.xmax === null ? null : g.m.xmax * 1000, motion: motionOf(freq, out.xprGroups![k]!, g.m.mmp) }))
         : null,
     portVelocity: out.vport,
     rearPortVelocity: out.vport2,
@@ -1050,6 +1149,8 @@ export function simulate(driverIn: DriverInput, box: EnclosureInput, opts: Simul
     maxSpl: out.splmax,
     ampAtMax: { volts: out.ampV, amps: out.ampI, watts: out.ampW },
     limitedBy,
+    ampLimitBy,
+    ceilings,
     airHd2: out.airHd2,
     airHd2AtMax: out.airMax,
     airModel: airOpt ? (line ? "path" : "spring") : null,

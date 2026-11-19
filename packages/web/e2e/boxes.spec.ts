@@ -25,7 +25,7 @@ test("Boxes: top row is + Box, Size all and fold all; + Box lists the kinds", as
   await expect(top.getByRole("button", { name: "Add a box" })).toBeVisible();
   await expect(top.getByRole("button", { name: /Size all/ })).toBeVisible();
   await top.getByRole("button", { name: "Add a box" }).click();
-  await expect(page.getByRole("menu", { name: "Box type" }).getByRole("menuitem")).toHaveText(["Sealed", "Ported", "Passive radiators", "Bandpass", "Transmission line"]);
+  await expect(page.getByRole("menu", { name: "Box type" }).getByRole("menuitem")).toHaveText(["Sealed", "Ported", "Passive radiators", "Bandpass", "Transmission line", "Infinite baffle"]);
   await page.keyboard.press("Escape");
   await top.getByRole("button", { name: "Fold all boxes" }).click();
   await expect(page.locator("#panel-boxes .bx-body")).toHaveCount(0);

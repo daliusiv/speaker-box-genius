@@ -125,6 +125,8 @@ function boxDesign(input: EnclosureInput, name: string): { design: DesignState; 
   switch (input.kind) {
     case "sealed":
       return { design: { ...newDesign("sealed", []), name, vb_l: input.vb_l }, losses };
+    case "infinite-baffle":
+      return { design: { ...newDesign("ib", []), name, ...(input.rear_l ? { rear: "space" as const, vb_l: input.rear_l } : { rear: "open" as const }) }, losses };
     case "vented": {
       const v = newDesign("vented", []) as VentedDesign;
       return { design: { ...v, ...portFields(input.port, input.portCount ?? 1, v), name, vb_l: input.vb_l, targetFb: v.targetFb, ...at }, losses };
@@ -202,6 +204,7 @@ export function hornrespBoxState(id: string): AppState | null {
     wiring: c.wiring ?? "parallel",
     highPass: c.highPass ? { on: true, type: c.highPass.type, order: c.highPass.order, freq: c.highPass.freq } : { ...EMPTY.highPass, on: false },
     eq: (c.eq ?? []).map((e, i) => ({ ...e, id: `e${i + 1}`, on: true, target: "all" })),
+    passive: c.passive ? { on: true, branches: [0, 1, 2, 3].map((i) => ({ ...(c.passive!.branches[i] ?? {}) })) } : EMPTY.passive,
     settings: {
       ...EMPTY.settings,
       air: "hornresp",

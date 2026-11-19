@@ -70,6 +70,8 @@ export function Num(props: {
   none?: { text: string; at: number };
   /** Inside <KitFields>: an icon before the label (a part's schematic symbol), with this name as its title. */
   icon?: { name: IconName; title: string };
+  /** Inside <KitFields>: one line under the field (a conversion or consequence of the value). */
+  hint?: ReactNode;
 }) {
   const units = useUnits();
   const u = props.q ? units.unit(props.q) : { unit: props.unit ?? "", k: 1 };
@@ -124,6 +126,7 @@ export function Num(props: {
           {input}
           {u.unit && <span className="ui-number-unit">{u.unit}</span>}
         </span>
+        {props.hint && <p className="ui-field-hint">{props.hint}</p>}
       </div>
     );
   return (
@@ -293,5 +296,31 @@ export function InfoPopover(props: { label: string; children: ReactNode }) {
         </div>
       )}
     </span>
+  );
+}
+
+/**
+ * Something the page is waiting for: what it's doing, n / N, a bar and a stop button (keeps what it
+ * found so far, where it can). Without a total (a single search, a file loading) the bar just moves.
+ */
+export function JobProgress(props: { label: string; done: number; total: number; onStop?: () => void; stopTitle?: string; children?: ReactNode }) {
+  return (
+    <div className="finder-progress" role="status">
+      <div className="finder-progress-text">
+        <span>{props.label}…</span>
+        {props.total > 0 && (
+          <span className="muted">
+            {props.done} / {props.total}
+          </span>
+        )}
+      </div>
+      {props.total > 0 ? <progress value={props.done} max={props.total} aria-label={props.label} /> : <progress aria-label={props.label} />}
+      {props.children}
+      {props.onStop && (
+        <button type="button" className="icon" onClick={props.onStop} aria-label="Stop" title={props.stopTitle ?? "Stop (keeps the results so far)"}>
+          ✕
+        </button>
+      )}
+    </div>
   );
 }

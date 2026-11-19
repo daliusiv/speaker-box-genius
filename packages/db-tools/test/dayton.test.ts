@@ -45,7 +45,7 @@ test("unit parsing", () => {
 test("category page: product links", () => {
   const links = parseCategory(fx("category-121.html"));
   assert.equal(links.length, 20);
-  assert.ok(links.includes("https://www.daytonaudio.com/product/1792/mx12-22-12-max-x-high-excursion-dvc-subwoofer-2-ohms-per-coil"));
+  assert.ok(new Set(links).has("https://www.daytonaudio.com/product/1792/mx12-22-12-max-x-high-excursion-dvc-subwoofer-2-ohms-per-coil"));
 });
 
 test("product page: RSS315HF-4, with its wrong Bl dropped", () => {

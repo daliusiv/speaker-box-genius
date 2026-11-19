@@ -1,0 +1,37 @@
+{
+  "brand": "Memphis Audio",
+  "model": "SRX1044V",
+  "type": "car-audio",
+  "nominal_ohms": 2,
+  "voice_coils": 2,
+  "ts_wiring": "parallel",
+  "size_in": 10,
+  "ts": {
+    "fs": 35,
+    "qms": 4.22,
+    "qes": 0.83,
+    "vas_l": 31.006896,
+    "re": 1.64,
+    "sd_cm2": 363.03,
+    "qts": 0.69,
+    "bl": 7.36,
+    "mms_g": 124.5,
+    "xmax_mm": 9.4996,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 232.918,
+    "depth_mm": 113.792,
+    "displacement_l": 1.416
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.memphiscaraudio.com/product/srx1044v/",
+      "retrieved": "2026-11-16",
+      "note": "Values from Memphis Audio's spec sheets (PDF supplied 16 Nov 2026), used with Memphis Audio's permission (16 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Memphis Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Re 1.64 Ω calculated from the published Qes, Bl and Mms (not listed by the maker). The sheet's DCR (3.3 Ω) is per coil; two in parallel give about 1.65 Ω, which matches."
+}

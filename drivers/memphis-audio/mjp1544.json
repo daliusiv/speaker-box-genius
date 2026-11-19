@@ -1,0 +1,36 @@
+{
+  "brand": "Memphis Audio",
+  "model": "MJP1544",
+  "type": "car-audio",
+  "nominal_ohms": 2,
+  "voice_coils": 2,
+  "ts_wiring": "parallel",
+  "size_in": 15,
+  "ts": {
+    "fs": 31.2,
+    "qms": 6.558,
+    "qes": 0.727,
+    "vas_l": 82.968224,
+    "re": 1.75,
+    "sd_cm2": 829.58,
+    "qts": 0.65,
+    "bl": 12,
+    "mms_g": 305.92,
+    "xmax_mm": 12.954,
+    "pe_w": 750
+  },
+  "physical": {
+    "cutout_mm": 351.536,
+    "depth_mm": 200.152,
+    "displacement_l": 8.212
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.memphiscaraudio.com/product/mjp1544/",
+      "retrieved": "2026-11-16",
+      "note": "Values from Memphis Audio's spec sheets (PDF supplied 16 Nov 2026), used with Memphis Audio's permission (16 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Memphis Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

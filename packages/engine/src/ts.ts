@@ -28,6 +28,14 @@ export function cmsFromVas(vas_l: number, sd_cm2: number, air: Air = STANDARD_AI
   return vas / (air.rho * air.c * air.c * sd * sd);
 }
 
+/**
+ * A passive radiator's free-air resonance Fp (Hz) from its Mmp (g), Vap (L) and Sdp (cm²):
+ * 1 / (2π·√(Mmp·Cmp)). WinISD stores a PR as this Fs and Vas. NaN while a value is missing.
+ */
+export function prFreeAirFs(pr: { mms_g: number; vas_l: number; sd_cm2: number }, air: Air = STANDARD_AIR): number {
+  return 1 / (2 * Math.PI * Math.sqrt((pr.mms_g / 1000) * cmsFromVas(pr.vas_l, pr.sd_cm2, air)));
+}
+
 /** Moving mass Mms (kg) from fs and Cms. */
 export function mmsFromFsCms(fs: number, cms: number): number {
   const w = 2 * Math.PI * fs;

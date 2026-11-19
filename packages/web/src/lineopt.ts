@@ -221,11 +221,29 @@ const DENSITIES = [4, 8, 12];
  * The caller retunes the length afterwards.
  */
 export function bestLine(driver: DriverInput, d: LineDesign, sim: SimulationOptions, goal: LineGoal, wall_mm = 18): LineBest | null {
+  const steps = bestLineSteps(driver, d, sim, goal, wall_mm);
+  for (;;) {
+    const n = steps.next();
+    if (n.done) return n.value;
+  }
+}
+
+/** bestLine, one combination per yield ({ done, total }, starting at 0); the result is the return value. */
+export function* bestLineSteps(
+  driver: DriverInput,
+  d: LineDesign,
+  sim: SimulationOptions,
+  goal: LineGoal,
+  wall_mm = 18,
+): Generator<{ done: number; total: number }, LineBest | null> {
   const L = lineLength(d);
   const positions = d.end === "tapped" ? [d.driverAt_cm / L] : POSITIONS;
   const fills: { k: number; dens: number }[] = [{ k: 0, dens: 0 }];
   for (let k = 1; k <= d.sections.length; k++) for (const dens of DENSITIES) fills.push({ k, dens });
   const tried: { design: LineDesign; score: LineScore; pos: number; fill: { k: number; dens: number } }[] = [];
+  const total = positions.length * fills.length;
+  let done = 0;
+  yield { done, total };
   for (const pos of positions) {
     for (const fill of fills) {
       const design: LineDesign = {
@@ -234,9 +252,11 @@ export function bestLine(driver: DriverInput, d: LineDesign, sim: SimulationOpti
         sections: d.sections.map((x, i) => ({ ...x, fill_kgm3: i < fill.k ? fill.dens : 0 })),
       };
       // A tapped horn's front tap must stay ahead of the rear.
-      if (design.end === "tapped" && design.tapAt_cm <= design.driverAt_cm) continue;
-      const score = scoreLine(driver, design, sim, wall_mm);
-      if (score) tried.push({ design, score, pos, fill });
+      if (design.end !== "tapped" || design.tapAt_cm > design.driverAt_cm) {
+        const score = scoreLine(driver, design, sim, wall_mm);
+        if (score) tried.push({ design, score, pos, fill });
+      }
+      yield { done: ++done, total };
     }
   }
   if (tried.length === 0) return null;

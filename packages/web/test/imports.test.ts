@@ -19,8 +19,8 @@ test("files are recognised by name and first bytes", () => {
 
 test("an impedance sweep asks; a response file doesn't", () => {
   assert.deepEqual(importUses("a.zma"), ["measure-driver", "overlay-impedance"]);
-  assert.deepEqual(importUses("a.frd"), ["overlay-response"]);
-  assert.equal(importUses("a.txt").length, 3);
+  assert.deepEqual(importUses("a.frd"), ["overlay-response", "driver-on-baffle"]);
+  assert.deepEqual(importUses("a.txt"), ["measure-driver", "overlay-impedance", "overlay-response", "driver-on-baffle"]);
 });
 
 test("save times read as how long ago", () => {

@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "15 F 4 CP",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 46.4,
+    "qms": 7.73,
+    "qes": 0.28,
+    "vas_l": 97,
+    "re": 5.1,
+    "sd_cm2": 855.3,
+    "qts": 0.27,
+    "le_mh": 1.22,
+    "bl": 26,
+    "mms_g": 126,
+    "xmax_mm": 7,
+    "pe_w": 700
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 169
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/15-f-4-cp/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

@@ -11,6 +11,8 @@ group: start
 
 A sub that sounds thin in a living room can shake a car, because the cabin itself boosts the deep bass. That boost changes which box you should build, but not in the way most forum threads say. This guide puts one popular 10″ sub at its full rated power in a small sealed box and two ported boxes, then runs them in a car and out of it, so you can see what the cabin does and what it doesn't.
 
+Try it: the [subwoofer box calculator](/calculators/subwoofer-box/) gives a compact, a balanced and a deep box for your sub at your amplifier's power, and the [box volume calculator](/calculators/box-volume/) the net volume of a car wedge from its outside size.
+
 [[Open the worked example (in the car)|car-example]] [[The same boxes out of the car|car-nocabin]]
 
 ## The short answer
@@ -125,7 +127,7 @@ The **Max SPL** chart shows the ceiling, cabin gain included. The bars under it 
 2. On the **Signal** tab, under **Room / cabin gain**, choose **Car cabin** under **Space** and set **Longest inside** to your cabin, windscreen to the back of the boot. **Lift starts** shows where it begins.
 3. Still on **Signal**, open **High-pass** and turn it on: 24 dB/oct, a few hertz below your lowest tuning (here 26 Hz).
 4. On **Boxes**, add a sealed and a ported design. The summary table gives each box's own F3 and, next to it, the **F3 in the car**; the response chart's dots mark the in-car F3.
-5. Check the **Excursion** chart against the red Xmax line, then the **Max SPL** tab: its bars tell you whether the cone, the port or the power runs out first. On ported boxes, check **Port speed** too: a chuffing port is easy to hear in a quiet cabin. If you accept some port noise at full power (common in SPL builds), raise the **Chuffing line** in **Settings → Limits → Port speed**.
+5. Check the **Excursion** chart against the red Xmax line, then the **Max SPL** tab: its bars tell you whether the cone, the port or the power runs out first. On ported boxes, check **Port speed** too: a chuffing port is easy to hear in a quiet cabin. If you accept some port noise at full power (common in SPL builds), raise the **Chuffing line** in **Settings → Limits → Port speed & excursion**.
 
 Not sure which sub to buy? The [design assistant](/guides/design-assistant/) tries every suitable one in the database in sealed, ported and bandpass boxes, at your power, in your cabin from the Signal tab (or a typical 2.5 m one if you haven't set it). Tick **Bandpass** for 4th- and 6th-order boxes, which are popular in cars for very high output in a narrow band; on a bandpass design, **Size this bandpass** sizes both chambers and their ports for your driver in the same total volume.
 

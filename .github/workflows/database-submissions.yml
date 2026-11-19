@@ -18,10 +18,14 @@ concurrency:
 
 jobs:
   to-pull-request:
+    # Only a change to the form's text reruns it (a title edit doesn't), and only the
+    # submission labels count.
     if: >-
       github.event.issue.state == 'open' &&
       (contains(github.event.issue.labels.*.name, 'new-driver') ||
-       contains(github.event.issue.labels.*.name, 'new-passive-radiator'))
+       contains(github.event.issue.labels.*.name, 'new-passive-radiator')) &&
+      (github.event.action != 'edited' || github.event.changes.body != null) &&
+      (github.event.action != 'labeled' || github.event.label.name == 'new-driver' || github.event.label.name == 'new-passive-radiator')
     runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +34,27 @@ jobs:
         with:
           node-version: 22
 
+      # A maintainer who pushed fixes to the pull request branch keeps them: a later form edit
+      # isn't applied to it (the bot comment says so). See packages/db-tools/src/branch-guard.ts.
+      - name: Check the pull request branch for maintainer changes
+        id: guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: db/issue-${{ github.event.issue.number }}
+        run: |
+          export PR_NUMBER=$(gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&head=${GITHUB_REPOSITORY%%/*}:$BRANCH" --jq '.[0].number // empty')
+          { gh api "repos/$GITHUB_REPOSITORY/compare/main...$BRANCH" 2>/dev/null || true; } \
+            | node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/branch-guard.ts
+
+      - name: Keep the maintainer's changes
+        if: steps.guard.outputs.locked == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+        run: bash .github/scripts/db-comment.sh
+
       - name: Convert the issue into a database file
+        if: steps.guard.outputs.locked != 'true'
         id: convert
         env:
           # Passed through the environment, never interpolated into the script.
@@ -39,21 +63,41 @@ jobs:
           ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
         run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/issue-to-driver.ts
 
+      # The issue was opened with the form's placeholder title: name it after the driver.
+      # (Edits made with GITHUB_TOKEN don't start another run.)
+      - name: Fix the issue title
+        if: always() && steps.guard.outputs.locked != 'true' && steps.convert.outputs.issue_title != '' && contains(github.event.issue.title, '<Brand>')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+          TITLE: ${{ steps.convert.outputs.issue_title }}
+        run: gh issue edit "$NUMBER" --repo "$GITHUB_REPOSITORY" --title "$TITLE"
+
+      # One bot comment per issue, edited on every run, listing every problem at once.
       - name: Explain what needs fixing
         if: failure() && steps.convert.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
           NUMBER: ${{ github.event.issue.number }}
-        run: gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body-file issue-error.md
+        run: bash .github/scripts/db-comment.sh
 
       - name: Open or update the pull request
         id: pr
+        if: steps.guard.outputs.locked != 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           branch: ${{ steps.convert.outputs.branch }}
+          # The bot's own name on its commits: branch-guard.ts tells them from a maintainer's.
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          # A new brand also updates the "N brands" counts (README, docs, site pages).
           add-paths: |
             drivers/**
             passive-radiators/**
+            README.md
+            docs/*.md
+            site/*.md
+            site/pages/*.md
           commit-message: "${{ steps.convert.outputs.title }} (from #${{ github.event.issue.number }})"
           title: ${{ steps.convert.outputs.title }}
           labels: database
@@ -62,18 +106,17 @@ jobs:
 
             Adds `${{ steps.convert.outputs.path }}`. The database checks passed.
 
-            Consistency warnings (if any):
+            Worth a check (if any):
             ${{ steps.convert.outputs.warnings }}
 
             Reviewer: compare the values with the datasheet link, then merge.
 
-      - name: Link the pull request on the issue
-        if: steps.pr.outputs.pull-request-number && steps.pr.outputs.pull-request-operation == 'created'
+      - name: Tell the submitter
+        if: steps.pr.outputs.pull-request-number
         env:
           GH_TOKEN: ${{ github.token }}
           NUMBER: ${{ github.event.issue.number }}
           PR: ${{ steps.pr.outputs.pull-request-number }}
-        # Block scalar: in a plain YAML value, " #" would start a comment and cut the command short.
         run: |
-          gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" \
-            --body "Thanks! I've opened #$PR with this entry. A maintainer will check it against the datasheet and merge it."
+          sed -i "1a **Pull request:** #$PR" issue-comment.md
+          bash .github/scripts/db-comment.sh

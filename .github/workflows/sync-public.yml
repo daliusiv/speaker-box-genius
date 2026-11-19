@@ -2,7 +2,8 @@ name: Sync with public repo
 
 # Private dev repo only. Run by hand (Actions > Sync with public repo > Run workflow), scripts/sync-public.sh:
 #   1. copies commits merged on the public repo into a dev branch and opens a
-#      "Changes from public" PR in dev (CI and preview run on it);
+#      "Changes from public" PR in dev (CI and preview run on it); when it only touches driver data
+#      and its checks are green, merge-public-data.yml merges it by itself;
 #   2. publishes dev main to public main as one "Release v<version>" commit ("Release <date>" when there is no new version), but only
 #      when dev main's checks are green and dev already has every public change. CHANGELOG.md's
 #      Unreleased entries become the next release on dev main first ("## 1.1.0 (<date>)"), then
@@ -72,6 +73,9 @@ jobs:
           chmod 600 ~/.ssh/public_key ~/.ssh/dev_key
           ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
           printf 'Host github-public\n  HostName github.com\n  User git\n  IdentityFile ~/.ssh/public_key\n  IdentitiesOnly yes\nHost github-dev\n  HostName github.com\n  User git\n  IdentityFile ~/.ssh/dev_key\n  IdentitiesOnly yes\n' > ~/.ssh/config
+          # Self-hosted runners keep the workspace between runs: replace remotes a previous run added.
+          git remote remove dev 2>/dev/null || true
+          git remote remove public 2>/dev/null || true
           git remote add dev "git@github-dev:${{ github.repository }}.git"
           git remote add public "git@github-public:${PUBLIC_REPO}.git"
           git config user.name "github-actions[bot]"

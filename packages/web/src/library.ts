@@ -16,6 +16,7 @@ export interface DbIndex {
     size_in?: number;
     fs?: number;
     qts?: number;
+    qes?: number;
     vas_l?: number;
     xmax_mm?: number;
     pe_w?: number;
@@ -125,6 +126,8 @@ function displacementOf(p: Physical | undefined): number | undefined {
 }
 
 export interface LoadedDriver {
+  /** The database id ("brand/model"); absent for drivers that didn't come from the database. */
+  id?: string;
   name: string;
   brand: string;
   nominal_ohms?: number;
@@ -162,6 +165,7 @@ export async function loadDriver(id: string): Promise<LoadedDriver> {
     if (typeof v === "number") ts[k] = v;
   }
   return {
+    id,
     name: `${rec.brand} ${rec.model}`,
     brand: rec.brand,
     nominal_ohms: rec.nominal_ohms,

@@ -1,0 +1,41 @@
+name: Project board
+
+# Moves issues and pull requests between the maintainer's project board columns:
+# a "status: …" label moves an open issue; a draft pull request is In progress, an
+# open one In review, and so are the issues its description closes. The board's own
+# workflows handle Inbox (new items) and Done (closed or merged). Run it by hand to
+# place every open issue with a status label and every open pull request.
+# Private repo only; needs the PROJECT_TOKEN secret (classic token with the project scope).
+on:
+  issues:
+    types: [labeled]
+  pull_request:
+    types: [opened, reopened, ready_for_review, converted_to_draft, edited]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  status:
+    # Other labels are skipped here, so they never take a runner or a concurrency slot
+    # (an issue opened with several labels would otherwise cancel its own status run).
+    if: >-
+      github.event.repository.private == true &&
+      (github.event_name != 'issues' || startsWith(github.event.label.name, 'status: '))
+    concurrency:
+      group: project-board-${{ github.event.issue.number || github.event.pull_request.number || 'all' }}
+      cancel-in-progress: false
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
+    steps:
+      # No checkout: the self-hosted runners share one workspace per repo, and a sparse
+      # checkout here left core.sparseCheckout set there, so CI's next checkout missed files.
+      # The script is read through the API at the event's commit instead.
+      - uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PROJECT_TOKEN }}
+          script: |
+            const { data } = await github.rest.repos.getContent({ ...context.repo, path: ".github/scripts/project-board.cjs", ref: context.sha });
+            const mod = { exports: {} };
+            new Function("module", "exports", "require", Buffer.from(data.content, "base64").toString("utf8"))(mod, mod.exports, require);
+            await mod.exports.run({ github, context, core, projectNumber: 1 });

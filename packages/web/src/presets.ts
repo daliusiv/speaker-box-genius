@@ -202,6 +202,9 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
       case "line":
         skipped.push(`${d.name}: use the line's own presets (they size the line for the driver)`);
         return d;
+      case "ib":
+        // Nothing to size: the driver and the space behind the wall decide it.
+        return d;
     }
   });
   return { state: changed.length > 0 ? { ...s, designs } : s, changed, skipped };

@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "8 H 1 CS",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 49.5,
+    "qms": 5.13,
+    "qes": 0.6,
+    "vas_l": 27.8,
+    "re": 6.1,
+    "sd_cm2": 213.8,
+    "qts": 0.54,
+    "le_mh": 1.8,
+    "bl": 8.73,
+    "mms_g": 24.1,
+    "xmax_mm": 4,
+    "pe_w": 70
+  },
+  "physical": {
+    "cutout_mm": 184,
+    "depth_mm": 85.1
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/8-h-1-cs/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

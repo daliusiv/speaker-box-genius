@@ -1,5 +1,7 @@
 import { coilLabel, driveLabel, prGroupLabels, type Design } from "../sim.ts";
 import type { AppState } from "../state.ts";
+import type { Motion } from "@sbg/engine";
+import { excursionFactor } from "../chartProps.ts";
 import { safeName, type ExportFormat } from "./types.ts";
 
 /** One line on how the designs are driven and filtered (the forum posts and the CSV header). */
@@ -11,7 +13,7 @@ export function subtitle(state: AppState): string {
   if (state.passive.on && state.passive.branches.some((b) => (b.r ?? 0) > 0 || (b.l_mH ?? 0) > 0 || (b.c_uF ?? 0) > 0)) parts.push("passive parts");
   if (state.roomGain.mode === "curve") parts.push(`room curve "${state.roomGain.curve?.name ?? ""}" added`);
   else if (state.roomGain.mode !== "off") parts.push(`${state.roomGain.mode === "car" ? "cabin" : "room"} gain from ${(34320 / (2 * state.roomGain.length_cm)).toFixed(0)} Hz`);
-  parts.push(`Xmax ${state.xmax_mm} mm`);
+  parts.push(state.xmax_mm > 0 ? `Xmax ${state.xmax_mm} mm` : "Xmax not set");
   if (state.compare) parts.push(`compared with ${state.compare.driverName} (dashed)`);
   return parts.join(" · ");
 }
@@ -20,15 +22,30 @@ export function subtitle(state: AppState): string {
 export function curvesCsv(state: AppState, designs: Design[]): string {
   if (designs.length === 0) return "";
   const vel = state.settings.velocity === "rms" ? "RMS" : "peak";
+  // Excursion as Settings shows it (one way peak, peak-to-peak or RMS); always mm here, like the rest of the CSV.
+  const ex = state.settings.excursion;
+  const xk = excursionFactor(ex);
+  const xt = ex === "pp" ? "peak-to-peak" : ex === "rms" ? "RMS" : "peak";
+  const mm = (a: Float64Array | null) => a && (xk === 1 ? a : a.map((v) => v * xk));
   const cols: { head: string; data: Float64Array }[] = [];
   for (const { design: d, label, result: r } of designs) {
     const add = (what: string, data: Float64Array | null) => data && cols.push({ head: `${label}: ${what}`, data });
     add("SPL (dB)", r.spl);
-    add("Cone excursion (mm peak)", r.excursionMm);
+    add(`Cone excursion (mm ${xt})`, mm(r.excursionMm));
+    const motion = (who: string, m: Motion) => {
+      add(`${who} velocity (m/s ${xt})`, mm(m.velocity_ms));
+      add(`${who} acceleration (m/s² ${xt})`, mm(m.accel_ms2));
+      add(`${who} force, moving mass × acceleration (N ${xt})`, mm(m.forceN));
+    };
+    motion("Cone", r.coneMotion);
     if (r.prGroups && (r.prGroups.length > 1 || d.kind === "bandpass")) {
       const names = prGroupLabels(d);
-      r.prGroups.forEach((g, k) => add(`PR excursion, ${names[k] ?? `group ${k + 1}`} (mm peak)`, g.excursionMm));
-    } else add("PR excursion (mm peak)", r.prExcursionMm);
+      r.prGroups.forEach((g, k) => add(`PR excursion, ${names[k] ?? `group ${k + 1}`} (mm ${xt})`, mm(g.excursionMm)));
+      r.prGroups.forEach((g, k) => motion(`PR ${names[k] ?? `group ${k + 1}`}`, g.motion));
+    } else {
+      add(`PR excursion (mm ${xt})`, mm(r.prExcursionMm));
+      if (r.prGroups?.[0]) motion("PR", r.prGroups[0].motion);
+    }
     add(d.kind === "bandpass" ? `Front port velocity (m/s ${vel})` : `Port velocity (m/s ${vel})`, r.portVelocity);
     add(`Rear port velocity (m/s ${vel})`, r.rearPortVelocity);
     add("Impedance (ohm)", r.impedanceOhm);

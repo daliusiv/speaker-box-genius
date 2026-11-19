@@ -545,3 +545,19 @@ test("a result within its limits says when its cone passes Xmax below where limi
   // Sealed: the air holds the cone, under Xmax all the way down at 300 W.
   assert.deepEqual([sealed.over, sealed.subsonic], [[], undefined]);
 });
+
+test("the second pass as a search job: one tick per driver, the same results as evaluateDriver, and data a worker can take", async () => {
+  const { searchTicks } = await import("../src/search.ts");
+  const { checkTicks } = await import("./ticks.ts");
+  const goal = { ...goalFor("hifi", "balanced"), boxes: ["sealed", "vented", "bandpass"] as AssistantGoal["boxes"] };
+  const boxes = runAll(goal).results;
+  const short = bandpassShortlist(boxes, prefilter(rows, goal)).slice(0, 3);
+  const tasks = short.map((row) => ({ row, driver: loaded(row.id), stage: "bandpass" as const }));
+  const job = { kind: "assistant" as const, base: DEFAULT_STATE, goal, tasks };
+  assert.deepEqual(structuredClone(job), job);
+  const ticks = [...searchTicks(job)];
+  checkTicks(ticks);
+  assert.equal(ticks.at(-1)!.total, tasks.length);
+  const got = ticks.flatMap((t) => (t.step?.kind === "assistant" ? t.step.results : []));
+  assert.deepEqual(got, tasks.flatMap((t) => evaluateDriver(DEFAULT_STATE, t.row, t.driver, goal, "bandpass")));
+});

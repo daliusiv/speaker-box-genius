@@ -1,5 +1,8 @@
 import { DEFAULT_END_CORRECTION, parseWpr } from "@sbg/engine";
+import { driverExtras } from "./importReport.ts";
 import { MAX_DESIGNS, newDesign, type AppState, type DesignState } from "./state.ts";
+import { stuffable } from "./stuffing.ts";
+import type { Assumed } from "@sbg/engine";
 
 type WprProject = ReturnType<typeof parseWpr>;
 type WprChamberLosses = { ql: number; qa: number; qp: number };
@@ -24,8 +27,9 @@ function portShape(w: WprPort, base: { slotWidth_cm: number; slotHeight_cm: numb
     : { shape: "round" as const, diameter_cm: Number(w.diameter_cm.toFixed(3)) };
 }
 
-export function applyWpr(s: AppState, p: WprProject, fileName: string): { state: AppState; message: string } {
+export function applyWpr(s: AppState, p: WprProject, fileName: string): { state: AppState; message: string; assumed: Assumed[] } {
   const d = p.driver;
+  const x = driverExtras(d);
   const base = fileName.replace(/\.wpr$/i, "");
   const label = [d.brand, d.model].filter(Boolean).join(" ") || base;
   // WinISD keeps an end correction per port; the app has one (Settings → Ports), from the
@@ -98,20 +102,26 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
       const sd = newDesign("sealed", s.designs);
       design = { ...sd, name: `WinISD: ${base}`, vb_l: Number(p.box.vb_l.toFixed(3)) };
     }
-    const designs = design && s.designs.length < MAX_DESIGNS ? [...s.designs, design] : s.designs;
+    const added = design !== null && s.designs.length < MAX_DESIGNS;
+    // A sealed, ported or PR box keeps the project's leakage as its own Ql (Settings' stays);
+    // otherwise (a bandpass, or no box added) the project's Ql goes into Settings as before.
+    const ownQl = added && design !== null && stuffable(design.kind) && !p.bandpass;
+    if (ownQl && design && p.box.ql !== s.settings.losses.ql) design = { ...design, ql: p.box.ql };
+    const designs = added && design ? [...s.designs, design] : s.designs;
     return {
       ...s,
       driverName: label,
       driverBrand: d.brand,
-      nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
+      driverOrigin: undefined,
+      nominal_ohms: x.nominal_ohms,
       ts: d.ts,
-      le_mh: d.le_mh ?? 0,
+      le_mh: x.le_mh,
       l2_mh: 0,
       r2_ohm: 0,
       semi: undefined,
       fdd: undefined,
-      xmax_mm: d.xmax_mm ?? s.xmax_mm,
-      pe_w: d.pe_w ?? s.pe_w,
+      xmax_mm: x.xmax_mm,
+      pe_w: x.pe_w,
       // With the WinISD drive model (set below) the watts mean the same as WinISD's, isobaric pairs included.
       power: Number(p.power.toFixed(2)),
       drive: "watts",
@@ -138,7 +148,7 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
         inductance: p.simulateLe,
         losses: p.bandpass
           ? { ql: p.bandpass.front.ql, qa: p.bandpass.front.qa, qp: p.bandpass.front.qp }
-          : { ql: p.box.ql, qa: p.box.qa, qp: p.box.qp },
+          : { ql: ownQl ? s.settings.losses.ql : p.box.ql, qa: p.box.qa, qp: p.box.qp },
       },
       highPass: p.highPass ? { on: true, ...p.highPass } : { ...s.highPass, on: false },
       designs,
@@ -151,12 +161,13 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
     };
   })();
   const lossSrc = p.bandpass?.front ?? p.box;
+  const boxQl = state.designs.length > s.designs.length ? state.designs[state.designs.length - 1]!.ql : undefined;
   const lossNote =
     p.bandpass && bandpassOwnLosses(p.bandpass)
       ? ` The bandpass keeps the project's own losses for each chamber (Front Ql ${p.bandpass.front.ql}, Qa ${p.bandpass.front.qa}, Qp ${p.bandpass.front.qp}; Rear Ql ${p.bandpass.rear.ql}, Qa ${p.bandpass.rear.qa}, Qp ${p.bandpass.rear.qp}; baffle leak ${p.bandpass.qicl}).`
-      : lossSrc.ql !== 10 || lossSrc.qa !== 100 || lossSrc.qp !== 100
-        ? ` Box losses set to the project's Ql ${lossSrc.ql}, Qa ${lossSrc.qa}, Qp ${lossSrc.qp}.`
-        : "";
+      : (boxQl !== undefined ? ` The box keeps the project's leakage as its own (Ql ${boxQl}).` : "") +
+        (boxQl === undefined && lossSrc.ql !== 10 ? ` Box losses set to the project's Ql ${lossSrc.ql}, Qa ${lossSrc.qa}, Qp ${lossSrc.qp}.` : "") +
+        ((boxQl !== undefined || lossSrc.ql === 10) && (lossSrc.qa !== 100 || lossSrc.qp !== 100) ? ` Absorption and port loss set to the project's Qa ${lossSrc.qa}, Qp ${lossSrc.qp}.` : "");
   const boxNote = p.box.type === "other" ? " This box type isn't supported yet, so only the driver was imported." : "";
   const driversNote =
     p.drivers > 1 && !p.isobaric
@@ -179,5 +190,5 @@ export function applyWpr(s: AppState, p: WprProject, fileName: string): { state:
         ? ` The project's ports use different end corrections; the app uses one for all, ${ec}.`
         : "";
   const message = `Imported WinISD project ${fileName} with its power, amplifier resistance and air settings.${filterNote}${unsupportedNote}${driversNote}${isoNote}${boxNote}${lossNote}${ecNote}`;
-  return { state, message };
+  return { state, message, assumed: [...x.assumed, ...p.assumed] };
 }

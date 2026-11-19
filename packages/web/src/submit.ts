@@ -23,6 +23,8 @@ export function submitDriverUrl(s: AppState): string {
     `Le (mH): ${s.le_mh || ""}`,
     `Bl (T·m): ${v(t.bl)}`,
     `Mms (g): ${v(t.mms_g)}`,
+    // Mmd only when typed (the database stores Mms; the importer converts it with Sd).
+    ...(t.mmd_g !== undefined ? [`Mmd (g, without air load): ${v(t.mmd_g)}`] : []),
     `Sd (cm²): ${v(t.sd_cm2)}`,
     `Xmax (mm, one way): ${s.xmax_mm || ""}`,
     `Pe (W, RMS): ${s.pe_w || ""}`,
@@ -37,3 +39,7 @@ export function submitDriverUrl(s: AppState): string {
   });
   return `${REPO}/issues/new?${q.toString()}`;
 }
+
+/** Where the website form posts (the submit Worker) and Turnstile's site key; unset → the menu links to the GitHub form. */
+export const SUBMIT_ENDPOINT: string = import.meta.env.VITE_SUBMIT_ENDPOINT ?? "";
+export const TURNSTILE_SITE_KEY: string = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "";

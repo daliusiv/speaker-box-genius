@@ -13,23 +13,14 @@
  *   ...
  */
 import { parseDatasheet } from "../../engine/src/datasheet.ts";
+import { solveTs } from "../../engine/src/tsSolver.ts";
 import { parseQuantity, type Quantity } from "../../engine/src/units.ts";
 import { SLUG_RE } from "../../schema/src/index.ts";
+import { brandCase, buildRecord, modelCase, submissionHints, type BuiltRecord, type SubmissionFields } from "./submission.ts";
 
-export interface IssueRecord {
-  kind: "driver" | "passive-radiator";
-  brandSlug: string;
-  modelSlug: string;
-  brand: string;
-  record: Record<string, unknown>;
-}
+export { brandCase, modelCase, slugify, submissionHints } from "./submission.ts";
 
-export const slugify = (s: string) =>
-  s
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+export type IssueRecord = BuiltRecord;
 
 function sections(body: string): Map<string, string> {
   const out = new Map<string, string>();
@@ -54,6 +45,23 @@ function num(text: string): number | undefined {
   return text.trim() !== "" && Number.isFinite(v) && v > 0 ? v : undefined;
 }
 
+/** The first number in "2 Ω", "2ohm", "4 (DVC)", "8Ω nominal" → 2, 2, 4, 8. */
+export function leadingNumber(text: string): number | undefined {
+  const m = /^\s*(\d+(?:[.,]\d+)?)/.exec(text);
+  return m ? num(m[1]!) : undefined;
+}
+
+/** "15", "15 in", '15"', "15 inch", "380 mm", "38 cm" → inches. */
+export function sizeInches(text: string): number | undefined {
+  const t = text.trim().replace(/[″”]/g, '"');
+  if (!t) return undefined;
+  const mm = parseQuantity(t, "length");
+  const bare = /^\d+(?:[.,]\d+)?$/.test(t);
+  if (mm !== null && mm > 0 && !bare) return Number((mm / 25.4).toPrecision(3));
+  return leadingNumber(t);
+}
+
+
 /**
  * "Cutout diameter (mm): 216.5" or "Mounting depth (mm): 3.5 in" → number in
  * the label's unit, converting any unit the user typed after the value.
@@ -72,107 +80,59 @@ function labelled(text: string, label: RegExp, q: Quantity = "plain"): number | 
   return undefined;
 }
 
-const clean = <T extends Record<string, unknown>>(o: T) =>
-  Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as Partial<T>;
+/** "Voice coils: Dual" (+ the wiring the datasheet's T/S were measured with) → `voice_coils` / `ts_wiring`. */
+function voiceCoils(sec: Map<string, string>): { voice_coils?: 2; ts_wiring?: "series" | "parallel" } {
+  if (!/^dual/i.test(find(sec, "voice coils"))) return {};
+  const w = find(sec, "dual voice coil wiring").toLowerCase();
+  return { voice_coils: 2, ...(w.startsWith("series") ? { ts_wiring: "series" as const } : w.startsWith("parallel") ? { ts_wiring: "parallel" as const } : {}) };
+}
 
 export function parseIssue(body: string, opts: { issue: number; author: string; today: string }): IssueRecord {
   const sec = sections(body);
-  const brand = find(sec, "brand");
-  const model = find(sec, "model");
-  if (!brand || !model) throw new Error("The issue needs a Brand and a Model.");
-  const brandSlug = slugify(brand);
-  const modelSlug = slugify(model);
-  if (!SLUG_RE.test(brandSlug) || !SLUG_RE.test(modelSlug)) throw new Error("Brand or model has no usable letters or digits.");
-
-  const url = find(sec, "datasheet link").split(/\s+/)[0] ?? "";
-  const measured = find(sec, "your own measurements");
-  const sources: Record<string, unknown>[] = [];
-  if (url) {
-    sources.push({
-      kind: "datasheet",
-      url,
-      retrieved: opts.today,
-      note: `Submitted in issue #${opts.issue} by @${opts.author}.`,
-    });
-  }
-  if (measured) {
-    sources.push({ kind: "measured", by: `github:${opts.author}`, method: measured.split("\n")[0]!.slice(0, 200) });
-  }
+  const fields: SubmissionFields = {
+    kind: "driver",
+    brand: find(sec, "brand"),
+    model: find(sec, "model"),
+    source_url: find(sec, "datasheet link"),
+    measured: find(sec, "your own measurements") || undefined,
+    size_in: sizeInches(find(sec, "nominal size")),
+  };
+  if (!brandCase(fields.brand) || !modelCase(fields.model)) throw new Error("The issue needs a Brand and a Model.");
 
   const physicalText = find(sec, "physical data");
-  const physical = clean({
+  fields.physical = {
     displacement_l: labelled(physicalText, /^(driver displacement|displacement)/, "volume"),
     cutout_mm: labelled(physicalText, /^cutout/, "length"),
     depth_mm: labelled(physicalText, /^mounting depth|^depth/, "length"),
-  });
-  const size_in = num(find(sec, "nominal size"));
+  };
 
   const tsText = find(sec, "thiele/small parameters");
   if (tsText) {
     const p = parseDatasheet(tsText);
-    const ts = clean({
-      fs: p.fs,
-      qms: p.qms,
-      qes: p.qes,
-      qts: p.qts,
-      vas_l: p.vas_l,
-      re: p.re,
-      le_mh: p.le_mh,
-      bl: p.bl,
-      mms_g: p.mms_g,
-      sd_cm2: p.sd_cm2,
-      xmax_mm: p.xmax_mm,
-      pe_w: p.pe_w,
-    });
-    return {
-      kind: "driver",
-      brand,
-      brandSlug,
-      modelSlug,
-      record: clean({
-        brand,
-        model,
-        type: find(sec, "driver type") || "other",
-        nominal_ohms: num(find(sec, "nominal impedance")),
-        size_in,
-        ts,
-        physical: Object.keys(physical).length ? physical : undefined,
-        sources,
-        status: "community",
-      }),
+    fields.type = find(sec, "driver type") || "other";
+    fields.nominal_ohms = leadingNumber(find(sec, "nominal impedance"));
+    Object.assign(fields, voiceCoils(sec));
+    fields.ts = {
+      ...p,
+      // A datasheet that gives Mmd (without the air load): the database stores Mms.
+      mms_g: p.mms_g ?? (p.mmd_g !== undefined && p.sd_cm2 !== undefined ? Number(solveTs({ mmd_g: p.mmd_g, sd_cm2: p.sd_cm2 }).values.mms_g!.toPrecision(4)) : undefined),
+    };
+  } else {
+    // Passive radiator form
+    const paramText = find(sec, "parameters");
+    if (!paramText) throw new Error("No parameters found in the issue.");
+    const p = parseDatasheet(paramText);
+    fields.kind = "passive-radiator";
+    fields.params = {
+      ...p,
+      xmech_mm: labelled(paramText, /^xmech/, "length"),
+      max_added_mass_g: labelled(paramText, /^maximum added mass/),
     };
   }
-
-  // Passive radiator form
-  const paramText = find(sec, "parameters");
-  if (!paramText) throw new Error("No parameters found in the issue.");
-  const p = parseDatasheet(paramText);
-  const params = clean({
-    fs: p.fs,
-    qms: p.qms,
-    vas_l: p.vas_l,
-    mms_g: p.mms_g,
-    cms_mm_per_n: p.cms_mm_per_n,
-    sd_cm2: p.sd_cm2,
-    xmax_mm: p.xmax_mm,
-    // The maker's mechanical limit, only when no linear Xmax is given (prTravel uses it then).
-    xmech_mm: p.xmax_mm === undefined ? labelled(paramText, /^xmech/, "length") : undefined,
-    max_added_mass_g: labelled(paramText, /^maximum added mass/),
-  });
-  return {
-    kind: "passive-radiator",
-    brand,
-    brandSlug,
-    modelSlug,
-    record: clean({
-      brand,
-      model,
-      type: "passive-radiator",
-      size_in,
-      params,
-      physical: Object.keys(physical).length ? physical : undefined,
-      sources,
-      status: "community",
-    }),
-  };
+  const built = buildRecord(fields, { kind: "issue", ...opts });
+  if (!SLUG_RE.test(built.brandSlug) || !SLUG_RE.test(built.modelSlug)) throw new Error("Brand or model has no usable letters or digits.");
+  return built;
 }
+
+/** The submission hints as text lines (issue comment and pull request body). */
+export const hintLines = (r: IssueRecord) => submissionHints(r).map((h) => h.message);

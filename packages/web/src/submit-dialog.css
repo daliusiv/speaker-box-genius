@@ -1,0 +1,152 @@
+/* ---- Submit to database (SubmitDialog.tsx) ---- */
+.sd .ui-sheet-body {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+/* The values the app already has: one line, with a way back to the driver card. */
+.sd-values {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--well);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-problems {
+  display: grid;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.sd-problem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1) 0 var(--space-1) var(--space-3);
+  border-left: 2px solid var(--over);
+  font-size: var(--text-sm);
+  line-height: var(--leading-base);
+}
+
+.sd-problem[data-tone="warn"] {
+  border-left-color: var(--warn);
+  color: var(--muted);
+}
+
+/* A message belongs to the field above it: closer to it than to the next field. */
+.sd-msg {
+  margin: calc(-1 * var(--space-2)) 0 0;
+}
+
+.sd-msg[data-tone="over"] {
+  color: var(--over);
+}
+
+.sd-msg[data-tone="warn"] {
+  color: var(--warn);
+}
+
+.sd-check {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--size-control);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.sd-check input {
+  width: var(--size-icon);
+  height: var(--size-icon);
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.sd-lead {
+  margin: 0 0 var(--space-2);
+  line-height: var(--leading-base);
+}
+
+.sd-turnstile {
+  /* Turnstile sizes itself ("flexible": the form's width); keep its room so nothing jumps or hides under it. */
+  min-height: var(--size-row);
+}
+
+.sd-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.sd-fine {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs, var(--text-sm));
+  line-height: var(--leading-base);
+}
+
+.sd .ui-button[aria-disabled="true"] {
+  opacity: 0.6;
+}
+
+@media (max-width: 767.98px) {
+  .sd-foot {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sd-foot > .ui-button {
+    width: 100%;
+  }
+}
+
+
+/* Label above a full-width box; on wide screens the label sits beside it. */
+.sd-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1);
+}
+
+.sd-field .ui-text {
+  width: 100%;
+}
+
+.sd-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+@media (min-width: 768px) {
+  .sd-field {
+    grid-template-columns: 10rem minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--space-3);
+  }
+
+  .sd-field .sd-hint {
+    grid-column: 2;
+  }
+
+  .sd-msg {
+    margin-left: calc(10rem + var(--space-3));
+  }
+}
+
+/* Actions inside the form (Edit in driver card, Fix, Follow it on GitHub) read as links: accent colour. */
+.sd .ui-sheet-body .ui-button[data-variant="ghost"] {
+  color: var(--accent);
+}

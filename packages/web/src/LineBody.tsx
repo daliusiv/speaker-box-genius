@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
 import type { AlignmentDriver, DriverInput, SimulationOptions } from "@sbg/engine";
-import { Fixed, Num, Select } from "./components.tsx";
-import { lineFoldOf, lineLength, lineVolume } from "./sim.ts";
+import { Fixed, JobProgress, Num, Select } from "./components.tsx";
+import { ampVoltsOf, lineFoldOf, lineLength, lineVolume } from "./sim.ts";
 import { startSearch } from "./search.ts";
 import { frontHorn, makePreset, presetFor, SHOWN_PRESETS, rankLines, tuneLine, type LineBest, type LineCompare, type LineGoal, type PresetId } from "./lineopt.ts";
 import type { LineDesign, LineSection } from "./state.ts";
@@ -25,8 +25,8 @@ function HornrespPanel(p: {
   const [text, setText] = useState("");
   const [useDriver, setUseDriver] = useState(true);
   const [result, setResult] = useState<{ ok: boolean; lines: string[] } | null>(null);
-  const power = p.sim.power ?? 1;
-  const eg = p.driver ? (p.sim.convention === "volts" ? power : Math.sqrt(power * p.driver.re)) : 2.83;
+  // Across the whole driver bank, as the app drives it (one driver's Re was wrong for several).
+  const eg = p.driver ? ampVoltsOf(p.driver, p.sim) : 2.83;
   const out = p.driver
     ? toHornresp(p.d, p.driver, { eg, drivers: p.drivers, wiring: p.sim.wiring, name: p.d.name, pmax: p.driver.pe_w, xmax_mm: p.driver.xmax_mm, sim: p.sim })
     : "Enter the driver's parameters first.";
@@ -360,7 +360,7 @@ export function LineBody(p: {
   const stopLine = useRef<(() => void) | null>(null);
   useEffect(() => () => stopLine.current?.(), []);
   // "Best line": search driver position and stuffing, then retune the length.
-  const [best, setBest] = useState<{ goal: LineGoal; result: LineBest | null; busy: boolean } | null>(null);
+  const [best, setBest] = useState<{ goal: LineGoal; result: LineBest | null; busy: boolean; done?: number; total?: number } | null>(null);
   useEffect(() => {
     stopLine.current?.();
     setBest(null);
@@ -374,6 +374,7 @@ export function LineBody(p: {
       { kind: "bestLine", driver, design: d, sim: p.sim, goal, wall_mm: p.wall_mm },
       {
         step: (s) => s.kind === "bestLine" && setBest({ goal, result: s.result, busy: false }),
+        progress: (done, total) => setBest((b) => (b?.busy ? { ...b, done, total } : b)),
         done: () => {},
         error: (message) => {
           setBest(null);
@@ -381,6 +382,11 @@ export function LineBody(p: {
         },
       },
     );
+  };
+  const stopBest = () => {
+    stopLine.current?.();
+    stopLine.current = null;
+    setBest(null);
   };
   const useBest = (r: LineBest) => {
     if (!p.driver) return;
@@ -396,7 +402,7 @@ export function LineBody(p: {
   };
 
   // "Which type suits this driver?": every preset made, tuned and simulated, one per tick.
-  const [cmp, setCmp] = useState<{ rows: LineCompare[]; done: boolean } | null>(null);
+  const [cmp, setCmp] = useState<{ rows: LineCompare[]; done: boolean; tried?: number; total?: number } | null>(null);
   const cmpKey = JSON.stringify([p.driver, p.drivers, p.sim, p.wall_mm]);
   useEffect(() => {
     stopLine.current?.();
@@ -414,8 +420,9 @@ export function LineBody(p: {
         step: (s) => {
           if (s.kind !== "compare") return;
           rows.push(s.row);
-          setCmp({ rows: [...rows], done: false });
+          setCmp((c) => ({ ...c, rows: [...rows], done: false }));
         },
+        progress: (tried, total) => setCmp((c) => (c && !c.done ? { ...c, tried, total } : c)),
         done: () => setCmp({ rows: rankLines(rows, driver.xmax_mm, p.portLimit * (p.rms ? Math.SQRT2 : 1)), done: true }),
         error: (message) => {
           setCmp(null);
@@ -423,6 +430,13 @@ export function LineBody(p: {
         },
       },
     );
+  };
+  // Stop keeps the types already tried, ranked.
+  const stopCompare = () => {
+    stopLine.current?.();
+    stopLine.current = null;
+    const rows = cmp?.rows ?? [];
+    setCmp(rows.length > 0 && p.driver ? { rows: rankLines(rows, p.driver.xmax_mm, p.portLimit * (p.rms ? Math.SQRT2 : 1)), done: true } : null);
   };
   const useRow = (r: LineCompare) => {
     if (!r.design) return;
@@ -610,7 +624,8 @@ export function LineBody(p: {
           Compare types
         </button>
       </div>
-      {cmp && (
+      {cmp && !cmp.done && <JobProgress label={`Sizing and tuning ${SHOWN_PRESETS[cmp.rows.length]?.label ?? "the types"}`} done={cmp.tried ?? 0} total={cmp.total ?? 0} onStop={stopCompare} />}
+      {cmp && cmp.rows.length > 0 && (
         <div className="line-compare">
           <table className="cut-table">
             <thead>
@@ -652,13 +667,6 @@ export function LineBody(p: {
                   </td>
                 </tr>
               ))}
-              {!cmp.done && (
-                <tr>
-                  <td colSpan={6} className="hint">
-                    Sizing and tuning {SHOWN_PRESETS[cmp.rows.length]?.label}…
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
           {cmp.done && (
@@ -680,7 +688,7 @@ export function LineBody(p: {
           Deepest
         </button>
       </div>
-      {best?.busy && <p className="hint">Trying driver positions and stuffing…</p>}
+      {best?.busy && <JobProgress label="Trying driver positions and stuffing" done={best.done ?? 0} total={best.total ?? 0} onStop={stopBest} stopTitle="Stop" />}
       {best && !best.busy && !best.result && <p className="warn">No combination gave a usable response for this line.</p>}
       {best?.result && (
         <div className="tuning-card">

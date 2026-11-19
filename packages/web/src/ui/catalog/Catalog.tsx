@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import tokens from "../tokens.json";
-import { Button, Card, Chip, FieldRow, Menu, Notice, NumberField, RadioCards, Readout, Section, Segmented, Select, Sheet, Stepper, Switch, TextField, Tooltip } from "../index.ts";
+import { Button, Card, Chip, FieldRow, Menu, Notice, NumberField, Popover, RadioCards, Readout, Section, Segmented, Select, Sheet, Stepper, Switch, TextField, Tooltip } from "../index.ts";
 
 /**
  * /ui/: every component in every state, on the app's own stylesheets. It is the reference for
@@ -174,7 +174,7 @@ function Choices() {
   const [cap, setCap] = useState(false);
   const [hp, setHp] = useState(true);
   return (
-    <Block title="Choices" note="Segmented for 2–4 short options; radio cards when each option needs a line; switches apply at once.">
+    <Block title="Choices" note="Segmented for 2–4 short options; radio cards (a quiet list; boxed cards for big choices) when each option needs a line; switches apply at once.">
       <Specimen name="Segmented and switch">
         <FieldRow label="Loading">
           {(id) => (
@@ -198,7 +198,19 @@ function Choices() {
           legend="Coil model"
           value={coil}
           options={[
-            { value: "le", title: "Le (+ L2/R2)", description: "Datasheet values", aside: <Chip>Usual</Chip> },
+            { value: "le", title: "Le (+ L2/R2)", description: "Datasheet values", aside: <Chip>Default</Chip> },
+            { value: "semi", title: "Semi-inductance", description: "Fitted, like Hornresp" },
+          ]}
+          onChange={setCoil}
+        />
+      </Specimen>
+      <Specimen name="Radio cards, card variant">
+        <RadioCards
+          legend="Coil model"
+          variant="card"
+          value={coil}
+          options={[
+            { value: "le", title: "Le (+ L2/R2)", description: "Datasheet values", aside: <Chip>Default</Chip> },
             { value: "semi", title: "Semi-inductance", description: "Fitted, like Hornresp" },
           ]}
           onChange={setCoil}
@@ -228,6 +240,8 @@ function Sections() {
 
 function Overlays() {
   const [sheet, setSheet] = useState(false);
+  const [bottom, setBottom] = useState(false);
+  const [pop, setPop] = useState(false);
   return (
     <Block title="Overlays" note="Menus for 2+ secondary actions; sheets are full screen on phones; tooltips hold short notes.">
       <Specimen name="Menu (open)">
@@ -244,6 +258,22 @@ function Overlays() {
           />
         </div>
       </Specimen>
+      <Specimen name="Choice menu (open): a unit switch on phones">
+        <div className="cat-menu-room">
+          <Menu
+            label="N"
+            ariaLabel="Show: Force"
+            variant="ghost"
+            defaultOpen
+            items={[
+              { label: "Excursion", detail: "mm", checked: false, onSelect: () => {} },
+              { label: "Velocity", detail: "m/s", checked: false, onSelect: () => {} },
+              { label: "Acceleration", detail: "g", checked: false, onSelect: () => {} },
+              { label: "Force", detail: "N", checked: true, onSelect: () => {} },
+            ]}
+          />
+        </div>
+      </Specimen>
       <Specimen name="Icon menu, tooltip, sheet">
         <div className="cat-row">
           <Menu label="Driver tools" icon="wrench" iconOnly items={[{ label: "Export WinISD .wdr…", onSelect: () => {} }]} />
@@ -252,6 +282,28 @@ function Overlays() {
         </div>
         <Sheet open={sheet} onClose={() => setSheet(false)} title="T/S parameters" footer={<Button variant="primary" onClick={() => setSheet(false)}>Done</Button>}>
           <FieldRow label="Fs">{(id) => <NumberField id={id} value={30} unit="Hz" state="typed" onChange={() => {}} />}</FieldRow>
+        </Sheet>
+      </Specimen>
+      <Specimen name="Popover: live settings under their button; on phones a bottom sheet">
+        <div className="cat-menu-room cat-row">
+          <Popover
+            open={pop}
+            onClose={() => setPop(false)}
+            label="Program signal"
+            align="start"
+            trigger={(id) => (
+              <Button variant="ghost" icon="wave" aria-expanded={pop} aria-controls={pop ? id : undefined} onClick={() => setPop((v) => !v)}>
+                Program: Pink noise 6 dB ▾
+              </Button>
+            )}
+          >
+            <FieldRow label="Crest factor">{(id) => <NumberField id={id} value={6} unit="dB" onChange={() => {}} />}</FieldRow>
+            <FieldRow label="Target SPL">{(id) => <NumberField id={id} value={105} unit="dB" onChange={() => {}} />}</FieldRow>
+          </Popover>
+          <Button onClick={() => setBottom(true)}>Open bottom sheet</Button>
+        </div>
+        <Sheet bottom open={bottom} onClose={() => setBottom(false)} title="Program signal" footer={<Button variant="primary" onClick={() => setBottom(false)}>Done</Button>}>
+          <FieldRow label="Crest factor">{(id) => <NumberField id={id} value={6} unit="dB" onChange={() => {}} />}</FieldRow>
         </Sheet>
       </Specimen>
     </Block>

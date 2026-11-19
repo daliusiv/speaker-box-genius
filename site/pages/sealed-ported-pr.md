@@ -13,6 +13,8 @@ The same woofer can go in a small sealed box, a big ported box or a passive radi
 
 [[Open all three boxes (with a subsonic filter)|box-types-example]] [[The same three, no filter|box-types-nofilter]]
 
+Try it: the [sealed box calculator](/calculators/sealed-box/) sizes the sealed box for your driver, and the [port length](/calculators/port-length/) and [passive radiator](/calculators/passive-radiator/) calculators finish the other two.
+
 ## The short answer
 
 - **Sealed is the smallest box, ported plays loudest near its tuning.** Here sealed is 39.8 L with F3 {{num:box-types-example/1/f3}} Hz; ported is 86.4 L with F3 {{num:box-types-example/2/f3}} Hz, and {{diff:box-types-example/2/1/max@25}} dB more output at 25 Hz.
@@ -143,6 +145,8 @@ Our 10″ is the interesting one. EBP 48 says sealed, but Qts 0.45 is comfortabl
    - **PR excursion** and **Port speed:** the radiators and the port.
 
 For more on each box type, see [the passive radiator guide](/guides/passive-radiator-box/) and [the port guide](/guides/port-chuffing/).
+
+Try it: the [ported box calculator](/calculators/ported-box/) gives a driver's QB3, C4 and BB4 boxes with a port that fits, without opening the simulator.
 
 ## Sources
 

@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "8 D 1.5 CS",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 62,
+    "qms": 2.21,
+    "qes": 0.35,
+    "vas_l": 25.5,
+    "re": 6.6,
+    "sd_cm2": 213.8,
+    "qts": 0.3,
+    "le_mh": 0.35,
+    "bl": 11.18,
+    "mms_g": 16.8,
+    "xmax_mm": 2.5,
+    "pe_w": 130
+  },
+  "physical": {
+    "cutout_mm": 184,
+    "depth_mm": 88.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/8-d-15-cs/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

@@ -16,6 +16,7 @@ export const KIND_COLORS: Record<DesignKind, readonly string[]> = {
   pr: ["#22c55e", "#86efac", "#84cc16", "#bbf7d0"],
   bandpass: ["#a855f7", "#d8b4fe", "#d946ef", "#e9d5ff"],
   line: ["#f472b6", "#f9a8d4", "#db2777", "#fbcfe8"],
+  ib: ["#14b8a6", "#5eead4", "#0f766e", "#ccfbf1"],
 };
 
 /** What a guide calls each of KIND_COLORS, shade by shade (site/liveNumbers.ts writes these into captions). */
@@ -25,6 +26,7 @@ export const KIND_COLOR_NAMES: Record<DesignKind, readonly string[]> = {
   pr: ["green", "light green", "lime", "pale green"],
   bandpass: ["purple", "light purple", "magenta", "pale purple"],
   line: ["pink", "light pink", "dark pink", "pale pink"],
+  ib: ["teal", "light teal", "dark teal", "pale teal"],
 };
 
 /** Measured curves: apart from the design palette, drawn dashed. */
@@ -39,6 +41,8 @@ export const LIMIT = {
   amp: "#0891b2",
   air: "#0d9488",
   deepBass: "#fbbf24",
+  /** Max SPL on a program: the target SPL line (amber, apart from the deep-bass yellow). */
+  target: "#f59e0b",
 } as const;
 
 /** Past a limit: the part of a curve over its line. */

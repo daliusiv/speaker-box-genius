@@ -20,6 +20,7 @@ test("every export format has a unique id, a known icon and a group", () => {
 test("every format writes its files for the example project's boxes", () => {
   for (const f of EXPORT_FORMATS) {
     if (f.id === "browser") continue; // localStorage: browser only
+    if (f.pick) continue; // picks a file; the app opens the window that writes it
     const ids = state.designs.filter((d) => d.on && (f.supports?.(d, state) ?? true) === true).map((d) => d.id);
     if (f.scope === "designs" && ids.length === 0) continue;
     const opts = f.defaults?.(state) ?? {};

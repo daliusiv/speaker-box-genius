@@ -11,6 +11,7 @@ export { Menu, MenuItemButton, type MenuItem } from "./Menu.tsx";
 export { MiniResponse } from "./MiniResponse.tsx";
 export { Notice } from "./Notice.tsx";
 export { NumberField, type NumberState } from "./NumberField.tsx";
+export { Popover } from "./Popover.tsx";
 export { RadioCards } from "./RadioCards.tsx";
 export { Readout } from "./Readout.tsx";
 export { Section } from "./Section.tsx";

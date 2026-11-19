@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "15 PFS 3",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 39,
+    "qms": 3.24,
+    "qes": 0.52,
+    "vas_l": 135.5,
+    "re": 5.1,
+    "sd_cm2": 855.3,
+    "qts": 0.45,
+    "le_mh": 1.36,
+    "bl": 17.5,
+    "mms_g": 127.7,
+    "xmax_mm": 7,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 163
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/15-pfs-3/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

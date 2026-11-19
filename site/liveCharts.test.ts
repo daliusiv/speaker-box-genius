@@ -38,6 +38,16 @@ test("live numbers: typographic minus, level against the passband, a tuned box's
   assert.equal(fillLive("{{num:assistant-example/1/x20}} / {{num:assistant-example/1/prx20}}"), "9.5 / 14.0");
 });
 
+test("live numbers: fs is the Fs of the driver in that box, the comparison driver's on its dashed run", () => {
+  // mismatch-example compares the DSA215-8 (Fs 33 Hz) with itself at Fs +15 %.
+  const [main, cmp] = [Number(fillLive("{{num:mismatch-example/1/fs:3}}")), Number(fillLive("{{num:mismatch-example/2/fs:3}}"))];
+  assert.ok(Math.abs(cmp / main - 1.15) < 1e-3, `${main} → ${cmp}`);
+  // break-in-15: only Cms changes, so Qts follows Fs (× 1.15) and Vas falls by 1.15².
+  assert.ok(Math.abs(Number(fillLive("{{num:break-in-15/4/qts:4}}")) / Number(fillLive("{{num:break-in-15/1/qts:4}}")) - 1.15) < 1e-3);
+  assert.ok(Math.abs(Number(fillLive("{{num:break-in-15/1/vas:3}}")) / Number(fillLive("{{num:break-in-15/4/vas:3}}")) - 1.15 ** 2) < 1e-3);
+  assert.ok(Math.abs(Number(fillLive("{{num:mismatch-example/2/fsfb:1}}")) / Number(fillLive("{{num:mismatch-example/1/fsfb:1}}")) - 1.15) < 1e-3);
+});
+
 test("live numbers: a bad placeholder stops the build and names the page", () => {
   assert.throws(() => fillLive("{{num:car-example/9/f3}}", "x.md"), /x\.md: .*has 3 designs/);
   assert.throws(() => fillLive("{{num:car-example/1/nope}}", "x.md"), /x\.md: .*unknown metric "nope"/);
@@ -232,4 +242,21 @@ test("live numbers: who leads, by how much", () => {
 
 test("live numbers: group delay peak and cycles", () => {
   assert.match(fillLive("{{num:group-delay/2/gdp}} {{num:group-delay/2/gdpf}} {{num:group-delay/2/gdc@40}}"), /^\d+\.\d \d+\.?\d? 0\.\d\d$/);
+});
+
+test("guide charts: a legend peak is red only where the app checks the limit, as its glow, summary and badge", async () => {
+  // No high-pass filter: the app checks the cone from 20 Hz (or from F3 when lower). The open attic
+  // passes Xmax only at 10 Hz (not checked: no glow, no ⚠); the EQ'd one is over from 18 Hz (red).
+  const src = "chart:ib-nofilter/excursion";
+  const c = await guideCharts(`![a](${src})`, "x.md");
+  const narrow = c.draw(src).split('class="gc-narrow"')[1]!;
+  const rows = [...narrow.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((m) => m[1]!).filter((r) => /mm/.test(r));
+  const red = (name: string) => {
+    const row = rows.find((r) => r.includes(name))!;
+    assert.ok(row, name);
+    return /class="over"/.test(row);
+  };
+  assert.equal(red("Open attic<"), false, "open attic: past Xmax only below 20 Hz");
+  assert.equal(red("Linkwitz"), true, "Linkwitz Transform: past Xmax from its F3 up");
+  assert.equal(red("Closed space"), false);
 });

@@ -25,7 +25,7 @@ export function wprFor(s: AppState, d: DesignState): { text: string; notes: stri
   const solved = solveDriver(s);
   if (solved.missing.length > 0) return "Enter enough driver parameters to simulate first.";
   if (!wprExportable(d))
-    return `WinISD can't open a ${d.kind === "line" ? "transmission line" : d.kind === "bandpass" && d.order === "6s" && d.frontOpening === "port" && d.rearOpening === "port" ? "6th-order bandpass box with the rear chamber ported into the front (it only has the kind ported to the room)" : "bandpass box with passive radiators"}.`;
+    return `WinISD can't open a${d.kind === "ib" ? "n infinite baffle (it has no such box)" : ` ${d.kind === "line" ? "transmission line" : d.kind === "bandpass" && d.order === "6s" && d.frontOpening === "port" && d.rearOpening === "port" ? "6th-order bandpass box with the rear chamber ported into the front (it only has the kind ported to the room)" : "bandpass box with passive radiators"}`}.`;
   const notes: string[] = [];
   const air = airOf(s);
   const t = solved.values;

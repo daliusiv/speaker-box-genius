@@ -14,6 +14,7 @@ const DIM_OF: Record<string, WedgeDim> = {
   "Top depth": "D1",
   "Slope angle": "theta",
   "Bottom depth": "D2",
+  "Lip height": "L",
   Walls: "T",
   "Sloped panel": "Tb",
   "Driver depth": "driver",
@@ -79,6 +80,7 @@ export function WedgeSize(props: {
         <Num help="Outside width, side to side (across the car)." label="Width" q="len" value={v.width_cm} onChange={(x) => set("width_cm", x)} />
         <Num help="Outside height, at the back (the upright panel)." label="Height" q="len" value={v.height_cm} onChange={(x) => set("height_cm", x)} />
         <Num help="Outside depth along the bottom, back to the foot of the slope: the long one." label="Bottom depth" q="len" value={v.depth_cm} onChange={(x) => set("depth_cm", x)} />
+        <Num help="Height of the upright part of the sloped face, below the slope. 0 = sloped all the way down (the usual car wedge)." label="Lip height" q="len" value={v.lip_cm} min={0} onChange={(x) => set("lip_cm", x)} />
         <FieldRow label="Enter top as" help="Enter the top depth, or the slope angle (the top depth follows from it).">
           {(id) => (
             <Segmented<"depth" | "angle">
@@ -95,11 +97,11 @@ export function WedgeSize(props: {
         </FieldRow>
         {byAngle ? (
           <Num
-            help="Slope of the sloped panel from horizontal (90° = upright). Sets the top depth: D1 = D2 − H·cot θ."
+            help="Slope of the sloped panel from horizontal (90° = upright). Sets the top depth: D1 = D2 − (H − lip)·cot θ."
             label="Slope angle"
             unit="°"
             value={Math.round(g.theta * 100) / 100}
-            onChange={(x) => x > 0 && x <= 90 && set("topDepth_cm", topDepthForAngle(v.depth_cm * 10, v.height_cm * 10, x) / 10)}
+            onChange={(x) => x > 0 && x <= 90 && set("topDepth_cm", topDepthForAngle(v.depth_cm * 10, v.height_cm * 10, x, v.lip_cm * 10) / 10)}
           />
         ) : (
           <Num help="Outside depth along the top: the short one." label="Top depth" q="len" value={v.topDepth_cm} min={0} onChange={(x) => set("topDepth_cm", x)} />
@@ -148,7 +150,7 @@ export function WedgeSize(props: {
               label="Drawing"
               value={props.show3d ? "3d" : "side"}
               options={[
-                { value: "side", label: "Side view" },
+                { value: "side", label: "Side" },
                 { value: "3d", label: "3D" },
               ]}
               onChange={(x) => props.onShow3d(x === "3d")}
@@ -164,12 +166,16 @@ export function WedgeSize(props: {
         <Fixed help="Slope from vertical: the bevel for butt joints." label="φ" value={deg(g.phi)} />
         <Fixed help="Inside depth along the bottom." label="Inside bottom" num={g.insideBottomDepth / 10} q="len" />
         <Fixed help="Inside depth along the top." label="Inside top" num={g.insideTopDepth / 10} q="len" />
+        {g.lip > 0 && <Fixed help="Inside height of the upright lip, floor to the foot of the slope." label="Inside lip" num={g.insideLip / 10} q="len" />}
         <Fixed help="Exact inside volume, before deductions. The sloped panel takes its thickness ÷ sin θ across." label="Inside" num={g.volume_l} q="vol" />
         {v.joinery === "butt" ? (
-          <Fixed help="Saw tilt for the bevelled edges: top and bottom of the baffle, the front edges of the top and bottom." label="Bevel" value={deg(a.bevel)} />
+          <>
+            <Fixed help={g.lip > 0 ? "Saw tilt for the bevelled edges: the top of the baffle and the front edge of the top." : "Saw tilt for the bevelled edges: top and bottom of the baffle, the front edges of the top and bottom."} label="Bevel" value={deg(a.bevel)} />
+            {a.lipJoint && <Fixed help="Saw tilt where the lip meets the baffle: the lip's top edge and the baffle's bottom edge, outside corner to inside corner." label="Lip joint" value={deg(Math.max(...a.lipJoint))} />}
+          </>
         ) : (
           <>
-            <Fixed help="Saw tilt at the bottom–slope miter." label="Miter bottom" value={deg(Math.max(...a.miter.bottom))} />
+            <Fixed help={a.lipJoint ? "Saw tilt at the lip–slope miter (the lip meets the bottom at 45°)." : "Saw tilt at the bottom–slope miter."} label={a.lipJoint ? "Miter lip" : "Miter bottom"} value={deg(Math.max(...a.miter.bottom))} />
             <Fixed help="Saw tilt at the top–slope miter." label="Miter top" value={deg(Math.max(...a.miter.top))} />
             <Fixed help="Saw tilt at the back corners." label="Miter back" value={deg(a.miter.back)} />
           </>

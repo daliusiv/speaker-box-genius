@@ -1,0 +1,66 @@
+name: Merge data-only changes from public
+
+# Private dev repo only. The sync's "Changes from public" PR (branch sync/from-public) holds what was
+# merged on the public repo, mostly driver submissions from the website form. When every file it
+# changes is under drivers/ or passive-radiators/ and all its checks are green, this merges it, so
+# the next public sync isn't held up waiting for a person. Anything else in it (code, docs,
+# workflows) or any check that isn't green leaves it for a person, with a line in the run summary.
+# Runs after each of the PR's workflows finishes; the last one to finish does the merge.
+
+on:
+  workflow_run:
+    workflows: ["CI", "UI visual", "Preview on Cloudflare"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  actions: write
+
+concurrency:
+  group: merge-public-data
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    if: ${{ github.event.repository.private == true && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.head_branch == 'sync/from-public') }}
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
+    steps:
+      - name: Merge when data-only and green
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          say() { echo "$1" | tee -a "$GITHUB_STEP_SUMMARY"; }
+          pr=$(gh api "repos/$GH_REPO/pulls?state=open&head=${GH_REPO%%/*}:sync/from-public" --jq '.[0] | select(.) | "\(.number) \(.head.sha)"')
+          if [ -z "$pr" ]; then say "No open \"Changes from public\" PR."; exit 0; fi
+          read -r number sha <<< "$pr"
+
+          # Data only: every changed file is a database entry or a brand file.
+          others=$(gh api --paginate "repos/$GH_REPO/pulls/$number/files" --jq '.[].filename' | grep -Ev '^(drivers|passive-radiators)/' || true)
+          if [ -n "$others" ]; then
+            say "#$number changes more than driver data, so it waits for a person:"
+            echo "$others" | sed 's/^/- /' | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Green: every check on the PR's head finished as success, skipped or neutral, and CI ran.
+          runs=$(gh api --paginate "repos/$GH_REPO/commits/$sha/check-runs?per_page=100" --jq '.check_runs[] | "\(.name)|\(.status)|\(.conclusion)"')
+          pending=$(echo "$runs" | awk -F'|' '$2 != "completed"' || true)
+          bad=$(echo "$runs" | awk -F'|' '$2 == "completed" && $3 != "success" && $3 != "skipped" && $3 != "neutral"' || true)
+          if ! echo "$runs" | grep -q '^check|completed|success$'; then say "#$number: CI hasn't passed yet."; exit 0; fi
+          if [ -n "$pending" ]; then say "#$number: checks still running; the last one to finish merges it."; exit 0; fi
+          if [ -n "$bad" ]; then
+            say "#$number: a check failed, so it waits for a person:"
+            echo "$bad" | sed 's/^/- /' | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          gh api -X PUT "repos/$GH_REPO/pulls/$number/merge" -f merge_method=merge -f sha="$sha" \
+            -f commit_title="Changes from public (driver data, merged automatically)" > /dev/null
+          say "Merged #$number (driver data only, all checks green)."
+          # A merge made with this token doesn't start main's workflows: rebuild the dev preview.
+          gh workflow run preview.yml --ref main && say "Started the preview build for main."

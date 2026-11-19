@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "8 Fe 2.5 CP",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 73,
+    "qms": 3.73,
+    "qes": 0.3,
+    "vas_l": 15.6,
+    "re": 5.5,
+    "sd_cm2": 213.8,
+    "qts": 0.28,
+    "le_mh": 0.5,
+    "bl": 13.01,
+    "mms_g": 19.8,
+    "xmax_mm": 4,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 184,
+    "depth_mm": 98
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/8-fe-2-5-cp/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

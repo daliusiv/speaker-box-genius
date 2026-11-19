@@ -174,7 +174,7 @@ The sealed figures follow Nousaine's rules of thumb: about 1.5 lb/ft³ for boxes
 
 ## Modelling stuffing in the app
 
-Each sealed, ported and passive radiator design has a **Stuffing** row on its card. The **Vb** you enter stays the real net volume; the app simulates the volume the stuffing makes the box act as, with the absorption loss (Qa) it adds:
+Each sealed, ported and passive radiator design has a **Stuffing** row on its card. The **Vb** you enter stays the real net volume (the [box volume calculator](/calculators/box-volume/) works it out from the outside size); the app simulates the volume the stuffing makes the box act as, with the absorption loss (Qa) it adds:
 
 | Stuffing | What the app uses | When |
 |---|---|---|

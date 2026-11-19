@@ -2,7 +2,7 @@
 
 **A free, browser-based loudspeaker enclosure simulator: a modern replacement for WinISD and Hornresp.**
 
-Design sealed, ported, passive radiator, bandpass and transmission line boxes for any driver, see straight away whether the cone, the passive radiators or the port run out of headroom, then share the live design with a link instead of a pile of screenshots.
+Design sealed, ported, passive radiator, bandpass, transmission line and infinite baffle subwoofers for any driver, see straight away whether the cone, the passive radiators or the port run out of headroom, then share the live design with a link instead of a pile of screenshots.
 
 **Try it: https://speakerboxgenius.com**
 
@@ -18,6 +18,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 - **Sealed**, **ported** (vented) and **passive radiator** boxes
 - **4th- and 6th-order bandpass**, each chamber with its own port or passive radiators
+- **Infinite baffle**: drivers in a wall, floor or ceiling with an open attic or garage behind them, or a closed space of any volume (its leak never reaches the room); Hornresp import and export ([guide](https://speakerboxgenius.com/guides/infinite-baffle/))
 - **Port and PR position**: next to the cone, on the back panel or a set distance away, added up in front of the box or as Hornresp's Acoustic Path Length
 - **Transmission lines**: open lines, mass-loaded lines, **tapped horns** and **front-loaded horns**, built from tapered sections (parallel, conical or exponential), with stuffing, the driver anywhere along the line and a drawing of the folded box. Presets and **Compare types** cover every type but the tapped horn, whose starting point is being reworked; set one up by hand or import it from Hornresp
 - **Stuffing** per sealed, ported or passive radiator design: lined walls, a fibre fill by weight (g/L or lb/ft³, with the grams to weigh out) or your own measured values, so an empty and a stuffed box can sit on one chart; **fit to a measured impedance sweep** (.zma) finds the volume a finished box really acts as and its Qa
@@ -27,10 +28,10 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 - **SPL**, relative or absolute (dB SPL), with each design's **F3** marked
 - **Cone excursion** with an **Xmax redline**, and **passive radiator excursion** with each PR's own Xmax and a shaded caution band below it (75 % of Xmax by default, a rule of thumb)
-- **Port air velocity** with a **chuffing-risk line** (peak or RMS; 17 m/s by default, your own in Settings → Limits → Port speed, used by every check and the design assistant)
+- **Port air velocity** with a **chuffing-risk line** (peak or RMS; 17 m/s by default, your own in Settings → Limits → Port speed & excursion, used by every check and the design assistant)
 - **Box pressure**: the peak sound pressure inside the box (both chambers of a bandpass), the load on the cone and the walls; matches Hornresp's diaphragm pressure chart
 - **Air distortion**: the 2nd harmonic a box's air spring adds when a big cone squeezes a small box (sealed, ported, PR and bandpass), and that builds up along a line or horn as the wave steepens (checked against Thuras 1935), in % or dBc, at the power set or at max SPL, with each box's peak in the summary and your own limit (Settings → Limits → Air distortion); it can also count as a Max SPL limit. The air only: the driver's own distortion isn't modelled
-- **Maximum SPL**: the loudest each box can play at every frequency, with a band showing what limits it there (Xmax, PR Xmax, port speed or thermal power), and the **amplifier voltage and current** needed to reach it, after the filter and EQ, against your amplifier's limits (typed in, or worked out from its watt ratings)
+- **Maximum SPL**: the loudest each box can play at every frequency, with a band showing what limits it there (Xmax, PR Xmax, port speed or thermal power), and the **amplifier voltage, current and power** needed to reach it, after the filter and EQ, against your amplifier's limits (volts, amps and watts typed in, or volts and amps worked out from its watt ratings); on a sine or on a **program signal** (pink noise, music, cinema or your own crest factor), with the **headroom on peaks and on average** against a target SPL
 - **Impedance** (magnitude or phase, with the lowest load the amplifier sees), **group delay**, and **line load (Za)** for lines and horns
 - For lines: the **cone and mouth** contributions on their own, and **pressure and air speed along the line** at any frequency, showing where stuffing does the most
 - **Edit on the chart:** ✎ Edit lets you drag a ported or PR box's tuning, or an EQ point (frequency, gain; tap its chip under the chart for its fields, type, ✓ / ✕ and delete), with mouse, finger or keyboard. Tap the chart and "+ Add" puts a parametric EQ, low or high shelf, high-pass or Linkwitz Transform (sealed boxes) at that frequency, at 0 dB until you drag it. The high-pass is a ▲ handle on its corner (−3 dB, or −6 dB for Linkwitz-Riley; 5–200 Hz; Delete turns it off), a dashed curve shows the EQ chain on its own, and a Limits strip marks where Xmax, PR Xmax, port speed or air distortion is near or passed, with a one-tap "Cut to …" fix (the gain that just fits, or a Linkwitz Transform's fp). Cancel puts everything back as it was
@@ -40,15 +41,15 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 ### Drivers
 
-- **A T/S parameter editor that never overwrites what you typed.** Type any set of parameters in any order; the rest are calculated (shown in grey), and contradictions are flagged. A box-type hint (EBP and Qts) says whether the driver leans sealed or ported
+- **A T/S parameter editor that never overwrites what you typed.** Type any set of parameters in any order; the rest are calculated (shown in grey), and contradictions are flagged. Change a database driver or passive radiator and a line says what was edited, with **Reset** to get the published values back (shared links remember which database entry it was). A box-type hint (EBP and Qts) says whether the driver leans sealed or ported
 - **Paste straight from a datasheet**: the parameters are picked out of the text, with units like "1.9 ft³" or "35630 mm²" converted
-- **A driver database of about 1,610 drivers from 20 brands**, plus 59 passive radiators, searchable and filterable, with links to each manufacturer's datasheet. Values that look wrong for a driver (an Xmax too large for its cone, say) are marked "check" until someone confirms them against the datasheet, and the design assistant leaves those drivers out
+- **A driver database of about 1,800 drivers from 23 brands**, plus 59 passive radiators, searchable and filterable, with links to each manufacturer's datasheet. Values that look wrong for a driver (an Xmax too large for its cone, say) are marked "check" until someone confirms them against the datasheet, and the design assistant leaves those drivers out
 - **A page for every driver** on the site ([speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/)), with suggested sealed, ported and passive radiator boxes (none over 300 L) at the driver's power rating, their charts, and a link that opens them in the app
 - **Compare with another driver**: a second driver drawn dashed in every box, with its own number of drivers and wiring if you like (one 15″ against two 10″s), and **Swap** to make it the main one
 - **Multiple drivers**: any number, wired in series or parallel, **isobaric** pairs and **dual voice coil** drivers
 - **Measure your own driver** from a free-air impedance sweep (DATS, REW, ARTA and others, as `.zma`, `.txt` or `.csv`), with an added-mass sweep for Vas
 - Voice-coil inductance models (Le, and L2R2 for a closer match to measurements), and a **hot voice coil** setting for power compression
-- **Import and export WinISD** `.wdr` drivers and `.wpr` projects (open any sealed, ported, PR or ported bandpass box in WinISD; slot ports go both ways as WinISD's rectangular vents), **import OpenISD** `.owpr` projects and `.owdr` drivers, and send a driver to the database from the app
+- **Import and export WinISD** `.wdr` drivers and `.wpr` projects (open any sealed, ported, PR or ported bandpass box in WinISD; slot ports go both ways as WinISD's rectangular vents), **import OpenISD** `.owpr` projects and `.owdr` drivers, and send a driver to the database from the app. A file with values missing still opens, with what was filled in listed
 - **Export an LTspice netlist** of any box: the equivalent circuit the app is tested against, with a header that says what to plot
 
 ### Sizing and tuning
@@ -56,7 +57,8 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **Alignment presets sized like WinISD's wizard**: Qtc 0.5, 0.577 and 0.707 for sealed boxes; QB3, plus C4/SC4 and BB4/SBB4, for ported and PR boxes, giving the same boxes as WinISD (counting its 0.1 Ω amplifier resistance and the box's losses). Settings → Simulation → Box → Box presets → Textbook gives the lossless textbook alignments instead (QB3/B4, Keele, SQB3, C4/SC4, BB4/SBB4). One tap sizes every box for the driver (sealed at Qtc 0.707, or twice Vas when Qts is so close to 0.707 that the box would run away) and picks each port: the simplest that fits and stays under the chuffing line at the driver's rated power. A single preset keeps your port when its new length fits the box, and otherwise picks one the same way
 - **Find a passive radiator**: tries every PR in the database (and, optionally, woofers used as PRs) in groups of 1, 2 or 4, tunes each with added mass and ranks them by bass extension and spare travel. Also a stand-alone [passive radiator calculator](https://speakerboxgenius.com/calculators/passive-radiator/): the added mass for any box, tuning and PR, and whether the PRs keep up with your driver
 - **Best PR tuning**: the added mass for the flattest response, the deepest bass or the smallest box for a target F3
-- **Port fit checks**: the port length for a tuning, whether it fits inside the box, round or slot ports, flared ends, your own end correction (K), the likely tuning range of a slot along a wall, and an option to model ports as pipes (with their own resonances). Also a stand-alone [port length calculator](https://speakerboxgenius.com/calculators/port-length/)
+- **Port fit checks**: the port length for a tuning, whether it fits inside the box, round or slot ports, flared ends, your own end correction (K), the likely tuning range of a slot along a wall, and an option to model ports as pipes (with their own resonances). Also a stand-alone [port length calculator](https://speakerboxgenius.com/calculators/port-length/) and a [ported box calculator](https://speakerboxgenius.com/calculators/ported-box/) (QB3, C4 and BB4 boxes as WinISD sizes them, with a port that fits and its air speed)
+- **Calculators** on the site ([all of them](https://speakerboxgenius.com/calculators/)): each runs the simulator's own engine, keeps your inputs in its link (**Copy link** shares exactly what you see) and opens the box in the simulator: [subwoofer box](https://speakerboxgenius.com/calculators/subwoofer-box/) (a compact, a balanced and a deep box for your sub, sealed or ported), port length, passive radiator, [sealed box](https://speakerboxgenius.com/calculators/sealed-box/) (the volume for a target Qtc, or the Qtc, F3 and cone excursion of the box you have) [ported box](https://speakerboxgenius.com/calculators/ported-box/) (QB3, C4 and BB4 boxes as WinISD sizes them, with a port that fits and its air speed) and [box volume](https://speakerboxgenius.com/calculators/box-volume/) (the net volume of a box, car wedge, cylinder, sphere or tapered box from its outside size, minus driver, ports, PRs and bracing, or the size for a net volume)
 - **Tune a line** by its length (or its port, for a mass-loaded line) to a target frequency
 
 ### Signal and room
@@ -65,11 +67,11 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **High-pass filter** (Butterworth 6–24 dB/oct or Linkwitz–Riley 12 and 24 dB/oct), **Linkwitz Transform**, peaking, low-shelf and high-shelf **EQ** (matched with Hornresp)
 - **Export to DSP**: the high-pass and EQ as biquads for **Equalizer APO**, **CamillaDSP 3** or **miniDSP**, or as a coefficient CSV, at 44.1, 48, 96 or 192 kHz
 - **Passive parts** between the amplifier and the drivers: series coils (with their resistance), capacitors across, Zobels and L-pads, in up to four branches (Hornresp's layout); the impedance chart shows what the amplifier sees
-- **Car cabin or room gain**, or **your own room-gain curve** (.txt or .frd, as Hornresp imports it), and **baffle step** for free-standing speakers
+- **Car cabin or room gain**, or **your own room-gain curve** (.txt or .frd, as Hornresp imports it), and **baffle step** for free-standing speakers, also on a driver's own .frd (Save & Export → Crossover tools: saved with the baffle's diffraction for VituixCAD or XSim; checked against The Edge)
 
 ### Volume and build
 
-- **Real-world net volume calculator** for boxes, car wedges (single slope, exact, with a double-baffle option, a side-view drawing, saw angles and a driver-motor clearance check), cylinders (with their own end-cap thickness), spheres and tapered boxes (all sides; walls taken square to each sloping face), with the shape's lowest standing wave, minus the drivers, passive radiators, ports, bracing and crossover board, linked to a design so its volume follows the calculator
+- **Real-world net volume calculator** for boxes, car wedges (single slope, exact, with a double-baffle option, an optional upright lip under the slope, a side-view drawing, saw angles and a driver-motor clearance check), cylinders (with their own end-cap thickness), spheres and tapered boxes (all sides; walls taken square to each sloping face), with the shape's lowest standing wave, minus the drivers, passive radiators, ports, bracing and crossover board, linked to a design so its volume follows the calculator. Also a stand-alone [box volume calculator](https://speakerboxgenius.com/calculators/box-volume/) on the site
 - **3D take-apart view** of every volume-calculator shape (box, car wedge, tube, sphere, tapered box): turn it round, pull it apart piece by piece, tap a panel for its cut size; drawn by a small built-in renderer, loaded only when opened
 - **Build sheet**: panel sizes, cutouts, port and braces, a **cut list laid out on stock sheets**, metric or imperial (to 1/16″), a PDF export and a **FreeCAD macro** that builds every panel as a solid, with the air inside checked against the app's volume
 
@@ -89,7 +91,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **Metric or imperial** units
 - **Match** WinISD, Hornresp or VituixCAD: one choice sets that program's conventions together (air constants, coil inductance, how watts are counted; for Hornresp also the cone's air load, ports as pipes, leaked air and SPL from radiated power; for VituixCAD its stuffing gain, port sound and F3), for like-for-like comparisons. Opening a WinISD project sets the WinISD one
 - **Your own air**: temperature, humidity and pressure (for altitude or a hot car), which set the air's density and speed of sound
-- Box losses (Ql, Qa, Qp), amplifier and cable resistance (0.1 Ω by default, as WinISD), peak or RMS port speed and the chuffing line
+- Box losses (Ql, Qa, Qp; a sealed, ported or PR box can have its own Ql), amplifier and cable resistance (0.1 Ω by default, as WinISD), peak or RMS port speed and the chuffing line
 
 ## Accuracy
 
@@ -102,13 +104,13 @@ The model is small-signal and lumped (one-dimensional for lines). Port compressi
 
 ## The driver database
 
-The database lives in this repo, in [`drivers/`](drivers) and [`passive-radiators/`](passive-radiators): about 1,610 drivers and 59 passive radiators. Sources and credits are in [`docs/data-sources.md`](docs/data-sources.md). Every driver with enough parameters also gets a page on the site with suggested sealed, ported and passive radiator boxes: [speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/). It isn't affiliated with or endorsed by any manufacturer. Spotted a mistake? [Ask for a correction or removal](../../issues/new?template=data-correction.yml).
+The database lives in this repo, in [`drivers/`](drivers) and [`passive-radiators/`](passive-radiators): about 1,800 drivers and 59 passive radiators. Sources and credits are in [`docs/data-sources.md`](docs/data-sources.md). Every driver with enough parameters also gets a page on the site with suggested sealed, ported and passive radiator boxes: [speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/). It isn't affiliated with or endorsed by any manufacturer. Spotted a mistake? [Ask for a correction or removal](../../issues/new?template=data-correction.yml).
 
 ## Contributing
 
 There are two ways to help:
 
-1. **Add drivers and passive radiators.** No coding needed. Use the [new driver form](../../issues/new?template=new-driver.yml) and copy the numbers from the manufacturer's datasheet. See [`drivers/README.md`](drivers/README.md).
+1. **Add drivers and passive radiators.** No coding and no GitHub account needed: enter the datasheet values in [the app](https://speakerboxgenius.com/), then **Edit T/S → ⋯ → Submit to database…** and paste the datasheet link (a passive radiator you typed has the same button on its card). With GitHub you can also use the [new driver form](../../issues/new?template=new-driver.yml). See [`drivers/README.md`](drivers/README.md).
 2. **Work on the code.** See [`CONTRIBUTING.md`](CONTRIBUTING.md). Code and docs contributions need a one-time [Contributor License Agreement](CLA.md), signed with a comment on your first pull request; adding drivers doesn't.
 
 ## Development
@@ -137,7 +139,6 @@ Merging to `main` builds and deploys to GitHub Pages automatically.
 - More ported and passive radiator alignments, and the tapped-horn preset back
 - A low-pass filter, included in the DSP export
 - A tolerance band on the charts
-- A box volume calculator page on the site, with all the calculators on one page
 - CAD drawings of the build sheet (SVG/DXF)
 - Checks against real, measured boxes
 

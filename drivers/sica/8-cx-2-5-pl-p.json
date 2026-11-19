@@ -1,0 +1,35 @@
+{
+  "brand": "Sica",
+  "model": "8 Cx 2.5 PL P",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 74,
+    "qms": 2.63,
+    "qes": 0.32,
+    "vas_l": 16.2,
+    "re": 5.6,
+    "sd_cm2": 213.8,
+    "qts": 0.28,
+    "le_mh": 0.6,
+    "bl": 12.34,
+    "mms_g": 18.5,
+    "xmax_mm": 5,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 184,
+    "depth_mm": 111.6
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/8-cx-2-5-pl/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial: the woofer's parameters (the tweeter's are left out)."
+}

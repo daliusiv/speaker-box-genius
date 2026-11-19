@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "rea
 import { REPO } from "./components.tsx";
 import { DRIVER_AS_PR, doubtsXmax, flagText, type DataQuality, type DbIndex } from "./library.ts";
 import { useUnits } from "./units.ts";
+import { boxSuits } from "./boxType.ts";
 import { Icon } from "./Icon.tsx";
 import { Button, ButtonLink, Chip, Select, TextField } from "./ui/index.ts";
 
@@ -72,8 +73,13 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
   const filterCount = Object.values(filters).reduce((n, v) => n + v.length, 0);
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 }>({ key: "name", dir: 1 });
   const [cursor, setCursor] = useState(0);
+  // The dialog's contents (and the filtered list) only exist while it's open: with ~1,800
+  // drivers the table alone was ~20k elements on first load. Search, filters and sort live
+  // here, so reopening keeps them.
+  const [isOpen, setIsOpen] = useState(false);
 
   const open = () => {
+    setIsOpen(true);
     dlg.current?.showModal();
     setCursor(0);
     // Select the old query so typing replaces it.
@@ -86,6 +92,7 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
   };
 
   const shown = useMemo(() => {
+    if (!isOpen) return [];
     const tokens = query.split(/\s+/).map(norm).filter(Boolean);
     const list = props.rows.filter((r) => {
       const hay = norm(props.searchText(r));
@@ -105,14 +112,15 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
       const c = typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y), undefined, { numeric: true });
       return c * sort.dir || `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`, undefined, { numeric: true });
     });
-  }, [props.rows, props.columns, props.filters, props.searchText, query, filters, sort]);
+  }, [isOpen, props.rows, props.columns, props.filters, props.searchText, query, filters, sort]);
 
   useEffect(() => setCursor(0), [query, filters]);
 
   // Keep the highlighted row in view while arrowing through the list.
   useEffect(() => {
+    if (!isOpen) return;
     dlg.current?.querySelector<HTMLElement>(`tr[data-i="${cursor}"]`)?.scrollIntoView({ block: "nearest" });
-  }, [cursor]);
+  }, [cursor, isOpen]);
 
   const toggle = (key: string, value: string, multi: boolean) =>
     setFilters((f) => {
@@ -162,156 +170,159 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
         ref={dlg}
         className="library"
         aria-label={props.title}
+        onClose={() => setIsOpen(false)}
         onClick={(e) => {
           if (e.target === e.currentTarget) close(); // backdrop
         }}
       >
-        <div className="lib-inner">
-          <header>
-            <h2>{props.title}</h2>
-            <ButtonLink icon="plus" label="Missing one? Add it to the database" href={`${REPO}/blob/main/CONTRIBUTING.md`} target="_blank" />
-            <Button variant="ghost" icon="close" label="Close" onClick={close} />
-          </header>
-          <div className="lib-searchrow">
-            <TextField
-              ref={searchBox}
-              type="search"
-              icon="search"
-              className="lib-search"
-              placeholder={props.noun ? `Search ${props.rows.length.toLocaleString("en")} ${props.noun}` : "Search, e.g. rss315 or scan 30w"}
-              value={query}
-              onChange={(e) => setQuery(e.currentTarget.value)}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  setCursor((c) => Math.min(c + 1, shown.length - 1));
-                } else if (e.key === "ArrowUp") {
-                  e.preventDefault();
-                  setCursor((c) => Math.max(c - 1, 0));
-                } else if (e.key === "Enter" && shown[cursor]) {
-                  e.preventDefault();
-                  pick(shown[cursor].id);
-                }
-              }}
-              aria-label="Search"
-            />
-            <Button
-              className="lib-filter-toggle"
-              data-active={filterCount > 0 || undefined}
-              aria-expanded={filtersOpen}
-              aria-controls={filtersId}
-              aria-label={filterCount > 0 ? `Filters, ${filterCount} on` : "Filters"}
-              onClick={() => setFiltersOpen(!filtersOpen)}
-            >
-              Filters
-              {filterCount > 0 && <Chip tone="accent">{filterCount}</Chip>}
-              <span aria-hidden="true">{filtersOpen ? "▴" : "▾"}</span>
-            </Button>
-          </div>
-          <div className={`lib-filters${filtersOpen ? " open" : ""}`} id={filtersId}>
-            <label className="lib-filter lib-sort">
-              <span>Sort by</span>
-              <Select value={`${sort.key}:${sort.dir}`} options={sortOptions} onChange={(v) => {
-                const [key, dir] = v.split(":");
-                setSort({ key: key!, dir: Number(dir) as 1 | -1 });
-              }} />
-            </label>
-            {props.filters.map((f) =>
-              f.kind === "select" ? (
-                <label key={f.key} className="lib-filter">
-                  <span>{f.label}</span>
-                  <Select
-                    value={filters[f.key]?.[0] ?? ""}
-                    options={[{ value: "", label: "All" }, ...f.options.map((o) => ({ value: o.value, label: o.text }))]}
-                    onChange={(v) => toggle(f.key, v, false)}
-                  />
-                </label>
-              ) : (
-                <div key={f.key} className="lib-filter" role="group" aria-label={f.label} title={f.hint}>
-                  <span>{f.label}</span>
-                  <div className="lib-chips">
-                    {f.options.map((o) => (
-                      <Chip key={o.value} pressed={filters[f.key]?.includes(o.value) ?? false} onClick={() => toggle(f.key, o.value, true)}>
-                        {o.text}
-                      </Chip>
-                    ))}
-                  </div>
-                </div>
-              ),
-            )}
-          </div>
-          {props.note}
-          <p className="lib-status">
-            {shown.length} of {props.rows.length}
-            {active && (
-              <button
-                type="button"
-                className="link"
-                onClick={() => {
-                  setQuery("");
-                  setFilters({});
+        {isOpen && (
+          <div className="lib-inner">
+            <header>
+              <h2>{props.title}</h2>
+              <ButtonLink icon="plus" label="Missing one? Add it to the database" href={`${REPO}/blob/main/CONTRIBUTING.md`} target="_blank" />
+              <Button variant="ghost" icon="close" label="Close" onClick={close} />
+            </header>
+            <div className="lib-searchrow">
+              <TextField
+                ref={searchBox}
+                type="search"
+                icon="search"
+                className="lib-search"
+                placeholder={props.noun ? `Search ${props.rows.length.toLocaleString("en")} ${props.noun}` : "Search, e.g. rss315 or scan 30w"}
+                value={query}
+                onChange={(e) => setQuery(e.currentTarget.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setCursor((c) => Math.min(c + 1, shown.length - 1));
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setCursor((c) => Math.max(c - 1, 0));
+                  } else if (e.key === "Enter" && shown[cursor]) {
+                    e.preventDefault();
+                    pick(shown[cursor].id);
+                  }
                 }}
+                aria-label="Search"
+              />
+              <Button
+                className="lib-filter-toggle"
+                data-active={filterCount > 0 || undefined}
+                aria-expanded={filtersOpen}
+                aria-controls={filtersId}
+                aria-label={filterCount > 0 ? `Filters, ${filterCount} on` : "Filters"}
+                onClick={() => setFiltersOpen(!filtersOpen)}
               >
-                Clear search and filters
-              </button>
-            )}
-          </p>
-          <div className="lib-table">
-            <table>
-              <thead>
-                <tr>
-                  {props.columns.map((c) => {
-                    const on = sort.key === c.key;
-                    return (
-                      <th
-                        key={c.key}
-                        className={`${c.num ? "num" : ""}${c.wide ? " wide" : ""}`}
-                        title={c.title}
-                        aria-sort={on ? (sort.dir === 1 ? "ascending" : "descending") : undefined}
-                      >
-                        {c.sort || c.key === "name" ? (
-                          <button
-                            type="button"
-                            onClick={() => setSort((s) => ({ key: c.key, dir: s.key === c.key ? ((-s.dir) as 1 | -1) : 1 }))}
-                          >
-                            {c.label}
-                            <span className="arrow">{on ? (sort.dir === 1 ? "▲" : "▼") : ""}</span>
-                          </button>
-                        ) : (
-                          c.label
-                        )}
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {shown.map((r, i) => (
-                  <tr
-                    key={r.id}
-                    data-i={i}
-                    className={i === cursor ? "cursor-row" : undefined}
-                    onClick={() => pick(r.id)}
-                    onMouseMove={() => i !== cursor && setCursor(i)}
-                  >
-                    {props.columns.map((c) => (
-                      <td key={c.key} className={`${c.num ? "num" : ""}${c.wide ? " wide" : ""}`}>
-                        {c.cell(r)}
-                        {c.key === "name" && <span className="lib-summary">{props.summary(r)}</span>}
-                      </td>
-                    ))}
+                Filters
+                {filterCount > 0 && <Chip tone="accent">{filterCount}</Chip>}
+                <span aria-hidden="true">{filtersOpen ? "▴" : "▾"}</span>
+              </Button>
+            </div>
+            <div className={`lib-filters${filtersOpen ? " open" : ""}`} id={filtersId}>
+              <label className="lib-filter lib-sort">
+                <span>Sort by</span>
+                <Select value={`${sort.key}:${sort.dir}`} options={sortOptions} onChange={(v) => {
+                  const [key, dir] = v.split(":");
+                  setSort({ key: key!, dir: Number(dir) as 1 | -1 });
+                }} />
+              </label>
+              {props.filters.map((f) =>
+                f.kind === "select" ? (
+                  <label key={f.key} className="lib-filter">
+                    <span>{f.label}</span>
+                    <Select
+                      value={filters[f.key]?.[0] ?? ""}
+                      options={[{ value: "", label: "All" }, ...f.options.map((o) => ({ value: o.value, label: o.text }))]}
+                      onChange={(v) => toggle(f.key, v, false)}
+                    />
+                  </label>
+                ) : (
+                  <div key={f.key} className="lib-filter" role="group" aria-label={f.label} title={f.hint}>
+                    <span>{f.label}</span>
+                    <div className="lib-chips">
+                      {f.options.map((o) => (
+                        <Chip key={o.value} pressed={filters[f.key]?.includes(o.value) ?? false} onClick={() => toggle(f.key, o.value, true)}>
+                          {o.text}
+                        </Chip>
+                      ))}
+                    </div>
+                  </div>
+                ),
+              )}
+            </div>
+            {props.note}
+            <p className="lib-status">
+              {shown.length} of {props.rows.length}
+              {active && (
+                <button
+                  type="button"
+                  className="link"
+                  onClick={() => {
+                    setQuery("");
+                    setFilters({});
+                  }}
+                >
+                  Clear search and filters
+                </button>
+              )}
+            </p>
+            <div className="lib-table">
+              <table>
+                <thead>
+                  <tr>
+                    {props.columns.map((c) => {
+                      const on = sort.key === c.key;
+                      return (
+                        <th
+                          key={c.key}
+                          className={`${c.num ? "num" : ""}${c.wide ? " wide" : ""}`}
+                          title={c.title}
+                          aria-sort={on ? (sort.dir === 1 ? "ascending" : "descending") : undefined}
+                        >
+                          {c.sort || c.key === "name" ? (
+                            <button
+                              type="button"
+                              onClick={() => setSort((s) => ({ key: c.key, dir: s.key === c.key ? ((-s.dir) as 1 | -1) : 1 }))}
+                            >
+                              {c.label}
+                              <span className="arrow">{on ? (sort.dir === 1 ? "▲" : "▼") : ""}</span>
+                            </button>
+                          ) : (
+                            c.label
+                          )}
+                        </th>
+                      );
+                    })}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {shown.length === 0 && (
-              <p className="lib-empty">
-                Nothing matches. <a href={`${REPO}/blob/main/CONTRIBUTING.md`}>Add it to the database</a>, or enter its
-                parameters by hand.
-              </p>
-            )}
+                </thead>
+                <tbody>
+                  {shown.map((r, i) => (
+                    <tr
+                      key={r.id}
+                      data-i={i}
+                      className={i === cursor ? "cursor-row" : undefined}
+                      onClick={() => pick(r.id)}
+                      onMouseMove={() => i !== cursor && setCursor(i)}
+                    >
+                      {props.columns.map((c) => (
+                        <td key={c.key} className={`${c.num ? "num" : ""}${c.wide ? " wide" : ""}`}>
+                          {c.cell(r)}
+                          {c.key === "name" && <span className="lib-summary">{props.summary(r)}</span>}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {shown.length === 0 && (
+                <p className="lib-empty">
+                  Nothing matches. <a href={`${REPO}/blob/main/CONTRIBUTING.md`}>Add it to the database</a>, or enter its
+                  parameters by hand.
+                </p>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </dialog>
     </div>
   );
@@ -396,6 +407,35 @@ function sizeFilter<R extends { size_in?: number }>(rows: R[]): ChipFilter<R> {
   };
 }
 
+/** A row's EBP (Fs/Qes), or null without both. */
+const ebpOfRow = (r: { fs?: number; qes?: number }) => (r.fs && r.qes ? r.fs / r.qes : null);
+/** One driver's displacement Sd × Xmax (cm³), or null without both. */
+const vdOfRow = (r: { sd_cm2?: number; xmax_mm?: number }) => (r.sd_cm2 && r.xmax_mm ? (r.sd_cm2 * r.xmax_mm) / 10 : null);
+
+/**
+ * Which box a driver suits, from its datasheet (boxType.ts: EBP and Qts). Infinite baffle (a
+ * driver in a wall or floor, its back to an attic or the next room): low Fs (≤ 30 Hz) and a
+ * high Qts (≥ 0.5) or a low EBP (< 50), as the IB builders' rule of thumb has it.
+ */
+const SUITS: { value: string; text: string; match: (r: DbIndex["drivers"][number]) => boolean }[] = [
+  { value: "sealed", text: "Sealed", match: (r) => suitsOf(r) === "sealed" },
+  { value: "ported", text: "Ported", match: (r) => suitsOf(r) === "ported" },
+  {
+    value: "ib",
+    text: "Infinite baffle",
+    match: (r) => {
+      const ebp = ebpOfRow(r);
+      return r.fs !== undefined && r.fs <= 30 && ((r.qts ?? 0) >= 0.5 || (ebp !== null && ebp < 50));
+    },
+  },
+];
+
+function suitsOf(r: { fs?: number; qes?: number; qts?: number }) {
+  if (!r.fs || !r.qes || !r.qts || r.qts >= r.qes) return null;
+  const qms = 1 / (1 / r.qts - 1 / r.qes);
+  return boxSuits(r.fs, r.qes, qms)?.suits ?? null;
+}
+
 const QTS_BANDS: { value: string; text: string; lo: number; hi: number }[] = [
   { value: "low", text: "< 0.35", lo: 0, hi: 0.35 },
   { value: "mid", text: "0.35–0.5", lo: 0.35, hi: 0.5 },
@@ -411,6 +451,7 @@ export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onP
 }) {
   const units = useUnits();
   const vol = units.unit("vol");
+  const disp = units.unit("disp");
   const rows = props.rows ?? [];
 
   const filters = useMemo<ChipFilter<DriverRow>[]>(() => {
@@ -442,6 +483,14 @@ export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onP
         },
         hint: "Lower Qts generally suits ported boxes; higher Qts suits small sealed boxes",
       },
+      {
+        key: "suits",
+        label: "Suits",
+        kind: "chips",
+        options: SUITS.map((s) => ({ value: s.value, text: s.text })),
+        match: (r, v) => SUITS.find((s) => s.value === v)!.match(r),
+        hint: "From EBP (Fs/Qes) and Qts. Infinite baffle: Fs ≤ 30 Hz with Qts ≥ 0.5 or EBP < 50",
+      },
     ];
     if (types.length > 1) {
       list.push({
@@ -462,6 +511,7 @@ export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onP
       { key: "ohms", label: "Ω", sort: (r) => r.ohms, cell: ohmsText, num: true, title: "Nominal impedance (DVC: per coil)" },
       { key: "fs", label: "Fs", sort: (r) => r.fs, cell: (r) => fmt(r.fs), num: true, title: "Resonance, Hz" },
       { key: "qts", label: "Qts", sort: (r) => r.qts, cell: (r) => fmt(r.qts, 2), num: true },
+      { key: "ebp", label: "EBP", sort: (r) => ebpOfRow(r) ?? undefined, cell: (r) => fmt(ebpOfRow(r) ?? undefined, 0), num: true, wide: true, title: "Efficiency bandwidth product, Fs/Qes: under ~50 suits sealed (or infinite baffle), over ~100 ported" },
       {
         key: "vas",
         label: `Vas ${vol.unit}`,
@@ -471,9 +521,21 @@ export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onP
         wide: true,
       },
       { key: "xmax", label: "Xmax", sort: (r) => r.xmax_mm, cell: xmaxCell, num: true, title: "One-way linear excursion, mm" },
+      {
+        key: "vd",
+        label: `Vd ${disp.unit}`,
+        sort: (r) => vdOfRow(r) ?? undefined,
+        cell: (r) => {
+          const v = vdOfRow(r);
+          return v === null ? "–" : (v * disp.k).toFixed(disp.digits);
+        },
+        num: true,
+        wide: true,
+        title: "Displacement of one driver, Sd × Xmax: the air it can move (compare drivers for output in the deep bass)",
+      },
       { key: "pe", label: "Pe W", sort: (r) => r.pe_w, cell: (r) => fmt(r.pe_w, 0), num: true, wide: true, title: "Thermal power handling" },
     ],
-    [vol.unit, vol.k, vol.digits],
+    [vol.unit, vol.k, vol.digits, disp.unit, disp.k, disp.digits],
   );
 
   return (

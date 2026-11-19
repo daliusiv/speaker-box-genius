@@ -13,6 +13,10 @@ const newLine = (s: AppState) => newDesign("line", s.designs);
 import { baffleStepFrequency, estimateDriverDisplacement, keeleAlignment, portLengthForFb, sealedVolumeForAlignment, type PortInput } from "../packages/engine/src/index.ts";
 import { alignmentDriver, baffleOf, dimensionsFor, driverInputOf, runDesigns, simOptionsOf, solveDriver } from "../packages/web/src/sim.ts";
 import { compareLines } from "../packages/web/src/lineopt.ts";
+import { boxForQtc, roundVb, sealedState } from "../packages/web/src/calculators/sealedMath.ts";
+import { alignmentChips, portedBox } from "../packages/web/src/calculators/portedMath.ts";
+import { driverState, loadDb } from "./drivers.ts";
+import { subwooferExampleState } from "./calculators.ts";
 
 const ROOT = new URL("..", import.meta.url);
 const json = (path: string) => JSON.parse(readFileSync(new URL(path, ROOT), "utf8"));
@@ -67,7 +71,7 @@ function prExample(): AppState {
     ...s,
     designs: [
       { ...vented, name: "Ported", vb_l: vb, shape: "round", diameter_cm: 5, flare_cm: 0, length_cm: Math.round(length * 10) / 10, count: 1, targetFb: fb, preset: "QB3" },
-      { ...pr, name: "PR", vb_l: vb, prName: "Dayton Audio DS215-PR", params: prParams("dayton-audio/ds215-pr"), count: 1, addedMass_g: 4, targetFb: fb, extra: [] },
+      { ...pr, name: "PR", vb_l: vb, prName: "Dayton Audio DS215-PR", prId: "dayton-audio/ds215-pr", params: prParams("dayton-audio/ds215-pr"), count: 1, addedMass_g: 4, targetFb: fb, extra: [] },
     ],
   };
 }
@@ -185,6 +189,7 @@ function boxTypesExample(filter: boolean) {
       name: "Passive radiators",
       vb_l: BOX_TYPES.vented_l,
       prName: "Dayton Audio RSS265-PR",
+      prId: "dayton-audio/rss265-pr",
       params: prParams("dayton-audio/rss265-pr"),
       count: 2,
       addedMass_g: BOX_TYPES.prMass_g,
@@ -304,6 +309,69 @@ function mismatchExample(): AppState {
   return { ...s, compare: { ...asCompare(s), driverName: "Dayton Audio DSA215-8 (Fs +15 %)", ts: { ...s.ts, fs: s.ts.fs! * 1.15 } } };
 }
 
+/**
+ * A driver whose suspension compliance is `k` × the datasheet's: only Cms changes (Mms, Bl, Re,
+ * Sd and Rms stay), so Vas scales by k and Fs, Qes, Qms and Qts by 1/√k.
+ */
+export function withCms(ts: AppState["ts"], k: number): AppState["ts"] {
+  const r = 1 / Math.sqrt(k);
+  const out = { ...ts };
+  for (const p of ["fs", "qes", "qms", "qts"] as const) if (out[p] !== undefined) out[p] = out[p]! * r;
+  if (out.vas_l !== undefined) out.vas_l = out.vas_l * k;
+  if (out.cms_mm_per_n !== undefined) out.cms_mm_per_n = out.cms_mm_per_n * k;
+  return out;
+}
+
+/**
+ * Break-in guide: the RSS265HF-4 as its datasheet (a run-in driver) in a 30 L sealed box, a
+ * 50 L ported box at 26 Hz (4″ port flared 2.5 cm) and an open-rear infinite baffle (the compare
+ * guide's boxes), at 120 W (every cone inside Xmax) behind a 22 Hz 24 dB/oct high-pass, compared with the same driver
+ * fresh out of the box: its suspension stiffer, Cms × `k` (5 % as Audioholics measured, or the
+ * Fs +15 % of a stiff subwoofer).
+ */
+export const BREAK_IN = { k5: 1 / 1.05, k15: 1 / 1.15 ** 2, watts: 120 };
+function breakInExample(k: number, label: string) {
+  return (): AppState => {
+    const s = compareExample();
+    const ib = { ...newDesign("ib", s.designs), id: "d3", name: "Infinite baffle" } as DesignState;
+    return {
+      ...s,
+      power: BREAK_IN.watts,
+      driverName: "Dayton Audio RSS265HF-4 (run in)",
+      designs: [...s.designs, ib],
+      compare: { ...asCompare(s), driverName: `Dayton Audio RSS265HF-4 (${label})`, ts: withCms(s.ts, k) },
+    };
+  };
+}
+
+/**
+ * Break-in guide's measurement trap: the run-in driver (the datasheet) in the boxes the presets size
+ * (Qtc 0.707 sealed, QB3 ported) for the stiff driver as measured fresh (Cms × k15), beside the
+ * boxes they size for its datasheet values.
+ */
+function breakInTrap(): AppState {
+  const base = withDriver({ ...DEFAULT_STATE, power: BREAK_IN.watts, highPass: highPass(4, COMPARE.hp) }, "dayton-audio/rss265hf-4");
+  const boxes = (s: AppState) => {
+    const d = sizeAllForDriver(s).state.designs;
+    return [d.find((x) => x.kind === "sealed")!, d.find((x) => x.kind === "vented")!] as const;
+  };
+  const [stiffSealed, stiffPorted] = boxes({ ...base, ts: withCms(base.ts, BREAK_IN.k15) });
+  const [sealed, ported] = boxes(base);
+  const litres = (d: DesignState) => `${Math.round(d.vb_l * 10) / 10} L`;
+  // Both ported boxes get the same 4″ flared port (cut for each tuning), so only the box differs.
+  const port = { shape: "round" as const, diameter_cm: 10.16, flare_cm: 2.5 };
+  const vented = (d: DesignState, id: string, name: string) => ({ ...ventedWith(d as Vented, name, d.vb_l, (d as Vented).targetFb!, port), id });
+  return {
+    ...base,
+    designs: [
+      { ...stiffSealed, id: "d1", name: `Sealed ${litres(stiffSealed)}, sized fresh` },
+      { ...sealed, id: "d2", name: `Sealed ${litres(sealed)}, sized run-in` },
+      vented(stiffPorted, "d3", `Ported ${litres(stiffPorted)}, sized fresh`),
+      vented(ported, "d4", `Ported ${litres(ported)}, sized run-in`),
+    ],
+  };
+}
+
 /** Port tuning: the same port in the box as designed (16.2 L) and as built (14.1 L net, after the driver, port tube and bracing). */
 function portTuningExample(): AppState {
   const s = dsaPorted();
@@ -402,6 +470,52 @@ function isoExample(pair: boolean, coils: "parallel" | "series" = "parallel") {
   };
 }
 
+/**
+ * Infinite baffle guide: four Dayton Audio UMII18-22 in parallel in a ceiling, their backs to an
+ * open attic, next to the same four with a 2000 L closed space behind them (2 × their Vas);
+ * 100 W behind a 24 dB/oct high-pass at 15 Hz. `eq` adds a Linkwitz Transform on the open
+ * one, from its own Fc and Qtc to 18 Hz at Q 0.707.
+ */
+/**
+ * Infinite baffle guide: four Dayton Audio UMII18-22 (DVC 2 Ω, each driver's coils in parallel,
+ * the four drivers in series: a 4.2 Ω load) at 2000 W, as an IB ceiling build would run them.
+ * Three designs on one chart: an open attic, the same with a Linkwitz Transform to 18 Hz at
+ * Q 0.707, and a 2000 L closed space (about twice the four drivers' Vas). `hp` sets the subsonic
+ * filter for all three: off, or a 4th-order filter at 15 Hz (Linkwitz–Riley or Butterworth).
+ */
+export const IB_EX = { power: 2000, rear_l: 2000, fp: 18, qp: 0.707, hp_hz: 15 };
+function ibExample(hp: "off" | "linkwitz-riley" | "butterworth") {
+  return (): AppState => {
+    const s = withDriver(
+      {
+        ...DEFAULT_STATE,
+        power: IB_EX.power,
+        drivers: 4,
+        wiring: "series",
+        dvc: { on: true, entered: "series", wired: "parallel" },
+        highPass: hp === "off" ? { ...DEFAULT_STATE.highPass, on: false } : { ...highPass(4, IB_EX.hp_hz), type: hp },
+      },
+      "dayton-audio/umii18-22",
+    );
+    const base = newDesign("ib", []) as Extract<DesignState, { kind: "ib" }>;
+    const open = { ...base, id: "d1", name: "Open attic", rear: "open" as const };
+    const plain = { ...s, designs: [open] };
+    const r = runDesigns(plain, solveDriver(plain))[0]!.result.summary;
+    // As the app fills them in from the design (Eq.tsx): fc to 0.1 Hz, Qtc to 0.001.
+    const f0 = Math.round(r.fc! * 10) / 10;
+    const q0 = Math.round(r.qtc! * 1000) / 1000;
+    return {
+      ...s,
+      designs: [
+        open,
+        { ...open, id: "d2", name: "Open attic + Linkwitz Transform" },
+        { ...base, id: "d3", name: `Closed space, ${IB_EX.rear_l} L`, rear: "space" as const, vb_l: IB_EX.rear_l },
+      ],
+      eq: [{ id: "e1", on: true, target: "d2", type: "linkwitz", f0, q0, fp: IB_EX.fp, qp: IB_EX.qp }],
+    };
+  };
+}
+
 /** A copy of the state with the absorption loss Qa (in Settings, so it applies to every design) set. */
 
 /**
@@ -466,6 +580,24 @@ function qtcExample(): AppState {
       const vb = sealedVolumeForAlignment(align, q);
       if (!vb) throw new Error(`No sealed box for Qtc ${q}`);
       return { ...sealed, id: `d${i + 1}`, name: `Qtc ${q}`, vb_l: Math.round(vb * 10) / 10, preset: `Qtc ${q}` };
+    }),
+  };
+}
+
+/**
+ * The sealed box calculator's worked example: a Dayton Audio RSS315HF-4 12″ at 250 W in the boxes
+ * the calculator gives for Qtc 0.577, 0.707 and 0.9 (site/calculators.ts works the table out from
+ * these same designs).
+ */
+export const SEALED_CALC = { driverId: "dayton-audio/rss315hf-4", power_w: 250, qtcs: [0.577, 0.707, 0.9] };
+function sealedCalcExample(): AppState {
+  const s = withDriver({ ...DEFAULT_STATE, power: SEALED_CALC.power_w }, SEALED_CALC.driverId);
+  return {
+    ...s,
+    designs: SEALED_CALC.qtcs.map((q, i) => {
+      const b = boxForQtc(s, q);
+      if (typeof b === "string") throw new Error(`No sealed box for Qtc ${q}`);
+      return { ...sealedState(s, b.vb_l, `Qtc ${q}, ${roundVb(b.vb_l).toFixed(1)} L`).designs[0]!, id: `d${i + 1}` };
     }),
   };
 }
@@ -753,7 +885,7 @@ function assistantExample(): AppState {
     ...s,
     dvc: { on: true, entered: "series", wired: "series" },
     designs: [
-      { ...pr, id: "d1", name: "PR RSS315HO-44", vb_l: ASSISTANT_EX.pr_l, prName: "Dayton Audio RSS315-PR", count: ASSISTANT_EX.prCount, addedMass_g: ASSISTANT_EX.prMass_g, targetFb: ASSISTANT_EX.fb, params: prParams("dayton-audio/rss315-pr"), extra: [], preset: "Assistant" },
+      { ...pr, id: "d1", name: "PR RSS315HO-44", vb_l: ASSISTANT_EX.pr_l, prName: "Dayton Audio RSS315-PR", prId: "dayton-audio/rss315-pr", count: ASSISTANT_EX.prCount, addedMass_g: ASSISTANT_EX.prMass_g, targetFb: ASSISTANT_EX.fb, params: prParams("dayton-audio/rss315-pr"), extra: [], preset: "Assistant" },
       { ...v, id: "d2", name: "Ported RSS315HO-44", vb_l: ASSISTANT_EX.pr_l, shape: "round", ...ASSISTANT_EX.port, count: 1, targetFb: ASSISTANT_EX.fb, preset: "Assistant" },
       { ...byKind(DEFAULT_STATE, "sealed"), id: "d3", name: "Sealed RSS315HO-44", vb_l: ASSISTANT_EX.sealed_l, preset: "Assistant" },
     ],
@@ -761,12 +893,17 @@ function assistantExample(): AppState {
 }
 
 export const EXAMPLES: Record<string, () => AppState> = {
+  "subwoofer-example": () => subwooferExampleState("ported").state,
   "assistant-example": assistantExample,
+  "sealed-calc": sealedCalcExample,
   "stuffing-sealed": stuffingSealed(false),
   "stuffing-sealed-losses": stuffingSealed(true),
   "stuffing-ported-empty": stuffingPorted(false),
   "stuffing-ported-filled": stuffingPorted(true),
   "mismatch-example": mismatchExample,
+  "break-in-5": breakInExample(BREAK_IN.k5, "fresh, 5 % stiffer"),
+  "break-in-15": breakInExample(BREAK_IN.k15, "fresh, Fs +15 %"),
+  "break-in-trap": breakInTrap,
   "tol-fs-up": toleranceExample("fs", 1.15),
   "tol-fs-down": toleranceExample("fs", 0.85),
   "tol-vas-down": toleranceExample("vas_l", 0.75),
@@ -846,7 +983,29 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "baffle-free": baffleExample("free"),
   "baffle-eq3": baffleExample("eq3"),
   "baffle-passive": baffleExample("passive"),
+  "ib-example": ibExample("linkwitz-riley"),
+  "ib-nofilter": ibExample("off"),
+  "ib-bw15": ibExample("butterworth"),
+  "ported-box-example": portedBoxExample,
 };
+
+/**
+ * The ported box calculator's worked example (/calculators/ported-box/): a Dayton Audio
+ * RSS315HF-4 at 250 W in each of the alignments the calculator offers it (QB3, C4, BB4), each
+ * with the port the calculator picks. The page's table and chart come from this one state.
+ */
+export const PORTED_EX = { driverId: "dayton-audio/rss315hf-4", power_w: 250 };
+export function portedBoxExample(): AppState {
+  const rec = loadDb().drivers.find((d) => d.id === PORTED_EX.driverId);
+  if (!rec) throw new Error(`examples: ${PORTED_EX.driverId} isn't in the database`);
+  const s = { ...driverState(rec.data), drive: "watts" as const, power: PORTED_EX.power_w };
+  const designs = alignmentChips(s).map((c, i) => {
+    const r = portedBox(s, c.vb_l, c.fb, c.label);
+    if (!r) throw new Error(`examples: no port for ${c.label}`);
+    return { ...r.design, id: `d${i + 1}`, name: `${c.label}: ${c.vb_l} L, ${c.fb} Hz` };
+  });
+  return { ...s, designs };
+}
 
 /** Share links (`https://…/#z=…`) for every example. */
 export async function exampleLinks(site: string): Promise<Record<string, string>> {

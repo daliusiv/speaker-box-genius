@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "18 PFS 4",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 28.7,
+    "qms": 4.31,
+    "qes": 0.41,
+    "vas_l": 245.9,
+    "re": 5.68,
+    "sd_cm2": 1164.2,
+    "qts": 0.37,
+    "le_mh": 0.62,
+    "bl": 24.6,
+    "mms_g": 240.2,
+    "xmax_mm": 9.5,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 417,
+    "depth_mm": 209.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/18-pfs-4/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

@@ -10,8 +10,8 @@ dist/
 # generated at build time from drivers/ and passive-radiators/
 packages/web/public/db/
 
-# written by the database-submissions workflow on failure
-issue-error.md
+# written by the database-submissions workflow (the bot's issue comment)
+issue-comment.md
 
 # Importer reports (used as PR descriptions, not committed)
 *-import-report.md

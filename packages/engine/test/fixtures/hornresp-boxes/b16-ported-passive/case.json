@@ -1,0 +1,31 @@
+{
+  "title": "Ported box with a passive filter",
+  "text": "B2 with Hornresp's passive Filter Wizard: 0.3 ohm and 2.2 mH in line (branch 1, series), 47 uF across the speaker (branch 2)",
+  "frontAir": 1,
+  "input": {
+    "kind": "vented",
+    "vb_l": 30,
+    "port": {
+      "shape": "round",
+      "diameter_cm": 7,
+      "length_cm": 15
+    },
+    "ql": null,
+    "qa": null,
+    "qp": null
+  },
+  "portModel": "pipe",
+  "passive": {
+    "branches": [
+      {
+        "r": 0.3,
+        "l_mH": 2.2,
+        "join": "series"
+      },
+      {
+        "c_uF": 47,
+        "join": "series"
+      }
+    ]
+  }
+}

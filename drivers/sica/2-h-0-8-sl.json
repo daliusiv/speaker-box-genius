@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "2 H 0.8 SL",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 2,
+  "ts": {
+    "fs": 216,
+    "qms": 2.75,
+    "qes": 1,
+    "vas_l": 0.1,
+    "re": 5.5,
+    "sd_cm2": 11.3,
+    "qts": 0.81,
+    "le_mh": 0.2,
+    "bl": 2.6,
+    "mms_g": 0.9,
+    "xmax_mm": 1.4,
+    "pe_w": 20
+  },
+  "physical": {
+    "cutout_mm": 48,
+    "depth_mm": 32.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/2-h-08-sl/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

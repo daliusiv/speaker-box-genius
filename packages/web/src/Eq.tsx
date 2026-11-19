@@ -43,13 +43,13 @@ export function EqSection(props: { state: AppState; designs: Design[]; onChange:
   const eq = state.eq;
   const set = (item: EqItem) => props.onChange(eq.map((e) => (e.id === item.id ? item : e)));
   const remove = (item: EqItem) => props.onChange(eq.filter((e) => e.id !== item.id));
-  const sealedResult = (id: string) => props.designs.find((d) => d.design.id === id && d.design.kind === "sealed")?.result;
+  const sealedResult = (id: string) => props.designs.find((d) => d.design.id === id && (d.design.kind === "sealed" || d.design.kind === "ib"))?.result;
 
   const add = (type: EqStage["type"]) => {
     const id = newId(eq);
     if (type === "linkwitz") {
       // Aim it at the first sealed design and start from its fc / Qtc.
-      const sealed = props.designs.find((d) => d.design.kind === "sealed");
+      const sealed = props.designs.find((d) => d.design.kind === "sealed" || d.design.kind === "ib");
       const fc = sealed?.result.summary.fc ?? 40;
       const qtc = sealed?.result.summary.qtc ?? 0.7;
       props.onChange([
@@ -83,7 +83,7 @@ export function EqSection(props: { state: AppState; designs: Design[]; onChange:
 
   return (
     <Section help={helpEntries(HELP)} icon="sliders" title="EQ" value={eq.length === 0 ? "None" : `${eq.length} filter${eq.length > 1 ? "s" : ""}${on < eq.length ? ` · ${eq.length - on} off` : ""}`}>
-      {eq.length === 0 && <p className="hint">No EQ. Add a Linkwitz Transform to a sealed box, or shape any design.</p>}
+      {eq.length === 0 && <p className="hint">No EQ. Add a Linkwitz Transform to a sealed box or infinite baffle, or shape any design.</p>}
       {eq.map((e) => {
         const r = e.type === "linkwitz" ? sealedResult(e.target) : undefined;
         return (
@@ -112,11 +112,11 @@ export function EqSection(props: { state: AppState; designs: Design[]; onChange:
                 <Button
                   variant="ghost"
                   disabled={!r}
-                  title={r ? "Use the sealed design's fc and Qtc as f0 and Q0" : "Pick a sealed design under “Applies to”"}
+                  title={r ? "Use the box's fc and Qtc as f0 and Q0" : "Pick a sealed box or infinite baffle under “Applies to”"}
                   onClick={() => r && set({ ...e, f0: round(r.summary.fc!), q0: round(r.summary.qtc!, 3) })}
                 >
                   <Sparkle />
-                  Match sealed design
+                  Match the box
                 </Button>
               )}
               <Button variant="ghost" icon="trash" onClick={() => remove(e)}>

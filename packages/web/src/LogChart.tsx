@@ -41,6 +41,11 @@ export interface Series {
   thin?: boolean;
   /** This curve's own limit: where it runs above it, a red glow is drawn behind it. */
   over?: number;
+  /**
+   * Judge `over`, `deepOver` and `deepFloor` against this curve instead of `y` (one value per
+   * point): e.g. a cone's excursion while its velocity is shown, so the glow marks the same frequencies.
+   */
+  judge?: Float64Array;
   /** Below this frequency the limit is `deepOver` instead (a tuned box's deep bass, graded). */
   deepBelow?: number;
   deepOver?: number;
@@ -54,6 +59,16 @@ export interface Series {
   noRank?: boolean;
   /** Drawn faint (opacity 0.35) but still in the legend: a reference or inactive curve. */
   fade?: boolean;
+  /** Per-design values for Props.summary's columns (one each, not read at the cursor): e.g. headroom. */
+  summary?: readonly SummaryCell[];
+}
+
+/** One value in a summary column: "+3.2 dB", where ("@ 28 Hz") and why ("port speed"), and how it reads. */
+export interface SummaryCell {
+  main: string;
+  at?: string;
+  why?: string;
+  tone?: "ok" | "warn" | "over";
 }
 
 /**
@@ -97,6 +112,11 @@ export interface Limit {
   value: number;
   label: string;
   color: string;
+  /**
+   * A limit that changes with frequency, one value per point of `freq` (e.g. Xmax as a velocity,
+   * ω·Xmax): drawn as a curve in place of a level line, and `value` is not used.
+   */
+  curve?: Float64Array;
 }
 
 /** A shaded horizontal band between two values across the whole chart (a caution zone under a limit). */
@@ -105,6 +125,9 @@ export interface Band {
   to: number;
   label: string;
   color: string;
+  /** Edges that change with frequency (one value per point of `freq`), in place of `from` and `to`. */
+  fromCurve?: Float64Array;
+  toCurve?: Float64Array;
 }
 
 /** A shaded band from the left edge up to `below` Hz, with its own limit drawn across it only. */
@@ -113,7 +136,12 @@ export interface Zone {
   value: number;
   label: string;
   color: string;
+  /** A limit that changes with frequency (one value per point of `freq`), in place of `value`. */
+  curve?: Float64Array;
 }
+
+/** A curve's lowest finite value (its in-range end, for a limit that rises with frequency). */
+const lowest = (c: Float64Array) => c.reduce((m, v) => (Number.isFinite(v) && v < m ? v : m), Infinity);
 
 export type LogChartProps = Props;
 
@@ -138,6 +166,8 @@ interface Props {
   /** Controls shown in the caption beside the title (e.g. a view switch). */
   actions?: ReactNode;
   digits?: number;
+  /** Values in the readout to this many significant figures instead of a fixed `digits` (small and large values alike). */
+  sig?: number;
   /**
    * Which value leads at the tapped frequency, marked in the readout: "high" (SPL), "low"
    * (excursion, port speed) or "zero" (closest to zero: group delay). None: no marker.
@@ -169,6 +199,13 @@ interface Props {
   peakFrom?: number;
   /** No Peak column (a chart whose top value says nothing, e.g. a phase). */
   noPeak?: boolean;
+  /**
+   * Columns of one value per design (each series' `summary`) in place of Peak, in the legend and the
+   * hover box (e.g. headroom on peaks / on average), with a line over the legend saying what they are.
+   */
+  summary?: { headings: string[]; tipHeadings?: string[]; caption?: string };
+  /** One point to ring and label on the plot (e.g. the least headroom of all the boxes). */
+  worst?: { f: number; y: number; label: string; tone: "ok" | "warn" | "over" };
   /** The handle picked (tapped, clicked or focused), or null when the plot itself is tapped. */
   onSelect?: (id: string | null) => void;
   /** The picked handle, drawn ringed. */
@@ -182,6 +219,8 @@ interface Props {
    * across instead of measuring itself, no hover hint, and a cursor only where `at` puts it.
    */
   still?: { width: number; at?: number };
+  /** The legend's first column heading (default "Enclosure"). */
+  rowHeading?: string;
 }
 
 /** A point on the chart that can be dragged (edit mode): a box's tuning, an EQ point. */
@@ -216,7 +255,7 @@ const padOf = (k: number, tall: boolean) =>
   tall
     ? { l: 34 + 14 * (k - 1), r: 6 + 6 * (k - 1), t: 26 * k, b: 20 + 12 * (k - 1) }
     : { l: 48 + 22 * (k - 1), r: 12 + 16 * (k - 1), t: 30 + 12 * (k - 1), b: 28 + 14 * (k - 1) };
-const X_TICKS = [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000];
+const X_TICKS = [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 5000, 10000, 20000];
 /** A y label. Phones' lean margin fits about three digits, so thousands become "1.5k". */
 export const tickLabel = (v: number, tall: boolean) =>
   tall && Math.abs(v) >= 1000 ? `${Number((v / 1000).toFixed(2))}k` : String(Number(v.toFixed(6)));
@@ -254,6 +293,7 @@ export function LogChart({
   limitStyle = "limit",
   actions,
   digits = 1,
+  sig,
   best,
   shortTitle,
   hidden,
@@ -268,11 +308,14 @@ export function LogChart({
   noteLabel = "Note",
   peakFrom,
   noPeak = false,
+  summary,
+  worst,
   onSelect,
   selected,
   onPlotTap,
   ribbonReserve = 0,
   still,
+  rowHeading = "Enclosure",
 }: Props) {
   const clipId = useId();
   const shared = useContext(Crosshair);
@@ -321,12 +364,21 @@ export function LogChart({
       }
     }
   }
+  // A limit that rises with frequency keeps its low end in view (as a level line keeps all of it); the rest may run off the top.
   for (const l of limits) {
-    lo = Math.min(lo, l.value);
-    hi = Math.max(hi, l.value * 1.1);
+    const v = l.curve ? lowest(l.curve) : l.value;
+    if (!Number.isFinite(v)) continue;
+    lo = Math.min(lo, v);
+    hi = Math.max(hi, v * 1.1);
   }
-  for (const z of zones) hi = Math.max(hi, z.value * 1.1);
-  for (const b of bands) hi = Math.max(hi, b.to * 1.1);
+  for (const z of zones) {
+    const v = z.curve ? lowest(z.curve) : z.value;
+    if (Number.isFinite(v)) hi = Math.max(hi, v * 1.1);
+  }
+  for (const b of bands) {
+    const v = b.toCurve ? lowest(b.toCurve) : b.to;
+    if (Number.isFinite(v)) hi = Math.max(hi, v * 1.1);
+  }
   if (!Number.isFinite(lo)) {
     lo = 0;
     hi = 1;
@@ -338,6 +390,17 @@ export function LogChart({
   lo = Math.floor(lo / step) * step;
   hi = Math.ceil(hi / step) * step;
   const yOf = (v: number) => PAD.t + (1 - (v - lo) / (hi - lo)) * PH;
+  /** A per-frequency curve as a path (up to `upTo` Hz), held to a little outside the plot (the plot clips it). */
+  const curvePath = (c: Float64Array, reverse = false, upTo = Infinity) => {
+    const pts: string[] = [];
+    for (let n = 0; n < c.length; n++) {
+      const i = reverse ? c.length - 1 - n : n;
+      if (freq[i]! > upTo || !Number.isFinite(c[i]!)) continue;
+      const y = Math.max(PAD.t - PH, Math.min(PAD.t + 2 * PH, yOf(c[i]!)));
+      pts.push(`${xOf(freq[i]!).toFixed(1)},${y.toFixed(1)}`);
+    }
+    return pts.length ? `M${pts.join("L")}` : "";
+  };
   const editing = handles.length > 0;
   // The handle being dragged (or focused from the keyboard): its bubble shows.
   const [active, setActive] = useState<string | null>(null);
@@ -382,18 +445,27 @@ export function LogChart({
   const yTicks: number[] = [];
   for (let v = lo; v <= hi + step / 2; v += step) yTicks.push(v);
 
-  /** The parts of a curve above `limit`, as a path (for the over-limit glow). */
-  const overPathOf = (y: Float64Array, over: number, deepBelow?: number, deepOver?: number, deepFloor?: number) => {
-    const limit = (i: number) =>
+  /**
+   * A curve's limit at each point, as the app checks it: none below `deepFloor`, `deepOver` in a
+   * tuned box's deep-bass zone, else `over`. The glow, the legend's red values and the summary agree.
+   */
+  const limitOf =
+    (over: number, deepBelow?: number, deepOver?: number, deepFloor?: number) =>
+    (i: number): number =>
       deepFloor !== undefined && freq[i]! < deepFloor ? Infinity : deepBelow !== undefined && deepOver !== undefined && freq[i]! < deepBelow ? deepOver : over;
+  /** The parts of a curve above `limit`, as a path (for the over-limit glow). */
+  const overPathOf = (y: Float64Array, over: number, deepBelow?: number, deepOver?: number, deepFloor?: number, judge?: Float64Array) => {
+    const limit = limitOf(over, deepBelow, deepOver, deepFloor);
+    // What's judged against the limit: the curve itself, or the one it was worked out from.
+    const j = judge ?? y;
     let d = "";
     let pen = false;
     for (let i = 0; i < y.length; i++) {
       const v = y[i]!;
-      const prev = i > 0 ? y[i - 1]! : NaN;
-      const next = i + 1 < y.length ? y[i + 1]! : NaN;
+      const prev = i > 0 ? j[i - 1]! : NaN;
+      const next = i + 1 < y.length ? j[i + 1]! : NaN;
       // Include the neighbours of over-limit points so the glow reaches the crossing.
-      const on = Number.isFinite(v) && (v > limit(i) || prev > limit(i - 1) || next > limit(i + 1));
+      const on = Number.isFinite(v) && (j[i]! > limit(i) || prev > limit(i - 1) || next > limit(i + 1));
       if (!on) {
         pen = false;
         continue;
@@ -431,6 +503,9 @@ export function LogChart({
   };
 
   const visible = series.filter((s) => s.y);
+  // Decimals shown for a value: fixed, or enough for `sig` significant figures (at most 4).
+  const decimals = (v: number) =>
+    sig === undefined || !Number.isFinite(v) || v === 0 ? digits : Math.min(4, Math.max(0, sig - 1 - Math.floor(Math.log10(Math.abs(v)))));
   // The leader at the tapped frequency (ties at the shown precision all lead); only with two or more to rank.
   const leaders = (() => {
     const out = new Set<string>();
@@ -438,7 +513,7 @@ export function LogChart({
     const ranked = visible.filter((s) => !s.thin && !s.noRank && Number.isFinite(s.y![hover]!));
     if (ranked.length < 2) return out;
     const score = (s: Series) => {
-      const v = Number(s.y![hover]!.toFixed(digits));
+      const v = Number(s.y![hover]!.toFixed(decimals(s.y![hover]!)));
       return best === "high" ? v : best === "low" ? -v : -Math.abs(v);
     };
     const top = Math.max(...ranked.map(score));
@@ -451,7 +526,7 @@ export function LogChart({
 
   // Legend rows: value at the cursor, peak (and where), the chart's own columns, then notes.
   const num = (v: number) => {
-    const t = v.toFixed(digits);
+    const t = v.toFixed(decimals(v));
     return /^-0(\.0+)?$/.test(t) ? t.slice(1) : t; // never "-0.0"
   };
   const withUnit = (v: number) => (unit && unit.length <= 4 ? `${num(v)} ${unit}` : num(v));
@@ -471,6 +546,12 @@ export function LogChart({
       }
     }
     const v = hover === null ? NaN : y[hover]!;
+    // Red where the curve is over its limit where the app checks it (as the glow): a peak below
+    // the checked range (no high-pass filter, under 20 Hz) isn't a failure.
+    // A curve judged on another (`judge`, e.g. velocity on its excursion) is red where that one is over.
+    const limit = s.over === undefined ? null : limitOf(s.over, s.deepBelow, s.deepOver, s.deepFloor);
+    const judged = s.judge ?? y;
+    const overAnywhere = limit !== null && judged.some((q, i) => Number.isFinite(q) && q > limit(i));
     const cut = s.label.lastIndexOf(" · ");
     const parent = s.thin && cut > 0 && designLabels.has(s.label.slice(0, cut)) ? s.label.slice(0, cut) : undefined;
     return {
@@ -478,11 +559,13 @@ export function LogChart({
       label: parent ? s.label : shortName(s.label),
       color: s.color,
       dash: s.dash,
-      parent,
+      // A part folds under its design's row, which shows the short name ("PR", "TL").
+      parent: parent ? shortName(parent) : undefined,
       at: Number.isFinite(v) ? withUnit(v) : "–",
-      atOver: s.over !== undefined && Number.isFinite(v) && v > s.over && (s.deepBelow === undefined || freq[hover!]! >= s.deepBelow),
+      atOver: limit !== null && hover !== null && Number.isFinite(v) && judged[hover]! > limit(hover),
       lead: leaders.has(s.label) ? { mark, title: markTitle } : undefined,
-      peak: noPeak || !Number.isFinite(pk) ? undefined : { main: withUnit(pk), sub: `@ ${fHz(pkF)}`, over: s.over !== undefined && pk > s.over && (s.deepBelow === undefined || pkF >= s.deepBelow) },
+      summary: summary ? (s.summary ?? []) : undefined,
+      peak: noPeak || summary || !Number.isFinite(pk) ? undefined : { main: withUnit(pk), sub: `@ ${fHz(pkF)}`, over: overAnywhere },
       cols: [...columns.map((_, ci) => (hover === null ? "" : (s.cols?.[ci]?.[hover] ?? ""))), ...(hasNotes ? [hover === null ? "" : (s.notes?.[hover] ?? "")] : [])],
       faint: faded.length > 0 && fadedBy(faded, s.label),
     };
@@ -496,7 +579,24 @@ export function LogChart({
   const ROW = 11 * k;
   const usedKinds = Object.keys(ribbonKinds).filter((kind) => ribbons.some((r) => r.kinds.includes(kind)));
   const ribbonRows = ribbonReserve > 0 ? Math.max(ribbons.length, ribbonReserve) : ribbons.length;
-  const ribbonH = ribbonRows > 0 ? 8 * k + ribbonRows * ROW + 20 * k : 0;
+  // The key wraps onto another line when it would run past the plot's right edge (phones, long labels).
+  const KEY_LINE = 16 * k;
+  const keyAt: { kind: string; x: number; line: number }[] = [];
+  {
+    let x = PAD.l;
+    let line = 0;
+    for (const kind of usedKinds) {
+      const w = 16 * k + ribbonKinds[kind]!.label.length * 6.2 * k;
+      if (x > PAD.l && x + w > W - PAD.r) {
+        x = PAD.l;
+        line++;
+      }
+      keyAt.push({ kind, x, line });
+      x += w + 14 * k;
+    }
+  }
+  const keyLines = keyAt.length > 0 ? keyAt[keyAt.length - 1]!.line + 1 : 1;
+  const ribbonH = ribbonRows > 0 ? 8 * k + ribbonRows * ROW + 20 * k + (keyLines - 1) * KEY_LINE : 0;
   ribbonsHeight = ribbonH;
   const edge = (i: number) =>
     i <= 0 ? PAD.l : i >= freq.length ? W - PAD.r : (xOf(freq[i - 1]!) + xOf(freq[i]!)) / 2;
@@ -510,7 +610,6 @@ export function LogChart({
     }
     return out;
   };
-  let legendX = PAD.l;
 
   return (
     <figure className={`chart${editing ? " editing" : ""}`} hidden={hidden} data-chart={chartId} data-forum={forum ? "" : undefined}>
@@ -573,7 +672,7 @@ export function LogChart({
           <table className="tip-table">
             <thead>
               <tr>
-                <th scope="col">{legendColumns.length > 0 || hasPeakTip ? "Enclosure" : ""}</th>
+                <th scope="col">{legendColumns.length > 0 || hasPeakTip || summary ? rowHeading : ""}</th>
                 <th scope="col" className="legend-at on">
                   {fHz(freq[hover]!)}
                 </th>
@@ -583,6 +682,12 @@ export function LogChart({
                     Peak
                   </th>
                 )}
+                {summary &&
+                  (summary.tipHeadings ?? summary.headings).map((h) => (
+                    <th scope="col" key={h} className="num">
+                      {h}
+                    </th>
+                  ))}
                 {legendColumns.map((c, ci) => (
                   <th scope="col" key={c} className={numCols[ci] ? "num" : undefined}>
                     {c}
@@ -612,6 +717,21 @@ export function LogChart({
                       )}
                     </td>
                   )}
+                  {summary &&
+                    summary.headings.map((h, ci) => {
+                      const c = r.summary?.[ci];
+                      return (
+                        <td key={h} className="tip-peak" data-tone={c?.tone}>
+                          {c ? (
+                            <>
+                              {c.main} {c.at && <span className="muted">{c.at}</span>}
+                            </>
+                          ) : (
+                            "–"
+                          )}
+                        </td>
+                      );
+                    })}
                   {legendColumns.map((c, ci) => (
                     <td key={c} className={`legend-note${numCols[ci] ? " num" : ""}`}>
                       {r.cols[ci] || "–"}
@@ -719,9 +839,13 @@ export function LogChart({
         <g clipPath={`url(#${clipId})`}>
           {bands.map((b, bi) => (
             <g key={`band-${bi}`}>
-              <rect className="band" x={PAD.l} y={yOf(b.to)} width={W - PAD.l - PAD.r} height={Math.max(0, yOf(b.from) - yOf(b.to))} fill={b.color} opacity={0.12} />
+              {b.fromCurve && b.toCurve ? (
+                <path className="band" d={`${curvePath(b.toCurve)}${curvePath(b.fromCurve, true).replace(/^M/, "L")}Z`} fill={b.color} opacity={0.12} />
+              ) : (
+                <rect className="band" x={PAD.l} y={yOf(b.to)} width={W - PAD.l - PAD.r} height={Math.max(0, yOf(b.from) - yOf(b.to))} fill={b.color} opacity={0.12} />
+              )}
               {b.label && (
-                <text className="limit-label" x={PAD.l + 4} y={yOf(b.from) - 4} textAnchor="start" fill={b.color} {...fs(11)}>
+                <text className="limit-label" x={PAD.l + 4} y={b.fromCurve ? PAD.t + 28 * k : yOf(b.from) - 4} textAnchor="start" fill={b.color} {...fs(11)}>
                   {b.label}
                 </text>
               )}
@@ -733,14 +857,45 @@ export function LogChart({
             return (
               <g key={`zone-${zi}`}>
                 <rect x={PAD.l} y={PAD.t} width={x2 - PAD.l} height={PH} fill={z.color} opacity={0.08} />
-                <line className="limit" x1={PAD.l} x2={x2} y1={yOf(z.value)} y2={yOf(z.value)} stroke={z.color} {...sw(1.5)} />
-                <text className="limit-label" x={PAD.l + 4} y={yOf(z.value) - 4} textAnchor="start" fill={z.color} {...fs(11)}>
+                {z.curve ? (
+                  <path className="limit" d={curvePath(z.curve, false, z.below)} fill="none" stroke={z.color} {...sw(1.5)} />
+                ) : (
+                  <line className="limit" x1={PAD.l} x2={x2} y1={yOf(z.value)} y2={yOf(z.value)} stroke={z.color} {...sw(1.5)} />
+                )}
+                {/* A curved limit's label sits at the top, under the first line (where other curved limits put theirs). */}
+                <text className="limit-label" x={PAD.l + 4} y={z.curve ? PAD.t + 28 * k : yOf(z.value) - 4} textAnchor="start" fill={z.color} {...fs(11)}>
                   {z.label}
                 </text>
               </g>
             );
           })}
-          {limits.map((l, li) => (
+          {limits
+            .filter((l) => l.curve)
+            .map((l, li) => {
+              const c = l.curve!;
+              // The label sits where the curve leaves the top of the plot (or at its right end).
+              let at = -1;
+              for (let i = 0; i < c.length; i++) if (Number.isFinite(c[i]!) && yOf(c[i]!) >= PAD.t + 14 * k) at = i;
+              const right = at >= 0 && xOf(freq[at]!) > PAD.l + PW / 3;
+              return (
+                <g key={`curve-${l.label}-${li}`}>
+                  <path className="limit" d={curvePath(c)} fill="none" stroke={l.color} {...sw(1.5)} />
+                  {at >= 0 && l.label && (
+                    <text
+                      className="limit-label"
+                      x={xOf(freq[at]!) + (right ? -6 : 6) * k}
+                      y={yOf(c[at]!) - 4 * k}
+                      textAnchor={right ? "end" : "start"}
+                      fill={l.color}
+                      {...fs(11)}
+                    >
+                      {l.label}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+          {limits.filter((l) => !l.curve).map((l, li) => (
             <g key={`${l.label}-${l.value}-${li}`}>
               <line
                 className={limitStyle === "guide" ? "guide" : "limit"}
@@ -779,7 +934,7 @@ export function LogChart({
               <path
                 key={`over-${s.label}`}
                 className="over-glow"
-                d={overPathOf(s.y!, s.over, s.deepBelow, s.deepOver, s.deepFloor)}
+                d={overPathOf(s.y!, s.over, s.deepBelow, s.deepOver, s.deepFloor, s.judge)}
                 fill="none"
                 stroke={OVER_RED}
                 strokeLinecap="round"
@@ -820,6 +975,20 @@ export function LogChart({
                 </text>
               </g>
             ))}
+          {worst && worst.f >= fMin && worst.f <= fMax && Number.isFinite(worst.y) && (
+            <g className="chart-worst" data-tone={worst.tone}>
+              <circle cx={xOf(worst.f)} cy={yOf(worst.y)} r={5 * k} fill="none" {...sw(1.5)} />
+              <text
+                className="worst-label"
+                x={xOf(worst.f) + (xOf(worst.f) > PAD.l + PW * 0.75 ? -8 : 8) * k}
+                y={yOf(worst.y) + 16 * k}
+                textAnchor={xOf(worst.f) > PAD.l + PW * 0.75 ? "end" : "start"}
+                {...fs(11)}
+              >
+                {worst.label}
+              </text>
+            </g>
+          )}
           {hover !== null && (
             <g className="cursor">
               <line className="cursor" x1={xOf(freq[hover]!)} x2={xOf(freq[hover]!)} y1={PAD.t} y2={PAD.t + PH} {...sw(1)} strokeDasharray={`${4 * k} ${4 * k}`} />
@@ -927,11 +1096,9 @@ export function LogChart({
                 </g>
               );
             })}
-            {usedKinds.map((kind) => {
-              const x = legendX;
+            {keyAt.map(({ kind, x, line }) => {
               const { label, color } = ribbonKinds[kind]!;
-              legendX += 16 * k + label.length * 6.2 * k + 14 * k;
-              const y = H + 6 * k + ribbonRows * ROW + 10 * k;
+              const y = H + 6 * k + ribbonRows * ROW + 10 * k + line * KEY_LINE;
               return (
                 <g key={kind}>
                   <rect x={x} y={y - 7 * k} width={9 * k} height={9 * k} rx={1.5 * k} fill={color} />
@@ -949,7 +1116,14 @@ export function LogChart({
       </div>
       {/* The legend: every curve, its value at the cursor, its peak and the chart's own columns. */}
       <div className={still ? undefined : "legend-below"} role="status" aria-live="off">
-        <ChartLegend atHeading={hover === null ? null : `@ ${fHz(freq[hover]!)}`} peakHeading="Peak" columns={legendColumns} rows={legendRows} />
+        <ChartLegend
+          atHeading={hover === null ? null : `@ ${fHz(freq[hover]!)}`}
+          peakHeading="Peak"
+          columns={legendColumns}
+          rows={legendRows}
+          rowHeading={rowHeading}
+          {...(summary ? { summaryHeadings: summary.headings, caption: summary.caption } : {})}
+        />
       </div>
     </figure>
   );

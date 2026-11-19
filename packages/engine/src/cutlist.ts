@@ -305,7 +305,7 @@ export function layoutSheets(pieces: { name: string; a: number; b: number }[], s
 export function piecesOf(c: CutList): { name: string; a: number; b: number }[] {
   const out: { name: string; a: number; b: number }[] = [];
   for (const p of [...c.panels, ...c.braces]) {
-    const short = p.name.replace(/ \(.*\)$/, "").replace(/ and bottom$/, "/bottom");
+    const short = p.name.replace(/ \([^()]*\)$/, "").replace(/ and bottom$/, "/bottom");
     for (let k = 0; k < p.qty; k++) out.push({ name: p.qty > 1 ? `${short} ${k + 1}` : short, a: p.a, b: p.b });
   }
   return out;

@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "15 SR 4 CP",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 34,
+    "qms": 5.53,
+    "qes": 0.3,
+    "vas_l": 101.2,
+    "re": 5.1,
+    "sd_cm2": 754.8,
+    "qts": 0.29,
+    "le_mh": 1.83,
+    "bl": 25.03,
+    "mms_g": 175.1,
+    "xmax_mm": 8,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 175
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/15-sr-4-cp/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

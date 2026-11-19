@@ -9,7 +9,7 @@
  * A figure is one chart or several side by side (each labelled); a panel can also be an app chart
  * (`chart:` form, see guideCharts.ts). Colours come from the app's palette (palette.ts).
  */
-import { EXAMPLES } from "./examples.ts";
+import { BREAK_IN, EXAMPLES } from "./examples.ts";
 import { runDesigns, solveDriver, roomGainOf, type Design } from "../packages/web/src/sim.ts";
 import { GUIDE, KIND_COLORS, KIND_COLOR_NAMES, LIMIT } from "../packages/web/src/palette.ts";
 import { ampLimitsFromRatings, ampPowerInto } from "../packages/web/src/ampRating.ts";
@@ -417,6 +417,96 @@ Object.assign(FIGURES, {
     };
   },
 
+  /** Break-in: the fresh driver's response minus the run-in one's, per box, for a 5 % stiffer suspension and one stiff enough for Fs +15 % (Cms × 0.756). */
+  "break-in-difference": (): Figure => {
+    const values: Record<string, number | string> = {};
+    const panel = (example: string, key: string, label: string): FigurePanel => {
+      const r = run(example);
+      const n = r.length / 2;
+      const idx = range(r[0]!.result.freq, 20, 200);
+      const freq = idx.map((i) => r[0]!.result.freq[i]!);
+      const names = ["sealed", "ported", "ib"];
+      const series = r.slice(0, n).map((d, j) => {
+        const y = idx.map((i) => r[j + n]!.result.spl[i]! - d.result.spl[i]!);
+        values[`${key}${names[j]}`] = Math.max(...y.map(Math.abs));
+        return { label: d.design.name, color: d.color, y };
+      });
+      return { label, plot: { title: "Fresh minus run-in", unit: "dB", freq, noPeak: true, guides: ZERO, yMin: -1, yMax: 1, digits: 2, series } };
+    };
+    return {
+      panels: [panel("break-in-5", "k5", "Suspension 5 % stiffer (Fs +2.5 %)"), panel("break-in-15", "k15", "Suspension stiff enough for Fs +15 %")],
+      values,
+    };
+  },
+
+  /**
+   * Break-in: how much a stiffer suspension moves the system's resonance, against how big the box
+   * is next to the driver's Vas (α = Vas/Vb; 0 is no box: an infinite baffle, where it's Fs). Only
+   * Cms changes, so (fc'/fc)² = (1/k + α)/(1 + α). The dots are the engine's, for the examples.
+   */
+  "break-in-dilution": (): Figure => {
+    const curve = (k: number): [number, number][] => Array.from({ length: 41 }, (_, i) => {
+      const a = i / 8;
+      return [a, 100 * (Math.sqrt((1 / k + a) / (1 + a)) - 1)];
+    });
+    const fc = (example: string, i: number) => run(example)[i]!.result.summary.fc!;
+    const sealedA = run("break-in-5")[0]!.design.vb_l;
+    const alpha = EXAMPLES["break-in-5"]!().ts.vas_l! / sealedA;
+    const dot = (example: string, i: number, n: number) => 100 * (fc(example, i + n) / fc(example, i) - 1);
+    const values = {
+      alpha,
+      ib5: dot("break-in-5", 2, 3), ib15: dot("break-in-15", 2, 3),
+      sealed5: dot("break-in-5", 0, 3), sealed15: dot("break-in-15", 0, 3),
+    };
+    return {
+      panels: [{ xy: {
+        title: "How far the resonance moves when the suspension is stiffer",
+        xLabel: "Vas ÷ Vb",
+        yLabel: "%",
+        x: { min: 0, max: 5, ticks: [0, 1, 2, 3, 4, 5] },
+        y: { min: 0, max: 16, ticks: [0, 4, 8, 12, 16] },
+        series: [
+          { label: "Fs +15 % (32 % stiffer)", color: shade("sealed").color, points: curve(BREAK_IN.k15) },
+          { label: "5 % stiffer (Fs +2.5 %)", color: shade("sealed", 1).color, points: curve(BREAK_IN.k5), dash: "7 4" },
+        ],
+        dots: [
+          { x: 0, y: values.ib15, label: `No box: +${values.ib15.toFixed(1)} %` },
+          { x: alpha, y: values.sealed15, label: `30 L box: +${values.sealed15.toFixed(1)} %` },
+          { x: alpha, y: values.sealed5, label: `+${values.sealed5.toFixed(1)} %` },
+        ],
+      } }],
+      values,
+    };
+  },
+
+  /**
+   * Break-in: GR Research's M-130 woofer (Fs, measured with Clio), fresh, after 10 s, 20 h and 40 h at
+   * 50 Hz: right after each run (warm) and after cooling for hours. Published data, not the engine.
+   */
+  "break-in-hours": (): Figure => {
+    const warm: [number, number][] = [[0, 56.93], [0.003, 53.2], [20, 48.24], [40, 46.99]];
+    const cooled: [number, number][] = [[0, 56.93], [0.003, 54.21], [20, 50.47], [40, 49.9]];
+    return {
+      panels: [{ xy: {
+        title: "GR Research M-130 woofer: Fs during 40 hours at 50 Hz",
+        xLabel: "hours run",
+        yLabel: "Hz",
+        x: { min: 0, max: 40, ticks: [0, 10, 20, 30, 40] },
+        y: { min: 44, max: 58, ticks: [44, 48, 52, 56] },
+        series: [
+          { label: "After cooling for hours", color: shade("sealed").color, points: cooled },
+          { label: "Warm, right after the run", color: shade("vented").color, points: warm, dash: "7 4" },
+        ],
+        dots: [
+          { x: 0, y: 56.93, label: "Fresh, cold: 56.9" },
+          { x: 20, y: 50.47, label: "50.5" },
+          { x: 40, y: 49.9, label: "49.9" },
+          { x: 40, y: 46.99, label: "47.0 warm" },
+        ],
+      } }],
+      values: { fresh: 56.93, cooled40: 49.9, warm40: 46.99, drop: 100 * (1 - 49.9 / 56.93) },
+    };
+  },
   /** DVC wiring at the same power: SPL, the load, and what 0.15 Ω of amp and cable costs each wiring. */
   "dvc-wiring": (): Figure => {
     const rg = run("dvc-watts"), zero = run("dvc-watts-norg");

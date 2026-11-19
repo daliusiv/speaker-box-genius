@@ -9,7 +9,7 @@ group: switching
 
 # A free online Hornresp alternative for lines and horns
 
-Hornresp is the standard free tool for simulating horns and transmission lines, and it's what this app is checked against. Speaker Box Genius models the everyday line and horn designs, in your browser on any computer or phone, next to sealed, ported and passive radiator boxes, and with your Hornresp records going both ways.
+Hornresp is the standard free tool for simulating horns and transmission lines, and it's what this app is checked against. Speaker Box Genius models the everyday line and horn designs, in your browser on any computer or phone, next to sealed, ported and passive radiator boxes and infinite baffles, and with your Hornresp records going both ways (an infinite baffle with an open rear is a box record with no rear chamber).
 
 [[Open an example: three line types|tl-example]]
 
@@ -73,13 +73,13 @@ For like-for-like comparisons, set these in **Settings**: **Air** to **Hornresp 
 Each line or horn design has a **Hornresp** section:
 
 - **Export** writes a record in Hornresp's own layout (segments with their flares, the driver, chambers and stuffing) that Hornresp opens unchanged. The app also lists every value, in case your version of Hornresp needs typing in.
-- **Import** reads a record from its `.txt` file, or pasted straight from a forum post. It can bring the record's driver in too.
+- **Import** reads a record from its `.txt` file, or pasted straight from a forum post. It can bring the record's driver in too. A record with values missing still opens, and what was filled in is listed under the driver card: a box without a port length is tuned to the driver's Fs, a passive radiator without Mmp or Cmp gets the example PR's, and Hornresp has no PR Xmax or nominal impedance, so the PR's Xmax stays empty and Znom is 4 Ω.
 
 Sealed, ported and passive radiator boxes go both ways too. **Save & Export → Hornresp record** writes each one the way Hornresp models a box: a horn too short to matter, with the box as its rear chamber and the port or passive radiator in it. A port's distance from the cone becomes the Acoustic Path Length. **Open** takes a Hornresp record (box or line) as a new design, brings in its driver, and sets Hornresp's conventions in Settings.
 
 ## What it adds
 
-- **A driver database** of about 1,610 drivers, so you don't need to type parameters in, each with [its own page](/drivers/).
+- **A driver database** of about 1,800 drivers, so you don't need to type parameters in, each with [its own page](/drivers/).
 - **Line types side by side:** **Compare types** makes and tunes a classic TL, TQWT, offset TL, MLTL and front horn for your driver, and ranks them by bass extension, size and smoothness.
 - **Tuning by simulation:** **Set line length** scales the whole line until it tunes where you ask; **Best line** searches the driver position and stuffing.
 - **Inside the line:** the cone and mouth contributions on their own, and the pressure and air speed along the line at any frequency.

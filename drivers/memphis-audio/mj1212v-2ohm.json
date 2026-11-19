@@ -1,0 +1,34 @@
+{
+  "brand": "Memphis Audio",
+  "model": "MJ1212V (2 Ω)",
+  "type": "car-audio",
+  "nominal_ohms": 2,
+  "size_in": 12,
+  "ts": {
+    "fs": 33,
+    "qms": 2.488,
+    "qes": 0.514,
+    "vas_l": 22.370272,
+    "re": 2,
+    "sd_cm2": 490.32,
+    "qts": 0.426,
+    "bl": 16.9,
+    "mms_g": 358,
+    "xmax_mm": 27.94,
+    "pe_w": 2000
+  },
+  "physical": {
+    "cutout_mm": 279.4,
+    "depth_mm": 215.9,
+    "displacement_l": 5.663
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.memphiscaraudio.com/product/mj1212v/",
+      "retrieved": "2026-11-16",
+      "note": "Values from Memphis Audio's spec sheets (PDF supplied 16 Nov 2026), used with Memphis Audio's permission (16 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Memphis Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

@@ -10,8 +10,10 @@ import { qrSvg } from "./qrDraw.ts";
 import { FoldDrawing } from "./LineBody.tsx";
 import { roundGrams, stuffFactor, stuffable, stuffingInstruction } from "./stuffing.ts";
 import { downloadMacro, freecadFor } from "./freecadExport.ts";
+import { designProgram, headroomCell } from "./chartProps.ts";
+import { fmtCrest, signalLabel, type SideHeadroom } from "./programSignal.ts";
 
-const KIND: Record<DesignState["kind"], string> = { sealed: "Sealed", vented: "Ported", pr: "Passive radiator", bandpass: "Bandpass", line: "Transmission line" };
+const KIND: Record<DesignState["kind"], string> = { sealed: "Sealed", vented: "Ported", pr: "Passive radiator", bandpass: "Bandpass", line: "Transmission line", ib: "Infinite baffle" };
 
 
 /** "18 1/4" style inches to the nearest 1/16. */
@@ -274,6 +276,7 @@ export function BuildSheet(props: {
                 <>The box in the volume calculator. Choose a design under “Used by” to add its port or passive radiators.</>
               )}
             </p>
+            {sim && s.settings.signal.program && <ProgramLine sim={sim} signal={s.settings.signal} />}
             {line && (
               <div className="build-fold">
                 <FoldDrawing d={line} wall_mm={v.wall_mm} driverCutout={driverCutout > 0 ? driverCutout : undefined} />
@@ -468,5 +471,20 @@ export function BuildSheet(props: {
         {(copied || (!line && macroMsg)) && <p className="hint">{copied ? "Cut list copied ✓ as a Markdown table." : macroMsg}</p>}
       </div>
     </Card>
+  );
+}
+
+/** The build sheet's headroom line, with Program on: the signal, the target and each side's headroom. */
+function ProgramLine({ sim, signal }: { sim: Design; signal: AppState["settings"]["signal"] }) {
+  const p = designProgram(sim, signal);
+  const side = (h: SideHeadroom, name: string) => {
+    const c = headroomCell(h);
+    return c ? `${c.main} ${name} (${c.at}, ${c.why})` : `– ${name}`;
+  };
+  return (
+    <p className="hint build-program">
+      Headroom on {signalLabel(signal)} (crest factor {fmtCrest(signal.crest_dB)} dB) vs {signal.target_dB !== null ? `${fmtCrest(signal.target_dB)} dB` : "the drive"}, from F3 up:{" "}
+      {side(p.peak, "on peaks")}, {side(p.avg, "on average")}.
+    </p>
   );
 }

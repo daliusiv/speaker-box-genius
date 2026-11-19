@@ -14,6 +14,10 @@
  * back's outside face, the back fits between them, the sloped baffle sits between top and
  * bottom with its top and bottom edges bevelled at φ (a parallelogram in section). Mitred:
  * every top/bottom/back/baffle joint runs from the outside corner to the inside corner.
+ *
+ * A lip (an upright strip under the slope, `lip` > 0): it stands on the bottom for butt
+ * joints (the bottom runs to the front) and is mitred to it otherwise; its joint with the
+ * sloped baffle always runs from the outside corner to the inside one (wedge.ts).
  */
 
 import { slopeWallOf, wedgeGeometry, type Vec2, type WedgeDims, type WedgeJoinery, type WedgeSlope } from "./wedge.ts";
@@ -163,12 +167,38 @@ export function buildWedgePanels(p: PanelInput): PanelSet {
   const { s, k } = g;
   const zi0 = T, zi1 = W - T;
 
+  const L = g.lip;
+  if (L > 0 && !(g.insideLip > 0 && g.insideSlant > 0)) throw new RangeError("The lip must be taller than the wall and leave room for the slope.");
   // Built with the slope at the front, then mirrored (x → D2 − x) for a sloped back.
-  const outerF: Vec2[] = [[0, 0], [D2, 0], [D1, H], [0, H]];
-  const innerF: Vec2[] = [[T, T], [D2 - s * T - Tb * k, T], [D1 + s * T - Tb * k, H - T], [T, H - T]];
   type Quad = { id: string; role: PanelRole; a0: Vec2; a1: Vec2; b0: Vec2; b1: Vec2; ends: [string, string] };
   let quads: Quad[];
-  if (joinery === "miter") {
+  let outerF: Vec2[], innerF: Vec2[];
+  if (L > 0) {
+    const yk = g.slopeFoot;
+    const topIn: Vec2 = [D1 + s * T - Tb * k, H - T];
+    outerF = [[0, 0], [D2, 0], [D2, L], [D1, H], [0, H]];
+    innerF = [[T, T], [D2 - T, T], [D2 - T, yk], topIn, [T, H - T]];
+    const lipBaffle: Quad = { id: "baffle", role: "baffle", a0: [D2, L], a1: joinery === "miter" ? [D1, H] : [D1 + s * T, H - T], b0: [D2 - T, yk], b1: topIn, ends: ["lip", "top"] };
+    if (joinery === "miter") {
+      quads = [
+        { id: "bottom", role: "bottom", a0: [0, 0], a1: [D2, 0], b0: [T, T], b1: [D2 - T, T], ends: ["back", "front"] },
+        { id: "lip", role: "front", a0: [D2, 0], a1: [D2, L], b0: [D2 - T, T], b1: [D2 - T, yk], ends: ["bottom", "top"] },
+        lipBaffle,
+        { id: "top", role: "top", a0: [D1, H], a1: [0, H], b0: topIn, b1: [T, H - T], ends: ["front", "back"] },
+        { id: "back", role: "back", a0: [0, H], a1: [0, 0], b0: [T, H - T], b1: [T, T], ends: ["top", "bottom"] },
+      ];
+    } else {
+      quads = [
+        { id: "bottom", role: "bottom", a0: [0, 0], a1: [D2, 0], b0: [0, T], b1: [D2, T], ends: ["back", "front"] },
+        { id: "lip", role: "front", a0: [D2, T], a1: [D2, L], b0: [D2 - T, T], b1: [D2 - T, yk], ends: ["bottom", "top"] },
+        lipBaffle,
+        { id: "top", role: "top", a0: [D1, H], a1: [0, H], b0: [D1 + s * T, H - T], b1: [0, H - T], ends: ["front", "back"] },
+        { id: "back", role: "back", a0: [0, H - T], a1: [0, T], b0: [T, H - T], b1: [T, T], ends: ["top", "bottom"] },
+      ];
+    }
+  } else if (joinery === "miter") {
+    outerF = [[0, 0], [D2, 0], [D1, H], [0, H]];
+    innerF = [[T, T], [D2 - s * T - Tb * k, T], [D1 + s * T - Tb * k, H - T], [T, H - T]];
     const [o0, o1, o2, o3] = outerF as [Vec2, Vec2, Vec2, Vec2];
     const [i0, i1, i2, i3] = innerF as [Vec2, Vec2, Vec2, Vec2];
     quads = [
@@ -178,6 +208,8 @@ export function buildWedgePanels(p: PanelInput): PanelSet {
       { id: "back", role: "back", a0: o3, a1: o0, b0: i3, b1: i0, ends: ["top", "bottom"] },
     ];
   } else {
+    outerF = [[0, 0], [D2, 0], [D1, H], [0, H]];
+    innerF = [[T, T], [D2 - s * T - Tb * k, T], [D1 + s * T - Tb * k, H - T], [T, H - T]];
     quads = [
       { id: "bottom", role: "bottom", a0: [0, 0], a1: [D2, 0], b0: [0, T], b1: [D2 - s * T, T], ends: ["back", "front"] },
       { id: "baffle", role: "baffle", a0: [D2 - s * T, T], a1: [D1 + s * T, H - T], b0: [D2 - s * T - Tb * k, T], b1: [D1 + s * T - Tb * k, H - T], ends: ["bottom", "top"] },
@@ -192,8 +224,8 @@ export function buildWedgePanels(p: PanelInput): PanelSet {
   const swapEnds = (e: [string, string]): [string, string] => [e[1], e[0]];
   const boxLike = D1 === D2;
   const names: Record<string, [string, PanelRole]> = rear
-    ? { baffle: ["Back (sloped)", "back"], back: ["Baffle", "baffle"] }
-    : { baffle: [boxLike ? "Baffle" : "Baffle (sloped)", "baffle"], back: ["Back", "back"] };
+    ? { baffle: ["Back (sloped)", "back"], back: ["Baffle", "baffle"], lip: ["Back lip", "front"] }
+    : { baffle: [boxLike ? "Baffle" : "Baffle (sloped)", "baffle"], back: ["Back", "back"], lip: ["Lip", "front"] };
   const panels: SolidPanel[] = [];
   const outer = rear ? [...outerF].reverse().map(mx) : outerF;
   panels.push(sidePanel("side-left", "Side", outer, 0, T, D2, H));
@@ -207,7 +239,7 @@ export function buildWedgePanels(p: PanelInput): PanelSet {
       : facePanel(q.id, name, role, q.a0, q.a1, q.b0, q.b1, ends, zi0, zi1);
     panels.push(panel);
   }
-  const order = ["side-left", "side-right", "top", "bottom", "back", "baffle"];
+  const order = ["side-left", "side-right", "top", "bottom", "lip", "back", "baffle"];
   panels.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
 
   // Holes on the baffle's outside face.
@@ -222,9 +254,9 @@ export function buildWedgePanels(p: PanelInput): PanelSet {
         return { kind: h.kind, diameter: h.diameter, center: [D2, T + at, z], normal: [1, 0, 0], ...slot };
       }
       const at = h.at ?? g.insideSlant / 2;
-      // Inside face bottom edge, up the slope by `at`, then out through the panel.
-      const ix = D2 - s * T - Tb * k - at * Math.cos(th);
-      const iy = T + at * Math.sin(th);
+      // Inside face bottom edge (on the bottom, or the lip's top), up the slope by `at`, then out through the panel.
+      const ix = D2 - s * (g.slopeFoot - L) - Tb * k - at * Math.cos(th);
+      const iy = g.slopeFoot + at * Math.sin(th);
       const nx = Math.sin(th), ny = Math.cos(th);
       return { kind: h.kind, diameter: h.diameter, center: [ix + Tb * nx, iy + Tb * ny, z], normal: [nx, ny, 0], ...slot };
     });

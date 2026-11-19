@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Num, Select } from "./components.tsx";
+import { JobProgress, Num, Select } from "./components.tsx";
 import {
   CURVE_FREQS,
   PRIORITIES,
@@ -30,7 +30,7 @@ import {
   prCautionNote,
 } from "./assistant.ts";
 import { loadDriver, type DbIndex, type LoadedDriver } from "./library.ts";
-import type { WorkerJob, WorkerReply } from "./assistantWorker.ts";
+import { startSearch } from "./search.ts";
 import { loadCandidates as loadPrCandidates } from "./PrFinder.tsx";
 import type { AppState } from "./state.ts";
 import { useUnits } from "./units.ts";
@@ -248,12 +248,12 @@ export function DesignAssistant(props: {
     // Lines and bandpass boxes found in the second pass: held back (the list doesn't jump
     // under your finger) until it ends, or until you ask to see them.
     const extra: AssistantResult[] = [];
-    let worker: Worker | null = null;
+    let stopWorker: (() => void) | null = null;
     const finish = (wasStopped = false) => {
       live = false;
       clearTimeout(timer);
-      worker?.terminate();
-      worker = null;
+      stopWorker?.();
+      stopWorker = null;
       stopRef.current = null;
       mergeRef.current = null;
       out.push(...extra.splice(0));
@@ -353,51 +353,16 @@ export function DesignAssistant(props: {
         };
         report(0);
         // In a worker when the browser can (no jank); else here, in slices between paints.
-        const inSlices = () => {
-          let j = 0;
-          const slice = () => {
-            if (!live) return;
-            if (j >= tasks.length) return finish();
-            const t0 = performance.now();
-            while (j < tasks.length && performance.now() - t0 < 30) {
-              const { row, driver, stage } = tasks[j++]!;
-              try {
-                extra.push(...evaluateDriver(props.base, row, driver, goal, stage, prs));
-              } catch {
-                // One that won't simulate is left out; the rest carry on.
-              }
-              if (stage === "lines") break;
-            }
-            report(j);
-            timer = setTimeout(slice, 0);
-          };
-          timer = setTimeout(slice, 30);
-        };
-        try {
-          worker = new Worker(new URL("./assistantWorker.ts", import.meta.url), { type: "module" });
-        } catch {
-          worker = null;
-        }
-        if (!worker) return inSlices();
-        let heard = false;
-        worker.onmessage = (e: MessageEvent<WorkerReply>) => {
-          heard = true;
-          if (!live) return;
-          if (e.data.type === "result") {
-            extra.push(...e.data.results);
-            report(e.data.done);
-          } else finish();
-        };
-        worker.onerror = (e) => {
-          e.preventDefault();
-          worker?.terminate();
-          worker = null;
-          if (!live) return;
-          // It never started (couldn't load): do the work here instead; else keep what came in.
-          if (!heard) inSlices();
-          else finish();
-        };
-        worker.postMessage({ base: props.base, goal, tasks, prs } satisfies WorkerJob);
+        stopWorker = startSearch(
+          { kind: "assistant", base: props.base, goal, tasks, prs },
+          {
+            step: (st) => st.kind === "assistant" && extra.push(...st.results),
+            progress: report,
+            done: () => finish(),
+            // Keep what came in.
+            error: () => finish(),
+          },
+        );
       };
       stopRef.current = () => finish(true);
       setProgress({ label: "Trying each driver", done: 0, total: cands.length });
@@ -406,7 +371,7 @@ export function DesignAssistant(props: {
     return () => {
       live = false;
       clearTimeout(timer);
-      worker?.terminate();
+      stopWorker?.();
       stopRef.current = null;
       mergeRef.current = null;
     };
@@ -752,25 +717,13 @@ export function DesignAssistant(props: {
                 </button>
               </div>
               {progress && (
-                <div className="finder-progress" role="status">
-                  <div className="finder-progress-text">
-                    <span>{progress.label}…</span>
-                    <span className="muted">
-                      {progress.done} / {progress.total}
-                    </span>
-                  </div>
-                  <progress value={progress.done} max={Math.max(1, progress.total)} />
+                <JobProgress {...progress} onStop={stopRef.current ? () => stopRef.current?.() : undefined}>
                   {pending > 0 && (
                     <button type="button" className="link assist-pending" onClick={() => mergeRef.current?.()}>
                       {pending} new {pending === 1 ? "design" : "designs"}: show {pending === 1 ? "it" : "them"} now
                     </button>
                   )}
-                  {stopRef.current && (
-                    <button type="button" className="icon" onClick={() => stopRef.current?.()} aria-label="Stop" title="Stop (keeps the results so far)">
-                      ✕
-                    </button>
-                  )}
-                </div>
+                </JobProgress>
               )}
               {error && <p className="warn">{error}</p>}
               {stopped && <p className="hint">Stopped: the best of the drivers tried so far.</p>}

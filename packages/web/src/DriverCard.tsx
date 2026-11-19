@@ -1,6 +1,8 @@
 import { useRef, type ReactNode } from "react";
 import type { AppState } from "./state.ts";
 import type { NameKind } from "./driverName.ts";
+import { ModifiedLine } from "./ModifiedLine.tsx";
+import { Icon } from "./Icon.tsx";
 import { Button, ButtonLink, Chip, collectHelp, FieldRow, HelpButton, Menu, Notice, NumberField, RadioCards, Readout, Section, Segmented, Select, Sheet, Stepper, TextField, type MenuItem } from "./ui/index.ts";
 
 /**
@@ -20,6 +22,8 @@ export interface DriverCardProps {
   picker: ReactNode;
   /** Plausibility flag and other notes about the driver itself. */
   notes?: ReactNode;
+  /** A database driver whose values were changed: what changed, and a reset to the database's values. */
+  modified?: Modified | null;
   /** The driver's name, first in Edit T/S: fixed for a database driver, editable otherwise. */
   name: { kind: NameKind; onChange: (name: string) => void };
   ts: {
@@ -31,13 +35,28 @@ export interface DriverCardProps {
     attention?: string;
     fill: readonly MenuItem[];
     submitUrl: string;
+    /** Opens the website form; without it the menu links to the GitHub issue form. */
+    onSubmit?: () => void;
     onClear: () => void;
   };
   sections: { open: ReadonlySet<string>; onToggle: (key: string, open: boolean) => void };
-  compare: { picker: ReactNode; onSwap: () => void; onStop: () => void };
+  compare: { picker: ReactNode; onSwap: () => void; onStop: () => void; modified?: Modified | null };
   amp?: { nominal: number; re: number; low?: { z: number; f: number; name?: string } } | null;
   /** As-wired Re and Qes for a dual-coil driver. */
   dvcNote?: string;
+}
+
+interface Modified {
+  text: string;
+  onReset: () => void;
+}
+
+const RESET_HELP =
+  "This driver came from the database and some of its values were changed here (typed, pasted or measured). Reset puts the database's published values and name back; your boxes, the number of drivers, their wiring and the volume calculator stay as they are. Undo brings your values back.";
+
+/** "Changed from the database: T/S." with a Reset (one line under the driver it's about). */
+function ModifiedNote(props: { modified: Modified; what: string }) {
+  return <ModifiedLine text={props.modified.text} help={RESET_HELP} resetLabel={`Reset ${props.what} to the database's values`} onReset={props.modified.onReset} />;
 }
 
 const ohms = (x: number) => (x >= 10 ? x.toFixed(0) : Number(x.toPrecision(2)).toString());
@@ -49,13 +68,31 @@ export function DriverCard(p: DriverCardProps) {
   const card = useRef<HTMLElement>(null);
   const tsBox = useRef<HTMLDivElement>(null);
   const tsOpen = p.ts.open;
+  // One row: the typed / calculated key, then every action in one menu (fill from, submit, clear).
   const tools = (
     <div className="dv-ts-tools">
-      <Menu label="Fill from" items={p.ts.fill} />
-      <ButtonLink href={p.ts.submitUrl} target="_blank" title="Opens a pre-filled GitHub form; you add the datasheet link." icon="external">
-        Submit to database
-      </ButtonLink>
-      <Button variant="ghost" icon="trash" label="Clear all T/S values" className="dv-clear" onClick={p.ts.onClear} />
+      <span className="dv-ts-key" aria-hidden="true">
+        <i className="dv-key-typed" />
+        Typed
+        <i className="dv-key-calc" />
+        Calculated
+      </span>
+      <Menu
+        label="T/S actions"
+        iconOnly
+        icon="more"
+        variant="secondary"
+        align="end"
+        className="dv-ts-more"
+        items={[
+          { kind: "heading", label: "Fill from" },
+          ...p.ts.fill,
+          { kind: "separator" },
+          p.ts.onSubmit ? { label: "Submit to database…", onSelect: p.ts.onSubmit } : { kind: "link", label: "Submit to database", href: p.ts.submitUrl, icon: <Icon name="external" /> },
+          { kind: "separator" },
+          { label: "Clear all values", danger: true, onSelect: p.ts.onClear },
+        ]}
+      />
     </div>
   );
   const nameRow =
@@ -63,7 +100,7 @@ export function DriverCard(p: DriverCardProps) {
       <div className="ui-field dv-name" data-help="The name shared links, images and exports use. A database driver keeps the database's name; change a T/S value and it becomes yours to rename, with “(edited)” added." data-help-title="Name">
         <span className="ui-field-label">Name</span>
         <span className="dv-name-fixed">
-          <b>{s.driverName}</b> <span>· from database</span>
+          <b>{s.driverName}</b>
         </span>
       </div>
     ) : (
@@ -71,7 +108,6 @@ export function DriverCard(p: DriverCardProps) {
         <FieldRow
           label="Name"
           help="The name shared links, images and exports use. A database driver keeps the database's name; change a T/S value and it becomes yours to rename, with “(edited)” added."
-          hint={p.name.kind === "edited" ? "Values changed from the database's, so “(edited)” was added. Rename it if you like." : undefined}
         >
           {(id) => <TextField id={id} value={s.driverName} placeholder="Brand and model" onChange={(e) => p.name.onChange(e.currentTarget.value)} />}
         </FieldRow>
@@ -86,11 +122,7 @@ export function DriverCard(p: DriverCardProps) {
         <h2 className="ui-card-title" id="dv-title">
           Driver
         </h2>
-        {p.specs && (
-          <ButtonLink href={p.specs.url} target="_blank" title={p.specs.title} icon="external">
-            Specs
-          </ButtonLink>
-        )}
+        {p.specs && <ButtonLink href={p.specs.url} target="_blank" icon="datasheet" label={p.specs.title} />}
         <Button variant="ghost" icon="sliders" aria-expanded={tsOpen} onClick={() => p.ts.onOpenChange(!tsOpen)}>
           Edit T/S
         </Button>
@@ -113,6 +145,7 @@ export function DriverCard(p: DriverCardProps) {
       {!p.phone && tsOpen && (
         <div className="dv-ts" role="region" aria-label="T/S parameters">
           {nameRow}
+          {p.modified && <ModifiedNote modified={p.modified} what="the driver" />}
           {tools}
           <div ref={tsBox}>{p.ts.editor}</div>
         </div>
@@ -122,9 +155,16 @@ export function DriverCard(p: DriverCardProps) {
           open={p.ts.open}
           onClose={() => p.ts.onOpenChange(false)}
           title="T/S parameters"
+          className="dv-ts-sheet"
+          footer={
+            <Button variant="primary" onClick={() => p.ts.onOpenChange(false)}>
+              Done
+            </Button>
+          }
           actions={<HelpButton title="T/S parameters" icon="sliders" collect={() => collectHelp(tsBox.current)} />}
         >
           {nameRow}
+          {p.modified && <ModifiedNote modified={p.modified} what="the driver" />}
           {tools}
           <div ref={tsBox}>{p.ts.editor}</div>
         </Sheet>
@@ -134,14 +174,15 @@ export function DriverCard(p: DriverCardProps) {
         <FieldRow label={unitsLabel} help="How many drivers (or isobaric pairs) share the box. More drivers move more air; the box volume is shared between them.">
           {(id) => <Stepper id={id} label={unitsLabel} value={s.drivers} min={1} max={64} onChange={(v) => set("drivers", v)} />}
         </FieldRow>
+        {p.modified && !tsOpen && <ModifiedNote modified={p.modified} what="the driver" />}
       </div>
 
-      <Section icon="signal" title="Large signal" value={`Xmax ${num(s.xmax_mm)} mm · Pe ${num(s.pe_w)} W`} {...sec("large")}>
-        <FieldRow label="Xmax" help="Maximum one-way excursion the cone can make while staying linear (from the datasheet). The excursion chart turns red above it.">
-          {(id) => <NumberField id={id} value={s.xmax_mm} unit="mm" positive onChange={(v) => v !== undefined && set("xmax_mm", v)} />}
+      <Section icon="signal" title="Large signal" value={`Xmax ${s.xmax_mm > 0 ? `${num(s.xmax_mm)} mm` : "not set"} · Pe ${s.pe_w > 0 ? `${num(s.pe_w)} W` : "not set"}`} {...sec("large")}>
+        <FieldRow label="Xmax" help="Maximum one-way excursion the cone can make while staying linear (from the datasheet). The excursion chart turns red above it. Empty when an imported file didn't have it: no redline until you enter it.">
+          {(id) => <NumberField id={id} value={s.xmax_mm > 0 ? s.xmax_mm : undefined} placeholder="not set" unit="mm" positive onChange={(v) => set("xmax_mm", v ?? 0)} />}
         </FieldRow>
-        <FieldRow label="Pe" help="Thermal power rating: how much power the voice coil can take continuously. Sets the thermal limit in the Max SPL chart.">
-          {(id) => <NumberField id={id} value={s.pe_w} unit="W" positive onChange={(v) => v !== undefined && set("pe_w", v)} />}
+        <FieldRow label="Pe" help="Thermal power rating: how much power the voice coil can take continuously. Sets the thermal limit in the Max SPL chart. Empty when an imported file didn't have it.">
+          {(id) => <NumberField id={id} value={s.pe_w > 0 ? s.pe_w : undefined} placeholder="not set" unit="W" positive onChange={(v) => set("pe_w", v ?? 0)} />}
         </FieldRow>
       </Section>
 
@@ -154,7 +195,7 @@ export function DriverCard(p: DriverCardProps) {
             legend="Coil model"
             value={s.semi ? "semi" : "le"}
             options={[
-              { value: "le", title: "Le (+ L2/R2)", description: "Datasheet values", aside: <Chip>Usual</Chip> },
+              { value: "le", title: "Le (+ L2/R2)", description: "Datasheet values", aside: <Chip>Default</Chip> },
               { value: "semi", title: "Semi-inductance", description: "Fitted, like Hornresp" },
             ]}
             onChange={(m) => set("semi", m === "semi" ? (s.semi ?? { leb_mh: 0, le_mh: s.le_mh, ke: 0, rss_ohm: 0 }) : undefined)}
@@ -193,7 +234,7 @@ export function DriverCard(p: DriverCardProps) {
             legend="Suspension losses"
             value={s.fdd ? "fdd" : "qms"}
             options={[
-              { value: "qms", title: "From Qms", description: "One resistance, the T/S way", aside: <Chip>Usual</Chip> },
+              { value: "qms", title: "From Qms", description: "One resistance, the T/S way", aside: <Chip>Default</Chip> },
               { value: "fdd", title: "Frequency-dependent", description: "FDD, like Hornresp" },
             ]}
             onChange={(m) => set("fdd", m === "fdd" ? (s.fdd ?? { rms: 0, ams_mm_per_n: 0 }) : undefined)}
@@ -335,6 +376,7 @@ export function DriverCard(p: DriverCardProps) {
         <div className="dv-compare" data-help="Shows a second driver in every box as faint dashed curves, with the same settings and, unless you give it its own number below, the same number of drivers and wiring. Swap makes it the main driver (to edit it or size boxes for it)." data-help-title="Compare with another driver">
           {p.compare.picker}
         </div>
+        {p.compare.modified && <ModifiedNote modified={p.compare.modified} what="the comparison driver" />}
         {s.compare ? (
           <>
             <div className="dv-compare-actions">

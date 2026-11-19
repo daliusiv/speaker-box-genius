@@ -30,7 +30,7 @@ test("markdown: headings, lists, tables, links, figures and notes", () => {
   assert.match(html, /<th>a<\/th><th>b<\/th>.*<td>1<\/td><td>2<\/td>/s);
   assert.match(html, /<figure><img src="\/guides\/img\/x.png" alt="Caption here" loading="lazy"><figcaption>Caption here<\/figcaption><\/figure>/);
   assert.match(html, /<aside class="note"><p>A note<\/p><\/aside>/);
-  assert.doesNotMatch(markdown("a <script>x</script>"), /<script>/);
+  assert.doesNotMatch(markdown("a <script>x</script>"), /<script>/i);
   assert.match(markdown("# Title\n\nThe intro.\n\nMore."), /<h1>Title<\/h1>\n<p class="lede">The intro.<\/p>\n<p>More.<\/p>/);
   // Nested lists: an indented list inside an item, in bullet and numbered lists; plain indented
   // lines still continue the item.
@@ -147,7 +147,7 @@ test("the validation page shows every case from results.json, with the top bar",
   const rep = JSON.parse(readFileSync(join(import.meta.dirname, "../docs/validation/results.json"), "utf8"));
   for (const c of rep.winisd.cases) assert.match(html, new RegExp(`id="winisd-${c.id}"`));
   for (const c of rep.hornresp.cases) assert.match(html, new RegExp(`id="hornresp-${c.id}"`));
-  assert.match(html, /<a href="\/validation\/" class="wide" aria-current="page">Validation<\/a>/);
+  assert.match(html, /<a href="\/validation\/" class="wider" aria-current="page">Validation<\/a>/);
   assert.match(readFileSync(join(out, "sitemap-pages.xml"), "utf8"), /speakerboxgenius\.com\/validation\//);
   assert.match(readFileSync(join(out, "guides/index.html"), "utf8"), /<a href="\/guides\/" aria-current="page">Guides<\/a>/);
 });
@@ -435,6 +435,212 @@ test("passive radiator calculator page: form, worked example that matches its te
   assert.ok(sb1!.r.tooLow && sb1!.r.bareFb < 25, "SB34NRX-00 already tunes below 25 Hz");
   assert.ok(Math.abs(ds2!.c.vdRatio - rss1!.c.vdRatio) < 0.2, "two DS315-PRs have about the displacement ratio of one RSS315-PR");
   assert.ok(Math.cbrt(e.rows[0]!.i.vb_l * 1000) > 41 && Math.cbrt(e.rows[0]!.i.vb_l * 1000) < 43, "faces about 42 cm across");
+});
+
+test("sealed box calculator page: form, worked example that matches its text", async () => {
+  const { out, paths } = await built();
+  assert.ok(paths.includes("/calculators/sealed-box/"));
+  const html = readFileSync(join(out, "calculators/sealed-box/index.html"), "utf8");
+  assert.match(html, /<title>Sealed box calculator: [^<]+<\/title>/);
+  assert.match(html, /<h1>Sealed box calculator<\/h1>/);
+  assert.match(html, /<form id="sc-form"[^>]*data-driver-id="dayton-audio\/rss315hf-4"/);
+  for (const id of ["sc-metric", "sc-imperial", "sc-driver", "sc-ts", "sc-n", "sc-power", "sc-rated", "sc-mode-box", "sc-mode-qtc", "sc-qtc", "sc-vb", "sc-out", "sc-chart", "sc-open", "sc-copy"]) assert.match(html, new RegExp(`id="${id}"`), id);
+  // Element order: units, driver, T/S by hand, drivers and power, mode, Qtc chips, results, chart, actions, then the text.
+  const at = (s: string) => html.indexOf(s);
+  const order = ['id="sc-metric"', 'id="sc-driver"', 'id="sc-ts"', 'id="sc-n"', 'id="sc-power"', 'id="sc-mode-box"', 'name="sc-qtcpick"', 'id="sc-out"', 'id="sc-chart"', 'id="sc-open"', "How the box is worked out", "Worked example"].map(at);
+  assert.ok(order.every((n, i) => n > 0 && (i === 0 || n > order[i - 1]!)), `element order: ${order}`);
+  assert.match(html, /name="sc-qtcpick" value="0.707" checked/);
+  assert.doesNotMatch(html, /\{\{calc:/);
+  assert.doesNotMatch(html, /<script type="module"/);
+  assert.match(readFileSync(join(out, "sitemap-pages.xml"), "utf8"), /\/calculators\/sealed-box\//);
+  // The worked example's chart is the app's, with its three boxes; the page links both guides.
+  assert.match(html, /<figure class="guide-chart">/);
+  assert.match(html, /Qtc 0\.577, 75\.9 L/);
+  assert.match(html, /href="\/guides\/sealed-qtc\/"/);
+  assert.match(html, /href="\/guides\/sealed-vs-ported\/"/);
+
+  // The example's claims, in the page's words.
+  const { sealedExample } = await import("./calculators.ts");
+  const { loadDb } = await import("./drivers.ts");
+  const ts = loadDb().drivers.find((d) => d.id === "dayton-audio/rss315hf-4")!.data.ts;
+  assert.deepEqual([ts.fs, ts.vas_l, ts.xmax_mm], [24.2, 84.1, 14.3], "the page names Fs 24.2 Hz, Vas 84.1 L, Xmax 14.3 mm");
+  assert.ok(Math.abs((ts.qes! * ts.qms!) / (ts.qes! + ts.qms!) - 0.39) < 0.005, "and a Qts of 0.39");
+  const [a, b, c] = sealedExample().map((e) => e.r);
+  assert.ok(a!.vb_l / b!.vb_l > 1.9 && a!.vb_l / b!.vb_l < 2.05, "the biggest box is nearly twice the middle one");
+  assert.ok(a!.vb_l / c!.vb_l > 3.5 && a!.vb_l / c!.vb_l < 4, "and almost four times the smallest");
+  assert.ok(Math.abs(a!.f3! - b!.f3!) < 0.5 && c!.f3! - a!.f3! < 5, "F3 barely moves");
+  assert.ok(c!.f10! - a!.f10! > 7, "F10 drops by 8 Hz");
+  assert.ok(a!.spl30! > b!.spl30! && b!.spl30! > c!.spl30!, "the bigger box is louder at 30 Hz");
+  assert.ok(a!.x_mm! > a!.xmax_mm && b!.x_mm! < b!.xmax_mm && c!.x_mm! < c!.xmax_mm, "only the biggest box's cone goes past its Xmax at 250 W");
+  assert.ok(a!.x_mm! - a!.xmax_mm < 0.5, "and only just");
+  assert.ok(a!.x_mm! > b!.x_mm! && b!.x_mm! > c!.x_mm!, "the biggest box needs the most cone");
+  assert.ok(Math.abs(b!.qtc! - 0.707) < 0.003 && b!.qtc! < 0.707, "it reads a hair under 0.707");
+  // The 2 × Vas paragraph: Qts 0.68 needs over 10 × Vas for 0.707, and the preset's Qtc is Qts × √1.5 (0.83).
+  const { sealedVolumeForAlignment } = await import("../packages/engine/src/index.ts");
+  const vb = sealedVolumeForAlignment({ fs: 30, qms: 6, qes: 0.767, vas_l: 100, style: "winisd" } as never, 0.707)!;
+  assert.ok(vb / 100 > 10, `over 10 × Vas: ${vb / 100}`);
+  assert.equal((0.68 * Math.sqrt(1.5)).toFixed(2), "0.83");
+});
+
+test("ported box calculator page: form, worked example that matches its text", async () => {
+  const { out, paths } = await built();
+  assert.ok(paths.includes("/calculators/ported-box/"));
+  const html = readFileSync(join(out, "calculators/ported-box/index.html"), "utf8");
+  assert.match(html, /<title>Ported box calculator: [^<]+<\/title>/);
+  assert.match(html, /<h1>Ported box calculator<\/h1>/);
+  assert.match(html, /<form id="vc-form"[^>]*data-driver-id="dayton-audio\/rss315hf-4"/);
+  for (const id of ["vc-metric", "vc-imperial", "vc-driver", "vc-ts", "vc-n", "vc-power", "vc-rated", "vc-chips", "vc-align", "vc-other", "vc-vb", "vc-fb", "vc-out", "vc-chart", "vc-open", "vc-copy"]) assert.match(html, new RegExp(`id="${id}"`), id);
+  assert.doesNotMatch(html, /\{\{calc:/);
+  assert.doesNotMatch(html, /<script type="module"/);
+  assert.match(readFileSync(join(out, "sitemap-pages.xml"), "utf8"), /\/calculators\/ported-box\//);
+  // Order: driver, number of drivers and power, alignment chips, other, results, chart, actions, text, example.
+  const at = (s: string) => html.indexOf(s);
+  const order = ['id="vc-driver"', 'id="vc-n"', 'id="vc-power"', 'id="vc-chips"', 'id="vc-other"', 'id="vc-out"', 'id="vc-chart"', 'id="vc-open"', "How the box is worked out", "Worked example"];
+  for (let i = 1; i < order.length; i++) assert.ok(at(order[i - 1]!) >= 0 && at(order[i - 1]!) < at(order[i]!), `${order[i - 1]} before ${order[i]}`);
+  // The worked example's chart is the app's, drawn at build.
+  assert.match(html, /<figure class="chart" data-chart="response">[\s\S]*?<svg viewBox="0 0 640 \d+" role="img" aria-label="Relative response at 250 W/);
+  // Cross-links from the page.
+  for (const href of ["/calculators/port-length/", "/guides/port-chuffing/", "/guides/sealed-vs-ported/", "/calculators/sealed-box/"]) assert.match(html, new RegExp(`href="${href}"`), href);
+
+  // The example's claims, in the page's words.
+  const { portedExample } = await import("./calculators.ts");
+  const { portExample } = await import("./calculators.ts");
+  const e = portedExample();
+  const row = (k: string) => e.rows.find((r) => r.key === k)!;
+  const [qb3, c4, bb4] = ["qb3", "c4", "bb4"].map(row);
+  assert.equal(e.rows.length, 3, "QB3, C4 and BB4");
+  assert.equal(e.s.xmax_mm, 14.3, "the page names a 14.3 mm Xmax");
+  assert.equal(e.s.power, 250);
+  assert.deepEqual([qb3!.chip.vb_l, qb3!.chip.fb], [75.6, 24.4], "WinISD's QB3 for this driver");
+  assert.ok(c4!.chip.db < 0.1 && Math.abs(c4!.chip.vb_l - qb3!.chip.vb_l) < 1 && Math.abs(c4!.r.f3! - qb3!.r.f3!) < 0.5, "C4 is QB3's box with a tiny ripple");
+  assert.ok(bb4!.chip.vb_l / qb3!.chip.vb_l > 0.72 && bb4!.chip.vb_l / qb3!.chip.vb_l < 0.8, "BB4 is nearly a quarter smaller");
+  assert.ok(bb4!.r.f3! > qb3!.r.f3! + 2, "and gives up bass");
+  assert.ok(bb4!.chip.db > 0 && bb4!.chip.db < 0.5, "with a small peak");
+  for (const r of e.rows) {
+    assert.ok(r.r.x! < e.s.xmax_mm, `${r.key}: the cone stays inside Xmax`);
+    assert.ok(r.r.vp! > 17 && !r.r.quiet, `${r.key}: the port is over the 17 m/s line`);
+    assert.equal(r.r.design.shape, "round");
+  }
+  assert.ok(qb3!.r.design.flare_cm > 0 && qb3!.r.design.diameter_cm === 7.5, "a flared 7.5 cm port");
+  // A 10 cm tube doesn't fit straight in the QB3 box (the page says it's too long).
+  const { portLengthForFb } = await import("../packages/engine/src/index.ts");
+  const { portRoom_cm } = await import("../packages/web/src/sim.ts");
+  const len = portLengthForFb(qb3!.chip.vb_l, { shape: "round", diameter_cm: 10, length_cm: 10 }, qb3!.chip.fb);
+  assert.ok(len > portRoom_cm(qb3!.chip.vb_l, 10), `a 10 cm tube needs ${len.toFixed(1)} cm`);
+  assert.ok(!portExample().r100.r.fits, "and the port length page's example agrees");
+});
+
+test("subwoofer box calculator page: form, worked example that matches its text, linked from the hub and two guides", async () => {
+  const { out, paths } = await built();
+  assert.ok(paths.includes("/calculators/subwoofer-box/"));
+  const html = readFileSync(join(out, "calculators/subwoofer-box/index.html"), "utf8");
+  assert.match(html, /<title>Subwoofer box calculator: compact, balanced and deep boxes for your sub[^<]*<\/title>/);
+  assert.match(html, /<form id="sb-form"[^>]*data-driver-id="dayton-audio\/rss315hf-4"/);
+  for (const id of ["sb-imperial", "sb-size", "sb-type", "sb-driver", "sb-power", "sb-rated", "sb-ts", "sb-picks", "sb-note", "sb-chart", "sb-open", "sb-copy"]) assert.match(html, new RegExp(`id="${id}"`), id);
+  assert.match(html, /name="sb-size-chip" value="12" checked/);
+  assert.match(html, /name="sb-t" value="ported" checked/);
+  assert.match(html, /Open Balanced in the simulator/);
+  assert.doesNotMatch(html, /\{\{calc:/);
+  assert.doesNotMatch(html, /<script type="module"/);
+  assert.match(html, /class="chart/, "the worked example's chart is drawn");
+  assert.match(readFileSync(join(out, "sitemap-pages.xml"), "utf8"), /\/calculators\/subwoofer-box\//);
+  const { CALCULATORS } = await import("./calculators.ts");
+  assert.equal(CALCULATORS[0]!.path, "/calculators/subwoofer-box/", "its card comes first");
+  assert.match(readFileSync(join(out, "calculators/index.html"), "utf8"), /Subwoofer box calculator/);
+  for (const g of ["guides/car-subwoofer", "guides/one-15-vs-two-10s"]) assert.match(readFileSync(join(out, g, "index.html"), "utf8"), /href="\/calculators\/subwoofer-box\/"/, g);
+
+  // The example's claims, in the page's words.
+  const { subwooferExample } = await import("./calculators.ts");
+  const e = subwooferExample();
+  const { KIND_COLOR_NAMES } = await import("../packages/web/src/palette.ts");
+  assert.deepEqual(KIND_COLOR_NAMES.vented.slice(0, 3), ["orange", "light orange", "dark orange"], "the caption's colour names");
+  assert.equal(e.s.power, 250);
+  assert.equal(e.s.xmax_mm, 14.3, "the page names a 14.3 mm Xmax");
+  const p = e.ported;
+  assert.deepEqual([p.compact.vb_l, p.balanced.vb_l, p.deep.vb_l], [58.1, 75.6, 113.4]);
+  assert.ok(Math.abs(p.deep.f3! - 20.3) < 0.2 && Math.abs(p.deep.fb! - 21) < 0.5);
+  for (const k of ["compact", "balanced", "deep"] as const) assert.ok(p[k].air! > 17, `${k} chuffs at 250 W`);
+  assert.ok(p.balanced.spl30! > p.compact.spl30! && p.balanced.spl30! > p.deep.spl30!, "Balanced is loudest at 30 Hz");
+  assert.ok(p.deep.f3! < p.balanced.f3! && p.balanced.f3! < p.compact.f3!);
+  assert.ok(Math.abs(p.compact.f3! - p.balanced.f3! - 3.5) < 0.1, "Compact costs about 3.5 Hz of F3");
+  assert.ok(e.sealed.deep.x! > e.s.xmax_mm && e.sealed.balanced.x! < e.s.xmax_mm, "only the deep sealed box passes Xmax");
+  assert.ok(Math.abs(e.sealed.balanced.f3! - p.balanced.f3! - 21) < 1, "sealed gives up about 21 Hz");
+  assert.ok(Math.abs(e.sealed.deep.f3! - e.sealed.balanced.f3!) < 0.5, "sealed F3 barely moves with size");
+  assert.ok(e.sealed.deep.spl30! > e.sealed.balanced.spl30!);
+  // Every port the app's picker tries (tubes, two tubes, flared, slots that fit) is over the line at 250 W.
+  const { bestVentedPort } = await import("../packages/web/src/presets.ts");
+  const { newDesign } = await import("../packages/web/src/state.ts");
+  for (const k of ["compact", "balanced", "deep"] as const) {
+    const d = p[k].design as import("../packages/web/src/state.ts").VentedDesign;
+    const best = bestVentedPort({ ...e.s, designs: [] }, newDesign("vented", []) as never, d.vb_l, d.targetFb);
+    assert.ok(best && !best.quiet, `${k}: no port the picker tries stays quiet`);
+  }
+});
+
+test("box volume calculator page: form in the planned order, worked example that matches its text, hub card and guide links", async () => {
+  const { out, paths } = await built();
+  assert.ok(paths.includes("/calculators/box-volume/"));
+  const html = readFileSync(join(out, "calculators/box-volume/index.html"), "utf8");
+  assert.match(html, /<title>Speaker box volume calculator: net litres for any shape, minus driver, port and bracing[^<]*<\/title>/);
+  assert.match(html, /<h1>Box volume calculator<\/h1>/);
+  assert.match(html, /<form id="bv-form"[^>]*data-driver-id="dayton-audio\/rss315hf-4"/);
+  for (const id of ["bv-metric", "bv-imperial", "bv-mode-net", "bv-mode-size", "bv-shape", "bv-sizing", "bv-target", "bv-ratio", "bv-w", "bv-h", "bv-d", "bv-dia", "bv-len", "bv-tw", "bv-td", "bv-bw", "bv-bd", "bv-lip", "bv-wall", "bv-cap", "bv-sw", "bv-svg", "bv-caption", "bv-done", "bv-parts-total", "bv-driver", "bv-driver-status", "bv-n", "bv-dd", "bv-pr", "bv-np", "bv-pd", "bv-pc", "bv-pt", "bv-pdia", "bv-pw", "bv-ph", "bv-pl", "bv-pwt", "bv-br", "bv-o", "bv-out", "bv-open", "bv-copy", "bv-hint"])
+    assert.match(html, new RegExp(`id="${id}"`), id);
+  for (const shape of ["Box", "Car wedge", "Cylinder", "Sphere", "Tapered"]) assert.match(html, new RegExp(`name="bv-shape-chip" value="[a-z]+"[^>]*><span>${shape}</span>`), shape);
+  assert.match(html, /name="bv-shape-chip" value="box" checked/);
+  assert.match(html, /<span class="calc-est">≈ 3\.01 L each, estimated<\/span>/, "the example driver's displacement is marked as an estimate");
+  assert.doesNotMatch(html, /\{\{calc:/);
+  assert.match(readFileSync(join(out, "sitemap-pages.xml"), "utf8"), /\/calculators\/box-volume\//);
+  // The plan's element order: units, work out, shape, sizing, sizes | outline, done, inside the box, result, actions, hint, text, example.
+  const at = (s: string) => html.indexOf(s);
+  const order = ['id="bv-metric"', 'id="bv-mode-net"', 'name="bv-shape-chip"', 'id="bv-sizing"', 'class="calc-size"', 'id="bv-w"', 'id="bv-wall"', 'class="calc-shape"', 'id="bv-done"', 'class="calc-part"', 'id="bv-driver"', 'id="bv-n"', 'id="bv-dd"', 'id="bv-pr"', 'id="bv-np"', 'id="bv-pd"', 'id="bv-pc"', 'id="bv-pt"', 'id="bv-pdia"', 'id="bv-pl"', 'id="bv-pwt"', 'id="bv-br"', 'id="bv-o"', 'id="bv-out"', 'id="bv-open"', 'id="bv-copy"', 'id="bv-hint"', "How it's worked out", "Worked example"];
+  for (let i = 1; i < order.length; i++) assert.ok(at(order[i - 1]!) >= 0 && at(order[i - 1]!) < at(order[i]!), `${order[i - 1]} before ${order[i]}`);
+  for (const href of ["/guides/shaped-cabinets/", "/guides/box-stuffing/", "/calculators/port-length/", "/calculators/sealed-box/"]) assert.match(html, new RegExp(`href="${href}"`), href);
+
+  // The worked example's numbers, from the calculator's own sums, as the shaped-cabinets guide gives them.
+  const { boxVolumeExample } = await import("./calculators.ts");
+  const e = boxVolumeExample();
+  assert.deepEqual([e.tube.dia, e.tube.len, e.tube.wall, e.tube.cap, e.tube.dd], [36.8, 98.5, 6, 38, 3.01]);
+  assert.equal(e.tubeSized.len, 98.5, "sizing the tube from 100 cm lands on the guide's length");
+  assert.deepEqual([e.t.r.gross_l.toFixed(2), e.t.r.net_l.toFixed(2)], ["90.48", "83.45"]);
+  assert.deepEqual([e.box.w, e.box.h, e.box.d], [49.3, 79.7, 30.4]);
+  assert.deepEqual([e.b.r.gross_l.toFixed(2), e.b.r.net_l.toFixed(1)], ["93.20", "83.4"]);
+  assert.equal(e.wg.r.gross_l.toFixed(2), "75.60", "the guide's car wedge");
+  for (const v of ["90.48", "83.45", "49.3 × 79.7 × 30.4", "93.20", "75.60"]) assert.ok(html.includes(v), v);
+
+  // The hub: the card after Ported box, before Port length, and its "Which one do I need?" line.
+  const { CALCULATORS } = await import("./calculators.ts");
+  const i = CALCULATORS.findIndex((c) => c.path === "/calculators/box-volume/");
+  assert.equal(CALCULATORS[i - 1]!.path, "/calculators/ported-box/");
+  assert.equal(CALCULATORS[i + 1]!.path, "/calculators/port-length/");
+  assert.ok(CALCULATORS[i]!.isNew);
+  const hub = readFileSync(join(out, "calculators/index.html"), "utf8");
+  assert.ok(hub.indexOf("You know the box you'll build") > 0 && hub.indexOf("You know the box you'll build") < hub.indexOf("You have a box and want to tune it"), "the hub's line, before tuning");
+  for (const g of ["guides/shaped-cabinets", "guides/car-subwoofer", "guides/box-stuffing", "guides/port-tuning"]) assert.match(readFileSync(join(out, g, "index.html"), "utf8"), /href="\/calculators\/box-volume\/"/, g);
+});
+
+test("calculators hub: every calculator listed, in the nav and footer of every page, with breadcrumbs on each calculator", async () => {
+  const { out, paths } = await built();
+  assert.ok(paths.includes("/calculators/"), "the hub is built (/calculators/ used to be an error)");
+  const html = readFileSync(join(out, "calculators/index.html"), "utf8");
+  const { CALCULATORS } = await import("./calculators.ts");
+  for (const c of CALCULATORS) {
+    assert.ok(paths.includes(c.path), `${c.path} is built`);
+    assert.match(html, new RegExp(`<li><a href="${c.path}">`), `hub card for ${c.path}`);
+    const page = readFileSync(join(out, c.path, "index.html"), "utf8");
+    assert.match(page, /"@type":"BreadcrumbList"/, `${c.path} has breadcrumbs`);
+    assert.match(page, /<a href="\/calculators\/" aria-current="page">Calculators<\/a>/, `${c.path}: Calculators is current in the nav`);
+    // One primary (Open) and a Copy link button in one action row.
+    assert.match(page, /<div class="calc-actions"><a id="[a-z]+-open" class="button"[^>]*>[^<]+<\/a><button id="[a-z]+-copy" class="ghost"/);
+  }
+  assert.match(html, /"@type":"CollectionPage"/);
+  assert.match(html, /<a href="\/calculators\/" aria-current="page">Calculators<\/a>/);
+  // Every page's top bar: Calculators shown at all widths (no class), Validation hidden on phones.
+  const guides = readFileSync(join(out, "guides/index.html"), "utf8");
+  assert.match(guides, /<a href="\/calculators\/">Calculators<\/a><a href="\/validation\/" class="wider">Validation<\/a>/);
+  assert.doesNotMatch(guides, /Port calculator/);
+  assert.match(guides, /<footer>[\s\S]*<a href="\/calculators\/">Calculators<\/a>[\s\S]*<\/footer>/);
+  assert.match(readFileSync(join(out, "sitemap-pages.xml"), "utf8"), /speakerboxgenius\.com\/calculators\/<\/loc>/);
 });
 
 test("calculators: the script is found through Vite's manifest", async () => {

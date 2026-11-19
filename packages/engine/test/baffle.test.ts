@@ -5,8 +5,11 @@ import { baffleStepDb, baffleStepFrequency } from "../src/baffle.ts";
 const SQ = { width: 0.3, height: 0.3, x: 0.15, y: 0.15 };
 
 test("−6 dB well below the step, about 0 dB well above (on average)", () => {
-  const [lo] = baffleStepDb([10], SQ);
-  assert.ok(Math.abs(lo! + 6.02) < 0.1, `${lo}`);
+  const [lo] = baffleStepDb([10], { ...SQ, distance: 100 });
+  assert.ok(Math.abs(lo! + 6.02) < 0.02, `${lo}`);
+  // At 1 m the edges are a little farther than the listener, so their sound is weaker: −5.89 dB.
+  const [near] = baffleStepDb([10], SQ);
+  assert.ok(near! > lo! && Math.abs(near! + 5.89) < 0.02, `${near}`);
   const f: number[] = [];
   for (let x = 3000; x < 20000; x *= 1.01) f.push(x);
   const hi = baffleStepDb(f, { ...SQ, sd_cm2: 130 });

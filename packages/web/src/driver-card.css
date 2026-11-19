@@ -83,27 +83,70 @@ button.browse.chosen.rich .caret {
 .dv-ts-tools {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   margin: 0 0 var(--space-3);
 }
 
-.dv-ts-tools .ui-button {
-  padding-inline: var(--space-3);
-}
-
-.dv-ts-tools .dv-clear {
+.dv-ts-tools .dv-ts-more {
   margin-left: auto;
-  padding: 0;
 }
 
-/* Name: first in Edit T/S; the field takes the row's width after its label. */
+/* The key for the cells below: a typed box and a calculated (dashed) one. */
+.dv-ts-key {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.dv-ts-key i {
+  display: inline-block;
+  width: var(--space-6);
+  height: var(--space-4);
+  border: var(--border-hairline) solid var(--input-border);
+  border-radius: var(--radius-sm);
+}
+
+.dv-ts-key i + i,
+.dv-ts-key .dv-key-calc {
+  margin-left: var(--space-2);
+}
+
+.dv-ts-key .dv-key-typed {
+  background: var(--well);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.dv-ts-key .dv-key-calc {
+  border-style: dashed;
+}
+
+/* The edited line right under the name. */
+.dv-name + .modified-line {
+  margin: calc(var(--space-2) * -1) 0 var(--space-2);
+}
+
+/* Phones: Done fills the sheet's foot. */
+.dv-ts-sheet .ui-sheet-foot .ui-button {
+  flex: 1;
+}
+
+/* Name: first in Edit T/S; the label above, the name (or its field) the full width under it. */
 .dv-name.ui-field,
 .dv-name .ui-field {
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--space-1);
 }
 
 .dv-name {
   margin: 0 0 var(--space-2);
+}
+
+.dv-name .ui-field-label {
+  color: var(--muted);
+  font-size: var(--text-sm);
 }
 
 .dv-name .ui-text input {
@@ -124,71 +167,128 @@ button.browse.chosen.rich .caret {
   font-weight: var(--weight-semibold);
 }
 
-.dv-name-fixed span {
+.dv-name-fixed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+
+/* The T/S fields: two groups, two cells to a row at every width. A cell is one box: the label
+   inside on the left, the value right-aligned, then the unit. Typed: solid with an accent edge,
+   bold. Calculated: dashed, grey placeholder. */
+.ts-group-title {
+  margin: var(--space-3) 0 var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ts-group:first-child .ts-group-title {
+  margin-top: 0;
+}
+
+.ts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.ts-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  height: var(--size-control);
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border: var(--border-hairline) solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--well);
+  cursor: text;
+}
+
+.ts-cell.typed {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.ts-cell.calculated {
+  border-style: dashed;
+  background: transparent;
+}
+
+.ts-cell:focus-within {
+  border-color: var(--accent);
+}
+
+.ts-cell.conflict,
+.ts-cell.bad {
+  border-color: var(--warn);
+}
+
+.ts-cell-label {
+  flex: none;
+  min-width: var(--space-8);
   color: var(--muted);
   font-size: var(--text-sm);
 }
 
-/* The T/S grid: two columns of label | value, the unit inside the box. */
-.ts-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2) var(--space-4);
-}
-
-.ts-grid > label {
-  display: grid;
-  grid-template-columns: var(--size-col-label) minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-md);
-}
-
-.ts-grid .ts-input {
-  position: relative;
-}
-
-.ts-grid .ts-input input {
-  width: 100%;
-  min-height: var(--size-control);
+.ts-cell input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+  color: var(--fg);
+  font: inherit;
   font-size: var(--text-field);
-  padding-right: var(--space-12);
+  font-variant-numeric: var(--font-numeric);
   text-align: right;
 }
 
-.ts-grid .ts-input .unit {
-  position: absolute;
-  top: 50%;
-  right: var(--space-2);
+.ts-cell.typed input {
+  font-weight: var(--weight-semibold);
+}
+
+.ts-cell input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.ts-cell-unit {
+  flex: none;
+  min-width: var(--space-8);
   color: var(--muted);
   font-size: var(--text-xs);
-  pointer-events: none;
-  transform: translateY(-50%);
 }
 
 /* The clear × shows while the value is being edited, in place of the unit. */
-.ts-grid .ts-input.has-clear button.clear {
+.ts-cell button.clear {
   display: none;
+  flex: none;
   min-width: var(--space-8);
   min-height: var(--space-8);
+  padding: 0;
 }
 
-.ts-grid .ts-input.has-clear:focus-within button.clear {
+.ts-cell:focus-within button.clear {
   display: block;
 }
 
-.ts-grid .ts-input.has-clear:focus-within .unit {
-  visibility: hidden;
+.ts-cell:has(button.clear):focus-within .ts-cell-unit {
+  display: none;
 }
 
-@media (max-width: 359px) {
-  .ts-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.ts-editor .ts-legend {
-  margin: var(--space-3) 0 0;
+.ts-editor .ts-hint {
+  margin: var(--space-2) 0 0;
 }
 
 .ts-chips {
@@ -242,4 +342,70 @@ button.browse.chosen.rich .caret {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+/* A database driver or PR changed by hand: "T/S was edited" as a field row, Reset as wide as the
+   control column under the fields (DriverCard, Designs). */
+.modified-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--size-col-control);
+  align-items: center;
+  column-gap: var(--space-3);
+  min-height: var(--size-row);
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.modified-line .ui-button {
+  justify-self: stretch;
+  justify-content: center;
+}
+
+/* The last import's report (ImportNotice.tsx): its line + dismiss, then "N values assumed". */
+.import-report {
+  margin-top: var(--space-3);
+}
+
+.import-report .ui-notice > div {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.import-report-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.import-report-head p {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.import-report-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.import-report-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--space-3);
+}
+
+.import-report-value {
+  text-align: right;
+}
+
+.import-report-note {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: var(--text-sm);
 }

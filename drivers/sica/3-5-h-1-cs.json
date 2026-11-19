@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "3.5 H 1 CS",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 3.5,
+  "ts": {
+    "fs": 85,
+    "qms": 6.95,
+    "qes": 0.57,
+    "vas_l": 1.8,
+    "re": 6.1,
+    "sd_cm2": 38.5,
+    "qts": 0.53,
+    "le_mh": 0.4,
+    "bl": 4.83,
+    "mms_g": 4.1,
+    "xmax_mm": 2.5,
+    "pe_w": 45
+  },
+  "physical": {
+    "cutout_mm": 81,
+    "depth_mm": 44.7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/3-5-h-1-cs/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

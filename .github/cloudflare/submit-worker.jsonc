@@ -1,0 +1,27 @@
+// The submit Worker (packages/submit-worker): the website form posts driver and passive radiator
+// submissions here and it opens a pull request on the public repo with a GitHub App.
+// Deployed by .github/workflows/submit-worker.yml; the Worker's name comes from the repo variable
+// CF_SUBMIT_WORKER_NAME (passed as --name). Secrets (GH_APP_ID, GH_APP_PRIVATE_KEY,
+// GH_INSTALLATION_ID, TURNSTILE_SECRET) and TARGET_REPO are set in the Cloudflare dashboard only.
+{
+  "main": "../../packages/submit-worker/src/index.ts",
+  "compatibility_date": "2026-11-01",
+  // Only reachable on the site's own subdomain.
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "submit.speakerboxgenius.com", "custom_domain": true }],
+  // Keep the text variables set in the dashboard (TARGET_REPO, DRY_RUN, EXTRA_ORIGINS) on every
+  // deploy: without this, wrangler deletes variables that aren't listed below.
+  "keep_vars": true,
+  "vars": {
+    "ALLOWED_ORIGINS": "https://speakerboxgenius.com,https://www.speakerboxgenius.com",
+    "MAX_OPEN": "20",
+    "MAX_PER_HOUR": "60"
+  },
+  // Cloudflare's rate limit binding counts per 10 s or 60 s window (per Cloudflare location).
+  // Per person: 2 submissions a minute. The hourly cap across everyone (MAX_PER_HOUR) is counted
+  // from the repo's recent web-submission pull requests instead.
+  "ratelimits": [{ "name": "PER_IP", "namespace_id": "1101", "simple": { "limit": 2, "period": 60 } }],
+  // No request logs: submissions never end up in Cloudflare's log storage.
+  "observability": { "enabled": false }
+}

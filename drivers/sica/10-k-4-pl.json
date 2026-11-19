@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "10 K 4 PL",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 62.5,
+    "qms": 5.29,
+    "qes": 0.32,
+    "vas_l": 19.5,
+    "re": 6.1,
+    "sd_cm2": 346.4,
+    "qts": 0.31,
+    "le_mh": 0.4,
+    "bl": 20.38,
+    "mms_g": 56.8,
+    "xmax_mm": 5,
+    "pe_w": 800
+  },
+  "physical": {
+    "cutout_mm": 232,
+    "depth_mm": 136
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/10-k-4-pl/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

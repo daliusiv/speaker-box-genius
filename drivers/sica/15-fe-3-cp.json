@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "15 Fe 3 CP",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 40.2,
+    "qms": 9.52,
+    "qes": 0.34,
+    "vas_l": 170.4,
+    "re": 5.2,
+    "sd_cm2": 855.3,
+    "qts": 0.33,
+    "le_mh": 1.22,
+    "bl": 19.1,
+    "mms_g": 91,
+    "xmax_mm": 5.5,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 161
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/15-fe-3-cp/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

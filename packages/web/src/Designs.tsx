@@ -1,9 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Sparkle } from "./Logo.tsx";
+import { SubmitPrContext } from "./SubmitDialog.tsx";
 import {
   portEffectiveLength,
   prAddedMassForFb,
   prFb,
+  prFreeAirFs,
   prGroupsAddedMassForFb,
   prGroupsFb,
   portLengthForFb,
@@ -15,7 +17,9 @@ import {
 import { Fixed, KitFields, Num, Select } from "./components.tsx";
 import { Icon } from "./Icon.tsx";
 import type { IconName } from "./iconPaths.ts";
-import { Button, Chip, collectHelp, Disclosure, FieldRow, HelpSheet, InlineText, Menu, MenuItemButton, MiniResponse, Section, Segmented, Stepper, type HelpEntry, type MenuItem } from "./ui/index.ts";
+import { Button, Chip, RadioCards, collectHelp, Disclosure, FieldRow, HelpSheet, InlineText, Menu, MenuItemButton, MiniResponse, Section, Segmented, Stepper, type HelpEntry, type MenuItem } from "./ui/index.ts";
+import { changedText, prModification, type DatabasePr } from "./driverOrigin.ts";
+import { ModifiedLine } from "./ModifiedLine.tsx";
 import { PassiveRadiatorBrowser } from "./Library.tsx";
 import { loadPrChoice, type DbIndex } from "./library.ts";
 import { PrTuning } from "./PrTuning.tsx";
@@ -48,11 +52,13 @@ import type {
   ChamberOpening,
   DesignKind,
   DesignState,
+  IbDesign,
   PortFields,
   PrDesign,
   PrGroupState,
   VentedDesign,
 } from "./state.ts";
+import { track } from "./telemetry.ts";
 
 const f1 = (v: number) => (Number.isFinite(v) ? v.toFixed(1) : "–");
 /** Up to one decimal, without a trailing ".0" (330, 18, 12.5). */
@@ -78,6 +84,8 @@ interface CommonProps<D extends DesignState> {
   backDepth_cm: number | null;
   /** A design's response for the Preset picker's curves (null while the driver is incomplete). */
   preview?: (d: DesignState) => PresetPreview | null;
+  /** The simulated summary (Fc, Qtc, Fb…), when there is one. */
+  glance?: DesignGlance;
   onChange: (d: D) => void;
 }
 
@@ -190,6 +198,9 @@ const builtOf = (d: DesignState) => ("vb_l" in d ? d.vb_l : 0);
 export interface DesignGlance {
   vb_l: number;
   fb?: number;
+  /** Sealed boxes: the simulated system resonance and Q (with Rg and the box's losses, as the charts). */
+  fc?: number;
+  qtc?: number;
   f3: number | null;
   over: number;
 }
@@ -260,7 +271,7 @@ function DesignShell(props: {
           />
           {d.on && props.folded && g ? (
             <span className="bx-sub">
-              {fmt(g.vb_l, "vol", 1)}
+              {d.kind === "ib" && d.rear === "open" ? "Open rear" : fmt(g.vb_l, "vol", 1)}
               {g.fb ? ` · Fb ${g.fb.toFixed(1)} Hz` : ""}
               {g.f3 === null ? " · F3 –" : ` · F3 ${g.f3.toFixed(0)} Hz`}
               {" · "}
@@ -336,7 +347,107 @@ function SealedBody(p: CommonProps<DesignState & { kind: "sealed" }>) {
         options={usable ? [0.5, 0.577, 0.707].map((q) => ({ name: `Qtc ${q}`, help: QTC_TITLES[q]!, design: make(q), apply: () => apply(q) })) : []}
       />
       <VbField vb_l={p.built_l} value={p.design.vb_l} linked={p.linked} onChange={(vb_l) => p.onChange({ ...p.design, vb_l, preset: undefined })} />
+      <SealedReadouts align={p.align} drivers={p.drivers} vb_l={p.vb_l} glance={p.glance} />
       {msg && <p className="warn">{msg}</p>}
+    </div>
+  );
+}
+
+/**
+ * What a sealed box does to the driver: its resonance and Q against the driver's own, and how
+ * big the box is next to Vas. From about 10 × Vas the air barely springs the cone (Qtc within
+ * 5 % of Qts): the box acts as an infinite baffle.
+ */
+function SealedReadouts(p: { align: AlignmentDriver | null; drivers: number; vb_l: number; glance?: DesignGlance; rear?: IbDesign["rear"] }) {
+  const fc = p.glance?.fc;
+  const qtc = p.glance?.qtc;
+  if (fc === undefined || qtc === undefined) return null;
+  const qts = p.align ? (p.align.qms * p.align.qes) / (p.align.qms + p.align.qes) : null;
+  const vas = p.align ? p.align.vas_l * p.drivers : null;
+  if (p.rear) return <IbReadouts fc={fc} qtc={qtc} qts={qts} fs={p.align?.fs ?? null} vas={vas} drivers={p.drivers} rear={p.rear} vb_l={p.vb_l} />;
+  const ratio = vas && p.vb_l > 0 ? p.vb_l / vas : null;
+  const rise = qts ? Math.round((qtc / qts - 1) * 100) : null;
+  return (
+    <>
+      <Fixed
+        label="Fc"
+        unit="Hz"
+        value={f1(fc)}
+        help={`The box's resonance: the driver's Fs${p.align ? ` (${f1(p.align.fs)} Hz)` : ""} raised by the box's air spring. The response is down by 20·log(Qtc) dB here.`}
+      />
+      <Fixed
+        label="Qtc"
+        value={qts !== null && rise !== null ? `${qtc.toFixed(2)} (Qts ${qts.toFixed(2)}${rise > 0 ? `, +${rise} %` : ""})` : qtc.toFixed(2)}
+        help="The box's total Q, as the charts have it (with the amplifier's source resistance and the box losses). A smaller box raises it above the driver's Qts; 0.5–0.71 is the usual range."
+      />
+      {ratio !== null && (
+        <Fixed
+          label="Vb ÷ Vas"
+          value={`${ratio < 10 ? ratio.toFixed(2) : ratio.toFixed(0)} ×`}
+          help={`The box's volume over the drivers' Vas${p.drivers > 1 ? ` (${p.drivers} drivers: ${f1(vas!)} L)` : ""}. Qtc rises above Qts by √(1 + Vas ÷ Vb): 4 × Vas → +12 %, 10 × → +5 %, 25 × → +2 %.`}
+        />
+      )}
+      {ratio !== null && ratio >= 10 && <p className="hint">At {ratio.toFixed(0)} × Vas the box barely springs the cone: it acts as an infinite baffle (Fc ≈ Fs, Qtc ≈ Qts). The box leak (Settings → Simulation → Box → Leak Ql) counts as a gap into the room: for an attic-sized space behind the driver, clear it.</p>}
+    </>
+  );
+}
+
+/** An infinite baffle's readouts: Fc and Qtc against the driver's, and for a closed space how big it is next to Vas. */
+function IbReadouts(p: { fc: number; qtc: number; qts: number | null; fs: number | null; vas: number | null; drivers: number; rear: IbDesign["rear"]; vb_l: number }) {
+  const rise = p.qts ? Math.round((p.qtc / p.qts - 1) * 100) : null;
+  const ratio = p.rear === "space" && p.vas && p.vb_l > 0 ? p.vb_l / p.vas : null;
+  return (
+    <>
+      <Fixed
+        label="Fc"
+        unit="Hz"
+        value={f1(p.fc)}
+        help={
+          p.rear === "open"
+            ? `With an open rear the system resonates at the driver's own Fs${p.fs ? ` (${f1(p.fs)} Hz)` : ""}.`
+            : `The driver's Fs${p.fs ? ` (${f1(p.fs)} Hz)` : ""} raised a little by the rear space's air spring.`
+        }
+      />
+      <Fixed
+        label="Qtc"
+        value={p.qts !== null && rise !== null ? `${p.qtc.toFixed(2)} (Qts ${p.qts.toFixed(2)}${rise > 0 ? `, +${rise} %` : ""})` : p.qtc.toFixed(2)}
+        help="The total Q as the charts have it (with the amplifier's source resistance). With an open rear it is the driver's own Qts; a closed space raises it a little. Under about 0.5 the bass rolls off early: EQ (a low shelf or Linkwitz Transform) brings it back."
+      />
+      {ratio !== null && (
+        <Fixed
+          label="Rear ÷ Vas"
+          value={`${ratio < 10 ? ratio.toFixed(2) : ratio.toFixed(0)} ×`}
+          help={`The rear space over the drivers' Vas${p.drivers > 1 ? ` (${p.drivers} drivers: ${f1(p.vas!)} L)` : ""}. From about 10 × it barely springs the cone (Qtc within 5 % of Qts).`}
+        />
+      )}
+      <p className="hint">Keep the rear space sealed off from the room you listen in: sound coming back through doors or vents cancels the bass.</p>
+    </>
+  );
+}
+
+/** Infinite baffle: what's behind the wall (open, or a closed space of some volume), then the readouts. */
+function IbBody(p: CommonProps<IbDesign>) {
+  return (
+    <div className="bx-body">
+      <RadioCards<IbDesign["rear"]>
+        legend="Rear space"
+        value={p.design.rear}
+        options={[
+          { value: "open", title: "Open", description: "Attic, garage or outdoors: too big to spring the cone (a true infinite baffle)", aside: <Chip>Default</Chip> },
+          { value: "space", title: "Closed space", description: "A room, cupboard or car boot behind the baffle: springs the cone like a very big sealed box" },
+        ]}
+        onChange={(rear) => p.onChange({ ...p.design, rear })}
+      />
+      {p.design.rear === "space" && (
+        <Num
+          help="Air volume of the space behind the baffle (a room: length × width × height). Its leak (Settings → Simulation → Box → Leak Ql) goes out of that space, never into the room you listen in."
+          label="Volume"
+          q="vol"
+          value={p.design.vb_l}
+          onChange={(vb_l) => p.onChange({ ...p.design, vb_l })}
+        />
+      )}
+      <SealedReadouts align={p.align} drivers={p.drivers} vb_l={p.vb_l} glance={p.glance} rear={p.design.rear} />
     </div>
   );
 }
@@ -683,6 +794,7 @@ function PrBody(
 ) {
   const pr = p.design;
   const [msg, setMsg] = useState("");
+  const submitPr = useContext(SubmitPrContext);
   const set = (patch: Partial<PrDesign>) => p.onChange({ ...pr, ...patch });
   /** A hand edit to the box or its PRs: it no longer is the preset it was sized with. */
   const edit = (patch: Partial<PrDesign>) => set({ ...patch, preset: undefined });
@@ -764,13 +876,14 @@ function PrBody(
           title={t.mixed ? "Group 1" : undefined}
           group={pr}
           db={p.db}
+          air={p.air}
           countHelp="Number of identical passive radiators. More PRs means more cone area: less excursion each."
           massHelp="Mass glued onto each PR cone (grams, per passive radiator). More mass tunes the box lower."
           noParams
           onPick={(id) =>
             loadPrChoice(id).then(
               ({ name, params, displacement_l, cutout_mm }) => {
-                edit({ prName: name, params });
+                edit({ prName: name, prId: id, params });
                 p.onPrPhysical({ displacement_l, cutout_mm });
               },
               () => alert("Couldn't load that passive radiator."),
@@ -786,12 +899,14 @@ function PrBody(
           title={t.mixed ? "Sets the added mass on group 1's PRs; the other groups stay as they are" : undefined}
           onApply={tune}
         />
-        <PrParams params={pr.params} onChange={(patch) => edit({ params: { ...pr.params, ...patch } })} />
+        <PrModifiedNote group={pr} onReset={(patch) => edit(patch)} />
+        <PrParams params={pr.params} air={p.air} onChange={(patch) => edit({ params: { ...pr.params, ...patch } })} />
         {pr.extra.map((g, i) => (
           <PrGroupFields
             key={i}
             title={`Group ${i + 2}`}
             group={g}
+            air={p.air}
             db={p.db}
             onChange={(patch) => setGroup(i, patch)}
             onRemove={() => edit({ extra: pr.extra.filter((_, k) => k !== i) })}
@@ -804,13 +919,58 @@ function PrBody(
             variant="ghost"
             icon="plus"
             title="Put a second kind of passive radiator in the same box (or the same PR with a different added mass)"
-            onClick={() => edit({ extra: [...pr.extra, { prName: pr.prName, count: 1, addedMass_g: pr.addedMass_g, params: { ...pr.params } }] })}
+            onClick={() => edit({ extra: [...pr.extra, { prName: pr.prName, ...(pr.prId ? { prId: pr.prId } : {}), count: 1, addedMass_g: pr.addedMass_g, params: { ...pr.params } }] })}
           >
             Add a different PR
           </Button>
+          {submitPr && !pr.prId && (
+            <Button variant="ghost" title="Add these values to the passive radiator database (no GitHub account needed)" onClick={() => submitPr(pr.prName, pr.params)}>
+              Submit to database…
+            </Button>
+          )}
         </div>
       </Section>
     </>
+  );
+}
+
+/** Database PRs by id, fetched once (null: couldn't be loaded). */
+const databasePrs = new Map<string, Promise<DatabasePr | null>>();
+
+/** The database PR a group was loaded from, once fetched. */
+function useDatabasePr(id: string | undefined): DatabasePr | null {
+  const [got, setGot] = useState<{ id: string; rec: DatabasePr | null } | null>(null);
+  useEffect(() => {
+    if (!id) return;
+    let p = databasePrs.get(id);
+    if (!p) {
+      p = loadPrChoice(id).then(
+        (x) => ({ name: x.name, params: x.params }),
+        () => null,
+      );
+      databasePrs.set(id, p);
+    }
+    let live = true;
+    void p.then((rec) => live && setGot({ id, rec }));
+    return () => {
+      live = false;
+    };
+  }, [id]);
+  return got && got.id === id ? got.rec : null;
+}
+
+/** "Changed from the database: Vas." with a Reset, for a PR group whose parameters were changed by hand. */
+function PrModifiedNote(props: { group: Pick<PrGroupState, "prName" | "prId" | "params">; onReset: (patch: Pick<PrGroupState, "prName" | "params">) => void }) {
+  const rec = useDatabasePr(props.group.prId);
+  const changed = prModification(props.group, rec);
+  if (!rec || !changed || changed.length === 0) return null;
+  return (
+    <ModifiedLine
+      text={changedText(changed)}
+      help="This passive radiator came from the database and some of its parameters were changed here. Reset puts the database's values back; the number of PRs and the added mass stay as they are."
+      resetLabel="Reset the passive radiator to the database's values"
+      onReset={() => props.onReset({ prName: rec.name, params: { ...rec.params } })}
+    />
   );
 }
 
@@ -836,6 +996,7 @@ function PrGroupFields(props: {
   onRemove?: () => void;
   /** Leave the parameters out (the PR box shows group 1's after its tuning rows). */
   noParams?: boolean;
+  air: Air;
 }) {
   const g = props.group;
   const body = (
@@ -845,14 +1006,17 @@ function PrGroupFields(props: {
           rows={props.db?.passiveRadiators}
           drivers={props.db?.drivers}
           current={g.prName}
-          onPick={
-            props.onPick ??
-            ((id) =>
-              loadPrChoice(id).then(
-                ({ name, params }) => props.onChange({ prName: name, params }),
-                () => alert("Couldn't load that passive radiator."),
-              ))
-          }
+          onPick={(id) => {
+            track("pr_set", { source: "database", count: g.count });
+            return (
+              props.onPick ??
+              ((id: string) =>
+                loadPrChoice(id).then(
+                  ({ name, params }) => props.onChange({ prName: name, prId: id, params }),
+                  () => alert("Couldn't load that passive radiator."),
+                ))
+            )(id);
+          }}
         />
       </div>
       <div className="ui-field" data-help={props.countHelp ?? "Number of identical passive radiators in this group."} data-help-title="PRs">
@@ -860,7 +1024,8 @@ function PrGroupFields(props: {
         <Stepper label="Passive radiators" value={g.count} min={1} max={16} onChange={(count) => props.onChange({ count })} />
       </div>
       <Num help={props.massHelp ?? "Mass glued onto each PR cone in this group (grams). More mass tunes lower."} label="Added mass" unit="g" value={g.addedMass_g} min={0} onChange={(v) => props.onChange({ addedMass_g: v })} />
-      {!props.noParams && <PrParams params={g.params} onChange={(patch) => props.onChange({ params: { ...g.params, ...patch } })} />}
+      {!props.noParams && <PrModifiedNote group={g} onReset={props.onChange} />}
+      {!props.noParams && <PrParams params={g.params} air={props.air} onChange={(patch) => props.onChange({ params: { ...g.params, ...patch } })} />}
     </>
   );
   if (!props.title) return body;
@@ -876,12 +1041,17 @@ function PrGroupFields(props: {
 }
 
 /** A PR's datasheet parameters behind one row that shows them while closed. */
-function PrParams(props: { params: PrDesign["params"]; onChange: (patch: Partial<PrDesign["params"]>) => void }) {
+function PrParams(props: { params: PrDesign["params"]; air: Air; onChange: (patch: Partial<PrDesign["params"]>) => void }) {
   const q = props.params;
+  const f = prFreeAirFs(q, props.air);
+  const fp = Number.isFinite(f) && f > 0 ? f : null;
   return (
-    <Disclosure title="PR parameters" value={`Mms ${short(q.mms_g)} g · Sd ${short(q.sd_cm2)} cm² · ${q.xmech ? "Xmech" : "Xmax"} ${short(q.xmax_mm)} mm`}>
+    <Disclosure
+      title="PR parameters"
+      value={`${fp ? `Fp ${fp.toFixed(1)} Hz · ` : ""}Mmp ${short(q.mms_g)} g · Sdp ${short(q.sd_cm2)} cm² · ${q.xmech ? "Xmech" : "Xmax"} ${short(q.xmax_mm)} mm`}
+    >
       <PrParamFields params={q} onChange={props.onChange} />
-      <p className="hint">From the datasheet. PR Mms is the bare moving mass, without added mass.</p>
+      {fp !== null && <p className="hint">Fp {fp.toFixed(1)} Hz: the PR's free-air resonance, from Mmp, Vap and Sdp. Check it against the datasheet's Fs.</p>}
     </Disclosure>
   );
 }
@@ -925,6 +1095,7 @@ function ChamberPrs(props: {
           key={i}
           title={mixed ? `Group ${i + 1}` : undefined}
           group={g}
+          air={props.air}
           db={props.db}
           onChange={(patch) => setGroup(i, patch)}
           onRemove={mixed ? () => props.onChange(gs.filter((_, k) => k !== i)) : undefined}
@@ -957,17 +1128,17 @@ function PrParamFields(props: { params: PrDesign["params"]; onChange: (patch: Pa
   const { params, onChange } = props;
   return (
     <>
-      <Num help="Moving mass of the passive radiator (its datasheet value, without added mass)." label="PR Mms" unit="g" value={params.mms_g} onChange={(v) => onChange({ mms_g: v })} />
-      <Num help="Compliance of the PR's suspension, as an equivalent air volume. Bigger means a softer suspension." label="PR Vas" unit="L" value={params.vas_l} onChange={(v) => onChange({ vas_l: v })} />
-      <Num help="Mechanical Q of the PR: its own losses. Higher means a lossless, sharper resonance." label="PR Qms" value={params.qms} onChange={(v) => onChange({ qms: v })} />
-      <Num help="Effective cone area of the passive radiator." label="PR Sd" unit="cm²" value={params.sd_cm2} onChange={(v) => onChange({ sd_cm2: v })} />
+      <Num help="Moving mass of the passive radiator, without added mass. Most datasheets call it Mms; Small's papers and BassBox call it Mmp." label="Mmp" unit="g" value={params.mms_g} onChange={(v) => onChange({ mms_g: v })} />
+      <Num help="Compliance of the PR's suspension, as an equivalent air volume (Vas on most datasheets). Bigger means a softer suspension." label="Vap" unit="L" value={params.vas_l} onChange={(v) => onChange({ vas_l: v })} />
+      <Num help="Mechanical Q of the PR: its own losses (Qms on most datasheets). Higher means a sharper resonance." label="Qmp" value={params.qms} onChange={(v) => onChange({ qms: v })} />
+      <Num help="Effective cone area of the passive radiator (Sd on most datasheets). Changing it keeps Vap, so the PR's suspension, and Fp, change with it (as in WinISD)." label="Sdp" unit="cm²" value={params.sd_cm2} onChange={(v) => onChange({ sd_cm2: v })} />
       <Num
         help={
           params.xmech
             ? "The maker's mechanical limit (Xmech): where the PR bottoms out. They publish no linear Xmax, so its suspension stiffens somewhat before this."
-            : "One-way linear excursion of the passive radiator (Xmax)."
+            : "One-way linear excursion of the passive radiator."
         }
-        label={params.xmech ? "PR Xmech" : "PR Xmax"}
+        label={params.xmech ? "Xmech" : "Xmax"}
         unit="mm"
         value={params.xmax_mm}
         onChange={(v) => onChange({ xmax_mm: v })}
@@ -1265,6 +1436,7 @@ export function DesignCard(props: {
     drivers: props.drivers,
     backDepth_cm: props.backDepth_cm ?? null,
     preview: props.preview,
+    glance: props.glance,
   };
   return (
     <DesignShell
@@ -1278,11 +1450,12 @@ export function DesignCard(props: {
       onChange={(patch) => props.onChange({ ...d, ...patch } as DesignState)}
       onDuplicate={props.onDuplicate}
       onDelete={props.onDelete}
-      onDimensions={d.kind !== "line" ? props.onDimensions : undefined}
+      onDimensions={d.kind !== "line" && d.kind !== "ib" ? props.onDimensions : undefined}
       onUnlink={props.onUnlink}
     >
       <KitFields>
         {d.kind === "sealed" && <SealedBody {...common} design={d} onChange={props.onChange} />}
+        {d.kind === "ib" && <IbBody {...common} design={d} onChange={props.onChange} />}
         {d.kind === "vented" && <VentedBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} pickPort={props.pickPort} />}
         {d.kind === "bandpass" && (
           <BandpassBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} db={props.db} losses={props.losses} onSize={props.onSizeBandpass} />
@@ -1314,7 +1487,7 @@ export function DesignCard(props: {
             onChange={props.onChange}
             db={props.db}
             onPrPhysical={props.onPrPhysical}
-            finder={{ ...props.finder, losses: { ...props.finder.losses, qa: stuffingEffect(d.stuffing, "pr").qa ?? props.finder.losses.qa } }}
+            finder={{ ...props.finder, losses: { ql: d.ql ?? props.finder.losses.ql, qa: stuffingEffect(d.stuffing, "pr").qa ?? props.finder.losses.qa } }}
             onFound={(patch, summary, physical) =>
               // The finder and tuning work with the volume the box acts as: build the stuffed volume.
               props.onFound(d, patch.vb_l !== undefined ? { ...patch, vb_l: toBuilt(patch.vb_l, fill) } : patch, summary, physical)
@@ -1326,13 +1499,60 @@ export function DesignCard(props: {
             <StuffingFields design={d as DesignState & { kind: StuffableKind }} built_l={props.built_l} air={props.air} ec={props.ec} fit={props.fit} onChange={props.onChange} />
           </Section>
         )}
+        {stuffable(d.kind) && <LeakageSection design={d} settingsQl={props.losses.ql} onChange={props.onChange} />}
       </KitFields>
     </DesignShell>
   );
 }
 
+/**
+ * Sealed, ported and PR boxes: the leak (Ql) from Settings, or this box's own, so a tight box
+ * and a leaky one can be compared side by side.
+ */
+function LeakageSection(props: { design: DesignState; settingsQl: number; onChange: (d: DesignState) => void }) {
+  const d = props.design;
+  const own = d.ql !== undefined;
+  const set = (ql: number | undefined) => {
+    const next = { ...d, ql } as DesignState;
+    if (ql === undefined) delete next.ql;
+    props.onChange(next);
+  };
+  return (
+    <Section icon="sliders" title="Leakage" value={own ? `Ql ${qText(d.ql!)}` : `Ql ${qText(props.settingsQl)} · as in Settings`}>
+      <RadioCards<"shared" | "own">
+        legend="Leak Ql"
+        hideLegend
+        value={own ? "own" : "shared"}
+        options={[
+          { value: "shared", title: "Same as Settings", description: `Ql ${qText(props.settingsQl)} from Settings, shared by every box` },
+          { value: "own", title: "This box", description: "Its own Ql, for this box only" },
+        ]}
+        onChange={(v) => set(v === "own" ? props.settingsQl : undefined)}
+      >
+        {own && (
+          <Num
+            label="This box's Ql"
+            help="This box's leakage loss as a Q at the tuning frequency: lower means a leakier box. Clear it for no leak."
+            value={d.ql!}
+            min={1}
+            none={NO_LOSS}
+            onChange={(ql) => set(ql)}
+          />
+        )}
+      </RadioCards>
+      <p
+        className="hint"
+        data-help-title="Leakage"
+        data-help="Air escaping other than through the port: gaps in joints and gaskets, terminal cups, a vented pole piece, a porous dust cap. Measured boxes come out between about Ql 5 (leaky) and 20 (glued and gasketed); 7 is the classic value. Settings' default is 10, as WinISD's. Hornresp's ordinary boxes have no leakage: None matches it. The guide “Box losses” has more."
+      >
+        Typical 7 (default 10, as WinISD) · lower = leakier
+      </p>
+    </Section>
+  );
+}
+
 /** Each box type's icon (the + Box menu draws it in the colour the new box gets). */
-const KIND_ICON: Record<DesignKind, IconName> = { sealed: "box", vented: "port", pr: "radiator", bandpass: "box", line: "line" };
+const KIND_ICON: Record<DesignKind, IconName> = { sealed: "box", vented: "port", pr: "radiator", bandpass: "box", line: "line", ib: "baffle" };
 
 const ADD_KINDS: { kind: DesignKind; what: string }[] = [
   { kind: "sealed", what: "Simplest: tight bass with a gentle roll-off" },
@@ -1340,6 +1560,7 @@ const ADD_KINDS: { kind: DesignKind; what: string }[] = [
   { kind: "pr", what: "Like ported, with passive radiators instead of a port: no chuffing" },
   { kind: "bandpass", what: "Driver between two chambers: loud over a narrow band" },
   { kind: "line", what: "A folded line or horn behind the driver" },
+  { kind: "ib", what: "In a wall, floor or ceiling, its back to an attic, garage or the next room" },
 ];
 
 /**

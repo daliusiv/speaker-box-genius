@@ -14,6 +14,7 @@
   --faint: #4b5266; /* disabled controls */
   --accent: #4ed7e9; /* interactive only: active tabs, toggles, scrub, focus */
   --accent-soft: rgb(78 215 233 / 0.15);
+  --hover: rgb(230 233 239 / 0.05); /* faint fg tint behind a hovered or pressed row */
   --on-accent: #0b1220;
   --accent-fg: #0b1220;
   --draw: #fb923c; /* diagrams and sketches (the brand orange, as the logo) */
@@ -4967,6 +4968,10 @@ button.copied:not(.secondary) {
   border-radius: 8px;
   background: var(--well);
   overflow: hidden;
+}
+
+.share-preview .finder-progress {
+  width: min(20rem, 90%);
 }
 
 .share-preview img {

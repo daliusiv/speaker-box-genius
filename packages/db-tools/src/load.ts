@@ -9,14 +9,12 @@ import {
   type Driver,
   type PassiveRadiator,
 } from "../../schema/src/index.ts";
-import { checkConsistency } from "../../engine/src/ts.ts";
 import { driverFlags, passiveRadiatorFlags, type Flag } from "./plausibility.ts";
 
 export const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 
-/** Relative differences above these fail CI / only warn. */
-export const CONSISTENCY_ERROR = 0.15;
-export const CONSISTENCY_WARN = 0.05;
+export { CONSISTENCY_ERROR, CONSISTENCY_WARN } from "./submission.ts";
+import { driverConsistency } from "./submission.ts";
 
 export type Kind = "driver" | "passive-radiator";
 
@@ -90,30 +88,11 @@ function loadTree(root: string, kind: Kind, result: LoadResult) {
         errs.forEach((e) => result.errors.push(`${rel}: ${e}`));
         if (errs.length > 0) continue;
         const d = data as Driver;
-        let consistent = true;
-        for (const issue of checkConsistency(d.ts)) {
-          if (issue.diff > CONSISTENCY_ERROR && d.inconsistency_reason === undefined) {
-            consistent = false;
-            result.errors.push(
-              `${rel}: ${issue.message}. Over ${CONSISTENCY_ERROR * 100}% usually means a typo or unit mix-up. ` +
-                `If the datasheet really says this, add an "inconsistency_reason" field explaining why.`,
-            );
-          } else if (issue.diff > CONSISTENCY_WARN) {
-            result.warnings.push(`${rel}: ${issue.message}`);
-          }
-        }
-        // A "displacement" equal to Sd × Xmax is the datasheet's Vd, not the driver's size.
-        const disp = d.physical?.displacement_l;
-        if (disp !== undefined && d.ts.xmax_mm !== undefined) {
-          const vd = (d.ts.sd_cm2 * d.ts.xmax_mm) / 10000; // litres
-          if (Math.abs(disp - vd) <= 0.05 * vd) {
-            consistent = false;
-            result.errors.push(
-              `${rel}: physical.displacement_l (${disp} L) equals Vd = Sd × Xmax (${vd.toFixed(3)} L), the air the cone moves. ` +
-                `It should be the space the driver takes up inside the box; leave it blank if the datasheet doesn't give it.`,
-            );
-          }
-        }
+        // Published values that disagree, a displacement that is really Vd (shared with the submission forms).
+        const c = driverConsistency(d);
+        c.errors.forEach((e) => result.errors.push(`${rel}: ${e.message}`));
+        c.warnings.forEach((w) => result.warnings.push(`${rel}: ${w.message}`));
+        const consistent = c.errors.length === 0;
         if (consistent) result.drivers.push({ id, file: rel, data: d, flags: driverFlags(d) });
       } else {
         const errs = validatePassiveRadiator(data);

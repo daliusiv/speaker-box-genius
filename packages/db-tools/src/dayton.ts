@@ -40,14 +40,24 @@ export const CATEGORIES: { id: number; slug: string }[] = [
 // HTML parsing (pure, tested against fixtures)
 // ---------------------------------------------------------------------------
 
+/** Remove HTML tags until none are left (one pass can leave `<script` behind from `<scr<x>ipt>`), then any stray angle brackets. */
+const stripTags = (s: string) => {
+  let prev: string;
+  do {
+    prev = s;
+    s = s.replace(/<[^>]*>/g, "");
+  } while (s !== prev);
+  return s.replace(/[<>]/g, "");
+};
+
+// `&amp;` is decoded last so `&amp;quot;` stays the literal text `&quot;`.
 const decode = (s: string) =>
-  s
-    .replace(/<[^>]+>/g, "")
+  stripTags(s)
     .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, "&")
     .replace(/&#39;|&rsquo;/g, "'")
     .replace(/&nbsp;/g, " ")
     .replace(/\s+/g, " ")
+    .replace(/&amp;/g, "&")
     .trim();
 
 /** The category's own paging address and last page number, from its page links. */

@@ -1,0 +1,42 @@
+name: Import Sica drivers
+
+# Reads the product catalogue on sica.it (with Sica's permission, see
+# docs/data-permissions.md) and opens a pull request with new and updated entries
+# plus a report of anything adjusted or skipped. Run by hand, and once a month so new
+# Sica drivers turn up without anyone remembering to look.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 4 5 * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  import:
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read sica.it
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/sica.ts
+
+      - name: Check the database
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts
+
+      - name: Open or update the pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: db/sica-import
+          add-paths: |
+            drivers/sica/**
+          commit-message: "Database: import Sica drivers from sica.it (with permission)"
+          title: "Database: Sica import"
+          labels: database
+          body-path: sica-import-report.md

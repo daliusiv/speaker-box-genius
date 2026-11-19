@@ -71,6 +71,8 @@ export type CaseBox =
   | { kind: "free-air" }
   | BandpassInput
   | { kind: "sealed"; vb_l: number; ql?: number | null; qa?: number | null }
+  /** Infinite baffle: open rear (no `rear_l`) = the cone's back to ground; a rear space = a sealed box whose leak isn't heard. */
+  | { kind: "infinite-baffle"; rear_l?: number; ql?: number | null; qa?: number | null }
   | {
       kind: "vented";
       vb_l: number;

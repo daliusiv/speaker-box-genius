@@ -23,6 +23,7 @@ export const ICON_PATHS = {
   bbcode: "M8 4H5v16h3 M16 4h3v16h-3 M10 9h4 M10 15h4",
   browser: "M3 5c0-1.66 4-3 9-3s9 1.34 9 3-4 3-9 3-9-1.34-9-3z M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5 M3 12c0 1.66 4 3 9 3s9-1.34 9-3",
   file: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6",
+  datasheet: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h5",
   table: "M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18",
   chart: "M3 3v18h18 M7 15l4-4 3 3 5-6",
   circuit: "M2 12h4l2-4 3 8 3-8 3 8 2-4h3",

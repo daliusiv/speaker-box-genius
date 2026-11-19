@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "15 PNS 4",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 37.3,
+    "qms": 5.21,
+    "qes": 0.38,
+    "vas_l": 116.3,
+    "re": 5.1,
+    "sd_cm2": 855.3,
+    "qts": 0.35,
+    "le_mh": 1.42,
+    "bl": 22.73,
+    "mms_g": 161.8,
+    "xmax_mm": 9,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 176.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/15-pns-4/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

@@ -39,9 +39,28 @@ body:
     id: nominal_ohms
     attributes:
       label: Nominal impedance (Ω)
+      description: Just the number, e.g. 4. For a dual voice coil driver, one coil's impedance (2 for a dual 2 Ω sub).
       placeholder: "4"
     validations:
       required: true
+  - type: dropdown
+    id: voice_coils
+    attributes:
+      label: Voice coils
+      options:
+        - Single
+        - Dual (DVC)
+      default: 0
+  - type: dropdown
+    id: ts_wiring
+    attributes:
+      label: Dual voice coil wiring
+      description: DVC only. How the coils were wired for the datasheet's T/S (Re is about 2× one coil in series, ½× in parallel).
+      options:
+        - Not stated
+        - Series
+        - Parallel
+      default: 0
   - type: input
     id: size_in
     attributes:

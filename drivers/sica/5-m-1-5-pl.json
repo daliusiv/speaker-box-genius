@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "5 M 1.5 PL",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 145,
+    "qms": 5.12,
+    "qes": 0.56,
+    "vas_l": 2,
+    "re": 6,
+    "sd_cm2": 84.9,
+    "qts": 0.51,
+    "le_mh": 0.1,
+    "bl": 7.69,
+    "mms_g": 6.1,
+    "xmax_mm": 1.5,
+    "pe_w": 130
+  },
+  "physical": {
+    "cutout_mm": 113,
+    "depth_mm": 72
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/5-m-15-pl/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

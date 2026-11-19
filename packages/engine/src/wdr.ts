@@ -1,6 +1,8 @@
 import type { HighPass } from "./filters.ts";
 import { solveTs, type TsValues } from "./tsSolver.ts";
 import { STANDARD_AIR, WINISD_AIR, type Air } from "./constants.ts";
+import { pushAssumed, type Assumed } from "./assumed.ts";
+import { prFreeAirFs } from "./ts.ts";
 
 /**
  * WinISD driver files (.wdr): an INI file with a [Driver] section, values in
@@ -215,6 +217,8 @@ export interface WprProject {
    */
   highPass?: HighPass;
   unsupportedFilters: number;
+  /** Box values the file didn't have, filled with WinISD's defaults (listed for the user). */
+  assumed: Assumed[];
 }
 
 function parseFilters(sec: Record<string, string> | undefined): { highPass?: HighPass; unsupportedFilters: number } {
@@ -269,9 +273,22 @@ export function parseWpr(text: string): WprProject {
   const bType = n0(box, "BType");
   const vent = s.get("ventrear");
   const vb_l = n0(box, "Vr") * 1000;
+  const assumed: Assumed[] = [];
+  /** A value the file should have; missing (or 0) → WinISD's default, listed. */
+  const or = (sec: Record<string, string> | undefined, key: string, fallback: number, field: string, note?: string): number => {
+    const v = n0(sec, key);
+    if (v > 0) return v;
+    pushAssumed(assumed, { field, value: String(fallback), ...(note ? { note } : {}) });
+    return fallback;
+  };
+  /** A chamber's losses; Qp is listed only where there's a port, and nothing for a box that isn't imported. */
+  const losses = (l: string, a: string, p: string, where = "", list = true, ported = true) => {
+    const q = (key: string, fallback: number, field: string) => (list ? or(box, key, fallback, field, "WinISD's default") : n0(box, key) || fallback);
+    return { ql: q(l, 10, `Leakage Ql${where}`), qa: q(a, 100, `Absorption Qa${where}`), qp: list && ported ? or(box, p, 100, `Port loss Qp${where}`, "WinISD's default") : n0(box, p) || 100 };
+  };
   const ventOf = (sec: Record<string, string> | undefined): WprPort | undefined => {
     if (!sec || !(n0(sec, "len") > 0 && n0(sec, "dia1") > 0)) return undefined;
-    const port: WprPort = { count: n0(sec, "Num") || 1, diameter_cm: n0(sec, "dia1") * 100, length_cm: n0(sec, "len") * 100, endCorrection: n0(sec, "endcorrection") || 0.732 };
+    const port: WprPort = { count: n0(sec, "Num") || 1, diameter_cm: n0(sec, "dia1") * 100, length_cm: n0(sec, "len") * 100, endCorrection: or(sec, "endcorrection", 0.732, "Port end correction", "WinISD's default") };
     if (n0(sec, "Shape") === 2 && n0(sec, "dia2") > 0) {
       const slot = { width_cm: n0(sec, "dia1") * 100, height_cm: n0(sec, "dia2") * 100 };
       return { ...port, slot, diameter_cm: 2 * Math.sqrt((slot.width_cm * slot.height_cm) / Math.PI) };
@@ -297,9 +314,9 @@ export function parseWpr(text: string): WprProject {
     const rearPort = bType === 2 ? undefined : (intraVent ?? rearVent);
     bandpass = {
       order: rearPort === undefined ? "4" : intraVent ? "6s" : "6p",
-      front: { vb_l: n0(box, "Vf") * 1000, fb: n0(box, "Ff"), port: frontVent, ql: n0(box, "Qlf") || 10, qa: n0(box, "Qaf") || 100, qp: n0(box, "Qpf") || 100 },
-      rear: { vb_l: n0(box, "Vr") * 1000, fb: n0(box, "Fr") || undefined, port: rearPort, ql: n0(box, "Qlr") || 10, qa: n0(box, "Qar") || 100, qp: n0(box, "Qpr") || 100 },
-      qicl: n0(box, "Qiclfr") || 100,
+      front: { vb_l: n0(box, "Vf") * 1000, fb: n0(box, "Ff"), port: frontVent, ...losses("Qlf", "Qaf", "Qpf", " (front)") },
+      rear: { vb_l: n0(box, "Vr") * 1000, fb: n0(box, "Fr") || undefined, port: rearPort, ...losses("Qlr", "Qar", "Qpr", " (rear)", true, rearPort !== undefined) },
+      qicl: or(box, "Qiclfr", 100, "Leak between chambers Qicl", "WinISD's default"),
     };
   }
   const d = s.get("driver");
@@ -315,23 +332,29 @@ export function parseWpr(text: string): WprProject {
     const cms = vas / (air.rho * air.c * air.c * sd * sd);
     const mms = 1 / ((2 * Math.PI * fs) ** 2 * cms);
     pr = {
-      count: n0(box, "Npr") || 1,
+      count: or(box, "Npr", 1, "Passive radiators"),
       addedMass_g: n0(prSec, "Me") * 1000,
-      params: { mms_g: mms * 1000, sd_cm2: sd * 1e4, vas_l: vas * 1000, fs, qms: n0(prSec, "Qms") || 10, xmax_mm: n0(prSec, "Xmax") * 1000 },
+      params: { mms_g: mms * 1000, sd_cm2: sd * 1e4, vas_l: vas * 1000, fs, qms: or(prSec, "Qms", 10, "PR Qmp", "WinISD's default"), xmax_mm: n0(prSec, "Xmax") * 1000 },
     };
+    if (!(n0(prSec, "Xmax") > 0)) pushAssumed(assumed, { field: "PR Xmax", value: "not set", note: "no PR redline until you enter it" });
   }
+  // The box's own losses (a bandpass lists its chambers above instead).
+  const own =
+    type === "bandpass" && bandpass
+      ? { ql: bandpass.rear.ql, qa: bandpass.rear.qa, qp: bandpass.rear.qp }
+      : losses("Qlr", "Qar", "Qpr", "", type !== "other", type === "vented");
   return {
     driver,
     pr,
     bandpass,
-    box: { type, bType, vb_l, fb: type === "vented" || type === "passive-radiator" ? n0(box, "Fr") : undefined, ql: n0(box, "Qlr") || 10, qa: n0(box, "Qar") || 100, qp: n0(box, "Qpr") || 100 },
+    box: { type, bType, vb_l, fb: type === "vented" || type === "passive-radiator" ? n0(box, "Fr") : undefined, ...own },
     port:
       type === "vented" && vent
         ? (rearVent ?? {
             count: n0(vent, "Num") || 1,
             diameter_cm: n0(vent, "dia1") * 100,
             length_cm: n0(vent, "len") * 100,
-            endCorrection: n0(vent, "endcorrection") || 0.732,
+            endCorrection: or(vent, "endcorrection", 0.732, "Port end correction", "WinISD's default"),
           })
         : undefined,
     rg: n0(s.get("signalsource"), "Rg"),
@@ -343,6 +366,7 @@ export function parseWpr(text: string): WprProject {
     distance_m: n0(box, "d") || 1,
     coilTempRise_C: n0(box, "dTVC"),
     ...parseFilters(s.get("filters")),
+    assumed,
   };
 }
 
@@ -502,8 +526,7 @@ export function writeWpr(p: WprExport): string {
   if (b.type === "passive-radiator") {
     // WinISD keeps a PR's Fs and Vas (its Mms follows from them).
     const sd = b.pr.sd_cm2 / 1e4;
-    const cms = b.pr.vas_l / 1000 / (p.air.rho * p.air.c * p.air.c * sd * sd);
-    const fs = 1 / (2 * Math.PI * Math.sqrt((b.pr.mms_g / 1000) * cms));
+    const fs = prFreeAirFs(b.pr, p.air);
     parts.push(
       section("PassiveRadiator", [
         ["Vas", b.pr.vas_l / 1000],

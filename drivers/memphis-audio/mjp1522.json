@@ -1,0 +1,36 @@
+{
+  "brand": "Memphis Audio",
+  "model": "MJP1522",
+  "type": "car-audio",
+  "nominal_ohms": 1,
+  "voice_coils": 2,
+  "ts_wiring": "parallel",
+  "size_in": 15,
+  "ts": {
+    "fs": 33.6,
+    "qms": 7.95,
+    "qes": 0.823,
+    "vas_l": 65.411808,
+    "re": 1,
+    "sd_cm2": 829.58,
+    "qts": 0.746,
+    "bl": 9.3,
+    "mms_g": 334.4,
+    "xmax_mm": 12.954,
+    "pe_w": 750
+  },
+  "physical": {
+    "cutout_mm": 351.536,
+    "depth_mm": 200.152,
+    "displacement_l": 8.212
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.memphiscaraudio.com/product/mjp1522/",
+      "retrieved": "2026-11-16",
+      "note": "Values from Memphis Audio's spec sheets (PDF supplied 16 Nov 2026), used with Memphis Audio's permission (16 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Memphis Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

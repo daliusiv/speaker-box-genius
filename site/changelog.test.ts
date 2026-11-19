@@ -85,3 +85,9 @@ test("lint catches PR numbers, tooling notes and bad headings", () => {
   assert.ok(p.some((x) => /tooling/.test(x)));
   assert.ok(p.some((x) => /isn't a release/.test(x)));
 });
+
+test("lint: site links are absolute, so they work on GitHub and in release notes", () => {
+  const md = (link: string) => `# Changelog\n\n## Unreleased\n\n- See [Privacy](${link}).\n\n## Earlier\n\nOld.\n`;
+  assert.ok(lint(md("/privacy/")).some((p) => /bare \/path/.test(p)));
+  assert.deepEqual(lint(md("https://speakerboxgenius.com/privacy/")), []);
+});

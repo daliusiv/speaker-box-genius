@@ -36,7 +36,7 @@ import { fillLive } from "./liveNumbers.ts";
 import { guideCardHtml, guideCharts } from "./guideCharts.ts";
 import { cardSvg, findChrome, Rasterizer } from "./og.ts";
 import { CardCache, cardSalt } from "./cardCache.ts";
-import { CALC_STYLE, fillCalc, portExampleValues, portForm, prExampleValues, prForm, viteScript } from "./calculators.ts";
+import { CALC_PAGES, CALC_STYLE, CALCULATORS, fillCalc, HUB_STYLE, hubCards, viteScript } from "./calculators.ts";
 import { LastmodStore, sitemapFiles, type SitemapEntry, type SitemapGroup } from "./sitemap.ts";
 import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, hubSizes, loadDb, prCandidate, relatedDrivers, sens283, shareLink, sizeContent, sizeLabel, sizePath, sizeSlug, type DriverPage, type PageLd, type VariantLink } from "./drivers.ts";
 import { variantFamilies, variantLabels } from "../packages/db-tools/src/variants.ts";
@@ -93,7 +93,7 @@ function inline(s: string): string {
     // Images live in site/img, served from /guides/img/ whatever page they're on.
     .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_, alt: string, src: string) => `<img src="${src.replace(/^img\//, "/guides/img/")}" alt="${alt}" loading="lazy">`)
     .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, text: string, href: string) => {
-      const external = /^https?:/.test(href) && !href.startsWith(SITE);
+      const external = /^https?:/.test(href) && URL.parse(href)?.origin !== SITE;
       return `<a href="${href}"${external ? ' rel="noopener"' : ""}>${text}</a>`;
     })
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
@@ -225,7 +225,6 @@ a{color:var(--accent)}
 @media (max-width:520px){.brand span{display:none}.nav{gap:.8rem}.nav .button{padding:.45rem .8rem}}
 @media (max-width:400px){.top{padding:.9rem .8rem;gap:.5rem}.nav{gap:.65rem;font-size:.95rem}.nav .button{padding:.4rem .65rem}}
 @media (max-width:440px){.nav .opt{display:none}}
-@media (max-width:359px){.nav .wide:not([aria-current]){display:none}}
 @media (max-width:520px){.nav .wider{display:none}}
 .button{display:inline-block;padding:.55rem 1rem;border-radius:.6rem;background:var(--accent);color:#0b1220;font-weight:650;text-decoration:none;white-space:nowrap}
 main{max-width:46rem;margin:0 auto;padding:.5rem 1.1rem 3rem}
@@ -278,10 +277,9 @@ const jsonLd = (x: unknown) => JSON.stringify(x).replace(/</g, "\\u003c");
 const NAV = [
   { href: "/drivers/", label: "Drivers", match: (p: string) => p.startsWith("/drivers/") },
   { href: "/guides/", label: "Guides", match: (p: string) => p.startsWith("/guides/") || p.endsWith("-alternative/") },
-  // Left out of the top bar on narrow phones (it's in the footer).
-  // Left out below 520 px, even on its own page (it's in the footer and linked from the port guides).
-  { href: "/calculators/port-length/", label: "Port calculator", match: (p: string) => p.startsWith("/calculators/port-length/"), cls: "wider" },
-  { href: "/validation/", label: "Validation", match: (p: string) => p === "/validation/", wide: true },
+  { href: "/calculators/", label: "Calculators", match: (p: string) => p.startsWith("/calculators/") },
+  // Left out below 520 px, so Drivers · Guides · Calculators fit on a phone (it's in the footer).
+  { href: "/validation/", label: "Validation", match: (p: string) => p === "/validation/", cls: "wider" },
 ];
 
 export function layout(o: { title: string; description: string; path: string; image?: string; imagePath?: string; content: string; guides: Page[]; style?: string; ld?: PageLd; scripts?: string[] }): string {
@@ -337,13 +335,13 @@ ${GOATCOUNTER}
 <body>
 <header class="top">
 <a class="brand" href="/"><img src="/icons/icon-192.png" alt=""><span>Speaker Box Genius</span></a>
-<nav class="nav">${NAV.map((n) => `<a href="${n.href}"${"wide" in n ? ' class="wide"' : "cls" in n ? ` class="${n.cls}"` : ""}${n.match(o.path) ? ' aria-current="page"' : ""}>${n.label}</a>`).join("")}<a class="button" href="/">Open<span class="opt"> the</span> app</a></nav>
+<nav class="nav">${NAV.map((n) => `<a href="${n.href}"${"cls" in n ? ` class="${n.cls}"` : ""}${n.match(o.path) ? ' aria-current="page"' : ""}>${n.label}</a>`).join("")}<a class="button" href="/">Open<span class="opt"> the</span> app</a></nav>
 </header>
 <main>
 ${o.content}
 </main>
 <footer>
-<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/calculators/port-length/">Port length calculator</a> · <a href="/calculators/passive-radiator/">Passive radiator calculator</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a> · <a href="/changelog/">Changelog</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
+<p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/calculators/">Calculators</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a> · <a href="/changelog/">Changelog</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
 </footer>${(o.scripts ?? []).map((src) => `\n<script type="module" src="${src}"></script>`).join("")}
 </body>
 </html>
@@ -619,34 +617,34 @@ export async function build(outDir: string): Promise<string[]> {
   );
 
   // Calculators (site/calculators.ts): the page text here, the live part from the app's build.
-  {
-    const script = viteScript(outDir, "src/calculators/portLength.ts");
-    const md = fillCalc(readFileSync(join(HERE, "calculators", "port-length.md"), "utf8"), portExampleValues());
+  write(
+    "/calculators/",
+    layout({
+      title: "Speaker box calculators: subwoofer, sealed and ported box size, ports and PRs",
+      description: "Free speaker box calculators that run the simulator's own engine, checked against WinISD and Hornresp: subwoofer, sealed and ported box size, port length and air speed, passive radiator mass.",
+      path: "/calculators/",
+      content: `<h1>Speaker box calculators</h1>\n<p class="lede">Quick answers for box size, ports and passive radiators. Each one runs the simulator's own engine, the one checked against WinISD and Hornresp on the <a href="/validation/">validation page</a>. Copy a link to share your numbers, or open the box in the simulator to see every chart.</p>\n${hubCards()}\n${markdown(readFileSync(join(HERE, "calculators", "index.md"), "utf8"))}`,
+      guides,
+      style: HUB_STYLE,
+      ld: { list: CALCULATORS.map((c) => ({ name: c.name, path: c.path })) },
+    }),
+  );
+  for (const c of CALC_PAGES) {
+    const script = viteScript(outDir, c.entry);
+    const md = fillCalc(readFileSync(join(HERE, "calculators", c.md), "utf8"), c.values());
+    // A worked example may show the app's charts (![…](chart:example/response)), drawn as in the guides.
+    const charts = await guideCharts(md, c.md);
+    const extra = c.chartStyle?.() ?? "";
     write(
-      "/calculators/port-length/",
+      c.path,
       layout({
-        title: "Port length calculator: round and slot ports, with air speed",
-        description: "Work out a speaker port's length for any box and tuning, round or slot, with flares, end corrections and the port's own volume. Then check its air speed with your driver.",
-        path: "/calculators/port-length/",
-        content: `<h1>Port length calculator</h1>\n<p class="lede">The length of a round or slot port for your box and tuning, worked out with the simulator's own port model. Pick your driver to see whether the port will chuff.</p>\n${portForm()}\n${markdown(md)}`,
+        title: c.title,
+        description: c.description,
+        path: c.path,
+        ld: { crumbs: [{ name: "Calculators", path: "/calculators/" }, { name: c.crumb }] },
+        content: `<h1>${c.h1}</h1>\n<p class="lede">${c.lede}</p>\n${c.form()}\n${markdown(md, charts.draw)}`,
         guides,
-        style: CALC_STYLE,
-        ...(script ? { scripts: [script] } : {}),
-      }),
-    );
-  }
-  {
-    const script = viteScript(outDir, "src/calculators/passiveRadiator.ts");
-    const md = fillCalc(readFileSync(join(HERE, "calculators", "passive-radiator.md"), "utf8"), prExampleValues());
-    write(
-      "/calculators/passive-radiator/",
-      layout({
-        title: "Passive radiator calculator: added mass, tuning and PR travel",
-        description: "Work out how much mass to add to a passive radiator for any box and tuning, from the PR database or your own values. Then check the PRs keep up with your driver.",
-        path: "/calculators/passive-radiator/",
-        content: `<h1>Passive radiator calculator</h1>\n<p class="lede">The added mass that tunes your box, worked out with the simulator's own PR model. Pick your driver to see whether the PRs run out of travel before the cone does.</p>\n${prForm()}\n${markdown(md)}`,
-        guides,
-        style: CALC_STYLE,
+        style: CALC_STYLE + (charts.count ? charts.style : extra),
         ...(script ? { scripts: [script] } : {}),
       }),
     );

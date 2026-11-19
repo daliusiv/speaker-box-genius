@@ -267,31 +267,31 @@ test("baffle step guide: loss, step frequency, compensation, excursion and max S
   const ib = r("baffle-ib"), free = r("baffle-free"), eq3 = r("baffle-eq3"), pas = r("baffle-passive");
   const spl = (x: typeof ib, hz: number) => at(x.freq, x.spl, hz);
   [[40, 87.4], [100, 87.8], [200, 87.9], [500, 87.9]].forEach(([hz, v]) => near(spl(ib, hz!), v!, 0.06, `infinite baffle at ${hz} Hz`));
-  [[40, 81.4], [100, 82.4], [200, 83.8], [300, 85.3], [500, 87.6], [1000, 89.5]].forEach(([hz, v]) => near(spl(free, hz!), v!, 0.06, `free-standing at ${hz} Hz`));
-  [[40, -5.9], [100, -5.4], [200, -4.1], [300, -2.6]].forEach(([hz, v]) => near(spl(free, hz!) - spl(ib, hz!), v!, 0.06, `loss at ${hz} Hz`));
+  [[40, 81.5], [100, 82.4], [200, 83.9], [300, 85.3], [500, 87.6], [1000, 89.5]].forEach(([hz, v]) => near(spl(free, hz!), v!, 0.06, `free-standing at ${hz} Hz`));
+  [[40, -5.8], [100, -5.4], [200, -4.0], [300, -2.6]].forEach(([hz, v]) => near(spl(free, hz!) - spl(ib, hz!), v!, 0.06, `loss at ${hz} Hz`));
   const s = EXAMPLES["baffle-free"]!();
   const b = baffleOf(s, solveDriver(s).values.sd_cm2)!;
-  near(baffleStepFrequency(b), 272, 1, "step frequency");
+  near(baffleStepFrequency(b), 271, 1, "step frequency");
   near(free.summary.f3!, 31.1, 0.06, "F3 unchanged");
   // +3 dB shelf: level, F3 and excursion at 2.83 V.
-  near(spl(eq3, 40), 84.4, 0.06, "+3 dB shelf at 40 Hz");
-  near(spl(eq3, 100), 85.0, 0.06, "+3 dB shelf at 100 Hz");
+  near(spl(eq3, 40), 84.5, 0.06, "+3 dB shelf at 40 Hz");
+  near(spl(eq3, 100), 85.1, 0.06, "+3 dB shelf at 100 Hz");
   near(eq3.summary.f3!, 27.8, 0.06, "+3 dB shelf F3");
   near(at(free.freq, free.excursionMm, 40), 1.54, 0.02, "excursion at 40 Hz");
   near(at(eq3.freq, eq3.excursionMm, 40), 2.16, 0.02, "excursion at 40 Hz with +3 dB");
   // Passive 2.4 mH ∥ 5.6 Ω: 81–84 dB from 40 Hz to 1 kHz.
-  near(spl(pas, 40), 81.1, 0.06, "passive at 40 Hz");
+  near(spl(pas, 40), 81.2, 0.06, "passive at 40 Hz");
   [60, 100, 200, 300, 500, 1000].forEach((hz) => { const v = spl(pas, hz); assert.ok(v >= 81.9 && v <= 84.2, `passive at ${hz} Hz: ${v}`); });
   // Max SPL: infinite baffle vs free-standing.
-  [[30, 95.9, 90.0], [50, 97.6, 91.8], [100, 103.3, 97.9]].forEach(([hz, a, f]) => {
+  [[30, 95.9, 90.0], [50, 97.6, 91.9], [100, 103.3, 97.9]].forEach(([hz, a, f]) => {
     near(at(ib.freq, ib.maxSpl, hz!), a!, 0.06, `max SPL infinite baffle at ${hz} Hz`);
     near(at(free.freq, free.maxSpl, hz!), f!, 0.06, `max SPL free-standing at ${hz} Hz`);
   });
   // The step for other baffles.
   const shape = (width: number, height: number, x: number, y: number) => baffleStepFrequency({ ...b, width: width / 100, height: height / 100, x: x / 100, y: y / 100 });
   near(shape(20, 20, 10, 10), 340, 3, "20 cm square");
-  near(shape(30, 30, 15, 15), 218, 3, "30 cm square");
-  near(shape(20, 100, 10, 25), 183, 3, "20 × 100 tower");
+  near(shape(30, 30, 15, 15), 217, 3, "30 cm square");
+  near(shape(20, 100, 10, 25), 186, 3, "20 × 100 tower");
 });
 
 test("shaped cabinets guide: four shapes sized to the same net volume, their sizes, modes and the shortcuts' errors", async () => {
@@ -635,7 +635,7 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   assert.equal(sealed.vb_l, 23.6);
   assert.equal(ranked.findIndex((r) => r.driverId === "18-sound/18ntlw5000-8ohm" && r.box === "vented") + 1, 4);
   assert.equal(ranked.indexOf(sealed) + 1, 3);
-  assert.equal(ranked.indexOf(ported) + 1, 530);
+  assert.equal(ranked.indexOf(ported) + 1, 576);
   assert.equal(sealed.subsonic, undefined);
   // Re-sorted: Deepest and Loudest on the same results; Smallest sizes the boxes again.
   const deep = rankResults(res, { ...goal, priority: "deep" })[0]!;
@@ -651,7 +651,7 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   assert.ok(small.notes.some((n) => n.includes("won't all fit")));
   // The counts the guide gives for these defaults.
   const grade = (g: string) => ranked.filter((r) => (g === "over" ? r.over.length > 0 : g === "deep" ? !r.over.length && !!r.deep : !r.over.length && !r.deep)).length;
-  assert.deepEqual([cands.length, ranked.length, grade("ok"), grade("deep"), grade("over")], [760, 1486, 451, 78, 957]);
+  assert.deepEqual([cands.length, ranked.length, grade("ok"), grade("deep"), grade("over")], [854, 1654, 494, 80, 1080]);
   // Opening it with ported too, plus the sealed box, gives the example's designs.
   const opened = openResults(DEFAULT_STATE, loaded(top.driverId) as never, [top, ported, sealed], goal);
   const ex = EXAMPLES["assistant-example"]!();

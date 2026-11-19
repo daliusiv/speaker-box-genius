@@ -1,5 +1,5 @@
 import { compareWith, compareMessage } from "./compareDriver.ts";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   impedanceMagnitude,
   insideLongest_cm,
@@ -11,14 +11,15 @@ import {
   resampleMagnitude,
   type HighPassType,
   type SimulationResult,
-  type TsValues,
   TS_PARAMS,
+  type Assumed,
 } from "@sbg/engine";
 import { Icon } from "./Icon.tsx";
 import { ChartEmphasis, CrosshairProvider, LogChart, shortName, type ChartHandle, type Series } from "./LogChart.tsx";
 import { TimeChart } from "./TimeChart.tsx";
 import { addFilterAt, applyFit, changeFilterType, combineLanes, draggableEq, eqOnlyDb, eqQ, excursionLane, fitToLimits, moveEq, moveHighPass, retune, tunable, worstLimit, type AddType, type Fit, type SealedRef } from "./chartEdit.ts";
 import { useUndoable } from "./useUndoable.ts";
+import { setContext, track, trackOnce } from "./telemetry.ts";
 import { bestVentedPort, sizeAllForDriver, sizeBandpassDesign } from "./presets.ts";
 import { loadCandidates, type FinderContext } from "./PrFinder.tsx";
 import { sizeForNewDriver } from "./quickStart.ts";
@@ -34,6 +35,7 @@ import {
   swapCompare,
   type AppState,
   type BandpassDesign,
+  type DesignKind,
   type DesignState,
   type EqItem,
   type Settings,
@@ -41,15 +43,18 @@ import {
 } from "./state.ts";
 import { applyOwpr, withOpenisdDriver } from "./owprImport.ts";
 import { applyWpr } from "./wprImport.ts";
-import { flagText, loadDriver, loadIndex, type DbIndex } from "./library.ts";
+import { flagText, loadDriver, loadIndex, type DbIndex, type LoadedDriver } from "./library.ts";
+import { changedText, modification, resetDriver, sourceFor, type LoadedDrivers } from "./driverOrigin.ts";
 import { Card, DriveValue, KitFields, Num, REPO, Select, useNarrow } from "./components.tsx";
 import { SettingsPanel } from "./SettingsPanel.tsx";
+import { ProgramControl } from "./ProgramControl.tsx";
+import { fmtCrest, signalLabel, simStateOf } from "./programSignal.ts";
 import { DriverBrowser } from "./Library.tsx";
 import { PwaStatus, usePwa } from "./Pwa.tsx";
 import { GettingStarted, LinkNote, useWelcome } from "./Welcome.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { DriverCard } from "./DriverCard.tsx";
-import { Button, Card as KitCard, Notice } from "./ui/index.ts";
+import { Button, Card as KitCard, Menu, Notice, Segmented } from "./ui/index.ts";
 
 /** What Size all does: its button's tooltip and help. */
 const SIZE_ALL_HELP =
@@ -103,6 +108,8 @@ import {
 } from "./sim.ts";
 import { RoomGainSection } from "./RoomGain.tsx";
 import { BaffleSection } from "./BafflePanel.tsx";
+import { BaffleFrdSheet, loadFrd } from "./BaffleFrd.tsx";
+import type { FrdFile } from "./baffleFrd.ts";
 import { HighPassSection } from "./HighPass.tsx";
 import { AirChart } from "./AirChart.tsx";
 import { AddBoxMenu, DesignCard } from "./Designs.tsx";
@@ -120,19 +127,60 @@ import { ExportWindow } from "./ExportWindow.tsx";
 import { OpenWindow } from "./OpenWindow.tsx";
 import { importKind, type ImportUse } from "./formats/imports.ts";
 import { applyHornresp } from "./hornrespBox.ts";
-import { readProjectJson } from "./formats/project.ts";
+import { readProjectFile } from "./formats/project.ts";
+import { driverExtras, type ImportReport } from "./importReport.ts";
+import { ImportNotice } from "./ImportNotice.tsx";
 import { openResults, withDriver } from "./assistant.ts";
 import type { SharedResults } from "./assistant.ts";
 import { ASSISTANT_HASH, SHARED_LINK, SHARED_RESULTS, START_IN_ASSISTANT, untouched } from "./start.ts";
 import { DesignAssistant } from "./DesignAssistant.tsx";
 import { Logo, Sparkle } from "./Logo.tsx";
-import { submitDriverUrl } from "./submit.ts";
+import { SUBMIT_ENDPOINT, submitDriverUrl, TURNSTILE_SITE_KEY } from "./submit.ts";
+import { dbLookup, prSubmitFields, sendSubmission, submitFields } from "./submitForm.ts";
+import { SubmitDialog, SubmitPrContext, type SubmitStatus } from "./SubmitDialog.tsx";
+import type { SubmissionFields } from "../../db-tools/src/submission.ts";
 import { fromDatabase, nameAfterTsEdit, nameKind } from "./driverName.ts";
+import { measuredTs } from "./measuredTs.ts";
 import { EQ_HANDLE, GUIDE, GUIDE_DIM, LIMIT } from "./palette.ts";
-import { delayChart, excursionChart, impedanceChart, maxSplChart, portChart, prChart, pressureChart, relRefOf, responseChart, valueAt, zaChart, type ChartInput } from "./chartProps.ts";
+import { designProgram, headroomCell, sideLimitText } from "./chartProps.ts";
+import { delayChart, excursionChart, impedanceChart, maxSplChart, MAX_MODES, MAX_MODE_INFO, type MaxMode, portChart, prChart, pressureChart, relRefOf, responseChart, valueAt, zaChart, type ChartInput, excursionText, XVIEWS, XVIEW_ORDER, xviewUnit, type XView } from "./chartProps.ts";
 
 const LIMIT_RED = LIMIT.xmax;
-type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay" | "transient" | "pressure" | "air";
+
+/** What the excursion charts' other views mean (their ⓘ). None for excursion itself. */
+function motionInfo(view: XView, what: "cone" | "pr", excursion: AppState["settings"]["excursion"]): ReactNode {
+  if (view === "x") return undefined;
+  const mass = what === "cone" ? "Mms, air load included" : "Mmp, with any added mass";
+  const one = what === "cone" ? "per driver" : "per passive radiator";
+  const kind = excursion === "pp" ? "peak-to-peak" : excursion === "rms" ? "RMS" : "peak";
+  return (
+    <>
+      <p>
+        {view === "pct"
+          ? `Excursion as a share of Xmax (one way peak against one way peak, whatever Settings shows excursion as): 100 % is Xmax, so drivers and PRs with different Xmax read on one scale.`
+          : view === "vol"
+            ? `The air it moves (${kind}, ${one}): Sd × excursion. Compare a cone with its PRs: together they must move the air the port would.`
+            : view === "v"
+              ? `How fast it moves (${kind}, ${one}): 2πf × excursion.`
+              : view === "a"
+                ? `Its acceleration (${kind}, ${one}) in g (9.81 m/s²): (2πf)² × excursion.`
+                : `Moving mass × acceleration (${kind}, ${one}; ${mass}), the force it pushes into the box, as VituixCAD's peak force. How several add up on the cabinet depends on which way they face.`}
+      </p>
+      <p>Red still marks excursion past Xmax: the dashed line or curve is Xmax in this unit, so a curve crossing it reaches Xmax. Past Xmax the model is linear and a real driver moves less than shown.</p>
+    </>
+  );
+}
+/** Runs `fn` each time `open` turns true by the user's hand (not for how the app started). */
+function useOpened(open: boolean, fn: () => void) {
+  const was = useRef(open);
+  useEffect(() => {
+    if (open && !was.current) fn();
+    was.current = open;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+}
+
+export type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay" | "transient" | "pressure" | "air";
 
 /** The picker's two-part label: the model bold, then brand · nominal Ω · size from the database row. */
 function chosenOf(
@@ -220,6 +268,13 @@ export function App(props: { initial: AppState | null }) {
   // The short link for the current state, once compressed (compression is asynchronous).
   const link = useRef<{ state: AppState; hash: string } | null>(null);
   const [db, setDb] = useState<DbIndex | null>(null);
+  // The website form (Submit to database…): what it opened with, and where sending got to.
+  const [submit, setSubmit] = useState<{ init: SubmissionFields; github: string } | null>(null);
+  const [submitStatus, setSubmitStatus] = useState<SubmitStatus>({ kind: "edit" });
+  const openSubmit = (init: SubmissionFields, github: string) => {
+    setSubmitStatus({ kind: "edit" });
+    setSubmit({ init, github });
+  };
   const [assistant, setAssistant] = useState(START_IN_ASSISTANT);
   /** A shared list of assistant results: undefined while the link is still being read. */
   const [shared, setShared] = useState<SharedResults | null | undefined>(SHARED_LINK ? undefined : null);
@@ -234,9 +289,29 @@ export function App(props: { initial: AppState | null }) {
     if (untouched(latest.current)) setAssistant(true);
     else window.open(`${location.pathname}${ASSISTANT_HASH}`, "_blank", "noopener");
   };
-  /** Credit line for the driver loaded from the database; shown while its name is unchanged. */
-  const [driverSource, setDriverSource] = useState<{ name: string; url?: string; via?: "driver-base"; ts?: TsValues; id?: string } | null>(null);
-  const [wdrMsg, setWdrMsg] = useState("");
+  /**
+   * Database drivers in this project (main and comparison), fetched by their stored id: their
+   * published values, specs link and name. A reload or an opened link fetches them again.
+   */
+  const [dbDrivers, setDbDrivers] = useState<LoadedDrivers>({});
+  const rememberDriver = (d: LoadedDriver) => {
+    if (d.id) setDbDrivers((m) => ({ ...m, [d.id!]: d }));
+  };
+  useEffect(() => {
+    for (const id of [state.driverOrigin, state.compare?.driverOrigin]) {
+      if (!id || id in dbDrivers) continue;
+      setDbDrivers((m) => (id in m ? m : { ...m, [id]: null }));
+      // Offline, or no longer in the database: the driver just reads as your own.
+      loadDriver(id).then(rememberDriver, () => undefined);
+    }
+  }, [state.driverOrigin, state.compare?.driverOrigin]);
+  /** The main driver's database origin (credit line, published values); it counts while its name is unchanged or "(edited)". */
+  const driverSource = sourceFor(state.driverOrigin, dbDrivers);
+  const mainChange = modification(state, dbDrivers);
+  // The comparison driver keeps a borrowed Xmax / Pe (it has no fields for them).
+  const compareChange = state.compare ? modification(state.compare, dbDrivers, true) : null;
+  const [importReport, setImportReport] = useState<ImportReport | null>(null);
+  const report = (text: string, assumed: Assumed[] = [], error = false) => setImportReport({ text, assumed, ...(error ? { error } : {}) });
   const [measurement, setMeasurement] = useState<Measurement | null>(null);
   const wdrInput = useRef<HTMLInputElement>(null);
   const [pasting, setPasting] = useState(false);
@@ -261,11 +336,28 @@ export function App(props: { initial: AppState | null }) {
   });
   // Watts counted WinISD's way (Settings → Watts): said beside the Max SPL chart and the amplifier fields.
   const winisdWatts = state.settings.driveModel === "winisd" && state.drive === "watts";
-  // Max SPL chart: the SPL itself, or the amplifier voltage or current it takes to get there.
-  const [maxMode, setMaxMode] = useState<"spl" | "volts" | "amps">(() => {
+  // Excursion charts (cone and PR): excursion, or the velocity, acceleration or force that goes with it. One choice for both, kept per browser.
+  const [xView, setXView] = useState<XView>(() => {
+    try {
+      const v = localStorage.getItem("sbg.xview");
+      return (XVIEW_ORDER as readonly string[]).includes(v ?? "") ? (v as XView) : "x";
+    } catch {
+      return "x";
+    }
+  });
+  const chooseXView = (v: XView) => {
+    setXView(v);
+    try {
+      localStorage.setItem("sbg.xview", v);
+    } catch {
+      // not remembered
+    }
+  };
+  // Max SPL chart: the SPL itself, or the amplifier voltage, current or power it takes to get there.
+  const [maxMode, setMaxMode] = useState<MaxMode>(() => {
     try {
       const v = localStorage.getItem("sbg.max");
-      return v === "volts" || v === "amps" ? v : "spl";
+      return MAX_MODES.find((m) => m === v) ?? "spl";
     } catch {
       return "spl";
     }
@@ -304,7 +396,7 @@ export function App(props: { initial: AppState | null }) {
       // not remembered
     }
   };
-  const chooseMaxMode = (m: "spl" | "volts" | "amps") => {
+  const chooseMaxMode = (m: MaxMode) => {
     setMaxMode(m);
     try {
       localStorage.setItem("sbg.max", m);
@@ -376,6 +468,7 @@ export function App(props: { initial: AppState | null }) {
   });
   const chooseChart = (c: ChartId) => {
     setChartPick(c);
+    track("chart_viewed", { chart: c });
     try {
       localStorage.setItem("sbg.chart", c);
     } catch {
@@ -385,9 +478,16 @@ export function App(props: { initial: AppState | null }) {
   // Which group of controls the left column shows.
   const [panel, setPanel] = useState<PanelId>(initialPanel);
   const choosePanel = (p: PanelId) => {
+    if (p !== panel) track("tab_viewed", { tab: p });
     setPanel(p);
     rememberPanel(p);
   };
+  // What crash reports say is open: box types, tab, chart and where the driver came from (never the design).
+  const boxTypes = [...new Set(state.designs.map((d) => d.kind))].sort().join();
+  const driverFrom = fromDatabase(state.driverName, driverSource) ? "database" : "custom";
+  useEffect(() => {
+    setContext({ box_types: boxTypes ? (boxTypes.split(",") as DesignKind[]) : [], design_count: state.designs.length, driver_source: driverFrom, panel, chart: chartPick });
+  }, [boxTypes, state.designs.length, driverFrom, panel, chartPick]);
   // Phones show one screen at a time: the charts, or one panel of controls (bottom tab bar).
   const [phoneView, setPhoneView] = useState<"charts" | "panel">("charts");
   /** Set by the launcher's "I have a speaker driver": the driver picked next is shown on the charts. */
@@ -462,10 +562,24 @@ export function App(props: { initial: AppState | null }) {
   }, []);
 
   const solved = useMemo(() => solveDriver(state), [state.ts, state.settings.air]); // eslint-disable-line react-hooks/exhaustive-deps
-  const designs = useMemo(() => runDesigns(state, solved), [state, solved]);
+  // A change to the program signal alone needs no new simulation (Max SPL on a program comes from the stored ceilings).
+  const simRef = useRef<AppState | null>(null);
+  const simState = simStateOf(simRef.current, state);
+  simRef.current = simState;
+  const designs = useMemo(() => runDesigns(simState, solved), [simState, solved]);
   const freq = designs[0]?.result.freq ?? new Float64Array();
 
   const set = <K extends keyof AppState>(k: K, v: AppState[K]) => setState((s) => ({ ...s, [k]: v }));
+  // The Driver curve window (Signal → Baffle step, Save & Export, Open / Import): its curve stays for the session, never in links.
+  const [frdOpen, setFrdOpen] = useState(false);
+  const [frdFile, setFrdFile] = useState<FrdFile | null>(null);
+  const [frdError, setFrdError] = useState<string | null>(null);
+  const openFrdWith = async (f: File) => {
+    const r = await loadFrd(f);
+    if (r.file) setFrdFile(r.file);
+    setFrdError(r.error);
+    setFrdOpen(true);
+  };
 
   // Comparison driver: its curves faint (and dashed) behind the main ones.
   const fadedLabels = useMemo(() => designs.filter((d) => d.compare).map((d) => d.label), [designs]);
@@ -481,6 +595,20 @@ export function App(props: { initial: AppState | null }) {
     [focusIds, designs, fadedLabels],
   );
   const mainDesigns = useMemo(() => designs.filter((d) => !d.compare), [designs]);
+  // Anonymous usage stats (telemetry.ts): which tools get opened, and which limits people run into.
+  useOpened(assistant, () => track("tool_opened", { tool: "assistant" }));
+  useOpened(measureOpen, () => track("tool_opened", { tool: "measure" }));
+  useOpened(frdOpen, () => track("tool_opened", { tool: "baffle_frd" }));
+  useOpened(openWin, () => track("tool_opened", { tool: "open_window" }));
+  useOpened(exportFor !== null, () => track("tool_opened", { tool: "export_window" }));
+  useOpened(submit !== null, () => submit && track("submit_opened", { kind: submit.init.kind }));
+  useEffect(() => {
+    for (const d of mainDesigns) {
+      const l = limitsOf(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state), airLimitOf(state));
+      for (const k of l.over) trackOnce(`warn:${d.design.id}:${k}`, "warning_shown", { warning: k, box_type: d.design.kind });
+      if (l.deep) trackOnce(`warn:${d.design.id}:deep`, "warning_shown", { warning: "xmax_deep", box_type: d.design.kind });
+    }
+  }, [mainDesigns, state]);
   const series = (pick: (r: SimulationResult) => Float64Array | null): Series[] =>
     designs.map((d) => ({ label: d.label, color: d.color, dash: d.dash, y: pick(d.result) }));
 
@@ -497,20 +625,22 @@ export function App(props: { initial: AppState | null }) {
       if (/^\[Box\]/im.test(text)) return importWpr(file.name, text);
       if (/^\s*\{/.test(text)) return importOpenisd(file.name, new TextDecoder("utf-8").decode(await file.arrayBuffer()));
       const d = parseWdr(text);
+      const x = driverExtras(d);
       offerSizing([d.brand, d.model].filter(Boolean).join(" ") || file.name);
       setStep((s) => ({
         ...s,
         driverName: [d.brand, d.model].filter(Boolean).join(" ") || file.name.replace(/\.wdr$/i, ""),
         driverBrand: d.brand,
-        nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
+        driverOrigin: undefined,
+        nominal_ohms: x.nominal_ohms,
         ts: d.ts,
-        le_mh: d.le_mh ?? 0,
+        le_mh: x.le_mh,
         l2_mh: 0,
         r2_ohm: 0,
         semi: undefined,
         fdd: undefined,
-        xmax_mm: d.xmax_mm ?? s.xmax_mm,
-        pe_w: d.pe_w ?? s.pe_w,
+        xmax_mm: x.xmax_mm,
+        pe_w: x.pe_w,
         dvc:
           (d.voiceCoils ?? 1) > 1
             ? { on: true, entered: d.raw.vccon === "2" ? "series" : "parallel", wired: d.raw.vccon === "2" ? "series" : "parallel" }
@@ -522,9 +652,12 @@ export function App(props: { initial: AppState | null }) {
           driverDepth_mm: 0,
         },
       }));
-      setWdrMsg(`Imported ${file.name}.`);
+      report(`Imported ${file.name}.`, x.assumed);
+      track("import_done", { kind: "winisd" });
+      track("driver_set", { source: "import", slot: "main" });
     } catch (e) {
-      setWdrMsg(`Couldn't read ${file.name}: ${(e as Error).message}`);
+      track("import_failed", { kind: "winisd", reason: "unreadable" });
+      report(`Couldn't read ${file.name}: ${(e as Error).message}`, [], true);
     }
   };
 
@@ -537,17 +670,21 @@ export function App(props: { initial: AppState | null }) {
         const name = [d.brand, d.model].filter(Boolean).join(" ") || fileName.replace(/\.owdr$/i, "");
         offerSizing(name);
         setStep((s) => withOpenisdDriver(s, d, name));
-        setWdrMsg(`Imported OpenISD driver ${fileName}.`);
+        report(`Imported OpenISD driver ${fileName}.`, driverExtras(d).assumed);
+        track("import_done", { kind: "winisd" });
+        track("driver_set", { source: "import", slot: "main" });
         return;
       }
       const p = parseOwpr(text);
       // The notes don't depend on the rest of the state, so take them from the current one.
-      const { notes } = applyOwpr(state, p, fileName);
+      const { notes, assumed } = applyOwpr(state, p, fileName);
       notify(`Imported ${fileName}.`);
       setStep((s) => applyOwpr(s, p, fileName).state);
-      setWdrMsg(`Imported OpenISD project ${fileName} with its drive, amplifier resistance and box losses. ${notes.join(" ")}`.trim());
+      report(`Imported OpenISD project ${fileName} with its drive, amplifier resistance and box losses. ${notes.join(" ")}`.trim(), assumed);
+      track("import_done", { kind: "winisd" });
     } catch (e) {
-      setWdrMsg(`Couldn't read ${fileName}: ${(e as Error).message}`);
+      track("import_failed", { kind: "winisd", reason: "unreadable" });
+      report(`Couldn't read ${fileName}: ${(e as Error).message}`, [], true);
     }
   };
 
@@ -556,12 +693,14 @@ export function App(props: { initial: AppState | null }) {
     try {
       const p = parseWpr(text);
       // The message doesn't depend on the rest of the state, so take it from the current one.
-      const { message } = applyWpr(state, p, fileName);
+      const { message, assumed } = applyWpr(state, p, fileName);
       notify(`Imported ${fileName}.`);
       setStep((s) => applyWpr(s, p, fileName).state);
-      setWdrMsg(message);
+      report(message, assumed);
+      track("import_done", { kind: "winisd" });
     } catch (e) {
-      setWdrMsg(`Couldn't read ${fileName}: ${(e as Error).message}`);
+      track("import_failed", { kind: "winisd", reason: "unreadable" });
+      report(`Couldn't read ${fileName}: ${(e as Error).message}`, [], true);
     }
   };
 
@@ -569,7 +708,10 @@ export function App(props: { initial: AppState | null }) {
   const importFile = async (f: File) => {
     const head = new TextDecoder("latin1").decode(await f.slice(0, 4096).arrayBuffer());
     const kind = importKind(f.name, head);
-    if (kind === null) return notify(`${f.name}: not a file Speaker Box Genius reads.`);
+    if (kind === null) {
+      track("import_failed", { reason: "unknown_type" });
+      return notify(`${f.name}: not a file Speaker Box Genius reads.`);
+    }
     if (kind === "measurement") {
       setPendingFile(f);
       setOpenWin(true);
@@ -578,17 +720,35 @@ export function App(props: { initial: AppState | null }) {
     setOpenWin(false);
     setPendingFile(null);
     if (kind === "project") {
-      const s = readProjectJson(await f.text());
-      if (!s) return notify(`${f.name} isn't a Speaker Box Genius project file.`);
-      setStep(s);
-      return notify(`Opened “${s.driverName}”.`);
+      const opened = readProjectFile(await f.text());
+      if (!opened) {
+        track("import_failed", { kind: "project", reason: "not_project" });
+        return notify(`${f.name} isn't a Speaker Box Genius project file.`);
+      }
+      track("import_done", { kind: "project" });
+      setStep(opened.state);
+      if (opened.dropped > 0) {
+        const n = opened.dropped;
+        report(`Opened “${opened.state.driverName}”. ${n} box${n > 1 ? "es" : ""} of a type this version doesn't know ${n > 1 ? "weren't" : "wasn't"} opened.`);
+        return notify(`Opened “${opened.state.driverName}” without ${n} box${n > 1 ? "es" : ""}.`, { label: "Details", run: () => showOnPhone("panel", "driver") });
+      }
+      return notify(`Opened “${opened.state.driverName}”.`);
     }
     if (kind === "hornresp") {
       const r = applyHornresp(state, await f.text(), f.name);
-      if (typeof r === "string") return notify(`${f.name}: ${r}`);
+      if (typeof r === "string") {
+        track("import_failed", { kind: "hornresp", reason: "unreadable" });
+        return notify(`${f.name}: ${r}`);
+      }
+      track("import_done", { kind: "hornresp" });
       setStep(() => r.state);
       showOnPhone("panel", "boxes");
-      return notify(r.message);
+      report(r.message, r.assumed);
+      const n = r.assumed.length;
+      return notify(
+        n > 0 ? `Opened ${f.name}: ${n} value${n > 1 ? "s" : ""} assumed.` : r.message,
+        n > 0 ? { label: "See what was assumed", run: () => showOnPhone("panel", "driver") } : undefined,
+      );
     }
     // WinISD / OpenISD: the result (and any notes) shows on the driver card.
     showOnPhone("panel", "driver");
@@ -599,6 +759,11 @@ export function App(props: { initial: AppState | null }) {
     setPendingFile(null);
     setOpenWin(false);
     try {
+      track("import_done", { kind: "measurement", use });
+      if (use === "driver-on-baffle") {
+        await openFrdWith(f);
+        return;
+      }
       if (use === "measure-driver") {
         setMeasurement(await measurementOf(f));
         setMeasureOpen(true);
@@ -610,6 +775,7 @@ export function App(props: { initial: AppState | null }) {
       setStep((s) => ({ ...s, measured: r.list }));
       notify(r.message);
     } catch (e) {
+      track("import_failed", { kind: "measurement", use, reason: "unreadable" });
       notify(`${f.name}: ${(e as Error).message}.`);
     }
   };
@@ -679,6 +845,7 @@ export function App(props: { initial: AppState | null }) {
   const addDesign = (kind: DesignState["kind"]) => {
     if (state.designs.length >= MAX_DESIGNS) return;
     const d = newDesign(kind, state.designs);
+    track("design_added", { box_type: kind });
     scrollToNew.current = d.id;
     setStep((s) => (s.designs.length >= MAX_DESIGNS ? s : { ...s, designs: [...s.designs, d] }));
   };
@@ -718,7 +885,7 @@ export function App(props: { initial: AppState | null }) {
   // The charts under the tab row: one at a time, the choice remembered; unavailable ones are left out.
   const hasPr = prDesigns.length > 0;
   const hasPort = designs.some((d) => d.result.portVelocity || d.result.rearPortVelocity);
-  const hasBoxPressure = designs.some((d) => d.result.boxPressurePa);
+  const hasBoxPressure = designs.some((d) => d.result.boxPressurePa && !(d.design.kind === "ib" && d.design.rear === "open"));
   const hasAir = designs.some((d) => d.result.airHd2);
   // A dot on the charts where a box is over its limit at this drive (as in the summary).
   const overCharts = new Set(
@@ -806,14 +973,14 @@ export function App(props: { initial: AppState | null }) {
   // Adds a filter at the tapped frequency (40 Hz without a tap) as one undo step.
   // A sealed main design a Linkwitz Transform can correct.
   const sealedRef = useMemo(() => {
-    const sd = mainDesigns.find((d) => d.design.kind === "sealed" && d.result.summary.fc !== undefined && d.result.summary.qtc !== undefined);
+    const sd = mainDesigns.find((d) => (d.design.kind === "sealed" || d.design.kind === "ib") && d.result.summary.fc !== undefined && d.result.summary.qtc !== undefined);
     return sd ? { id: sd.design.id, fc: sd.result.summary.fc!, qtc: sd.result.summary.qtc! } : null;
   }, [mainDesigns]);
   // The sealed box a filter with this target can become a Linkwitz Transform for: its own box when
   // sealed, or for "all" the only sealed box (with two, which one would be a guess).
   const sealedOf = (target: string | null): SealedRef | null => {
     const ds = mainDesigns.filter(
-      (d) => (target === null || target === "all" || d.design.id === target) && d.design.kind === "sealed" && d.result.summary.fc !== undefined && d.result.summary.qtc !== undefined,
+      (d) => (target === null || target === "all" || d.design.id === target) && (d.design.kind === "sealed" || d.design.kind === "ib") && d.result.summary.fc !== undefined && d.result.summary.qtc !== undefined,
     );
     const sd = ds.length === 1 ? ds[0]! : null;
     return sd ? { id: sd.design.id, fc: sd.result.summary.fc!, qtc: sd.result.summary.qtc! } : null;
@@ -1086,6 +1253,7 @@ export function App(props: { initial: AppState | null }) {
 
   return (
     <UnitsContext.Provider value={state.settings.units}>
+    <SubmitPrContext.Provider value={SUBMIT_ENDPOINT ? (name, params) => openSubmit(prSubmitFields(name, params, dbLookup(db).brands), `${REPO}/issues/new?template=new-passive-radiator.yml`) : null}>
     <div className={`layout phone-${phoneView}`}>
       <header className="top">
         <div className="title">
@@ -1141,6 +1309,21 @@ export function App(props: { initial: AppState | null }) {
             designs={designs}
             shareUrl={shareUrl}
             notify={(m) => notify(m)}
+            onPick={(_, f) => {
+              setExportFor(null);
+              void openFrdWith(f);
+            }}
+          />
+          <BaffleFrdSheet
+            open={frdOpen}
+            onClose={() => setFrdOpen(false)}
+            state={state}
+            sd_cm2={finderCtx.driver?.sd_cm2}
+            onBaffle={(patch) => setState((s) => ({ ...s, baffle: { ...s.baffle, ...patch } }))}
+            file={frdFile}
+            setFile={setFrdFile}
+            error={frdError}
+            setError={setFrdError}
           />
           <PwaStatus pwa={pwa} />
           {/* Always one tap away: start a new project (the launcher; a new tab once this one is in use). */}
@@ -1168,22 +1351,20 @@ export function App(props: { initial: AppState | null }) {
                   setMeasurement(null);
                 }}
                 sd_cm2={solved.values.sd_cm2}
-                onUse={(ts, coil) =>
+                onUse={(ts, coil) => {
+                  track("driver_set", { source: "measured", slot: "main" });
                   setStep((s) => {
-                    // Keep Vas / Sd the user had, unless the measurement provides them; drop values it supersedes.
-                    const keep: typeof s.ts = {};
-                    if (s.ts.vas_l !== undefined && ts.mms_g === undefined) keep.vas_l = s.ts.vas_l;
-                    if (s.ts.mms_g !== undefined && s.ts.vas_l === undefined && ts.mms_g === undefined) keep.mms_g = s.ts.mms_g;
+                    // Keep the driver's moving mass (or, without a cone area, its Vas) unless the measurement gives it.
                     return {
                       ...s,
                       driverName: s.driverName.endsWith("(measured)") ? s.driverName : `${s.driverName} (measured)`,
-                      ts: { ...keep, ...ts },
+                      ts: measuredTs(s.ts, solveDriver(s).values.mms_g, ts),
                       ...coil,
                       semi: undefined,
                       fdd: undefined,
                     };
-                  })
-                }
+                  });
+                }}
               />
               </div>
             )}
@@ -1216,7 +1397,7 @@ export function App(props: { initial: AppState | null }) {
                     state={state}
                     set={set}
                     phone={phone}
-                    specs={fromDb && driverSource!.url ? { url: driverSource!.url, title: driverSource!.via === "driver-base" ? "Manufacturer's specs (values via driver-base, CC BY 4.0)" : "Manufacturer's specs" } : undefined}
+                    specs={fromDb && driverSource!.url ? { url: driverSource!.url, title: driverSource!.via === "driver-base" ? "Datasheet: the manufacturer's specs (values via driver-base, CC BY 4.0)" : "Datasheet: the manufacturer's specs" } : undefined}
                     picker={
                   <DriverBrowser
                     rows={db?.drivers}
@@ -1228,12 +1409,16 @@ export function App(props: { initial: AppState | null }) {
                       // in the same undo step. Picked any other time, sizing is only offered: the boxes may be yours.
                       // Only while the boxes are still the example's: a search left open and used later
                       // (after editing) is an ordinary pick.
+                      track("driver_set", { source: "database", slot: "main" });
                       const fresh = pickToCharts.current && JSON.stringify(latest.current.designs) === JSON.stringify(DEFAULT_STATE.designs);
                       pickToCharts.current = false;
                       const prs = fresh && db ? loadCandidates(db).catch(() => null) : Promise.resolve(null);
                       return Promise.all([loadDriver(id), prs]).then(
                         ([d, cands]) => {
-                          setDriverSource({ name: d.name, ...d.source, ts: d.ts, id });
+                          rememberDriver(d);
+                          // An entry without Xmax or Pe leaves them unset (never the previous driver's): say so under the card.
+                          const missing = driverExtras(d, { le: false }).assumed;
+                          if (missing.length > 0) report(`Loaded “${d.name}”. Its database entry doesn't have every value.`, missing);
                           if (!fresh) {
                             offerSizing(d.name);
                             setStep((s) => withDriver(s, d));
@@ -1253,6 +1438,17 @@ export function App(props: { initial: AppState | null }) {
                   />
                     }
                     notes={flag ? <Notice tone="warn">{flag}</Notice> : undefined}
+                    modified={
+                      mainChange && mainChange.changed.length > 0
+                        ? {
+                            text: changedText(mainChange.changed),
+                            onReset: () => {
+                              setStep((s) => resetDriver(s, mainChange.driver));
+                              notify(`Reset “${mainChange.driver.name}” to the database's values.`);
+                            },
+                          }
+                        : null
+                    }
                     name={{ kind: driverSource ? nameKind(state.driverName, driverSource.name) : "own", onChange: (v) => set("driverName", v) }}
                     ts={{
                       editor: (
@@ -1270,20 +1466,26 @@ export function App(props: { initial: AppState | null }) {
                 pasting={pasting}
                 onPastingChange={setPasting}
                 onPaste={(ts, x) => {
+                  track("driver_set", { source: "paste", slot: "main" });
                   offerSizing("Pasted driver");
+                  // A new driver: what the datasheet didn't have is unset or defaulted (never the previous driver's), and listed.
+                  const extras = driverExtras(x);
+                  if (extras.assumed.length > 0) report("Pasted driver values.", extras.assumed);
                   setStep((s) => ({
                     ...s,
                     driverName: "Pasted driver",
                     driverBrand: "",
+                    driverOrigin: undefined,
                     volume: { ...s.volume, driverCutout_mm: 0, driverDepth_mm: 0 },
                     ts,
-                    le_mh: x.le_mh ?? s.le_mh,
+                    nominal_ohms: extras.nominal_ohms,
+                    le_mh: extras.le_mh,
                     l2_mh: 0,
                     r2_ohm: 0,
                     semi: undefined,
                     fdd: undefined,
-                    xmax_mm: x.xmax_mm ?? s.xmax_mm,
-                    pe_w: x.pe_w ?? s.pe_w,
+                    xmax_mm: extras.xmax_mm,
+                    pe_w: extras.pe_w,
                   }));
                 }}
               />
@@ -1304,13 +1506,13 @@ export function App(props: { initial: AppState | null }) {
                           },
                         },
                         { label: "Measure from an impedance sweep (.zma)…", icon: <Sparkle />, onSelect: openMeasure },
-                        { kind: "separator" },
                         { label: "WinISD or OpenISD file…", onSelect: () => wdrInput.current?.click() },
                       ],
                       submitUrl: submitDriverUrl(state),
+                      onSubmit: SUBMIT_ENDPOINT ? () => openSubmit(submitFields(state), submitDriverUrl(state)) : undefined,
                       onClear: () => {
                         setStep((s) => ({ ...s, ts: {} }));
-                        notify("Cleared the T/S values.", { label: "Undo", run: undo });
+                        notify("Cleared the T/S values.");
                       },
                     }}
                     sections={{
@@ -1334,6 +1536,8 @@ export function App(props: { initial: AppState | null }) {
                     onPick={(id) =>
                       loadDriver(id).then(
                         (d) => {
+                          track("driver_set", { source: "database", slot: "compare" });
+                          rememberDriver(d);
                           const { compare, borrowed } = compareWith(latest.current, d);
                           // A new comparison driver keeps the count the last one was given.
                           setStep((s) => ({ ...s, compare: { ...compare, ...(s.compare?.drivers !== undefined ? { drivers: s.compare.drivers, wiring: s.compare.wiring } : {}) } }));
@@ -1349,6 +1553,16 @@ export function App(props: { initial: AppState | null }) {
                         notify(`${state.compare!.driverName} is now the main driver; ${state.driverName} is the comparison.`);
                       },
                       onStop: () => setStep((s) => ({ ...s, compare: null })),
+                      modified:
+                        compareChange && compareChange.changed.length > 0
+                          ? {
+                              text: changedText(compareChange.changed),
+                              onReset: () => {
+                                setStep((s) => (s.compare ? { ...s, compare: resetDriver(s.compare, compareChange.driver, true) } : s));
+                                notify(`Reset “${compareChange.driver.name}” to the database's values.`);
+                              },
+                            }
+                          : null,
                     }}
                     amp={load ? { ...load, low } : null}
                     dvcNote={
@@ -1368,7 +1582,7 @@ export function App(props: { initial: AppState | null }) {
                       e.currentTarget.value = "";
                     }}
                   />
-                  {wdrMsg && <p className="hint">{wdrMsg}</p>}
+                  {importReport && <ImportNotice report={importReport} onClose={() => setImportReport(null)} />}
                 </>
               );
             })()}
@@ -1441,6 +1655,8 @@ export function App(props: { initial: AppState | null }) {
                   return {
                     vb_l: builtVbOf(state, d),
                     fb: r.summary.fb,
+                    fc: r.summary.fc,
+                    qtc: r.summary.qtc,
                     f3: r.summary.f3,
                     over: limitsOf(r, state.xmax_mm, state.highPass.on, portLimitOf(state), airLimitOf(state)).over.length,
                   };
@@ -1500,22 +1716,28 @@ export function App(props: { initial: AppState | null }) {
                 onChange={updateDesign}
                 onDuplicate={() => duplicateDesign(d)}
                 onDelete={() => deleteDesign(d)}
-                onImportDriver={(x) =>
+                onImportDriver={(x) => {
+                  // A Hornresp record's driver: never the previous driver's Xmax, Pe or Znom (listed under the driver card).
+                  const extras = driverExtras({ le_mh: x.le_mh, xmax_mm: x.xmax_mm, pe_w: x.pe_w }, { le: false });
+                  if (extras.assumed.length > 0) report(`Driver taken from the Hornresp record (${x.name}).`, extras.assumed);
                   setStep((s) => ({
                     ...s,
                     driverName: x.name,
                     driverBrand: "",
+                    driverOrigin: undefined,
                     ts: x.ts,
                     le_mh: x.le_mh,
                     l2_mh: 0,
                     r2_ohm: 0,
                     semi: x.semi,
                     fdd: x.fdd,
-                    ...(x.xmax_mm !== undefined ? { xmax_mm: x.xmax_mm } : {}),
+                    xmax_mm: extras.xmax_mm,
+                    pe_w: extras.pe_w,
+                    nominal_ohms: extras.nominal_ohms,
                     ...(x.drivers ? { drivers: x.drivers.count, wiring: x.drivers.wiring } : {}),
                     dvc: { ...s.dvc, on: false },
-                  }))
-                }
+                  }));
+                }}
                 onPrPhysical={(x) =>
                   setState((s) => ({
                     ...s,
@@ -1554,6 +1776,8 @@ export function App(props: { initial: AppState | null }) {
                     state={state}
                     sd_cm2={finderCtx.driver?.sd_cm2}
                     onChange={(b) => set("baffle", b)}
+                    driverCurve={frdFile?.name ?? null}
+                    onOpenDriverCurve={() => setFrdOpen(true)}
                     onAddEq={(item) => {
                       setStep((st) => ({ ...st, eq: [...st.eq, item] }));
                       notify(`Added a +${"gain_db" in item ? item.gain_db : 0} dB low shelf at ${"freq" in item ? item.freq : ""} Hz (EQ, all designs).`);
@@ -1589,6 +1813,7 @@ export function App(props: { initial: AppState | null }) {
                 onChange={(v) => set("settings", v)}
                 re={solved.values.re !== undefined ? solved.values.re * dvcFactors(state).re : undefined}
                 winisdWatts={winisdWatts}
+                ampLoad={amplifierLoad(state, solved)}
               />
             </KitFields>
           </div>
@@ -1612,7 +1837,7 @@ export function App(props: { initial: AppState | null }) {
         )}
         {welcome.linkNote && <LinkNote onDismiss={welcome.dismissLinkNote} onTips={welcome.showTips} />}
         {welcome.tips && <GettingStarted onDismiss={welcome.dismissTips} onAssistant={launchAssistant} drivers={db?.drivers.length} />}
-        <Summary designs={designs} state={state} missing={solved.missing.length > 0} narrow={narrow} onJump={jumpTo} />
+        <Summary designs={designs} state={state} missing={solved.missing.length > 0} narrow={narrow} onJump={jumpTo} onMaxSpl={(ids) => showChart("maxspl", ids)} />
 
         {designs.length > 0 && (
           <ChartEmphasis.Provider value={emphasis}>
@@ -1673,8 +1898,8 @@ export function App(props: { initial: AppState | null }) {
                               ["lowshelf", "Low shelf", "Raise or lower everything below"],
                               ["highshelf", "High shelf", "Raise or lower everything above"],
                               ["highpass", state.highPass.on ? "Move the high-pass here" : "High-pass", "Protect the cone below the cut-off"],
-                              ...(mainDesigns.some((d) => d.design.kind === "sealed" && d.result.summary.fc !== undefined && d.result.summary.qtc !== undefined)
-                                ? [["linkwitz", "Linkwitz Transform", "Retune a sealed box's response"]]
+                              ...(mainDesigns.some((d) => (d.design.kind === "sealed" || d.design.kind === "ib") && d.result.summary.fc !== undefined && d.result.summary.qtc !== undefined)
+                                ? [["linkwitz", "Linkwitz Transform", "Retune a sealed box or infinite baffle"]]
                                 : []),
                             ] as [AddType, string, string][]
                           ).map(([type, title, text]) => (
@@ -1819,7 +2044,35 @@ export function App(props: { initial: AppState | null }) {
                 className="chart-tabs"
               />
             )}
-            <LogChart forum {...excursionChart(chartInput)} hidden={narrow && chartTab !== "excursion"} />
+            <LogChart
+              forum
+              {...excursionChart(chartInput, xView)}
+              hidden={narrow && chartTab !== "excursion"}
+              info={motionInfo(xView, "cone", state.settings.excursion)}
+              actions={
+                narrow ? (
+                  <Menu
+                    label={xviewUnit(xView, state.settings.units)}
+                    ariaLabel={`Show: ${XVIEWS[xView].name}`}
+                    variant="ghost"
+                    align="end"
+                    items={XVIEW_ORDER.map((k) => ({
+                      label: XVIEWS[k].name,
+                      detail: xviewUnit(k, state.settings.units),
+                      checked: k === xView,
+                      onSelect: () => chooseXView(k),
+                    }))}
+                  />
+                ) : (
+                  <Segmented<XView>
+                    label="Show"
+                    value={xView}
+                    options={XVIEW_ORDER.map((k) => ({ value: k, label: xviewUnit(k, state.settings.units), title: XVIEWS[k].hint }))}
+                    onChange={chooseXView}
+                  />
+                )
+              }
+            />
             <LowDriveNote state={state} chart="excursion" hidden={narrow && chartTab !== "excursion"} onRated={useRatedPower} />
             {!narrow && (
               <TabRow<ChartId>
@@ -1831,7 +2084,7 @@ export function App(props: { initial: AppState | null }) {
               />
             )}
             {hasPr && (
-              <LogChart forum {...prChart(chartInput)} hidden={chartTab !== "pr"} />
+              <LogChart forum {...prChart(chartInput, xView)} hidden={chartTab !== "pr"} info={motionInfo(xView, "pr", state.settings.excursion)} />
             )}
             {hasPort && (
               <LogChart forum {...portChart(chartInput)} hidden={chartTab !== "port"} />
@@ -1857,32 +2110,44 @@ export function App(props: { initial: AppState | null }) {
               info={
                 winisdWatts ? (
                   <p>
-                    Watts as WinISD counts them (Settings → Watts): into the coil and the amp + cable together, with a hot coil's Re. The amplifier volts and amps are real.
+                    Watts as WinISD counts them (Settings → Watts): into the coil and the amp + cable together, with a hot coil's Re. The amplifier volts, amps and watts are real.
                   </p>
                 ) : undefined
               }
               actions={
-                <div className="unit-switch" role="group" aria-label="Show">
-                  <button aria-pressed={maxMode === "spl"} onClick={() => chooseMaxMode("spl")} title="The loudest each design can play, and what limits it">
-                    SPL
-                  </button>
-                  <button
-                    aria-pressed={maxMode === "volts"}
-                    onClick={() => chooseMaxMode("volts")}
-                    title="The amplifier's output voltage (RMS) needed to reach that maximum SPL, after the high-pass filter and EQ"
-                  >
-                    Volts
-                  </button>
-                  <button
-                    aria-pressed={maxMode === "amps"}
-                    onClick={() => chooseMaxMode("amps")}
-                    title="The current (RMS) the amplifier must deliver into the speaker's impedance to reach that maximum SPL"
-                  >
-                    Amps
-                  </button>
-                </div>
+                <>
+                  {narrow ? (
+                    <Menu
+                      label={MAX_MODE_INFO[maxMode].label}
+                      ariaLabel={`Show: ${MAX_MODE_INFO[maxMode].name}`}
+                      variant="ghost"
+                      align="end"
+                      items={MAX_MODES.map((m) => ({
+                        label: MAX_MODE_INFO[m].name,
+                        detail: MAX_MODE_INFO[m].unit,
+                        checked: m === maxMode,
+                        onSelect: () => chooseMaxMode(m),
+                      }))}
+                    />
+                  ) : (
+                    <Segmented<MaxMode>
+                      label="Show"
+                      value={maxMode}
+                      options={MAX_MODES.map((m) => ({ value: m, label: MAX_MODE_INFO[m].label, title: MAX_MODE_INFO[m].hint }))}
+                      onChange={chooseMaxMode}
+                    />
+                  )}
+                  <ProgramControl signal={state.settings.signal} narrow={narrow} onChange={(signal) => setState((st) => ({ ...st, settings: { ...st.settings, signal } }))} />
+                </>
               }
             />
+            {state.settings.signal.program && chartTab === "maxspl" && (
+              <p className="hint">
+                {signalLabel(state.settings.signal)}
+                {state.settings.signal.target_dB !== null ? `, target ${fmtCrest(state.settings.signal.target_dB)} dB` : ""}: each curve is the loudest that box plays on
+                this signal (average SPL); turn Program off for the sine curve. Headroom: plain = 3 dB or more spare, amber = under 3 dB, red = short.
+              </p>
+            )}
             <LogChart
               hidden={chartTab !== "impedance"}
               {...impedanceChart(chartInput, zMode, impedanceExtra)}
@@ -1962,8 +2227,7 @@ export function App(props: { initial: AppState | null }) {
               <ul>
                 <li><a href="/guides/">Guides</a></li>
                 <li><a href="/drivers/">Drivers</a></li>
-                <li><a href="/calculators/port-length/">Port calculator</a></li>
-                <li><a href="/calculators/passive-radiator/">PR calculator</a></li>
+                <li><a href="/calculators/">Calculators</a></li>
                 <li><a href="/validation/">Validation</a></li>
               </ul>
             </div>
@@ -2040,7 +2304,7 @@ export function App(props: { initial: AppState | null }) {
           // The new boxes: their volumes and tuning first (the charts on phones).
           choosePanel("boxes");
           setPhoneView("charts");
-          setDriverSource({ name: d.name, ...d.source, ts: d.ts, id: rs[0]?.driverId });
+          rememberDriver(d);
           setAssistant(false);
           const boxes = rs
             .map((r) =>
@@ -2067,6 +2331,32 @@ export function App(props: { initial: AppState | null }) {
           idPrefix="ptab-"
         />
       </nav>
+      {submit && (
+        <SubmitDialog
+          open
+          onClose={() => setSubmit(null)}
+          initial={submit.init}
+          {...dbLookup(db)}
+          githubUrl={submit.github}
+          onFix={() => {
+            setSubmit(null);
+            if (submit.init.kind === "driver") {
+              choosePanel("driver");
+              setPhoneView("panel");
+              setTsOpen(true);
+            }
+          }}
+          status={submitStatus}
+          siteKey={TURNSTILE_SITE_KEY}
+          onSubmit={(fields, credit, token) => {
+            track("submit_sent", { kind: submit.init.kind });
+            setSubmitStatus({ kind: "sending" });
+            sendSubmission(SUBMIT_ENDPOINT, fields, credit, token).then((r) =>
+              setSubmitStatus(r.ok ? { kind: "done", prUrl: r.prUrl, prNumber: r.prNumber, dryRun: r.dryRun } : { kind: "failed", message: r.message }),
+            );
+          }}
+        />
+      )}
       {toast && (
         <div className="toast" role="status" key={toast.id}>
           <span>{toast.text}</span>
@@ -2100,6 +2390,7 @@ export function App(props: { initial: AppState | null }) {
         </div>
       )}
     </div>
+    </SubmitPrContext.Provider>
     </UnitsContext.Provider>
   );
 }
@@ -2209,12 +2500,15 @@ function Summary({
   missing,
   narrow,
   onJump,
+  onMaxSpl,
 }: {
   designs: Design[];
   state: AppState;
   missing: boolean;
   narrow?: boolean;
   onJump?: (kind: LimitKind | null, ids: string[]) => void;
+  /** Show the Max SPL chart with these designs picked out (a headroom cell). */
+  onMaxSpl?: (ids: string[]) => void;
 }) {
   const [open, setOpen] = useState<string | null>(null);
   const [folded, setFolded] = useState(true);
@@ -2320,7 +2614,7 @@ function Summary({
                     <span className="dot" style={{ background: color }} aria-hidden="true" />
                     <span>{shortName(d.name)}</span>
                   </th>
-                  <td>{volCell(vb_l, acting_l, state.settings.units)}</td>
+                  <td>{(d.kind === "ib" && d.rear === "open" ? "Open" : volCell(vb_l, acting_l, state.settings.units))}</td>
                   <td>
                     {fmt(r.summary.f3)}
                     {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
@@ -2389,11 +2683,37 @@ function Summary({
       </div>
     );
   }
+  const signal = state.settings.signal;
+  const headroomCol = (d: Design, side: "peak" | "avg") => {
+    const h = designProgram(d, signal)[side];
+    if (!h) return <td>–</td>;
+    const cell = headroomCell(h)!;
+    return (
+      <td data-tone={cell.tone}>
+        <button
+          type="button"
+          className="headroom-link"
+          title={`${cell.at} · ${sideLimitText(h.kind, side)}: show Max SPL`}
+          onClick={() => onMaxSpl?.([d.design.id])}
+        >
+          {cell.main}
+        </button>
+      </td>
+    );
+  };
   return (
     <div className="summary">
       <div className="summary-scroll">
       <table>
         <thead>
+          {signal.program && (
+            <tr className="headroom-groups">
+              <th colSpan={hasAir ? 9 : 8} />
+              <th colSpan={2} className="headroom-group">
+                Headroom vs {signal.target_dB !== null ? `${fmtCrest(signal.target_dB)} dB` : "drive"}
+              </th>
+            </tr>
+          )}
           <tr>
             <th />
             <th>Vb</th>
@@ -2404,10 +2724,17 @@ function Summary({
             <th>Peak PR</th>
             <th>Peak port</th>
             {hasAir && <th title="Peak 2nd harmonic from the air (HD2: in the box, or along a line), above the same floor as the other peaks">Peak air</th>}
+            {signal.program && (
+              <>
+                <th title="Xmax, port speed, air, amp volts and current: limited on the signal's peaks">On peaks</th>
+                <th title="Driver power (Pe), amp watts: limited on the signal's average">On average</th>
+              </>
+            )}
           </tr>
         </thead>
         <tbody>
-          {designs.map(({ design: d, label, compare, color, vb_l, acting_l, f3Room, result: r }) => {
+          {designs.map((dz) => {
+            const { design: d, label, compare, color, vb_l, acting_l, f3Room, result: r } = dz;
             const xmax = compare && state.compare ? state.compare.xmax_mm : state.xmax_mm;
             const lim = limitsOf(r, xmax, state.highPass.on, portLimitOf(state), airLimitOf(state));
             const { x, xpr, vp, deep, hd2 } = lim;
@@ -2419,7 +2746,7 @@ function Summary({
                   <span title={label}>{shortName(label)}</span>
                 </th>
                 <td>
-                  {volCell(vb_l, acting_l, state.settings.units)}
+                  {(d.kind === "ib" && d.rear === "open" ? "Open" : volCell(vb_l, acting_l, state.settings.units))}
                   {d.kind === "bandpass" && ` + ${fmtQ(d.frontVb_l, "vol", state.settings.units)}`}
                 </td>
                 <td>
@@ -2435,11 +2762,11 @@ function Summary({
                 </td>
                 <td>{fmt(r.summary.qtc, 2)}</td>
                 <td className={xOver ? "over" : ""}>
-                  <OverValue over={xOver} text={`${fmt(x)} mm`} onJump={() => onJump?.("xmax", [d.id])} />
+                  <OverValue over={xOver} text={excursionText(x, state)} onJump={() => onJump?.("xmax", [d.id])} />
                   {deep && (
                     <span className="deep-note" title={deepText(deep, state)}>
                       {" "}
-                      · {fmt(deep.x_mm)} &lt;{deep.below_hz.toFixed(0)} Hz
+                      · {excursionText(deep.x_mm, state)} &lt;{deep.below_hz.toFixed(0)} Hz
                     </span>
                   )}
                 </td>
@@ -2447,7 +2774,7 @@ function Summary({
                   className={xpr?.over ? "over" : ""}
                   title={(r.prGroups?.length ?? 0) > 1 ? "The PR group closest to (or furthest past) its own Xmax" : undefined}
                 >
-                  {xpr === null ? "–" : <OverValue over={xpr.over} text={`${fmt(xpr.mm)} mm`} onJump={() => onJump?.("pr", [d.id])} />}
+                  {xpr === null ? "–" : <OverValue over={xpr.over} text={excursionText(xpr.mm, state)} onJump={() => onJump?.("pr", [d.id])} />}
                 </td>
                 <td className={vp !== null && vp > portLimitOf(state) ? "over" : ""}>
                   {vp === null ? "–" : <OverValue over={vp > portLimitOf(state)} text={`${fmt(vp)} m/s`} onJump={() => onJump?.("port", [d.id])} />}
@@ -2457,6 +2784,8 @@ function Summary({
                     {hd2 === null ? "–" : <OverValue over={lim.over.includes("air")} text={`${fmt(hd2)} %`} onJump={() => onJump?.("air", [d.id])} />}
                   </td>
                 )}
+                {signal.program && headroomCol(dz, "peak")}
+                {signal.program && headroomCol(dz, "avg")}
               </tr>
             );
           })}

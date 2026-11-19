@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
 import { Button } from "./ui/index.ts";
+import { JobProgress } from "./components.tsx";
 import {
   largestPrFor,
   rankPrResults,
@@ -172,7 +173,6 @@ export function PrFinder(props: {
     const all = withDrivers ? [...cands, ...driverCands!] : cands;
     const out: PrFinderResult[] = [];
     let done = 0;
-    let shown = 0;
     const finish = (stopped?: { done: number; total: number }) => {
       stopRef.current = null;
       setSimming(null);
@@ -184,14 +184,9 @@ export function PrFinder(props: {
         step: (s) => {
           if (s.kind !== "pr") return;
           out.push(...s.results);
-          done = s.done;
-          // The progress bar at most every 50 ms: a worker sends a message per candidate.
-          const now = performance.now();
-          if (now - shown > 50) {
-            shown = now;
-            setSimming({ done, total: all.length });
-          }
+          done++;
         },
+        progress: (n, total) => setSimming({ done: n, total }),
         done: () => finish(),
         error: (message) => {
           stopRef.current = null;
@@ -241,6 +236,7 @@ export function PrFinder(props: {
     const c = [...cands!, ...(driverCands ?? [])].find((x) => x.id === r.id)!;
     const patch: Partial<PrDesign> = {
       prName: c.name,
+      prId: c.id,
       params: c.params,
       count: r.count,
       addedMass_g: Math.round(r.addedMass_g),
@@ -312,20 +308,9 @@ export function PrFinder(props: {
           </label>
           {shownError && <p className="warn">{shownError}</p>}
           <div className="finder-results">
-            {!results && !progress && !shownError && <p className="hint">Loading the passive radiators…</p>}
+            {!results && !progress && !shownError && <JobProgress label="Loading the passive radiators" done={0} total={0} />}
             {progress && !shownError && (
-              <div className="finder-progress" role="status">
-                <div className="finder-progress-text">
-                  <span>{progress.label}…</span>
-                  <span className="muted">
-                    {progress.done} / {progress.total}
-                  </span>
-                </div>
-                <progress value={progress.done} max={Math.max(1, progress.total)} />
-                <button type="button" className="icon" onClick={stop} aria-label="Stop" title="Stop (keeps the results so far)">
-                  ✕
-                </button>
-              </div>
+              <JobProgress {...progress} onStop={stop} />
             )}
             {found.stopped && (
               <p className="hint">

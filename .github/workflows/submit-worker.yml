@@ -1,0 +1,54 @@
+name: Submit Worker
+
+# Private dev repo only: tests and deploys the submit Worker (packages/submit-worker,
+# .github/cloudflare/submit-worker.jsonc) when its code or the shared checks change. The Worker's
+# name comes from the repo variable CF_SUBMIT_WORKER_NAME, so no name is kept in the code.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - packages/submit-worker/**
+      - packages/db-tools/src/submission.ts
+      - packages/db-tools/src/plausibility.ts
+      - packages/schema/**
+      - packages/engine/src/ts.ts
+      - .github/cloudflare/submit-worker.jsonc
+      - .github/workflows/submit-worker.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: submit-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ github.event.repository.private == true }}
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test the Worker and the shared checks
+        run: >-
+          node --experimental-strip-types --disable-warning=ExperimentalWarning --test
+          packages/submit-worker/test/*.test.ts packages/db-tools/test/submission.test.ts
+
+      - name: Deploy to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WORKER: ${{ vars.CF_SUBMIT_WORKER_NAME }}
+        run: |
+          if [ -z "$WORKER" ]; then
+            echo "::warning::Set the repository variable CF_SUBMIT_WORKER_NAME to deploy the submit Worker."
+            exit 0
+          fi
+          npx --yes wrangler@4 deploy --config .github/cloudflare/submit-worker.jsonc --name "$WORKER" \
+            --message "${{ github.sha }}"

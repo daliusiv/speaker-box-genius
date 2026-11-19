@@ -1,5 +1,7 @@
 # Driver database
 
+**Adding a driver?** The easiest way is the app: enter the datasheet values, then **Edit T/S → ⋯ → Submit to database…**. It checks the entry the same way CI does and opens the pull request for you, no GitHub account needed. The rest of this page is for editing the files by hand.
+
 One JSON file per driver, grouped by brand:
 
 ```

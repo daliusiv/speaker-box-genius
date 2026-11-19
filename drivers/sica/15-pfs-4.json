@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "15 PFS 4",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 39,
+    "qms": 4.87,
+    "qes": 0.37,
+    "vas_l": 103.9,
+    "re": 5.3,
+    "sd_cm2": 855.3,
+    "qts": 0.34,
+    "le_mh": 1.8,
+    "bl": 24.24,
+    "mms_g": 166.5,
+    "xmax_mm": 8,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 175
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/15-pfs-4/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

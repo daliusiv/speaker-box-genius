@@ -49,3 +49,31 @@ test("the public sync runs only in the private repo and names no repos or accoun
   const script = readFileSync(join(REPO_ROOT, "scripts", "sync-public.sh"), "utf8");
   assert.doesNotMatch(script, /daliusiv|speaker-box-genius-dev|workers\.dev/);
 });
+
+test("the submit Worker deploys from the private repo only and keeps names and secrets out of the code", () => {
+  const wf = readFileSync(join(REPO_ROOT, ".github", "workflows", "submit-worker.yml"), "utf8");
+  assert.ok(wf.includes("if: ${{ github.event.repository.private == true }}"));
+  assert.ok(wf.includes('--config .github/cloudflare/submit-worker.jsonc --name "$WORKER"'));
+  assert.ok(wf.includes("${{ vars.CF_SUBMIT_WORKER_NAME }}"));
+  assert.doesNotMatch(wf, /daliusiv|speaker-box-genius|workers\.dev/);
+  const cfg = readFileSync(join(REPO_ROOT, ".github", "cloudflare", "submit-worker.jsonc"), "utf8");
+  assert.doesNotMatch(cfg, /"name"\s*:\s*"(?!PER_IP)/, "no Worker name in the config");
+  assert.doesNotMatch(cfg, /GH_APP_PRIVATE_KEY"\s*:|TURNSTILE_SECRET"\s*:|TARGET_REPO"\s*:|daliusiv|workers\.dev/, "secrets and the repo stay in the dashboard");
+  assert.match(cfg, /"workers_dev": false/);
+  assert.match(cfg, /"keep_vars": true/, "a deploy must not wipe DRY_RUN / TARGET_REPO / EXTRA_ORIGINS set in the dashboard");
+  assert.match(cfg, /"observability": \{ "enabled": false \}/);
+  assert.match(cfg, /"period": (10|60)/, "the rate limit binding only takes 10 or 60 s");
+});
+
+test("data-only changes from public merge themselves; anything else waits for a person", () => {
+  const wf = readFileSync(join(REPO_ROOT, ".github", "workflows", "merge-public-data.yml"), "utf8");
+  assert.ok(wf.includes("github.event.repository.private == true"), "dev repo only");
+  assert.ok(wf.includes("github.event.workflow_run.head_branch == 'sync/from-public'"), "only the sync's branch");
+  assert.ok(wf.includes(`grep -Ev '^(drivers|passive-radiators)/'`), "data-only rule");
+  assert.ok(wf.includes("-f sha=\"$sha\""), "merges the head that was checked, nothing newer");
+  assert.match(wf, /\^check\|completed\|success\$/, "CI must have passed");
+  assert.doesNotMatch(wf, /daliusiv|speaker-box-genius|workers\.dev/);
+  // The PR it merges is the one sync-public.yml opens.
+  const sync = readFileSync(join(REPO_ROOT, ".github", "workflows", "sync-public.yml"), "utf8");
+  assert.ok(sync.includes("INCOMING_BRANCH: sync/from-public"));
+});

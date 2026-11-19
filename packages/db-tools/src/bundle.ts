@@ -44,6 +44,8 @@ const index = {
     size_in: d.size_in,
     fs: d.ts.fs,
     qts: d.ts.qts ?? (d.ts.qms * d.ts.qes) / (d.ts.qms + d.ts.qes),
+    // For EBP (Fs/Qes) in the picker's "Suits" filter.
+    qes: d.ts.qes,
     vas_l: d.ts.vas_l,
     xmax_mm: d.ts.xmax_mm,
     pe_w: d.ts.pe_w,

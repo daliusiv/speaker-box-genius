@@ -58,10 +58,26 @@ export const projectJson = (state: AppState, date = new Date()) =>
 
 /** A project file back to a state (migrated and checked like a share link), or null. */
 export function readProjectJson(text: string): AppState | null {
+  return readProjectFile(text)?.state ?? null;
+}
+
+/** Box kinds this version opens (a newer version's file may hold others). */
+const KNOWN_KINDS = ["sealed", "vented", "pr", "bandpass", "line"];
+
+/**
+ * A project file back to a state, and how many of its boxes were left out because this version
+ * doesn't know their type (the rest opens rather than the whole file failing). Null when it
+ * isn't a project file.
+ */
+export function readProjectFile(text: string): { state: AppState; dropped: number } | null {
   try {
     const file = JSON.parse(text);
     if (file?.app !== "speaker-box-genius" || !file.state) return null;
-    return decodeState(encodeState(file.state));
+    const state = decodeState(encodeState(file.state));
+    if (!state) return null;
+    const raw: unknown[] = Array.isArray(file.state.designs) ? file.state.designs : [];
+    const dropped = raw.filter((d) => !KNOWN_KINDS.includes((d as { kind?: string } | null)?.kind ?? "")).length;
+    return { state, dropped };
   } catch {
     return null;
   }

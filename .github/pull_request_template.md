@@ -10,3 +10,5 @@
 - [ ] Something users would notice: a line under `## Unreleased` at the top of `CHANGELOG.md` (add the heading if it isn't there)
 - [ ] Database entries cite a datasheet or my own measurement
 - [ ] Code or docs changes: I've signed the [CLA](https://github.com/daliusiv/speaker-box-genius/blob/main/CLA.md) (the CLA check asks on your first PR; not needed for database-only changes)
+
+<!-- Reviewing a `web-submission` PR (opened by the website form's bot): open the datasheet link, check every value in the table against it (and the brand's own terms if the PR notes them), then merge. The bot has already run the database checks; "Worth a check" lists what they flagged. -->

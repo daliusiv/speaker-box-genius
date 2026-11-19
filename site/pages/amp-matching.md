@@ -153,10 +153,11 @@ So the danger isn't "too small an amp", it's an amp of any size driven past its 
 ![Settings → Limits → Amplifier: Max volts and Max current, and From the amp's ratings, which works them out from two ratings (350 W into 4 Ω and 550 W into 2 Ω give 37.4 V and 16.6 A).](img/amp-matching-settings.png)
 
 1. **Driver → Drivers and Wiring:** set how many subs and how they're wired. The line underneath says what the amp sees, nominally and at its lowest (here "2 Ω nominal (Re 1.55 Ω), dipping to 1.58 Ω").
-2. **Settings → Limits → Amplifier → From the amp's ratings:** enter two of its ratings (the 4 Ω one and its lowest) and press **Use … V and … A**. That fills in **Max volts** and **Max current**. Use the bridged ratings if you'll bridge it.
+2. **Settings → Limits → Amplifier → From the amp's ratings:** enter two of its ratings (the 4 Ω one and its lowest) and press **Use … V and … A**. That fills in **Max volts** and **Max current**. Use the bridged ratings if you'll bridge it. To hold the amp to a continuous power figure as well (a power supply or heat limit), type it in **Max power**: the lowest of the three applies at each frequency, and the line under it says what it is in volts and amps into the nominal load.
 3. **Settings → Simulation → Amplifier & cable → Power rating vs:** leave it on V²/Re (WinISD's way), which matches how drivers are rated. **Real power** lets the sub take more voltage at its impedance peaks, as Hornresp does.
-4. **Max SPL chart:** the band underneath shows what limits each frequency, and blue means the amplifier. Switch to **Volts** or **Amps** to see what the amp has to deliver, with its own limit as a dashed line.
-5. **Impedance chart:** switch between **Ω** and **Phase** to see how hard a load the boxes are.
+4. **Max SPL chart:** the band underneath shows what limits each frequency, and blue means the amplifier. Switch to **Volts**, **Amps** or **Watts** to see what the amp has to deliver, with its own limit as a dashed line; hover the SPL view and the tooltip names which of the three is the limit (amp volts, amp current or amp power).
+5. **Max SPL → Program:** music isn't a sine. Turn **Program signal** on and pick what you'll play (Pink noise 6 dB, Music 9 dB, Cinema 12 dB): the amp's volts and current clip on the signal's peaks, so they bind sooner by its crest factor, while **Max power** and the driver's rating hold its average. Type a **Target SPL** and the headroom **On peaks** and **On average** says which side runs out first, and where; the tooltip gives the peak volts the amp has to swing.
+6. **Impedance chart:** switch between **Ω** and **Phase** to see how hard a load the boxes are.
 
 ## The forum claims, checked
 

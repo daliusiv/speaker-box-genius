@@ -134,3 +134,25 @@ test("fit range: with frequency-dependent damping, Qms's tolerance still counts 
   const qms = fitted(fitStuffing(s, d, m, { tolerance: { vas: 0, fs: 0, qes: 0, qms: 0.2 } }));
   assert.ok(qms.qa_range[1] - qms.qa_range[0] > none.qa_range[1] - none.qa_range[0], JSON.stringify([none.qa_range, qms.qa_range]));
 });
+
+test("fit uses the box's own leakage (Ql) when it has one", () => {
+  const s = DEFAULT_STATE;
+  const d = { ...s.designs.find((x) => x.kind === "vented")!, ql: 4 } as DesignState & { kind: StuffableKind };
+  // Measured with Ql 4: fitting with the box's Ql 4 recovers the stuffing; Settings' 10 would not.
+  const leaky: AppState = { ...s, settings: { ...s.settings, losses: { ...s.settings.losses, ql: 4 } } };
+  const fit = fitStuffing(s, d, sweep(leaky, d, 23, 18));
+  assert.ok(typeof fit === "object" && Math.abs(fit.gain_pct - 23) < 1.5 && Math.abs(fit.qa - 18) / 18 < 0.15, JSON.stringify(fit));
+});
+
+test("the stuffing fit as a search job gives fitStuffing's own answer, from data a worker can take", async () => {
+  const { searchTicks } = await import("../src/search.ts");
+  const { checkTicks } = await import("./ticks.ts");
+  const s = DEFAULT_STATE;
+  const d = s.designs.find((x) => x.kind === "vented")! as DesignState & { kind: StuffableKind };
+  const measured = sweep(s, d, 23, 18);
+  const job = { kind: "stuffingFit" as const, state: s, design: d, measured, source: "datasheet" as const };
+  assert.deepEqual(structuredClone(job), job);
+  const ticks = [...searchTicks(job)];
+  checkTicks(ticks);
+  assert.deepEqual(ticks.at(-1)!.step, { kind: "stuffingFit", fit: fitStuffing(s, d, measured, { source: "datasheet" }) });
+});

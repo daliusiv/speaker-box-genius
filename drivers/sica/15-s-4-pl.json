@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "15 S 4 PL",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 39.5,
+    "qms": 15.87,
+    "qes": 0.33,
+    "vas_l": 127.6,
+    "re": 5.1,
+    "sd_cm2": 855.3,
+    "qts": 0.32,
+    "le_mh": 1.38,
+    "bl": 22.52,
+    "mms_g": 132,
+    "xmax_mm": 10,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 176.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/15-s-4-pl/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

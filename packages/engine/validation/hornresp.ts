@@ -460,7 +460,7 @@ export const HORNRESP_BOX_TOL = {
 };
 type BoxTol = typeof HORNRESP_BOX_TOL;
 
-export const HORNRESP_BOX_NOTES = `Hornresp models an ordinary box as a very short horn on the cone's front (its "Horn" output) with the box behind, so these records are its "Nd" records with a 0.01 cm horn; bandpass boxes run in its Loudspeaker Wizard, which exports SPL, impedance and excursion but not group delay or port air speed. The cases set up in its wizards (bandpass B4–B6 and B14, high-pass B12, EQ B15, stuffed lines S1–S5) can't be carried in a record, so they are checked on Hornresp 60.60 (re-run 12 Nov 2026, identical exports), not yet on 60.70.
+export const HORNRESP_BOX_NOTES = `Hornresp models an ordinary box as a very short horn on the cone's front (its "Horn" output) with the box behind, so these records are its "Nd" records with a 0.01 cm horn; bandpass boxes run in its Loudspeaker Wizard, which exports SPL, impedance and excursion but not group delay or port air speed. The cases set up in its wizards (bandpass B4–B6 and B14, high-pass B12, EQ B15, passive parts B16, stuffed lines S1–S5) can't be carried in a record, so they are checked on Hornresp 60.60 (re-run 12 Nov 2026, identical exports), not yet on 60.70.
 
 What the comparison settles, and the conventions it has to bridge:
 
@@ -484,6 +484,8 @@ What the comparison settles, and the conventions it has to bridge:
 
 **EQ (B15).** Hornresp's Equaliser Filter Wizard offers Peak EQ, Low Shelf, High Shelf, Low Pass and High Pass bands. Its Peak EQ and shelves are the standard analog (RBJ) shapes, the same as the app's Peaking, Low shelf and High shelf (the high shelf was added to the app to match): on the ported box with a 40 Hz Q 2 −6 dB peak, a 30 Hz Q 0.71 +6 dB low shelf and a 150 Hz Q 0.71 −6 dB high shelf, the voltage reaching the speaker agrees within 0.00005 % from 10 Hz to 20 kHz, and SPL, excursion, impedance and group delay as closely as without EQ.
 
+**Passive parts (B16).** Hornresp's passive Filter Wizard puts up to four branches between the amplifier and the speaker, in line, across, in line, across, as the app's Signal → Passive parts. On the ported box with 0.3 Ω and 2.2 mH in line and 47 µF across the speaker (a 2nd-order low-pass with its coil's resistance), SPL matches within 0.03 dB on average (0.09 dB at the 95th percentile), the impedance the amplifier sees within 0.3 %, excursion within 0.2 % and group delay within 0.06 ms: as closely as the box without the filter.
+
 **Stuffed lines (S1–S5).** Hornresp models fill with D. K. Wilson's relaxation model (1997), set by the flow resistivity alone (Fr, mks rayls/m). The app used Delany–Bazley's empirical fit, which was 0.2–1.2 dB and 1–1.5 % out at Fr 150–2000. It now uses Wilson's model too, with porosity and tortuosity 1 (fibre) and the thermal relaxation time 1.75 × the viscous one (the one value fitted, against all three densities): within 0.07 dB and 0.3 % at every density, as close as the unstuffed line run the same way (S1), and an offset line stuffed only behind the driver (S5) within 0.05 dB and 0.3 % (the old model: 0.29 dB, 0.7 %). The app's fill is set in kg/m³ of polyester and turned into flow resistivity with Garai & Pompoli's measurements (481.65 rayls/m = 8.0 kg/m³); Hornresp's "Total Polyfill" readout uses its own empirical figure for one product (481.65 rayls/m = 9.9 kg/m³), so densities from the two programs aren't interchangeable, flow resistivities are.
 
 **Frequency-dependent damping (B13).** Hornresp's FDD model (double-click the Cms label) takes two values, Rms (N·s/m) and Ams (m/N). Two exports of the sealed box (Rms 2 / Ams 3.0E-04 and Rms 8 / Ams 1.0E-03) pin it down exactly: the suspension becomes Rms + 1/(jω(Cms − j·Ams)), a complex compliance (a loss that's the same fraction Ams/Cms of the stiffness at every frequency, as rubber and foam behave) with its own Rms in place of the one from Qms. That fits Hornresp's motional impedance to 0.0003 % on average. The app has the same model (Driver → Suspension losses → Frequency-dependent): within 0.46 % in impedance and 0.04 dB, as close as the box without it.
@@ -493,6 +495,8 @@ What the comparison settles, and the conventions it has to bridge:
 **Records with their models switched on.** A record imported with "Semi-Inductance Model Flag = 1" or "Damping Model Flag = 1" (and Rg set) comes in with the model on (Le or Cms shown green), and gives exactly what turning it on by hand gave (B8a/B8c, B13a/B13b, B10 re-made that way match the earlier exports to the last digit). The filter and EQ fields in a record are not applied on import: those still need the Filter Wizard.
 
 **More boxes (N1–N15, Hornresp 60.70).** Two passive radiators (as one radiator of twice the area, mass and damping and half the compliance, with the front air of that larger piston, 5.41 g per PR), a PR with 30 g added, a PR with five times the damping, a PR in 20 L, the 12″ subwoofer sealed and ported, the 4″ full-range sealed and ported, the B2 box with Rg, semi-inductance and FDD all at once, a PR box with semi-inductance, two drivers in parallel with Rg, and two drivers in series in the ported box: all within the box limits, most within 0.05 dB and 0.4 %. Maximum SPL with the amplifier's current limited (2 A, on the FDD box) matches as the voltage limit does.
+
+**Infinite baffle (N16, N17).** A record with no rear chamber (Vrc and Lrc 0) is Hornresp's open rear: the cone's back radiates too, and its default Combined output adds the two sides (cancelling in the bass, as an unbaffled cone). Output → Horn gives the front alone, the sound an infinite baffle puts into the room. With the "Piston" cone load (both sides' air out of Mms, each face a baffled piston) the app matches within 0.03 dB and 0.1 % in impedance for the 12″ subwoofer and the 18″ UMII18-22.
 
 **Power compression.** Hornresp's Tools → Power Compression sets the voice coil's temperature; at 120 °C its Re rises by 39.3 %, copper's 0.393 %/°C, as the app's Settings → Voice coil °C does. The sealed box (B9) and the mass-loaded line (case 16) at 120 °C match as closely as at 20 °C: 0.05 dB and 0.5 % in impedance for the box, 0.02 dB and 0.3 % for the line.
 
@@ -524,6 +528,8 @@ export interface HornrespBoxCase {
   highPass?: SimulationOptions["highPass"];
   /** EQ before the amplifier (Hornresp's Equaliser Filter Wizard). */
   eq?: SimulationOptions["eq"];
+  /** Passive parts between the amplifier and the speaker (Hornresp's passive Filter Wizard). */
+  passive?: SimulationOptions["passive"];
   /** SPL from radiated power (lines, as Hornresp works them out). */
   splFrom?: "power";
   /** Compare up to here (Hz) instead of HORNRESP_BOX_F_MAX (stuffed lines run to 1 kHz). */
@@ -606,7 +612,7 @@ export function runHornrespBox(id: string): HornrespBoxRun {
   const tol = { ...HORNRESP_BOX_TOL, ...c.tol };
   const driver = { ...hornrespDriver(c.driver ?? HORNRESP_DRIVER, c.frontAir), ...(c.semi ? { semi: c.semi } : {}), ...(c.fdd ? { fdd: c.fdd } : {}) };
   const base: SimulationOptions = {
-    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, leakage: c.leakage, coneLoad: c.coneLoad, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom, highPass: c.highPass, eq: c.eq, space: c.space,
+    power: 2.83, convention: "volts", fMin: 10, fMax: Math.max(1000, c.zeFMax ?? 0), points: 8000, air: HORNRESP_AIR, drivers: c.drivers, wiring: c.wiring, portModel: c.portModel, leakage: c.leakage, coneLoad: c.coneLoad, coilTemp_C: c.coilTemp_C, rg: c.rg, splFrom: c.splFrom, highPass: c.highPass, eq: c.eq, passive: c.passive, space: c.space,
   };
   const r = simulate(driver, c.input, base);
   const fTop = c.fMax ?? HORNRESP_BOX_F_MAX;

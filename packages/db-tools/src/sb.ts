@@ -53,15 +53,25 @@ export function kindOf(p: StoreProduct): { kind: Driver["type"] | "passive-radia
   return { skip: other ? `category ${other}` : `no driver category (${cats.join(", ") || "none"})` };
 }
 
+/** Remove HTML tags until none are left (one pass can leave `<script` behind from `<scr<x>ipt>`), then any stray angle brackets. */
+const stripTags = (s: string) => {
+  let prev: string;
+  do {
+    prev = s;
+    s = s.replace(/<[^>]*>/g, "");
+  } while (s !== prev);
+  return s.replace(/[<>]/g, "");
+};
+
+// `&amp;` is decoded last so `&amp;nbsp;` stays the literal text `&nbsp;`.
 const decode = (s: string) =>
-  s
-    .replace(/<[^>]+>/g, "")
+  stripTags(s)
     .replace(/&#8243;|&#8221;|″/g, '"')
     .replace(/&#215;/g, "×")
     .replace(/&#8211;/g, "–")
-    .replace(/&amp;/g, "&")
     .replace(/&nbsp;/g, " ")
     .replace(/\s+/g, " ")
+    .replace(/&amp;/g, "&")
     .trim();
 
 /** Model and nominal size from a product name such as '7½″ SATORI MW19TX-4 / TeXtreme'. */

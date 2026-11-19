@@ -13,9 +13,13 @@ export type MenuItem =
       detail?: ReactNode;
       /** A choice in a set (the current one ticked): the item becomes a menuitemradio. */
       checked?: boolean;
+      /** Removes or clears something: drawn in the over-limit colour. */
+      danger?: boolean;
     }
   | { kind: "link"; label: string; href: string; icon?: ReactNode }
-  | { kind: "separator" };
+  | { kind: "separator" }
+  /** A small heading over the items after it (a group in a longer menu). */
+  | { kind: "heading"; label: string };
 
 /** One item for a menu list built by hand (a menu with its own placement or extras). */
 export function MenuItemButton(props: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" | "role">) {
@@ -49,6 +53,8 @@ export function Menu(props: {
   className?: string;
   /** Called as the list opens (to work out what it shows only when it's needed). */
   onOpen?: () => void;
+  /** A labelled trigger's accessible name when its visible label is too short to say what it is (e.g. a unit). */
+  ariaLabel?: string;
 }) {
   const [open, setOpen] = useState(props.defaultOpen ?? false);
   const root = useRef<HTMLDivElement>(null);
@@ -76,6 +82,22 @@ export function Menu(props: {
       removeEventListener("resize", fit);
     };
   }, [open, props.pinned, props.align]);
+  // A list that would run off the window's side (its button mid-row on a phone) slides back in.
+  const [shift, setShift] = useState(0);
+  useLayoutEffect(() => {
+    if (!open || place) {
+      setShift(0);
+      return;
+    }
+    const list = root.current?.querySelector<HTMLElement>(".ui-menu-list");
+    if (!list) return;
+    const r = list.getBoundingClientRect();
+    const margin = 8;
+    const left = r.left - shift;
+    const right = r.right - shift;
+    const vw = document.documentElement.clientWidth;
+    setShift(left < margin ? margin - left : right > vw - margin ? Math.max(margin - left, vw - margin - right) : 0);
+  }, [open, place]); // eslint-disable-line react-hooks/exhaustive-deps
   const focusTrigger = () => root.current?.querySelector<HTMLButtonElement>("button")?.focus();
 
   useEffect(() => {
@@ -143,16 +165,29 @@ export function Menu(props: {
       ) : props.iconOnly && props.icon ? (
         <Button variant={props.variant ?? "ghost"} icon={props.icon} label={props.label} aria-haspopup="menu" aria-expanded={open} aria-controls={id} disabled={props.disabled} onClick={() => setOpen(!open)} />
       ) : (
-        <Button variant={props.variant ?? "secondary"} icon={props.icon} aria-haspopup="menu" aria-expanded={open} aria-controls={id} disabled={props.disabled} onClick={() => setOpen(!open)}>
+        <Button
+          variant={props.variant ?? "secondary"}
+          icon={props.icon}
+          aria-label={props.ariaLabel}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-controls={id}
+          disabled={props.disabled}
+          onClick={() => setOpen(!open)}
+        >
           {props.label}
           {props.caret !== false && <span aria-hidden="true">▾</span>}
         </Button>
       )}
       {open && (
-        <div className="ui-menu-list" role="menu" id={id} aria-label={props.label} style={place}>
+        <div className="ui-menu-list" role="menu" id={id} aria-label={props.ariaLabel ?? props.label} style={place ?? (shift ? { transform: `translateX(${shift}px)` } : undefined)}>
           {props.items.map((it, i) =>
             it.kind === "separator" ? (
               <hr key={i} className="ui-menu-sep" />
+            ) : it.kind === "heading" ? (
+              <div key={i} className="ui-menu-head" role="presentation">
+                {it.label}
+              </div>
             ) : it.kind === "link" ? (
               <a key={i} className="ui-menu-item" role="menuitem" href={it.href} target="_blank" rel="noopener" onClick={close}>
                 {it.icon}
@@ -162,7 +197,10 @@ export function Menu(props: {
               <button
                 key={i}
                 type="button"
-                className={it.description !== undefined || it.checked !== undefined ? "ui-menu-item ui-menu-item-rich" : "ui-menu-item"}
+                className={
+                  it.description !== undefined || it.checked !== undefined ? `ui-menu-item ui-menu-item-rich${it.icon ? "" : " ui-menu-item-noicon"}` : "ui-menu-item"
+                }
+                data-tone={it.danger ? "danger" : undefined}
                 role={it.checked !== undefined ? "menuitemradio" : "menuitem"}
                 aria-checked={it.checked}
                 onClick={() => {

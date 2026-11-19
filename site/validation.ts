@@ -585,6 +585,9 @@ ${group("hornresp-stuffed", `Stuffed lines: ${stuffed.length} cases`, stuffed, s
 <h2 id="spice">Independent circuit check (SPICE)</h2>
 ${sp.html}
 
+<h2 id="the-edge">Baffle step: The Edge</h2>
+<p>The baffle step and edge diffraction (Signal &rarr; Baffle step, and the Driver curve export) are compared with The Edge 4.x, the baffle diffraction simulator, on nine flat baffles (25 &times; 40 and 40 &times; 60&nbsp;cm, centred and off-centre, point sources and 130 and 200&nbsp;mm cones, at 1, 2 and 100&nbsp;m): within 0.1&nbsp;dB to 2&nbsp;kHz and 0.22&nbsp;dB to 5&nbsp;kHz for point sources, within 0.3&nbsp;dB for cones up to the frequency the app marks as approximate. The cases and table are in <a href="${REPO}/blob/main/docs/validation.md#the-edge-signal--baffle-step-driver-curve">docs/validation.md</a>.</p>
+
 <h2 id="not-compared">Not compared</h2>
 <p>Some features have no equivalent in WinISD or Hornresp and are checked by their own tests instead: the L2R2 voice-coil model (fitted against Dayton Audio's published impedance measurements), a port's own pipe resonances, and a hot voice coil. They're described in <a href="${REPO}/blob/main/docs/validation.md#not-compared-with-winisd-or-hornresp">docs/validation.md</a>. With those settings at their defaults, the app gives the results above.</p>
 

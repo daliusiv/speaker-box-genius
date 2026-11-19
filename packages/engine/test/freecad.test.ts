@@ -32,6 +32,10 @@ function sets(): { what: string; set: PanelSet }[] {
       out.push({ what: `wedge ${slope} ${joinery}`, set: buildWedgePanels({ ...p, holes: layoutBaffleHoles(p, HOLES) }) });
     }
   }
+  for (const slope of ["front", "rear"] as const) {
+    const p: PanelInput = { ...EX, lip: 120, slope, joinery: "butt" };
+    out.push({ what: `wedge with a lip ${slope}`, set: buildWedgePanels({ ...p, holes: layoutBaffleHoles(p, HOLES) }) });
+  }
   out.push({ what: "wedge double baffle", set: buildWedgePanels({ ...EX, slopeWall: 36, holes: layoutBaffleHoles({ ...EX, slopeWall: 36 }, HOLES) }) });
   const box = { width: 300, height: 450, depth: 350, wall: 18 };
   out.push({ what: "box", set: buildBoxPanels({ ...box, holes: layoutBaffleHoles({ ...box, topDepth: 350, bottomDepth: 350 }, [HOLES[0]!]) }) });

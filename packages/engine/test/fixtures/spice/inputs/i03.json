@@ -1,0 +1,31 @@
+{
+  "id": "i03",
+  "title": "Infinite baffle, open rear, 4 × RSS315HF-4 in parallel, Rg 0.1, 100 W",
+  "driver": {
+    "fs": 24.2,
+    "qms": 2.83,
+    "qes": 0.45,
+    "vas_l": 84.1,
+    "re": 3.1,
+    "sd_cm2": 514.7,
+    "le_mh": 0.96
+  },
+  "box": {
+    "kind": "infinite-baffle"
+  },
+  "opts": {
+    "drivers": 4,
+    "wiring": "parallel",
+    "rg": 0.1,
+    "power": 100
+  },
+  "air": {
+    "rho": 1.204,
+    "c": 343.2
+  },
+  "sweep": {
+    "perDecade": 50,
+    "fMin": 5,
+    "fMax": 2000
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "8 M 1.5 CS",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 460,
+    "qms": 12.36,
+    "qes": 2.13,
+    "vas_l": 0.7,
+    "re": 6,
+    "sd_cm2": 213.8,
+    "qts": 1.82,
+    "le_mh": 0.37,
+    "bl": 9.83,
+    "mms_g": 11.6,
+    "xmax_mm": 1,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 184,
+    "depth_mm": 82
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/8-m-1-5-cs/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

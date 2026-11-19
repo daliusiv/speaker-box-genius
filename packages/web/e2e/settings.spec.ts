@@ -13,9 +13,9 @@ async function settings(page: Page) {
 const row = (page: Page, title: string) => page.locator("#panel-settings .ui-section").filter({ has: page.locator(".ui-section-title", { hasText: new RegExp(`^${title}$`) }) }).first();
 const value = (page: Page, title: string) => row(page, title).locator(".ui-section-value");
 
-test("Settings: General, Simulation and Limits cards, each setting a row that shows its value", async ({ page }) => {
+test("Settings: General, Simulation, Limits and Privacy cards, each setting a row that shows its value", async ({ page }) => {
   await settings(page);
-  await expect(page.locator("#panel-settings .ui-card-title")).toHaveText(["General", "Simulation", "Limits"]);
+  await expect(page.locator("#panel-settings .ui-card-title")).toHaveText(["General", "Simulation", "Limits", "Privacy"]);
   await expect(value(page, "Match")).toHaveText("Default");
   await expect(value(page, "Box")).toHaveText("Ql 10 · Qa 100 · Qp 100");
   await expect(value(page, "Amplifier")).toHaveText("No limit");
@@ -50,6 +50,18 @@ test("Settings: My conditions shows its fields; the amp's ratings fill the limit
   await expect(value(page, "Amplifier")).toHaveText(/^\d+(\.\d+)? V · \d+(\.\d+)? A$/);
 });
 
+test("Settings: Help improve the app is on by default, and switching it off is kept in this browser", async ({ page }) => {
+  await settings(page);
+  const sw = page.getByRole("switch", { name: "Help improve the app" });
+  await expect(sw).toHaveAttribute("aria-checked", "true");
+  await sw.click();
+  await expect(sw).toHaveAttribute("aria-checked", "false");
+  expect(await page.evaluate(() => localStorage.getItem("sbg.usageStats"))).toBe("off");
+  await page.reload();
+  await settings(page);
+  await expect(page.getByRole("switch", { name: "Help improve the app" })).toHaveAttribute("aria-checked", "false");
+});
+
 test("Settings: the General and Simulation cards", async ({ page }) => {
   await settings(page);
   await page.mouse.move(0, 0);
@@ -59,7 +71,7 @@ test("Settings: the General and Simulation cards", async ({ page }) => {
 test("Settings on phones: controls look at least 40 px and take taps across 44 px; no sideways scroll", async ({ page }, info) => {
   test.skip(info.project.name !== "phone", "phones only");
   await settings(page);
-  for (const t of ["Match", "Amplifier & cable", "Air", "Voice coil", "Box", "Ports", "SPL", "Amplifier", "Port speed", "Air distortion"]) await row(page, t).locator(":scope > summary").click();
+  for (const t of ["Match", "Amplifier & cable", "Air", "Voice coil", "Box", "Ports", "SPL", "Amplifier", "Port speed & excursion", "Air distortion"]) await row(page, t).locator(":scope > summary").click();
   const bad = await page.evaluate(() => {
     const out: string[] = [];
     const panel = document.querySelector("#panel-settings")!;

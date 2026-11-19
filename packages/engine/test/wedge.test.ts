@@ -236,3 +236,98 @@ test("wedge: inside volumes equal FreeCAD's boolean cuts (fixtures/crosscheck/fr
     assert.ok(Math.abs(v - c.inside_l) < 2e-6, `${id}: ${v} vs FreeCAD ${c.inside_l}`);
   }
 });
+
+// ---------------------------------------------------------------------------
+// Lip: an upright strip under the slope
+// ---------------------------------------------------------------------------
+
+/** Worked lip example: 40 × 50 cm, 30/45 cm deep, 15 cm lip, 18 mm walls. */
+const LIP: WedgeDims = { width: 400, height: 500, topDepth: 300, bottomDepth: 450, wall: 18, lip: 150 };
+
+test("lip: no lip (0 or absent) gives exactly the plain wedge", () => {
+  for (const d of [EX, { ...EX, slopeWall: 36 }, { width: 500, height: 300, topDepth: 120, bottomDepth: 450, wall: 25, slopeWall: 19 }]) {
+    assert.deepEqual({ ...wedgeGeometry({ ...d, lip: 0 }) }, { ...wedgeGeometry(d) });
+    assert.deepEqual(wedgeAngles({ ...d, lip: 0 }), wedgeAngles(d));
+    assert.deepEqual(buildWedgePanels({ ...d, lip: 0 }), buildWedgePanels(d));
+  }
+});
+
+test("lip: the worked example by hand", () => {
+  const g = wedgeGeometry(LIP);
+  // Slope rises H − L = 350 over D2 − D1 = 150: θ = atan(350/150).
+  near(g.theta, (Math.atan2(350, 150) * 180) / Math.PI, 1e-9, "θ");
+  near(g.theta, 66.8014, 0.0001, "θ value");
+  near(g.s, 150 / 350, 1e-12, "s");
+  // Inside: the lip's face up to yk = L + (T − T·k)/s, then the slope's.
+  const yk = 150 + (18 - 18 * g.k) / g.s;
+  near(g.slopeFoot, yk, 1e-9, "foot of the slope inside");
+  near(g.insideLip, yk - 18, 1e-9, "inside lip");
+  // Inside profile (T,T) (D2−T,T) (D2−T,yk) (top, H−T) (T,H−T) by the shoelace formula.
+  const topX = 450 - g.s * (482 - 150) - 18 * g.k;
+  const prof: [number, number][] = [[18, 18], [432, 18], [432, yk], [topX, 482], [18, 482]];
+  near(g.volume_l, (polygonArea(prof) * 364) / 1e6, 1e-9, "inside = shoelace × width");
+  near(g.volume_l, 61.133, 0.001, "inside L");
+  near(g.insideTopDepth, topX - 18, 1e-9, "inside top");
+  near(g.insideBottomDepth, 414, 1e-9, "inside bottom (to the lip)");
+  near(g.outsideSlant, Math.hypot(350, 150), 1e-9, "sloped face");
+  // Equal thicknesses: the lip–slope joint splits the angle, φ/2 each side.
+  const a = wedgeAngles(LIP);
+  near(a.lipJoint![0], g.phi / 2, 1e-9, "lip tilt");
+  near(a.lipJoint![1], g.phi / 2, 1e-9, "slope tilt at the lip");
+  near(topDepthForAngle(450, 500, g.theta, 150), 300, 1e-9, "D1 from θ with a lip");
+});
+
+test("lip: panels plus inside fill the outside; a lip panel; the inside matches the closed form", () => {
+  const cases: WedgeDims[] = [LIP, { ...LIP, slopeWall: 36 }, { ...LIP, lip: 40 }, { width: 500, height: 300, topDepth: 120, bottomDepth: 450, wall: 25, slopeWall: 19, lip: 120 }];
+  for (const d of cases) {
+    for (const slope of ["front", "rear"] as const) {
+      for (const joinery of ["butt", "miter"] as const) {
+        const set = buildWedgePanels({ ...d, slope, joinery });
+        const what = `${JSON.stringify(d)} ${slope} ${joinery}`;
+        const sum = set.panels.reduce((a, p) => a + prismVolume(p), 0) + prismVolume(set.cavity);
+        near(sum, set.outerVolume, 1e-6 * set.outerVolume, `${what}: panels + inside`);
+        near(set.innerVolume / 1e6, wedgeVolume_l(d), 1e-9, `${what}: inside = closed form`);
+        near(set.outerVolume, (d.bottomDepth * d.lip! + ((d.topDepth + d.bottomDepth) / 2) * (d.height - d.lip!)) * d.width, 1e-6, `${what}: outside`);
+        for (const p of set.panels) assert.ok(polygonArea(p.profile) > 0, `${what}: ${p.id} counter-clockwise`);
+        assert.equal(set.panels.length, 7, what);
+        const lip = set.panels.find((p) => p.id === "lip")!;
+        assert.equal(lip.name, slope === "rear" ? "Back lip" : "Lip", what);
+        near(lip.thickness, d.wall, 1e-9, `${what}: lip thickness`);
+      }
+    }
+  }
+  // Butt: the lip stands on the bottom (the bottom runs to the front); its top is cut to the joint.
+  const by = (id: string) => buildWedgePanels(LIP).panels.find((p) => p.id === id)!;
+  assert.deepEqual(by("bottom").profile, [[0, 0], [450, 0], [450, 18], [0, 18]]);
+  assert.deepEqual(by("lip").bevels!.map((b) => b.edge), ["top"]);
+  assert.deepEqual(by("baffle").bevels!.map((b) => b.edge), ["lip", "top"]);
+});
+
+test("lip: checks, the solver and the driver on the slope above it", () => {
+  const codes = (d: WedgeDims) => wedgeIssues(d).map((x) => x.code);
+  assert.deepEqual(codes(LIP), []);
+  assert.deepEqual(codes({ ...LIP, lip: 10 }), ["lip-too-short"]);
+  assert.deepEqual(codes({ ...LIP, lip: 490 }), ["lip-too-tall"]);
+  assert.equal(wedgeIssues({ ...LIP, lip: 490 })[0]!.action, "use-box");
+  assert.throws(() => buildWedgePanels({ ...LIP, lip: 10 }), RangeError);
+  // More lip, more inside: solve the lip for a volume and land on it.
+  assert.ok(wedgeVolume_l({ ...LIP, lip: 200 }) > wedgeVolume_l(LIP));
+  const r = solveWedge(LIP, "lip", 63);
+  assert.ok(r.ok);
+  near(r.volume_l, 63, 0.001, "lip solve");
+  for (const field of ["width", "height", "topDepth", "bottomDepth"] as const) {
+    const s = solveWedge(LIP, field, 63);
+    assert.ok(s.ok, field);
+    near(s.volume_l, 63, 0.001, `${field} with a lip`);
+    assert.equal(s.dims.lip, 150, `${field}: lip kept`);
+  }
+  // The sloped face starts above the lip: the driver's centre sits on it, the motor clears the lip.
+  const m = wedgeDriverClearance(LIP, "front", { cutout: 230, depth: 140 });
+  const g = wedgeGeometry(LIP);
+  near(m.faceLength, g.insideSlant, 1e-9, "face is the slope above the lip");
+  assert.ok(m.center[1] > g.slopeFoot, "centre above the lip");
+  assert.ok(m.ok);
+  // A deep motor low on the slope hits the lip's inside face.
+  const low = wedgeDriverClearance(LIP, "front", { cutout: 230, depth: 140 }, 0);
+  assert.ok(low.margin < m.margin);
+});

@@ -37,7 +37,7 @@ The simulation uses the **net** volume: the air the box really holds. Everything
 
 ![The same port in the box as designed ({{color:port-tuning-example/1}}) and as built ({{color:port-tuning-example/2}}): the impedance dip, which marks the tuning, moves up by about {{diff:port-tuning-example/2/1/fb:0}} Hz.](chart:port-tuning-example/impedance)
 
-That's the most common cause of a box tuning high. The tuning goes roughly with one over the square root of the volume, so every 10 % of volume you lose raises Fb by about 5 %.
+That's the most common cause of a box tuning high. The tuning goes roughly with one over the square root of the volume, so every 10 % of volume you lose raises Fb by about 5 %. The [box volume calculator](/calculators/box-volume/) takes all of these off from the box's outside size, so you can size the port for the net volume.
 
 ### The port's inner end is crowded
 

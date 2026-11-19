@@ -1,12 +1,12 @@
 import { buildWedgePanels, wedgeGeometry, type MountCheck, type Vec2, type WedgeDims, type WedgeJoinery, type WedgeSlope } from "@sbg/engine";
 
 /** Which dimension a focused field changes, to light it up on the drawing. */
-export type WedgeDim = "W" | "H" | "D1" | "D2" | "theta" | "T" | "Tb" | "driver";
+export type WedgeDim = "W" | "H" | "D1" | "D2" | "L" | "theta" | "T" | "Tb" | "driver";
 
 /**
  * Side view of the car wedge: the walls hatched (the sloped panel in its own hatch), the
- * inside dashed, D1 along the top, D2 along the bottom, H up the back and θ at the foot of the
- * slope. The back (against the seat) is on the left, the trunk opening on the right. With a
+ * inside dashed, D1 along the top, D2 along the bottom, H up the back, L up the lip (when there
+ * is one) and θ at the foot of the slope. The back (against the seat) is on the left, the trunk opening on the right. With a
  * driver: its axis and motor outline, red when the motor hits a wall.
  */
 export function WedgeDiagram(props: { d: WedgeDims; slope: WedgeSlope; joinery: WedgeJoinery; focus: WedgeDim | null; mount?: MountCheck | null; cutout?: number }) {
@@ -27,18 +27,24 @@ export function WedgeDiagram(props: { d: WedgeDims; slope: WedgeSlope; joinery: 
   // Engine y is up; SVG y is down.
   const P = (p: Vec2) => `${p[0].toFixed(2)},${(H - p[1]).toFixed(2)}`;
   const poly = (ps: Vec2[]) => ps.map(P).join(" ");
-  const outer: Vec2[] = rear ? [[0, 0], [D2, 0], [D2, H], [D2 - D1, H]] : [[0, 0], [D2, 0], [D1, H], [0, H]];
+  const L = g.lip;
+  const outer: Vec2[] = rear
+    ? (L > 0 ? [[0, 0], [D2, 0], [D2, H], [D2 - D1, H], [0, L]] : [[0, 0], [D2, 0], [D2, H], [D2 - D1, H]])
+    : L > 0 ? [[0, 0], [D2, 0], [D2, L], [D1, H], [0, H]] : [[0, 0], [D2, 0], [D1, H], [0, H]];
   const on = (k: WedgeDim) => (focus === k ? " on" : "");
   // θ at the foot of the slope.
-  const foot: Vec2 = rear ? [0, 0] : [D2, 0];
+  const foot: Vec2 = rear ? [0, L] : [D2, L];
   const th = (g.theta * Math.PI) / 180;
   const r = big * 0.09;
-  const arcEnd: Vec2 = rear ? [r * Math.cos(th), r * Math.sin(th)] : [D2 - r * Math.cos(th), r * Math.sin(th)];
-  const arcStart: Vec2 = rear ? [r, 0] : [D2 - r, 0];
+  const arcEnd: Vec2 = rear ? [r * Math.cos(th), L + r * Math.sin(th)] : [D2 - r * Math.cos(th), L + r * Math.sin(th)];
+  const arcStart: Vec2 = rear ? [r, L] : [D2 - r, L];
   const topX0 = rear ? D2 - D1 : 0;
   const bad = props.mount && !props.mount.ok;
   // Middle of the sloped face, a little outside it (slope front).
-  const mid: Vec2 = [(D1 + D2) / 2 + Math.sin(th) * fs * 1.2, H / 2 - Math.cos(th) * fs * 1.2];
+  // (SVG coordinates: the slope runs from y = H − L up to 0.)
+  const mid: Vec2 = [(D1 + D2) / 2 + Math.sin(th) * fs * 1.2, (H - L) / 2 - Math.cos(th) * fs * 1.2];
+  // L up the lip, outside it (front lip: right of the box; back lip: left, past the H line).
+  const lipX = rear ? -m * 0.62 : D2 + m * 0.3;
   return (
     <svg className="wedge-drawing" viewBox={`${-m} ${-m} ${D2 + 2 * m} ${H + 2 * m}`} role="img" aria-label="Side view of the wedge: back against the seat on the left, trunk opening on the right">
       <defs>
@@ -78,7 +84,14 @@ export function WedgeDiagram(props: { d: WedgeDims; slope: WedgeSlope; joinery: 
       {D1 < D2 && (
         <g className={`wedge-dim${on("theta")}`} fontSize={fs}>
           <path d={`M ${P(arcStart)} A ${r} ${r} 0 0 ${rear ? 0 : 1} ${P(arcEnd)}`} fill="none" strokeWidth={fs * 0.07} />
-          <text x={foot[0] + (rear ? 1 : -1) * r * 1.5} y={H - fs * 0.4} textAnchor="middle">θ {g.theta.toFixed(1)}°</text>
+          {/* Above the foot without a lip; with one, inside below the foot, clear of the BAFFLE label. */}
+          <text x={foot[0] + (rear ? 1 : -1) * r * (L > 0 ? 1.9 : 1.5)} y={L > 0 ? H - L + fs * 1.2 : H - fs * 0.4} textAnchor="middle">θ {g.theta.toFixed(1)}°</text>
+        </g>
+      )}
+      {L > 0 && (
+        <g className={`wedge-dim${on("L")}`} fontSize={fs}>
+          <line x1={lipX} y1={H - L} x2={lipX} y2={H} strokeWidth={fs * 0.07} />
+          <text x={lipX + fs * 0.9} y={H - L / 2} textAnchor="middle" transform={`rotate(90 ${lipX + fs * 0.9} ${H - L / 2})`}>L {Math.round(L)}</text>
         </g>
       )}
 
@@ -93,6 +106,11 @@ export function WedgeDiagram(props: { d: WedgeDims; slope: WedgeSlope; joinery: 
       {rear && (
         <text className="wedge-label" fontSize={fs * 0.8} x={D2 + m * 0.75} y={H / 2} textAnchor="middle" transform={`rotate(90 ${D2 + m * 0.75} ${H / 2})`}>
           BAFFLE
+        </text>
+      )}
+      {L > 0 && (
+        <text className="wedge-label" fontSize={fs * 0.8} x={rear ? d.wall + fs * 1.1 : D2 - d.wall - fs * 1.1} y={H - L / 2} textAnchor="middle" transform={`rotate(90 ${rear ? d.wall + fs * 1.1 : D2 - d.wall - fs * 1.1} ${H - L / 2})`}>
+          LIP
         </text>
       )}
       <text className="wedge-label" fontSize={fs * 0.8} x={D2 + m * (rear ? 0.05 : 0.1)} y={H + m * 0.75} textAnchor="end">

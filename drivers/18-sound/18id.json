@@ -10,10 +10,11 @@
     "qes": 0.27,
     "vas_l": 67,
     "re": 1.5,
-    "sd_cm2": 1225,
+    "sd_cm2": 1100,
     "qts": 0.26,
     "le_mh": 1.22,
     "bl": 24,
+    "mms_g": 420,
     "xmax_mm": 15.5,
     "pe_w": 1800
   },
@@ -25,10 +26,10 @@
     {
       "kind": "datasheet",
       "url": "https://www.eighteensound.it/en/products/lf-driver/18-0/2/18iD",
-      "retrieved": "2026-10-18",
-      "note": "Values from driver-base (https://github.com/JonathanDCohen/driver-base), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/), compiled from the manufacturer's product page. Converted to this format and checked by Speaker Box Genius; any values changed are listed in the notes."
+      "retrieved": "2026-11-17",
+      "note": "Values from 18 Sound's parameter file (Excel supplied 17 Nov 2026), used with 18 Sound's permission (6 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without 18 Sound's permission. See LICENSE-DATA."
     }
   ],
   "status": "community",
-  "notes": "Published Mms 420 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+  "notes": "Sd 1100 cm²: the parameter file gives it in m² for this model (0.11)."
 }

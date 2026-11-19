@@ -1,0 +1,34 @@
+{
+  "brand": "Memphis Audio",
+  "model": "PRXSL12FTV (2 Ω)",
+  "type": "car-audio",
+  "nominal_ohms": 2,
+  "size_in": 12,
+  "ts": {
+    "fs": 33,
+    "qms": 4.659,
+    "qes": 0.788,
+    "vas_l": 43.607872,
+    "re": 1.8,
+    "sd_cm2": 530.9,
+    "qts": 0.674,
+    "bl": 9.74,
+    "mms_g": 201.4,
+    "xmax_mm": 7.0104,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 279.4,
+    "depth_mm": 78.74,
+    "displacement_l": 3.653
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.memphiscaraudio.com/product/prxsl12ftv/",
+      "retrieved": "2026-11-16",
+      "note": "Values from Memphis Audio's spec sheets (PDF supplied 16 Nov 2026), used with Memphis Audio's permission (16 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Memphis Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

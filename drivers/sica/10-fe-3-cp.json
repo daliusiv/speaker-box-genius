@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "10 Fe 3 CP",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 52,
+    "qms": 7.5,
+    "qes": 0.32,
+    "vas_l": 38.6,
+    "re": 5.6,
+    "sd_cm2": 346.4,
+    "qts": 0.31,
+    "le_mh": 0.67,
+    "bl": 15.35,
+    "mms_g": 41.4,
+    "xmax_mm": 5,
+    "pe_w": 450
+  },
+  "physical": {
+    "cutout_mm": 232,
+    "depth_mm": 122.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/10-fe-3-cp/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

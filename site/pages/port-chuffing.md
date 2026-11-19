@@ -22,7 +22,7 @@ Around the box's tuning frequency, most of the bass comes out of the port, and t
 
 The usual rule is to keep the **peak air speed under about 17 m/s**, about 5 % of the speed of sound. That's where the app draws its **chuffing-risk line** on the Port speed chart. Ports with well-rounded (flared) ends tolerate more.
 
-How much port noise you accept is up to you: car SPL builds often run 25–30 m/s at full power. Set your own line in **Settings → Limits → Port speed → Chuffing line**; the chart, the summary's ⚠ and the [design assistant](/guides/design-assistant/) all use it.
+How much port noise you accept is up to you: car SPL builds often run 25–30 m/s at full power. Set your own line in **Settings → Limits → Port speed & excursion → Chuffing line**; the chart, the summary's ⚠ and the [design assistant](/guides/design-assistant/) all use it.
 
 ## Area against length
 
@@ -67,12 +67,14 @@ A long port is also a pipe, with its own resonance at about the speed of sound d
 
 ## Checklist
 
-1. Keep the peak port speed under about 17 m/s at your real power (the red line on the Port speed chart), or the line you've set in **Settings → Limits → Port speed**.
+1. Keep the peak port speed under about 17 m/s at your real power (the red line on the Port speed chart), or the line you've set in **Settings → Limits → Port speed & excursion**.
 2. Make the port bigger before anything else; press **Set port length** to recut it for the tuning.
 3. If it won't fit, use a slot along a wall, bend it, or flare its ends.
 4. Check a long port's pipe resonance if the speaker plays above about 100 Hz.
 5. If nothing fits, make the box bigger, tune it higher, or play it a little quieter.
 
 [[Open the worked example|port-example]]
+
+Try it: the [ported box calculator](/calculators/ported-box/) sizes a QB3, C4 or BB4 box for your driver, picks a port that fits and shows its air speed at your power.
 
 > **Port compression:** at high air speeds a port also loses output. **Settings → Simulation → Ports → Port compression** estimates that loss at your power level, so you can see what a fast port costs you as well as how it sounds.

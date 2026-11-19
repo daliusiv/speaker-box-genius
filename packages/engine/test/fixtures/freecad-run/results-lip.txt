@@ -1,0 +1,56 @@
+FreeCAD 1.1.4
+== sbg_lip_front_butt: OK
+  Cavity: FreeCAD 61.133 L, app 61.133 L, relative error 3.1e-10
+  Pieces + cavity: FreeCAD 79.500 L, app 79.500 L, relative error 2.3e-10
+    side_left      Side                         vol      3.578 L  faces   7  valid True
+    side_right     Side001                      vol      3.578 L  faces   7  valid True
+    top            Top                          vol      1.991 L  faces   6  valid True
+    bottom         Bottom                       vol      2.948 L  faces   6  valid True
+    lip            Lip                          vol      0.853 L  faces   6  valid True
+    back           Back                         vol      3.040 L  faces   6  valid True
+    baffle         Baffle (sloped)              vol      1.632 L  faces   7  valid True
+    Cavity         Cavity (air inside)          vol     61.133 L  faces   7  valid True
+== sbg_lip_front_doublebaffle: OK
+  Cavity: FreeCAD 58.577 L, app 58.577 L, relative error 6.1e-10
+  Pieces + cavity: FreeCAD 79.500 L, app 79.500 L, relative error 2.3e-10
+    side_left      Side                         vol      3.578 L  faces   7  valid True
+    side_right     Side001                      vol      3.578 L  faces   7  valid True
+    top            Top                          vol      1.991 L  faces   6  valid True
+    bottom         Bottom                       vol      2.948 L  faces   6  valid True
+    lip            Lip                          vol      0.703 L  faces   6  valid True
+    back           Back                         vol      3.040 L  faces   6  valid True
+    baffle         Baffle (sloped)              vol      5.085 L  faces   6  valid True
+    Cavity         Cavity (air inside)          vol     58.577 L  faces   7  valid True
+== sbg_lip_front_miter: OK
+  Cavity: FreeCAD 61.133 L, app 61.133 L, relative error 3.1e-10
+  Pieces + cavity: FreeCAD 79.500 L, app 79.500 L, relative error 0.0e+00
+    side_left      Side                         vol      3.578 L  faces   7  valid True
+    side_right     Side001                      vol      3.578 L  faces   7  valid True
+    top            Top                          vol      1.868 L  faces   6  valid True
+    bottom         Bottom                       vol      2.830 L  faces   6  valid True
+    lip            Lip                          vol      0.912 L  faces   6  valid True
+    back           Back                         vol      3.158 L  faces   6  valid True
+    baffle         Baffle (sloped)              vol      1.696 L  faces   7  valid True
+    Cavity         Cavity (air inside)          vol     61.133 L  faces   7  valid True
+== sbg_lip_rear_butt: OK
+  Cavity: FreeCAD 61.133 L, app 61.133 L, relative error 3.1e-10
+  Pieces + cavity: FreeCAD 79.500 L, app 79.500 L, relative error 2.3e-10
+    side_left      Side                         vol      3.578 L  faces   7  valid True
+    side_right     Side001                      vol      3.578 L  faces   7  valid True
+    top            Top                          vol      1.991 L  faces   6  valid True
+    bottom         Bottom                       vol      2.948 L  faces   6  valid True
+    lip            Back lip                     vol      0.853 L  faces   6  valid True
+    back           Back (sloped)                vol      2.380 L  faces   6  valid True
+    baffle         Baffle                       vol      2.292 L  faces   7  valid True
+    Cavity         Cavity (air inside)          vol     61.133 L  faces   7  valid True
+== sbg_lip_rear_miter: OK
+  Cavity: FreeCAD 61.133 L, app 61.133 L, relative error 3.1e-10
+  Pieces + cavity: FreeCAD 79.500 L, app 79.500 L, relative error 0.0e+00
+    side_left      Side                         vol      3.578 L  faces   7  valid True
+    side_right     Side001                      vol      3.578 L  faces   7  valid True
+    top            Top                          vol      1.868 L  faces   6  valid True
+    bottom         Bottom                       vol      2.830 L  faces   6  valid True
+    lip            Back lip                     vol      0.912 L  faces   6  valid True
+    back           Back (sloped)                vol      2.444 L  faces   6  valid True
+    baffle         Baffle                       vol      2.410 L  faces   7  valid True
+    Cavity         Cavity (air inside)          vol     61.133 L  faces   7  valid True

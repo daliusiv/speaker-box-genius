@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "5 D 1 CS",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 79,
+    "qms": 4.95,
+    "qes": 0.58,
+    "vas_l": 5.5,
+    "re": 6,
+    "sd_cm2": 78.5,
+    "qts": 0.52,
+    "le_mh": 0.33,
+    "bl": 5.73,
+    "mms_g": 6.4,
+    "xmax_mm": 3,
+    "pe_w": 60
+  },
+  "physical": {
+    "cutout_mm": 113,
+    "depth_mm": 58.1
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/5-d-1-cs/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

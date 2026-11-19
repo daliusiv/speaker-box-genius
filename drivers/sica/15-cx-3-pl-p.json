@@ -1,0 +1,35 @@
+{
+  "brand": "Sica",
+  "model": "15 Cx 3 PL P",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 44.5,
+    "qms": 12.88,
+    "qes": 0.42,
+    "vas_l": 152.4,
+    "re": 5.1,
+    "sd_cm2": 855.3,
+    "qts": 0.4,
+    "le_mh": 1.12,
+    "bl": 17.26,
+    "mms_g": 87.2,
+    "xmax_mm": 5.5,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 178.9
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/15-cx-3-pl/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial: the woofer's parameters (the tweeter's are left out)."
+}

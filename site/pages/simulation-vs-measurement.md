@@ -28,7 +28,7 @@ You simulated the box, built it carefully, measured it, and the curves don't mat
 
 ## 1. Your driver isn't the datasheet driver
 
-Datasheet values describe an average sample, measured one way. Production tolerances are wide: a typical factory tolerance for Fs is ±15 %, and Vas is commonly quoted to ±20–30 % [1]. Q values vary by up to ±20 % [2]. The suspension also softens as the driver breaks in, so Fs and Qts fall and Vas rises over the first hours of use [3].
+Datasheet values describe an average sample, measured one way. Production tolerances are wide: a typical factory tolerance for Fs is ±15 %, and Vas is commonly quoted to ±20–30 % [1]. Q values vary by up to ±20 % [2]. The suspension also softens as the driver breaks in, so Fs and Qts fall and Vas rises over the first hours of use [3]; [speaker break-in](/guides/driver-break-in/) works out how little of that a box lets through.
 
 How much does that matter? Take the worked example: a **Dayton Audio DSA215-8** in its QB3 ported box (16.2 L tuned to {{num:losses-ql10/1/fb}} Hz). Change one datasheet value at a time by a realistic amount, and the F3 moves like this:
 
@@ -46,7 +46,7 @@ How much does that matter? Take the worked example: a **Dayton Audio DSA215-8** 
 
 A driver that's within its tolerance can move the F3 of a ported box by more than 10 Hz. Small, tuned boxes like this QB3 alignment are the most sensitive; a big sealed box barely notices.
 
-**How to close it:** measure your own driver. Under **Driver → Edit T/S → Fill from**, **Measure from an impedance sweep…** fits the T/S parameters from a free-air sweep made with DATS, REW, ARTA or similar, and a second sweep with a known added mass gives Vas. Measure after a few hours of use, at a low level, with the driver held firmly and well away from walls. To see how sensitive your design is, add your measured (or a ±15 %) driver with **Compare** and look at both curves at once.
+**How to close it:** measure your own driver. Under **Driver → Edit T/S → ⋯**, **Measure from an impedance sweep…** fits the T/S parameters from a free-air sweep made with DATS, REW, ARTA or similar, and a second sweep with a known added mass gives Vas. Run the driver in and let it cool first (the [break-in guide](/guides/driver-break-in/#a-run-in-routine-before-you-measure) has a routine), then measure at a low level, with the driver held firmly and well away from walls. To see how sensitive your design is, add your measured (or a ±15 %) driver with **Compare** and look at both curves at once.
 
 ## 2. Baffle step: the simulation is in half space
 
@@ -54,7 +54,7 @@ Box simulators, WinISD included, assume the speaker is mounted in an infinite wa
 
 For the example box on a 22 × 32 cm baffle, turning on **Baffle step** (on the Signal tab) lowers the response by **{{diff:losses-ql10/1/sim-baffle/1/spl@50}} dB** at 40–60 Hz and {{diff:losses-ql10/1/sim-baffle/1/spl@300}} dB at 300 Hz, relative to the half-space simulation. That's a large part of most "my bass is weaker than predicted" complaints.
 
-**How to close it:** turn on **Baffle step** and enter your baffle's size and the driver's position. Then either accept the step (a speaker near a wall gets much of it back), or compensate for it in the crossover or with EQ [4]. [Baffle step loss explained](/guides/baffle-step/) works through a bookshelf example: where the step really falls, how much to compensate and what each way costs.
+**How to close it:** turn on **Baffle step** and enter your baffle's size and the driver's position. Then either accept the step (a speaker near a wall gets much of it back), or compensate for it in the crossover or with EQ [4]. [Baffle step loss explained](/guides/baffle-step/) works through a bookshelf example: where the step really falls, how much to compensate and what each way costs. For a crossover, put the driver's own response on your baffle with **Save & Export → Crossover tools → Driver on baffle** ([how](/guides/baffle-step/#use-it-on-a-driver-s-curve)).
 
 ## 3. Your room
 

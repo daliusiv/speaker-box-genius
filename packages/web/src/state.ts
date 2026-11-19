@@ -1,7 +1,8 @@
 import { DEFAULT_END_CORRECTION, TS_PARAMS, type EqStage, type HighPassType, type PassiveBranch, type PassiveRadiatorInput, type SemiInductance, type TsValues } from "@sbg/engine";
 import { stuffable, stuffingFrom, type Stuffing } from "./stuffing.ts";
+import { DEFAULT_SIGNAL, signalFrom, type ProgramSignal } from "./programSignal.ts";
 
-export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line";
+export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line" | "ib";
 /**
  * Volume calculator shapes. "frustum" is shown as "Tapered (all sides)" (it was "Truncated
  * pyramid"; the id stays so old links open); "wedge" is the car wedge with one sloped panel.
@@ -27,10 +28,25 @@ interface DesignBase {
    * the simulation uses the bigger volume the stuffing makes it act as, and its Qa. Absent = none.
    */
   stuffing?: Stuffing;
+  /**
+   * Sealed, ported and PR boxes: this box's own leakage (Ql), in place of the one in Settings.
+   * NO_LOSS_Q = no leak. Absent = Settings' Ql.
+   */
+  ql?: number;
 }
 
 export interface SealedDesign extends DesignBase {
   kind: "sealed";
+}
+
+/**
+ * Infinite baffle: the driver in a wall, floor or ceiling, its back to a space isolated from the
+ * room. "open": an attic, garage or outdoors, too big to spring the cone. "space": a closed space
+ * of `vb_l` litres (kept when switching to open, so switching back restores it).
+ */
+export interface IbDesign extends DesignBase {
+  kind: "ib";
+  rear: "open" | "space";
 }
 
 export interface VentedDesign extends DesignBase {
@@ -58,6 +74,8 @@ export interface VentedDesign extends DesignBase {
 /** A further group of passive radiators in the same box (a different model, or the same with other added mass). */
 export interface PrGroupState {
   prName: string;
+  /** The database PR (or "driver:" + driver id) its parameters were loaded from; counts while prName is still its name. */
+  prId?: string;
   count: number;
   addedMass_g: number;
   params: PrParams;
@@ -66,6 +84,8 @@ export interface PrGroupState {
 export interface PrDesign extends DesignBase {
   kind: "pr";
   prName: string;
+  /** As PrGroupState.prId. */
+  prId?: string;
   count: number;
   addedMass_g: number;
   targetFb: number;
@@ -179,7 +199,7 @@ export interface LineDesign extends DesignBase {
   throatChamber_l: number;
 }
 
-export type DesignState = SealedDesign | VentedDesign | PrDesign | BandpassDesign | LineDesign;
+export type DesignState = SealedDesign | VentedDesign | PrDesign | BandpassDesign | LineDesign | IbDesign;
 
 /** An EQ stage plus where it applies: every design, or one design by id. */
 export type EqItem = EqStage & { id: string; on: boolean; target: string };
@@ -201,6 +221,11 @@ export interface Settings {
   airConditions: { temp_C: number; humidity_pct: number; pressure_hPa: number };
   /** Port air velocity shown as peak (default) or RMS. */
   velocity: "peak" | "rms";
+  /**
+   * Excursion (and the cone's and PRs' velocity, acceleration and force) shown as the peak one way
+   * (default, as WinISD and Hornresp), peak-to-peak or RMS. Display only: every limit check stays on the one-way peak.
+   */
+  excursion: "peak" | "pp" | "rms";
   /** Amplifier output + cable resistance (Ω). */
   rg: number;
   /**
@@ -211,6 +236,13 @@ export interface Settings {
   /** The amplifier's own limits on the Max SPL chart: RMS volts and amps at its output (0 = none). */
   ampVolts: number;
   ampAmps: number;
+  /** The amplifier's maximum output power (W, RMS) into the speaker's impedance at each frequency (0 = none). */
+  ampWatts: number;
+  /**
+   * The Max SPL chart's signal: off = a steady sine (as WinISD and Hornresp); on = a program with
+   * this crest factor (peak ÷ RMS, dB), and headroom measured against an optional target SPL (dB, average).
+   */
+  signal: ProgramSignal;
   /** Include voice-coil inductance (Le, and L2/R2 when entered) in the simulation. WinISD leaves it out by default. */
   inductance: boolean;
   /** Box losses as Q values at the tuning frequency: leakage, absorption, port. WinISD's defaults are 10 / 100 / 100. */
@@ -295,6 +327,7 @@ export const MAX_MEASURED = 4;
 export const DRIVER_KEYS = [
   "driverName",
   "driverBrand",
+  "driverOrigin",
   "nominal_ohms",
   "ts",
   "le_mh",
@@ -315,7 +348,7 @@ export type DriverSlot = Pick<AppState, (typeof DRIVER_KEYS)[number]>;
  * The fields a comparison driver has of its own; how many drivers there are and how they're
  * loaded and wired stay the main driver's, so the comparison is like for like.
  */
-export const COMPARE_KEYS = ["driverName", "driverBrand", "nominal_ohms", "ts", "le_mh", "l2_mh", "r2_ohm", "semi", "fdd", "xmax_mm", "pe_w", "dvc"] as const;
+export const COMPARE_KEYS = ["driverName", "driverBrand", "driverOrigin", "nominal_ohms", "ts", "le_mh", "l2_mh", "r2_ohm", "semi", "fdd", "xmax_mm", "pe_w", "dvc"] as const;
 /**
  * The comparison driver: its own T/S, limits and coil wiring, and optionally its own number of
  * drivers and how they're wired (one 15″ against two 10″). Without `drivers` it follows the main
@@ -330,6 +363,12 @@ export interface AppState {
   driverName: string;
   /** Brand part of driverName (for WinISD export); empty if unknown. */
   driverBrand: string;
+  /**
+   * The database driver these values were loaded from ("brand/model" id), kept in links and
+   * projects so the app can show its published values and offer a reset. It only counts while
+   * the name is still that driver's (see driverName.ts `fromDatabase`).
+   */
+  driverOrigin?: string;
   nominal_ohms: number;
   /** T/S values the user entered. Derived values are never stored. */
   ts: TsValues;
@@ -404,6 +443,8 @@ export interface AppState {
      * how the corners are cut (butt joints with bevels, or mitres).
      */
     slopeWall_mm: number | null;
+    /** Car wedge: outside height of the upright lip under the slope (cm, 0 = sloped all the way down). */
+    lip_cm: number;
     slope: "front" | "rear";
     joinery: "butt" | "miter";
     /** Driver mounting depth (mm, 0 = unknown) for the wedge's motor clearance check. */
@@ -440,6 +481,8 @@ export function newDesign(kind: DesignKind, existing: DesignState[]): DesignStat
   switch (kind) {
     case "sealed":
       return { id, kind, name: `Sealed${suffix}`, on: true, vb_l: 40 };
+    case "ib":
+      return { id, kind, name: `Infinite baffle${suffix}`, on: true, rear: "open", vb_l: 10000 };
     case "vented":
       return {
         id,
@@ -553,10 +596,13 @@ export const DEFAULT_STATE: AppState = {
     air: "standard",
     airConditions: { temp_C: 20, humidity_pct: 50, pressure_hPa: 1013 },
     velocity: "peak",
+    excursion: "peak",
     rg: 0.1, // WinISD's default (Rg 0.1 Ω): with it, presets and responses match WinISD as it opens
     thermalLimit: "nominal",
     ampVolts: 0,
     ampAmps: 0,
+    ampWatts: 0,
+    signal: DEFAULT_SIGNAL,
     inductance: true,
     losses: { ql: 10, qa: 100, qp: 100 },
     portCompression: false,
@@ -593,6 +639,7 @@ export const DEFAULT_STATE: AppState = {
     wall_mm: 18,
     capWall_mm: null,
     slopeWall_mm: null,
+    lip_cm: 0,
     slope: "front",
     joinery: "butt",
     driverDepth_mm: 0,
@@ -881,6 +928,7 @@ function prGroupsFrom(raw: unknown): PrGroupState[] {
     .filter((g: unknown) => g && typeof g === "object")
     .map((g: Raw) => ({
       prName: typeof g.prName === "string" ? g.prName : "Passive radiator",
+      ...(isDatabaseId(g.prId) ? { prId: g.prId } : {}),
       count: Number.isFinite(g.count) && g.count >= 1 ? Math.round(g.count) : 1,
       addedMass_g: Number.isFinite(g.addedMass_g) && g.addedMass_g >= 0 ? g.addedMass_g : 0,
       params: { ...EXAMPLE_PR, ...(g.params ?? {}) },
@@ -923,12 +971,13 @@ function lineFrom(d: Raw, base: LineDesign): Partial<LineDesign> {
 }
 
 function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
-  if (!["sealed", "vented", "pr", "bandpass", "line"].includes(d?.kind)) return null;
+  if (!["sealed", "vented", "pr", "bandpass", "line", "ib"].includes(d?.kind)) return null;
   const base = newDesign(d.kind, all);
   const merged = { ...base, ...d } as DesignState;
   if (merged.kind === "pr") {
     merged.params = { ...(base as PrDesign).params, ...(d.params ?? {}) };
     merged.extra = prGroupsFrom(d.extra);
+    if (!isDatabaseId(d.prId)) delete merged.prId;
   }
   if (merged.kind === "line") {
     Object.assign(merged, lineFrom(d, base as LineDesign));
@@ -947,6 +996,7 @@ function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
     merged.rearPrs = rp.length ? rp : b.rearPrs;
     merged.losses = bandpassLossesOf(d.losses);
   }
+  if (merged.kind === "ib" && merged.rear !== "space") merged.rear = "open";
   if (merged.kind === "vented" || merged.kind === "pr") {
     // Side by side is the default and is left out, so links without a position stay as they were.
     if (merged.ventAt !== "back" && merged.ventAt !== "custom") delete merged.ventAt;
@@ -967,6 +1017,9 @@ function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
   const st = stuffable(merged.kind) ? stuffingFrom(d.stuffing) : undefined;
   if (st) merged.stuffing = st;
   else delete merged.stuffing;
+  const ql = (d as Raw).ql;
+  if (stuffable(merged.kind) && typeof ql === "number" && Number.isFinite(ql) && ql >= 1) merged.ql = Math.min(ql, NO_LOSS_Q);
+  else delete merged.ql;
   return merged;
 }
 
@@ -984,11 +1037,15 @@ function tsFrom(raw: unknown, d: TsValues): TsValues {
   return out;
 }
 
+/** A database id as links carry it: "brand/model", lower-case slugs (a PR's may start "driver:"). */
+export const isDatabaseId = (v: unknown): v is string => typeof v === "string" && v.length <= 120 && /^(driver:)?[a-z0-9][a-z0-9._-]*\/[a-z0-9][a-z0-9._-]*$/.test(v);
+
 /** One driver's fields from raw (decoded) data, with defaults for anything missing or malformed. */
 function driverSlotFrom(raw: Raw, d: DriverSlot): DriverSlot {
   return {
     driverName: typeof raw.driverName === "string" ? raw.driverName : d.driverName,
     driverBrand: typeof raw.driverBrand === "string" ? raw.driverBrand : "",
+    ...(isDatabaseId(raw.driverOrigin) ? { driverOrigin: raw.driverOrigin } : {}),
     nominal_ohms: raw.nominal_ohms ?? d.nominal_ohms,
     ts: tsFrom(raw.ts, d.ts),
     le_mh: raw.le_mh ?? d.le_mh,
@@ -1041,9 +1098,15 @@ function volumeFrom(raw: Raw, d: AppState["volume"]): AppState["volume"] {
   if (v.slope !== "rear") v.slope = "front";
   if (v.joinery !== "miter") v.joinery = "butt";
   if (!(typeof v.slopeWall_mm === "number" && Number.isFinite(v.slopeWall_mm) && v.slopeWall_mm > 0)) v.slopeWall_mm = null;
+  if (!(typeof v.lip_cm === "number" && Number.isFinite(v.lip_cm) && v.lip_cm >= 0)) v.lip_cm = 0;
   if (!(typeof v.driverAt_mm === "number" && Number.isFinite(v.driverAt_mm) && v.driverAt_mm >= 0)) v.driverAt_mm = null;
   if (!(typeof v.driverDepth_mm === "number" && Number.isFinite(v.driverDepth_mm) && v.driverDepth_mm >= 0)) v.driverDepth_mm = 0;
   return v;
+}
+
+/** An amplifier power limit from a link or file: 0 (none) unless a positive number, then 0.1–10,000 W. */
+export function ampWattsFrom(v: unknown): number {
+  return typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.min(10_000, Math.max(0.1, v)) : 0;
 }
 
 /** Reads state from a URL hash, falling back to defaults for anything missing. */
@@ -1108,6 +1171,9 @@ export function decodeState(hash: string): AppState | null {
         f3From: raw.settings?.f3From === "peak" ? "peak" : "passband",
         qaVolume: raw.settings?.qaVolume === true,
         ventPlacement: raw.settings?.ventPlacement === "portLength" ? "portLength" : "own",
+        excursion: raw.settings?.excursion === "pp" || raw.settings?.excursion === "rms" ? raw.settings.excursion : "peak",
+        ampWatts: ampWattsFrom(raw.settings?.ampWatts),
+        signal: signalFrom(raw.settings?.signal),
       },
       eq: Array.isArray(raw.eq)
         ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf", "highshelf"].includes(e.type)).slice(0, 12)

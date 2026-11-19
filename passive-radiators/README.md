@@ -1,5 +1,7 @@
 # Passive radiator database
 
+**Adding a passive radiator?** The easiest way is the app: type its parameters into a passive radiator box, then **Submit to database…** on its card (no GitHub account needed; the entry is checked before it's sent). The rest of this page is for editing the files by hand.
+
 Same layout as [`drivers/`](../drivers/README.md): `passive-radiators/<brand-slug>/<model-slug>.json`, plus a `_brand.json` per brand.
 
 - **Format:** see [`docs/examples/passive-radiators/example-audio/ex10-pr.json`](../docs/examples/passive-radiators/example-audio/ex10-pr.json) (a made-up PR).

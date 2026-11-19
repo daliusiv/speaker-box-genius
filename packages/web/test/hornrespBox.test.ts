@@ -26,6 +26,22 @@ test("ported box export: the B2 validation record's box and driver", () => {
   for (const k of ["Bl", "Cms", "Rms", "Mmd"]) assert.ok(close(Number(ours[k]), Number(ref[k]), 0.003), `${k}: ${ours[k]} vs ${ref[k]}`);
 });
 
+test("box exports have every line of a Hornresp record (60.70 refuses one with a line missing)", () => {
+  const keys = (text: string) => text.split(/\r?\n/).filter((l) => / = /.test(l)).map((l) => l.split(" = ")[0]);
+  const cases = [
+    [newDesign("sealed", designs), "B1-sealed.txt"],
+    [newDesign("vented", designs), "B2-ported.txt"],
+    [newDesign("pr", designs), "B3-passive-radiator.txt"],
+    [{ ...newDesign("ib", designs), rear: "open" }, "N16-ib-sub.txt"],
+    [{ ...newDesign("ib", designs), rear: "space", vb_l: 800 }, "B1-sealed.txt"],
+  ] as const;
+  for (const [d, rec] of cases) {
+    const out = toHornrespBox(d as Parameters<typeof toHornrespBox>[0], DSA215, { vb_l: 20, distance_cm: 0, eg: 2.83, drivers: 1 });
+    assert.ok(typeof out !== "string");
+    assert.deepEqual(keys(out.text), keys(record(rec)), `${d.kind}: the record's lines, in order`);
+  }
+});
+
 test("PR box export: the B3 validation record's passive radiator", () => {
   // B3: DSA270-PR as Hornresp has it (Mmp 88.16 g without the air in front, Cmp 0.596 mm/N, Rmp 2.31).
   const air = (8 * 1.205 * Math.pow(0.0353 / Math.PI, 1.5)) / 3;
@@ -99,4 +115,31 @@ test("Save & Export: Hornresp records for every box but bandpass", () => {
   assert.ok(typeof out !== "string" && "files" in out, String(out));
   assert.equal(out.files.length, ids.length);
   for (const file of out.files) assert.match(String(file.data), /^ID = 55\.30/);
+});
+
+test("Hornresp export: Eg is the amplifier's voltage across the whole driver bank, as the app drives it", async () => {
+  // Hornresp applies Eg across the wired drivers (2S gets Eg/2 per driver, 6.02 dB below 2P: B11), as
+  // the app does with a set voltage. In watts, the app turns P into volts with the bank's Re, so the
+  // record must too: one driver's Re was 2× too high for four in parallel and ½ for four in series.
+  const { runDesigns, simOptionsOf, solveDriver } = await import("../src/sim.ts");
+  const f = exportFormat("hornresp")!;
+  const ib = { ...newDesign("ib", designs), id: "d1", name: "Open" } as (typeof designs)[number];
+  const base = { ...DEFAULT_STATE, ts: { fs: 22, qms: 2.53, qes: 0.67, vas_l: 248.2, re: 4.2, sd_cm2: 1184 }, designs: [ib], power: 2000, drivers: 4 };
+  for (const [wiring, dvc, bankRe] of [
+    ["series", { on: true, entered: "series", wired: "parallel" }, 4 * 1.05],
+    ["parallel", { on: false, entered: "parallel", wired: "parallel" }, 4.2 / 4],
+    ["series", { on: false, entered: "parallel", wired: "parallel" }, 4 * 4.2],
+  ] as const) {
+    const s = { ...base, wiring, dvc } as typeof DEFAULT_STATE;
+    const out = f.run({ state: s, designs: [], shareUrl: "" }, ["d1"], {});
+    assert.ok(typeof out !== "string" && "files" in out, String(out));
+    const eg = Number(values(String(out.files[0]!.data)).Eg);
+    assert.ok(close(eg, Math.sqrt(2000 * bankRe), 0.001), `${wiring}: Eg ${eg} vs ${Math.sqrt(2000 * bankRe)}`);
+    // The same design driven at that voltage gives the app's own curves.
+    const watts = runDesigns(s, solveDriver(s))[0]!.result;
+    const volts = runDesigns({ ...s, drive: "volts", volts: eg }, solveDriver(s))[0]!.result;
+    assert.equal(simOptionsOf({ ...s, drive: "volts", volts: eg }).convention, "volts");
+    const i = watts.freq.findIndex((q) => q >= 30);
+    assert.ok(Math.abs(watts.spl[i]! - volts.spl[i]!) < 0.01, `${wiring}: ${watts.spl[i]} vs ${volts.spl[i]} dB`);
+  }
 });

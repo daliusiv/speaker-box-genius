@@ -20,7 +20,7 @@
  * 15–200 Hz, and where), ref (passband level), rise and risef (the response's peak above its passband,
  * 10–500 Hz, and where), xin (Xmax minus peak excursion), xmaxW (the power at which the cone first reaches Xmax, to 10 W), w@F (the
  * watts the box takes at F before its first limit), gd@F (group delay, ms), gdc@F (the same in cycles),
- * gdp and gdpf (peak group delay 15–200 Hz and where), prx (peak PR travel), x20 and prx20 (the same from 20 Hz up), fs (the driver's Fs), fsfb (Fs × Fb), zpp (a tuned box's two impedance peak
+ * gdp and gdpf (peak group delay 15–200 Hz and where), prx (peak PR travel), x20 and prx20 (the same from 20 Hz up), fs, qts, qes and vas (the driver's, the comparison driver's on its run), fsfb (Fs × Fb), zpp (a tuned box's two impedance peak
  * frequencies multiplied); vb (net volume, L); for lines linelen (cm), vol (L), portd (MLTL port, cm), and ripple and f3line
  * (as Compare types scores a line: no filter, peak-to-peak from 1.5 × F3 to 400 Hz); xr (peak excursion over Xmax), vset (the drive setting in
  * volts), vout@F (the amplifier's volts at F at that setting, after filters and EQ), pw@F (the real
@@ -42,7 +42,7 @@ import { combineRuns, parseRunSpec } from "../packages/web/src/guideRuns.ts";
 import { figure } from "./figures.ts";
 import { KIND_COLORS, KIND_COLOR_NAMES } from "../packages/web/src/palette.ts";
 import { valueAt } from "../packages/web/src/chartProps.ts";
-import type { AppState } from "../packages/web/src/state.ts";
+import { compareView, type AppState } from "../packages/web/src/state.ts";
 
 /** What sets the max SPL, as the guides word it. */
 const LIMIT_WORDS: Record<string, string> = { xmax: "Xmax", "pr-xmax": "PR Xmax", port: "port speed", thermal: "power", amp: "amp", air: "air distortion" };
@@ -85,6 +85,9 @@ function metric(r: { state: AppState; designs: Design[] }, d: Design, name: stri
     if (arg === undefined || !Number.isFinite(arg)) throw new Error(`"${name}" needs a frequency: ${name}@30`);
     return arg;
   };
+  // The driver in this box (the comparison driver for its dashed run), as solved.
+  const driver = () => solveDriver(d.compare ? compareView(r.state)! : r.state).values;
+  const driverFs = () => driver().fs ?? NaN;
   switch (name) {
     case "f3":
       return [summary.f3 ?? NaN, hz(summary.f3 ?? 0)];
@@ -194,7 +197,7 @@ function metric(r: { state: AppState; designs: Design[] }, d: Design, name: stri
       return name === "ripple" ? [sc.ripple, 1] : [sc.f3, hz(sc.f3)];
     }
     case "fsfb":
-      return [(r.state.ts.fs ?? NaN) * (summary.fb ?? NaN), 0];
+      return [driverFs() * (summary.fb ?? NaN), 0];
     case "zpp": {
       // Small's check: the two impedance peaks' frequencies multiplied (≈ Fs × Fb).
       const fb = summary.fb;
@@ -202,7 +205,13 @@ function metric(r: { state: AppState; designs: Design[] }, d: Design, name: stri
       return [peak(freq, d.result.impedanceOhm, 10, fb)[1] * peak(freq, d.result.impedanceOhm, fb, 200)[1], 0];
     }
     case "fs":
-      return [r.state.ts.fs ?? NaN, 1];
+      return [driverFs(), 1];
+    case "qts":
+      return [driver().qts ?? NaN, 2];
+    case "qes":
+      return [driver().qes ?? NaN, 2];
+    case "vas":
+      return [driver().vas_l ?? NaN, 1];
     case "vset":
       return [summary.volts, 1];
     case "vout": {

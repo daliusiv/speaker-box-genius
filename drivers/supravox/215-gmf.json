@@ -1,0 +1,34 @@
+{
+  "brand": "Supravox",
+  "model": "215 GMF",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 54,
+    "qms": 8.57,
+    "qes": 0.38,
+    "vas_l": 60,
+    "re": 8,
+    "sd_cm2": 253,
+    "qts": 0.36,
+    "le_mh": 0.73,
+    "bl": 9.7,
+    "mms_g": 13,
+    "xmax_mm": 3.7,
+    "pe_w": 40
+  },
+  "physical": {
+    "cutout_mm": 208,
+    "depth_mm": 115
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://supravox.fr/products/215-gmf-haut-parleur-grave-medium-40w-96db-8-ohms",
+      "retrieved": "2026-11-17",
+      "note": "Values from the technical specifications on Supravox's product pages (supravox.fr), used with Supravox's permission (17 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Supravox's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

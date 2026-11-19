@@ -6,6 +6,7 @@
  * (calculated) }, SI units.
  */
 import { solveTs, type TsValues } from "./tsSolver.ts";
+import { pushAssumed, type Assumed } from "./assumed.ts";
 
 /** A driver read from OpenISD: the T/S values entered there, and the rest. */
 export interface OpenisdDriver {
@@ -74,6 +75,8 @@ export interface OpenisdProject {
   /** The drive: watts or volts, whichever was entered. */
   drive?: { watts: number } | { volts: number };
   filters: OpenisdFilter[];
+  /** Box values the file didn't have, filled with OpenISD's defaults (listed for the user). */
+  assumed: Assumed[];
   /** Filters that can't be brought across (low-pass, all-pass, other families…). */
   unsupportedFilters: number;
 }
@@ -142,9 +145,21 @@ export function openisdDriver(device: unknown): OpenisdDriver {
   };
 }
 
-function losses(x: unknown): OpenisdLosses {
+/** A value the file should have, or `fallback` listed as assumed. */
+function or(v: number | undefined, fallback: number, assumed: Assumed[], field: string, note = "OpenISD's default"): number {
+  if (v !== undefined) return v;
+  pushAssumed(assumed, { field, value: String(fallback), note });
+  return fallback;
+}
+
+/** A chamber's losses; Qp is listed only where the chamber has a port. */
+function losses(x: unknown, assumed: Assumed[], ported: boolean, where = ""): OpenisdLosses {
   const l = obj(obj(x).losses);
-  return { ql: num(l.Ql) ?? 10, qa: num(l.Qa) ?? 100, qp: num(l.Qp) ?? 100 };
+  return {
+    ql: or(num(l.Ql), 10, assumed, `Leakage Ql${where}`),
+    qa: or(num(l.Qa), 100, assumed, `Absorption Qa${where}`),
+    qp: ported ? or(num(l.Qp), 100, assumed, `Port loss Qp${where}`) : (num(l.Qp) ?? 100),
+  };
 }
 
 function port(x: unknown): OpenisdPort | undefined {
@@ -167,18 +182,18 @@ function port(x: unknown): OpenisdPort | undefined {
   };
 }
 
-function boxOf(b: J): OpenisdBox | null {
+function boxOf(b: J, assumed: Assumed[]): OpenisdBox | null {
   const type = String(val(b.boxType) ?? "");
   const vol = (x: unknown) => (num(obj(x).volume_m3) ?? 0) * 1000;
   if (type === "sealed") {
     const s = obj(b.sealed);
-    return vol(s) > 0 ? { type: "sealed", vb_l: vol(s), losses: losses(s) } : null;
+    return vol(s) > 0 ? { type: "sealed", vb_l: vol(s), losses: losses(s, assumed, false) } : null;
   }
   if (type === "vented") {
     const v = obj(b.vented);
     const p = port(v.vent);
     if (!(vol(v.chamber) > 0) || !p) return null;
-    return { type: "vented", vb_l: vol(v.chamber), fb: num(obj(v.chamber).tuning_goal_hz) ?? num(v.tuning_goal_hz), port: p, losses: losses(v.chamber) };
+    return { type: "vented", vb_l: vol(v.chamber), fb: num(obj(v.chamber).tuning_goal_hz) ?? num(v.tuning_goal_hz), port: p, losses: losses(v.chamber, assumed, true) };
   }
   if (type === "passiveRadiator" || type === "box-passive-radiator") {
     const p = obj(b.passiveRadiator);
@@ -191,6 +206,7 @@ function boxOf(b: J): OpenisdBox | null {
     // Mms from Fs and Vas (as OpenISD and WinISD keep a PR) when it isn't stored.
     const mms = num(s.Mms_kg) ?? (fs ? 1 / ((2 * Math.PI * fs) ** 2 * (vas / (1.204 * 343.2 ** 2 * sd * sd))) : undefined);
     if (!mms) return null;
+    if (!(num(s.Xmax_m)! > 0)) pushAssumed(assumed, { field: "PR Xmax", value: "not set", note: "no PR redline until you enter it" });
     return {
       type: "passive-radiator",
       vb_l: vol(p),
@@ -202,10 +218,10 @@ function boxOf(b: J): OpenisdBox | null {
         mms_g: mms * 1000,
         sd_cm2: sd * 1e4,
         vas_l: vas * 1000,
-        qms: num(s.Qms) ?? 10,
+        qms: or(num(s.Qms), 10, assumed, "PR Qmp"),
         xmax_mm: (num(s.Xmax_m) ?? 0) * 1000,
       },
-      losses: losses(p),
+      losses: losses(p, assumed, false),
     };
   }
   if (type === "bandpass4" || type === "bandpass6" || type === "abc") {
@@ -218,9 +234,9 @@ function boxOf(b: J): OpenisdBox | null {
     return {
       type: "bandpass",
       order: type === "bandpass4" ? "4" : type === "bandpass6" ? "6p" : "6s",
-      front: { vb_l: vol(front), fb: num(front.tuning_goal_hz), port: fp, losses: losses(front) },
-      rear: { vb_l: vol(rear), fb: num(rear.tuning_goal_hz), ...(rp ? { port: rp } : {}), losses: losses(rear) },
-      qicl: num(bp.Qiclfr) ?? 100,
+      front: { vb_l: vol(front), fb: num(front.tuning_goal_hz), port: fp, losses: losses(front, assumed, true, " (front)") },
+      rear: { vb_l: vol(rear), fb: num(rear.tuning_goal_hz), ...(rp ? { port: rp } : {}), losses: losses(rear, assumed, rp !== undefined, " (rear)") },
+      qicl: or(num(bp.Qiclfr), 100, assumed, "Leak between chambers Qicl"),
     };
   }
   return null;
@@ -262,16 +278,19 @@ export function parseOwpr(text: string): OpenisdProject {
   const v = num(sig.voltage_V);
   const drive = entered(sig.voltage_V) && v ? { volts: v } : w ? { watts: w } : v ? { volts: v } : undefined;
   const meta = obj(s.meta);
+  const assumed: Assumed[] = [];
+  const box = boxOf(obj(s.box), assumed);
   return {
     name: str(meta.name) || str(root.label) || "OpenISD project",
     driver: openisdDriver(de.device),
     drivers: Math.max(1, Math.round(num(de.nDrivers) ?? 1)),
     wiring: de.wiring === "series" ? "series" : "parallel",
     rs_ohm: num(de.Rs_ohm) ?? 0,
-    box: boxOf(obj(s.box)),
+    box,
     ...(T ? { air: { temp_C: T - 273.15, humidity_pct: num(env.humidity_pct) ?? 0, pressure_hPa: (num(env.pressure_Pa) ?? 101325) / 100 } } : {}),
     ...(drive ? { drive } : {}),
     ...filtersOf(obj(s.filters).filters),
+    assumed,
   };
 }
 

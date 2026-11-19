@@ -44,6 +44,15 @@ Speaker Box Genius without that manufacturer's permission:
                        docs/data-permissions.md)
   drivers/beyma/       Beyma (permission 6 Nov 2026; see
                        docs/data-permissions.md)
+  drivers/memphis-audio/  Memphis Audio (permission 16 Nov 2026; see
+                       docs/data-permissions.md)
+  drivers/18-sound/    18 Sound (permission 6 Nov 2026; see
+                       docs/data-permissions.md): the entries whose
+                       source note says "Not covered by CC BY-NC-SA".
+                       The folder's other entries are from driver-base
+                       (CC BY 4.0).
+  drivers/supravox/    Supravox (permission 17 Nov 2026; see
+                       docs/data-permissions.md)
 
 Each such brand's _brand.json has a "licence" field, and each entry's
 source note says "Not covered by CC BY-NC-SA". Leave these entries out

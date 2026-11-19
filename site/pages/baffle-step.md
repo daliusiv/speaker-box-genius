@@ -17,7 +17,7 @@ You simulate a bookshelf woofer, the bass looks flat down to 45 Hz, you build it
 
 - **What it is.** At high frequencies the front panel (the baffle) is big compared with the wavelength, and the woofer radiates forward into half the space around it. At low frequencies the sound wraps round the cabinet into all the space around it, so the same output is spread over twice the area: **6 dB less on axis** [1][2].
 - **Simulators leave it out.** WinISD, like most box simulators, shows the speaker in an infinite baffle (half space) [3], which is right for a subwoofer on the floor or a speaker built into a wall, and up to 6 dB optimistic for a speaker on a stand. This app adds it with **Signal → Baffle step**.
-- **The step is lower than the usual rule.** The popular f3 = 115 / baffle width (m) puts a 20 cm baffle's step at 575 Hz. For a 20 × 32 cm bookshelf baffle, the app puts it at **272 Hz**, close to what the diffraction simulator The Edge gives (265 Hz) [4]. The rule comes from a sphere; a flat rectangular baffle steps about an octave lower, and a tall one lower still.
+- **The step is lower than the usual rule.** The popular f3 = 115 / baffle width (m) puts a 20 cm baffle's step at 575 Hz. For a 20 × 32 cm bookshelf baffle, the app puts it at **271 Hz**, close to what the diffraction simulator The Edge gives (265 Hz) [4]. The rule comes from a sphere; a flat rectangular baffle steps about an octave lower, and a tall one lower still.
 - **How much to compensate depends on the room.** The full 6 dB is right out in free space. A wall or the floor close behind gives some back, so **3–4 dB is typical** for a bookshelf speaker in a room [2][5][6].
 - **It costs something either way.**
   - **Active EQ** boosts the bass: 4 times the power and twice the excursion for 6 dB.
@@ -33,8 +33,8 @@ An **SB Acoustics SB17NRX2C35-8**, a popular 6.5″ two-way woofer [7], in a Kee
 | SPL at 2.83 V | 40 Hz | 100 Hz | 200 Hz | 300 Hz | 500 Hz | 1 kHz |
 |---|---|---|---|---|---|---|
 | Infinite baffle (what WinISD shows) | 87.4 | 87.8 | 87.9 | 87.9 | 87.9 | 87.9 |
-| Free-standing | 81.4 | 82.4 | 83.8 | 85.3 | 87.6 | 89.5 |
-| Difference | −5.9 | −5.4 | −4.1 | −2.6 | −0.3 | +1.6 |
+| Free-standing | 81.5 | 82.4 | 83.9 | 85.3 | 87.6 | 89.5 |
+| Difference | −5.8 | −5.4 | −4.0 | −2.6 | −0.3 | +1.6 |
 
 The simulation said flat at 88 dB; free-standing, the bass is 6 dB down and the upper midrange 1–2 dB up. That 8 dB tilt is the thin, forward sound. The box's F3 is the same 31 Hz either way: the step is a tilt across the whole bass and midbass, not a loss of extension.
 
@@ -46,16 +46,16 @@ The step happens over about three octaves, centred where the baffle's size is co
 |---|---|
 | The usual rule, f3 = 115 / width (m) [1][2] | 575 Hz |
 | The Edge's author's rule for a baffle about twice as tall as wide, 53 / width (m) [4] | 265 Hz |
-| This app (edge diffraction over the whole baffle) | **272 Hz** |
+| This app (edge diffraction over the whole baffle) | **271 Hz** |
 
 The 115/W rule is John Murphy's, fitted to Olson's measurements of a speaker in a **sphere** [1]. Svante Granqvist, who wrote the diffraction simulator The Edge, found it puts the step about an octave too high for rectangular baffles. His rules of thumb are 69/W for a square baffle, 53/W for one twice as tall as wide, and 33/W for a tall, narrow one [4]. The app agrees with them:
 
 | Baffle | App's step | 115/W rule | The Edge's rule [4] |
 |---|---|---|---|
 | 20 × 20 cm, driver centred | 340 Hz | 575 Hz | 345 Hz |
-| 30 × 30 cm, driver centred | 218 Hz | 383 Hz | 230 Hz |
-| 20 × 32 cm (the example) | 272 Hz | 575 Hz | 265 Hz |
-| 20 × 100 cm tower | 183 Hz | 575 Hz | 165 Hz |
+| 30 × 30 cm, driver centred | 217 Hz | 383 Hz | 230 Hz |
+| 20 × 32 cm (the example) | 271 Hz | 575 Hz | 265 Hz |
+| 20 × 100 cm tower | 186 Hz | 575 Hz | 165 Hz |
 
 So:
 - **Width matters most, but height counts.** A tall tower with the same width steps about half an octave to an octave lower than a square baffle. The rule's "width" alone can't see that.
@@ -90,7 +90,7 @@ John Murphy's advice is to compensate the diffraction loss fully, and treat the 
 
 A **low shelf** boosts everything below the step. In the app, **Signal → Baffle step** has a **Compensate** menu that adds one at the step frequency: **+3 dB (near a wall)** or **+6 dB (free-standing)**.
 
-- **+3 dB** lifts the bass to 84.4 dB at 40 Hz, leaving a 3 dB tilt for the room to fill.
+- **+3 dB** lifts the bass to 84.5 dB at 40 Hz, leaving a 3 dB tilt for the room to fill.
 - **The cost is power and excursion.** At 2.83 V, the cone moves 1.54 mm at 40 Hz with no shelf, 2.16 mm with +3 dB and 3.03 mm with +6 dB. For the same bass level as the infinite-baffle simulation you need **4 times the amplifier power** below the step. It doesn't raise the maximum output: the cone and the voice coil hit their limits at the same bass level as before, just at a lower volume setting.
 
 ### Passive: a coil and a resistor
@@ -105,9 +105,9 @@ With it, the bookshelf measures **81–84 dB from 40 Hz to 1 kHz**, flat within 
 
 | | Bass level | Upper midrange | Sensitivity | Amplifier power for the same bass |
 |---|---|---|---|---|
-| No compensation | 81.4 dB | 89.5 dB | high, but thin | the same |
-| Active +6 dB shelf | 87.3 dB | 90 dB | as designed | 4 times |
-| Passive 6 dB network | 81.1 dB | 84 dB | 5–6 dB lower | the same (you turn it up) |
+| No compensation | 81.5 dB | 89.5 dB | high, but thin | the same |
+| Active +6 dB shelf | 87.4 dB | 90 dB | as designed | 4 times |
+| Passive 6 dB network | 81.2 dB | 84 dB | 5–6 dB lower | the same (you turn it up) |
 
 Either way you pay about the same, in amplifier power: the passive speaker needs the same 4 times the power for the same loudness, it just takes it across the whole range.
 
@@ -123,12 +123,23 @@ The baffle step also lowers the **maximum** bass. On an infinite baffle the app'
 4. **Compensate:** **Compensate → +3 dB (near a wall)** or **+6 dB (free-standing)** adds a low shelf in **EQ**; or build the passive network in **Passive parts**.
 5. **Measure:** a near-field measurement doesn't include the baffle step, so compare it with the simulation *without* it; a far-field or in-room one, with it (see [simulation vs measurement](/guides/simulation-vs-measurement/)).
 
+## Use it on a driver's curve
+
+For crossover work you want the woofer's (or tweeter's) whole response on your baffle, not just the bass. The **Driver curve** window does that, and it opens three ways: **Save & Export → Crossover tools → Driver on baffle** (pick the file and the window opens with it), opening or dropping an .frd and choosing **Put the driver on my baffle**, or **Signal → Baffle step → Driver curve**. It works with the baffle step on or off: the charts only change when Baffle step is set to Free-standing.
+
+1. **Load the driver's curve**: an .frd or text file of frequency, dB and (if you have it) phase, from the datasheet's half-space or infinite-baffle curve or your own ground-plane measurement. A curve measured on a test baffle already has some of that baffle's diffraction in it; it isn't taken out.
+2. **Check the baffle and the cone**: the baffle's size (from the box, or typed in) and the driver's place on it are Baffle step's own fields, so changing them here changes them there too. The cone diameter starts from the driver's Sd; type another if the curve is a different driver's.
+3. **Export FRD** saves the curve on your baffle, with the phase moved by the baffle's, ready for VituixCAD, XSim or another crossover tool. With no phase in the file, the export carries only the baffle's phase: let your crossover tool make the driver's minimum phase.
+4. **⋯ → Export baffle only (.frd)** saves the baffle's effect by itself, to add to any driver curve in a tool that sums curves.
+
+The model treats the cone as a few points and leaves out how a driver beams at high frequencies, so above the frequency the window names (where the cone is about two-thirds of a wavelength across) the result is approximate; the ripple there is small. Rounded edges aren't modelled either.
+
 ## The forum claims, checked
 
 | Claim | Verdict |
 |---|---|
 | "Free-standing speakers lose 6 dB of bass" | Up to 6 dB, in free space. In a room, walls give some back; 3–4 dB of compensation is typical. |
-| "The step is at 115 / baffle width" | That rule is for a sphere. For a rectangular baffle it's about an octave lower; 272 Hz instead of 575 Hz for a 20 × 32 cm bookshelf. |
+| "The step is at 115 / baffle width" | That rule is for a sphere. For a rectangular baffle it's about an octave lower; 271 Hz instead of 575 Hz for a 20 × 32 cm bookshelf. |
 | "BSC adds bass" | It evens the balance. Active: more power and excursion in the bass. Passive: less sensitivity everywhere else. |
 | "Compensation gives back the lost output" | No: the maximum bass free-standing is up to 6 dB below the infinite-baffle simulation either way. |
 | "Round the edges to fix it" | That smooths the ripple above the step, not the step. |

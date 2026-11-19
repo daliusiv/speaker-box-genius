@@ -10,22 +10,40 @@ import { withDriver } from "../assistant.ts";
 import { loadDriver, loadIndex, type DbIndex, type LoadedDriver } from "../library.ts";
 import { portSpeedFor } from "../ports.ts";
 import { portCalc, type PortCalcInput, type PortCalcResult, type PortEnds } from "./portMath.ts";
+import { $, applyValues, esc, pageQuery, val, wireCopyLink } from "./common.ts";
+import { wireCombos } from "./combo.ts";
+import type { QuerySpec } from "./query.ts";
 
 const L_PER_FT3 = 28.3168;
 const CM_PER_IN = 2.54;
 const AIR = airOf(DEFAULT_STATE);
 
-const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
-const val = (id: string) => Number(($<HTMLInputElement>(id)?.value ?? "").replace(",", "."));
 const imperial = () => $<HTMLInputElement>("pc-imperial")?.checked === true;
 
 /** Lengths in the user's unit: "21.4 cm (8.4″)" or "8.4″ (21.4 cm)". */
 const len = (cm: number) => (imperial() ? `${(cm / CM_PER_IN).toFixed(2)}″ (${cm.toFixed(1)} cm)` : `${cm.toFixed(1)} cm (${(cm / CM_PER_IN).toFixed(2)}″)`);
 const vol = (l: number) => (imperial() ? `${(l / L_PER_FT3).toFixed(2)} ft³ (${l.toFixed(1)} L)` : `${l.toFixed(1)} L (${(l / L_PER_FT3).toFixed(2)} ft³)`);
 const area = (cm2: number) => (imperial() ? `${(cm2 / CM_PER_IN ** 2).toFixed(1)} in² (${cm2.toFixed(0)} cm²)` : `${cm2.toFixed(0)} cm² (${(cm2 / CM_PER_IN ** 2).toFixed(1)} in²)`);
-const ENTITY: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
-/** Escapes text for HTML content and quoted attribute values, in one pass. */
-const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ENTITY[c]!);
+
+/** The inputs kept in the page address (see query.ts); `d` is the picked driver's database id. */
+export const PORT_QUERY: QuerySpec = {
+  u: { id: "pc-imperial", kind: "check", on: "in" },
+  vb: { id: "pc-vb", kind: "num" },
+  fb: { id: "pc-fb", kind: "num" },
+  s: { id: "pc-shape", kind: "choice", choices: ["round", "slot"] },
+  n: { id: "pc-n", kind: "int" },
+  dia: { id: "pc-d", kind: "num" },
+  fl: { id: "pc-flare", kind: "num" },
+  w: { id: "pc-w", kind: "num" },
+  h: { id: "pc-h", kind: "num" },
+  e: { id: "pc-ends", kind: "choice", choices: ["flanged", "both", "free", "wall"] },
+  wt: { id: "pc-wall", kind: "num" },
+  li: { id: "pc-inside", kind: "num" },
+  sub: { id: "pc-sub", kind: "check" },
+  d: { id: "pc-driver", kind: "text" },
+  p: { id: "pc-power", kind: "num" },
+};
+const query = pageQuery(PORT_QUERY, { d: "" });
 
 function readInput(): PortCalcInput {
   const toCm = imperial() ? CM_PER_IN : 1;
@@ -178,6 +196,7 @@ async function update() {
     out.innerHTML = `<p class="calc-note">Enter a volume, a tuning and a port size. If they're all there, the port is too small for this tuning: it would need a negative length. Use a smaller port or fewer ports.</p>`;
     speed.innerHTML = "";
     open.hidden = true;
+    query.save({ d: driver?.id ?? "" });
     return;
   }
   out.innerHTML = resultHtml(i, r);
@@ -185,6 +204,7 @@ async function update() {
   open.hidden = false;
   const s = stateFor(i, r);
   open.href = `/#${await encodeStateShort(s)}`;
+  query.save({ d: driver?.id ?? "" });
 }
 
 let timer = 0;
@@ -224,10 +244,18 @@ async function pickDriver(text: string) {
     schedule();
     return;
   }
+  await setDriver(row.id, true);
+}
+
+/** Loads a database driver; `ratedPower` puts its rated power in the power field. */
+async function setDriver(id: string, ratedPower: boolean) {
+  const status = $("pc-driver-status");
   try {
-    driver = await loadDriver(row.id);
+    driver = await loadDriver(id);
+    const pick = $<HTMLInputElement>("pc-driver");
+    if (pick) pick.value = driver.name;
     const power = $<HTMLInputElement>("pc-power");
-    if (power && driver.pe_w) power.value = String(Math.round(driver.pe_w));
+    if (ratedPower && power && driver.pe_w) power.value = String(Math.round(driver.pe_w));
     if (status) status.textContent = driver.xmax_mm ? `Xmax ${driver.xmax_mm} mm${driver.pe_w ? `, rated ${driver.pe_w} W` : ""}.` : "";
   } catch {
     driver = null;
@@ -236,9 +264,18 @@ async function pickDriver(text: string) {
   schedule();
 }
 
-export function start() {
+export async function start() {
   const form = $("pc-form");
   if (!form) return;
+  // The link's values: units first (they convert the defaults), then the fields, then the driver.
+  const { u, d, p, ...fields } = query.start();
+  if (u) {
+    const imp = $<HTMLInputElement>("pc-imperial");
+    if (imp) imp.checked = true;
+    convertUnits(true);
+  }
+  applyValues(PORT_QUERY, fields);
+  if (p !== undefined) applyValues(PORT_QUERY, { p });
   form.addEventListener("input", (e) => {
     const t = e.target as HTMLElement;
     if (t.id === "pc-driver") return;
@@ -272,9 +309,13 @@ export function start() {
     },
     { once: true },
   );
+  wireCopyLink("pc-copy");
+  wireCombos();
   form.hidden = false;
   document.querySelectorAll<HTMLElement>(".calc-nojs").forEach((el) => (el.hidden = true));
+  if (d) await setDriver(d, p === undefined);
   void update();
 }
 
-start();
+// Not in tests, which import the page's link spec without a page.
+if (typeof document !== "undefined") void start();

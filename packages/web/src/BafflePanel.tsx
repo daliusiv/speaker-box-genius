@@ -3,6 +3,7 @@ import { Fixed, Num, Select } from "./components.tsx";
 import { useUnits } from "./units.ts";
 import { Chip, Menu, RadioCards, Section, type MenuItem, helpEntries } from "./ui/index.ts";
 import { baffleOf } from "./sim.ts";
+import { BaffleFrdRow, DRIVER_CURVE_HELP } from "./BaffleFrd.tsx";
 import { newId, type AppState, type EqItem } from "./state.ts";
 
 /** What each field of this row does: the fields' help and the row's ⓘ sheet (fields that only show after a choice too). */
@@ -11,6 +12,7 @@ const HELP: Record<string, string> = {
   "Width": "Width of the front panel. Narrower baffles move the baffle step higher in frequency.",
   "Height": "Height of the front panel.",
   "Step at": "Where the step is half done (−3 dB). Shown on the SPL and maximum SPL charts (up to 1 kHz while this is on); the F3 in the summary stays the infinite-baffle one.",
+  "Driver curve": DRIVER_CURVE_HELP,
 };
 
 type BaffleState = AppState["baffle"];
@@ -19,7 +21,15 @@ type BaffleState = AppState["baffle"];
  * Baffle step: a free-standing speaker loses up to 6 dB of bass compared with the
  * half-space (infinite baffle) simulation, below a frequency set by the baffle size.
  */
-export function BaffleSection(props: { state: AppState; sd_cm2?: number; onChange: (b: BaffleState) => void; onAddEq: (item: EqItem) => void }) {
+export function BaffleSection(props: {
+  state: AppState;
+  sd_cm2?: number;
+  onChange: (b: BaffleState) => void;
+  onAddEq: (item: EqItem) => void;
+  /** The Driver curve window's loaded file name, and how to open the window (it lives in App). */
+  driverCurve: string | null;
+  onOpenDriverCurve: () => void;
+}) {
   const s = props.state;
   const b = s.baffle;
   const set = (patch: Partial<BaffleState>) => props.onChange({ ...b, ...patch });
@@ -60,11 +70,12 @@ export function BaffleSection(props: { state: AppState; sd_cm2?: number; onChang
         legend="Baffle"
         value={b.on ? "on" : "off"}
         options={[
-          { value: "off", title: "Infinite baffle", description: "Half space, like WinISD: the box sits in a wall", aside: <Chip>usual</Chip> },
+          { value: "off", title: "In a wall (half space)", description: "Like WinISD: the box sits in a wall, no baffle step", aside: <Chip>Default</Chip> },
           { value: "on", title: "Free-standing", description: "On a stand or the floor: shows the baffle step, up to −6 dB of bass" },
         ]}
         onChange={(x) => set({ on: x === "on" })}
       />
+      {!b.on && <BaffleFrdRow fileName={props.driverCurve} onOpen={props.onOpenDriverCurve} />}
       {b.on && (
         <>
           {isBox && (
@@ -98,6 +109,7 @@ export function BaffleSection(props: { state: AppState; sd_cm2?: number; onChang
             value={fStep ? fStep.toFixed(0) : "–"}
             help={HELP["Step at"]}
           />
+          <BaffleFrdRow fileName={props.driverCurve} onOpen={props.onOpenDriverCurve} />
           {outside && <p className="warn">The driver is off the baffle: check its position against the width and height.</p>}
           {fStep && (
             <>

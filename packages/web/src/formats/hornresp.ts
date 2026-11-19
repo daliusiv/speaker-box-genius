@@ -1,6 +1,6 @@
 import { toHornresp } from "../hornresp.ts";
 import { hornrespBoxKind, toHornrespBox } from "../hornrespBox.ts";
-import { builtVbOf, driverInputOf, simOptionsOf, solveDriver, ventDistanceOf } from "../sim.ts";
+import { ampVoltsOf, builtVbOf, driverInputOf, simOptionsOf, solveDriver, ventDistanceOf } from "../sim.ts";
 import { stuffFactor } from "../stuffing.ts";
 import { safeName, type ExportFormat, type OutFile } from "./types.ts";
 
@@ -18,8 +18,8 @@ export const hornrespFormat: ExportFormat = {
     if (solved.missing.length > 0) return "Enter enough driver parameters to simulate first.";
     const driver = driverInputOf(state, solved);
     const sim = simOptionsOf(state, true);
-    const power = sim.power ?? 1;
-    const eg = sim.convention === "volts" ? power : Math.sqrt(power * driver.re);
+    // Across the whole driver bank, as the app drives it (one driver's Re was wrong for several).
+    const eg = ampVoltsOf(driver, sim);
     const files: OutFile[] = [];
     const notes = new Set<string>();
     for (const d of state.designs.filter((x) => ids.includes(x.id))) {

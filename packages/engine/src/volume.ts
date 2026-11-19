@@ -34,9 +34,10 @@ export type Shape =
    * and at the bottom (long); one panel slopes between them. `slopeWall_mm` is the sloped
    * panel's thickness when it differs from the walls (a double baffle); absent = the wall.
    * Exact: the sloped panel takes its thickness ÷ sin θ across the horizontal (see wedge.ts).
-   * Whether the front or the back slopes doesn't change the volume.
+   * Whether the front or the back slopes doesn't change the volume. `lip_cm`: the outside
+   * height of an upright lip under the slope (absent or 0 = sloped all the way down).
    */
-  | { kind: "wedge"; width_cm: number; height_cm: number; topDepth_cm: number; bottomDepth_cm: number; slopeWall_mm?: number };
+  | { kind: "wedge"; width_cm: number; height_cm: number; topDepth_cm: number; bottomDepth_cm: number; slopeWall_mm?: number; lip_cm?: number };
 
 /** A wedge shape in the millimetres wedge.ts works in. */
 export const wedgeDimsOf = (shape: Extract<Shape, { kind: "wedge" }>, wall_mm: number) => ({
@@ -46,6 +47,7 @@ export const wedgeDimsOf = (shape: Extract<Shape, { kind: "wedge" }>, wall_mm: n
   bottomDepth: shape.bottomDepth_cm * 10,
   wall: wall_mm,
   ...(shape.slopeWall_mm !== undefined ? { slopeWall: shape.slopeWall_mm } : {}),
+  ...(shape.lip_cm ? { lip: shape.lip_cm * 10 } : {}),
 });
 
 const pos = (x: number) => Math.max(0, x);

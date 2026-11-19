@@ -1,0 +1,35 @@
+{
+  "brand": "Sica",
+  "model": "8 C 2 CP",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 78.5,
+    "qms": 4.55,
+    "qes": 0.32,
+    "vas_l": 14.7,
+    "re": 6.1,
+    "sd_cm2": 213.8,
+    "qts": 0.3,
+    "le_mh": 0.8,
+    "bl": 13.5,
+    "mms_g": 18.2,
+    "xmax_mm": 3.5,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 184,
+    "depth_mm": 90
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/8-c-2-cp/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial: the woofer's parameters (the tweeter's are left out)."
+}

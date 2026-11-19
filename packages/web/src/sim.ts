@@ -17,6 +17,7 @@ import {
   DEFAULT_END_CORRECTION,
   solveTs,
   type DriverInput,
+  type SimulationOptions,
   type EqStage,
   type EnclosureInput,
   type PortInput,
@@ -38,7 +39,7 @@ import { qaGain, stuffFactor, stuffable, stuffingEffect } from "./stuffing.ts";
 export { KIND_COLORS } from "./palette.ts";
 import { KIND_COLORS } from "./palette.ts";
 
-export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators", bandpass: "Bandpass", line: "Transmission line" } as const;
+export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators", bandpass: "Bandpass", line: "Transmission line", ib: "Infinite baffle" } as const;
 
 /** Line style of the comparison driver's curves. */
 export const COMPARE_DASH = "7 4";
@@ -52,6 +53,9 @@ export const compareShort = (name: string, brand: string) => {
   const out = model ?? rest;
   return out.length > 18 ? `${out.slice(0, 17)}…` : out || "comparison";
 };
+
+/** A driver name's closing parenthetical note, "(edited)" in "Dayton Audio RSS265HF-4 (edited)". */
+const nameNote = (name: string) => /\([^()]+\)$/.exec(name.trim())?.[0];
 
 export function colorOf(s: AppState, id: string): string {
   const i = s.designs.findIndex((d) => d.id === id);
@@ -105,6 +109,7 @@ export function shapeOf(v: AppState["volume"]): Shape {
         topDepth_cm: v.topDepth_cm,
         bottomDepth_cm: v.depth_cm,
         ...(v.slopeWall_mm !== null && v.slopeWall_mm > 0 ? { slopeWall_mm: v.slopeWall_mm } : {}),
+        ...(v.lip_cm > 0 ? { lip_cm: v.lip_cm } : {}),
       };
     case "frustum":
       return {
@@ -194,10 +199,13 @@ export function enclosureOptsOf(s: AppState): EnclosureOpts {
   };
 }
 
-/** Box losses for a design: Settings', with the Qa its stuffing sets. */
+/** Box losses for a design: Settings', with the box's own Ql (if any) and the Qa its stuffing sets. */
 export function lossesFor(s: AppState, d: DesignState): Settings["losses"] {
-  const qa = stuffable(d.kind) ? stuffingEffect(d.stuffing, d.kind).qa : null;
-  return qa === null ? s.settings.losses : { ...s.settings.losses, qa };
+  if (!stuffable(d.kind)) return s.settings.losses;
+  const qa = stuffingEffect(d.stuffing, d.kind).qa;
+  const ql = d.ql;
+  if (qa === null && ql === undefined) return s.settings.losses;
+  return { ...s.settings.losses, ...(ql !== undefined ? { ql } : {}), ...(qa !== null ? { qa } : {}) };
 }
 
 /** Hornresp's air: c = 344 m/s, ρ = 1.205 kg/m³. */
@@ -375,6 +383,9 @@ export function enclosureOf(d: DesignState, vb: number, losses: Settings["losses
       return lineInputOf(d, wall_mm);
     case "sealed":
       return { kind: "sealed", vb_l: vb, ql, qa };
+    case "ib":
+      // The rear space's leak is never heard (engine); an open rear has no box at all.
+      return d.rear === "open" ? { kind: "infinite-baffle" } : { kind: "infinite-baffle", rear_l: vb, ql, qa };
     case "vented":
       return { kind: "vented", vb_l: vb, port: portOf(d), portCount: d.count, ql, qa, qp, ...at };
     case "pr":
@@ -445,8 +456,9 @@ export function driverInputOf(s: AppState, solved: SolveResult): DriverInput {
           },
         }
       : {}),
-    xmax_mm: s.xmax_mm,
-    pe_w: s.pe_w,
+    // 0 = not known (an imported driver without them).
+    xmax_mm: s.xmax_mm > 0 ? s.xmax_mm : undefined,
+    pe_w: s.pe_w > 0 ? s.pe_w : undefined,
   };
 }
 
@@ -489,8 +501,12 @@ export function simOptionsOf(s: AppState, search = false) {
     coilTemp_C: s.settings.coilTemp_C > 20 ? s.settings.coilTemp_C : undefined,
     thermalLimit: s.settings.thermalLimit === "real" ? ("real" as const) : undefined,
     amp:
-      s.settings.ampVolts > 0 || s.settings.ampAmps > 0
-        ? { ...(s.settings.ampVolts > 0 ? { volts: s.settings.ampVolts } : {}), ...(s.settings.ampAmps > 0 ? { amps: s.settings.ampAmps } : {}) }
+      s.settings.ampVolts > 0 || s.settings.ampAmps > 0 || s.settings.ampWatts > 0
+        ? {
+            ...(s.settings.ampVolts > 0 ? { volts: s.settings.ampVolts } : {}),
+            ...(s.settings.ampAmps > 0 ? { amps: s.settings.ampAmps } : {}),
+            ...(s.settings.ampWatts > 0 ? { watts: s.settings.ampWatts } : {}),
+          }
         : null,
   };
 }
@@ -508,9 +524,15 @@ export function runDesigns(s: AppState, solved: SolveResult): Design[] {
   // With different counts or wiring, say so: "2 × RSS265HF-4", "2 × … in series".
   const counted = view.drivers !== s.drivers || view.wiring !== s.wiring;
   const tag = (x: AppState, name: string) => (counted && x.drivers > 1 ? `${x.drivers} × ${name}${x.wiring === "series" ? " in series" : ""}` : name);
-  const mine = tag(s, compareShort(s.driverName, s.driverBrand));
+  let mine = tag(s, compareShort(s.driverName, s.driverBrand));
   let theirs = tag(view, compareShort(view.driverName, view.driverBrand));
-  if (theirs === mine) theirs = `${theirs} (compare)`;
+  if (theirs === mine) {
+    // The same model twice (a sample against its datasheet, an edited copy): each name's own
+    // closing note ("(edited)", "(measured)", "(Fs +15 %)") tells them apart, else "(compare)".
+    const a = nameNote(s.driverName), b = nameNote(view.driverName);
+    if (a && a !== b) mine = `${mine} ${a}`;
+    theirs = `${theirs} ${b && b !== a ? b : "(compare)"}`;
+  }
   return [
     ...main.map((d) => ({ ...d, label: `${d.design.name} · ${mine}` })),
     ...cmp.map((d) => ({ ...d, label: `${d.design.name} · ${theirs}`, dash: COMPARE_DASH, compare: true })),
@@ -610,6 +632,7 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
         const db = baffleCache(result.freq, step);
         result.spl = result.spl.map((v, i) => v + db[i]!);
         result.maxSpl = result.maxSpl.map((v, i) => v + db[i]!);
+        result.ceilings = liftCeilings(result.ceilings, db);
         if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + db[i]!), mouth: result.parts.mouth.map((v, i) => v + db[i]!) };
         if (result.splSideBySide) result.splSideBySide = result.splSideBySide.map((v, i) => v + db[i]!);
       }
@@ -623,6 +646,7 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
         f3Room = (d.kind === "line" ? lowEdge(result.freq, rel) : minus3Points(result.freq, rel, d.kind === "bandpass"))[0] ?? null;
         result.spl = result.spl.map((v, i) => v + lift[i]!);
         result.maxSpl = result.maxSpl.map((v, i) => v + lift[i]!);
+        result.ceilings = liftCeilings(result.ceilings, lift);
         if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + lift[i]!), mouth: result.parts.mouth.map((v, i) => v + lift[i]!) };
         if (result.splSideBySide) result.splSideBySide = result.splSideBySide.map((v, i) => v + lift[i]!);
       }
@@ -643,10 +667,22 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
   return out;
 }
 
+/** Max SPL's two ceilings moved by the same dB as maxSpl (baffle step, room or cabin gain). */
+function liftCeilings(c: SimulationResult["ceilings"], db: ArrayLike<number>): SimulationResult["ceilings"] {
+  return { ...c, avgSpl: c.avgSpl.map((v, i) => v + db[i]!), peakSpl: c.peakSpl.map((v, i) => v + db[i]!) };
+}
+
 /** The front baffle for the baffle step, or null when it's off or the size is unusable. */
 export function baffleOf(s: AppState, sd_cm2?: number): Baffle | null {
+  return s.baffle.on ? baffleGeometry(s, sd_cm2) : null;
+}
+
+/**
+ * The front baffle from Baffle step's size and driver place, whether or not the step is on the
+ * charts (the Driver curve window uses it either way); null when the size is unusable.
+ */
+export function baffleGeometry(s: AppState, sd_cm2?: number): Baffle | null {
   const b = s.baffle;
-  if (!b.on) return null;
   const v = s.volume;
   const w = b.fromBox && v.shape === "box" ? v.width_cm : b.width_cm;
   const h = b.fromBox && v.shape === "box" ? v.height_cm : b.height_cm;
@@ -659,6 +695,15 @@ export function baffleOf(s: AppState, sd_cm2?: number): Baffle | null {
     sd_cm2,
     c: airOf(s).c,
   };
+}
+
+/** Is the driver centre off Baffle step's baffle (on or past an edge)? */
+export function driverOffBaffle(s: AppState): boolean {
+  const b = s.baffle;
+  const v = s.volume;
+  const w = b.fromBox && v.shape === "box" ? v.width_cm : b.width_cm;
+  const h = b.fromBox && v.shape === "box" ? v.height_cm : b.height_cm;
+  return b.x_cm <= 0 || b.x_cm >= w || b.y_cm <= 0 || b.y_cm >= h;
 }
 
 /** The baffle step (dB) at these frequencies, or null when it's off. */
@@ -701,6 +746,17 @@ export function prLimits(d: DesignState): { mm: number; mech: boolean }[] {
         ? [...(d.frontOpening === "pr" ? d.frontPrs : []), ...(d.order !== "4" && d.rearOpening === "pr" ? d.rearPrs : [])].map((g) => g.params)
         : [];
   return ps.map((p) => ({ mm: p.xmax_mm, mech: !!p.xmech }));
+}
+
+/** Each PR group's cone area (cm²), in the engine's group order (as prLimits). */
+export function prAreas(d: DesignState): number[] {
+  const ps =
+    d.kind === "pr"
+      ? [d.params, ...d.extra.map((g) => g.params)]
+      : d.kind === "bandpass"
+        ? [...(d.frontOpening === "pr" ? d.frontPrs : []), ...(d.order !== "4" && d.rearOpening === "pr" ? d.rearPrs : [])].map((g) => g.params)
+        : [];
+  return ps.map((p) => p.sd_cm2);
 }
 
 /** Every PR Xmax used by a design, for redlines. */
@@ -836,8 +892,9 @@ export function limitsOf(r: SimulationResult, xmax_mm: number, highPassOn: boole
   const prDeep = split ? prPeak(r, DEEP_FLOOR_HZ, split) : null;
   // How far past each limit (1 = at it): the worst sets the safe drive.
   const ratios = [
-    x !== null ? x / xmax_mm : 0,
-    xDeep !== null ? xDeep / (DEEP_ALLOW * xmax_mm) : 0,
+    // Xmax 0 = not known (an imported driver without it): no cone limit.
+    x !== null && xmax_mm > 0 ? x / xmax_mm : 0,
+    xDeep !== null && xmax_mm > 0 ? xDeep / (DEEP_ALLOW * xmax_mm) : 0,
     xpr?.xmax ? xpr.mm / xpr.xmax : 0,
     prDeep?.xmax ? prDeep.mm / (DEEP_ALLOW * prDeep.xmax) : 0,
     vp !== null ? vp / portLimit : 0,
@@ -849,12 +906,23 @@ export function limitsOf(r: SimulationResult, xmax_mm: number, highPassOn: boole
   if (ratios[4]! > 1) over.push("port");
   if (ratios[5]! > 1) over.push("air");
   // Deep bass: past Xmax (cone or PR) in the zone, but within the allowance.
-  const deepRatio = Math.max(xDeep !== null ? xDeep / xmax_mm : 0, prDeep?.xmax ? prDeep.mm / prDeep.xmax : 0);
+  const deepRatio = Math.max(xDeep !== null && xmax_mm > 0 ? xDeep / xmax_mm : 0, prDeep?.xmax ? prDeep.mm / prDeep.xmax : 0);
   const deep =
     split && deepRatio > 1 && !over.includes("xmax") && !over.includes("pr")
       ? { below_hz: split, x_mm: xDeep ?? 0, scale: 1 / deepRatio }
       : null;
   return { x, xpr: xpr && { ...xpr, over: ratios[2]! > 1 || ratios[3]! > 1 }, vp, hd2, over, deep, safeScale: Math.min(1, 1 / Math.max(...ratios, 1e-9)) };
+}
+
+/**
+ * The amplifier's voltage (RMS, across the whole driver bank) the simulation drives with: the
+ * set volts, or the watts turned into volts as simulate() does (the bank's Re after DVC, isobaric
+ * pairing and wiring). What a Hornresp record's Eg must be for its curves to match the app's.
+ */
+export function ampVoltsOf(driver: DriverInput, o: Pick<SimulationOptions, "power" | "convention" | "isobaric" | "drivers" | "wiring" | "rg" | "coilTemp_C" | "driveModel" | "passive">): number {
+  const power = o.power ?? 1;
+  if (o.convention === "volts") return power;
+  return Math.sqrt(power) * voltsPerRootWatt(driver, o);
 }
 
 /**
@@ -944,6 +1012,7 @@ export function dimensionsFor(
     diameter_cm: base.diameter_cm * k,
     topWidth_cm: base.topWidth_cm * k,
     topDepth_cm: base.topDepth_cm * k,
+    lip_cm: base.lip_cm * k,
   });
   const vol = (k: number) => volumeFor({ ...s, volume: scaled(k) }, d).net_l;
   if (!(target_l > 0)) return null;
@@ -968,6 +1037,7 @@ export function dimensionsFor(
     diameter_cm: r(out.diameter_cm),
     topWidth_cm: r(out.topWidth_cm),
     topDepth_cm: r(out.topDepth_cm),
+    lip_cm: r(out.lip_cm),
   };
 }
 
@@ -983,6 +1053,7 @@ export function wedgeDimsOf(v: AppState["volume"]): WedgeDims {
     bottomDepth: v.depth_cm * 10,
     wall: v.wall_mm,
     ...(v.slopeWall_mm !== null && v.slopeWall_mm > 0 ? { slopeWall: v.slopeWall_mm } : {}),
+    ...(v.lip_cm > 0 ? { lip: v.lip_cm * 10 } : {}),
   };
 }
 
@@ -993,6 +1064,7 @@ export const wedgeToVolume = (v: AppState["volume"], d: WedgeDims): AppState["vo
   height_cm: d.height / 10,
   topDepth_cm: d.topDepth / 10,
   depth_cm: d.bottomDepth / 10,
+  lip_cm: (d.lip ?? 0) / 10,
 });
 
 /**
@@ -1012,7 +1084,7 @@ export function solveWedgeFor(s: AppState, d: DesignState | undefined, field: We
   const gross = grossForNet(s, d, net_l);
   if (gross === null) return null;
   const r = solveWedge(wedgeDimsOf(s.volume), field, gross);
-  const round = (x: WedgeDims): WedgeDims => ({ ...x, [field]: Math.round(x[field] * 10) / 10 });
+  const round = (x: WedgeDims): WedgeDims => ({ ...x, [field]: Math.round((x[field] ?? 0) * 10) / 10 });
   return r.ok ? { ...r, dims: round(r.dims) } : { ...r, nearest: round(r.nearest) };
 }
 

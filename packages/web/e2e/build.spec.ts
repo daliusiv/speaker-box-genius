@@ -28,6 +28,25 @@ test("Build: Box and Cut list cards, each setting a row that shows its value", a
   await expect(row(page, "Driver fit")).toBeVisible();
 });
 
+test("Build: a car wedge's lip shows in Outside size, the drawing and Angles and inside", async ({ page }) => {
+  await build(page);
+  await row(page, "Shape").locator("summary").first().click();
+  await row(page, "Shape").getByText("Car wedge", { exact: true }).click();
+  const outside = row(page, "Outside size");
+  await outside.locator("summary").first().click();
+  await expect(outside.getByRole("radio", { name: "Side", exact: true })).toBeVisible();
+  const lip = outside.getByLabel("Lip height");
+  await expect(lip).toHaveValue("0");
+  await expect(page.locator(".wedge-drawing .wedge-dim", { hasText: /^L / })).toHaveCount(0);
+  await lip.fill("15");
+  await lip.blur();
+  await expect(value(page, "Outside size")).toHaveText("40 × 50 × 30/45 cm · lip 15 · 18 mm");
+  await expect(page.locator(".wedge-drawing .wedge-dim", { hasText: "L 150" })).toHaveCount(1);
+  await expect(outside.locator(".ui-disclosure-value")).toHaveText("θ 66.8° · inside 61.1 L");
+  await outside.locator(".ui-disclosure summary").click();
+  await expect(outside.locator(".ui-field", { hasText: "Inside lip" }).locator("output")).toHaveText("12.8 cm");
+});
+
 test("Build: Inside parts change the net volume; Size box finds the size", async ({ page }) => {
   await build(page);
   const net = await value(page, "Net volume").textContent();

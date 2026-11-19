@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "8 L 2 SL",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 64,
+    "qms": 2.69,
+    "qes": 0.36,
+    "vas_l": 18.2,
+    "re": 6.1,
+    "sd_cm2": 213.8,
+    "qts": 0.32,
+    "le_mh": 0.85,
+    "bl": 12.3,
+    "mms_g": 22.1,
+    "xmax_mm": 3.5,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 181,
+    "depth_mm": 94.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/8-l-2-sl/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

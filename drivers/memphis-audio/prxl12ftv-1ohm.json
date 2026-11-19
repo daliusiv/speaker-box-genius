@@ -1,0 +1,34 @@
+{
+  "brand": "Memphis Audio",
+  "model": "PRXL12FTV (1 Ω)",
+  "type": "car-audio",
+  "nominal_ohms": 1,
+  "size_in": 12,
+  "ts": {
+    "fs": 33.8,
+    "qms": 3.387,
+    "qes": 0.829,
+    "vas_l": 53.2922176,
+    "re": 0.9,
+    "sd_cm2": 530.9,
+    "qts": 0.666,
+    "bl": 6.475,
+    "mms_g": 171.6,
+    "xmax_mm": 9.017,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 279.4,
+    "depth_mm": 139.7,
+    "displacement_l": 3.653
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.memphiscaraudio.com/product/76prxl12ftv/",
+      "retrieved": "2026-11-16",
+      "note": "Values from Memphis Audio's spec sheets (PDF supplied 16 Nov 2026), used with Memphis Audio's permission (16 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Memphis Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

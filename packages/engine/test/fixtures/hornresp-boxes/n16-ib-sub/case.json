@@ -1,0 +1,21 @@
+{
+  "title": "12-inch subwoofer, infinite baffle",
+  "text": "The N8 subwoofer with an open rear (Vrc 0): the cone's front alone (Output → Horn)",
+  "frontAir": 2,
+  "coneLoad": "piston",
+  "splFrom": "power",
+  "driver": {
+    "fs": 24,
+    "qms": 4.2,
+    "qes": 0.42,
+    "vas_l": 85,
+    "re": 3.4,
+    "sd_cm2": 480,
+    "le_mh": 2.4,
+    "xmax_mm": 14,
+    "pe_w": 400
+  },
+  "input": {
+    "kind": "infinite-baffle"
+  }
+}

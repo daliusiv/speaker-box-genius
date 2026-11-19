@@ -26,7 +26,7 @@ export type ExportResult = { files: OutFile[]; notes?: string[] } | { message: s
 
 export interface ExportFormat {
   id: string;
-  group: "project" | "sim" | "dsp";
+  group: "project" | "sim" | "crossover" | "dsp";
   label: string;
   /** Shown next to the label: ".wpr", "this device"… */
   ext: string;
@@ -41,6 +41,10 @@ export interface ExportFormat {
   run(ctx: ExportContext, designIds: string[], opts: Record<string, string>): ExportResult;
   /** Button text; "Download" by default. */
   action?: string;
+  /** A line under the help about the current project (what the export will use). */
+  detail?: (s: AppState) => string;
+  /** The button picks a file instead of running the export: the app takes it from there (`onPick`). */
+  pick?: { accept: string };
 }
 
 /** A file name from a driver or design name. */
@@ -49,5 +53,6 @@ export const safeName = (s: string, fallback = "speaker-box") => s.replace(/[^\w
 export const GROUPS: Record<ExportFormat["group"], string> = {
   project: "Project",
   sim: "Simulators & data",
+  crossover: "Crossover tools",
   dsp: "DSP",
 };

@@ -26,6 +26,7 @@ import {
   type SimulationResult,
 } from "@sbg/engine";
 import { doubtsXmax, type DbIndex, type LoadedDriver } from "./library.ts";
+import { driverExtras } from "./importReport.ts";
 import { ventedAlignmentFor } from "./presets.ts";
 import { presetFor, sizeMltlPort, tuneLine, type PresetId } from "./lineopt.ts";
 import { airLimitOf, airOf, endCorrectionOf, lineFoldOf, portLimitOf, volumeFor, alignmentDriver, driverInputOf, enclosureOf, enclosureOptsOf, limitsOf, checkFromHz, lineLength, lineVolume, portRoom_cm, roomGainOf, simOptionsOf, solveDriver, type LimitKind } from "./sim.ts";
@@ -349,19 +350,22 @@ export function loadOptions(d: Pick<IndexRow, "ohms" | "coil_ohms">, goal: Pick<
 
 /** A database driver put into the app's state, as picking it in the driver list does. */
 export function withDriver(s: AppState, d: LoadedDriver): AppState {
+  // Never the previous driver's limits: an entry without Xmax or Pe leaves them unset (0), without Znom 4 Ω.
+  const x = driverExtras(d, { le: false });
   return {
     ...s,
     driverName: d.name,
     driverBrand: d.brand,
-    nominal_ohms: d.nominal_ohms ?? s.nominal_ohms,
+    driverOrigin: d.id,
+    nominal_ohms: x.nominal_ohms,
     ts: d.ts,
     le_mh: d.le_mh ?? 0,
     l2_mh: d.l2_mh ?? 0,
     r2_ohm: d.r2_ohm ?? 0,
     semi: undefined,
     fdd: undefined,
-    xmax_mm: d.xmax_mm ?? s.xmax_mm,
-    pe_w: d.pe_w ?? s.pe_w,
+    xmax_mm: x.xmax_mm,
+    pe_w: x.pe_w,
     volume: {
       ...s.volume,
       ...(d.displacement_l !== undefined ? { driverDisp_l: d.displacement_l } : {}),
@@ -863,6 +867,7 @@ export function evaluateDriver(
       ...base,
       vb_l: r1(box.vb),
       prName: found.name,
+      prId: c.id,
       params: c.params,
       count: found.count,
       addedMass_g: Math.round(found.addedMass_g),
@@ -1135,6 +1140,7 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
     ...s,
     driverName: t.driverName,
     driverBrand: t.driverBrand,
+    driverOrigin: t.driverOrigin,
     nominal_ohms: t.nominal_ohms,
     ts: t.ts,
     le_mh: t.le_mh,

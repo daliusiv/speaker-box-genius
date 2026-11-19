@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "15NW530",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 38,
+    "qms": 5.81,
+    "qes": 0.35,
+    "vas_l": 154,
+    "re": 5.3,
+    "sd_cm2": 900,
+    "qts": 0.33,
+    "le_mh": 1.4,
+    "bl": 22,
+    "mms_g": 135,
+    "xmax_mm": 7.5,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 353,
+    "depth_mm": 169
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/15-0/8/15NW530",
+      "retrieved": "2026-11-17",
+      "note": "Values from 18 Sound's parameter file (Excel supplied 17 Nov 2026), used with 18 Sound's permission (6 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without 18 Sound's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

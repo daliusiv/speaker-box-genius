@@ -1,0 +1,34 @@
+{
+  "brand": "Sica",
+  "model": "18 F 3 CP",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 31.6,
+    "qms": 3.1,
+    "qes": 0.52,
+    "vas_l": 321,
+    "re": 5.1,
+    "sd_cm2": 1164.2,
+    "qts": 0.44,
+    "le_mh": 1.41,
+    "bl": 17.22,
+    "mms_g": 152,
+    "xmax_mm": 6.5,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 417,
+    "depth_mm": 196.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://sica.it/prodotto/18-f-3-cp/",
+      "retrieved": "2026-11-16",
+      "note": "Sica catalogue values (sica.it), used with Sica's permission (16 Nov 2026) under CC BY-NC-SA 4.0, credited to Sica."
+    }
+  ],
+  "status": "community"
+}

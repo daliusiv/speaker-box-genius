@@ -1,0 +1,34 @@
+{
+  "brand": "18 Sound",
+  "model": "10NMB500",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 67,
+    "qms": 2.73,
+    "qes": 0.36,
+    "vas_l": 48.1,
+    "re": 5.2,
+    "sd_cm2": 346,
+    "qts": 0.32,
+    "le_mh": 0.2,
+    "bl": 11,
+    "mms_g": 20,
+    "xmax_mm": 2.5,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 232,
+    "depth_mm": 122
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.eighteensound.it/en/products/lf-driver/10-0/8/10NMB500",
+      "retrieved": "2026-11-17",
+      "note": "Values from 18 Sound's parameter file (Excel supplied 17 Nov 2026), used with 18 Sound's permission (6 Nov 2026); the link is the product page on their website. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without 18 Sound's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

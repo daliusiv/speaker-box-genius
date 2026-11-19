@@ -204,7 +204,8 @@ export function MeasurePanel(props: Props) {
           </div>
           <p className="hint">
             Replaces the driver's Fs, Qms, Qes, Re and Le{m.fit.l2_mh !== undefined ? " (with L2 and R2)" : ""}{added ? ", and adds Mms from the added-mass test" : ""}. Without an
-            added-mass sweep, keep the datasheet's Vas or Sd and Mms so the editor can work out the rest.
+            added-mass sweep, the driver's Mms is kept and Vas follows from it and Sd: moving mass hardly changes from
+            sample to sample or with break-in, while Vas changes with the suspension, as Fs does.
           </p>
         </>
       )}

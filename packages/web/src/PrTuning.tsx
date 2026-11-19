@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
 import { Button } from "./ui/index.ts";
-import { BUMP_LIMIT, bestPrTuning, evaluateTuning, type Fix, type PrTuningResult, type TuningGoal, type TuningPoint } from "@sbg/engine";
+import { BUMP_LIMIT, evaluateTuning, type Fix, type PrTuningResult, type TuningGoal, type TuningPoint } from "@sbg/engine";
 import type { FinderContext } from "./PrFinder.tsx";
 import type { PrDesign } from "./state.ts";
+import { JobProgress } from "./components.tsx";
+import { startSearch } from "./search.ts";
 
 const f1 = (v: number | null | undefined) => (v === null || v === undefined || !Number.isFinite(v) ? "–" : v.toFixed(1));
 
@@ -67,21 +69,30 @@ export function PrTuning(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, key]);
 
-  // The search simulates a few hundred tunings: run it after the window has painted.
+  // The search simulates a few hundred tunings: in the worker, with a bar meanwhile.
+  const [searching, setSearching] = useState(false);
   useEffect(() => {
     setResult(null);
     setError("");
+    setSearching(false);
     if (!isOpen || !ctx.driver || mixed) return;
     if (goal === "smallest" && !(targetF3! > 0)) return;
-    const driver = ctx.driver;
-    const t = setTimeout(() => {
-      try {
-        setResult(bestPrTuning(driver, { ...opts, goal, targetF3: targetF3 ?? undefined }));
-      } catch (e) {
-        setError((e as Error).message);
-      }
-    }, 30);
-    return () => clearTimeout(t);
+    setSearching(true);
+    const stop = startSearch(
+      { kind: "prTuning", driver: ctx.driver, options: { ...opts, goal, targetF3: targetF3 ?? undefined } },
+      {
+        step: (s) => s.kind === "prTuning" && setResult(s.result),
+        done: () => setSearching(false),
+        error: (message) => {
+          setSearching(false);
+          setError(message);
+        },
+      },
+    );
+    return () => {
+      stop();
+      setSearching(false);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, key]);
 
@@ -188,7 +199,7 @@ export function PrTuning(props: {
           )}
 
           {error && <p className="warn">{error}</p>}
-          {!result && !error && <p className="hint">Trying tunings…</p>}
+          {searching && !result && <JobProgress label="Trying tunings" done={0} total={0} />}
 
           {b && (
             <div className="tuning-card">

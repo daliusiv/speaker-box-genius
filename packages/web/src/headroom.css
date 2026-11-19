@@ -1,0 +1,81 @@
+/*
+ * Max SPL on a program signal: the Program popover / sheet, headroom tones in the legend, the
+ * hover box and the summary, the worst-point ring. Tokens only (Stylelint).
+ */
+.legend-caption {
+  margin: 0 0 var(--space-1);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+/* Headroom: plain at 3 dB or more, amber under 3 dB, red short of the target. */
+[data-tone="warn"],
+[data-tone="warn"] .legend-val {
+  color: var(--warn);
+  font-weight: var(--weight-semibold);
+}
+
+[data-tone="over"],
+[data-tone="over"] .legend-val {
+  color: var(--over);
+  font-weight: var(--weight-bold);
+}
+
+.chart-worst circle {
+  stroke: var(--muted);
+}
+
+.chart-worst text {
+  fill: var(--muted);
+  font-weight: var(--weight-semibold);
+}
+
+.chart-worst[data-tone="warn"] circle {
+  stroke: var(--warn);
+}
+
+.chart-worst[data-tone="warn"] text {
+  fill: var(--warn);
+}
+
+.chart-worst[data-tone="over"] circle {
+  stroke: var(--over);
+}
+
+.chart-worst[data-tone="over"] text {
+  fill: var(--over);
+}
+
+.program-body {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.program-body .hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-base);
+}
+
+.program-button .program-caret {
+  color: var(--muted);
+}
+
+/* Summary: the Headroom group's header spans its two columns. */
+.summary th.headroom-group {
+  border-bottom: var(--border-hairline) solid var(--divider);
+  text-align: center;
+}
+
+.headroom-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}

@@ -35,7 +35,7 @@ export function sizeForNewDriver(s: AppState, prs: QuickPr[] | null): { state: A
       if (s.volume.link === d.id) return d;
       if (d.kind === "pr" && pr && best) {
         extra.push(`${d.name}: ${best.count} × ${pr.name} (the best match in the database)`);
-        return { ...d, prName: pr.name, params: pr.params, count: best.count, addedMass_g: Math.round(best.addedMass_g), extra: [] };
+        return { ...d, prName: pr.name, prId: pr.id, params: pr.params, count: best.count, addedMass_g: Math.round(best.addedMass_g), extra: [] };
       }
       return d;
     });

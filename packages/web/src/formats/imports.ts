@@ -5,12 +5,13 @@
  */
 export type ImportKind = "project" | "winisd" | "hornresp" | "measurement";
 
-export type ImportUse = "measure-driver" | "overlay-impedance" | "overlay-response";
+export type ImportUse = "measure-driver" | "overlay-impedance" | "overlay-response" | "driver-on-baffle";
 
 export const IMPORT_USES: Record<ImportUse, { label: string; help: string }> = {
   "measure-driver": { label: "Measure the driver", help: "A free-air impedance sweep: fit the T/S parameters from it." },
   "overlay-impedance": { label: "Show impedance on the charts", help: "A sweep of the finished box, over the simulated impedance." },
   "overlay-response": { label: "Show response on the charts", help: "A measured frequency response of the finished box, level-matched to the first design." },
+  "driver-on-baffle": { label: "Put the driver on my baffle", help: "A driver's half-space curve (datasheet or ground plane): add your box's baffle diffraction and save it for a crossover tool." },
 };
 
 /** A project file's extension, and its media type. */
@@ -45,8 +46,8 @@ export function importKind(name: string, head: string): ImportKind | null {
 export function importUses(name: string): ImportUse[] {
   const ext = /\.([^.]+)$/.exec(name.toLowerCase())?.[1] ?? "";
   if (ext === "zma") return ["measure-driver", "overlay-impedance"];
-  if (ext === "frd") return ["overlay-response"];
-  return ["measure-driver", "overlay-impedance", "overlay-response"];
+  if (ext === "frd") return ["overlay-response", "driver-on-baffle"];
+  return ["measure-driver", "overlay-impedance", "overlay-response", "driver-on-baffle"];
 }
 
 /** "just now", "5 min ago", "3 h ago", "2 days ago", else the date. */

@@ -8,6 +8,9 @@ import { DEFAULT_STATE, encodeStateShort, type AppState, type PrParams } from ".
 import { airOf } from "../sim.ts";
 import { withDriver } from "../assistant.ts";
 import { loadDriver, loadIndex, loadPassiveRadiator, type DbIndex, type LoadedDriver } from "../library.ts";
+import { $, applyValues, esc, pageQuery, val, wireCopyLink } from "./common.ts";
+import { wireCombos } from "./combo.ts";
+import type { QuerySpec } from "./query.ts";
 import { fewestThatKeepUp, HEAVY_MASS_RATIO, keepsUp, MAX_MASS_RATIO, prCalc, prCheck, prDesignOf, VD_RULE, type PrCalcInput, type PrCalcResult } from "./prMath.ts";
 
 const L_PER_FT3 = 28.3168;
@@ -15,19 +18,36 @@ const G_PER_OZ = 28.3495;
 const AIR = airOf(DEFAULT_STATE);
 const CAUTION = DEFAULT_STATE.settings.prCaution_pct / 100;
 
-const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T | null;
-const val = (id: string) => Number(($<HTMLInputElement>(id)?.value ?? "").replace(",", "."));
 const imperial = () => $<HTMLInputElement>("prc-imperial")?.checked === true;
 
 const grams = (g: number) => (imperial() ? `${(g / G_PER_OZ).toFixed(1)} oz (${g.toFixed(0)} g)` : `${g.toFixed(0)} g (${(g / G_PER_OZ).toFixed(1)} oz)`);
 const vd = (cm3: number) => (imperial() ? `${(cm3 / 16.387).toFixed(1)} in³ (${cm3.toFixed(0)} cm³)` : `${cm3.toFixed(0)} cm³ (${(cm3 / 16.387).toFixed(1)} in³)`);
 const pct = (x: number) => `${Math.round(x * 100)} %`;
-const ENTITY: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
-/** Escapes text for HTML content and quoted attribute values, in one pass. */
-const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ENTITY[c]!);
+
+/** The inputs kept in the page address (see query.ts); `r` and `d` are the PR's and the driver's database ids. */
+export const PR_QUERY: QuerySpec = {
+  u: { id: "prc-imperial", kind: "check", on: "in" },
+  vb: { id: "prc-vb", kind: "num" },
+  fb: { id: "prc-fb", kind: "num" },
+  n: { id: "prc-n", kind: "int" },
+  r: { id: "prc-pr", kind: "text" },
+  m: { id: "prc-mms", kind: "num" },
+  sd: { id: "prc-sd", kind: "num" },
+  vas: { id: "prc-vas", kind: "num" },
+  x: { id: "prc-xmax", kind: "num" },
+  q: { id: "prc-qms", kind: "num" },
+  max: { id: "prc-max", kind: "num" },
+  d: { id: "prc-driver", kind: "text" },
+  p: { id: "prc-power", kind: "num" },
+};
+/** The PR's own values: a database PR's id stands for them in the link. */
+const PR_FIELDS = ["m", "sd", "vas", "x", "q", "max"] as const;
+let query = pageQuery(PR_QUERY);
 
 let index: DbIndex | null = null;
 let driver: LoadedDriver | null = null;
+/** The database PR whose values are in the form; "" once they're typed over. */
+let prId = "";
 let prName = "your passive radiator";
 /** The PR's travel is the maker's mechanical limit (Xmech), not a linear Xmax. */
 let prMech = false;
@@ -125,6 +145,7 @@ async function update() {
     out.innerHTML = `<p class="calc-note">Enter a volume, a tuning and the PR's Mms, Sd and Vas (or pick one from the database).</p>`;
     keep.innerHTML = "";
     open.hidden = true;
+    query.save({ r: prId, d: driver?.id ?? "" }, prId ? PR_FIELDS : []);
     return;
   }
   out.innerHTML = resultHtml(i, r);
@@ -132,6 +153,7 @@ async function update() {
   open.hidden = false;
   const s = { ...driverState(), designs: [prDesignOf(i, r, prName === "your passive radiator" ? "Passive radiator" : prName)] };
   open.href = `/#${await encodeStateShort(s)}`;
+  query.save({ r: prId, d: driver?.id ?? "" }, prId ? PR_FIELDS : []);
 }
 
 let timer = 0;
@@ -182,13 +204,23 @@ async function pickPr(text: string) {
     if (status) status.textContent = text.trim() ? "Pick a PR from the list, or type its values below." : "";
     return;
   }
+  await setPr(row.id);
+  schedule();
+}
+
+/** Fills the PR fields from the database. */
+async function setPr(id: string) {
+  const status = $("prc-pr-status");
   try {
-    const pr = await loadPassiveRadiator(row.id);
+    const pr = await loadPassiveRadiator(id);
+    prId = id;
     prName = pr.name;
     const set = (id: string, v: number | undefined) => {
       const el = $<HTMLInputElement>(id);
       if (el) el.value = v !== undefined ? String(v) : "";
     };
+    const pick = $<HTMLInputElement>("prc-pr");
+    if (pick) pick.value = pr.name;
     set("prc-mms", pr.params.mms_g);
     set("prc-sd", pr.params.sd_cm2);
     set("prc-vas", pr.params.vas_l);
@@ -201,7 +233,6 @@ async function pickPr(text: string) {
   } catch {
     if (status) status.textContent = "Couldn't load that passive radiator.";
   }
-  schedule();
 }
 
 async function pickDriver(text: string) {
@@ -213,28 +244,58 @@ async function pickDriver(text: string) {
     schedule();
     return;
   }
+  await setDriver(row.id, true);
+  schedule();
+}
+
+/** Loads a database driver; `ratedPower` puts its rated power in the power field. */
+async function setDriver(id: string, ratedPower: boolean) {
+  const status = $("prc-driver-status");
   try {
-    driver = await loadDriver(row.id);
+    driver = await loadDriver(id);
+    const pick = $<HTMLInputElement>("prc-driver");
+    if (pick) pick.value = driver.name;
     const power = $<HTMLInputElement>("prc-power");
-    if (power && driver.pe_w) power.value = String(Math.round(driver.pe_w));
+    if (ratedPower && power && driver.pe_w) power.value = String(Math.round(driver.pe_w));
     if (status) status.textContent = driver.xmax_mm ? `Xmax ${driver.xmax_mm} mm${driver.pe_w ? `, rated ${driver.pe_w} W` : ""}.` : "No Xmax in the database for this driver.";
   } catch {
     driver = null;
     if (status) status.textContent = "Couldn't load that driver.";
   }
-  schedule();
 }
 
-export function start() {
+export async function start() {
   const form = $("prc-form");
   if (!form) return;
   if (form.dataset.prName) prName = form.dataset.prName;
+  prId = form.dataset.prId ?? "";
   prMech = form.dataset.prMech === "1";
+  query = pageQuery(PR_QUERY, { r: prId, d: "" });
+  // The link's values: units first (they convert the defaults), then the database PR (it fills
+  // the PR fields), then the fields as the link has them, then the driver.
+  const { u, r, d, p, ...fields } = query.start();
+  if (u) {
+    const imp = $<HTMLInputElement>("prc-imperial");
+    if (imp) imp.checked = true;
+    convertUnits(true);
+  }
+  if (r && r !== prId) await setPr(r);
+  else if (r === undefined && Object.keys(fields).some((k) => (PR_FIELDS as readonly string[]).includes(k))) {
+    // Typed PR values: no longer the example PR.
+    prId = "";
+    prName = "your passive radiator";
+    prMech = false;
+    showTravelKind();
+  }
+  applyValues(PR_QUERY, fields);
+  if (p !== undefined) applyValues(PR_QUERY, { p });
+  if (d) await setDriver(d, p === undefined);
   form.addEventListener("input", (e) => {
     const id = (e.target as HTMLElement).id;
     if (id === "prc-driver" || id === "prc-pr") return;
     // Typed PR values are no longer the database PR's.
     if (["prc-mms", "prc-sd", "prc-vas", "prc-xmax", "prc-qms"].includes(id)) {
+      prId = "";
       prName = "your passive radiator";
       if (prMech) {
         prMech = false;
@@ -257,9 +318,12 @@ export function start() {
   const pick = $<HTMLInputElement>("prc-driver");
   pick?.addEventListener("change", () => void pickDriver(pick.value));
   pick?.addEventListener("focus", ensureIndex, { once: true });
+  wireCopyLink("prc-copy");
+  wireCombos();
   form.hidden = false;
   document.querySelectorAll<HTMLElement>(".calc-nojs").forEach((el) => (el.hidden = true));
   void update();
 }
 
-start();
+// Not in tests, which import the page's link spec without a page.
+if (typeof document !== "undefined") void start();
