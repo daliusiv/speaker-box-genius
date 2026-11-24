@@ -17,6 +17,7 @@ import {
   type PrFinderResult,
   type PrTuningOptions,
   type PrTuningResult,
+  type SimDelta,
   type SimulationOptions,
 } from "@sbg/engine";
 import { evaluateDriver, type AssistantGoal, type AssistantResult, type AssistantStage, type IndexRow, type PrCandidateWithParams } from "./assistant.ts";
@@ -25,6 +26,7 @@ import type { LoadedDriver } from "./library.ts";
 import type { AppState, DesignState, LineDesign } from "./state.ts";
 import type { StuffableKind } from "./stuffing.ts";
 import { fitStuffing, type FitSource, type StuffingFit } from "./stuffingFit.ts";
+import { similarDelta, type SimilarJob } from "./similarApp.ts";
 
 /** One driver for the design assistant's second pass. */
 export interface AssistantTask {
@@ -48,7 +50,8 @@ export type SearchJob =
     }
   | { kind: "assistant"; base: AppState; goal: AssistantGoal; tasks: AssistantTask[]; prs?: PrCandidateWithParams[] }
   | { kind: "prTuning"; driver: DriverInput; options: PrTuningOptions }
-  | { kind: "stuffingFit"; state: AppState; design: DesignState & { kind: StuffableKind }; measured: { f: number[]; v: number[] }; source: FitSource };
+  | { kind: "stuffingFit"; state: AppState; design: DesignState & { kind: StuffableKind }; measured: { f: number[]; v: number[] }; source: FitSource }
+  | ({ kind: "similar" } & SimilarJob);
 
 export type SearchStep =
   | { kind: "pr"; results: PrFinderResult[] }
@@ -56,7 +59,8 @@ export type SearchStep =
   | { kind: "compare"; row: LineCompare }
   | { kind: "assistant"; results: AssistantResult[] }
   | { kind: "prTuning"; result: PrTuningResult }
-  | { kind: "stuffingFit"; fit: StuffingFit | string };
+  | { kind: "stuffingFit"; fit: StuffingFit | string }
+  | { kind: "similar"; id: string; delta: SimDelta | null };
 
 /** How far a job has got, with the results that came with this tick (if any). */
 export interface Tick {
@@ -92,6 +96,12 @@ export function* searchTicks(job: SearchJob): Generator<Tick> {
       const row = compareOne(id, job.driver, job.design, job.sim, job.align, job.drivers, job.wall_mm);
       yield { done: ++done, total, step: { kind: "compare", row } };
     }
+  } else if (job.kind === "similar") {
+    // One same-box check per candidate (similarApp.ts), in the picker's order.
+    const total = job.candidates.length;
+    let done = 0;
+    yield { done, total };
+    for (const c of job.candidates) yield { done: ++done, total, step: { kind: "similar", id: c.id, delta: similarDelta(job, c.driver) } };
   } else if (job.kind === "prTuning" || job.kind === "stuffingFit") {
     // One search each, with nothing to count inside it: 0 of 1, then the answer.
     yield { done: 0, total: 1 };

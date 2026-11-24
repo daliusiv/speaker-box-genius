@@ -1,0 +1,36 @@
+{
+  "brand": "PHL Audio",
+  "model": "3920NdU-7",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 74,
+    "qms": 4.62,
+    "qes": 0.21,
+    "vas_l": 17.7,
+    "re": 5.4,
+    "sd_cm2": 308,
+    "qts": 0.2,
+    "le_mh": 1.065,
+    "bl": 20.7,
+    "mms_g": 35.2,
+    "xmax_mm": 4.5,
+    "pe_w": 450
+  },
+  "physical": {
+    "cutout_mm": 229,
+    "depth_mm": 132,
+    "displacement_l": 1.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/3920NdU-7_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

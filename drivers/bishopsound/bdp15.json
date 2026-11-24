@@ -1,0 +1,34 @@
+{
+  "brand": "BishopSound",
+  "model": "BDP15",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 47.8,
+    "qms": 16.577,
+    "qes": 0.68,
+    "vas_l": 95.33,
+    "re": 6.382,
+    "sd_cm2": 907.9,
+    "qts": 0.653,
+    "le_mh": 3.565,
+    "bl": 19.582,
+    "mms_g": 136.04,
+    "xmax_mm": 12.2,
+    "pe_w": 750
+  },
+  "physical": {
+    "cutout_mm": 353,
+    "depth_mm": 168
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bishopsound.com/products/bdp15-bass-mid-range-driver",
+      "retrieved": "2026-11-19",
+      "note": "Values from BishopSound's published datasheets (bishopsound.com), used with BishopSound's permission (18 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without BishopSound's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

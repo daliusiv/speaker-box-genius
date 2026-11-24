@@ -1,0 +1,32 @@
+{
+  "brand": "Accuton",
+  "model": "C173-6-090",
+  "type": "midrange",
+  "nominal_ohms": 6,
+  "size_in": 7,
+  "ts": {
+    "fs": 72,
+    "qms": 3.35,
+    "qes": 0.29,
+    "vas_l": 15.5,
+    "re": 6.39,
+    "sd_cm2": 133,
+    "qts": 0.26,
+    "le_mh": 0.32,
+    "xmax_mm": 5.25,
+    "pe_w": 120
+  },
+  "physical": {
+    "depth_mm": 102
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://accuton.com/home-audio/drivers/hall-of-fame/C173-6-090",
+      "retrieved": "2026-11-19",
+      "note": "Values from the product pages on accuton.com, used with Accuton's permission (19 Nov 2026), re-read from the website each month. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Accuton's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 15 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it). Published Bl 11.8 T·m disagrees with Fs, Mms, Re and Qes, so it's left out (the app derives it)."
+}

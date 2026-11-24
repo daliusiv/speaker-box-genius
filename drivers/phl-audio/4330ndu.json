@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "4330NdU",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 36,
+    "qms": 3.83,
+    "qes": 0.23,
+    "vas_l": 82.6,
+    "re": 5.4,
+    "sd_cm2": 527,
+    "qts": 0.22,
+    "le_mh": 1.598,
+    "bl": 22,
+    "mms_g": 93.1,
+    "xmax_mm": 8,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 282,
+    "depth_mm": 141.5,
+    "displacement_l": 2.1
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/4330NdU_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

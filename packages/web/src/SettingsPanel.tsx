@@ -3,7 +3,7 @@ import { coilHeatFactor, DEFAULT_END_CORRECTION } from "@sbg/engine";
 import { AmpFromRatings } from "./AmpFromRatings.tsx";
 import { COMPAT, COMPAT_NAMES, compatOf, nearestCompat, withCompat, type CompatPreset } from "./compat.ts";
 import { Num, Select } from "./components.tsx";
-import { airLimitOf, airOf, PORT_LIMIT, portLimitOf } from "./sim.ts";
+import { airLimitOf, airOf, PORT_LIMIT, portLimitOf, type HeatedCoil } from "./sim.ts";
 import { END_CORRECTION_MAX, NO_LOSS, qText, type AppState, type Settings } from "./state.ts";
 import { Card, Chip, FieldRow, helpEntries, RadioCards, Section, Segmented, Switch } from "./ui/index.ts";
 import { browserAskedNotToTrack, setUsageStats, track, trackOnce, usageStatsOn } from "./telemetry.ts";
@@ -68,6 +68,10 @@ export function SettingsPanel(props: {
   winisdWatts: boolean;
   /** What the amplifier sees across the driver bank (cold Re and the nominal impedance), for the amp power hint; null when unknown. */
   ampLoad?: { re: number; nominal: number } | null;
+  /** Heated coil: where the first design's coil settles at this drive (null: no Pe or R_th, or no design). */
+  heated?: HeatedCoil | null;
+  /** The driver has Pe or R_th (needed to heat the coil or limit its temperature). */
+  hasThermal: boolean;
 }) {
   const s = props.state.settings;
   const set = (patch: Partial<Settings>) => {
@@ -91,6 +95,14 @@ export function SettingsPanel(props: {
     return `≈ ${Math.sqrt(s.ampWatts * r).toFixed(1)} V, ${Math.sqrt(s.ampWatts / r).toFixed(1)} A into the ${ohms} Ω ${load.nominal > 0 ? "nominal load" : "bank's Re"}`;
   })();
   const heat = coilHeatFactor(s.coilTemp_C);
+  const coilValue =
+    s.coilMode === "heated"
+      ? props.heated && !props.heated.runaway
+        ? `Heated ${Math.round(props.heated.tempC)} °C`
+        : "Heated"
+      : s.coilMode === "fixed"
+        ? `${s.coilTemp_C} °C`
+        : "Cold";
 
   return (
     <div className="st-list">
@@ -146,15 +158,6 @@ export function SettingsPanel(props: {
             ]}
             onChange={(driveModel) => set({ driveModel })}
           />
-          <RadioCards<Settings["thermalLimit"]>
-            legend="Power rating vs"
-            value={s.thermalLimit}
-            options={[
-              { value: "nominal", title: "V²/Re", description: "The driver's Pe is held against the voltage into Re", aside: like("WinISD") },
-              { value: "real", title: "Real power", description: "What the driver actually takes: more volts allowed near resonance", aside: like("Hornresp") },
-            ]}
-            onChange={(thermalLimit) => set({ thermalLimit })}
-          />
         </Section>
 
         <Section
@@ -194,7 +197,7 @@ export function SettingsPanel(props: {
           )}
         </Section>
 
-        <Section icon="coil" title="Voice coil" value={`${s.inductance ? "Le on" : "Le off"} · ${s.coilTemp_C} °C`}>
+        <Section icon="coil" title="Voice coil" value={`${s.inductance ? "Le on" : "Le off"} · ${coilValue}`}>
           <RadioCards<"yes" | "no">
             legend="Coil inductance"
             value={s.inductance ? "yes" : "no"}
@@ -204,23 +207,92 @@ export function SettingsPanel(props: {
             ]}
             onChange={(x) => set({ inductance: x === "yes" })}
           />
-          <Num
-            label="Voice coil"
-            unit="°C"
-            value={s.coilTemp_C}
-            min={20}
-            help="Voice-coil temperature: 20 °C = the datasheet's cold values (like WinISD). A hot coil has a higher Re: less output, higher Q. Coils heat with sustained power, only a little at moderate levels but to 150 °C or more near their rated power; copper and aluminium both rise about 0.4 % per °C. This is power compression: the dB SPL view shows the lost output, the Relative view the change in shape (and F3)."
-            onChange={(t) => set({ coilTemp_C: Math.min(250, Math.max(20, t)) })}
-          />
-          {s.coilTemp_C > 20 ? (
-            <p className="hint">
-              At {s.coilTemp_C} °C the coil&rsquo;s resistance is {Math.round((heat - 1) * 100)}% higher
-              {props.re !== undefined ? ` (Re ${props.re.toFixed(2)} → ${(props.re * heat).toFixed(2)} Ω)` : ""}: about {(20 * Math.log10(heat)).toFixed(1)}&nbsp;dB less above the bass,
-              and Qes (so the box&rsquo;s Q) rises by the same ratio.
-            </p>
-          ) : (
-            <p className="hint">20 °C uses the datasheet&rsquo;s cold values. Coils heat with sustained power, to 150&nbsp;°C or more near their rated power: less output, higher Q.</p>
+          <div data-help="Voice-coil temperature. A hot coil has a higher Re: less output and a higher Q (power compression). Cold: the datasheet's 20 °C values, like WinISD. Fixed: a temperature you set. Heated by the drive: where the coil settles playing pink noise at the drive's average power, from Pe (or the thermal resistance on the driver card); every chart then shows the hot driver." data-help-title="Coil temperature">
+            <RadioCards<Settings["coilMode"]>
+              legend="Coil temperature"
+              value={s.coilMode}
+              options={[
+                { value: "cold", title: "Cold (datasheet)", description: "20 °C", aside: like("WinISD") },
+                { value: "fixed", title: "Fixed", description: "A temperature you set" },
+                { value: "heated", title: "Heated by the drive", description: "Where the drive's average power settles it" },
+              ]}
+              onChange={(coilMode) => set({ coilMode })}
+            />
+          </div>
+          {s.coilMode === "fixed" && (
+            <>
+              <Num
+                label="Voice coil"
+                unit="°C"
+                value={s.coilTemp_C}
+                min={20}
+                help="The coil's temperature. Coils heat with sustained power, only a little at moderate levels but to 150 °C or more near their rated power; copper and aluminium both rise about 0.4 % per °C."
+                onChange={(t) => set({ coilTemp_C: Math.min(250, Math.max(20, t)) })}
+              />
+              <p className="hint">
+                {s.coilTemp_C > 20 ? (
+                  <>
+                    At {s.coilTemp_C} °C the coil&rsquo;s resistance is {Math.round((heat - 1) * 100)}% higher
+                    {props.re !== undefined ? ` (Re ${props.re.toFixed(2)} → ${(props.re * heat).toFixed(2)} Ω)` : ""}: about {(20 * Math.log10(heat)).toFixed(1)}&nbsp;dB less above the bass,
+                    and Qes (so the box&rsquo;s Q) rises by the same ratio.
+                  </>
+                ) : (
+                  <>20 °C is the datasheet&rsquo;s cold coil.</>
+                )}
+              </p>
+            </>
           )}
+          {s.coilMode === "heated" && (
+            <>
+              <Num
+                label="Air around it"
+                unit="°C"
+                value={s.ambient_C}
+                min={-20}
+                help="The air around the driver: 20 °C in a room; a car in the sun can reach 40 °C or more. The coil starts from here."
+                onChange={(t) => set({ ambient_C: Math.min(60, Math.max(-20, t)) })}
+              />
+              <Num
+                label="Heated from"
+                unit="Hz"
+                value={s.heatBand[0]}
+                min={5}
+                help="The heating signal: pink noise (equal energy per octave) from here up to Heated to, at the drive's average power, after the high-pass and EQ. A subwoofer's 20–200 Hz by default."
+                onChange={(lo) => set({ heatBand: [Math.min(Math.max(5, lo), s.heatBand[1] - 1), s.heatBand[1]] })}
+              />
+              <Num
+                label="Heated to"
+                unit="Hz"
+                value={s.heatBand[1]}
+                min={6}
+                help="The top of the heating signal's band (see Heated from)."
+                onChange={(hi) => set({ heatBand: [s.heatBand[0], Math.max(Math.min(2000, hi), s.heatBand[0] + 1)] })}
+              />
+              <p className="hint">
+                {!props.hasThermal
+                  ? "Needs the driver's Pe or its thermal resistance (Driver → Large signal): until then the coil stays cold."
+                  : props.heated
+                    ? props.heated.runaway
+                      ? `At this drive the coil can't settle: it would pass ${Math.round(props.heated.tempC)} °C.`
+                      : `At this drive the coil settles at ${Math.round(props.heated.tempC)} °C: Re ${props.heated.re20.toFixed(2)} → ${props.heated.reHot.toFixed(2)} Ω, about ${Math.abs(props.heated.compressionDb).toFixed(1)} dB less output over ${s.heatBand[0]}–${s.heatBand[1]} Hz.`
+                    : "Where the coil settles shows here once a box is on."}{" "}
+                Steady state: a long, loud passage.
+              </p>
+            </>
+          )}
+          <div data-help="What limits the driver's power on the Max SPL chart. V²/Re: Pe against the voltage into Re (WinISD). Real power: what the driver actually takes, so more volts near resonance (Hornresp). Coil temperature: the coil heats with the current a steady note drives through it, until it reaches its highest temperature (Driver → Large signal); Pe sets how fast it heats, and the amplifier's limits are checked with the coil hot." data-help-title="Power rating vs">
+            <RadioCards<Settings["thermalLimit"]>
+              legend="Power rating vs"
+              value={s.thermalLimit}
+              options={[
+                { value: "nominal", title: "V²/Re", description: "The driver's Pe is held against the voltage into Re", aside: like("WinISD") },
+                { value: "real", title: "Real power", description: "What the driver actually takes: more volts allowed near resonance", aside: like("Hornresp") },
+                { value: "coil", title: "Coil temperature", description: "How hot the coil gets: Pe sets how fast it heats" },
+              ]}
+              onChange={(thermalLimit) => set({ thermalLimit })}
+            />
+          </div>
+          {s.thermalLimit === "coil" && !props.hasThermal && <p className="hint">Needs the driver&rsquo;s Pe or its thermal resistance (Driver → Large signal): until then there&rsquo;s no thermal limit.</p>}
         </Section>
 
         <Section icon="box" title="Box" value={`Ql ${qText(losses.ql)} · Qa ${qText(losses.qa)} · Qp ${qText(losses.qp)}`}>
@@ -430,7 +502,7 @@ export function SettingsPanel(props: {
 }
 
 const USAGE_HELP =
-  "Thank you for keeping this on: it's one of the easiest ways to help Speaker Box Genius get better for everyone. It sends anonymous counts of how the app is used (box types added, imports and exports, tabs and charts opened, warnings shown), where clicks land with all text hidden, and how fast pages load. That shows us what people rely on most and where things get confusing, so we can fix and improve the right things first. It never sends your design, its values, names or files, sets no cookies, and has no ID that follows you between visits. Crash reports are separate and stay on. Your choice is kept in this browser only.";
+  "Thank you for keeping this on: it's one of the easiest ways to help Speaker Box Genius get better for everyone. It sends anonymous counts of how the app is used (box types added, imports and exports, tabs and charts opened, warnings shown), where clicks land with all text hidden, how fast pages load, and session replays of the app as you use it (what you type into fields is hidden). That shows us what people rely on most and where things get confusing, so we can fix and improve the right things first. The counts never include your design, its values, names or files (the replays show the app as you see it, with the fields you type in hidden and never the files you open); it sets no cookies, and has no ID that follows you between visits. Switching it off also stops the site's visit counts. Crash reports are separate and stay on. Your choice is kept in this browser only.";
 
 /** PRIVACY: the anonymous usage stats switch (telemetry.ts). Kept in this browser, not in links or projects. */
 function PrivacyCard() {

@@ -6,7 +6,7 @@
  * of the sample rate the digital response matches the analog one to a few hundredths of a dB
  * (dsp.test.ts), which covers everything a bass filter does.
  */
-import { highPassPrototype, type EqStage, type HighPass } from "./filters.ts";
+import { highPassPrototype, shelf1Corners, type EqStage, type HighPass } from "./filters.ts";
 
 /** An analog section (b2·s² + b1·s + b0) / (a2·s² + a1·s + a0), s in rad/s, prewarped at fWarp. */
 export interface AnalogSection {
@@ -66,6 +66,10 @@ export function eqSection(st: EqStage): AnalogSection {
       const k = (Math.sqrt(A) / st.q) * w0;
       return { b: [A * A, A * k, A * w0 * w0], a: [1, k, A * w0 * w0], fWarp: st.freq };
     }
+    case "lowshelf1": {
+      const { wz, wp } = shelf1Corners(st.freq, st.gain_db);
+      return { b: [0, 1, wz], a: [0, 1, wp], fWarp: st.freq };
+    }
   }
 }
 
@@ -107,6 +111,8 @@ export function eqLabel(st: EqStage): string {
       return `Low shelf ${fmt(st.freq)} Hz ${st.gain_db >= 0 ? "+" : ""}${fmt(st.gain_db)} dB Q ${fmt(st.q)}`;
     case "highshelf":
       return `High shelf ${fmt(st.freq)} Hz ${st.gain_db >= 0 ? "+" : ""}${fmt(st.gain_db)} dB Q ${fmt(st.q)}`;
+    case "lowshelf1":
+      return `Low shelf 6 dB/oct ${fmt(st.freq)} Hz ${st.gain_db >= 0 ? "+" : ""}${fmt(st.gain_db)} dB`;
   }
 }
 

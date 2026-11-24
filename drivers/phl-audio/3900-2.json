@@ -1,0 +1,36 @@
+{
+  "brand": "PHL Audio",
+  "model": "3900-2",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 56,
+    "qms": 4.71,
+    "qes": 0.18,
+    "vas_l": 20.3,
+    "re": 5,
+    "sd_cm2": 308,
+    "qts": 0.18,
+    "le_mh": 1.433,
+    "bl": 22.7,
+    "mms_g": 53.5,
+    "xmax_mm": 4.5,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 229,
+    "depth_mm": 120,
+    "displacement_l": 2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/3900-2_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

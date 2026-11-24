@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "6201MNd",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 36,
+    "qms": 5.22,
+    "qes": 0.29,
+    "vas_l": 140,
+    "re": 5.3,
+    "sd_cm2": 871,
+    "qts": 0.27,
+    "le_mh": 1.624,
+    "bl": 25,
+    "mms_g": 150,
+    "xmax_mm": 10.5,
+    "pe_w": 1000
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 173,
+    "displacement_l": 4.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/6201MNd_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

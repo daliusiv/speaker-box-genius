@@ -1,0 +1,23 @@
+{
+  "title": "12-inch subwoofer, U-frame",
+  "record": "O3-ob12-u.txt",
+  "driver": {
+    "fs": 24,
+    "qms": 4.2,
+    "qes": 0.42,
+    "vas_l": 85,
+    "re": 3.4,
+    "sd_cm2": 480,
+    "le_mh": 2.4
+  },
+  "hornrespPath_cm": 68.9,
+  "text": "Hornresp: CH, S = 2025 cm², L12 = 0.1 (front, open), L56 = 30 cm (the duct behind the cone). App: 45 × 45 cm frame, no wall thickness, 30 cm deep (the same duct). Paths differ: app 75 cm, Hornresp 68.9 cm.",
+  "box": {
+    "kind": "open-baffle",
+    "frame": "u",
+    "w_cm": 45,
+    "h_cm": 45,
+    "t_cm": 0,
+    "depth_cm": 30
+  }
+}

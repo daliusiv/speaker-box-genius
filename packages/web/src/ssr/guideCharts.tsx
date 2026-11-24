@@ -35,12 +35,10 @@ export const GUIDE_CHART_WIDTHS = { narrow: 360, wide: 700 } as const;
 
 let next = 0;
 
-/**
- * One chart, drawn twice (phone and desktop layouts; the page's CSS shows one), or once at phone
- * width for a panel. `runs` are examples from site/examples.ts: several share one chart (see
- * combineRuns in guideRuns.ts).
- */
-export function renderGuideChart(runs: GuideChartRun[], kind: GuideChartKind, o: GuideChartOptions = {}): string {
+type Prepared = ReturnType<typeof prepare>;
+
+/** The engine run behind a chart: its designs, and each ChartDraw builder (the app's own). */
+function prepare(runs: GuideChartRun[], kind: GuideChartKind) {
   const solvedAll = runs.map((r) => solveDriver(r.state));
   if (runs.length > 1 && (kind === "impulse" || kind === "step")) throw new Error(`a ${kind} chart draws one example`);
   const { state, designs } = combineRuns(runs.map((r, i) => ({ run: { state: r.state, designs: runDesigns(r.state, solvedAll[i]!) }, ...(r.pick ? { pick: r.pick } : {}) })));
@@ -61,6 +59,43 @@ export function renderGuideChart(runs: GuideChartRun[], kind: GuideChartKind, o:
     za: () => zaChart(input),
     delay: () => delayChart(input),
   };
+  return { state, designs, solved, input, draws };
+}
+
+/** The numbers behind a chart, for the pages' Markdown twins (site/aiDocs.ts): its curves, limits and each design's F3 and F6. */
+export interface GuideChartData {
+  title: string;
+  unit: string;
+  freq: number[];
+  series: { label: string; y: number[] | null; over?: number; f3: number | null; f6: number | null }[];
+  limits: { label: string; value: number }[];
+}
+
+export function guideChartData(runs: GuideChartRun[], kind: GuideChartKind): GuideChartData {
+  const p: Prepared = prepare(runs, kind);
+  const shown = kind === "impulse" || kind === "step" ? p.designs.filter((d) => !d.compare) : p.designs;
+  const fs = (i: number, n: number) => (n === shown.length ? { f3: shown[i]!.result.summary.f3 ?? null, f6: shown[i]!.result.summary.f6 ?? null } : { f3: null, f6: null });
+  if (kind === "air" || kind === "airmax" || kind === "impulse" || kind === "step") {
+    const names: Record<string, string> = { air: "Air distortion", airmax: "Air distortion at max SPL", impulse: "Impulse response", step: "Step response" };
+    return { title: names[kind]!, unit: "", freq: [], series: shown.map((d, i) => ({ label: d.label, y: null, ...fs(i, shown.length) })), limits: [] };
+  }
+  const d = p.draws[kind]();
+  return {
+    title: d.title ?? kind,
+    unit: d.unit ?? "",
+    freq: Array.from(d.freq),
+    series: d.series.map((s, i) => ({ label: s.label, y: s.y ? Array.from(s.y) : null, ...(s.over ? { over: s.over } : {}), ...fs(i, d.series.length) })),
+    limits: (d.limits ?? []).filter((l) => !l.curve && l.label).map((l) => ({ label: l.label, value: l.value })),
+  };
+}
+
+/**
+ * One chart, drawn twice (phone and desktop layouts; the page's CSS shows one), or once at phone
+ * width for a panel. `runs` are examples from site/examples.ts: several share one chart (see
+ * combineRuns in guideRuns.ts).
+ */
+export function renderGuideChart(runs: GuideChartRun[], kind: GuideChartKind, o: GuideChartOptions = {}): string {
+  const { state, designs, solved, input, draws } = prepare(runs, kind);
   const faded = designs.filter((d) => d.compare).map((d) => d.label);
   const main = designs.filter((d) => !d.compare);
   const chart = (still: { width: number; at?: number }) =>

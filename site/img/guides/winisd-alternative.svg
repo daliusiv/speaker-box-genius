@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="#11141a"/>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+<rect x="220" y="90" width="760" height="450" rx="14" stroke="#8b93a3" fill="#8b93a3" fill-opacity="0.04"/>
+<path d="M220 134H980" stroke="#8b93a3" stroke-opacity=".6"/>
+<circle cx="250" cy="112" r="7" stroke="#8b93a3" fill="#8b93a3" fill-opacity="0.3"/>
+<circle cx="274" cy="112" r="7" stroke="#8b93a3" fill="#8b93a3" fill-opacity="0.3"/>
+<circle cx="298" cy="112" r="7" stroke="#8b93a3" fill="#8b93a3" fill-opacity="0.3"/>
+<rect x="300" y="240" width="200" height="230" rx="6" stroke="#4ed7e9" fill="#4ed7e9" fill-opacity="0.05"/>
+<path d="M500 265.0V395.0" stroke="#4ed7e9" stroke-width="7"/>
+<path d="M500 275.0L464 308.0V352.0L500 385.0Z" stroke="#4ed7e9" fill="#4ed7e9" fill-opacity=".14"/>
+<rect x="434" y="304.0" width="30" height="52.0" rx="4" stroke="#4ed7e9" fill="#4ed7e9" fill-opacity="0.25"/>
+<path d="M400 410H500M400 446H500" stroke="#fb923c"/>
+<path d="M420 428.0H460" stroke="#fb923c" stroke-dasharray="14 12"/>
+<path d="M450 416.0L470 428.0L450 440.0" stroke="#fb923c"/>
+<path d="M560 440C610 440 640 220 700 220S760 240 900 240" stroke="#fb923c"/>
+<path d="M560 470H900M560 200V470" stroke="#8b93a3" stroke-opacity=".5"/>
+</g>
+</svg>

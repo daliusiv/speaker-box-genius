@@ -63,3 +63,9 @@ jobs:
         # The database bundle and the app. The site pages (`pnpm build:site`) are already built by
         # the Tests step (site/build.test.ts), and in full by the deploy and preview workflows.
         run: pnpm build:db && pnpm --filter @sbg/web build
+
+      - name: MCP server bundle (npm package + Claude Desktop extension) runs on its own
+        run: |
+          pnpm mcp:build
+          pnpm --filter @sbg/mcp exec mcpb validate dist/mcpb/manifest.json
+          node --experimental-strip-types --disable-warning=ExperimentalWarning --test packages/mcp/test/bundle.test.ts

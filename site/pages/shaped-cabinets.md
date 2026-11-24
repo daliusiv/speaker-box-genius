@@ -3,6 +3,7 @@ title: "Non-rectangular speaker cabinets: cylinders, spheres and tapered boxes"
 description: How to get the true net volume of a Sonotube, a sphere or a tapered (truncated pyramid or wedge) cabinet, what the shape changes and what it doesn't, with one 83.5 L sub built four ways that you can open and change.
 path: guides/shaped-cabinets
 image: shaped-cabinets.png
+art: A box, a tube, a sphere and a tapered cabinet, each with its inside volume traced.
 order: 26
 group: start
 ---

@@ -1,0 +1,34 @@
+{
+  "brand": "Accuton",
+  "model": "CL190-6-351",
+  "type": "midbass",
+  "nominal_ohms": 6,
+  "size_in": 7.5,
+  "ts": {
+    "fs": 46,
+    "qms": 3.14,
+    "qes": 0.41,
+    "vas_l": 25.42,
+    "re": 5.4,
+    "sd_cm2": 206.12,
+    "qts": 0.37,
+    "mms_g": 27.6,
+    "le_mh": 0.17,
+    "bl": 10.27,
+    "xmax_mm": 4,
+    "pe_w": 120
+  },
+  "physical": {
+    "cutout_mm": 170,
+    "depth_mm": 78.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://accuton.com/home-audio/drivers/crystalid/CL190-6-351",
+      "retrieved": "2026-11-19",
+      "note": "Values from the product pages on accuton.com, used with Accuton's permission (19 Nov 2026), re-read from the website each month. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Accuton's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

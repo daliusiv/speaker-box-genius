@@ -53,7 +53,8 @@ export function ExportWindow(props: {
   const [error, setError] = useState("");
   const pickInput = useRef<HTMLInputElement>(null);
 
-  const f = exportFormat(formatId) ?? EXPORT_FORMATS[0]!;
+  const listed = EXPORT_FORMATS.filter((x) => x.shown?.(state) ?? true);
+  const f = listed.find((x) => x.id === formatId) ?? exportFormat("json") ?? listed[0]!;
   const boxes = state.designs.filter((d) => d.on);
   const why = (d: AppState["designs"][number]) => (f.supports ? f.supports(d, state) : true);
 
@@ -123,10 +124,10 @@ export function ExportWindow(props: {
     >
       <div className="export-grid">
         <div className="format-rail" role="radiogroup" aria-label="Format">
-          {groups.map((g) => (
+          {groups.filter((g) => listed.some((x) => x.group === g)).map((g) => (
             <div key={g} className="format-group">
               <p className="menu-label">{GROUPS[g]}</p>
-              {EXPORT_FORMATS.filter((x) => x.group === g).map((x) => (
+              {listed.filter((x) => x.group === g).map((x) => (
                 <button
                   key={x.id}
                   type="button"

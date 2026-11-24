@@ -72,7 +72,20 @@ export type EqStage =
   /** Low shelf: gain_db below freq, flat above (q 0.707 = gentle). */
   | { type: "lowshelf"; freq: number; gain_db: number; q: number }
   /** High shelf: gain_db above freq, flat below (q 0.707 = gentle). */
-  | { type: "highshelf"; freq: number; gain_db: number; q: number };
+  | { type: "highshelf"; freq: number; gain_db: number; q: number }
+  /**
+   * First-order low shelf (6 dB/oct): gain_db below freq/√g, flat above freq·√g, half the gain
+   * (in dB) at freq; g = 10^(gain_db/20). The open baffle's Dipole EQ uses it: a dipole falls
+   * 6 dB/oct below its peak.
+   */
+  | { type: "lowshelf1"; freq: number; gain_db: number };
+
+/** A first-order low shelf's two corners (rad/s): the zero ωz and the pole ωp, ωz/ωp = g. */
+export function shelf1Corners(freq: number, gain_db: number): { wz: number; wp: number } {
+  const w0 = 2 * Math.PI * freq;
+  const r = Math.sqrt(10 ** (gain_db / 20));
+  return { wz: w0 * r, wp: w0 / r };
+}
 
 /** Ratio of two quadratics in s = jω: (s² + b1·s + b0) / (s² + a1·s + a0), times k. */
 function biquad(w: number, b1: number, b0: number, a1: number, a0: number, k = 1, a2 = 1): Complex {
@@ -111,6 +124,11 @@ export function eqStageResponse(st: EqStage, f: number): Complex {
       const num = cx(w0 * w0 - A * w * w, b * w);
       const den = cx(A * w0 * w0 - w * w, b * w);
       return mul(cx(A), div(num, den));
+    }
+    case "lowshelf1": {
+      // (s + ωz) / (s + ωp): g at DC, 1 at high frequencies.
+      const { wz, wp } = shelf1Corners(st.freq, st.gain_db);
+      return div(cx(wz, w), cx(wp, w));
     }
   }
 }

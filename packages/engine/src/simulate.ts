@@ -3,7 +3,10 @@ import { passiveActive, passiveBankGain, passiveInputImpedance, passiveThevenin,
 import { AIR_GAMMA, STANDARD_AIR, type Air } from "./constants.ts";
 import { combineAtDistance, type PathMode } from "./combine.ts";
 import { baffledPistonImpedance, lineNetwork, pathHd2, pistonPowerFactor, type LineInput } from "./line.ts";
+import { coilTempForCurrent, reAt, rthOf, DEFAULT_TMAX_C, type CoilParts } from "./thermal.ts";
+import { SINE_CREST_DB } from "./program.ts";
 import { eqResponse, highPassResponse, type EqStage, type HighPass } from "./filters.ts";
+import { flatModel, frameModel, openBaffleFrequencies, openBaffleGeometry } from "./openBaffle.ts";
 import {
   boxCompliance,
   DEFAULT_END_CORRECTION,
@@ -123,9 +126,24 @@ export interface SimulationOptions {
   /**
    * What the driver's power rating (Pe) is held against for the max-SPL curve: "nominal"
    * (default, like WinISD) V²/Re; "real" the real power the driver takes, V·I·cos φ (like
-   * Hornresp), which is less than V²/Re wherever the impedance rises above Re.
+   * Hornresp), which is less than V²/Re wherever the impedance rises above Re. "coil": the voice
+   * coil's temperature instead (opt-in): the coil heats with the current a steady sine at each
+   * frequency drives through it (thermal.ts), Re rises and output falls, and the limit is the
+   * current that holds it at `thermal.tmax_C`; the amplifier's limits are checked with the coil at
+   * that temperature. Needs Pe or `thermal.rth`; without either there is no thermal limit.
    */
-  thermalLimit?: "nominal" | "real";
+  thermalLimit?: "nominal" | "real" | "coil";
+  /**
+   * Coil mode only: the program signal's crest factor (peak ÷ RMS, dB) for `programSpl`. Default
+   * 3.01 (a sine: programSpl = maxSpl). Elsewhere the program envelope comes from `ceilings`.
+   */
+  crest_dB?: number;
+  /** The coil's thermal model: R_th (K/W; default (T_max − 20)/Pe), T_max (°C, default 200), the air around it (°C, default 20). */
+  thermal?: { rth?: number; tmax_C?: number; ambient_C?: number } | null;
+  /** Fill `power`: where the amplifier's power goes at each frequency (costs a little; off for searches). */
+  powerBreakdown?: boolean;
+  /** Fill `coilParts`, to solve the coil's temperature at any drive without simulating again (thermal.ts). */
+  coilParts?: boolean;
   /**
    * Port end correction (× the port's equivalent diameter) for boxes that don't set their own:
    * default 0.732, one end flanged and one free, like WinISD.
@@ -361,6 +379,24 @@ export interface SimulationResult {
    */
   ceilings: { avgSpl: Float64Array; avgKind: LimitKind[]; peakSpl: Float64Array; peakKind: LimitKind[] };
   /**
+   * Coil mode only (thermalLimit "coil"): the average SPL a signal with crest factor `crest_dB`
+   * reaches, with the coil heated by that average and the peak limits met C − 3.01 dB sooner. The
+   * coil's temperature depends on the signal, so this one needs the engine (not programEnvelope).
+   */
+  programSpl?: Float64Array;
+  /** Coil mode only: the coil's temperature (°C) at maxSpl and the output it loses there against a cold coil (dB, ≤ 0). */
+  coilAtMax?: { tempC: Float64Array; compressionDb: Float64Array };
+  /**
+   * With `powerBreakdown`: where the power into the driver bank goes (W, the whole bank; the source
+   * resistance and passive parts left out). inW = coilW + eddyW + mechW + boxW + acousticW: the coil's
+   * resistance, the rest of the coil's losses (inductance, eddy currents), the suspensions (cones and
+   * PRs), the box, port and line losses (the remainder, ≥ 0), and the sound radiated (a baffled
+   * piston's share). efficiency = acousticW / inW.
+   */
+  power?: { inW: Float64Array; coilW: Float64Array; eddyW: Float64Array; mechW: Float64Array; boxW: Float64Array; acousticW: Float64Array; efficiency: Float64Array };
+  /** With `coilParts` (or `powerBreakdown`, or coil mode): the coil's current and loop, for thermal.ts. */
+  coilParts?: CoilParts;
+  /**
    * With `airDistortion`: the air's own 2nd harmonic (%) against the fundamental at this
    * frequency, at the input power (airHd2) and at maxPowerW (airHd2AtMax). Boxes: the box air
    * spring, radiated. Lines and horns: the wave steepening along the path, at the exit. Null when off.
@@ -394,6 +430,8 @@ export interface SimulationResult {
     fbRear?: number;
     fc?: number;
     qtc?: number;
+    /** Open baffle: the mean front-to-rear path D (m), dipole peak c/2D, first null c/D, and an H/U frame's duct resonance (Hz). */
+    ob?: { d_m: number; fPeak: number; fNull: number; fQuarter: number | null };
   };
 }
 
@@ -444,10 +482,14 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
   const air = opts.air ?? STANDARD_AIR;
   // An infinite baffle is a sealed box whose rear space isn't the room: its leak is never heard.
   // An open rear (or a sealed box of infinite volume) has no box at all: no air spring, no losses.
-  const ib = boxIn.kind === "infinite-baffle";
-  const asSealed = ib ? { kind: "sealed" as const, vb_l: boxIn.rear_l ?? Infinity, ql: boxIn.ql, qa: boxIn.qa } : boxIn;
+  // An open baffle is a driver with an open rear (a plain board) or in a frame's ducts (a line
+  // with an open mouth), radiating into full space with its rear wave round the edges.
+  const ob = boxIn.kind === "open-baffle" ? openBaffleGeometry(boxIn) : null;
+  const encl: Exclude<EnclosureInput, { kind: "open-baffle" }> = boxIn.kind === "open-baffle" ? (ob!.rearLine ?? { kind: "infinite-baffle" }) : boxIn;
+  const ib = encl.kind === "infinite-baffle";
+  const asSealed = ib ? { kind: "sealed" as const, vb_l: encl.rear_l ?? Infinity, ql: encl.ql, qa: encl.qa } : encl;
   const openRear = asSealed.kind === "sealed" && !Number.isFinite(asSealed.vb_l) && asSealed.vb_l > 0;
-  const box: Exclude<EnclosureInput, { kind: "infinite-baffle" }> = openRear ? { kind: "sealed", vb_l: Infinity, ql: Infinity, qa: Infinity } : asSealed;
+  const box: Exclude<EnclosureInput, { kind: "infinite-baffle" | "open-baffle" }> = openRear ? { kind: "sealed", vb_l: Infinity, ql: Infinity, qa: Infinity } : asSealed;
   const leakAbsorbed = opts.leakage === "absorbed" || ib;
   const base = driverModel(driverIn, air);
   const cold = opts.isobaric ? isobaricPair(base, opts.isobaric.coils) : base;
@@ -459,7 +501,7 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
   const winisd = opts.driveModel === "winisd";
   const power = opts.power ?? 1;
   const r = opts.distance_m ?? 1;
-  const space = opts.space === "full" ? 4 : 2;
+  const space = ob || opts.space === "full" ? 4 : 2;
   const vLimit = opts.portVelocityLimit ?? 17;
 
   // Voltage at the terminals of the whole driver bank, and per driver.
@@ -494,6 +536,8 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
   // Only for watts: a set voltage, or passive parts in front of the coil, keep the real circuit.
   const fold = wattsIn && !net && rgDriver > 0;
   const d = fold ? foldSourceResistance(hot, rgDriver) : hot;
+  const obFlat = ob?.frame === "flat" ? flatModel(boxIn as Extract<EnclosureInput, { kind: "open-baffle" }>, d.sd, air) : null;
+  const obFrame = ob && ob.frame !== "flat" ? frameModel(boxIn as Extract<EnclosureInput, { kind: "open-baffle" }>, d.sd, air) : null;
   const rgCircuit = fold ? 0 : rgDriver;
   // The amplifier's real output voltage: the folded driver at `volts` is the real one with Rg at this.
   const ampVolts = fold ? volts * Math.sqrt((hot.re + rgDriver) / hot.re) : volts;
@@ -504,6 +548,8 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
   const summary: SimulationResult["summary"] = { volts: ampVolts, referenceSpl: 0, f3: null, f6: null, f10: null, f3RefSpl: 0 };
   const bp = box.kind === "bandpass" ? bandpassNetwork({ ...box, endCorrection: box.endCorrection ?? opts.endCorrection }, d, n, air, summary, opts.portModel === "pipe", opts.leakage === "absorbed") : null;
   const line = box.kind === "line" ? lineNetwork(box, air) : null;
+  // H-frame: the duct in front of the cone.
+  const obFront = ob?.frontLine ? lineNetwork(ob.frontLine, air) : null;
   // A line or horn models the air on the cone's sides explicitly, so the cone carries its bare
   // moving mass Mmd = Mms − 16ρa³/3 (both sides' free-air load, as Hornresp defines it). An open
   // line adds the front's radiation load (a piston in a baffle); the rear's is in the line's load.
@@ -643,7 +689,7 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
   const N = freq.length;
   const out = {
     spl: new Float64Array(N),
-    parts: box.kind === "line" && box.tap_cm === undefined && !box.frontLoaded ? { cone: new Float64Array(N), mouth: new Float64Array(N) } : null,
+    parts: box.kind === "line" && box.tap_cm === undefined && !box.frontLoaded && !ob ? { cone: new Float64Array(N), mouth: new Float64Array(N) } : null,
     splSide: ventDist > 0 ? new Float64Array(N) : null,
     phase: new Float64Array(N),
     gd: new Float64Array(N),
@@ -694,6 +740,25 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
     return scale(add(c.zae, c.zas), 1 / n);
   };
 
+  // Voice-coil heating (thermal.ts): the coil current in the real circuit and the rest of its loop.
+  const coilMode = opts.thermalLimit === "coil";
+  const wantParts = coilMode || !!opts.coilParts || !!opts.powerBreakdown;
+  const simTemp = heat === 1 ? 20 : opts.coilTemp_C!;
+  const tAmb = opts.thermal?.ambient_C ?? 20;
+  const tMax = opts.thermal?.tmax_C ?? DEFAULT_TMAX_C;
+  const rth = rthOf(hot.pe, tMax, opts.thermal?.rth);
+  // The current (RMS, per driver) that holds the coil at T_max: P = (T_max − T_amb)/R_th into Re(T_max).
+  const iTh = rth === null ? Infinity : Math.sqrt(Math.max(0, (tMax - tAmb) / rth) / reAt(cold.re, tMax));
+  const crestExtra = (opts.crest_dB ?? SINE_CREST_DB) - SINE_CREST_DB;
+  const parts: CoilParts | null = wantParts
+    ? { re20: cold.re, simTemp_C: simTemp, reSim: hot.re, iRe: new Float64Array(N), iIm: new Float64Array(N), zRe: new Float64Array(N), zIm: new Float64Array(N), drivers: n, thermal: rth === null ? null : { rth, tmax_C: tMax, ambient_C: tAmb } }
+    : null;
+  const powerOut = opts.powerBreakdown
+    ? { inW: new Float64Array(N), coilW: new Float64Array(N), eddyW: new Float64Array(N), mechW: new Float64Array(N), boxW: new Float64Array(N), acousticW: new Float64Array(N), efficiency: new Float64Array(N) }
+    : null;
+  const programSpl = coilMode ? new Float64Array(N) : null;
+  const coilAtMax = coilMode ? { tempC: new Float64Array(N), compressionDb: new Float64Array(N) } : null;
+
   for (let i = 0; i < N; i++) {
     const f = freq[i]!;
     const w = 2 * Math.PI * f;
@@ -711,6 +776,7 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
     let xpr = 0;
     let vport = 0;
     let prLimitPower = Infinity;
+    let prLossW = 0; // the PRs' suspension losses (W, all of them), single PR boxes
     let airHd2Now = NaN;
     let u0Side: Complex | null = null; // with the port etc. side by side, when ventDist > 0
     if (bp) {
@@ -763,7 +829,7 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
       let zasLine = cx(susp.re / sd2, (w * lineMmd + susp.im) / sd2);
       // Several drivers side by side load each other's fronts: together they push one piston
       // of n·Sd, so each sees n × that piston's impedance (√n × one cone's air mass), as Hornresp has it.
-      if (!line.mouthOnly) zasLine = add(zasLine, scale(baffledPistonImpedance(n * d.sd, w, air), n));
+      if (!line.mouthOnly) zasLine = add(zasLine, scale(obFront ? obFront.zLoad(w) : baffledPistonImpedance(n * d.sd, w, air), n));
       const solveLine = () => {
         const zl = line.zLoad(w);
         const zm = add(zasLine, scale(zl, n));
@@ -814,6 +880,14 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
       const mouthOut = power ? scale(exitAtListener, pistonPowerFactor(line.exitArea, w, air)) : exitAtListener;
       const coneOut = power ? scale(ud, pistonPowerFactor(n * d.sd, w, air)) : ud;
       u0 = line.mouthOnly ? mouthOut : sub(mouthOut, coneOut);
+      if (ob) {
+        // Open baffle frame: the front source (the cone, or an H-frame's front mouth; its outward
+        // flow is −front) and the rear mouth, each heard round the frame's edges (edge diffraction
+        // of the frame as a block: F against a free source of the same flow).
+        const frontMouth = obFront ? mul(ud, obFront.exitPerCone(w)) : null;
+        const front = frontMouth ? (power ? scale(frontMouth, pistonPowerFactor(obFront!.exitArea, w, air)) : frontMouth) : coneOut;
+        u0 = sub(mul(mouthOut, obFrame!.rear.at(f)), mul(front, obFrame!.front.at(f)));
+      }
       // Two sources dm apart, their power over all directions (Hornresp's Path): the level only.
       if (pathPower && dm > 0 && !line.mouthOnly) u0 = combineAtDistance(mouthOut, scale(coneOut, -1), dm, w, air.c, "power");
       if (out.parts) {
@@ -892,6 +966,13 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
         u0 = combineAtDistance(cone, vent, ventDist, w, air.c, pathMode);
       }
 
+      if (obFlat) {
+        // Plain open baffle: the cone's front and back on the board's two faces, the back heard
+        // round the edges (edge diffraction, all orders): F against a free source of the front's flow.
+        const front = opts.splFrom === "power" ? scale(sol.u, -n * pistonPowerFactor(n * d.sd, w, air)) : scale(sol.u, -n);
+        u0 = mul(front, obFlat.at(f));
+      }
+
       if (out.airC && openRear) {
         // No air spring behind the cone: no box air to distort.
         airHd2Now = 0;
@@ -926,7 +1007,9 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
       if (prModels && out.xprGroups) {
         // Each group sees the box pressure; flow per PR = p / (group impedance × count).
         prModels.forEach((g, k) => {
-          const uEach = scale(div(pBox, g.z(w)), 1 / g.count);
+          const zg = g.z(w);
+          if (powerOut) prLossW += abs(div(pBox, zg)) ** 2 * zg.re;
+          const uEach = scale(div(pBox, zg), 1 / g.count);
           const xk = (Math.SQRT2 * abs(uEach)) / (g.m.sd * w);
           out.xprGroups![k]![i] = xk * 1000;
           if (g.m.xmax !== null && xk > 0) prLimitPower = Math.min(prLimitPower, pNow * (g.m.xmax / xk) ** 2);
@@ -970,12 +1053,49 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
     out.zmag[i] = abs(zIn);
     out.zph[i] = (arg(zIn) * 180) / Math.PI;
 
+    // The coil's current per driver in the real circuit (the folded driver's force Bl'·I' is the
+    // real Bl·I), and the rest of its loop: source, coil inductance and losses, motional impedance.
+    let iCoil = cx(0);
+    let zRest = cx(0); // coil (less Re) + motional, per driver
+    let zLoop = cx(0); // zRest + the source's impedance, per driver
+    if (parts) {
+      const zvcReal = fold ? voiceCoilImpedance(hot, w) : zvc;
+      const zSrc = fold ? cx(rgDriver) : th ? perDriverZ(th.z) : cx(rgCircuit);
+      iCoil = scale(sub(scale(pg, d.sd), div(scale(ui, (d.bl * d.bl) / d.sd), ze)), 1 / hot.bl);
+      zRest = add(sub(zvcReal, cx(hot.re)), div(cx((hot.bl * hot.bl) / sd2), zMech));
+      zLoop = add(zSrc, zRest);
+      parts.iRe[i] = iCoil.re;
+      parts.iIm[i] = iCoil.im;
+      parts.zRe[i] = zLoop.re;
+      parts.zIm[i] = zLoop.im;
+      if (powerOut) {
+        const i2 = iCoil.re * iCoil.re + iCoil.im * iCoil.im;
+        const u2 = ui.re * ui.re + ui.im * ui.im;
+        // Power into each driver: its coil's resistance and losses, and what the cone takes (|U|²·Re Zmech).
+        const inW = n * (i2 * zvcReal.re + u2 * zMech.re);
+        const coilW = n * i2 * hot.re;
+        const eddyW = n * i2 * (zvcReal.re - hot.re);
+        const mechW = n * u2 * (suspensionImpedance(d, w).re / sd2) + prLossW;
+        // Sound power: the far-field intensity over the solid angle it radiates into (2π or 4π), as
+        // a baffled piston of the radiating area (on-axis SPL overstates it once that's large).
+        const ppf = opts.splFrom === "power" ? 1 : pistonPowerFactor(line?.mouthOnly ? line.exitArea : n * d.sd, w, air);
+        const acousticW = (space * Math.PI * r * r * abs(p) ** 2 * ppf * ppf) / (air.rho * air.c);
+        powerOut.inW[i] = inW;
+        powerOut.coilW[i] = coilW;
+        powerOut.eddyW[i] = eddyW;
+        powerOut.mechW[i] = mechW;
+        powerOut.acousticW[i] = acousticW;
+        powerOut.boxW[i] = Math.max(0, inW - coilW - eddyW - mechW - acousticW);
+        powerOut.efficiency[i] = inW > 0 ? acousticW / inW : NaN;
+      }
+    }
+
     // Power limits: SPL ∝ V², excursion and velocity ∝ V.
     const limits: [SimulationResult["limitedBy"][number], number, AmpLimit?][] = [];
     // The amplifier's output now, through the filter and EQ, into the bank plus the source resistance.
     const zAmpNow = add(zIn, cx(rgTotal));
     const vAmpNow = ampVolts * Math.sqrt(filterGain2);
-    if (d.pe !== null) {
+    if (d.pe !== null && !coilMode) {
       if (opts.thermalLimit === "real") {
         // Real power into the bank: |V_bank|² · Re(Z) / |Z|².
         const vBank = net ? vAmpNow * abs(passiveBankGain(net, w, zBank, rgTotal)) : (vAmpNow * abs(zIn)) / abs(zAmpNow);
@@ -999,9 +1119,85 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
       if (Number.isFinite(prLimitPower)) limits.push(["pr-xmax", prLimitPower]);
     } else if (prXmax !== null && xpr > 0) limits.push(["pr-xmax", pNow * (prXmax / xpr) ** 2]);
     if (out.vport && vport > 0) limits.push(["port", pNow * (vLimit / vport) ** 2]);
-    if (out.airHd2) out.airHd2[i] = airHd2Now;
     // HD2 grows with the drive's amplitude (∝ √power).
     if (airOpt?.limit && airHd2Now > 0) limits.push(["air", pNow * ((airOpt.threshold * 100) / airHd2Now) ** 2]);
+    if (out.airHd2) out.airHd2[i] = airHd2Now;
+
+    if (coilMode) {
+      // Coil temperature: limits as coil currents (RMS, per driver). Excursion, port speed and air
+      // follow the current whatever the coil's temperature; the amplifier's depend on it (a hot
+      // coil draws less current from the same volts), so solve the temperature at the limit and
+      // check them there (fixed point).
+      const iSim = abs(iCoil);
+      const gainAt = (t: number) => abs(add(zLoop, cx(hot.re))) / abs(add(zLoop, cx(reAt(cold.re, t))));
+      const zAmpAt = (t: number) => {
+        const zd = add(cx(reAt(cold.re, t)), zRest);
+        const zb = wiring === "parallel" ? scale(zd, 1 / n) : scale(zd, n);
+        return add(net ? passiveInputImpedance(net, w, zb) : zb, cx(rgTotal));
+      };
+      type Lim = [LimitKind, number, AmpLimit | null];
+      let fixedPeak: Lim = ["none", Infinity, null];
+      for (const l of limits) {
+        const cur = iSim * Math.sqrt(l[1] / pNow);
+        if (l[0] !== "amp" && cur < fixedPeak[1]) fixedPeak = [l[0], cur, null];
+      }
+      const solveCoil = (extra: number) => {
+        let t = simTemp;
+        let res!: { iLim: number; t: number; tCoil: number; peak: Lim; avg: Lim; iNowT: number; za: Complex };
+        for (let k = 0; k < 8; k++) {
+          const iNowT = iSim * gainAt(t);
+          const za = zAmpAt(t);
+          let peak = fixedPeak;
+          let avg: Lim = [rth === null ? "none" : "thermal", iTh, null];
+          if (vAmpNow > 0 && iNowT > 0) {
+            const lims: Lim[] = [];
+            if (opts.amp?.volts) lims.push(["amp", (opts.amp.volts / vAmpNow) * iNowT, "volts"]);
+            if (opts.amp?.amps) lims.push(["amp", ((opts.amp.amps * abs(za)) / vAmpNow) * iNowT, "amps"]);
+            if (opts.amp?.watts && za.re > 0) lims.push(["amp", Math.sqrt(opts.amp.watts / ((vAmpNow / abs(za)) ** 2 * za.re)) * iNowT, "watts"]);
+            for (const l of lims) {
+              if (limitSide(l[0], l[2]) === "avg") {
+                if (l[1] < avg[1]) avg = l;
+              } else if (l[1] < peak[1]) peak = l;
+            }
+          }
+          const iLim = Math.min(avg[1], peak[1] * 10 ** (-extra / 20));
+          const tCoil = rth !== null && Number.isFinite(iLim) ? coilTempForCurrent(iLim, cold.re, rth, tAmb).tempC : simTemp;
+          res = { iLim, t, tCoil, peak, avg, iNowT, za };
+          if (Math.abs(tCoil - t) < 1e-4) break;
+          t = tCoil;
+        }
+        return res;
+      };
+      const sine = solveCoil(0);
+      const win = sine.avg[1] <= sine.peak[1] ? sine.avg : sine.peak;
+      const db = (cur: number) => (Number.isFinite(cur) ? out.spl[i]! + 20 * Math.log10(cur / iSim) : Infinity);
+      limitedBy.push(win[0]);
+      ampLimitBy.push(win[0] === "amp" ? win[2] : null);
+      ceilings.avgKind.push(sine.avg[0]);
+      ceilings.peakKind.push(sine.peak[0]);
+      ceilings.avgSpl[i] = db(sine.avg[1]);
+      ceilings.peakSpl[i] = db(sine.peak[1]);
+      if (Number.isFinite(sine.iLim) && iSim > 0) {
+        const sc = sine.iLim / sine.iNowT; // amplifier volts at the limit ÷ now
+        out.pmax[i] = pNow * sc * sc;
+        out.splmax[i] = db(sine.iLim);
+        if (out.airMax) out.airMax[i] = airHd2Now * (sine.iLim / iSim);
+        out.ampV[i] = vAmpNow * sc;
+        out.ampI[i] = out.ampV[i]! / abs(sine.za);
+        out.ampW[i] = out.ampI[i]! ** 2 * sine.za.re;
+        coilAtMax!.tempC[i] = sine.tCoil;
+        coilAtMax!.compressionDb[i] = 20 * Math.log10(abs(add(zLoop, cx(cold.re))) / abs(add(zLoop, cx(reAt(cold.re, sine.tCoil)))));
+        programSpl![i] = crestExtra === 0 ? out.splmax[i]! : db(solveCoil(crestExtra).iLim);
+      } else {
+        out.pmax[i] = Infinity;
+        out.splmax[i] = NaN;
+        if (out.airMax) out.airMax[i] = NaN;
+        out.ampV[i] = out.ampI[i] = out.ampW[i] = NaN;
+        coilAtMax!.tempC[i] = coilAtMax!.compressionDb[i] = NaN;
+        programSpl![i] = NaN;
+      }
+      continue;
+    }
     let best: [SimulationResult["limitedBy"][number], number, AmpLimit?] = ["none", Infinity];
     let bestAvg: [LimitKind, number] = ["none", Infinity];
     let bestPeak: [LimitKind, number] = ["none", Infinity];
@@ -1079,7 +1275,7 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
     if (band.length > 0) summary.referenceSpl = band[Math.floor(band.length / 2)]!;
   }
   if (line) {
-    summary.fb = lineTuning(freq, out.zmag) ?? undefined;
+    summary.fb = ob ? undefined : (lineTuning(freq, out.zmag) ?? undefined);
     // A line's response ripples above its tuning, so its F3 is the low-frequency edge:
     // where the response first reaches −3 dB coming up from the bottom.
     summary.f3 = crossingUp(freq, out.spl, summary.referenceSpl - 3);
@@ -1099,6 +1295,7 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
     summary.f10 = crossingUp(freq, out.spl, peak - 10);
   }
   summary.f3RefSpl = bp ? summary.bandPeakSpl! : summary.referenceSpl;
+  if (boxIn.kind === "open-baffle") summary.ob = openBaffleFrequencies(boxIn, air, base.sd);
   if (opts.f3From === "peak" && !line && !bp) {
     // VituixCAD style: measure from the bass peak (not above 5 × the box's tuning, where the
     // cone's own roll-off or breakup would take over). Still rising at the cap = no bass peak,
@@ -1151,6 +1348,10 @@ export function simulate(driverIn: DriverInput, boxIn: EnclosureInput, opts: Sim
     limitedBy,
     ampLimitBy,
     ceilings,
+    ...(programSpl ? { programSpl } : {}),
+    ...(coilAtMax ? { coilAtMax } : {}),
+    ...(powerOut ? { power: powerOut } : {}),
+    ...(parts ? { coilParts: parts } : {}),
     airHd2: out.airHd2,
     airHd2AtMax: out.airMax,
     airModel: airOpt ? (line ? "path" : "spring") : null,

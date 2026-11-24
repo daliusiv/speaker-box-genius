@@ -2,7 +2,7 @@ import { DEFAULT_END_CORRECTION, TS_PARAMS, type EqStage, type HighPassType, typ
 import { stuffable, stuffingFrom, type Stuffing } from "./stuffing.ts";
 import { DEFAULT_SIGNAL, signalFrom, type ProgramSignal } from "./programSignal.ts";
 
-export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line" | "ib";
+export type DesignKind = "sealed" | "vented" | "pr" | "bandpass" | "line" | "ib" | "ob";
 /**
  * Volume calculator shapes. "frustum" is shown as "Tapered (all sides)" (it was "Truncated
  * pyramid"; the id stays so old links open); "wedge" is the car wedge with one sloped panel.
@@ -47,6 +47,24 @@ export interface SealedDesign extends DesignBase {
 export interface IbDesign extends DesignBase {
   kind: "ib";
   rear: "open" | "space";
+}
+
+/**
+ * Open baffle (dipole): the driver on a free-standing board, its back open to the room. "flat": a
+ * plain board; "h": an H-frame (the board mid-way in a frame open front and back); "u": a U-frame
+ * (the board at the front, the frame open at the back). Sizes are the outside, in cm; the driver's
+ * centre from the left and bottom edges; walls `t_cm` thick; `depth_cm` front edge to back edge
+ * (kept when switching to a flat board). `vb_l` is unused.
+ */
+export interface ObDesign extends DesignBase {
+  kind: "ob";
+  frame: "flat" | "h" | "u";
+  w_cm: number;
+  h_cm: number;
+  x_cm: number;
+  y_cm: number;
+  t_cm: number;
+  depth_cm: number;
 }
 
 export interface VentedDesign extends DesignBase {
@@ -199,7 +217,7 @@ export interface LineDesign extends DesignBase {
   throatChamber_l: number;
 }
 
-export type DesignState = SealedDesign | VentedDesign | PrDesign | BandpassDesign | LineDesign | IbDesign;
+export type DesignState = SealedDesign | VentedDesign | PrDesign | BandpassDesign | LineDesign | IbDesign | ObDesign;
 
 /** An EQ stage plus where it applies: every design, or one design by id. */
 export type EqItem = EqStage & { id: string; on: boolean; target: string };
@@ -232,7 +250,7 @@ export interface Settings {
    * What the driver's power rating is held against on the Max SPL chart: V²/Re ("nominal",
    * like WinISD) or the real power it takes ("real", like Hornresp).
    */
-  thermalLimit: "nominal" | "real";
+  thermalLimit: "nominal" | "real" | "coil";
   /** The amplifier's own limits on the Max SPL chart: RMS volts and amps at its output (0 = none). */
   ampVolts: number;
   ampAmps: number;
@@ -272,8 +290,17 @@ export interface Settings {
   driveModel: "winisd" | "circuit";
   /** Sealed, ported and PR boxes: the cone's front air as a fixed mass (like WinISD) or a piston's radiation impedance (like Hornresp). */
   coneLoad: "mass" | "piston";
-  /** Voice-coil temperature (°C): 20 = the datasheet's cold values (like WinISD); hotter raises Re. */
+  /** Voice-coil temperature (°C): 20 = the datasheet's cold values (like WinISD); hotter raises Re. Used when coilMode is "fixed". */
   coilTemp_C: number;
+  /**
+   * The coil's temperature: "cold" the datasheet's 20 °C (like WinISD), "fixed" coilTemp_C, "heated"
+   * where the drive heats it (pink noise in heatBand at the drive's average power, Pe or R_th).
+   */
+  coilMode: CoilMode;
+  /** The air around the driver (°C), for the heated coil and the coil temperature limit. */
+  ambient_C: number;
+  /** Heated coil: the band (Hz) the pink noise that heats it covers, after the high-pass and EQ. */
+  heatBand: [number, number];
   /**
    * Chuffing line for port (and line mouth) air speed, m/s in the displayed convention: 17 is
    * the usual guide for quiet hi-fi ports; car SPL builds often accept 25–30.
@@ -337,6 +364,8 @@ export const DRIVER_KEYS = [
   "fdd",
   "xmax_mm",
   "pe_w",
+  "rth_k_w",
+  "tmax_C",
   "drivers",
   "wiring",
   "isobaric",
@@ -348,7 +377,7 @@ export type DriverSlot = Pick<AppState, (typeof DRIVER_KEYS)[number]>;
  * The fields a comparison driver has of its own; how many drivers there are and how they're
  * loaded and wired stay the main driver's, so the comparison is like for like.
  */
-export const COMPARE_KEYS = ["driverName", "driverBrand", "driverOrigin", "nominal_ohms", "ts", "le_mh", "l2_mh", "r2_ohm", "semi", "fdd", "xmax_mm", "pe_w", "dvc"] as const;
+export const COMPARE_KEYS = ["driverName", "driverBrand", "driverOrigin", "nominal_ohms", "ts", "le_mh", "l2_mh", "r2_ohm", "semi", "fdd", "xmax_mm", "pe_w", "rth_k_w", "tmax_C", "dvc"] as const;
 /**
  * The comparison driver: its own T/S, limits and coil wiring, and optionally its own number of
  * drivers and how they're wired (one 15″ against two 10″). Without `drivers` it follows the main
@@ -388,6 +417,10 @@ export interface AppState {
   fdd?: { rms: number; ams_mm_per_n: number };
   xmax_mm: number;
   pe_w: number;
+  /** The coil's thermal resistance (K/W); 0 = from Pe and tmax_C: (tmax_C − 20) / Pe. */
+  rth_k_w: number;
+  /** The highest coil temperature (°C) Pe is taken to hold (and the coil temperature limit). */
+  tmax_C: number;
   power: number;
   /** Drive level as power (W, V = √(P·Re) like WinISD) or as a voltage (e.g. 2.83 V, as datasheets quote). */
   drive: "watts" | "volts";
@@ -483,6 +516,9 @@ export function newDesign(kind: DesignKind, existing: DesignState[]): DesignStat
       return { id, kind, name: `Sealed${suffix}`, on: true, vb_l: 40 };
     case "ib":
       return { id, kind, name: `Infinite baffle${suffix}`, on: true, rear: "open", vb_l: 10000 };
+    case "ob":
+      // A floor-standing board, the driver about a third of the way up (smoother than centred).
+      return { id, kind, name: `Open baffle${suffix}`, on: true, vb_l: 0, frame: "flat", w_cm: 45, h_cm: 100, x_cm: 22.5, y_cm: 35, t_cm: 1.8, depth_cm: 30 };
     case "vented":
       return {
         id,
@@ -578,6 +614,8 @@ export const DEFAULT_STATE: AppState = {
   r2_ohm: 0,
   xmax_mm: 12,
   pe_w: 250,
+  rth_k_w: 0,
+  tmax_C: 200,
   // 1 W into Re, as WinISD and Hornresp (2.83 V into 8 Ω) start, so the charts read the same.
   power: 1,
   drive: "watts",
@@ -613,6 +651,9 @@ export const DEFAULT_STATE: AppState = {
     driveModel: "circuit",
     coneLoad: "mass",
     coilTemp_C: 20,
+    coilMode: "cold",
+    ambient_C: 20,
+    heatBand: [20, 200],
     portLimit_ms: 17,
     prCaution_pct: 75,
     alignments: "winisd",
@@ -808,6 +849,8 @@ const LEGACY_VENTED_PORT = { diameter_cm: 10, length_cm: 30, flare_cm: 0 } as co
 /** The state with default values left out (see above). The power is always kept (see LEGACY_POWER_W). */
 export function compactState(s: AppState): Raw {
   const out = stripKeys({ ...s, designs: [] }, { ...DEFAULT_STATE, designs: [] }, MERGED_TOP, ["v", "driverBrand", "power"]);
+  // A cold coil with a hot temperature kept for later would read back as "fixed": say so.
+  if (s.settings.coilMode !== coilModeFrom(undefined, s.settings.coilTemp_C)) out.settings = { ...(out.settings ?? {}), coilMode: s.settings.coilMode };
   const before: DesignState[] = [];
   out.designs = s.designs.map((d) => {
     const base = newDesign(d.kind, before);
@@ -970,8 +1013,27 @@ function lineFrom(d: Raw, base: LineDesign): Partial<LineDesign> {
   return out;
 }
 
+/** An open baffle's sizes made usable: positive, the driver on the board, a frame deeper than its walls. */
+export function fixOpenBaffle(d: Raw, base: ObDesign): Pick<ObDesign, "frame" | "w_cm" | "h_cm" | "x_cm" | "y_cm" | "t_cm" | "depth_cm" | "vb_l"> {
+  const num = (v: unknown, dflt: number, min: number, max: number) => (typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : dflt);
+  const frame = d.frame === "h" || d.frame === "u" ? d.frame : "flat";
+  const w = num(d.w_cm, base.w_cm, 5, 1000);
+  const h = num(d.h_cm, base.h_cm, 5, 1000);
+  const t = num(d.t_cm, base.t_cm, 0, Math.min(w, h) / 4);
+  return {
+    frame,
+    w_cm: w,
+    h_cm: h,
+    x_cm: num(d.x_cm, w / 2, w * 0.01, w * 0.99),
+    y_cm: num(d.y_cm, Math.min(base.y_cm, h / 2), h * 0.01, h * 0.99),
+    t_cm: t,
+    depth_cm: num(d.depth_cm, base.depth_cm, t + 1, 1000),
+    vb_l: 0,
+  };
+}
+
 function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
-  if (!["sealed", "vented", "pr", "bandpass", "line", "ib"].includes(d?.kind)) return null;
+  if (!["sealed", "vented", "pr", "bandpass", "line", "ib", "ob"].includes(d?.kind)) return null;
   const base = newDesign(d.kind, all);
   const merged = { ...base, ...d } as DesignState;
   if (merged.kind === "pr") {
@@ -997,6 +1059,7 @@ function fixDesign(d: Raw, all: DesignState[]): DesignState | null {
     merged.losses = bandpassLossesOf(d.losses);
   }
   if (merged.kind === "ib" && merged.rear !== "space") merged.rear = "open";
+  if (merged.kind === "ob") Object.assign(merged, fixOpenBaffle(merged, base as ObDesign));
   if (merged.kind === "vented" || merged.kind === "pr") {
     // Side by side is the default and is left out, so links without a position stay as they were.
     if (merged.ventAt !== "back" && merged.ventAt !== "custom") delete merged.ventAt;
@@ -1065,6 +1128,8 @@ function driverSlotFrom(raw: Raw, d: DriverSlot): DriverSlot {
       : {}),
     xmax_mm: raw.xmax_mm ?? d.xmax_mm,
     pe_w: raw.pe_w ?? d.pe_w,
+    rth_k_w: rthFrom(raw.rth_k_w),
+    tmax_C: tmaxFrom(raw.tmax_C),
     drivers: raw.drivers ?? d.drivers,
     wiring: raw.wiring === "series" ? "series" : "parallel",
     isobaric: raw.isobaric === true,
@@ -1105,6 +1170,28 @@ function volumeFrom(raw: Raw, d: AppState["volume"]): AppState["volume"] {
 }
 
 /** An amplifier power limit from a link or file: 0 (none) unless a positive number, then 0.1–10,000 W. */
+export type CoilMode = "cold" | "fixed" | "heated";
+
+const clampNum = (v: unknown, lo: number, hi: number, d: number) => (typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
+
+/** A coil's thermal resistance from a link or file: 0 (from Pe) unless 0.05–50 K/W. */
+export const rthFrom = (v: unknown): number => (typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.min(50, Math.max(0.05, v)) : 0);
+/** Highest coil temperature: 100–350 °C, default 200. */
+export const tmaxFrom = (v: unknown): number => clampNum(v, 100, 350, 200);
+
+/** The coil mode a link or file meant: its own, or (from before coilMode) "fixed" when it set a hot coil. */
+export function coilModeFrom(v: unknown, temp: unknown): CoilMode {
+  if (v === "cold" || v === "fixed" || v === "heated") return v;
+  return typeof temp === "number" && temp > 20 ? "fixed" : "cold";
+}
+
+/** The heating band: 5–2000 Hz, low below high; else 20–200 Hz. */
+export function heatBandFrom(v: unknown): [number, number] {
+  if (!Array.isArray(v) || v.length !== 2) return [20, 200];
+  const lo = clampNum(v[0], 5, 2000, NaN), hi = clampNum(v[1], 5, 2000, NaN);
+  return Number.isFinite(lo) && Number.isFinite(hi) && lo < hi ? [lo, hi] : [20, 200];
+}
+
 export function ampWattsFrom(v: unknown): number {
   return typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.min(10_000, Math.max(0.1, v)) : 0;
 }
@@ -1174,9 +1261,13 @@ export function decodeState(hash: string): AppState | null {
         excursion: raw.settings?.excursion === "pp" || raw.settings?.excursion === "rms" ? raw.settings.excursion : "peak",
         ampWatts: ampWattsFrom(raw.settings?.ampWatts),
         signal: signalFrom(raw.settings?.signal),
+        thermalLimit: (["nominal", "real", "coil"] as const).find((x) => x === raw.settings?.thermalLimit) ?? "nominal",
+        coilMode: coilModeFrom(raw.settings?.coilMode, raw.settings?.coilTemp_C),
+        ambient_C: clampNum(raw.settings?.ambient_C, -20, 60, 20),
+        heatBand: heatBandFrom(raw.settings?.heatBand),
       },
       eq: Array.isArray(raw.eq)
-        ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf", "highshelf"].includes(e.type)).slice(0, 12)
+        ? raw.eq.filter((e: Raw) => e && ["linkwitz", "peak", "lowshelf", "highshelf", "lowshelf1"].includes(e.type)).slice(0, 12)
         : [],
       measured: measuredFrom(raw.measured),
       compare,

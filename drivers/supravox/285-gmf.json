@@ -1,0 +1,34 @@
+{
+  "brand": "Supravox",
+  "model": "285 GMF",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 47.8,
+    "qms": 8.86,
+    "qes": 0.345,
+    "vas_l": 157,
+    "re": 6.5,
+    "sd_cm2": 442.6,
+    "qts": 0.33,
+    "le_mh": 1.02,
+    "bl": 10.55,
+    "mms_g": 19.7,
+    "xmax_mm": 3.4,
+    "pe_w": 70
+  },
+  "physical": {
+    "cutout_mm": 275,
+    "depth_mm": 128
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://supravox.fr/products/285-gmf-haut-parleur-grave-medium-70w-100db-8-ohms",
+      "retrieved": "2026-11-22",
+      "note": "Values from the technical specifications on Supravox's product pages (supravox.fr), used with Supravox's permission (17 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Supravox's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

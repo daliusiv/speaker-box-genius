@@ -30,6 +30,7 @@ export default defineConfig({
         "calc-ported-box": "src/calculators/portedBox.ts",
         "calc-subwoofer-box": "src/calculators/subwooferBox.ts",
         "calc-box-volume": "src/calculators/boxVolume.ts",
+        "calc-open-baffle": "src/calculators/openBaffle.ts",
       },
     },
   },

@@ -1,0 +1,34 @@
+{
+  "brand": "Purifi",
+  "model": "PTT6.5M04-NLA-02",
+  "type": "midrange",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 49,
+    "qms": 3.9,
+    "qes": 0.34,
+    "vas_l": 14.0,
+    "re": 3.9,
+    "sd_cm2": 132.7,
+    "qts": 0.32,
+    "le_mh": 0.28,
+    "bl": 8.1,
+    "mms_g": 19.2,
+    "xmax_mm": 2.9,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 148,
+    "depth_mm": 85.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/oem-transducers",
+      "retrieved": "2026-11-22",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

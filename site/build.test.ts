@@ -2,10 +2,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { build, GOATCOUNTER, markdown, parsePage, resolveExamples } from "./build.ts";
-import { cardData, designDriver, driverContent, driverState, driverTitle, hubSizes, loadDb, PAGE_MAX_L, prCandidate, SIZE_HUB_MIN, sizeLabel, sizePath, sizeSlug, type DriverPage } from "./drivers.ts";
+import { runInNewContext } from "node:vm";
+import { askAi, askAiPrompt, build, contents, GOATCOUNTER, markdown, parsePage, resolveExamples, topHeadings, withAskAi } from "./build.ts";
+import { cardData, designDriver, driverContent, driverState, driverTitle, hubSizes, loadDb, PAGE_MAX_L, prCandidate, PR_OTHERS, SIZE_HUB_MIN, sizeLabel, sizePath, sizeSlug, withPr, type DriverPage } from "./drivers.ts";
 import { chart } from "./chart.ts";
 import { cardSvg } from "./og.ts";
+import { twinPath } from "./aiDocs.ts";
+import { CALCULATORS } from "./calculators.ts";
 import { tempDir } from "./tempDir.ts";
 
 // One build for every test below (it takes a while: a page per driver). Share cards need
@@ -256,6 +259,31 @@ test("driver designs follow the app's presets, with a port that fits and a PR th
   assert.match(svg, />Dayton Audio DSA215-8</);
 });
 
+test("a PR box lists the next PRs that work in it, each opening the app with that PR in place", () => {
+  const db = loadDb();
+  const prs = db.passiveRadiators.map(prCandidate);
+  const e = db.drivers.find((x) => x.id === "dayton-audio/dsa215-8")!;
+  const p = designDriver(e, prs)!;
+  assert.ok(p.pr && p.prOthers && p.prOthers.length > 0 && p.prOthers.length <= PR_OTHERS);
+  const names = p.prOthers.map((o) => o.prName);
+  assert.equal(new Set(names).size, names.length, "one row per PR");
+  assert.ok(!names.includes(p.pr.name), "not the chosen PR");
+  // Each is a database PR with its own parameters, as the PR finder would put it in the box.
+  for (const o of p.prOthers) assert.deepEqual(o.params, prs.find((c) => c.name === o.prName)!.params);
+  const swapped = withPr(p.state, p.prOthers[0]!);
+  const pr = swapped.designs.find((d) => d.kind === "pr") as any;
+  assert.equal(pr.prName, p.prOthers[0]!.prName);
+  assert.equal(pr.vb_l, (p.state.designs.find((d) => d.kind === "pr") as any).vb_l, "same box");
+  assert.deepEqual(swapped.designs.filter((d) => d.kind !== "pr"), p.state.designs.filter((d) => d.kind !== "pr"));
+  const links = { all: "https://speakerboxgenius.com/#z=x", related: [], prOthers: p.prOthers.map((_, i) => `https://speakerboxgenius.com/#z=pr${i}`) };
+  const html = driverContent(p, links, chart).content;
+  const line = html.match(/<span class="pr-alt">Other PRs that work here: (.*?)<\/span>/)?.[1];
+  assert.ok(line, "the PR row has the line");
+  assert.equal((line.match(/<a href="https:\/\/speakerboxgenius\.com\/#z=pr\d" rel="nofollow">\d × [^<]+<\/a> \((\d+ g( each)?|no added mass)\)/g) ?? []).length, p.prOthers.length);
+  // Without the links (or none to list) the row is as before.
+  assert.doesNotMatch(driverContent(p, { all: links.all, related: [] }, chart).content, /pr-alt/);
+});
+
 test("no driver page suggests a box over the page limit, and a high-Qts driver's sealed box stays near twice Vas", () => {
   const db = loadDb();
   const prs = db.passiveRadiators.map(prCandidate);
@@ -326,7 +354,7 @@ test("every page counts visits the same way, and the privacy page says what that
   }
   // The app counts with the same tag (and never sends the design: it's after the #).
   const app = readFileSync(new URL("../packages/web/index.html", import.meta.url), "utf8");
-  assert.ok(app.includes(GOATCOUNTER.replace("></script>", "")), "the app's index.html has the same counter");
+  assert.ok(app.includes(GOATCOUNTER), "the app's index.html has the same counter");
   assert.ok(paths.includes("/changelog/"));
   assert.match(readFileSync(join(out, "changelog/index.html"), "utf8"), /<h2[^>]*>(Unreleased|\d+\.\d+\.\d+ \(\d{4}-\d{2}-\d{2}\))<\/h2>/);
   const privacy = readFileSync(join(out, "privacy/index.html"), "utf8");
@@ -362,6 +390,22 @@ test("guides index: every guide in a section, cards once, search box, list data;
   assert.match(related, /href="\/guides\/box-losses\/"/);
   assert.doesNotMatch(related, /href="\/guides\/box-stuffing\/"/);
   assert.ok((related.match(/<li>/g) ?? []).length <= 4);
+  // Illustrations: the card's title comes first (above the picture on phones), then the picture, lazy and sized.
+  assert.match(html, /<li><a href="\/guides\/port-chuffing\/">[^<]+<\/a><img class="thumb" src="\/guides\/img\/guides\/port-chuffing\.svg" alt="" width="1200" height="630" loading="lazy"><p>/);
+  assert.ok(existsSync(join(out, "guides/img/guides/port-chuffing.svg")));
+  const chuff = readFileSync(join(out, "guides/port-chuffing/index.html"), "utf8");
+  assert.equal((chuff.match(/<figure class="hero">/g) ?? []).length, 1);
+  assert.match(chuff, /<p class="lede">[\s\S]*?<\/p>\n<figure class="hero"><img src="\/guides\/img\/guides\/port-chuffing\.svg" alt="[^"]{20,}"/);
+  assert.ok(chuff.indexOf('class="hero"') < chuff.indexOf('class="cta"'), "banner before the open buttons");
+  assert.doesNotMatch(chuff.match(/<section class="related">[\s\S]*?<\/section>/)![0], /<img/);
+  // Every guide card has its picture.
+  assert.equal((html.match(/<img class="thumb"/g) ?? []).length, pages.length);
+});
+
+test("every guide has its own share card: an image or a chart, never the site's", () => {
+  for (const f of readdirSync(join(import.meta.dirname, "pages")).filter((f) => f.endsWith(".md"))) {
+    assert.ok(parsePage(readFileSync(join(import.meta.dirname, "pages", f), "utf8"), f).image, `${f}: set "image:" (a chart: or an image in site/img)`);
+  }
 });
 
 test("home page: title, canonical, structured data, and its links go to built pages", async () => {
@@ -437,6 +481,61 @@ test("passive radiator calculator page: form, worked example that matches its te
   assert.ok(Math.cbrt(e.rows[0]!.i.vb_l * 1000) > 41 && Math.cbrt(e.rows[0]!.i.vb_l * 1000) < 43, "faces about 42 cm across");
 });
 
+test("open baffle calculator page: form, worked example from the same code, hub card and driver-page lines", async () => {
+  const { out, paths } = await built();
+  assert.ok(paths.includes("/calculators/open-baffle/"));
+  const html = readFileSync(join(out, "calculators/open-baffle/index.html"), "utf8");
+  assert.match(html, /<h1>Open baffle calculator<\/h1>/);
+  assert.match(html, /<form id="ob-form"[^>]*data-driver-id="sb-acoustics\/sb34nrx75-16"/);
+  for (const id of ["ob-metric", "ob-imperial", "ob-mode-have", "ob-mode-peak", "ob-frame", "ob-w", "ob-h", "ob-x", "ob-y", "ob-depth", "ob-fp", "ob-ar", "ob-t", "ob-driver", "ob-ts", "ob-n", "ob-power", "ob-out", "ob-chart", "ob-open", "ob-copy"])
+    assert.match(html, new RegExp(`id="${id}"`), id);
+  // Element order: units, mode, frame, board, peak fields, thickness, driver, power, results, chart, actions, then the text.
+  // Page order, leaving out the "On this page" list (it repeats the section titles).
+  const page = html.replace(/<nav class="toc"[\s\S]*?<\/nav>/, "");
+  const at = (x: string) => page.indexOf(x);
+  const order = ['id="ob-metric"', 'id="ob-mode-have"', 'name="ob-framepick"', 'id="ob-w"', 'id="ob-fp"', 'id="ob-t"', 'id="ob-driver"', 'id="ob-power"', 'id="ob-out"', 'id="ob-chart"', 'id="ob-open"', "How it's worked out", "Worked example", "Related guides"].map(at);
+  assert.ok(order.every((n, i) => n > 0 && (i === 0 || n > order[i - 1]!)), `element order: ${order}`);
+  assert.match(html, /Open this baffle in the simulator/);
+  assert.doesNotMatch(html, /\{\{calc:/);
+  assert.match(html, /<figure class="guide-chart">/, "the worked example's chart");
+  // The example's numbers are the calculator's own.
+  const { obCalcRun, OB_CALC } = await import("./examples.ts");
+  const p = obCalcRun(OB_CALC.driverIds[0]!);
+  const r = obCalcRun(OB_CALC.driverIds[1]!);
+  assert.equal(p.suits, "passive");
+  assert.equal(r.suits, "dsp");
+  for (const v of [`${p.fPeak.toFixed(0)} Hz / ${p.fNull.toFixed(0)} Hz`, `${p.f3Eq!.toFixed(1)} Hz`, `${r.f3Eq!.toFixed(1)} Hz`, "an open baffle without EQ", "an open baffle with DSP EQ"]) assert.ok(html.includes(v), v);
+  // Claims in the text: same board, nearly the same peak; the high-Qts driver goes deeper without EQ.
+  assert.ok(Math.abs(p.fPeak / r.fPeak - 1) < 0.03, "nearly the same peak");
+  assert.ok(p.f3! < r.f3!, "the SB34NRX75-16 goes deeper without EQ");
+  assert.ok(p.lossEq! > p.loss! && r.lossEq! > r.loss!, "the EQ wins bass back");
+  // The hub card, with its picture, and its line.
+  const hub = readFileSync(join(out, "calculators/index.html"), "utf8");
+  assert.match(hub, /<li><a href="\/calculators\/open-baffle\/">Open baffle calculator<\/a><img class="thumb" src="\/guides\/img\/calculators\/open-baffle\.svg"/);
+  assert.match(hub, /You're building an open baffle/);
+  // Driver pages: the open baffle line by the picker's Suits rules, linking the calculator for that driver.
+  const pcs = readFileSync(join(out, "drivers/dayton-audio/pcs12-4/index.html"), "utf8");
+  assert.match(pcs, /<strong>Open baffle:<\/strong> suits one without EQ \(Qts 0\.67, Fs 30 Hz: its own level at 40 Hz is −1\.6 dB\)\. <a href="\/calculators\/open-baffle\/\?d=dayton-audio%2Fpcs12-4">Size its baffle →<\/a>/);
+  // Qts 0.64 with Fs 34 Hz: −2.7 dB of its own at 40 Hz, no better than a DSP woofer: no longer "passive".
+  assert.doesNotMatch(readFileSync(join(out, "drivers/peerless/sls-p830669/index.html"), "utf8"), /suits one without EQ/);
+  const rss = readFileSync(join(out, "drivers/dayton-audio/rss315hf-4/index.html"), "utf8");
+  assert.match(rss, /<strong>Open baffle:<\/strong> suits one with DSP EQ \(Qts 0\.39, Xmax 14\.3 mm, Fs 24\.2 Hz\)/);
+  const { openBaffleLine } = await import("./drivers.ts");
+  assert.equal(openBaffleLine("x/y", 60, 0.4, 4), "", "neither: no line");
+  assert.equal(openBaffleLine("x/y", 30, 0.4, 6), "", "too little travel for EQ: no line");
+});
+
+test("calculator pages: a live chart's tip and cursor are styled (a tap on a phone left the tip's table unstyled above the chart)", async () => {
+  const { out } = await built();
+  const { CALC_PAGES } = await import("./calculators.ts");
+  for (const c of CALC_PAGES) {
+    const html = readFileSync(join(out, c.path.slice(1), "index.html"), "utf8");
+    const css = html.replace(/\s*([{}:;,()])\s*/g, "$1");
+    for (const rule of [/\.chart-tip\{[^}]*position:absolute/, /@media\(max-width:860px\)\{\.chart-tip,\.chart-hint\{display:none/, /\.tip-table\{/, /\.cursor-dot\{/])
+      assert.match(css, rule, `${c.path}: ${rule}`);
+  }
+});
+
 test("sealed box calculator page: form, worked example that matches its text", async () => {
   const { out, paths } = await built();
   assert.ok(paths.includes("/calculators/sealed-box/"));
@@ -446,7 +545,9 @@ test("sealed box calculator page: form, worked example that matches its text", a
   assert.match(html, /<form id="sc-form"[^>]*data-driver-id="dayton-audio\/rss315hf-4"/);
   for (const id of ["sc-metric", "sc-imperial", "sc-driver", "sc-ts", "sc-n", "sc-power", "sc-rated", "sc-mode-box", "sc-mode-qtc", "sc-qtc", "sc-vb", "sc-out", "sc-chart", "sc-open", "sc-copy"]) assert.match(html, new RegExp(`id="${id}"`), id);
   // Element order: units, driver, T/S by hand, drivers and power, mode, Qtc chips, results, chart, actions, then the text.
-  const at = (s: string) => html.indexOf(s);
+  // Page order, leaving out the "On this page" list (it repeats the section titles).
+  const page = html.replace(/<nav class="toc"[\s\S]*?<\/nav>/, "");
+  const at = (s: string) => page.indexOf(s);
   const order = ['id="sc-metric"', 'id="sc-driver"', 'id="sc-ts"', 'id="sc-n"', 'id="sc-power"', 'id="sc-mode-box"', 'name="sc-qtcpick"', 'id="sc-out"', 'id="sc-chart"', 'id="sc-open"', "How the box is worked out", "Worked example"].map(at);
   assert.ok(order.every((n, i) => n > 0 && (i === 0 || n > order[i - 1]!)), `element order: ${order}`);
   assert.match(html, /name="sc-qtcpick" value="0.707" checked/);
@@ -494,7 +595,9 @@ test("ported box calculator page: form, worked example that matches its text", a
   assert.doesNotMatch(html, /<script type="module"/);
   assert.match(readFileSync(join(out, "sitemap-pages.xml"), "utf8"), /\/calculators\/ported-box\//);
   // Order: driver, number of drivers and power, alignment chips, other, results, chart, actions, text, example.
-  const at = (s: string) => html.indexOf(s);
+  // Page order, leaving out the "On this page" list (it repeats the section titles).
+  const page = html.replace(/<nav class="toc"[\s\S]*?<\/nav>/, "");
+  const at = (s: string) => page.indexOf(s);
   const order = ['id="vc-driver"', 'id="vc-n"', 'id="vc-power"', 'id="vc-chips"', 'id="vc-other"', 'id="vc-out"', 'id="vc-chart"', 'id="vc-open"', "How the box is worked out", "Worked example"];
   for (let i = 1; i < order.length; i++) assert.ok(at(order[i - 1]!) >= 0 && at(order[i - 1]!) < at(order[i]!), `${order[i - 1]} before ${order[i]}`);
   // The worked example's chart is the app's, drawn at build.
@@ -592,7 +695,9 @@ test("box volume calculator page: form in the planned order, worked example that
   assert.doesNotMatch(html, /\{\{calc:/);
   assert.match(readFileSync(join(out, "sitemap-pages.xml"), "utf8"), /\/calculators\/box-volume\//);
   // The plan's element order: units, work out, shape, sizing, sizes | outline, done, inside the box, result, actions, hint, text, example.
-  const at = (s: string) => html.indexOf(s);
+  // Page order, leaving out the "On this page" list (it repeats the section titles).
+  const page = html.replace(/<nav class="toc"[\s\S]*?<\/nav>/, "");
+  const at = (s: string) => page.indexOf(s);
   const order = ['id="bv-metric"', 'id="bv-mode-net"', 'name="bv-shape-chip"', 'id="bv-sizing"', 'class="calc-size"', 'id="bv-w"', 'id="bv-wall"', 'class="calc-shape"', 'id="bv-done"', 'class="calc-part"', 'id="bv-driver"', 'id="bv-n"', 'id="bv-dd"', 'id="bv-pr"', 'id="bv-np"', 'id="bv-pd"', 'id="bv-pc"', 'id="bv-pt"', 'id="bv-pdia"', 'id="bv-pl"', 'id="bv-pwt"', 'id="bv-br"', 'id="bv-o"', 'id="bv-out"', 'id="bv-open"', 'id="bv-copy"', 'id="bv-hint"', "How it's worked out", "Worked example"];
   for (let i = 1; i < order.length; i++) assert.ok(at(order[i - 1]!) >= 0 && at(order[i - 1]!) < at(order[i]!), `${order[i - 1]} before ${order[i]}`);
   for (const href of ["/guides/shaped-cabinets/", "/guides/box-stuffing/", "/calculators/port-length/", "/calculators/sealed-box/"]) assert.match(html, new RegExp(`href="${href}"`), href);
@@ -608,10 +713,11 @@ test("box volume calculator page: form in the planned order, worked example that
   assert.equal(e.wg.r.gross_l.toFixed(2), "75.60", "the guide's car wedge");
   for (const v of ["90.48", "83.45", "49.3 × 79.7 × 30.4", "93.20", "75.60"]) assert.ok(html.includes(v), v);
 
-  // The hub: the card after Ported box, before Port length, and its "Which one do I need?" line.
+  // The hub: the card after Ported box (and Open baffle), before Port length, and its "Which one do I need?" line.
   const { CALCULATORS } = await import("./calculators.ts");
   const i = CALCULATORS.findIndex((c) => c.path === "/calculators/box-volume/");
-  assert.equal(CALCULATORS[i - 1]!.path, "/calculators/ported-box/");
+  assert.equal(CALCULATORS[i - 1]!.path, "/calculators/open-baffle/");
+  assert.equal(CALCULATORS[i - 2]!.path, "/calculators/ported-box/");
   assert.equal(CALCULATORS[i + 1]!.path, "/calculators/port-length/");
   assert.ok(CALCULATORS[i]!.isNew);
   const hub = readFileSync(join(out, "calculators/index.html"), "utf8");
@@ -676,8 +782,8 @@ test("driver pages: versions link each other and the opening line says what diff
   assert.match(html, /≈ 96 dB at 2\.83 V \(≈ 99\.6 dB\)/);
   assert.match(html, /a 97\.3 L ported box \(62\.2 L\)/);
   // The version has its chip; the similar list doesn't repeat it.
-  const similar = html.slice(html.indexOf('id="similar"'));
-  assert.doesNotMatch(similar.slice(0, similar.indexOf("</ul>")), /18nlw4100-4ohm/);
+  assert.doesNotMatch(listOf(html, "similar"), /18nlw4100-4ohm/);
+  assert.doesNotMatch(sectionOf(html, "substitutes"), /18nlw4100-4ohm/);
 
   // A driver with one version keeps the old page.
   const single = readFileSync(join(out, "drivers/dayton-audio/dsa215-8/index.html"), "utf8");
@@ -760,6 +866,18 @@ test("driver list: sizes by size and by brand, smallest first", async () => {
   assert.deepEqual(links, hubs.map((h) => sizePath(h.inches)));
 });
 
+/** A page's section from its h2 to the next h2 (empty when it has none). */
+const sectionOf = (page: string, id: string) => {
+  const i = page.indexOf(`<h2 id="${id}">`);
+  if (i < 0) return "";
+  const j = page.indexOf("<h2", i + 4);
+  return page.slice(i, j < 0 ? undefined : j);
+};
+const listOf = (page: string, id: string) => {
+  const s = sectionOf(page, id);
+  return s.slice(0, s.indexOf("</ul>") + 1);
+};
+
 test("driver pages: the opening line and similar drivers link the size page, and list at least four", async () => {
   const { out, paths } = await built();
   const html = readPage(out, "drivers/18-sound/18nlw4100-8ohm");
@@ -771,8 +889,8 @@ test("driver pages: the opening line and similar drivers link the size page, and
   const few: string[] = [];
   for (const p of paths.filter((x) => /^\/drivers\/[^/]+\/[^/]+\/$/.test(x))) {
     const page = readPage(out, p);
-    const similar = page.slice(page.indexOf('id="similar"'));
-    const n = (similar.slice(0, similar.indexOf("</ul>")).match(/<li>/g) ?? []).length;
+    // Driver links in the substitutes table and the list after it.
+    const n = new Set([...sectionOf(page, "substitutes").matchAll(/<td><a href="(\/drivers\/[^"]+)"/g), ...listOf(page, "similar").matchAll(/<li><a href="([^"]+)"/g)].map((m) => m[1])).size;
     if (n < 4) few.push(`${p} (${n})`);
   }
   // Allowed only for a size with fewer than four drivers from other brands.
@@ -784,6 +902,53 @@ test("driver pages: the opening line and similar drivers link the size page, and
   });
   assert.deepEqual(fewer, []);
   console.log(`${few.length} driver pages list fewer than four similar drivers`);
+});
+
+test("driver pages: scored substitutes before the brand's other drivers, no risky rows, compare links, how it's scored", async () => {
+  const { out, paths } = await built();
+  const pages = allPages();
+  const byId = new Map(pages.map((p) => [p.id, p]));
+  let withTable = 0;
+  for (const path of paths.filter((x) => /^\/drivers\/[^/]+\/[^/]+\/$/.test(x))) {
+    const page = readPage(out, path);
+    const id = path.slice("/drivers/".length, -1);
+    const me = byId.get(id)!;
+    const subs = sectionOf(page, "substitutes");
+    if (!subs) {
+      // No scored list: the old similar list stays.
+      if (page.includes('id="similar"')) assert.match(page, /<h2 id="similar">Similar drivers<\/h2>/);
+      continue;
+    }
+    withTable++;
+    const rows = [...subs.matchAll(/<tr class="main"><td><a href="\/drivers\/([^"]+)\/">/g)].map((m) => m[1]!);
+    assert.ok(rows.length >= 1 && rows.length <= 10, path);
+    assert.ok(!rows.includes(id), `${path} lists itself`);
+    assert.doesNotMatch(subs, /tier-risky|>Risky</);
+    assert.equal((subs.match(/>Compare in the app →<\/a>/g) ?? []).length, rows.length);
+    assert.match(subs, /<a href="\/about\/#credits">How this is scored<\/a>/);
+    // Before the brand list, which keeps only the brand's own drivers.
+    const similar = listOf(page, "similar");
+    if (similar && !similar.includes("More from")) {
+      assert.match(similar, /<h2 id="similar">More drivers<\/h2>/);
+      for (const r of rows) assert.doesNotMatch(similar, new RegExp(`href="/drivers/${r}/"`));
+    } else if (similar) {
+      assert.ok(page.indexOf('id="substitutes"') < page.indexOf('id="similar"'));
+      assert.match(similar, new RegExp(`More from ${me.brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/&/g, "&amp;")}`));
+      for (const m of similar.matchAll(/<li><a href="\/drivers\/([^/]+)\/([^/]+)\//g)) {
+        assert.equal(m[1], me.brandSlug, path);
+        assert.ok(!rows.includes(`${m[1]}/${m[2]}`), `${path}: ${m[1]}/${m[2]} listed twice`);
+      }
+    }
+  }
+  assert.ok(withTable > 1500, `only ${withTable} pages have substitutes`);
+  // One worked page: the closest match first, its compare link opens both drivers.
+  const page = readPage(out, "drivers/dayton-audio/rss315hf-4");
+  assert.match(sectionOf(page, "substitutes"), /<p>The closest match is the Dayton Audio RSS315HFA-8: in this driver's \w[\w ]* box it /);
+  const href = sectionOf(page, "substitutes").match(/<a href="([^"]+)" rel="nofollow">Compare in the app/)![1]!.replace(/&amp;/g, "&");
+  const { decodeStateAny } = await import("../packages/web/src/state.ts");
+  const s = await decodeStateAny(href.slice(href.indexOf("#") + 1));
+  assert.match(s!.driverName, /RSS315HF-4$/);
+  assert.match(s!.compare!.driverName, /RSS315HFA-8$/);
 });
 
 test("brand pages: the size links its page, and 5.25 is not rounded", async () => {
@@ -803,4 +968,258 @@ test("PR candidates keep a maker's Xmech as Xmech (so the driver pages' redlines
   assert.equal((prCandidate(mech).params as { xmech?: boolean }).xmech, true);
   const lin = db.passiveRadiators.find((x) => x.data.params.xmax_mm !== undefined)!;
   assert.equal((prCandidate(lin).params as { xmech?: boolean }).xmech, undefined);
+});
+
+test("readability: sources list class, button rows, and the page's own sections", () => {
+  // The numbered list under "## Sources" gets its class; other lists don't.
+  const md = markdown("# T\n\nIntro.\n\n## Notes\n\n1. one\n\n## Sources\n\n1. [A](https://a.example)\n2. B");
+  assert.match(md, /<h2 id="sources">Sources<\/h2>\n<ol class="sources">/);
+  assert.equal(md.match(/<ol class="sources">/g)?.length, 1);
+  // A lone button is the row's only .button child (solid); a row keeps every button (outline, by CSS).
+  assert.match(markdown("[[Open it|ex]]"), /^<p class="cta"><a class="button" href="ex">Open it →<\/a><\/p>$/);
+  assert.equal(markdown("[[A|a]] [[B|b]] [[C|c]]").match(/class="button"/g)?.length, 3);
+  // Only top-level h2s with ids count: not those in sections, forms or other blocks.
+  const html = '<h2 id="a">A <code>x</code></h2><section><h2 id="s">S</h2></section><form><div><h2 id="f">F</h2></div></form><h2>no id</h2><h2 id="b">B</h2><h2 id="c">C</h2>';
+  assert.deepEqual(topHeadings(html), [{ id: "a", text: "A x" }, { id: "b", text: "B" }, { id: "c", text: "C" }]);
+  assert.match(contents(html), /^<nav class="toc" aria-label="On this page">.*<li><a href="#a">A x<\/a><\/li><li><a href="#b">B<\/a><\/li><li><a href="#c">C<\/a><\/li><\/ol><\/div><\/nav>\n$/);
+  assert.equal(contents('<h2 id="a">A</h2><h2 id="b">B</h2>'), "", "fewer than three sections: none");
+  assert.equal(contents('<ul><li><a href="#a">A</a></li><li><a href="#b">B</a></li><li><a href="#c">C</a></li></ul><h2 id="a">A</h2><h2 id="b">B</h2><h2 id="c">C</h2>'), "", "the page already links to each section: none");
+});
+
+test("readability: built pages get an 'On this page' list of their own sections", async () => {
+  const { out } = await built();
+  const list = (path: string) => {
+    const html = readFileSync(join(out, path, "index.html"), "utf8");
+    const nav = /<nav class="toc"[\s\S]*?<\/nav>/.exec(html)?.[0];
+    return { html, links: nav ? [...nav.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]!) : null };
+  };
+  for (const path of ["guides/port-chuffing", "changelog", "validation", "calculators/port-length", "drivers/hoqs/n185c"]) {
+    const { html, links } = list(path);
+    assert.ok(links && links.length >= 3, `${path} has a list`);
+    for (const id of links!) assert.match(html, new RegExp(`<h2 id="${id}">`), `${path}: #${id} is a section`);
+  }
+  // Form and section headings stay out; the guides index and size pages (own chips) have none.
+  assert.ok(!list("calculators/port-length").links!.includes("air-speed"));
+  assert.equal(list("guides").links, null);
+  assert.equal(list("drivers/12-inch").links, null);
+  assert.ok(!list("guides/port-chuffing").links!.includes("related-guides"));
+  assert.match(list("guides/baffle-step").html, /<h2 id="sources">Sources<\/h2>\n<ol class="sources">/);
+});
+
+test("markdown: a link whose URL holds brackets keeps them", () => {
+  const html = markdown("See [Passive radiator](https://en.wikipedia.org/wiki/Passive_radiator_(speaker)): it works.");
+  assert.match(html, /<a href="https:\/\/en\.wikipedia\.org\/wiki\/Passive_radiator_\(speaker\)" rel="noopener">Passive radiator<\/a>: it works\./);
+  // Plain links and a link followed by a bracketed aside are unchanged.
+  assert.match(markdown("[A](/guides/a/) (see [B](/guides/b/))"), /<a href="\/guides\/a\/">A<\/a> \(see <a href="\/guides\/b\/">B<\/a>\)/);
+});
+
+// Markdown twins, llms.txt and llms-full.txt (site/aiDocs.ts).
+const SITE_URL = "https://speakerboxgenius.com";
+const twinPaths = (): string[] => [
+  "/guides/",
+  ...readdirSync(new URL("./pages/", import.meta.url)).filter((f) => f.endsWith(".md")).map((f) => parsePage(readFileSync(new URL(`./pages/${f}`, import.meta.url), "utf8"), f).path),
+  "/calculators/",
+  ...CALCULATORS.map((c) => c.path),
+  "/about/",
+  "/validation/",
+  "/changelog/",
+  "/privacy/",
+  "/mcp/",
+];
+const twinFile = (out: string, path: string) => join(out, twinPath(path).slice(1));
+const htmlText = (html: string) =>
+  html
+    .replace(/<(script|style)\b[\s\S]*?<\/\1>/g, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&(amp|lt|gt|quot|nbsp|#39|#x27);/g, (_, e: string) => ({ amp: "&", lt: "<", gt: ">", quot: '"', nbsp: " ", "#39": "'", "#x27": "'" })[e]!);
+/** A twin's chart tables: [caption, tables' rows per panel]. */
+const chartBlocks = (md: string): { caption: string; rows: string[][] }[] => {
+  const lines = md.split("\n");
+  const blocks: { caption: string; rows: string[][] }[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (!lines[i]!.startsWith("**Chart:** ")) continue;
+    const block = { caption: lines[i]!.slice(11), rows: [] as string[][] };
+    let table: string[] = [];
+    const flush = () => {
+      if (table.length) block.rows.push(table.slice(2));
+      table = [];
+    };
+    for (i++; i < lines.length && (lines[i]! === "" || lines[i]!.startsWith("|") || /^\*[^*].*\*/.test(lines[i]!)); i++) {
+      if (lines[i]!.startsWith("|")) table.push(lines[i]!);
+      else flush();
+    }
+    flush();
+    i--;
+    blocks.push(block);
+  }
+  return blocks;
+};
+
+test("twins: every guide, calculator and reference page has a Markdown twin, driver pages none", async () => {
+  const { out, paths } = await built();
+  const want = twinPaths();
+  assert.ok(want.length >= 44);
+  for (const p of want) {
+    assert.ok(paths.includes(p), `${p} is a built page`);
+    const md = readFileSync(twinFile(out, p), "utf8");
+    assert.match(md, /^# .+\n\n> .+\n\nSource: https:\/\/speakerboxgenius\.com\/\S+ · Speaker Box Genius · built 2026-11-09\n/, p);
+    assert.ok(md.includes(`Source: ${SITE_URL}${p} `), p);
+    // The page says where its twin is.
+    const html = readFileSync(join(out, p, "index.html"), "utf8");
+    assert.ok(html.includes(`<link rel="alternate" type="text/markdown" href="${SITE_URL}${twinPath(p)}">`), `${p}: link rel`);
+  }
+  assert.ok(!existsSync(join(out, "drivers.md")));
+  assert.ok(!readdirSync(join(out, "drivers")).some((f) => f.endsWith(".md")));
+  assert.doesNotMatch(readFileSync(join(out, "drivers/index.html"), "utf8"), /text\/markdown/);
+  assert.doesNotMatch(readFileSync(join(out, "drivers/dayton-audio/index.html"), "utf8"), /text\/markdown/);
+});
+
+test("twins: no placeholder, button syntax, chart source or relative link is left", async () => {
+  const { out } = await built();
+  for (const p of twinPaths()) {
+    const md = readFileSync(twinFile(out, p), "utf8");
+    assert.doesNotMatch(md, /\{\{|\}\}|\[\[|\]\]/, `${p}: placeholder or button syntax`);
+    assert.doesNotMatch(md, /\]\((chart|figure):|\bchart:[\w:,+-]+\/\w+|\bfigure:[\w-]+\)/, `${p}: chart source`);
+    assert.doesNotMatch(md, /\bNaN\b|\bundefined\b|<img|<a /, `${p}: broken output`);
+    for (const m of md.matchAll(/\]\(((?:[^()\s]|\([^()\s]*\))+)(?: "[^"]*")?\)/g)) assert.match(m[1]!, /^(https?:|mailto:)/, `${p}: relative link ${m[1]}`);
+  }
+});
+
+test("twins: their numbers are the page's numbers", async () => {
+  const { out } = await built();
+  for (const p of twinPaths()) {
+    const md = readFileSync(twinFile(out, p), "utf8");
+    const text = htmlText(readFileSync(join(out, p, "index.html"), "utf8"));
+    // Without the header, the key-point tables of charts (worked out beside the drawing) and the links' URLs.
+    let body = md.split("\n").slice(5).join("\n");
+    for (const b of chartBlocks(md)) for (const rows of b.rows) for (const r of rows) body = body.replace(r, "");
+    body = body.replace(/\]\([^)\s]*(?:\([^()\s]*\))?[^)\s]*\)/g, "]").replace(/https?:\/\/\S+/g, "");
+    const missing = [...new Set(body.match(/\d+(?:\.\d+)?/g) ?? [])].filter((n) => !text.includes(n));
+    assert.deepEqual(missing, [], `${p}: numbers not on the page`);
+  }
+});
+
+test("twins: every chart is a caption and a table with a row per design", async () => {
+  const { out } = await built();
+  let charts = 0;
+  for (const p of twinPaths()) {
+    const md = readFileSync(twinFile(out, p), "utf8");
+    const html = readFileSync(join(out, p, "index.html"), "utf8");
+    const blocks = chartBlocks(md);
+    assert.equal(blocks.length, (html.match(/<figure class="guide-chart">/g) ?? []).length, `${p}: a block per chart figure`);
+    const text = htmlText(html);
+    for (const b of blocks) {
+      assert.ok(b.rows.length >= 1, `${p}: ${b.caption.slice(0, 40)}: a table`);
+      for (const rows of b.rows) {
+        assert.ok(rows.length >= 1, `${p}: a row per design`);
+        // Each row names a design (or curve) the page's chart shows.
+        for (const r of rows) assert.ok(text.includes(r.split("|")[1]!.trim()), `${p}: "${r.slice(0, 50)}" is on the page`);
+      }
+      charts++;
+    }
+  }
+  assert.ok(charts >= 40, `${charts} charts`);
+  // A known chart: three boxes, F3 in the table.
+  const svp = readFileSync(join(out, "guides/sealed-vs-ported.md"), "utf8");
+  assert.match(svp, /\| Design \| F3 \(Hz\) \| F6 \(Hz\) \| Peak \(dB @ Hz\) \|\n\| --- \| --- \| --- \| --- \|\n\| Sealed \| 41 \| 32 \|[^\n]*\n\| Ported \| 21 \|[^\n]*\n\| Passive radiators \| 23 \|/);
+});
+
+test("llms.txt: llmstxt.org layout, every link written, the MCP page listed with its page", async () => {
+  const { out, paths } = await built();
+  const txt = readFileSync(join(out, "llms.txt"), "utf8");
+  const lines = txt.split("\n");
+  assert.equal(lines[0], "# Speaker Box Genius");
+  assert.match(lines[2]!, /^> .+/);
+  assert.deepEqual([...txt.matchAll(/^## (.+)$/gm)].map((m) => m[1]), ["Guides", "Calculators", "Reference", "Optional"]);
+  const entries = [...txt.matchAll(/^- \[([^\]]+)\]\(([^)]+)\): (.+)$/gm)];
+  assert.equal(entries.length, lines.filter((l) => l.startsWith("- ")).length, "every list line is [Title](url): description");
+  for (const [, , url] of entries) {
+    if (!url!.startsWith(SITE_URL)) continue;
+    const path = new URL(url!).pathname;
+    assert.ok(existsSync(join(out, path)) || existsSync(join(out, path, "index.html")), `${url} is written`);
+  }
+  const twinLinks = entries.map((e) => e[2]!).filter((u) => u.startsWith(SITE_URL) && u.endsWith(".md"));
+  assert.equal(twinLinks.length, twinPaths().length);
+  assert.equal(twinLinks.includes(`${SITE_URL}/mcp.md`), paths.includes("/mcp/"));
+  assert.ok(entries.some((e) => e[2] === `${SITE_URL}/drivers/`), "the drivers index (HTML) is optional reading");
+  // Sections hold what they should.
+  const section = (name: string) => txt.split(`## ${name}\n`)[1]!.split("\n## ")[0]!;
+  assert.match(section("Guides"), /\/guides\.md\)[\s\S]*\/winisd-alternative\.md\)[\s\S]*\/guides\/port-chuffing\.md\)/);
+  assert.match(section("Calculators"), /\/calculators\.md\)[\s\S]*\/calculators\/port-length\.md\)/);
+  assert.match(section("Reference"), /\/about\.md[\s\S]*\/validation\.md[\s\S]*\/changelog\.md[\s\S]*\/privacy\.md/);
+  assert.deepEqual([...section("Optional").matchAll(/\]\((https:\/\/speakerboxgenius\.com\/[^)]+\.md)\)/g)].map((m) => m[1]), [`${SITE_URL}/mcp.md`], "only the MCP page is a twin in Optional");
+});
+
+test("llms-full.txt is every twin in llms.txt order, split by ---", async () => {
+  const { out } = await built();
+  const links = [...readFileSync(join(out, "llms.txt"), "utf8").matchAll(/\]\((https:\/\/speakerboxgenius\.com\/[^)]+\.md)\)/g)].map((m) => m[1]!.replace(SITE_URL, ""));
+  const full = readFileSync(join(out, "llms-full.txt"), "utf8");
+  assert.equal(full, links.map((l) => readFileSync(join(out, l), "utf8").trim()).join("\n\n---\n\n") + "\n");
+  console.log(`llms-full.txt: ${full.length} bytes (${Math.round(full.length / 1024)} KB), ${links.length} twins`);
+});
+
+test("twins are not in the sitemaps, and robots.txt is unchanged", async () => {
+  const { out } = await built();
+  for (const f of readdirSync(out).filter((f) => /^sitemap.*\.(xml|json)$/.test(f))) assert.doesNotMatch(readFileSync(join(out, f), "utf8"), /\.md\b|llms/, f);
+  assert.equal(readFileSync(join(out, "robots.txt"), "utf8"), `User-agent: *\nAllow: /\nDisallow: /sitemap-state.json\n\nSitemap: ${SITE_URL}/sitemap.xml\n`);
+});
+
+// "Ask AI about this page" (#393).
+test("ask AI: a <details> menu with Copy (the twin), Claude and ChatGPT links carrying the encoded prompt", () => {
+  const html = askAi("/guides/port-tuning/");
+  assert.match(html, /^<div class="ask-ai"><details class="ask-ai-d"><summary class="ask-ai-btn">/, "opens without JS");
+  assert.equal(askAiPrompt("/guides/port-tuning/"), `Read ${SITE_URL}/guides/port-tuning.md from Speaker Box Genius so I can ask questions about it.`);
+  const q = encodeURIComponent(askAiPrompt("/guides/port-tuning/"));
+  assert.ok(html.includes(`data-ask-ai="copy" href="/guides/port-tuning.md"`), "Copy links the twin (the no-JS fallback)");
+  assert.ok(html.includes(`href="https://claude.ai/new?q=${q}" target="_blank" rel="noopener"`));
+  assert.ok(html.includes(`href="https://chatgpt.com/?q=${q}" target="_blank" rel="noopener"`));
+  assert.deepEqual([...html.matchAll(/class="ask-ai-label">([^<]+)</g)].map((m) => m[1]), ["Copy page as Markdown", "Copied", "Open in Claude", "Open in ChatGPT"]);
+  // Counts only when GoatCounter is there (the preview build strips it).
+  assert.match(html, /window\.goatcounter&&window\.goatcounter\.count&&window\.goatcounter\.count\(\{path:"ask-ai-"\+k/);
+  assert.match(withAskAi("<h1>T</h1>\n<p class=\"lede\">L</p>", "/x/"), /^<h1>T<\/h1>\n<div class="ask-ai">[\s\S]*<\/script>\n<p class="lede">L<\/p>$/);
+});
+
+test("ask AI: on every guide and calculator page, right under the H1 and not in On this page; nowhere else", async () => {
+  const { out } = await built();
+  const want = [...twinPaths().filter((p) => !["/guides/", "/calculators/", "/about/", "/validation/", "/changelog/", "/privacy/", "/mcp/"].includes(p))];
+  for (const p of want) {
+    const html = readFileSync(join(out, p.slice(1), "index.html"), "utf8");
+    const main = html.split("<main>")[1]!.split("</main>")[0]!;
+    assert.equal(main.match(/class="ask-ai"/g)?.length, 1, `${p}: one menu`);
+    assert.match(main, /<\/h1>\n<div class="ask-ai">/, `${p}: right after the H1`);
+    // After the menu comes the page as before: the lede first.
+    assert.match(main, /<\/script>\n<p class="lede">/, `${p}: lede follows`);
+    const toc = /<nav class="toc"[\s\S]*?<\/nav>/.exec(main)?.[0] ?? "";
+    assert.doesNotMatch(toc, /Ask AI/, `${p}: not in On this page`);
+    assert.ok(main.includes(`href="${twinPath(p)}"`), `${p}: copies its own twin`);
+    assert.match(html, /\.ask-ai-menu\{/, `${p}: styled`);
+  }
+  for (const p of ["/guides/", "/calculators/", "/about/", "/validation/", "/changelog/", "/privacy/", "/mcp/", "/drivers/"]) {
+    assert.doesNotMatch(readFileSync(join(out, p.slice(1), "index.html"), "utf8"), /class="ask-ai"/, `${p}: no menu`);
+  }
+});
+
+test("the visit counter loads only without Do Not Track / GPC and with Help improve the app on", () => {
+  const code = GOATCOUNTER.replace(/^<script>/, "").replace(/<\/script>$/, "");
+  const loads = (nav: Record<string, unknown>, win: Record<string, unknown> = {}, stored: string | null = null, storageThrows = false) => {
+    const added: { src?: string; async?: boolean; attrs: Record<string, string> }[] = [];
+    const localStorage = { getItem: (k: string) => { if (storageThrows) throw new Error("blocked"); return k === "sbg.usageStats" ? stored : null; } };
+    const document = { createElement: () => ({ attrs: {}, setAttribute(k: string, v: string) { this.attrs[k] = v; } }), head: { appendChild: (el: (typeof added)[0]) => added.push(el) } };
+    runInNewContext(code, { navigator: nav, window: win, localStorage, document });
+    return added;
+  };
+  const [s] = loads({});
+  assert.equal(s.src, "https://gc.zgo.at/count.js");
+  assert.equal(s.async, true);
+  assert.equal(s.attrs["data-goatcounter"], "https://speakerboxgenius.goatcounter.com/count");
+  assert.equal(loads({ globalPrivacyControl: true }).length, 0, "GPC");
+  assert.equal(loads({ doNotTrack: "1" }).length, 0, "DNT");
+  assert.equal(loads({ doNotTrack: "yes" }).length, 0, "DNT yes");
+  assert.equal(loads({}, { doNotTrack: "1" }).length, 0, "window.doNotTrack");
+  assert.equal(loads({}, {}, "off").length, 0, "Help improve the app off");
+  assert.equal(loads({ doNotTrack: "0" }).length, 1, "DNT 0 still counts");
+  assert.equal(loads({}, {}, null, true).length, 1, "no storage: can't have switched it off");
+  // Same switch and same browser test as the app's usage stats.
+  assert.match(readFileSync(new URL("../packages/web/src/telemetry.ts", import.meta.url), "utf8"), /const PREF = "sbg\.usageStats";/);
+  assert.match(readFileSync(new URL("../packages/web/src/telemetrySchema.ts", import.meta.url), "utf8"), /nav\.globalPrivacyControl === true \|\| nav\.doNotTrack === "1" \|\| nav\.doNotTrack === "yes" \|\| win\?\.doNotTrack === "1"/);
 });

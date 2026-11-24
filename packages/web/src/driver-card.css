@@ -29,6 +29,11 @@
   font-size: var(--text-md);
 }
 
+/* "Find similar drivers": a ghost button under the picker, left-aligned. */
+.dv-similar {
+  justify-self: start;
+}
+
 button.browse.chosen.rich {
   display: flex;
   align-items: center;

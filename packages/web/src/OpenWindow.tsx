@@ -22,6 +22,8 @@ export function OpenWindow(props: {
   pending: File | null;
   onUse: (f: File, use: ImportUse) => void;
   notify: (m: string) => void;
+  /** False when every box is an open baffle: no "Put the driver on my baffle". */
+  baffle?: boolean;
 }) {
   const [saved, setSaved] = useState<Saved[]>([]);
   const [all, setAll] = useState(false);
@@ -47,7 +49,7 @@ export function OpenWindow(props: {
         <section className="sheet-section">
           <p className="menu-label">Use {props.pending.name} to…</p>
           <div className="use-list">
-            {importUses(props.pending.name).map((u) => (
+            {importUses(props.pending.name, props.baffle ?? true).map((u) => (
               <button key={u} type="button" className="secondary use-item" onClick={() => props.onUse(props.pending!, u)}>
                 <b>{IMPORT_USES[u].label}</b>
                 <span className="hint">{IMPORT_USES[u].help}</span>

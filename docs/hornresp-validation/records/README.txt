@@ -153,3 +153,15 @@ segments 30 / 90 / 30 / 150 cm by the old export), run 11 Nov 2026: it matches
 the app's case 27 layout with the tap at 150 cm (0.03 dB, 0.07 % impedance),
 not 120 cm (6.2 dB off). Hornresp takes the front tap where the last segment
 starts; the export refuses a horn with more than one section after its tap.
+
+Open baffles (Hornresp 60.70, 17 Nov 2026; the CH configuration with no rear or throat
+chamber, Ang = 2 x Pi, which Hornresp needs). Import, then Tools > Loudspeaker Wizard
+(Ctrl+E); double-click the schematic for the path; export Pressure (0 degrees), Power,
+Impedance and Displacement one by one (F9). For O4 also Power with Output 1 and Output 2.
+O1-ob12-flat            12in sub (N8's), flat baffle, S = 2025 cm2   (path 38.8 cm)
+O2-ob15-flat            Dayton UMII15-22, flat baffle, S = 3600 cm2 (path 51.9 cm)
+O3-ob12-u               12in sub, U-frame, S = 2025 cm2, L56 = 30 cm (path 68.9 cm)
+O4-ob12-h               12in sub, H-frame, S = 2025 cm2, 15 + 15 cm  (path 57.8 cm)
+O5-ob15-h               UMII15-22, H-frame, S = 3600 cm2, 20 + 20 cm (path 77.0 cm)
+A U-frame's duct is side 2 (L56): with it on side 1 the frame faces the other way.
+

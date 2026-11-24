@@ -17,6 +17,7 @@ export const KIND_COLORS: Record<DesignKind, readonly string[]> = {
   bandpass: ["#a855f7", "#d8b4fe", "#d946ef", "#e9d5ff"],
   line: ["#f472b6", "#f9a8d4", "#db2777", "#fbcfe8"],
   ib: ["#14b8a6", "#5eead4", "#0f766e", "#ccfbf1"],
+  ob: ["#f59e0b", "#fcd34d", "#b45309", "#fef3c7"],
 };
 
 /** What a guide calls each of KIND_COLORS, shade by shade (site/liveNumbers.ts writes these into captions). */
@@ -27,6 +28,7 @@ export const KIND_COLOR_NAMES: Record<DesignKind, readonly string[]> = {
   bandpass: ["purple", "light purple", "magenta", "pale purple"],
   line: ["pink", "light pink", "dark pink", "pale pink"],
   ib: ["teal", "light teal", "dark teal", "pale teal"],
+  ob: ["amber", "light amber", "dark amber", "pale amber"],
 };
 
 /** Measured curves: apart from the design palette, drawn dashed. */

@@ -33,7 +33,7 @@ export function VolumePanel(props: { state: AppState; onChange: (v: AppState["vo
   const hasPort = !target || target.kind === "vented" || rearOf(target) === "port";
   const linkOptions: { value: string; text: string }[] = [
     { value: "none", text: "No design" },
-    ...s.designs.filter((d) => d.kind !== "line" && d.kind !== "ib").map((d) => ({ value: d.id, text: d.name || d.id })),
+    ...s.designs.filter((d) => d.kind !== "line" && d.kind !== "ib" && d.kind !== "ob").map((d) => ({ value: d.id, text: d.name || d.id })),
   ];
 
   // Find dimensions for a target volume (what the box volume will be in the simulation).

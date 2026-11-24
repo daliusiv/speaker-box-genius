@@ -1,0 +1,43 @@
+name: Import Accuton drivers
+
+# Reads the product pages on accuton.com (with Accuton's permission, see
+# docs/data-permissions.md) and opens a pull request with new and updated entries
+# plus a report of anything adjusted or skipped. Accuton asked for the data to follow
+# their website (they're re-measuring their range), so it runs once a month as well as
+# by hand: run it by hand when Accuton says something changed.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "47 4 12 * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  import:
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read accuton.com
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/accuton.ts
+
+      - name: Check the database
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts
+
+      - name: Open or update the pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: db/accuton-import
+          add-paths: |
+            drivers/accuton/**
+          commit-message: "Database: import Accuton drivers from accuton.com (with permission)"
+          title: "Database: Accuton import"
+          labels: database
+          body-path: accuton-import-report.md

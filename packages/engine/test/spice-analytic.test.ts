@@ -177,6 +177,8 @@ test("SPICE analytic: signal chain gains at their corners (Butterworth −3 dB, 
   close(gainAt({ eq: [{ type: "linkwitz", f0: 60, q0: 0.9, fp: 30, qp: 0.6 }] }, 0.01), (60 / 30) ** 2, 1e-6, "Linkwitz Transform at DC");
   close(gainAt({ eq: [{ type: "lowshelf", freq: 40, gain_db: 6, q: 0.71 }] }, 0.01), 10 ** (6 / 20), 1e-6, "low shelf below");
   close(gainAt({ eq: [{ type: "highshelf", freq: 40, gain_db: -6, q: 0.71 }] }, 1e6), 10 ** (-6 / 20), 1e-6, "high shelf above");
+  close(gainAt({ eq: [{ type: "lowshelf1", freq: 40, gain_db: 9 }] }, 0.01), 10 ** (9 / 20), 1e-6, "6 dB/oct low shelf below");
+  close(gainAt({ eq: [{ type: "lowshelf1", freq: 40, gain_db: 9 }] }, 40), 10 ** (4.5 / 20), 1e-9, "6 dB/oct low shelf: half the gain at its frequency");
 });
 
 test("SPICE analytic: a series resistor in the passive ladder adds exactly R to the impedance", () => {

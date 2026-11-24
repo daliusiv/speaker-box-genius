@@ -3,6 +3,7 @@ title: "Hofmann's Iron Law: PA subwoofer vs home subwoofer"
 description: Efficiency, bass extension and box size, pick two. A B&C PA 18″ against a Dayton home 18″, in each other's boxes, at 1 W and at full power, worked out from Thiele/Small parameters with charts you can open and change.
 path: guides/hofmann-iron-law
 image: chart:iron-law/spl
+art: A triangle joining a small box, a deep bass wave and a loud driver: pick two.
 order: 24
 group: start
 ---

@@ -100,6 +100,7 @@ export function AirChart(p: {
       hidden={p.hidden}
       best="low"
       shortTitle="Air distortion"
+      detail={`2nd harmonic${at === "max" ? " · at max SPL" : ""}`}
       title={`${anyPath && !anySpring ? "Line air distortion" : anyPath ? "Air distortion" : "Box air distortion"} (2nd harmonic)${at === "max" ? " at max SPL" : ""}`}
       unit={unit === "dbc" ? "dBc" : "%"}
       digits={unit === "dbc" ? 1 : 2}

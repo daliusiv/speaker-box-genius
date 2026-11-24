@@ -2,6 +2,8 @@ import { useContext, useEffect, useLayoutEffect, useRef, useState, type CSSPrope
 import { Sparkle } from "./Logo.tsx";
 import { SubmitPrContext } from "./SubmitDialog.tsx";
 import {
+  openBaffleFrequencies,
+  openBaffleGeometry,
   portEffectiveLength,
   prAddedMassForFb,
   prFb,
@@ -15,6 +17,7 @@ import {
   type Air,
 } from "@sbg/engine";
 import { Fixed, KitFields, Num, Select } from "./components.tsx";
+import { ObDiagram, obDimOf, type ObDim } from "./ObDiagram.tsx";
 import { Icon } from "./Icon.tsx";
 import type { IconName } from "./iconPaths.ts";
 import { Button, Chip, RadioCards, collectHelp, Disclosure, FieldRow, HelpSheet, InlineText, Menu, MenuItemButton, MiniResponse, Section, Segmented, Stepper, type HelpEntry, type MenuItem } from "./ui/index.ts";
@@ -30,7 +33,7 @@ export interface PrPhysical {
   displacement_l?: number;
   cutout_mm?: number;
 }
-import { KIND_COLORS, KIND_LABEL, PORT_LIMIT, portOf, portRoom_cm, type PresetPreview } from "./sim.ts";
+import { KIND_COLORS, KIND_LABEL, OB_FRAME, PORT_LIMIT, portOf, portRoom_cm, type PresetPreview } from "./sim.ts";
 import { useUnits } from "./units.ts";
 import { bandpassLossesFrom, NO_LOSS, qText } from "./state.ts";
 import { alignmentHelp, flatPresetHelp, moreVentedFor, prTuning, withPreset, ventedAlignmentFor, ventedPresetPatch, type PortPicker } from "./presets.ts";
@@ -53,6 +56,7 @@ import type {
   DesignKind,
   DesignState,
   IbDesign,
+  ObDesign,
   PortFields,
   PrDesign,
   PrGroupState,
@@ -203,6 +207,8 @@ export interface DesignGlance {
   qtc?: number;
   f3: number | null;
   over: number;
+  /** Open baffle: path D, dipole peak, first null, frame resonance (from the simulation, as the charts). */
+  ob?: { d_m: number; fPeak: number; fNull: number; fQuarter: number | null };
 }
 
 /**
@@ -271,7 +277,7 @@ function DesignShell(props: {
           />
           {d.on && props.folded && g ? (
             <span className="bx-sub">
-              {d.kind === "ib" && d.rear === "open" ? "Open rear" : fmt(g.vb_l, "vol", 1)}
+              {d.kind === "ib" && d.rear === "open" ? "Open rear" : d.kind === "ob" ? OB_FRAME[d.frame] : fmt(g.vb_l, "vol", 1)}
               {g.fb ? ` · Fb ${g.fb.toFixed(1)} Hz` : ""}
               {g.f3 === null ? " · F3 –" : ` · F3 ${g.f3.toFixed(0)} Hz`}
               {" · "}
@@ -448,6 +454,88 @@ function IbBody(p: CommonProps<IbDesign>) {
         />
       )}
       <SealedReadouts align={p.align} drivers={p.drivers} vb_l={p.vb_l} glance={p.glance} rear={p.design.rear} />
+    </div>
+  );
+}
+
+/** An open baffle's front-to-rear path and the frequencies it sets, from the engine (null while the sizes don't make a board). */
+function obFrequencies(d: ObDesign, air: Air, sd_cm2: number) {
+  try {
+    return openBaffleFrequencies({ kind: "open-baffle", frame: d.frame, w_cm: d.w_cm, h_cm: d.h_cm, x_cm: d.x_cm, y_cm: d.y_cm, t_cm: d.t_cm, depth_cm: d.depth_cm }, air, sd_cm2 / 1e4);
+  } catch {
+    return null;
+  }
+}
+
+/** Whether the sizes make a board or frame the engine takes (a quick check, no model built). */
+function obFits(d: ObDesign): boolean {
+  try {
+    openBaffleGeometry({ kind: "open-baffle", frame: d.frame, w_cm: d.w_cm, h_cm: d.h_cm, x_cm: d.x_cm, y_cm: d.y_cm, t_cm: d.t_cm, depth_cm: d.depth_cm });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Open baffle: the frame, the board's size and the driver's place on it, then the dipole's frequencies. */
+function ObBody(p: CommonProps<ObDesign> & { sd_cm2?: number | null; onDipoleEq?: () => void }) {
+  const d = p.design;
+  const [focus, setFocus] = useState<ObDim | null>(null);
+  const set = (patch: Partial<ObDesign>) => p.onChange({ ...d, ...patch });
+  const framed = d.frame !== "flat";
+  // A frame's model takes a moment to build: its numbers come with the charts' run (in the worker).
+  const fr = framed ? (p.glance?.ob ?? null) : obFrequencies(d, p.air, p.sd_cm2 ?? 0);
+  const pending = framed && !fr && obFits(d);
+  return (
+    <div className="bx-body" onFocusCapture={(e) => setFocus(obDimOf(e))} onBlurCapture={() => setFocus(null)}>
+      <RadioCards<ObDesign["frame"]>
+        legend="Frame"
+        value={d.frame}
+        options={[
+          { value: "flat", title: "Flat board", description: "A plain board with the driver's back open to the room", aside: <Chip>usual</Chip> },
+          { value: "h", title: "H-frame", description: "The board mid-way in a frame open front and back: more bass, with a duct resonance to keep above the crossover" },
+          { value: "u", title: "U-frame", description: "The board at the front, the frame open at the back: the most bass for its depth" },
+        ]}
+        onChange={(frame) => set({ frame })}
+      />
+      <ObDiagram d={d} sd_cm2={p.sd_cm2} focus={focus} />
+      <Num help="Outside width of the board (or frame). A wider board lowers the dipole peak and gives more bass; on a tall board the width matters far more than the height." label="Width" q="len" value={d.w_cm} onChange={(w_cm) => set({ w_cm, x_cm: Math.min(d.x_cm, w_cm * 0.99) })} />
+      <Num help="Outside height of the board (or frame)." label="Height" q="len" value={d.h_cm} onChange={(h_cm) => set({ h_cm, y_cm: Math.min(d.y_cm, h_cm * 0.99) })} />
+      <Num help="Driver centre from the board's left edge. Off-centre spreads the paths round the edges and smooths the response." label="From left" q="len" value={d.x_cm} onChange={(x_cm) => set({ x_cm })} />
+      <Num help="Driver centre from the board's bottom edge. About a third of the way up is a common choice." label="From bottom" q="len" value={d.y_cm} onChange={(y_cm) => set({ y_cm })} />
+      <Num help="Board thickness; a frame's walls are taken as the same. A thicker board sends the rear wave further round its edges: a little more bass and a slightly lower dipole peak (18 mm on a 45 cm board: about 0.8 dB in the bass, the peak about 8 % lower than a thin one)." label="Thickness" q="len" value={d.t_cm} onChange={(t_cm) => set({ t_cm })} />
+      {framed && (
+        <Num
+          help={d.frame === "h" ? "Front edge to back edge of the frame, board included; the board sits half-way." : "Front edge (the board) to the open back of the frame."}
+          label="Depth"
+          q="len"
+          value={d.depth_cm}
+          onChange={(depth_cm) => set({ depth_cm })}
+        />
+      )}
+      {fr ? (
+        <>
+          <Fixed label="Path D" num={fr.d_m * 100} q="len" help={framed ? "How far the front and rear mouths effectively sit apart in the bass, worked out from edge diffraction round the frame as a block (checked against boundary-element solutions of four frames). It sets the bass level below the dipole peak." : "How far the front and back effectively sit apart in the bass, worked out from the board's edges (edge diffraction, checked against boundary-element solutions). About 0.7 × the side of a square board with the driver centred: shorter than front → edge → back. It sets the bass level below the dipole peak."} />
+          <Fixed label="Dipole peak" unit="Hz" value={fr.fPeak.toFixed(0)} help={framed ? "The first maximum of the sound round the frame, with the front and the rear mouth moving equal and opposite air (the ducts left out). Below it the bass falls 6 dB/octave; the duct resonance (Quarter-wave) adds its own peak on top." : "The response's first maximum, about 12–14 dB above the same driver standing free with no board: the rear wave round the edges adds to the front. Below it the bass falls 6 dB/octave; above it the board acts as a baffle."} />
+          <Fixed label="First null" unit="Hz" value={fr.fNull.toFixed(0)} help={framed ? "The dip after the dipole peak, where the sound round the frame works against the front." : "The dip after the dipole peak, where the sound round the edges works against the front. An off-centre driver makes it shallower."} />
+          {fr.fQuarter !== null && <Fixed label="Quarter-wave" unit="Hz" value={fr.fQuarter.toFixed(0)} help={"The frame's duct resonance: a peak (and the dip after it) to keep above the woofer's crossover. The duct's open end is taken as the end of a pipe (checked against boundary-element solutions). Hornresp puts it about 10 % lower (9–13 %), its mouth being a hole in a wall."} />}
+        </>
+      ) : pending ? (
+        <p className="hint">Working out the frame's numbers…</p>
+      ) : (
+        <p className="hint">These sizes don't make a board the driver fits on: check the width, height, driver position and depth.</p>
+      )}
+      <p className="hint">
+        Below the dipole peak the bass falls 6 dB/octave on top of the driver's own roll-off: boost it back with EQ and watch cone excursion. Cross the woofer over below about half the peak{framed ? " and the quarter-wave" : ""}.
+      </p>
+      {fr && p.onDipoleEq && (
+        <div className="sg-actions">
+          <Button variant="ghost" title="Add a 6 dB/oct low shelf and a cut at the dipole peak for this design, fitted to its limits (Signal → EQ)" onClick={p.onDipoleEq}>
+            <Sparkle />
+            Dipole EQ
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -1405,6 +1493,8 @@ export function DesignCard(props: {
   fit?: StuffingFitContext;
   /** Transmission lines: simulated tuning. */
   lineFb?: number | null;
+  /** Open baffles: add the Dipole EQ for this design. */
+  onDipoleEq?: () => void;
   /** Bandpass: re-size for the driver within its present volume. */
   onSizeBandpass?: () => void;
   /** Transmission lines: replace the driver with one read from a Hornresp record. */
@@ -1450,12 +1540,13 @@ export function DesignCard(props: {
       onChange={(patch) => props.onChange({ ...d, ...patch } as DesignState)}
       onDuplicate={props.onDuplicate}
       onDelete={props.onDelete}
-      onDimensions={d.kind !== "line" && d.kind !== "ib" ? props.onDimensions : undefined}
+      onDimensions={d.kind !== "line" && d.kind !== "ib" && d.kind !== "ob" ? props.onDimensions : undefined}
       onUnlink={props.onUnlink}
     >
       <KitFields>
         {d.kind === "sealed" && <SealedBody {...common} design={d} onChange={props.onChange} />}
         {d.kind === "ib" && <IbBody {...common} design={d} onChange={props.onChange} />}
+        {d.kind === "ob" && <ObBody {...common} design={d} onChange={props.onChange} sd_cm2={props.finder.driver?.sd_cm2} onDipoleEq={props.onDipoleEq} />}
         {d.kind === "vented" && <VentedBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} pickPort={props.pickPort} />}
         {d.kind === "bandpass" && (
           <BandpassBody {...common} design={d} onChange={props.onChange} portCtx={props.portCtx} db={props.db} losses={props.losses} onSize={props.onSizeBandpass} />
@@ -1552,7 +1643,7 @@ function LeakageSection(props: { design: DesignState; settingsQl: number; onChan
 }
 
 /** Each box type's icon (the + Box menu draws it in the colour the new box gets). */
-const KIND_ICON: Record<DesignKind, IconName> = { sealed: "box", vented: "port", pr: "radiator", bandpass: "box", line: "line", ib: "baffle" };
+const KIND_ICON: Record<DesignKind, IconName> = { sealed: "box", vented: "port", pr: "radiator", bandpass: "box", line: "line", ib: "baffle", ob: "dipole" };
 
 const ADD_KINDS: { kind: DesignKind; what: string }[] = [
   { kind: "sealed", what: "Simplest: tight bass with a gentle roll-off" },
@@ -1561,6 +1652,7 @@ const ADD_KINDS: { kind: DesignKind; what: string }[] = [
   { kind: "bandpass", what: "Driver between two chambers: loud over a narrow band" },
   { kind: "line", what: "A folded line or horn behind the driver" },
   { kind: "ib", what: "In a wall, floor or ceiling, its back to an attic, garage or the next room" },
+  { kind: "ob", what: "A free-standing board or frame, the driver's back open to the room (dipole)" },
 ];
 
 /**

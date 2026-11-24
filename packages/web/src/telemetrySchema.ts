@@ -19,19 +19,19 @@ const all =
   <const L extends readonly T[]>(list: L & (Exclude<T, L[number]> extends never ? unknown : { missing: Exclude<T, L[number]> })) =>
     list;
 
-export const BOX_TYPES = all<DesignKind>()(["sealed", "vented", "pr", "bandpass", "line", "ib"]);
+export const BOX_TYPES = all<DesignKind>()(["sealed", "vented", "pr", "bandpass", "line", "ib", "ob"]);
 export const SHAPES = all<ShapeKind>()(["box", "wedge", "cylinder", "sphere", "frustum"]);
 export const PANELS = all<PanelId>()(["driver", "boxes", "signal", "build", "settings"]);
-export const CHARTS = all<ChartId>()(["excursion", "pr", "port", "maxspl", "impedance", "za", "delay", "transient", "pressure", "air"]);
+export const CHARTS = all<ChartId>()(["excursion", "pr", "port", "maxspl", "power", "impedance", "za", "delay", "transient", "pressure", "air"]);
 export const IMPORT_KINDS = all<ImportKind>()(["project", "winisd", "hornresp", "measurement"]);
 export const IMPORT_USES = all<ImportUse>()(["measure-driver", "overlay-impedance", "overlay-response", "driver-on-baffle"]);
 /** `EXPORT_FORMATS` ids (formats/registry.ts); a test keeps the two lists equal. */
 export const EXPORT_FORMAT_IDS = ["browser", "json", "csv", "wpr", "wdr", "hornresp", "spice", "baffle-frd", "dsp"] as const;
-export const REFERRERS = ["reddit", "diyaudio", "google", "other", "none"] as const;
+export const REFERRERS = ["reddit", "diyaudio", "google", "site", "other", "none"] as const;
 export const SETTING_KEYS = all<keyof Settings>()([
   "units", "air", "airConditions", "velocity", "excursion", "rg", "thermalLimit", "ampVolts", "ampAmps", "ampWatts", "signal",
   "inductance", "losses", "portCompression", "lineSpl", "portModel", "endCorrection", "leakage", "driveModel", "coneLoad",
-  "coilTemp_C", "portLimit_ms", "prCaution_pct", "alignments", "airLimit_pct", "airInMaxSpl", "airFill", "f3From", "qaVolume", "ventPlacement",
+  "coilTemp_C", "coilMode", "ambient_C", "heatBand", "portLimit_ms", "prCaution_pct", "alignments", "airLimit_pct", "airInMaxSpl", "airFill", "f3From", "qaVolume", "ventPlacement",
 ]);
 export const MATCH_PRESETS = all<CompatPreset>()(["default", "winisd", "hornresp", "vituixcad"]);
 /** Limits shown as over in the summary (sim.ts LimitKind), plus Xmax reached only in the deep bass. */
@@ -55,8 +55,9 @@ export const USAGE_EVENTS = {
   share_used: { action: ["link", "markdown", "bbcode", "image_download", "image_copy", "native"] },
   tool_opened: { tool: ["assistant", "measure", "baffle_frd", "program", "open_window", "export_window"] },
   tab_viewed: { tab: PANELS },
-  chart_viewed: { chart: CHARTS },
-  setting_changed: { key: [...SETTING_KEYS, "match"], preset: MATCH_PRESETS },
+  // "response": a desktop chart slot switched to the response chart.
+  chart_viewed: { chart: [...CHARTS, "response"] },
+  setting_changed: { key: [...SETTING_KEYS, "match", "charts_per_row"], preset: MATCH_PRESETS },
   warning_shown: { warning: WARNINGS, box_type: BOX_TYPES },
   submit_opened: { kind: SUBMISSION_KINDS },
   submit_sent: { kind: SUBMISSION_KINDS },
@@ -81,7 +82,7 @@ export const CONTEXT = {
 export type Context = { [K in keyof typeof CONTEXT]?: Value<(typeof CONTEXT)[K]> };
 
 /** PostHog's own events allowed out with usage stats on: clicks (text masked), heatmaps, frustration clicks, page speed. */
-export const SDK_EVENTS = new Set(["$autocapture", "$rageclick", "$dead_click", "$$heatmap", "$web_vitals"]);
+export const SDK_EVENTS = new Set(["$autocapture", "$rageclick", "$dead_click", "$$heatmap", "$web_vitals", "$snapshot"]);
 
 /** Unprefixed keys the SDK itself puts on every event (the project token, the cookieless placeholder id). */
 const SDK_KEYS = new Set(["token", "distinct_id"]);
@@ -116,7 +117,7 @@ export function cleanEvent<T extends Outgoing>(e: T | null | undefined, usage: b
 }
 
 /** Where a visitor came from, as a bucket only: never the address itself. */
-export function referrerBucket(referrer: string, ownHost: string): (typeof REFERRERS)[number] | null {
+export function referrerBucket(referrer: string, ownHost: string): (typeof REFERRERS)[number] {
   if (!referrer) return "none";
   let host: string;
   try {
@@ -124,7 +125,7 @@ export function referrerBucket(referrer: string, ownHost: string): (typeof REFER
   } catch {
     return "other";
   }
-  if (host === ownHost) return null; // moving around the site isn't an arrival
+  if (host === ownHost) return "site"; // from one of the site's own pages (a guide, a calculator, a driver page)
   if (host === "reddit.com" || host.endsWith(".reddit.com") || host === "redd.it") return "reddit";
   if (host === "diyaudio.com" || host.endsWith(".diyaudio.com")) return "diyaudio";
   if (/(^|\.)google\.[a-z.]+$/.test(host)) return "google";

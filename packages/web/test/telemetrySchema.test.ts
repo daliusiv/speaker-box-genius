@@ -15,11 +15,11 @@ test("crash reports always pass, with the design stripped from every address", (
 test("usage events leave only with usage stats on, and only if listed", () => {
   assert.ok(cleanEvent({ event: "design_added", properties: { box_type: "pr" } }, true));
   assert.equal(cleanEvent({ event: "design_added", properties: { box_type: "pr" } }, false), null);
-  for (const ev of ["$autocapture", "$rageclick", "$dead_click", "$$heatmap", "$web_vitals"]) {
+  for (const ev of ["$autocapture", "$rageclick", "$dead_click", "$$heatmap", "$web_vitals", "$snapshot"]) {
     assert.ok(cleanEvent({ event: ev, properties: {} }, true), ev);
     assert.equal(cleanEvent({ event: ev, properties: {} }, false), null, ev);
   }
-  for (const ev of ["$pageview", "$snapshot", "$identify", "$set", "survey shown", "my_event"]) {
+  for (const ev of ["$pageview", "$identify", "$set", "survey shown", "my_event"]) {
     assert.equal(cleanEvent({ event: ev, properties: {} }, true), null, ev);
   }
   assert.equal(cleanEvent(null, true), null);
@@ -62,7 +62,7 @@ test("referrers become a bucket, never an address", () => {
   assert.equal(referrerBucket("https://www.google.co.uk/", own), "google");
   assert.equal(referrerBucket("https://example.org/page", own), "other");
   assert.equal(referrerBucket("not a url", own), "other");
-  assert.equal(referrerBucket("https://speakerboxgenius.com/guides/x/", own), null);
+  assert.equal(referrerBucket("https://speakerboxgenius.com/guides/x/", own), "site");
   assert.equal(referrerBucket("https://notgoogle.example/", own), "other");
 });
 
@@ -92,4 +92,11 @@ test("every rule in the schema is a non-empty list or a known kind", () => {
       assert.ok(ok, `${ev}.${k}`);
     }
   }
+});
+
+test("replay snapshots leave only with usage stats on, with the design stripped from the page address", () => {
+  const snap = { event: "$snapshot", properties: { ...sdk, $snapshot_data: [{ type: 4, data: { href: "https://speakerboxgenius.com/app/#v2.design" } }] } };
+  assert.equal(cleanEvent(snap, false), null);
+  const e = cleanEvent(snap, true)!;
+  assert.doesNotMatch(JSON.stringify(e), /#v2/);
 });

@@ -1,0 +1,36 @@
+{
+  "brand": "PHL Audio",
+  "model": "970",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 67,
+    "qms": 3.75,
+    "qes": 0.4,
+    "vas_l": 6.2,
+    "re": 5.7,
+    "sd_cm2": 92,
+    "qts": 0.36,
+    "le_mh": 0.346,
+    "bl": 8,
+    "mms_g": 10.7,
+    "xmax_mm": 6.5,
+    "pe_w": 120
+  },
+  "physical": {
+    "cutout_mm": 124.5,
+    "depth_mm": 76,
+    "displacement_l": 0.18
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/970_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

@@ -3,6 +3,7 @@ title: How to design a transmission line speaker
 description: Line types, length and tuning, stuffing and folding, with a worked example that compares a classic TL, an offset TL and a mass-loaded line in your browser.
 path: guides/transmission-line
 image: chart:tl-example/response
+art: A box in cutaway with a folded line inside, and the path the air takes from the driver to the mouth.
 order: 3
 group: lines
 ---

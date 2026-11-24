@@ -15,6 +15,8 @@ import { alignmentDriver, baffleOf, dimensionsFor, driverInputOf, runDesigns, si
 import { compareLines } from "../packages/web/src/lineopt.ts";
 import { boxForQtc, roundVb, sealedState } from "../packages/web/src/calculators/sealedMath.ts";
 import { alignmentChips, portedBox } from "../packages/web/src/calculators/portedMath.ts";
+import { obDesign, readOb, type ObForm } from "../packages/web/src/calculators/obCalcMath.ts";
+import { dipoleEq } from "../packages/web/src/dipoleEq.ts";
 import { driverState, loadDb } from "./drivers.ts";
 import { subwooferExampleState } from "./calculators.ts";
 
@@ -418,7 +420,7 @@ function simBaffle(x_cm: number, y_cm: number) {
 }
 function simHot(): AppState {
   const s = dsaPorted();
-  return { ...s, settings: { ...s.settings, coilTemp_C: 100 } };
+  return { ...s, settings: { ...s.settings, coilTemp_C: 100, coilMode: "fixed" } };
 }
 
 /** Box losses: the ported box with leakage Ql (and absorption Qa, port Qp, default 100) set as given; `sealed` swaps in its Qtc 0.707 sealed box (10.7 L). */
@@ -603,6 +605,48 @@ function sealedCalcExample(): AppState {
 }
 
 /**
+ * The open baffle calculator's worked example: two 12″ drivers on the app's default open baffle
+ * (45 × 100 cm, driver 22.5 cm from the left and 35 cm up): an SB Acoustics SB34NRX75-16 (Qts 0.71,
+ * Fs 25 Hz: suits an open baffle without EQ) and a Dayton Audio RSS315HF-4 (Qts 0.39, needs DSP EQ), at
+ * 1 W. The chart is the first one's: open baffle, with the Dipole EQ, and in a wall.
+ */
+export const OB_CALC = {
+  driverIds: ["sb-acoustics/sb34nrx75-16", "dayton-audio/rss315hf-4"],
+  power_w: 1,
+  board: { frame: "flat", w_cm: 45, h_cm: 100, x_cm: 22.5, y_cm: 35, t_cm: 1.8, depth_cm: 30 } as ObForm,
+};
+export function obCalcRun(driverId: string) {
+  const r = readOb(withDriver({ ...DEFAULT_STATE, power: OB_CALC.power_w }, driverId), OB_CALC.board);
+  if (!r) throw new Error(`open baffle calculator example: ${driverId} doesn't simulate`);
+  return r;
+}
+
+/**
+ * The open baffle guide: a Dayton Audio RSS390HF-4 15″ (Qts 0.43, Xmax 14 mm) on a 50 × 90 cm flat
+ * board, the driver centred across and 35 cm up, at 100 W behind a 20 Hz 24 dB/oct Linkwitz–Riley
+ * subsonic filter. `ob-example`: the bare board, the same with the app's Dipole EQ (worked out as
+ * the card's button does), and the same driver in a wall. The other examples change one thing:
+ * the board's width or height, where the driver sits, the frame, or the driver (by its Qts).
+ */
+export const OB_GUIDE = { driverId: "dayton-audio/rss390hf-4", power: 100, hp_hz: 20, board: { frame: "flat", w_cm: 50, h_cm: 90, x_cm: 25, y_cm: 35, t_cm: 1.8, depth_cm: 30 } as ObForm };
+function obGuideState(driverId = OB_GUIDE.driverId): AppState {
+  return withDriver({ ...DEFAULT_STATE, power: OB_GUIDE.power, highPass: { ...highPass(4, OB_GUIDE.hp_hz), type: "linkwitz-riley" } }, driverId);
+}
+const obBoard = (id: string, name: string, patch: Partial<ObForm> = {}): DesignState => ({ ...obDesign({ ...OB_GUIDE.board, ...patch }, id, name) });
+function obExample(): AppState {
+  const s = obGuideState();
+  const wall = { ...newDesign("ib", []), id: "d3", name: "Same driver in a wall", on: true, rear: "open" } as DesignState;
+  const plain: AppState = { ...s, designs: [obBoard("d1", "50 × 90 cm board"), obBoard("d2", "Board + Dipole EQ"), wall] };
+  const fit = dipoleEq(plain, solveDriver(plain), "d2");
+  if (!fit) throw new Error("open baffle guide: no Dipole EQ");
+  return { ...plain, eq: fit.eq };
+}
+/** Bare boards, one design per entry, the RSS390HF-4 unless another driver is given. */
+function obBoards(boards: [string, Partial<ObForm>][], driverId?: string) {
+  return (): AppState => ({ ...obGuideState(driverId), designs: boards.map(([name, patch], i) => obBoard(`d${i + 1}`, name, patch)) });
+}
+
+/**
  * The group delay guide: a Dayton Audio RSS315HF-4 12″ sub at 50 W in three boxes: sealed for
  * Qtc 0.707 (38.9 L), a small ported box tuned high (50 L at 42 Hz, peaked) and its low-tuned
  * Keele alignment (83.5 L at 23.8 Hz), both with a 10 cm port. `subsonic` adds the 18 Hz
@@ -663,7 +707,7 @@ function compressionExample(temp_C: number) {
   return (): AppState => {
     const s = withDriver({ ...DEFAULT_STATE, drive: "volts", volts: 25 }, "dayton-audio/rss315hf-4");
     const vented = ventedWith(byKind(DEFAULT_STATE, "vented") as Vented, `Ported 83.5 L, coil at ${temp_C} °C`, 83.5, 23.8, { shape: "round", diameter_cm: 12.5 });
-    return { ...s, settings: { ...s.settings, coilTemp_C: temp_C }, designs: [{ ...vented, id: "d1" }] };
+    return { ...s, settings: { ...s.settings, coilTemp_C: temp_C, coilMode: temp_C > 20 ? "fixed" : "cold" }, designs: [{ ...vented, id: "d1" }] };
   };
 }
 
@@ -896,6 +940,7 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "subwoofer-example": () => subwooferExampleState("ported").state,
   "assistant-example": assistantExample,
   "sealed-calc": sealedCalcExample,
+  "ob-calc": () => obCalcRun(OB_CALC.driverIds[0]!).chart,
   "stuffing-sealed": stuffingSealed(false),
   "stuffing-sealed-losses": stuffingSealed(true),
   "stuffing-ported-empty": stuffingPorted(false),
@@ -985,6 +1030,14 @@ export const EXAMPLES: Record<string, () => AppState> = {
   "baffle-passive": baffleExample("passive"),
   "ib-example": ibExample("linkwitz-riley"),
   "ib-nofilter": ibExample("off"),
+  "ob-example": obExample,
+  "ob-widths": obBoards([["30 cm wide", { w_cm: 30, x_cm: 15 }], ["50 cm wide", {}], ["70 cm wide", { w_cm: 70, x_cm: 35 }]]),
+  "ob-heights": obBoards([["60 cm tall", { h_cm: 60 }], ["90 cm tall", {}], ["120 cm tall", { h_cm: 120 }]]),
+  "ob-position": obBoards([["Centred", { y_cm: 45 }], ["Near a corner", { x_cm: 15, y_cm: 20 }]]),
+  "ob-frames": obBoards([["Flat board", {}], ["U-frame, 30 cm deep", { frame: "u", depth_cm: 30 }], ["H-frame, 40 cm deep", { frame: "h", depth_cm: 40 }]]),
+  "ob-qts-low": obBoards([["RSS390HF-4, Qts 0.43", {}]]),
+  "ob-qts-mid": obBoards([["FSL-1520R02-08, Qts 0.70", {}]], "peerless/fsl-1520r02-08"),
+  "ob-qts-high": obBoards([["Twiggy12, Qts 1.08", {}]], "redcatt/twiggy12"),
   "ib-bw15": ibExample("butterworth"),
   "ported-box-example": portedBoxExample,
 };

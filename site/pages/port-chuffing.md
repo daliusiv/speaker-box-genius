@@ -3,6 +3,7 @@ title: "Port chuffing: how big should my port be?"
 description: Why ports chuff, the 17 m/s rule, and how to get a port that's quiet and still fits in the box, with a worked 12-inch subwoofer example.
 path: guides/port-chuffing
 image: chart:port-example/port
+art: A ported box in cutaway: air rushing out of the port breaks into swirls at its mouth.
 order: 4
 group: ported
 ---

@@ -12,7 +12,8 @@ import { join } from "node:path";
 import { portCalc, type PortCalcInput } from "../packages/web/src/calculators/portMath.ts";
 import { fewestThatKeepUp, keepsUp, prCalc, prCheck, type PrCalcInput } from "../packages/web/src/calculators/prMath.ts";
 import { readSealed } from "../packages/web/src/calculators/sealedMath.ts";
-import { EXAMPLES, SEALED_CALC, SHAPED, SHAPED_START } from "./examples.ts";
+import { qtsOf } from "../packages/web/src/calculators/obCalcMath.ts";
+import { EXAMPLES, OB_CALC, obCalcRun, SEALED_CALC, SHAPED, SHAPED_START } from "./examples.ts";
 import { DEFAULT_STATE, newDesign, type VentedDesign } from "../packages/web/src/state.ts";
 import { airOf, limitsOf, PORT_LIMIT, runDesigns, solveDriver } from "../packages/web/src/sim.ts";
 import { PICK_KEYS, SIZES, subwooferPicks, type BoxKind } from "../packages/web/src/calculators/subwooferMath.ts";
@@ -24,6 +25,7 @@ import { ICON_PATHS } from "../packages/web/src/iconPaths.ts";
 import { BOX_DEFAULTS, boxVolume, formFromState, SHAPE_IDS, sizeFor, sizingOptions, type BoxForm } from "../packages/web/src/calculators/boxVolumeMath.ts";
 import { MM_KEYS, OUTLINES, outlineCaption, SHAPE_FIELDS, SHAPE_NAMES, SIZE_KEYS } from "../packages/web/src/calculators/boxShapes.ts";
 import { estimateDriverDisplacement } from "../packages/engine/src/index.ts";
+import { appChartCss } from "./appCss.ts";
 
 const AIR = airOf(DEFAULT_STATE);
 
@@ -616,6 +618,7 @@ export const CALC_STYLE = `
 .calc-actions .ghost:hover{border-color:var(--accent)}
 .calc-actions [hidden]{display:none}
 @media (max-width:700px){.calc-actions .button,.calc-actions .ghost{flex:1 1 100%}}
+.calc-out .sub{display:block;color:var(--muted);font-size:.88em;font-weight:400}
 .calc-ts{margin:.1rem 0 .8rem;color:var(--muted);font-size:.92rem}
 .calc-ts summary{cursor:pointer;color:var(--accent);font-weight:600;list-style:none;min-height:44px;display:flex;align-items:center}
 .calc-ts summary::-webkit-details-marker{display:none}
@@ -681,12 +684,90 @@ export const CALC_STYLE = `
 @media (max-width:700px){.calc-units label{min-height:44px}.calc-size{grid-template-columns:1fr}.calc-shape{order:-1;flex-direction:row;justify-content:center}.calc-shape>span{max-width:7.5rem}.calc-shape figcaption{text-align:left;max-width:12rem}}
 `;
 
+// ---- Open baffle ----
+
+/** The {{calc:…}} values of open-baffle.md: a column per driver of the worked example (p, r). */
+export function obExampleValues(): Record<string, string> {
+  const v: Record<string, string> = {};
+  const f = (x: number | null, dp = 0) => (x === null ? "–" : x.toFixed(dp));
+  OB_CALC.driverIds.forEach((id, i) => {
+    const k = "pr"[i]!;
+    const r = obCalcRun(id);
+    const t = r.open.ts;
+    const qts = qtsOf(r.open) ?? 0;
+    const shelf = r.eq.find((e) => e.type === "lowshelf1");
+    v[`${k}-qts`] = qts.toFixed(2);
+    v[`${k}-fs`] = f(t.fs ?? null, (t.fs ?? 0) < 30 ? 1 : 0);
+    v[`${k}-d`] = f(r.d_m * 100);
+    v[`${k}-peak`] = f(r.fPeak);
+    v[`${k}-null`] = f(r.fNull);
+    v[`${k}-f3`] = f(r.f3);
+    v[`${k}-f3eq`] = f(r.f3Eq, 1);
+    v[`${k}-loss`] = f(r.loss === null ? null : -r.loss, 1);
+    v[`${k}-losseq`] = f(r.lossEq === null ? null : -r.lossEq, 1);
+    v[`${k}-shelf`] = shelf ? `+${shelf.gain_db} dB at ${shelf.freq} Hz` : "–";
+    v[`${k}-x`] = f(r.x_mm, 1);
+    v[`${k}-xmax`] = String(r.xmax_mm);
+    v[`${k}-suits`] = r.suits === "passive" ? "an open baffle without EQ" : r.suits === "dsp" ? "an open baffle with DSP EQ" : "neither";
+  });
+  return v;
+}
+
+/** The calculator itself: a form the script makes live (hidden until it starts). Starts with the worked example's first driver and board. */
+export function obForm(): string {
+  const b = OB_CALC.board;
+  const len = (id: string, label: string, value: number, extra = "") =>
+    `<label class="calc-field"${extra}><span>${label}</span><span class="calc-in"><input id="${id}" type="number" inputmode="decimal" min="0" step="any" value="${value}"><em data-unit="len">cm</em></span></label>`;
+  const count = `<label class="calc-field"><span>Number of drivers</span><input id="ob-n" type="number" inputmode="numeric" min="1" step="1" value="1"></label>\n`;
+  return `<div class="calc">
+<p class="calc-nojs">The calculator needs JavaScript. The worked example below shows what it gives.</p>
+<form id="ob-form" class="calc-form" hidden onsubmit="return false" data-driver-id="${OB_CALC.driverIds[0]}">
+<fieldset class="calc-units"><legend>Units</legend><label><input type="radio" name="ob-units" id="ob-metric" checked> cm</label><label><input type="radio" name="ob-units" id="ob-imperial"> inches</label></fieldset>
+<fieldset class="calc-units"><legend>Work out</legend><label><input type="radio" name="ob-mode" id="ob-mode-have" checked> Board I have</label><label><input type="radio" name="ob-mode" id="ob-mode-peak"> Board for a peak at …</label></fieldset>
+<div id="ob-have">
+${chips("ob-framepick", "Frame", [{ value: "flat", label: "Flat board" }, { value: "h", label: "H-frame" }, { value: "u", label: "U-frame" }], b.frame)}
+<input type="hidden" id="ob-frame" value="${b.frame}">
+<div class="calc-grid">
+${len("ob-w", "Width", b.w_cm)}
+${len("ob-h", "Height", b.h_cm)}
+${len("ob-x", "Driver from the left", b.x_cm)}
+${len("ob-y", "Driver from the bottom", b.y_cm)}
+${len("ob-depth", "Frame depth", b.depth_cm, ' id="ob-depthfield" hidden')}
+</div>
+</div>
+<div id="ob-peak" hidden>
+<div class="calc-grid"><label class="calc-field"><span>Dipole peak at</span><span class="calc-in"><input id="ob-fp" type="number" inputmode="decimal" min="0" step="any" value="300"><em>Hz</em></span></label></div>
+<p class="calc-note">Crossing over at a frequency you know? Aim the peak at about twice it.</p>
+${chips("ob-arpick", "Board shape", [{ value: "square", label: "Square" }, { value: "tall", label: "Tall (1 : 2)" }], "square")}
+<input type="hidden" id="ob-ar" value="square">
+</div>
+<div class="calc-grid">${len("ob-t", "Board thickness", b.t_cm)}</div>
+${driverFields("ob", OB_CALC.power_w, count, OB_CALC.driverIds[0])}
+<div id="ob-out" class="calc-result" aria-live="polite"></div>
+<div id="ob-chart" class="calc-chart" data-calc-chart></div>
+${calcActions("ob", "Open this baffle in the simulator")}
+</form>
+</div>`;
+}
+
 // ---- Pages ----
 
 /**
+ * The classes a live chart adds once it's touched or hovered (its tip, cursor and legend's value
+ * column; LogChart.tsx, ChartLegend.tsx), which a worked example's still chart doesn't have: their
+ * rules come from the app's stylesheet like the still chart's (appChartCss keeps a rule only when
+ * every class it names is in the markup it's given). Without them, a tap on a phone dropped the
+ * tip's whole table, unstyled, above the chart.
+ */
+export const LIVE_CHART_MARKUP = `<figure class="chart"><div class="chart-main"><div class="chart-tip chart-hint"><table class="tip-table legend"><tr class="part"><th class="legend-at on num">` +
+  `<span class="lead muted over"></span></th><td class="legend-val tip-peak legend-note num"></td></tr></table></div>` +
+  `<svg class="chart-point cursor cursor-dot cursor-badge"></svg></div></figure>`;
+export const liveChartCss = () => appChartCss(LIVE_CHART_MARKUP);
+
+/**
  * Every calculator page: its text and form (here and in site/calculators/<md>), and its live
- * script (a Vite input, packages/web/vite.config.ts). A page whose live part draws a chart but
- * whose worked example has none gives `chartStyle` (the app's chart styles for that markup).
+ * script (a Vite input, packages/web/vite.config.ts). `chartStyle`: the app's chart styles the
+ * live chart needs beyond the worked example's chart (all of them when the example has none).
  */
 export interface CalcPage {
   path: string;
@@ -777,6 +858,20 @@ export const CALC_PAGES: CalcPage[] = [
     form: () => boxVolumeForm(),
     entry: "src/calculators/boxVolume.ts",
   },
+  {
+    path: "/calculators/open-baffle/",
+    title: "Open baffle calculator: dipole peak, bass loss and the EQ that wins it back",
+    description: "Work out an open baffle's dipole peak and null, how much bass it loses against the same driver in a wall, and the EQ that wins it back. Or the board size for the peak you want.",
+    h1: "Open baffle calculator",
+    lede: "How a board or frame shapes the bass: where its dipole peak and first null fall, how much bass it loses against the same driver in a wall, and the EQ that wins it back. Or the board size for the peak you want. Worked out with the simulator's own open baffle model.",
+    crumb: "Open baffle",
+    md: "open-baffle.md",
+    values: () => obExampleValues(),
+    form: () => obForm(),
+    entry: "src/calculators/openBaffle.ts",
+    // The live chart's in-a-wall curve is dashed, which the worked example's chart isn't: its legend swatch's rules.
+    chartStyle: () => appChartCss('<figure class="chart"><table class="legend"><tr><th><span class="legend-name"><svg class="legend-swatch line"></svg></span></th></tr></table></figure>'),
+  },
 ];
 
 // ---- Shared form parts ----
@@ -790,11 +885,11 @@ const num = (v: number | undefined) => (v === undefined ? "" : String(Math.round
  * The driver part of a box calculator (packages/web/src/calculators/driverInput.ts wires it):
  * database driver, T/S by hand (filled with the example driver's values), amplifier power with
  * "Rated N W". `power` is the starting power; `before` is markup for fields that sit in the
- * row of the power field (the number of drivers).
+ * row of the power field (the number of drivers); `driverId` the driver it starts with.
  */
-export function driverFields(prefix: string, power: number, before = ""): string {
-  const rec = loadDb().drivers.find((d) => d.id === EXAMPLE_DRIVER);
-  if (!rec) throw new Error(`calculators: ${EXAMPLE_DRIVER} isn't in the database`);
+export function driverFields(prefix: string, power: number, before = "", driverId = EXAMPLE_DRIVER): string {
+  const rec = loadDb().drivers.find((d) => d.id === driverId);
+  if (!rec) throw new Error(`calculators: ${driverId} isn't in the database`);
   const t = rec.data.ts as unknown as Record<string, number | undefined>;
   const field = (id: string, label: string, v: number | undefined, unit: string) =>
     `<label class="calc-field"><span>${label}</span><span class="calc-in"><input id="${prefix}-${id}" type="number" inputmode="decimal" min="0" step="any" value="${num(v)}"><em>${unit}</em></span></label>`;
@@ -838,6 +933,7 @@ export const CALCULATORS: { path: string; name: string; blurb: string; isNew?: b
   { path: "/calculators/subwoofer-box/", name: "Subwoofer box calculator", blurb: "What box for my 12-inch sub? A compact, a balanced and a deep box, sealed or ported, at your amplifier's power.", isNew: true },
   { path: "/calculators/sealed-box/", name: "Sealed box calculator", blurb: "The box volume for a target Qtc, or the Qtc, F3 and cone excursion of the box you have.", isNew: true },
   { path: "/calculators/ported-box/", name: "Ported box calculator", blurb: "QB3, C4 and BB4 boxes sized as WinISD's wizard sizes them, with a port that fits and its air speed.", isNew: true },
+  { path: "/calculators/open-baffle/", name: "Open baffle calculator", blurb: "How big a baffle, where its dipole peak and null fall, how much bass it loses and the EQ that wins it back.", isNew: true },
   {
     path: "/calculators/box-volume/",
     name: "Box volume calculator",
@@ -850,10 +946,14 @@ export const CALCULATORS: { path: string; name: string; blurb: string; isNew?: b
 
 const escHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** The hub's card grid. */
+/** A calculator's picture on the hub: site/img/calculators/<slug>.svg (same rules as the guides' pictures). */
+export const calcSlug = (path: string): string => path.replace(/^\/calculators\/|\/$/g, "");
+
+/** The hub's card grid. The picture is decorative (the link names the calculator), so its alt is empty, as on the guides list. */
 export function hubCards(): string {
   return `<ul class="calc-hub">\n${CALCULATORS.map(
-    (c) => `<li><a href="${c.path}">${escHtml(c.name)}</a><small>${escHtml(c.blurb)}</small>${c.isNew ? '<span class="tag">New</span>' : ""}</li>`,
+    (c) =>
+      `<li><a href="${c.path}">${escHtml(c.name)}</a><img class="thumb" src="/guides/img/calculators/${calcSlug(c.path)}.svg" alt="" width="1200" height="630" loading="lazy"><small>${escHtml(c.blurb)}</small>${c.isNew ? '<span class="tag">New</span>' : ""}</li>`,
   ).join("\n")}\n</ul>`;
 }
 
@@ -863,5 +963,11 @@ export const HUB_STYLE = `
 .calc-hub a{font-weight:650;text-decoration:none;font-size:1.05rem}
 .calc-hub small{color:var(--muted);font-size:.92rem;line-height:1.45}
 .calc-hub .tag{align-self:flex-start;font-size:.78rem;font-weight:600;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:.05rem .55rem}
-@media (max-width:700px){.calc-hub{grid-template-columns:1fr}}
+.calc-hub .thumb{order:-1;display:block;width:calc(100% + 2rem);max-width:none;height:auto;aspect-ratio:1200/630;margin:-.85rem -1rem .55rem;border-bottom:1px solid var(--border);border-radius:.7rem .7rem 0 0}
+@media (max-width:700px){.calc-hub{grid-template-columns:1fr}
+.calc-hub li{display:flow-root}
+.calc-hub li>a{display:block;margin-bottom:.35rem}
+.calc-hub .thumb{float:left;width:6rem;height:4.5rem;aspect-ratio:auto;margin:.2rem .9rem .35rem 0;object-fit:cover;border:1px solid var(--border);border-radius:.5rem}
+.calc-hub small{display:block}
+.calc-hub .tag{display:inline-block;margin-top:.35rem}}
 `;

@@ -521,13 +521,14 @@ export function signalNotes(sim: SimulationOptions | undefined): string[] {
     );
   }
   const eq = sim.eq ?? [];
-  const bands = eq.filter((e): e is Exclude<typeof e, { type: "linkwitz" }> => e.type !== "linkwitz");
+  const bands = eq.filter((e): e is Exclude<typeof e, { type: "linkwitz" | "lowshelf1" }> => e.type !== "linkwitz" && e.type !== "lowshelf1");
   if (bands.length > 0) {
     const name = { peak: "Peak EQ", lowshelf: "Low Shelf", highshelf: "High Shelf" } as const;
     const list = bands.map((e) => `${name[e.type]} ${fmt(e.freq)} Hz, Q ${fmt(e.q)}, ${e.gain_db > 0 ? "+" : ""}${fmt(e.gain_db)} dB`);
     out.push(`EQ: Tools → Filter Wizard → Equaliser (click a band's type label to change it): ${list.join("; ")}${bands.length > 6 ? " (Hornresp has 6 bands)" : ""}.`);
   }
   if (eq.some((e) => e.type === "linkwitz")) out.push("The Linkwitz Transform has no Hornresp equivalent and isn't exported.");
+  if (eq.some((e) => e.type === "lowshelf1")) out.push("Hornresp's shelves are second order: the 6 dB/oct low shelf (Dipole EQ) isn't exported.");
   if (passiveActive(sim.passive)) {
     const parts = sim.passive.branches.slice(0, 4).map((b, k) => {
       const v = [(b.r ?? 0) > 0 ? `R ${fmt(b.r!)} Ω` : "", (b.l_mH ?? 0) > 0 ? `L ${fmt(b.l_mH!)} mH` : "", (b.c_uF ?? 0) > 0 ? `C ${fmt(b.c_uF!)} µF` : ""].filter(Boolean);

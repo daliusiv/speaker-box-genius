@@ -8,7 +8,8 @@ import { Sheet } from "./Sheet.tsx";
 import { foldShapes } from "./foldShapes.ts";
 import { JobProgress, REPO } from "./components.tsx";
 import { fmtQ } from "./units.ts";
-import { excursionText } from "./chartProps.ts";
+import { withExportWidth } from "./chartSize.ts";
+import { excursionText, spaceOf } from "./chartProps.ts";
 import { encodeStateShort, type AppState } from "./state.ts";
 import { drawQr } from "./qrDraw.ts";
 import { track } from "./telemetry.ts";
@@ -131,6 +132,8 @@ function standaloneSvg(svg: SVGSVGElement, width: number, height: number): strin
   // React's generated ids contain characters that break url(#…) references outside the page.
   // Edit-mode handles aren't part of the picture.
   clone.querySelectorAll(".handle").forEach((el) => el.remove());
+  // The picture's caption is the full title, which already says what the curves are drawn at.
+  clone.querySelectorAll(".chart-detail").forEach((el) => el.remove());
   clone.querySelectorAll("[id]").forEach((el, i) => {
     const old = el.id;
     const id = `x${i}`;
@@ -181,12 +184,22 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
   // nearly 4:3) at the full column width; a row is as tall as its taller chart. Fitting every
   // chart into the shortest one's height shrank the taller ones to a narrow strip.
   const chartW = colW - 16;
-  const heightOfChart = (f: HTMLElement) => {
-    const vb = f.querySelector("svg")?.viewBox.baseVal;
-    const r = vb && vb.width > 0 ? vb.height / vb.width : 260 / 640;
-    return Math.round(chartW * Math.min(Number.isFinite(r) ? r : 260 / 640, 470 / 640));
-  };
-  const chartHs = figures.map(heightOfChart);
+  // Every chart is redrawn at the picture's own width for a moment (never painted), so the
+  // picture is the same from a phone, a laptop or a wide screen, then put back as it was.
+  const shots = withExportWidth(chartW, () =>
+    figures.map((f) => {
+      // The plot (role=img), not an icon in the caption (Edit's pencil, ⓘ).
+      const svg = f.querySelector<SVGSVGElement>("svg[role=img]");
+      const vb = svg?.viewBox.baseVal;
+      const r = vb && vb.width > 0 ? vb.height / vb.width : 260 / 640;
+      const h = Math.round(chartW * Math.min(Number.isFinite(r) ? r : 260 / 640, 470 / 640));
+      const head = f.querySelector<HTMLElement>(".chart-title");
+      // The header shows the chart's short name; the picture carries its full title.
+      const title = (f.dataset.title ?? head?.dataset.fullTitle ?? head?.textContent ?? "").replace(/\s*▾\s*$/, "");
+      return { h, title, svg: svg ? standaloneSvg(svg, chartW, h) : null };
+    }),
+  );
+  const chartHs = shots.map((x) => x.h);
   const rowHs = Array.from({ length: Math.ceil(figures.length / 2) }, (_, r) => Math.max(chartHs[2 * r] ?? 0, chartHs[2 * r + 1] ?? 0) + 48);
   const rowTop = (r: number) => rowHs.slice(0, r).reduce((a, h) => a + h + pad, 0);
   const rows = summaryRows(state, designs);
@@ -242,7 +255,7 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
   g.fillText(state.driverName, pad, 58, textW);
   g.fillStyle = muted;
   g.font = `400 20px ${font}`;
-  g.fillText(`${subtitle(state)} · 1 m, half space`, pad, 92, textW);
+  g.fillText(`${subtitle(state)} · 1 m, ${spaceOf(designs.filter((d) => !d.compare), false)}`, pad, 92, textW);
 
   // Summary table
   const colX = [pad, pad + 380, pad + 540, pad + 700, pad + 860, pad + 1040, pad + 1220];
@@ -264,9 +277,8 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
 
   // Charts
   for (let i = 0; i < figures.length; i++) {
-    const fig = figures[i]!;
-    const svg = fig.querySelector("svg");
-    if (!svg) continue;
+    const shot = shots[i]!;
+    if (!shot.svg) continue;
     const x = pad + (i % 2) * (colW + pad);
     const row = Math.floor(i / 2);
     const y = chartsTop + rowTop(row);
@@ -280,9 +292,8 @@ export async function renderForumImage(state: AppState, designs: Design[], url?:
     g.stroke();
     g.fillStyle = fg;
     g.font = `600 18px ${font}`;
-    // The on-screen title may carry a chart-switcher arrow: not part of the picture.
-    g.fillText((fig.querySelector(".chart-title")?.textContent ?? "").replace(/\s*▾\s*$/, ""), x + 16, y + 30);
-    const img = await loadImage(standaloneSvg(svg, chartW, chartH));
+    g.fillText(shot.title, x + 16, y + 30, colW - 32);
+    const img = await loadImage(shot.svg);
     g.drawImage(img, x + 8, y + 40, chartW, chartH);
   }
 

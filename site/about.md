@@ -4,7 +4,7 @@ Speaker Box Genius is a free loudspeaker box simulator that runs in your browser
 
 It's built by one person, [daliusiv](https://github.com/daliusiv), in the open on [GitHub](https://github.com/daliusiv/speaker-box-genius), and checked against WinISD and Hornresp in every build: see the [validation page](/validation/).
 
-There are no accounts, adverts or paid tiers. See [Privacy](/privacy/) for what the site does and doesn't collect.
+There are no accounts, adverts or paid tiers. See [Privacy](/privacy/) for what the site does and doesn't collect. It also works from AI assistants such as Claude, through a small [MCP server](/mcp/) that runs on your computer.
 
 ## The licence, in plain words
 
@@ -30,9 +30,10 @@ That's what keeps the project free while still letting the maintainer say yes to
 
 ## Credits
 
-- **Driver data** from the manufacturers who gave permission (Dayton Audio, SB Acoustics, B&C Speakers, Purifi, Markaudio, REDCATT, SEAS, Beyma, Sica, Memphis Audio and Supravox), and from [driver-base](https://github.com/JonathanDCohen/driver-base) (CC BY 4.0) for other brands. Each entry links to its source; the full list is in [Driver data credits](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/data-sources.md).
+- **Driver data** from the manufacturers who gave permission (Dayton Audio, SB Acoustics, B&C Speakers, Purifi, Markaudio, REDCATT, SEAS, Beyma, Sica, Memphis Audio, Supravox, PHL Audio, BishopSound and Accuton), and from [driver-base](https://github.com/JonathanDCohen/driver-base) (CC BY 4.0) for other brands. Each entry links to its source; the full list is in [Driver data credits](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/data-sources.md).
 - **WinISD** (LinearTeam) and **Hornresp** (David McBean) are the references the app is checked against. Speaker Box Genius isn't affiliated with either.
 - **OpenISD** (MIT licence) for its project file format, which the app can open.
+- **Substitute scoring** (the **Substitutes** on driver pages and **Find similar drivers** in the app) adapted from [Boxdex](https://github.com/blamas/boxdex) (MIT licence): drivers are ranked by a weighted log-ratio distance between their Thiele/Small parameters, then each is simulated in the same box. How it works: [`docs/similar-drivers.md`](https://github.com/daliusiv/speaker-box-genius/blob/main/docs/similar-drivers.md).
 - **Inter** typeface by Rasmus Andersson (SIL Open Font License 1.1), served with the app.
 - Not affiliated with or endorsed by any manufacturer. Product names and trademarks belong to their owners.
 

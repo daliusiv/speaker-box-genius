@@ -3,6 +3,7 @@ title: "Matching an amplifier to your subwoofer: volts, amps and why impedance d
 description: Read an amp's watt ratings as a voltage limit and a current limit, see how far a "4 Ω" sub's impedance really swings in its box, and find out when a dip runs your amp out of current, with a Crown XLS 1002 and two ported 12s you can open and change.
 path: guides/amp-matching
 image: chart:amp-one+amp-parallel+amp-series+amp-bridged/maxspl
+art: An amplifier wired to a subwoofer box, with an impedance curve dipping between its peaks.
 order: 27
 group: start
 ---
@@ -90,6 +91,19 @@ Now the amp. "350 W into 4 Ω" is 37.4 V. Square that over the sub's Re and you 
 
 > **Rule of thumb: volts needed = √(Pe × Re).** Then take your amp's 4 Ω rating, find its voltage (√(W × 4)), and compare. Aim for 2–3 dB more than the sub needs: 1.25 to 1.4 times the voltage, which is 1.6 to 2 times the watts.
 
+## Headroom: music has peaks, ratings are averages
+
+Every figure above is a steady sine, whose peaks are 1.41 times its RMS voltage (3 dB). Music isn't. The **crest factor** is a signal's peak over its RMS: about 6 dB for the pink noise drivers are rated with [4], around 9 dB for compressed music and 12 dB or more for film. An amp clips on the peaks, a driver heats on the average, so the two run out at different levels.
+
+The XLS 1002's 37.4 V RMS is a 52.9 V peak. On pink noise, whose peaks are twice its RMS, the amp's average stops at 26.4 V before the peaks clip: about 226 W on the sub's Re, under its 400 W rating. So on real signals a "just enough" amp is the limit, not the sub, which is the reason for the 2–3 dB rule above. With the XLS 1502 (45.8 V, 64.8 V peak) the average reaches 32.4 V, 338 W.
+
+It splits the limits in two:
+
+- **On peaks:** the amp's volts and current, cone and PR excursion, port speed. These follow the waveform, so they bind sooner by the crest factor (less 3 dB for the sine they were worked out with).
+- **On average:** the driver's power rating, and an amp's continuous power figure. These follow the heat, which follows the RMS.
+
+**Max SPL → Program** in the app draws the maximum on such a signal and, with a **Target SPL**, gives the headroom on each side.
+
 ## Two subs, one amp: four ways to wire them
 
 Here's where the impedance curve earns its keep. Two subs on one XLS 1002, four ways:
@@ -154,7 +168,7 @@ So the danger isn't "too small an amp", it's an amp of any size driven past its 
 
 1. **Driver → Drivers and Wiring:** set how many subs and how they're wired. The line underneath says what the amp sees, nominally and at its lowest (here "2 Ω nominal (Re 1.55 Ω), dipping to 1.58 Ω").
 2. **Settings → Limits → Amplifier → From the amp's ratings:** enter two of its ratings (the 4 Ω one and its lowest) and press **Use … V and … A**. That fills in **Max volts** and **Max current**. Use the bridged ratings if you'll bridge it. To hold the amp to a continuous power figure as well (a power supply or heat limit), type it in **Max power**: the lowest of the three applies at each frequency, and the line under it says what it is in volts and amps into the nominal load.
-3. **Settings → Simulation → Amplifier & cable → Power rating vs:** leave it on V²/Re (WinISD's way), which matches how drivers are rated. **Real power** lets the sub take more voltage at its impedance peaks, as Hornresp does.
+3. **Settings → Simulation → Voice coil → Power rating vs:** leave it on V²/Re (WinISD's way), which matches how drivers are rated. **Real power** lets the sub take more voltage at its impedance peaks, as Hornresp does. **Coil temperature** holds the coil's temperature instead: the coil heats with each note's current up to its max temperature (Driver → Large signal), and the amplifier's limits are checked with it hot.
 4. **Max SPL chart:** the band underneath shows what limits each frequency, and blue means the amplifier. Switch to **Volts**, **Amps** or **Watts** to see what the amp has to deliver, with its own limit as a dashed line; hover the SPL view and the tooltip names which of the three is the limit (amp volts, amp current or amp power).
 5. **Max SPL → Program:** music isn't a sine. Turn **Program signal** on and pick what you'll play (Pink noise 6 dB, Music 9 dB, Cinema 12 dB): the amp's volts and current clip on the signal's peaks, so they bind sooner by its crest factor, while **Max power** and the driver's rating hold its average. Type a **Target SPL** and the headroom **On peaks** and **On average** says which side runs out first, and where; the tooltip gives the peak volts the amp has to swing.
 6. **Impedance chart:** switch between **Ω** and **Phase** to see how hard a load the boxes are.

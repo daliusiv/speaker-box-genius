@@ -1,0 +1,73 @@
+name: Search Console report
+
+# Weekly Google Search Console numbers for speakerboxgenius.com (clicks, impressions, top
+# queries and pages, near misses, sitemaps), posted as a comment on the private dev issue
+# "Search Console weekly" so maintainers can read them without opening Search Console.
+# Private (dev) repo only: the public mirror skips the job.
+#
+# Setup (once): a Google Cloud service account with the Search Console API enabled, added in
+# Search Console as a (restricted) user of the property; its JSON key in the dev repo secret
+# GSC_SERVICE_ACCOUNT. Bing Webmaster Tools numbers are appended when the dev repo secret
+# BING_WEBMASTER_API_KEY is set (Bing → Settings → API access). Run by hand from the Actions tab to test.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  report:
+    if: ${{ github.event.repository.private == true }}
+    runs-on: [self-hosted, linux]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read Search Console
+        env:
+          GSC_SERVICE_ACCOUNT: ${{ secrets.GSC_SERVICE_ACCOUNT }}
+          OUT: search-console-report.md
+        run: |
+          if [ -z "$GSC_SERVICE_ACCOUNT" ]; then
+            echo "::warning::GSC_SERVICE_ACCOUNT is not set; skipping."
+            exit 0
+          fi
+          node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/search-console.ts
+          cat search-console-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      # Bing (scripts/bing-webmaster.ts): appended to the same report. Its own secret, so either
+      # half works alone.
+      - name: Read Bing Webmaster Tools
+        env:
+          BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
+          OUT: search-console-report.md
+        run: |
+          if [ -z "$BING_WEBMASTER_API_KEY" ]; then
+            echo "::warning::BING_WEBMASTER_API_KEY is not set; skipping Bing."
+            exit 0
+          fi
+          node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/bing-webmaster.ts > bing.md
+          cat bing.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post on the report issue
+        if: hashFiles('search-console-report.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TITLE: Search Console weekly
+        run: |
+          n=$(gh api "repos/$GH_REPO/issues?state=open&per_page=100" --paginate \
+            --jq ".[] | select(.pull_request == null and .title == \"$TITLE\") | .number" | head -n1)
+          if [ -z "$n" ]; then
+            n=$(gh api "repos/$GH_REPO/issues" -f title="$TITLE" \
+              -f body="Weekly Google Search Console numbers, one comment per week (posted by .github/workflows/search-console.yml). Read by the weekly site health task." \
+              --jq .number)
+          fi
+          gh api "repos/$GH_REPO/issues/$n/comments" -F body=@search-console-report.md --jq .html_url

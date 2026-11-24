@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="#11141a"/>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+<path d="M150 548H1050" stroke="#8b93a3" stroke-opacity=".45"/>
+<rect x="330" y="98" width="430" height="450" rx="6" stroke="#4ed7e9" fill="#4ed7e9" fill-opacity=".05"/>
+<path d="M760 140V290M760 340V510" stroke="#4ed7e9" stroke-width="7"/>
+<path d="M760 150L714 192V238L760 280Z" stroke="#4ed7e9" fill="#4ed7e9" fill-opacity=".14"/>
+<rect x="684" y="196" width="30" height="38" rx="4" stroke="#4ed7e9" fill="#4ed7e9" fill-opacity=".25"/>
+<path d="M776 150L730 192V238L776 280" stroke="#4ed7e9" stroke-opacity=".35" stroke-dasharray="8 10"/>
+<path d="M805 215H880M860 200L880 215L860 230M825 200L805 215L825 230" stroke="#4ed7e9"/>
+<path d="M760 352c-12 8-12 18 0 26M760 472c-12 8-12 18 0 26" stroke="#fb923c"/>
+<path d="M748 378V472" stroke="#fb923c" stroke-width="8"/>
+<rect x="716" y="404" width="26" height="42" rx="3" stroke="#fb923c" fill="#fb923c" fill-opacity=".3"/>
+<path d="M772 378V472" stroke="#fb923c" stroke-opacity=".4" stroke-dasharray="8 10"/>
+<path d="M805 425H880M860 410L880 425L860 440M825 410L805 425L825 440" stroke="#fb923c"/>
+<path d="M610 250l-22 13l44 18l-44 18l44 18l-44 18l44 18l-44 18l22 13" stroke="#8b93a3" stroke-opacity=".7"/>
+<path d="M610 250H684M610 400H712" stroke="#8b93a3" stroke-opacity=".7" stroke-dasharray="6 9"/>
+</g>
+</svg>

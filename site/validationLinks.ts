@@ -89,6 +89,7 @@ export function hornrespLineState(id: string, title: string): AppState | null {
       lineSpl: "power",
       rg: r.rg ?? 0,
       coilTemp_C: opts.coilTemp_C ?? EMPTY.settings.coilTemp_C,
+      coilMode: (opts.coilTemp_C ?? 20) > 20 ? "fixed" : "cold",
     },
     designs: [line],
   };
@@ -211,6 +212,7 @@ export function hornrespBoxState(id: string): AppState | null {
       lineSpl: c.splFrom === "power" ? "power" : "on-axis",
       rg: c.rg ?? 0,
       coilTemp_C: c.coilTemp_C ?? EMPTY.settings.coilTemp_C,
+      coilMode: (c.coilTemp_C ?? 20) > 20 ? "fixed" : "cold",
       portModel: c.portModel === "pipe" ? "pipe" : "lumped",
       leakage: c.leakage ?? "radiates",
       coneLoad: c.coneLoad ?? "mass",

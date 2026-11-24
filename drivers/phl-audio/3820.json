@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "3820",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 55,
+    "qms": 5.86,
+    "qes": 0.18,
+    "vas_l": 24.7,
+    "re": 5.1,
+    "sd_cm2": 356,
+    "qts": 0.17,
+    "le_mh": 1.424,
+    "bl": 24.5,
+    "mms_g": 61,
+    "xmax_mm": 4.5,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 229,
+    "depth_mm": 113,
+    "displacement_l": 2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/3820_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

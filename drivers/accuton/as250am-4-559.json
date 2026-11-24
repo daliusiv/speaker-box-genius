@@ -1,0 +1,34 @@
+{
+  "brand": "Accuton",
+  "model": "AS250AM-4-559",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 21.37,
+    "qms": 7.17,
+    "qes": 0.4,
+    "vas_l": 164.68,
+    "re": 4,
+    "sd_cm2": 397.61,
+    "qts": 0.38,
+    "mms_g": 75.5,
+    "le_mh": 0.24,
+    "bl": 10.03,
+    "xmax_mm": 9,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 230,
+    "depth_mm": 132
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://accuton.com/automotive/drivers/AS250AM-4-559",
+      "retrieved": "2026-11-19",
+      "note": "Values from the product pages on accuton.com, used with Accuton's permission (19 Nov 2026), re-read from the website each month. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Accuton's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

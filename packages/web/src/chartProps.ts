@@ -25,7 +25,7 @@ export const LIMIT_KINDS: Record<string, { label: string; short: string; color: 
 /** The props a chart builder fills in; the rest (controls, handles) are the app's. */
 export type ChartDraw = Pick<
   LogChartProps,
-  "chartId" | "title" | "shortTitle" | "unit" | "freq" | "series" | "limits" | "limitStyle" | "yStep" | "yMin" | "yMax" | "points" | "zones" | "bands" | "markers" | "ribbons" | "ribbonKinds" | "best" | "noteLabel" | "digits" | "sig" | "summary" | "worst"
+  "chartId" | "title" | "shortTitle" | "detail" | "unit" | "freq" | "series" | "limits" | "limitStyle" | "yStep" | "yMin" | "yMax" | "points" | "zones" | "bands" | "markers" | "ribbons" | "ribbonKinds" | "best" | "noteLabel" | "digits" | "sig" | "summary" | "worst"
 >;
 
 /**
@@ -149,6 +149,8 @@ function asView(draw: ChartDraw, view: XView, rads: (Radiator | null)[], state: 
     ...draw,
     title,
     shortTitle: view === "x" ? draw.shortTitle : view === "pct" ? `${short} % Xmax` : view === "vol" ? `${short} air moved` : `${short} ${lower}`,
+    // The view leads (the desktop title keeps the chart's own name): "velocity · peak · 1 W".
+    detail: `${view === "x" ? "" : `${XVIEWS[view].name.toLowerCase()} · `}${view === "pct" ? "peak" : view === "vol" ? `Sd × excursion, ${kindText(ex)}` : view === "x" ? kindText(ex, true) : kindText(ex)} · ${driveLabel(state)}`,
     unit: u,
     ...(view === "pct" ? { digits: 0, sig: undefined } : view === "x" && units === "metric" ? {} : { digits: 1, sig: 3 }),
     ...(view === "x" ? {} : { noteLabel: "Excursion" }),
@@ -226,6 +228,17 @@ export function sideBySideOf(d: Design, map: (y: Float64Array) => Float64Array):
   return placed && d.result.splSideBySide && !d.compare ? [{ label: `${d.label} · side by side`, color: d.color, y: map(d.result.splSideBySide), dash: "2 4", thin: true }] : [];
 }
 
+/**
+ * Where the response is drawn, with no room or baffle step: a box in a wall (half space), but an
+ * open baffle always stands free with its own board (full space), so say so when one is on.
+ */
+export function spaceOf(designs: Pick<Design, "design">[], long: boolean): string {
+  const ob = designs.filter((d) => d.design.kind === "ob").length;
+  if (ob === 0) return "half space";
+  if (ob === designs.length) return long ? "free-standing (open baffle)" : "free-standing";
+  return long ? "half space (open baffles free-standing)" : "half space, open baffles free-standing";
+}
+
 export function responseChart(c: ChartInput, mode: "relative" | "absolute"): ChartDraw {
   const { state, designs } = c;
   const hp = state.highPass;
@@ -235,7 +248,18 @@ export function responseChart(c: ChartInput, mode: "relative" | "absolute"): Cha
     chartId: "response",
     best: "high",
     noteLabel: mode === "absolute" ? "Note" : "vs loudest",
-    shortTitle: `${mode === "relative" ? "Response" : "SPL"} · ${driveLabel(state)}${hp.on ? " · high-pass" : ""}`,
+    shortTitle: mode === "relative" ? "Response" : "SPL",
+    detail: `${mode === "relative" ? "Relative" : "dB SPL"} · ${driveLabel(state)}${coilLabel(state)}, 1 m, ${
+      state.roomGain.mode === "car"
+        ? "in the car"
+        : state.roomGain.mode === "room"
+          ? "in the room"
+          : state.roomGain.mode === "curve"
+            ? "your room curve"
+            : state.baffle.on
+              ? "free-standing"
+              : spaceOf(mainDesigns, false)
+    }${hp.on ? ` · ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`,
     title: `${mode === "relative" ? "Relative response" : "SPL"} at ${driveLabel(state)}${coilLabel(state)}, 1 m, ${
       state.roomGain.mode === "car"
         ? "in the car (cabin gain added)"
@@ -245,7 +269,7 @@ export function responseChart(c: ChartInput, mode: "relative" | "absolute"): Cha
             ? "with your room curve added"
             : state.baffle.on
               ? "free-standing (baffle step)"
-              : "half space"
+              : spaceOf(mainDesigns, true)
     }${hp.on ? `, with ${hp.order * 6} dB/oct high-pass at ${hp.freq} Hz` : ""}`,
     unit: "dB",
     freq: freqOf(designs),
@@ -301,7 +325,7 @@ export function responseChart(c: ChartInput, mode: "relative" | "absolute"): Cha
       // With room or cabin gain, the dot is the F3 in that space (the summary's second
       // F3), where the curve as drawn crosses −3 dB. Otherwise it's the box's own F3, as
       // in the summary: without the baffle step (not a box property), drawn on the curve.
-      const step = baffleDbFor(state, d.result.freq, c.sd_cm2);
+      const step = d.design.kind === "ob" ? null : baffleDbFor(state, d.result.freq, c.sd_cm2);
       if (d.f3Room !== undefined) {
         return (d.f3Room === null ? [] : [d.f3Room]).map((f) => ({
           f,
@@ -340,6 +364,7 @@ export function excursionChart(c: ChartInput, view: XView = "x"): ChartDraw {
     best: "low",
     shortTitle: "Cone excursion",
     title: "Cone excursion (peak, one way)",
+    detail: `peak, one way · ${driveLabel(state)}`,
     unit: "mm",
     freq: freqOf(designs),
     series: designs.map((d) => {
@@ -416,11 +441,15 @@ export function maxSplChart(c: ChartInput, mode: MaxMode): ChartDraw {
     ? progs.reduce<DesignProgram["overall"]>((w, p) => (p.overall && (!w || p.overall.db < w.db) ? p.overall : w), null)
     : null;
   const target = sig.target_dB;
+  // Settings → Power rating vs → Coil temperature: the thermal limit is the coil's temperature, not Pe.
+  const coilMode = s.thermalLimit === "coil";
+  const kinds = coilMode ? { ...LIMIT_KINDS, thermal: { label: "Coil temperature", short: `coil at ${state.tmax_C} °C`, color: LIMIT_KINDS.thermal!.color } } : LIMIT_KINDS;
   return {
     chartId: "maxspl",
     noteLabel: "Limited by",
     best: mode === "spl" ? "high" : "low",
     shortTitle: mode === "spl" ? "Max SPL" : `${MAX_MODE_INFO[mode].name} for max SPL`,
+    detail: `${mode === "spl" ? "" : `${MAX_MODE_INFO[mode].name.toLowerCase()} · `}${on ? "on program · " : ""}${mode === "spl" ? "first limit reached" : mode === "volts" ? "RMS, at the amplifier's terminals" : mode === "amps" ? "RMS" : "RMS, into the speaker's impedance"}`,
     title:
       mode === "spl"
         ? on
@@ -444,9 +473,17 @@ export function maxSplChart(c: ChartInput, mode: MaxMode): ChartDraw {
       const watts = (i: number) => a.watts[i]! * g(i) ** 2;
       const pk = (i: number) => (p ? `, ${n1(volts(i) * 10 ** (crest / 20))} V pk` : "");
       const limit = (i: number) => {
-        if (p) return sideLimitText(p.kind[i]!, p.side[i]!);
+        if (p) return coilMode && p.kind[i] === "thermal" ? `${kinds.thermal!.short} on average` : sideLimitText(p.kind[i]!, p.side[i]!);
         const by = d.result.ampLimitBy[i];
-        return by ? AMP_LIMIT_SHORT[by] : (LIMIT_KINDS[d.result.limitedBy[i]!]?.short ?? "");
+        return by ? AMP_LIMIT_SHORT[by] : (kinds[d.result.limitedBy[i]!]?.short ?? "");
+      };
+      // Coil limit: how hot the coil runs at this maximum and what it costs against a cold coil.
+      const coilAt = (i: number) => {
+        const c = d.result.coilAtMax;
+        if (!c || !Number.isFinite(c.tempC[i]!)) return "";
+        const db = `${c.compressionDb[i]!.toFixed(1).replace("-", "−")} dB`;
+        // Held by the coil: the limit already says its temperature.
+        return (p ? p.kind[i] : d.result.limitedBy[i]) === "thermal" ? `, ${db}` : ` · coil ${Math.round(c.tempC[i]!)} °C, ${db}`;
       };
       const y = (arr: Float64Array, f: (i: number) => number) => (p ? Float64Array.from(arr, (_, i) => f(i)) : arr);
       return {
@@ -456,7 +493,7 @@ export function maxSplChart(c: ChartInput, mode: MaxMode): ChartDraw {
         y: mode === "spl" ? (p ? p.spl : d.result.maxSpl) : mode === "volts" ? y(a.volts, volts) : mode === "amps" ? y(a.amps, amps) : y(a.watts, watts),
         notes: Array.from(d.result.maxSpl, (_, i) =>
           mode === "spl"
-            ? `${limit(i)} · amp ${n1(volts(i))} V${p ? " RMS" : ""}${pk(i)}, ${n1(amps(i))} A${s.ampWatts > 0 ? `, ${n1(watts(i))} W` : ""}`
+            ? `${limit(i)}${coilAt(i)} · amp ${n1(volts(i))} V${p ? " RMS" : ""}${pk(i)}, ${n1(amps(i))} A${s.ampWatts > 0 ? `, ${n1(watts(i))} W` : ""}`
             : mode === "volts"
               ? `${n1(amps(i))} A, ${n1(watts(i))} W${pk(i)} · ${limit(i)}`
               : mode === "amps"
@@ -468,7 +505,7 @@ export function maxSplChart(c: ChartInput, mode: MaxMode): ChartDraw {
     }),
     // Each box's first limit (on the program, when on), then the comparison driver's in the same box (outlined marker).
     ribbons: designs.map((d, di) => ({ label: d.label, color: d.color, kinds: on ? progs[di]!.kind : d.result.limitedBy, ...(d.compare ? { hollow: true } : {}) })),
-    ribbonKinds: LIMIT_KINDS,
+    ribbonKinds: kinds,
     ...(on
       ? {
           summary: {
@@ -508,6 +545,7 @@ export function prChart(c: ChartInput, view: XView = "x"): ChartDraw {
     best: "low",
     shortTitle: "PR excursion",
     title: "Passive radiator excursion (peak, one way)",
+    detail: `peak, one way · ${driveLabel(state)}`,
     unit: "mm",
     freq: freqOf(designs),
     // Groups after the first are dashed and named after their PR.
@@ -550,6 +588,7 @@ export function portChart(c: ChartInput): ChartDraw {
     best: "low",
     shortTitle: "Port speed",
     title: `Port air velocity (${state.settings.velocity === "rms" ? "RMS" : "peak"})`,
+    detail: `${state.settings.velocity === "rms" ? "RMS" : "peak"} · ${driveLabel(state)}`,
     unit: "m/s",
     freq: freqOf(designs),
     series: [
@@ -562,12 +601,13 @@ export function portChart(c: ChartInput): ChartDraw {
 }
 
 export function pressureChart(c: ChartInput): ChartDraw {
-  const { designs } = c;
+  const { state, designs } = c;
   return {
     chartId: "pressure",
     best: "low",
     shortTitle: "Box pressure",
     title: "Sound pressure inside the box (peak): the load on the cone and the walls",
+    detail: `peak · ${driveLabel(state)}`,
     unit: "Pa",
     freq: freqOf(designs),
     series: [
@@ -579,7 +619,7 @@ export function pressureChart(c: ChartInput): ChartDraw {
   };
 }
 
-const openRear = (d: Design) => d.design.kind === "ib" && d.design.rear === "open";
+const openRear = (d: Design) => (d.design.kind === "ib" && d.design.rear === "open") || d.design.kind === "ob";
 
 const each = (designs: Design[], pick: (r: SimulationResult) => Float64Array | null): Series[] =>
   designs.map((d) => ({ label: d.label, color: d.color, dash: d.dash, y: pick(d.result) }));

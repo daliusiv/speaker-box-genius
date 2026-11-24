@@ -205,6 +205,9 @@ export function sizeAllForDriver(s: AppState): { state: AppState; changed: strin
       case "ib":
         // Nothing to size: the driver and the space behind the wall decide it.
         return d;
+      case "ob":
+        // Nothing to size: the board's size is the builder's choice.
+        return d;
     }
   });
   return { state: changed.length > 0 ? { ...s, designs } : s, changed, skipped };

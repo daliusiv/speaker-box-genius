@@ -1,0 +1,34 @@
+{
+  "brand": "Purifi",
+  "model": "PTT5.25M04-NFA-02",
+  "type": "midrange",
+  "nominal_ohms": 4,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 40,
+    "qms": 6.9,
+    "qes": 0.19,
+    "vas_l": 12.6,
+    "re": 3.8,
+    "sd_cm2": 84.9,
+    "qts": 0.19,
+    "le_mh": 0.27,
+    "bl": 8.1,
+    "mms_g": 13.1,
+    "xmax_mm": 2.9
+  },
+  "physical": {
+    "cutout_mm": 121,
+    "depth_mm": 75
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/oem-transducers",
+      "retrieved": "2026-11-22",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community",
+  "notes": "Long-term power is printed as TBD on the datasheet, so it's left out."
+}

@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "5011MNdU",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 38,
+    "qms": 3.54,
+    "qes": 0.28,
+    "vas_l": 169,
+    "re": 5.6,
+    "sd_cm2": 892,
+    "qts": 0.26,
+    "le_mh": 1.689,
+    "bl": 23.7,
+    "mms_g": 120,
+    "xmax_mm": 7.5,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 356,
+    "depth_mm": 168.5,
+    "displacement_l": 4.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/5011MNdU_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

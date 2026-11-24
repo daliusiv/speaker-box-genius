@@ -3,6 +3,7 @@ title: "Are ported boxes slow or boomy? Group delay explained"
 description: Why "sealed is fast, ported is slow" keeps coming up, what group delay really is, how a sealed box, a ported box tuned high and one tuned low compare in group delay, step response and ringing, and what listening tests say you can hear.
 path: guides/group-delay
 image: chart:group-delay/delay
+art: A sealed box sending out a clean pulse beside a ported box whose pulse rings on after it.
 order: 19
 group: ported
 ---

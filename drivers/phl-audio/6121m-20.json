@@ -1,0 +1,36 @@
+{
+  "brand": "PHL Audio",
+  "model": "6121M-20",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 39,
+    "qms": 4.22,
+    "qes": 0.25,
+    "vas_l": 119.7,
+    "re": 5.6,
+    "sd_cm2": 892,
+    "qts": 0.24,
+    "le_mh": 2.059,
+    "bl": 29,
+    "mms_g": 155,
+    "xmax_mm": 8.5,
+    "pe_w": 800
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 175,
+    "displacement_l": 5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/6121M-20_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

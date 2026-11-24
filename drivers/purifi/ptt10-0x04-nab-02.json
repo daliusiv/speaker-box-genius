@@ -1,0 +1,34 @@
+{
+  "brand": "Purifi",
+  "model": "PTT10.0X04-NAB-02",
+  "type": "subwoofer",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 24,
+    "qms": 5.5,
+    "qes": 0.35,
+    "vas_l": 82,
+    "re": 3.9,
+    "sd_cm2": 360,
+    "qts": 0.33,
+    "le_mh": 0.62,
+    "bl": 12.8,
+    "mms_g": 98.0,
+    "xmax_mm": 14.75
+  },
+  "physical": {
+    "cutout_mm": 242,
+    "depth_mm": 145
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/oem-transducers",
+      "retrieved": "2026-11-22",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community",
+  "notes": "Long-term power is printed as TBD on the datasheet, so it's left out."
+}

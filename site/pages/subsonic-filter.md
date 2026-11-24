@@ -3,6 +3,7 @@ title: "Subsonic filter: what frequency and slope?"
 description: Why ported and passive radiator boxes need a high-pass filter below their tuning, and how to choose its frequency and slope, with a worked 12-inch subwoofer example.
 path: guides/subsonic-filter
 image: chart:subsonic-on/excursion
+art: A ported box whose cone is moving too far, beside a high-pass filter curve rising out of the deep bass.
 order: 7
 group: ported
 ---

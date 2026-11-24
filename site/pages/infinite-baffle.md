@@ -3,6 +3,7 @@ title: "Infinite baffle subwoofer: drivers in the wall, the attic as the box"
 description: How an infinite baffle (IB) subwoofer works, how big the space behind it must be, what EQ and a subsonic filter cost, and which forum rules hold up, with numbers from four 18-inch drivers in a ceiling at 2000 W.
 path: guides/infinite-baffle
 image: chart:ib-example/response
+art: Two drivers mounted in a wall, with the big space behind it marked out as their box.
 order: 28
 group: sealed
 ---
@@ -114,6 +115,7 @@ The driver database has a filter for this: **Driver → Browse drivers → Filte
 
 ## Building it
 
+- **No wall to build into?** A driver on a free-standing board with its back open to the room is an open baffle, a different animal: its bass falls 6 dB/octave below the dipole peak. See [Open baffle speakers](/guides/open-baffle/).
 - **The baffle must be stiff.** It carries the drivers' reaction force, which can make a ceiling or a timber wall buzz. Builders often mount drivers in opposed pairs so their forces cancel [1].
 - **A manifold** (a short chamber in front of the drivers that opens into the room through one slot) is common. Keep its opening at least as big as the drivers' total cone area so it doesn't add a resonance of its own.
 - **Hornresp** opens the design: **Save & Export → Hornresp record** writes an open rear as a box record with no rear chamber, with Eg set to the amplifier voltage across all the drivers so Hornresp's levels match the app's. WinISD has no infinite baffle, so its export leaves these designs out.

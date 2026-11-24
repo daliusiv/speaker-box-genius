@@ -3,6 +3,7 @@ title: "Round port vs slot port: why your slot tunes lower and chuffs sooner"
 description: A 4″ flared round port against an 8:1 slot of the same area in the same box: why a slot along the box walls tunes lower than calculators say, why it gets noisy sooner, and the pipe resonance every port has. Charts and live examples you can open and change.
 path: guides/round-vs-slot-port
 image: chart:port-shape/port
+art: Two box fronts: one with a round port, one with a slot port along the floor.
 order: 23
 group: ported
 ---

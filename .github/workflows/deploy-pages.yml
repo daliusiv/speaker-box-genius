@@ -97,6 +97,19 @@ jobs:
       - name: Build guide pages, sitemaps and robots.txt
         run: pnpm build:site
 
+      # IndexNow (site/indexnow.ts): the pages this deploy adds or changes, against the state the
+      # live site still serves. The indexnow job sends them once the deploy is live.
+      - name: List new and changed pages for IndexNow
+        run: |
+          curl -fsSL --max-time 30 https://speakerboxgenius.com/sitemap-state.json -o .cache/sitemap-prev.json || rm -f .cache/sitemap-prev.json
+          node --experimental-strip-types --disable-warning=ExperimentalWarning site/indexnow.ts diff .cache/sitemap-prev.json packages/web/dist/sitemap-state.json .cache/indexnow-urls.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: indexnow-urls
+          path: .cache/indexnow-urls.txt
+          retention-days: 1
+
       - name: Save share cards
         uses: actions/cache/save@v4
         with:
@@ -124,3 +137,20 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Tells Bing and the other IndexNow engines about the new and changed pages. Never fails the deploy.
+  indexnow:
+    needs: deploy
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: site
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: indexnow-urls
+      - run: node --experimental-strip-types --disable-warning=ExperimentalWarning site/indexnow.ts submit indexnow-urls.txt

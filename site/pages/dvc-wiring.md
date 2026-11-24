@@ -3,6 +3,7 @@ title: "1 Ω vs 2 Ω vs 4 Ω: does DVC wiring change how a subwoofer sounds?"
 description: The same dual voice coil subwoofer wired in series (4 Ω) and in parallel (1 Ω), with 0.15 Ω of amplifier and cable resistance, on a real 1 Ω amplifier. SPL, impedance, Q and maximum output worked out, with charts you can open and change.
 path: guides/dvc-wiring
 image: chart:dvc-watts:1,3/impedance
+art: A subwoofer driver whose two voice coils are wired in parallel to the amplifier terminals.
 order: 22
 group: start
 ---

@@ -3,6 +3,7 @@ title: Thiele/Small parameters explained
 description: What Fs, Qts, Vas, Xmax and the rest mean in practice, checked on two real 8-inch drivers in the same boxes. Which numbers decide the box, which decide how loud, what the forum rules of thumb get wrong, and how to enter a datasheet without mistakes.
 path: guides/thiele-small-parameters
 image: chart:ts-example/spl
+art: A loudspeaker driver in cutaway: cone, surround, spider, voice coil and magnet, with the moving parts picked out.
 order: 10
 group: start
 ---
@@ -126,7 +127,7 @@ Any complete set describes the driver, and the rest follows. In Speaker Box Geni
 - **Contradictions are flagged.** If you type more values than needed and they disagree by more than 3 %, the app says which ones and lets you use the calculated value. The simulation always uses Fs, Qms, Qes, Vas, Re and Sd.
 - **Paste the datasheet.** **Driver → Edit T/S → ⋯ → Paste from datasheet…** picks the values out of a pasted spec table and converts units: "1.32 ft.³" as Dayton writes it, "1.9 ft3", "35630 mm²", "33 in²". A number with a unit it can't read is left out, and it says which line to type by hand.
 - **Mms or Mmd, either works.** Some datasheets (and Hornresp) give Mmd, the moving mass without the air load on the cone. Type it in the Mmd box, or paste it, and Mms follows from Sd (Mms = Mmd + 16ρa³/3, a the cone radius). Rms in kg/s, N·s/m or mechanical ohms is the same number.
-- **Or pick the driver** from the database of about 1,800 drivers. Each also has [its own page](/drivers/) with its parameters and suggested boxes.
+- **Or pick the driver** from the database of about 1,960 drivers. Each also has [its own page](/drivers/) with its parameters and suggested boxes.
 - **Measure your own.** **Driver → Edit T/S → ⋯ → Measure from an impedance sweep…** fits the T/S parameters to a DATS, REW or ARTA sweep (.zma), and a second sweep with a known added mass gives Vas. A mass that drops Fs by roughly 10–30 % works well [10].
 
 [[Open the worked example|ts-example]]

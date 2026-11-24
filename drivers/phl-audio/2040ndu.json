@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "2040NdU",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 119,
+    "qms": 4.71,
+    "qes": 0.91,
+    "vas_l": 9.3,
+    "re": 5.6,
+    "sd_cm2": 241,
+    "qts": 0.76,
+    "le_mh": 1.85,
+    "bl": 8.5,
+    "mms_g": 15.8,
+    "xmax_mm": 2,
+    "pe_w": 120
+  },
+  "physical": {
+    "cutout_mm": 185,
+    "depth_mm": 88.5,
+    "displacement_l": 0.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/2040NdU_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

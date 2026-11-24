@@ -14,6 +14,7 @@ import {
   type TsValues,
 } from "@sbg/engine";
 import { DATASHEET_TOLERANCE, splitConflicts } from "./datasheetCheck.ts";
+import { NUDGE_KEYS, nudgeKey } from "./ui/nudge.ts";
 
 const QUANTITY: Record<TsParam, Quantity> = {
   fs: "plain",
@@ -261,6 +262,18 @@ function TsField(props: {
         inputMode="decimal"
         value={text}
         placeholder={props.derived !== undefined ? fmt(props.derived) : "–"}
+        aria-keyshortcuts={props.entered !== undefined ? NUDGE_KEYS : undefined}
+        onKeyDown={(e) => {
+          // ↑/↓ nudge a typed value (it stays typed, the grey ones recalculate); calculated cells ignore it.
+          if (props.entered === undefined || bad) return;
+          const n = nudgeKey(e, props.entered);
+          if (n === null) return;
+          e.preventDefault();
+          if (n > 0 && n !== props.entered) {
+            setText(String(n));
+            props.onChange(n);
+          }
+        }}
         onChange={(e) => {
           const t = e.currentTarget.value;
           setText(t);

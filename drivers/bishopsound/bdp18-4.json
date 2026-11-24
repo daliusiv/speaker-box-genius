@@ -1,0 +1,34 @@
+{
+  "brand": "BishopSound",
+  "model": "BDP18/4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 18,
+  "ts": {
+    "fs": 38.8,
+    "qms": 17.416,
+    "qes": 0.407,
+    "vas_l": 183.25,
+    "re": 2.205,
+    "sd_cm2": 1301,
+    "qts": 0.397,
+    "le_mh": 2.672,
+    "bl": 17.067,
+    "mms_g": 220.2,
+    "xmax_mm": 11.3,
+    "pe_w": 1000
+  },
+  "physical": {
+    "cutout_mm": 420,
+    "depth_mm": 202
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bishopsound.com/products/bdp18-4-sub-bass-driver",
+      "retrieved": "2026-11-19",
+      "note": "Values from BishopSound's published datasheets (bishopsound.com), used with BishopSound's permission (18 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without BishopSound's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

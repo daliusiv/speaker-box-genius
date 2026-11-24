@@ -1,0 +1,22 @@
+{
+  "title": "Dayton UMII15-22, flat open baffle",
+  "record": "O2-ob15-flat.txt",
+  "driver": {
+    "fs": 29,
+    "qms": 2.34,
+    "qes": 1,
+    "vas_l": 96,
+    "re": 4.2,
+    "sd_cm2": 791,
+    "le_mh": 0.7
+  },
+  "hornrespPath_cm": 51.9,
+  "text": "As ob12-flat with S = 3600 cm² (60 × 60 cm board; Hornresp path 51.9 cm).",
+  "box": {
+    "kind": "open-baffle",
+    "frame": "flat",
+    "w_cm": 60,
+    "h_cm": 60,
+    "t_cm": 0
+  }
+}

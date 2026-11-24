@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "1660NdM",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 125,
+    "qms": 4.08,
+    "qes": 0.34,
+    "vas_l": 4,
+    "re": 5.2,
+    "sd_cm2": 150,
+    "qts": 0.31,
+    "le_mh": 0.746,
+    "bl": 12.5,
+    "mms_g": 13,
+    "xmax_mm": 2.5,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 146,
+    "depth_mm": 63,
+    "displacement_l": 0.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/1660NdM_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

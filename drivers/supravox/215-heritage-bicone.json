@@ -1,0 +1,33 @@
+{
+  "brand": "Supravox",
+  "model": "215 Héritage bicône",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 60,
+    "qms": 3.4,
+    "qes": 0.75,
+    "vas_l": 65,
+    "re": 5.5,
+    "sd_cm2": 263,
+    "qts": 0.61,
+    "bl": 5.4,
+    "mms_g": 10.6,
+    "xmax_mm": 3.2,
+    "pe_w": 25
+  },
+  "physical": {
+    "cutout_mm": 212,
+    "depth_mm": 157
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://supravox.fr/products/215-heritage-bicone-haut-parleur-large-bande-25w-96-5db-8-ohms",
+      "retrieved": "2026-11-22",
+      "note": "Values from the technical specifications on Supravox's product pages (supravox.fr), used with Supravox's permission (17 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Supravox's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

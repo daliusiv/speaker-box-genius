@@ -14,7 +14,9 @@ import { prTravel, type Driver, type PassiveRadiator } from "../packages/schema/
 import { DEFAULT_STATE, encodeStateShort, type AppState, type DesignState } from "../packages/web/src/state.ts";
 import { SEALED_MAX_VAS, sealedQtc, sizeAllForDriver, withPreset } from "../packages/web/src/presets.ts";
 import { stuffFactor } from "../packages/web/src/stuffing.ts";
+import { driverLevelDb, OB_PASSIVE_HZ, suitsOpenBaffle, suitsOpenBaffleDsp } from "../packages/web/src/boxType.ts";
 import { alignmentDriver, driverInputOf, runDesigns, simOptionsOf, solveDriver, type Design } from "../packages/web/src/sim.ts";
+import type { Substitute } from "./similar.ts";
 
 type Vented = Extract<DesignState, { kind: "vented" }>;
 type Pr = Extract<DesignState, { kind: "pr" }>;
@@ -76,6 +78,12 @@ export function prCandidate(e: Entry<PassiveRadiator>): PrCandidate & { params: 
 
 export { choosePort } from "../packages/web/src/assistant.ts";
 
+/** A passive radiator in place of the page's chosen one, in the same box. */
+export type PrPatch = Pick<Pr, "prName" | "params" | "count" | "addedMass_g">;
+
+/** How many other PRs a page lists under its PR box. */
+export const PR_OTHERS = 3;
+
 export interface DriverPage {
   id: string;
   brand: string;
@@ -88,6 +96,8 @@ export interface DriverPage {
   notes: string[];
   /** The PR chosen, if any. */
   pr?: { name: string; count: number; addedMass_g: number };
+  /** The next passive radiators that also work in the PR box (best first, one row per PR), as patches of its design. */
+  prOthers?: PrPatch[];
   /** Values that look implausible (packages/db-tools/src/plausibility.ts). */
   flags: Flag[];
 }
@@ -111,6 +121,7 @@ export function designDriver(e: Entry<Driver>, prs: ReturnType<typeof prCandidat
   const notes = skipped.map((x) => x.replace(/^[^:]+: /, ""));
   const keep: DesignState[] = [];
   let pr: DriverPage["pr"];
+  let prOthers: PrPatch[] | undefined;
   for (const d of sized.designs) {
     if (!d.preset) continue; // not sized for this driver: left out
     // Pages suggest boxes people build at home; past this the alignment's box isn't a suggestion.
@@ -135,15 +146,25 @@ export function designDriver(e: Entry<Driver>, prs: ReturnType<typeof prCandidat
     // Ported: the port Size all boxes chose (the simplest that fits and keeps quiet at this power).
     if (d.kind === "vented") keep.push(d);
     if (d.kind === "pr") {
-      const best = rankPrResults(
+      const ranked = rankPrResults(
         [...evaluatePrCandidates(driverInputOf(sized, solved), prs, { vb_l: d.vb_l, targetFb: d.targetFb, sim: simOptionsOf(sized), losses: sized.settings.losses, counts: [1, 2, 4] })].flat(),
-      ).find((x) => x.ok);
+      ).filter((x) => x.ok);
+      const best = ranked[0];
       if (!best) {
         notes.push(`no passive radiator in the database keeps up with it in ${r1(d.vb_l)} L at ${r1(d.targetFb)} Hz`);
         continue;
       }
       const c = prs.find((x) => x.id === best.id)!;
       pr = { name: best.name, count: best.count, addedMass_g: Math.round(best.addedMass_g) };
+      // The next PRs that work here, each at its best count (one row per PR).
+      const seen = new Set([best.id]);
+      prOthers = [];
+      for (const r of ranked) {
+        if (prOthers.length >= PR_OTHERS) break;
+        if (seen.has(r.id)) continue;
+        seen.add(r.id);
+        prOthers.push({ prName: r.name, params: prs.find((x) => x.id === r.id)!.params, count: r.count, addedMass_g: Math.round(r.addedMass_g) });
+      }
       keep.push({ ...(d as Pr), prName: best.name, params: c.params, count: best.count, addedMass_g: Math.round(best.addedMass_g), extra: [] });
     }
   }
@@ -152,7 +173,7 @@ export function designDriver(e: Entry<Driver>, prs: ReturnType<typeof prCandidat
   const designs = runDesigns(state, solveDriver(state));
   if (designs.length === 0) return null;
   const [brandSlug] = e.id.split("/") as [string];
-  return { id: e.id, brand: rec.brand, brandSlug, model: rec.model, rec, state, designs, notes, pr, flags: e.flags };
+  return { id: e.id, brand: rec.brand, brandSlug, model: rec.model, rec, state, designs, notes, pr, ...(prOthers?.length ? { prOthers } : {}), flags: e.flags };
 }
 
 export async function shareLink(site: string, s: AppState) {
@@ -255,6 +276,21 @@ function suitability(fs: number, qes: number, qts: number): string {
   return `With Fs ${f1(fs)} Hz, Qts ${qts.toFixed(2)} and an efficiency-bandwidth product (Fs/Qes) of ${Math.round(ebp)}, it leans towards ${lean}.`;
 }
 
+/**
+ * The open baffle line under the box lean, by the driver picker's Suits rules (boxType.ts), with a
+ * link to the open baffle calculator for this driver; empty when the driver suits neither.
+ */
+export function openBaffleLine(id: string, fs: number, qts: number, xmax_mm: number | undefined): string {
+  const link = `<a href="/calculators/open-baffle/?d=${encodeURIComponent(id)}">Size its baffle →</a>`;
+  if (suitsOpenBaffle({ qts, fs })) {
+    const own = driverLevelDb(OB_PASSIVE_HZ, fs, qts);
+    return `<p><strong>Open baffle:</strong> suits one without EQ (Qts ${qts.toFixed(2)}, Fs ${f1(fs)} Hz: its own level at ${OB_PASSIVE_HZ} Hz is ${own >= 0 ? "+" : "−"}${Math.abs(own).toFixed(1)} dB). ${link}</p>`;
+  }
+  if (suitsOpenBaffleDsp({ qts, xmax_mm, fs }))
+    return `<p><strong>Open baffle:</strong> suits one with DSP EQ (Qts ${qts.toFixed(2)}, Xmax ${xmax_mm} mm, Fs ${f1(fs)} Hz). ${link}</p>`;
+  return "";
+}
+
 /** Points of a curve for a chart, thinned to about 150. */
 function pts(freq: Float64Array, y: ArrayLike<number>): [number, number][] {
   const step = Math.max(1, Math.floor(freq.length / 150));
@@ -284,8 +320,20 @@ export interface PageLinks {
   /** The driver's other versions and the page itself, in family order (two or more, or none). */
   variants?: VariantLink[];
   related: { id: string; label: string }[];
+  /** Scored substitutes (site/similar.ts): shown rows (close and usable) and how many risky ones were left out. */
+  substitutes?: { rows: SubstituteRow[]; hidden: number };
+  /** Share links opening the page's designs with each of `DriverPage.prOthers` in the PR box. */
+  prOthers?: string[];
   /** The driver's size has a page of its own (sizePath), which the opening line and the similar drivers link to. */
   sizeHub?: boolean;
+}
+
+/** One row of a driver page's substitutes table. */
+export interface SubstituteRow {
+  sub: Substitute;
+  page: DriverPage;
+  /** Share link opening this page's designs with the substitute as the comparison driver. */
+  compare: string;
 }
 
 /** Structured data for a page (schema.org): what it's about, and where it sits (breadcrumbs). */
@@ -345,6 +393,95 @@ export function driverTitle(name: string, kinds: string[]): string {
   return `${name}: box size${tuning ? `, ${tuning}` : ""} and T/S parameters`;
 }
 
+/** The one frequency a driver page compares max SPL at: the middle F3 of its boxes, rounded to 5 Hz (≥ 20 Hz). */
+export function refFreq(p: DriverPage): number {
+  const f3s = p.designs.map((d) => d.result.summary.f3).filter((x): x is number => x !== null).sort((a, b) => a - b);
+  return Math.max(20, Math.round((f3s[Math.floor(f3s.length / 2)] ?? 40) / 5) * 5);
+}
+
+const TIER_NAME = { close: "Close", usable: "Usable", risky: "Risky" } as const;
+const signed = (v: number, digits = 1) => {
+  const r = Number(v.toFixed(digits));
+  return `${r > 0 ? "+" : r < 0 ? "−" : "±"}${Math.abs(r).toFixed(digits)}`;
+};
+
+/** A substitute's fit line: cutout, depth and amplifier load against the page's driver. */
+export function fitText(t: Driver, c: Driver, sub: Pick<Substitute, "fit">): string {
+  const tc = t.physical?.cutout_mm;
+  const cc = c.physical?.cutout_mm;
+  const cut =
+    sub.fit.cutout === "drop-in" ? "Drop-in" : sub.fit.cutout === "enlarge" ? `Cutout ${Math.round(cc! - tc!)} mm larger` : sub.fit.cutout === "ring" ? `Cutout ${Math.round(tc! - cc!)} mm smaller (adapter ring)` : "Cutout not published";
+  const td = t.physical?.depth_mm;
+  const cd = c.physical?.depth_mm;
+  const dd = td !== undefined && cd !== undefined ? Math.round(cd - td) : null;
+  const depth = dd === null ? "depth not published" : dd > 5 ? `${dd} mm deeper` : dd < -5 ? `${-dd} mm shallower` : "same depth";
+  const coil = c.voice_coils === 2 ? (c.ts_wiring ?? "parallel") === "parallel" ? c.nominal_ohms * 2 : c.nominal_ohms / 2 : undefined;
+  const load =
+    sub.fit.load === "same"
+      ? `${f1(c.nominal_ohms)} Ω`
+      : sub.fit.load === "dvc" && coil !== undefined
+        ? `${f1(t.nominal_ohms)} Ω (coils in ${Math.abs(coil * 2 - t.nominal_ohms) < 1e-9 ? "series" : "parallel"})`
+        : `${f1(c.nominal_ohms)} Ω, not ${f1(t.nominal_ohms)} Ω`;
+  return `${cut} · ${depth} · ${load}`;
+}
+
+/** The substitutes section: a sentence, a two-line table (tier, F3 and max SPL in the lead box, fit), and how it's worked out. */
+export function substitutesSection(p: DriverPage, s: NonNullable<PageLinks["substitutes"]>, fRef: number): string {
+  const lead = p.designs.find((d) => !d.compare);
+  if (!s.rows.length || !lead) return "";
+  const kind = KIND_WORD[lead.design.kind as BoxKind];
+  const delta = (r: SubstituteRow) => r.sub.boxes[0]?.delta;
+  const hasMax = s.rows.some((r) => delta(r)?.maxSplAt);
+  const cols = hasMax ? 4 : 3;
+  const rows = s.rows
+    .map((r) => {
+      const d = delta(r);
+      const f3 = d?.f3Candidate != null ? `${f1(d.f3Candidate)} Hz${d.f3Target != null ? ` <span class="alt">(${signed(d.f3Candidate - d.f3Target)})</span>` : ""}` : "–";
+      const m = d?.maxSplAt;
+      const max = m ? `${Math.round(m.candidate)} dB <span class="alt">(${signed(m.candidate - m.target)})</span>` : "–";
+      const size = r.sub.differentSize ? ` <span class="tag">different size</span>` : "";
+      return `<tr class="main"><td><a href="${driverPath(r.page.id)}">${esc(r.sub.label)}</a>${size}</td><td><span class="tag tier-${r.sub.tier}">${TIER_NAME[r.sub.tier]}</span></td><td class="n">${f3}</td>${hasMax ? `<td class="n">${max}</td>` : ""}</tr><tr class="how"><td colspan="${cols}">${fitText(p.rec, r.page.rec, r.sub)} · <a href="${esc(r.compare)}" rel="nofollow">Compare in the app →</a></td></tr>`;
+    })
+    .join("");
+  // One sentence on the closest match, and one on the loudest other when it's louder still.
+  const first = s.rows[0]!;
+  const fd = delta(first);
+  const hz = (v: number) => `${f1(Math.abs(v))} Hz ${v < 0 ? "lower" : "higher"}`;
+  const db = (v: number) => (Math.abs(v) < 0.05 ? "plays as loud" : `plays ${f1(Math.abs(v))} dB ${v > 0 ? "louder" : "quieter"}`);
+  const parts: string[] = [];
+  if (fd?.f3Candidate != null && fd.f3Target != null) {
+    const v = fd.f3Candidate - fd.f3Target;
+    parts.push(Math.abs(v) < 0.05 ? "reaches as low" : v < 0 ? `reaches ${hz(v)}` : `has an F3 ${hz(v)}`);
+  }
+  if (fd?.maxSplAt) parts.push(db(fd.maxSplAt.candidate - fd.maxSplAt.target));
+  let text = `The closest match is the ${esc(first.sub.label)}${parts.length ? `: in this driver's ${kind} box it ${parts.join(" and ")}` : ""}.`;
+  const gain = (r: SubstituteRow) => { const m = delta(r)?.maxSplAt; return m ? m.candidate - m.target : -Infinity; };
+  const loud = s.rows.slice(1).reduce<SubstituteRow | null>((b, r) => (gain(r) > (b ? gain(b) : -Infinity) ? r : b), null);
+  if (loud && gain(loud) >= 0.5 && gain(loud) > gain(first)) {
+    const ld = delta(loud)!;
+    const f3 = ld.f3Candidate != null && ld.f3Target != null && Math.abs(ld.f3Candidate - ld.f3Target) >= 0.05 ? `, with an F3 ${hz(ld.f3Candidate - ld.f3Target)}` : "";
+    text += ` The ${esc(loud.sub.label)} plays ${f1(gain(loud))} dB louder there${f3}.`;
+  }
+  const box = lead.design.kind === "sealed" ? `${f1(lead.vb_l)} L` : `${f1(lead.vb_l)} L tuned to ${f1(lead.result.summary.fb ?? NaN)} Hz`;
+  const more = s.hidden ? ` ${s.hidden} more ${s.hidden === 1 ? "match that does" : "matches that do"} worse in this box ${s.hidden === 1 ? "is" : "are"} in the app's driver picker.` : "";
+  return `<h2 id="substitutes">Substitutes</h2>
+<p>${text}</p>
+<div class="table"><table class="cmp subs"><thead><tr><th>Driver</th><th>Match</th><th>F3</th>${hasMax ? `<th>Max SPL at ${fRef} Hz</th>` : ""}</tr></thead><tbody>${rows}</tbody></table></div>
+<p class="muted">Similar parameters, simulated: each driver is put in the ${kind} box above (${box}) at its own rated power, so the comparison favours this driver. Check the fit and the box in the app before you swap.${more} <a href="/about/#credits">How this is scored</a></p>`;
+}
+
+/** The state with the PR box's PR swapped for another (the page's other designs unchanged). */
+export function withPr(s: AppState, patch: PrPatch): AppState {
+  return { ...s, designs: s.designs.map((d) => (d.kind === "pr" ? { ...d, ...patch, extra: [] } : d)) };
+}
+
+/** The PR row's extra line: the next PRs that work in the same box, each opening the app with it in place. */
+function otherPrs(p: DriverPage, links: PageLinks): string {
+  if (!p.prOthers?.length || links.prOthers?.length !== p.prOthers.length) return "";
+  const items = p.prOthers.map((o, i) => `<a href="${esc(links.prOthers![i]!)}" rel="nofollow">${o.count} × ${esc(o.prName)}</a> (${o.addedMass_g > 0 ? `${o.addedMass_g} g${o.count > 1 ? " each" : ""}` : "no added mass"})`);
+  return `<br><span class="pr-alt">Other PRs that work here: ${items.join(", ")}</span>`;
+}
+
 export function driverContent(p: DriverPage, links: PageLinks, chart: typeof import("./chart.ts").chart): { title: string; description: string; content: string; ld: PageLd } {
   const name = `${p.brand} ${p.model}`;
   const solved = solveDriver(p.state).values;
@@ -352,9 +489,7 @@ export function driverContent(p: DriverPage, links: PageLinks, chart: typeof imp
   const kindList = kinds.map((k) => KIND_NAME[k].toLowerCase()).join(", ").replace(/, ([^,]*)$/, " and $1");
   const title = driverTitle(name, kinds);
 
-  // Max SPL compared at one frequency for every box: the middle F3, rounded.
-  const f3s = p.designs.map((d) => d.result.summary.f3).filter((x): x is number => x !== null).sort((a, b) => a - b);
-  const fRef = Math.max(20, Math.round((f3s[Math.floor(f3s.length / 2)] ?? 40) / 5) * 5);
+  const fRef = refFreq(p);
   const hasMax = p.designs.some((d) => Number.isFinite(at(d.result.freq, d.result.maxSpl, fRef)));
 
   const rows = p.designs
@@ -364,7 +499,7 @@ export function driverContent(p: DriverPage, links: PageLinks, chart: typeof imp
       const m = at(d.result.freq, d.result.maxSpl, fRef);
       const lim = LIMIT_TEXT[limitAt(d, fRef)];
       const cols = hasMax ? 5 : 4;
-      return `<tr class="main"><td><span class="sw" style="background:${d.color}"></span>${KIND_NAME[d.design.kind as BoxKind]}</td><td class="n">${litres(d.vb_l)}</td><td class="n">${tuning}</td><td class="n">${s.f3 === null ? "–" : `${f1(s.f3)} Hz`}</td>${hasMax ? `<td class="n">${Number.isFinite(m) ? `${Math.round(m)} dB` : "–"}${lim ? `<br><small>${lim}</small>` : ""}</td>` : ""}</tr><tr class="how"><td colspan="${cols}">${boxText(d)}</td></tr>`;
+      return `<tr class="main"><td><span class="sw" style="background:${d.color}"></span>${KIND_NAME[d.design.kind as BoxKind]}</td><td class="n">${litres(d.vb_l)}</td><td class="n">${tuning}</td><td class="n">${s.f3 === null ? "–" : `${f1(s.f3)} Hz`}</td>${hasMax ? `<td class="n">${Number.isFinite(m) ? `${Math.round(m)} dB` : "–"}${lim ? `<br><small>${lim}</small>` : ""}</td>` : ""}</tr><tr class="how"><td colspan="${cols}">${boxText(d)}${d.design.kind === "pr" ? otherPrs(p, links) : ""}</td></tr>`;
     })
     .join("");
 
@@ -413,9 +548,17 @@ export function driverContent(p: DriverPage, links: PageLinks, chart: typeof imp
     : "";
 
   const notes = p.notes.length ? `<p class="muted">Not shown: ${p.notes.map(esc).join("; ")}.</p>` : "";
-  const related = links.related.length
-    ? `<h2 id="similar">Similar drivers</h2><ul class="related">${links.related.map((r) => `<li><a href="${driverPath(r.id)}">${esc(r.label)}</a></li>`).join("")}</ul>${links.sizeHub && p.rec.size_in ? `<p class="more"><a href="${sizePath(p.rec.size_in)}">All ${sizeSlug(p.rec.size_in)} drivers →</a></p>` : ""}`
-    : "";
+  const subs = links.substitutes ? substitutesSection(p, links.substitutes, fRef) : "";
+  // With a substitutes table, the old list keeps only the brand's own drivers, unless that leaves
+  // fewer than RELATED_MIN links in the two together: then the old list stays, less the substitutes.
+  const subIds = new Set(links.substitutes?.rows.map((r) => r.page.id));
+  const own = links.related.filter((r) => r.id.startsWith(`${p.brandSlug}/`) && !subIds.has(r.id));
+  const brandOnly = subs !== "" && own.length + subIds.size >= RELATED_MIN;
+  const relatedList = brandOnly ? own : links.related.filter((r) => !subIds.has(r.id));
+  const more = links.sizeHub && p.rec.size_in ? `<p class="more"><a href="${sizePath(p.rec.size_in)}">All ${sizeSlug(p.rec.size_in)} drivers →</a></p>` : "";
+  const related = relatedList.length
+    ? `<h2 id="similar">${brandOnly ? `More from ${esc(p.brand)}` : subs ? "More drivers" : "Similar drivers"}</h2><ul class="related">${relatedList.map((r) => `<li><a href="${driverPath(r.id)}">${esc(r.label)}</a></li>`).join("")}</ul>${more}`
+    : subs ? more : "";
 
   const content = `<nav class="crumbs"><a href="/drivers/">Drivers</a> › <a href="${brandPath(p.brandSlug)}">${esc(p.brand)}</a></nav>
 <h1>${esc(name)}: box design</h1>
@@ -426,6 +569,7 @@ ${p.rec.ts.pe_w ? `<p class="muted">They open at its ${Math.round(p.rec.ts.pe_w)
 ${flagNote}
 <h2 id="boxes">Suggested boxes</h2>
 <p>${suitability(solved.fs!, solved.qes!, solved.qts!)} The boxes use the flattest standard alignments (the ported ones as WinISD sizes them); a smaller box trades some bass extension for size, which you can try in the app. Volumes are net: add the space taken by the driver, port${p.pr ? ", passive radiators" : ""} and bracing (the app's volume calculator does this).</p>
+${openBaffleLine(p.id, solved.fs!, solved.qts!, t.xmax_mm)}
 <div class="table"><table class="cmp"><thead><tr><th>Box</th><th>Volume</th><th>Tuning</th><th>F3</th>${hasMax ? `<th>Max SPL at ${fRef} Hz</th>` : ""}</tr></thead><tbody>${rows}</tbody></table></div>
 ${notes}
 ${key}
@@ -435,6 +579,7 @@ ${key}
 <h2 id="parameters">Parameters</h2>
 <div class="table"><table class="cmp ts"><tbody>${tsRows}</tbody></table></div>
 <p class="muted">${credit}${ownTerms}${checked} <a href="${esc(report)}" rel="nofollow">Report a mistake</a>.</p>
+${subs}
 ${related}`;
 
   const desc = p.designs
@@ -474,9 +619,12 @@ td small{color:var(--muted)}
 .cmp{font-size:.95rem}
 .cmp tr.main td{border-bottom:0;padding-bottom:.1rem}
 .cmp tr.how td{padding-top:0;color:var(--muted);font-size:.88em}
+.pr-alt{display:inline-block;margin-top:.2rem}
 .ts{width:auto;min-width:16rem}
 .note.flag{border-left-color:#fbbf24}
 .tag{padding:0 .3rem;border:1px solid var(--border);border-radius:.3rem;color:var(--muted);font-size:.75rem}
+.tag.tier-close{border-color:var(--accent);color:var(--accent)}
+.subs td:nth-child(2){white-space:nowrap}
 .sw{display:inline-block;width:.7rem;height:.7rem;margin-right:.45rem;border-radius:.2rem;vertical-align:baseline}
 .key span::before{border-top-color:var(--c)}
 .related{columns:2 14rem;padding-left:1.1rem}

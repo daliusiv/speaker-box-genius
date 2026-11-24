@@ -6,8 +6,10 @@
  * What's sent: crash reports (the error, its stack trace, the page address without the design after the
  * `#`, the browser, the app version and a short summary of what's open: box types, tab, chart, where the
  * driver came from), and usage stats (the named events in telemetrySchema.ts, clicks with all text masked,
- * frustration clicks and page speed). No cookies or browser storage (cookieless mode), no page views (the
- * site's visit counter has those), no session replay or console output, and nothing that identifies the
+ * frustration clicks and page speed), and with usage stats on, session replays (REPLAY: what you type
+ * and sliders are hidden, design links blocked; labels, results and charts show as on screen). No cookies or browser storage (memory-only persistence: each page load is a new
+ * anonymous visitor; cookieless_mode is off because posthog-js refuses replay with it), no page views (the
+ * site's visit counter has those), no console output or network bodies, and nothing that identifies the
  * visitor. Every event goes through `cleanEvent` (telemetrySchema.ts): only listed events, properties and
  * values leave.
  *
@@ -34,6 +36,20 @@ let usage = (() => {
   }
 })();
 let ph: PostHog | null = null;
+
+/**
+ * Session replay masking: only what the visitor enters is hidden. Every input's value is masked (rrweb
+ * draws it as `*`), sliders are blocked (an empty box; dragging one is still seen), and any link carrying a
+ * design after `#` is blocked. Labels, results, driver names and charts are recorded as shown, so a replay
+ * reads like the screen. Network bodies and console output are off.
+ */
+export const REPLAY = {
+  maskAllInputs: true,
+  blockSelector: 'a[href*="#"], input[type="range"]',
+  recordCrossOriginIframes: false,
+  recordHeaders: false,
+  recordBody: false,
+} as const;
 const early: unknown[] = [];
 const pending: (() => void)[] = [];
 const onError = (e: ErrorEvent) => early.push(e.error ?? e.message);
@@ -80,6 +96,11 @@ export function usageStatsOn(): boolean {
 /** Switch usage stats on or off and remember it in this browser; crash reports keep going either way. */
 export function setUsageStats(on: boolean): void {
   usage = on;
+  // Replays follow the switch at once, not only from the next visit.
+  if (ph) {
+    if (on) ph.startSessionRecording();
+    else ph.stopSessionRecording();
+  }
   try {
     if (on) localStorage.removeItem(PREF);
     else localStorage.setItem(PREF, "off");
@@ -94,7 +115,8 @@ async function start() {
     posthog.init(TOKEN!, {
       api_host: "https://eu.i.posthog.com",
       defaults: "2026-08-30",
-      cookieless_mode: "always",
+      // Memory only: no cookies, localStorage or sessionStorage (replay parks nothing in storage either),
+      // and the random ID lives for one page load. Not cookieless_mode "always": replay refuses to run with it.
       persistence: "memory",
       person_profiles: "never",
       respect_dnt: true,
@@ -109,12 +131,19 @@ async function start() {
       capture_dead_clicks: true,
       capture_heatmaps: true,
       capture_performance: { web_vitals: true, network_timing: false },
-      disable_session_recording: true,
+      // Replays only with usage stats on (Settings → Privacy); masked as REPLAY says.
+      disable_session_recording: !usage,
+      session_recording: REPLAY,
+      enable_recording_console_log: false,
       disable_surveys: true,
       disable_web_experiments: true,
       disable_product_tours: true,
       disable_conversations: true,
-      advanced_disable_flags: true,
+      // The project config (/array/<token>/config) must load: replay only starts once it says replay is on.
+      // Feature flags stay off: no /flags request.
+      advanced_disable_flags: false,
+      advanced_disable_feature_flags: true,
+      advanced_disable_feature_flags_on_first_load: true,
       save_referrer: false,
       before_send: (event) => cleanEvent(event, usage),
     });

@@ -3,6 +3,7 @@ title: Why your measurement doesn't match the simulation
 description: The real reasons a built speaker measures differently from its simulation (driver tolerances, losses, inductance, baffle step, the room and the measurement itself) and how to close the gap.
 path: guides/simulation-vs-measurement
 image: chart:mismatch-example/response
+art: A microphone in front of a speaker box, and a smooth simulated curve beside a ragged measured one.
 order: 11
 group: measuring
 ---
@@ -71,7 +72,7 @@ The standard way to measure the bass of a speaker in an ordinary room is the **n
 
 Also measure at a low level (2.83 V or less), so the driver behaves like the small-signal model.
 
-**How to close it:** in the app, load your measurement with the **Measured** card (an `.frd` file for response, `.zma` for impedance) and lay it over the simulation, matching the level in the passband.
+**How to close it:** in the app, load your measurement from the **Response** or **Impedance** chart's menu (**Add a measured response** for an `.frd` file, **Add a measured impedance** for a `.zma`; on a phone, **Open / Import**) and lay it over the simulation, matching the level in the passband.
 
 ## 5. The box isn't the box you simulated
 
@@ -98,7 +99,7 @@ For the example box, changing QL from 10 to 5 raises the F3 from {{num:losses-ql
 
 At high power the voice coil heats up, its resistance rises, and the driver plays quieter and with a higher Q. A coil at 100 °C has about 30 % more resistance than at 20 °C. In the example, that's **{{diff:losses-ql10/1/sim-hot/1/spl@100:0}}–{{diff:losses-ql10/1/sim-hot/1/spl@40:0}} dB less** output across the bass. It's called power compression, and it's why a speaker driven hard never quite reaches its simulated SPL.
 
-**How to close it:** in **Settings**, set **Voice coil** to the temperature you expect (around 100–150 °C at sustained high power), and compare. The [power compression guide](/guides/power-compression/) shows what a hot coil does to a ported box in detail.
+**How to close it:** in **Settings → Voice coil**, pick **Fixed** and set the temperature you expect (around 100–150 °C at sustained high power), or **Heated by the drive**, and compare. The [power compression guide](/guides/power-compression/) shows what a hot coil does to a ported box in detail.
 
 ## 8. The voice-coil inductance model
 

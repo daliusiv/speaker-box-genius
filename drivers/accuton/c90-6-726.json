@@ -1,0 +1,34 @@
+{
+  "brand": "Accuton",
+  "model": "C90-6-726",
+  "type": "midrange",
+  "nominal_ohms": 6,
+  "size_in": 5,
+  "ts": {
+    "fs": 110.13,
+    "qms": 2.54,
+    "qes": 0.2,
+    "vas_l": 2.39,
+    "re": 5.4,
+    "sd_cm2": 73.27,
+    "qts": 0.19,
+    "mms_g": 6.66,
+    "le_mh": 0.14,
+    "bl": 11.12,
+    "xmax_mm": 3,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 124.4,
+    "depth_mm": 53
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://accuton.com/home-audio/drivers/ceramic/C90-6-726-cell",
+      "retrieved": "2026-11-19",
+      "note": "Values from the product pages on accuton.com, used with Accuton's permission (19 Nov 2026), re-read from the website each month. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Accuton's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

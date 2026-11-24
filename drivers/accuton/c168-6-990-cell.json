@@ -1,0 +1,34 @@
+{
+  "brand": "Accuton",
+  "model": "C168-6-990 Cell",
+  "type": "midrange",
+  "nominal_ohms": 6,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 55,
+    "qms": 4.76,
+    "qes": 0.22,
+    "vas_l": 10.3,
+    "re": 5.4,
+    "sd_cm2": 118,
+    "qts": 0.21,
+    "mms_g": 16.1,
+    "le_mh": 0.06,
+    "bl": 11.66,
+    "xmax_mm": 3,
+    "pe_w": 120
+  },
+  "physical": {
+    "cutout_mm": 147,
+    "depth_mm": 49.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://accuton.com/home-audio/drivers/ceramic/C168-6-990-cell",
+      "retrieved": "2026-11-19",
+      "note": "Values from the product pages on accuton.com, used with Accuton's permission (19 Nov 2026), re-read from the website each month. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Accuton's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

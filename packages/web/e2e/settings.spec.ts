@@ -26,7 +26,7 @@ test("Settings: Match sets the conventions; a hand change reads Custom", async (
   await row(page, "Match").locator(":scope > summary").click();
   await row(page, "Match").getByText("WinISD", { exact: true }).click();
   await expect(value(page, "Match")).toHaveText("WinISD");
-  await expect(value(page, "Voice coil")).toHaveText("Le off · 20 °C");
+  await expect(value(page, "Voice coil")).toHaveText("Le off · Cold");
   await row(page, "Ports").locator(":scope > summary").click();
   await row(page, "Ports").getByText("Pipe", { exact: true }).click();
   await expect(value(page, "Match")).toHaveText("Custom");

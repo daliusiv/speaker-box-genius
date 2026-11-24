@@ -989,6 +989,24 @@ button.ui-chip::after {
   color: var(--muted);
 }
 
+/* Keyboard tip under the help list: desktop only (touch keyboards have no arrow keys). */
+.ui-help-tip {
+  margin: var(--space-4) 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.ui-help-tip kbd {
+  font: inherit;
+  color: var(--fg);
+}
+
+@media (pointer: coarse), (max-width: 767.98px) {
+  .ui-help-tip {
+    display: none;
+  }
+}
+
 .ui-sheet-actions {
   display: flex;
   gap: var(--space-1);

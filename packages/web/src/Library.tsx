@@ -1,10 +1,12 @@
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { startTransition, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { REPO } from "./components.tsx";
 import { DRIVER_AS_PR, doubtsXmax, flagText, type DataQuality, type DbIndex } from "./library.ts";
 import { useUnits } from "./units.ts";
-import { boxSuits } from "./boxType.ts";
+import { boxSuits, suitsOpenBaffle, suitsOpenBaffleDsp } from "./boxType.ts";
 import { Icon } from "./Icon.tsx";
 import { Button, ButtonLink, Chip, Select, TextField } from "./ui/index.ts";
+import type { SimDelta, SimilarInput, SimilarTier } from "@sbg/engine";
+import { dF3Hz, rankForApp, similarRows, TIER_ORDER, TIER_TEXT, type SimilarBox, type SimilarRow } from "./similarApp.ts";
 
 /**
  * Database browser: a button that opens a modal with search, filters and a
@@ -38,6 +40,11 @@ type Filters = Record<string, string[]>;
 /** Lowercase, punctuation stripped: "RSS315HF-4" and "rss315hf4" both match. */
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9.]+/g, "");
 
+/** Rows drawn first when a browser opens (a screenful and more); the rest follow. */
+const FIRST_ROWS = 60;
+/** A tap this soon after the rows appear isn't aimed at one; it's a repeat of the tap that opened it. */
+const TAP_GUARD_MS = 150;
+
 function Browser<R extends { id: string; brand: string; model: string }>(props: {
   button: string;
   title: string;
@@ -62,6 +69,18 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
   noun?: string;
   /** No count badge on the button (the search box carries the count). */
   noCount?: boolean;
+  /** Under the search row (the Similar mode's chips). */
+  top?: ReactNode;
+  /** In place of "N of M" above the table. */
+  status?: ReactNode;
+  /** Under the table. */
+  foot?: ReactNode;
+  /** The column to sort by; changing it re-sorts (Similar mode sorts by match). */
+  sortKey?: string;
+  /** Set to a function that opens the dialog (another button can open it). */
+  opener?: { current: (() => void) | null };
+  /** The dialog closed (picked, Esc, ✕ or the backdrop). */
+  onClose?: () => void;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const searchBox = useRef<HTMLInputElement>(null);
@@ -71,28 +90,59 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersId = useId();
   const filterCount = Object.values(filters).reduce((n, v) => n + v.length, 0);
-  const [sort, setSort] = useState<{ key: string; dir: 1 | -1 }>({ key: "name", dir: 1 });
+  const [sort, setSort] = useState<{ key: string; dir: 1 | -1 }>({ key: props.sortKey ?? "name", dir: 1 });
+  useEffect(() => setSort({ key: props.sortKey ?? "name", dir: 1 }), [props.sortKey]);
   const [cursor, setCursor] = useState(0);
   // The dialog's contents (and the filtered list) only exist while it's open: with ~1,800
   // drivers the table alone was ~20k elements on first load. Search, filters and sort live
   // here, so reopening keeps them.
   const [isOpen, setIsOpen] = useState(false);
+  // How many rows the table shows. Building ~1,800 rows takes seconds on a phone, and doing it
+  // in the tap's own render left the screen frozen with no dialog, so people tapped again and
+  // that tap picked a row. Now the dialog (header, search, a progress bar) paints first, then
+  // the first rows, then the rest, each in a background render that a tap or keypress can cut into.
+  const [limit, setLimit] = useState(0);
+  // Taps on rows from before the rows were on screen (queued while the phone was busy) are ignored.
+  const rowsShownAt = useRef(Infinity);
 
   const open = () => {
+    if (dlg.current?.open) return;
     setIsOpen(true);
+    setLimit(0);
+    rowsShownAt.current = Infinity;
     dlg.current?.showModal();
     setCursor(0);
     // Select the old query so typing replaces it.
     requestAnimationFrame(() => searchBox.current?.select());
   };
+  if (props.opener) props.opener.current = open;
   const close = () => dlg.current?.close();
+
+  // After the dialog has painted: the first rows, then (once those are on screen) all of them.
+  useEffect(() => {
+    if (!isOpen || limit === Infinity) return;
+    let frame = 0;
+    const timer = setTimeout(() => {
+      frame = requestAnimationFrame(() => startTransition(() => setLimit(limit === 0 ? FIRST_ROWS : Infinity)));
+    });
+    return () => {
+      clearTimeout(timer);
+      cancelAnimationFrame(frame);
+    };
+  }, [isOpen, limit]);
+  useEffect(() => {
+    if (!isOpen || limit === 0 || rowsShownAt.current !== Infinity) return;
+    const frame = requestAnimationFrame(() => (rowsShownAt.current = performance.now() + TAP_GUARD_MS));
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen, limit]);
+  const loading = isOpen && limit !== Infinity;
   const pick = (id: string) => {
     close();
     props.onPick(id);
   };
 
   const shown = useMemo(() => {
-    if (!isOpen) return [];
+    if (!isOpen || limit === 0) return [];
     const tokens = query.split(/\s+/).map(norm).filter(Boolean);
     const list = props.rows.filter((r) => {
       const hay = norm(props.searchText(r));
@@ -112,7 +162,7 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
       const c = typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y), undefined, { numeric: true });
       return c * sort.dir || `${a.brand} ${a.model}`.localeCompare(`${b.brand} ${b.model}`, undefined, { numeric: true });
     });
-  }, [isOpen, props.rows, props.columns, props.filters, props.searchText, query, filters, sort]);
+  }, [isOpen, limit === 0, props.rows, props.columns, props.filters, props.searchText, query, filters, sort]);
 
   useEffect(() => setCursor(0), [query, filters]);
 
@@ -170,9 +220,16 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
         ref={dlg}
         className="library"
         aria-label={props.title}
-        onClose={() => setIsOpen(false)}
+        onClose={() => {
+          setIsOpen(false);
+          props.onClose?.();
+        }}
         onClick={(e) => {
-          if (e.target === e.currentTarget) close(); // backdrop
+          // The backdrop: outside the dialog's box (an empty part of the dialog, e.g. below the
+          // progress bar while the rows load, is also the dialog itself, so check where the tap was).
+          if (e.target !== e.currentTarget) return;
+          const b = e.currentTarget.getBoundingClientRect();
+          if (e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom) close();
         }}
       >
         {isOpen && (
@@ -218,6 +275,7 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
                 <span aria-hidden="true">{filtersOpen ? "▴" : "▾"}</span>
               </Button>
             </div>
+            {props.top}
             <div className={`lib-filters${filtersOpen ? " open" : ""}`} id={filtersId}>
               <label className="lib-filter lib-sort">
                 <span>Sort by</span>
@@ -252,7 +310,9 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
             </div>
             {props.note}
             <p className="lib-status">
-              {shown.length} of {props.rows.length}
+              {loading && shown.length === 0
+                ? `Loading ${props.rows.length.toLocaleString("en")} ${props.noun ?? "rows"}…`
+                : (props.status ?? `${shown.length} of ${props.rows.length}`)}
               {active && (
                 <button
                   type="button"
@@ -266,7 +326,8 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
                 </button>
               )}
             </p>
-            <div className="lib-table">
+            {loading && <progress className="lib-loading" aria-label={`Loading ${props.noun ?? "the list"}`} />}
+            <div className="lib-table" aria-busy={loading || undefined}>
               <table>
                 <thead>
                   <tr>
@@ -296,12 +357,14 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
                   </tr>
                 </thead>
                 <tbody>
-                  {shown.map((r, i) => (
+                  {shown.slice(0, limit).map((r, i) => (
                     <tr
                       key={r.id}
                       data-i={i}
                       className={i === cursor ? "cursor-row" : undefined}
-                      onClick={() => pick(r.id)}
+                      onClick={(e) => {
+                        if (e.timeStamp >= rowsShownAt.current) pick(r.id);
+                      }}
                       onMouseMove={() => i !== cursor && setCursor(i)}
                     >
                       {props.columns.map((c) => (
@@ -314,13 +377,14 @@ function Browser<R extends { id: string; brand: string; model: string }>(props: 
                   ))}
                 </tbody>
               </table>
-              {shown.length === 0 && (
+              {shown.length === 0 && !loading && !props.status && (
                 <p className="lib-empty">
                   Nothing matches. <a href={`${REPO}/blob/main/CONTRIBUTING.md`}>Add it to the database</a>, or enter its
                   parameters by hand.
                 </p>
               )}
             </div>
+            {props.foot}
           </div>
         )}
       </dialog>
@@ -415,7 +479,10 @@ const vdOfRow = (r: { sd_cm2?: number; xmax_mm?: number }) => (r.sd_cm2 && r.xma
 /**
  * Which box a driver suits, from its datasheet (boxType.ts: EBP and Qts). Infinite baffle (a
  * driver in a wall or floor, its back to an attic or the next room): low Fs (≤ 30 Hz) and a
- * high Qts (≥ 0.5) or a low EBP (< 50), as the IB builders' rule of thumb has it.
+ * high Qts (≥ 0.5) or a low EBP (< 50), as the IB builders' rule of thumb has it. Open baffle (a
+ * dipole loses bass below its peak): passive needs the driver's own bass hump where the bass is
+ * (its own level at 40 Hz from Fs and Qts −2 dB or better, boxType.ts); with DSP EQ a lower Qts (≥ 0.35) works if the cone can travel (Xmax ≥ 8 mm)
+ * and the resonance is low (Fs ≤ 45 Hz).
  */
 const SUITS: { value: string; text: string; match: (r: DbIndex["drivers"][number]) => boolean }[] = [
   { value: "sealed", text: "Sealed", match: (r) => suitsOf(r) === "sealed" },
@@ -428,6 +495,8 @@ const SUITS: { value: string; text: string; match: (r: DbIndex["drivers"][number
       return r.fs !== undefined && r.fs <= 30 && ((r.qts ?? 0) >= 0.5 || (ebp !== null && ebp < 50));
     },
   },
+  { value: "ob", text: "Open baffle (passive)", match: (r) => suitsOpenBaffle(r) },
+  { value: "ob-dsp", text: "Open baffle with DSP", match: (r) => suitsOpenBaffleDsp(r) },
 ];
 
 function suitsOf(r: { fs?: number; qes?: number; qts?: number }) {
@@ -442,17 +511,68 @@ const QTS_BANDS: { value: string; text: string; lo: number; hi: number }[] = [
   { value: "high", text: "> 0.5", lo: 0.5, hi: Infinity },
 ];
 
+/** What the picker's Similar mode needs from the app (App.tsx): the main driver and your boxes. */
+export interface SimilarSource {
+  /** The main driver's model, for "Like … ×" and the note. */
+  name: string;
+  /** Its full name, for the status line ("10 like Dayton Audio RSS315HF-4"). */
+  fullName: string;
+  target: SimilarInput;
+  boxes: SimilarBox[];
+  /**
+   * Stage 2 for these drivers in this box: calls `onDelta` per driver as each is simulated (null
+   * when one won't), `onDone` at the end; returns a function that stops it.
+   */
+  check: (ids: string[], box: SimilarBox, onDelta: (id: string, delta: SimDelta | null) => void) => () => void;
+}
+
+type SimilarDriverRow = DriverRow & { sim: SimilarRow };
+
+const signed = (v: number | null | undefined, d = 1) => (v === null || v === undefined ? "–" : `${v > 0 ? "+" : v < 0 ? "−" : "±"}${Math.abs(v).toFixed(d)}`);
+const tierTone = (t: SimilarTier): "accent" | "warn" | "neutral" => (t === "close" ? "accent" : t === "risky" ? "warn" : "neutral");
+const boxText = (b: SimilarBox) => b.name;
+
 export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onPick: (id: string) => void;
   button?: string;
   title?: string;
   current?: string;
   chosen?: { model: string; meta?: string };
   noCount?: boolean;
+  /** Offers "Find similar drivers" under the picker (the main driver only). */
+  similar?: SimilarSource;
 }) {
   const units = useUnits();
   const vol = units.unit("vol");
   const disp = units.unit("disp");
-  const rows = props.rows ?? [];
+  const allRows = props.rows ?? [];
+  const opener = useRef<(() => void) | null>(null);
+  // Similar mode: on from "Find similar drivers" until the dialog closes or "Like … ×" is pressed.
+  const [like, setLike] = useState(false);
+  const sim = like ? props.similar : undefined;
+  const [boxId, setBoxId] = useState<string | null>(null);
+  const box = sim ? (sim.boxes.find((b) => b.id === boxId) ?? sim.boxes[0]) : undefined;
+  const [tiers, setTiers] = useState<SimilarTier[]>(["close", "usable", "risky"]);
+  const ranked = useMemo(() => (sim ? rankForApp(sim.target, allRows) : []), [sim?.target, allRows, like]);
+  const [deltas, setDeltas] = useState<{ key: string; map: Map<string, SimDelta | null> }>({ key: "", map: new Map() });
+  const checkKey = box ? `${box.id}|${ranked.map((r) => r.id).join(",")}` : "";
+  useEffect(() => {
+    if (!sim || !box || ranked.length === 0) return;
+    const map = new Map<string, SimDelta | null>();
+    setDeltas({ key: checkKey, map });
+    return sim.check(
+      ranked.map((r) => r.id),
+      box,
+      (id, delta) => setDeltas((d) => (d.key === checkKey ? { key: checkKey, map: new Map(d.map).set(id, delta) } : d)),
+    );
+    // checkKey carries the box and the list.
+  }, [checkKey]);
+  const byId = useMemo(() => new Map(allRows.map((r) => [r.id, r])), [allRows]);
+  const simRows = useMemo<SimilarDriverRow[]>(() => {
+    if (!sim) return [];
+    const map = deltas.key === checkKey ? deltas.map : new Map<string, SimDelta | null>();
+    return similarRows(ranked, map).flatMap((s) => (byId.has(s.id) ? [{ ...byId.get(s.id)!, sim: s }] : []));
+  }, [sim, ranked, deltas, checkKey, byId]);
+  const rows: DriverRow[] = sim ? simRows.filter((r) => tiers.includes(r.sim.tier)) : allRows;
 
   const filters = useMemo<ChipFilter<DriverRow>[]>(() => {
     const ohms = uniq(rows.map(ohmsText)).sort((a, b) => {
@@ -489,7 +609,7 @@ export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onP
         kind: "chips",
         options: SUITS.map((s) => ({ value: s.value, text: s.text })),
         match: (r, v) => SUITS.find((s) => s.value === v)!.match(r),
-        hint: "From EBP (Fs/Qes) and Qts. Infinite baffle: Fs ≤ 30 Hz with Qts ≥ 0.5 or EBP < 50",
+        hint: "From EBP (Fs/Qes) and Qts. Infinite baffle: Fs ≤ 30 Hz with Qts ≥ 0.5 or EBP < 50. Open baffle: passive when its own level at 40 Hz (from Fs and Qts) is −2 dB or better; with DSP Qts ≥ 0.35, Xmax ≥ 8 mm and Fs ≤ 45 Hz",
       },
     ];
     if (types.length > 1) {
@@ -538,25 +658,135 @@ export function DriverBrowser(props: { rows: DbIndex["drivers"] | undefined; onP
     [vol.unit, vol.k, vol.digits, disp.unit, disp.k, disp.digits],
   );
 
-  return (
-    <Browser
-      button={props.button ?? "Browse drivers"}
-      title={props.title ?? "Driver database"}
-      current={props.current}
-      chosen={props.chosen}
-      noCount={props.noCount}
-      noun="drivers"
-      summary={(r) => (
-        <>
-          {r.size_in ? `${r.size_in}"` : "–"} · {ohmsText(r)} Ω · Fs <b>{fmt(r.fs)}</b> · Qts <b>{fmt(r.qts, 2)}</b> · Xmax <b>{xmaxCell(r)}</b>
-        </>
+  // Similar mode: Match, F3 and Max SPL in place of EBP, Vas, Vd and Pe (sorted by match).
+  const simOf = (r: DriverRow) => (r as SimilarDriverRow).sim;
+  const pending = (r: DriverRow) => simOf(r).delta === undefined;
+  const simColumns = useMemo<Column<DriverRow>[]>(() => {
+    const keep = (k: string) => columns.find((c) => c.key === k)!;
+    return [
+      keep("name"),
+      {
+        key: "match",
+        label: "Match",
+        sort: (r) => TIER_ORDER[simOf(r).tier] + simOf(r).distance,
+        cell: (r) => <Chip tone={tierTone(simOf(r).tier)}>{TIER_TEXT[simOf(r).tier]}</Chip>,
+        title: "How close its published T/S parameters are, then checked in your box: Close, Usable or Risky",
+      },
+      keep("size"),
+      keep("ohms"),
+      { ...keep("fs"), wide: true },
+      { ...keep("qts"), wide: true },
+      keep("xmax"),
+      {
+        key: "f3",
+        label: "F3",
+        sort: (r) => dF3Hz(simOf(r).delta) ?? undefined,
+        cell: (r) => (pending(r) ? "…" : signed(dF3Hz(simOf(r).delta))),
+        num: true,
+        title: "F3 in your box against the main driver's (Hz; lower is deeper)",
+      },
+      {
+        key: "maxspl",
+        label: "Max SPL",
+        sort: (r) => simOf(r).delta?.dMaxSpl ?? undefined,
+        cell: (r) => (pending(r) ? "…" : signed(simOf(r).delta?.dMaxSpl)),
+        num: true,
+        title: "Max SPL over the octave above F3, in your box, against the main driver's (dB; each at its own rated power)",
+      },
+    ];
+  }, [columns]);
+
+  const similarButton = props.similar && !sim && (
+    <Button
+      variant="ghost"
+      icon="search"
+      className="dv-similar"
+      disabled={allRows.length === 0}
+      onClick={() => {
+        setLike(true);
+        setBoxId(null);
+        opener.current?.();
+      }}
+    >
+      Find similar drivers
+    </Button>
+  );
+
+  const shownBox = box;
+  const top = sim && (
+    <div className="lib-similar">
+      <Chip tone="accent" pressed onClick={() => setLike(false)}>
+        Like {sim.name} <span aria-hidden="true">×</span>
+        <span className="sr-only"> (show all drivers)</span>
+      </Chip>
+      {sim.boxes.length > 0 && shownBox && (
+        <label className="lib-similar-box">
+          <span>in</span>
+          <Select value={shownBox.id} options={sim.boxes.map((b) => ({ value: b.id, label: boxText(b) }))} onChange={setBoxId} aria-label="Box the F3 and Max SPL changes come from" />
+        </label>
       )}
-      rows={rows}
-      columns={columns}
-      filters={filters}
-      searchText={(r) => `${r.brand} ${r.model} ${r.type} ${r.size_in ?? ""}in`}
-      onPick={props.onPick}
-    />
+      <div className="lib-chips" role="group" aria-label="Match">
+        {(["close", "usable", "risky"] as const).map((k) => (
+          <Chip key={k} pressed={tiers.includes(k)} onClick={() => setTiers((ts) => (ts.includes(k) ? ts.filter((x) => x !== k) : [...ts, k]))}>
+            {TIER_TEXT[k]}
+          </Chip>
+        ))}
+      </div>
+    </div>
+  );
+  const status = sim && (
+    <>
+      {ranked.length === 0
+        ? `No similar drivers in the database for ${sim.fullName}`
+        : `${rows.length === simRows.length ? rows.length : `${rows.length} of ${simRows.length}`} like ${sim.fullName}${shownBox ? ` · F3 and Max SPL vs it in your ${shownBox.name} box` : ""}`}
+      <button type="button" className="link" onClick={() => setLike(false)}>
+        Show all drivers
+      </button>
+    </>
+  );
+  const foot = sim && (
+    <p className="hint lib-note">
+      Tap a driver to use it in place of {sim.name}; Undo brings it back. Similar parameters, simulated at each driver's rated power.{" "}
+      <a href="/about/#credits" target="_blank" rel="noreferrer">
+        How this is scored
+      </a>
+    </p>
+  );
+
+  return (
+    <>
+      <Browser
+        button={props.button ?? "Browse drivers"}
+        title={props.title ?? "Driver database"}
+        current={props.current}
+        chosen={props.chosen}
+        noCount={props.noCount}
+        noun={sim ? "similar drivers" : "drivers"}
+        summary={(r) =>
+          sim ? (
+            <>
+              {TIER_TEXT[simOf(r).tier]} · F3 <b>{pending(r) ? "…" : `${signed(dF3Hz(simOf(r).delta))} Hz`}</b> · Max SPL <b>{pending(r) ? "…" : `${signed(simOf(r).delta?.dMaxSpl)} dB`}</b> · {ohmsText(r)} Ω
+            </>
+          ) : (
+            <>
+              {r.size_in ? `${r.size_in}"` : "–"} · {ohmsText(r)} Ω · Fs <b>{fmt(r.fs)}</b> · Qts <b>{fmt(r.qts, 2)}</b> · Xmax <b>{xmaxCell(r)}</b>
+            </>
+          )
+        }
+        rows={rows}
+        columns={sim ? simColumns : columns}
+        filters={filters}
+        searchText={(r) => `${r.brand} ${r.model} ${r.type} ${r.size_in ?? ""}in`}
+        onPick={props.onPick}
+        top={top}
+        status={status}
+        foot={foot}
+        sortKey={sim ? "match" : "name"}
+        opener={opener}
+        onClose={() => setLike(false)}
+      />
+      {similarButton}
+    </>
   );
 }
 

@@ -366,6 +366,8 @@ export function withDriver(s: AppState, d: LoadedDriver): AppState {
     fdd: undefined,
     xmax_mm: x.xmax_mm,
     pe_w: x.pe_w,
+    rth_k_w: 0,
+    tmax_C: 200,
     volume: {
       ...s.volume,
       ...(d.displacement_l !== undefined ? { driverDisp_l: d.displacement_l } : {}),
@@ -1150,6 +1152,8 @@ export function openResults(s: AppState, d: LoadedDriver, rs: AssistantResult[],
     fdd: t.fdd,
     xmax_mm: t.xmax_mm,
     pe_w: t.pe_w,
+    rth_k_w: t.rth_k_w,
+    tmax_C: t.tmax_C,
     // "Fit my space": the calculator set to the space; the first box that fills it takes its
     // volume from there (so the app shows the same net volume, after the driver and ports).
     volume: (() => {

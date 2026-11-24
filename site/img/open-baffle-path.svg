@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" font-family="system-ui, -apple-system, Segoe UI, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">Why an open baffle loses bass, and why its path is shorter than the board</title>
+  <desc id="d">Left: a flat board seen from above. The front of the cone pushes sound towards the listener; the back pulls, out of phase, and that rear wave bends round both edges to meet the front wave. The textbook path runs front, to the edge, to the back; the real bass path is shorter. Right: polar plots. A box (monopole) is a circle at low frequency; an open baffle (dipole) is a figure of eight: 3 dB down at 45 degrees and silent at 90 degrees to the sides.</desc>
+  <rect width="1200" height="560" fill="#11141a"/>
+  <!-- left panel: top view of the board -->
+  <text x="330" y="40" fill="#e6e8ee" font-size="22" font-weight="600" text-anchor="middle">Seen from above</text>
+  <text x="330" y="78" fill="#8b93a3" font-size="17" text-anchor="middle">listener ↑</text>
+  <!-- front wave arcs -->
+  <path d="M250 200 Q330 150 410 200" fill="none" stroke="#4ed7e9" stroke-width="4" stroke-linecap="round" opacity=".9"/>
+  <path d="M220 170 Q330 100 440 170" fill="none" stroke="#4ed7e9" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+  <text x="330" y="132" fill="#4ed7e9" font-size="17" text-anchor="middle">front wave (+)</text>
+  <!-- board -->
+  <rect x="130" y="262" width="400" height="16" rx="3" fill="#4ed7e9" fill-opacity=".25" stroke="#4ed7e9" stroke-width="4"/>
+  <!-- driver -->
+  <path d="M290 262 L305 232 L355 232 L370 262" fill="#4ed7e9" fill-opacity=".15" stroke="#4ed7e9" stroke-width="4" stroke-linejoin="round"/>
+  <rect x="310" y="278" width="40" height="26" rx="4" fill="#4ed7e9" fill-opacity=".3" stroke="#4ed7e9" stroke-width="4"/>
+  <!-- rear wave arcs -->
+  <path d="M250 340 Q330 390 410 340" fill="none" stroke="#fb923c" stroke-width="4" stroke-linecap="round" opacity=".9"/>
+  <text x="330" y="420" fill="#fb923c" font-size="17" text-anchor="middle">rear wave (−), out of phase</text>
+  <!-- wrap-round paths -->
+  <path d="M300 320 C200 340 110 330 115 270 C118 225 170 205 250 200" fill="none" stroke="#fb923c" stroke-width="4" stroke-dasharray="10 8" stroke-linecap="round"/>
+  <path d="M360 320 C460 340 550 330 545 270 C542 225 490 205 410 200" fill="none" stroke="#fb923c" stroke-width="4" stroke-dasharray="10 8" stroke-linecap="round"/>
+  <path d="M243 192 l12 8 -13 6" fill="none" stroke="#fb923c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M417 192 l-12 8 13 6" fill="none" stroke="#fb923c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- labels -->
+  <text x="40" y="470" fill="#e6e8ee" font-size="17">Textbook path: front → edge → back ≈ board width + thickness</text>
+  <text x="40" y="500" fill="#e6e8ee" font-size="17">Real bass path D: shorter, because sound bends round</text>
+  <text x="40" y="524" fill="#e6e8ee" font-size="17">every edge at once (the app sums them all)</text>
+  <!-- divider -->
+  <line x1="640" y1="40" x2="640" y2="520" stroke="#8b93a3" stroke-opacity=".35" stroke-width="2"/>
+  <!-- right panel: polar plots -->
+  <text x="920" y="40" fill="#e6e8ee" font-size="22" font-weight="600" text-anchor="middle">Where the bass goes</text>
+  <g transform="translate(920 285)">
+    <circle r="190" fill="none" stroke="#8b93a3" stroke-opacity=".35" stroke-width="2"/>
+    <circle r="134" fill="none" stroke="#8b93a3" stroke-opacity=".2" stroke-width="2" stroke-dasharray="4 6"/>
+    <line x1="-205" y1="0" x2="205" y2="0" stroke="#8b93a3" stroke-opacity=".35" stroke-width="2"/>
+    <line x1="0" y1="-205" x2="0" y2="205" stroke="#8b93a3" stroke-opacity=".35" stroke-width="2"/>
+    <line x1="0" y1="0" x2="-134" y2="-134" stroke="#8b93a3" stroke-opacity=".5" stroke-width="2" stroke-dasharray="4 6"/>
+    <!-- monopole: circle of radius 190 -->
+    <circle r="190" fill="#8b93a3" fill-opacity=".06" stroke="#8b93a3" stroke-width="4" stroke-dasharray="12 8"/>
+    <!-- dipole: r = 190·|cos θ|, θ from the front axis: two circles of radius 95 -->
+    <circle cy="-95" r="95" fill="#4ed7e9" fill-opacity=".18" stroke="#4ed7e9" stroke-width="4"/>
+    <circle cy="95" r="95" fill="#fb923c" fill-opacity=".15" stroke="#fb923c" stroke-width="4"/>
+    <circle cx="-95" cy="-95" r="6" fill="#e6e8ee"/>
+    <text x="-110" y="-118" fill="#e6e8ee" font-size="16" text-anchor="end">−3 dB at 45°</text>
+    <text x="198" y="-10" fill="#e6e8ee" font-size="16" text-anchor="end">null at 90°</text>
+    <text x="10" y="-200" fill="#4ed7e9" font-size="16">front +</text>
+    <text x="10" y="214" fill="#fb923c" font-size="16">rear −</text>
+  </g>
+  <text x="920" y="525" fill="#8b93a3" font-size="16" text-anchor="middle">dashed circle: a box (monopole) · lobes: open baffle (dipole)</text>
+</svg>

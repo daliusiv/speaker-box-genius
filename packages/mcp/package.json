@@ -1,0 +1,23 @@
+{
+  "name": "@sbg/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Speaker Box Genius as a local MCP server: the app's own engine for AI assistants, on your machine.",
+  "exports": {
+    ".": "./src/server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@sbg/engine": "workspace:*",
+    "@sbg/headless": "workspace:*"
+  },
+  "devDependencies": {
+    "@anthropic-ai/mcpb": "2.1.2",
+    "vite": "7.3.8"
+  },
+  "scripts": {
+    "build": "vite build -c vite.config.ts",
+    "package": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/pack.ts"
+  }
+}

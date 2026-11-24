@@ -4,7 +4,7 @@ import { airOf, driverInputOf, enclosureOf, enclosureOptsOf, lossesFor, simOptio
 import type { AppState, DesignState } from "./state.ts";
 
 /** Lines and horns aren't lumped boxes: Hornresp opens those. */
-export const spiceExportable = (d: DesignState): boolean => d.kind !== "line";
+export const spiceExportable = (d: DesignState): boolean => d.kind !== "line" && d.kind !== "ob";
 
 /** The sweep written into the netlist's .ac line. */
 export const SPICE_SWEEP = { perDecade: 100, fMin: 10, fMax: 1000 } as const;
@@ -18,6 +18,7 @@ export const SPICE_SWEEP = { perDecade: 100, fMin: 10, fMax: 1000 } as const;
 export function spiceFor(s: AppState, d: DesignState, shareUrl: string, date = new Date()): { text: string; notes: string[] } | string {
   const solved = solveDriver(s);
   if (solved.missing.length > 0) return "Enter enough driver parameters to simulate first.";
+  if (d.kind === "ob") return "SPICE netlists cover boxes and infinite baffles, not open baffles: the rear wave round the board's edges has no circuit here.";
   if (!spiceExportable(d)) return "SPICE netlists cover boxes (sealed, ported, passive radiator and bandpass), not transmission lines or horns: open those in Hornresp.";
   const notes: string[] = [];
   const { semi, fdd, xmax_mm: _x, pe_w: _p, ...driver } = driverInputOf(s, solved);

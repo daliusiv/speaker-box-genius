@@ -1,0 +1,35 @@
+{
+  "brand": "Accuton",
+  "model": "CL220-6-221",
+  "type": "woofer",
+  "nominal_ohms": 6,
+  "size_in": 8.5,
+  "ts": {
+    "fs": 27.2,
+    "qms": 6.5,
+    "qes": 0.35,
+    "vas_l": 99.05,
+    "re": 10.2,
+    "sd_cm2": 226.98,
+    "qts": 0.34,
+    "mms_g": 25.25,
+    "le_mh": 0.17,
+    "bl": 10.27,
+    "xmax_mm": 4,
+    "pe_w": 120
+  },
+  "physical": {
+    "cutout_mm": 191,
+    "depth_mm": 105
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://accuton.com/home-audio/drivers/crystalid/CL220-6-221",
+      "retrieved": "2026-11-19",
+      "note": "Values from the product pages on accuton.com, used with Accuton's permission (19 Nov 2026), re-read from the website each month. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Accuton's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Re 10.2 Ω is high for the 6 Ω in the model code; check against the product page."
+}

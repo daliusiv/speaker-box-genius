@@ -2,6 +2,7 @@ import { Icon } from "./Icon.tsx";
 import type { IconName } from "./iconPaths.ts";
 import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useUnits, type Quantity } from "./units.ts";
+import { NUDGE_KEYS, nudgeKey } from "./ui/nudge.ts";
 
 export const REPO = "https://github.com/daliusiv/speaker-box-genius";
 
@@ -99,6 +100,26 @@ export function Num(props: {
       inputMode="decimal"
       value={text}
       placeholder={props.zeroText ?? props.none?.text}
+      aria-keyshortcuts={NUDGE_KEYS}
+      onKeyDown={(e) => {
+        // ↑/↓ nudge the shown number (in display units); a blank "no limit" box stays put.
+        const t = text.trim();
+        if (t === "" && props.zeroText === undefined) return;
+        const cur = t === "" ? 0 : Number(t.replace(",", "."));
+        if (!Number.isFinite(cur)) return;
+        let n = nudgeKey(e, cur, { min: props.min !== undefined ? min : undefined });
+        if (n === null) return;
+        e.preventDefault();
+        if (props.min === undefined && n <= 0) n = props.zeroText !== undefined ? 0 : cur;
+        if (n === cur) return;
+        if (n === 0 && props.zeroText !== undefined) {
+          setText("");
+          props.onChange(0);
+          return;
+        }
+        setText(tidy(n, converted));
+        props.onChange(n / u.k);
+      }}
       onChange={(e) => {
         const t = e.currentTarget.value;
         setText(t);

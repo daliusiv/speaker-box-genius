@@ -1,0 +1,34 @@
+{
+  "brand": "Accuton",
+  "model": "AS250-8-555",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 23.78,
+    "qms": 3.54,
+    "qes": 0.36,
+    "vas_l": 131.17,
+    "re": 7.4,
+    "sd_cm2": 397.61,
+    "qts": 0.33,
+    "mms_g": 76.59,
+    "le_mh": 0.45,
+    "bl": 15.28,
+    "xmax_mm": 9,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 230,
+    "depth_mm": 141
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://accuton.com/home-audio/drivers/aluminium-sandwich/AS250-8-555",
+      "retrieved": "2026-11-19",
+      "note": "Values from the product pages on accuton.com, used with Accuton's permission (19 Nov 2026), re-read from the website each month. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Accuton's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

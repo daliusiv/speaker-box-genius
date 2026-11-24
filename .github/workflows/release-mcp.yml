@@ -1,0 +1,71 @@
+name: Release MCP server
+
+# Publishes the local MCP server: the npm package "speaker-box-genius" and the Claude Desktop
+# extension (speaker-box-genius.mcpb), attached to a versioned GitHub release and to the rolling
+# "mcp" release, so https://github.com/daliusiv/speaker-box-genius/releases/download/mcp/speaker-box-genius.mcpb
+# (linked from the site's /mcp/ page) always serves the newest without taking "latest" from the
+# app's own releases. Run by hand on the public repo, after a sync. Needs the NPM_TOKEN
+# secret (an npm automation token for the speaker-box-genius package).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (default: CHANGELOG's newest release). Each npm version can be published once: use e.g. 1.1.1 for a server-only fix."
+        required: false
+      dry_run:
+        description: "Build and check only; publish nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  # npm provenance (links the published package to this workflow run).
+  id-token: write
+
+jobs:
+  release:
+    if: github.repository == 'daliusiv/speaker-box-genius'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build and check
+        env:
+          SBG_MCP_VERSION: ${{ inputs.version }}
+        run: |
+          pnpm mcp:build
+          node --experimental-strip-types --disable-warning=ExperimentalWarning --test packages/mcp/test/bundle.test.ts
+          cd packages/mcp
+          pnpm exec mcpb validate dist/mcpb/manifest.json
+          pnpm exec mcpb pack dist/mcpb dist/speaker-box-genius.mcpb
+          echo "VERSION=$(node -p "require('./dist/npm/package.json').version")" >> "$GITHUB_ENV"
+
+      - name: Publish to npm
+        if: ${{ !inputs.dry_run }}
+        working-directory: packages/mcp/dist/npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance
+
+      - name: GitHub release with the Claude Desktop extension
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "mcp-v$VERSION" packages/mcp/dist/speaker-box-genius.mcpb \
+            --title "MCP server $VERSION" \
+            --notes "Local MCP server $VERSION: \`npx -y speaker-box-genius mcp\`, or install speaker-box-genius.mcpb in Claude Desktop. See https://speakerboxgenius.com/mcp/" \
+            --latest=false
+          gh release view mcp >/dev/null 2>&1 || gh release create mcp --title "MCP server (newest)" --notes "Always the newest Claude Desktop extension for the Speaker Box Genius MCP server." --latest=false
+          gh release upload mcp packages/mcp/dist/speaker-box-genius.mcpb --clobber

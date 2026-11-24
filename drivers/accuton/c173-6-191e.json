@@ -1,0 +1,34 @@
+{
+  "brand": "Accuton",
+  "model": "C173-6-191E",
+  "type": "midbass",
+  "nominal_ohms": 6,
+  "size_in": 7,
+  "ts": {
+    "fs": 37.8,
+    "qms": 5.2,
+    "qes": 0.36,
+    "vas_l": 21.3,
+    "re": 5.9,
+    "sd_cm2": 133,
+    "qts": 0.34,
+    "mms_g": 20.86,
+    "le_mh": 0.74,
+    "bl": 9,
+    "xmax_mm": 5,
+    "pe_w": 120
+  },
+  "physical": {
+    "cutout_mm": 146,
+    "depth_mm": 94.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://accuton.com/home-audio/drivers/hall-of-fame/C173-6-191E",
+      "retrieved": "2026-11-19",
+      "note": "Values from the product pages on accuton.com, used with Accuton's permission (19 Nov 2026), re-read from the website each month. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Accuton's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

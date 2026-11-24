@@ -90,6 +90,7 @@ export { OVER_RED } from "./palette.ts";
 import { OVER_RED } from "./palette.ts";
 import { InfoPopover } from "./components.tsx";
 import { ChartLegend, type LegendRow } from "./ChartLegend.tsx";
+import { BASE_H, BASE_W, drawWidth, freqTicks, plotHeight, useExportWidth, useViewHeight } from "./chartSize.ts";
 
 /** A labelled dot on the plot (e.g. each design's F3). */
 export interface Point {
@@ -173,8 +174,10 @@ interface Props {
    * (excursion, port speed) or "zero" (closest to zero: group delay). None: no marker.
    */
   best?: "high" | "low" | "zero";
-  /** A shorter title for phones (the full one shows on a tap). */
+  /** The chart's name in its header (the full title is the image's label, the info box's heading and the forum image's caption). */
   shortTitle?: string;
+  /** What the curves are drawn at (drive, distance, peak or RMS …): a muted note in the plot's top margin. */
+  detail?: string;
   /** Hidden charts stay rendered (the forum image can still use them). */
   hidden?: boolean;
   /** Names the chart for jumping to it (figure[data-chart]). */
@@ -189,6 +192,8 @@ interface Props {
   after?: ReactNode;
   /** Edit mode: caption, plot and `after` sit together in a tinted, outlined zone inside the card. */
   zone?: boolean;
+  /** A note at the card's foot (e.g. "the cone barely moves at this power"): part of the card, so cards side by side line up. */
+  foot?: ReactNode;
   /** Notes and caveats, behind an (i) button beside the title instead of text under the chart. */
   info?: ReactNode;
   /** The chart's own legend columns (each series' `cols`, at the cursor), after Peak. */
@@ -244,9 +249,8 @@ export interface ChartHandle {
   onRemove?: () => void;
 }
 
-const W = 640;
-/** Plot height: wide on computers; nearly 4:3 on phones, where the chart is the main thing on screen. */
-const heightOf = (tall: boolean) => (tall ? 470 : 260);
+/** Plot height on phones: nearly 4:3, where the chart is the main thing on screen. */
+const TALL_H = 470;
 /**
  * Margins around the plot, grown with the text scale k on narrow screens. The top margin holds
  * the unit (above the y labels) and the cursor's frequency badge.
@@ -260,12 +264,21 @@ const X_TICKS = [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 5000, 10000, 20
 export const tickLabel = (v: number, tall: boolean) =>
   tall && Math.abs(v) >= 1000 ? `${Number((v / 1000).toFixed(2))}k` : String(Number(v.toFixed(6)));
 
-function niceStep(range: number): number {
-  const raw = range / 5;
+function niceStep(range: number, lines = 5): number {
+  const raw = range / lines;
   const mag = 10 ** Math.floor(Math.log10(raw));
   const n = raw / mag;
   return (n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10) * mag;
 }
+
+/**
+ * Desktop: draws a chart's title as a menu of charts (its slot can show any chart). Given the
+ * chart's id and its name; none on phones, where the charts have tabs.
+ */
+export const ChartTitleMenu = createContext<((chartId: string, name: string) => ReactNode) | null>(null);
+
+/** `text` cut to about `chars` characters with an ellipsis (a long note on a narrow chart). */
+export const fitText = (text: string, chars: number) => (text.length <= chars ? text : `${text.slice(0, Math.max(1, Math.floor(chars) - 1)).trimEnd()}…`);
 
 /** Shorter design names where space is tight (the values box, the summary table): "Passive radiators" → "PR", "Transmission line" → "TL". */
 export const shortName = (label: string) =>
@@ -296,6 +309,7 @@ export function LogChart({
   sig,
   best,
   shortTitle,
+  detail,
   hidden,
   chartId,
   forum,
@@ -303,6 +317,7 @@ export function LogChart({
   below,
   after,
   zone,
+  foot,
   info,
   columns = [],
   noteLabel = "Note",
@@ -319,31 +334,38 @@ export function LogChart({
 }: Props) {
   const clipId = useId();
   const shared = useContext(Crosshair);
+  const titleMenu = useContext(ChartTitleMenu);
   const [ownF, setOwnF] = useState<number | null>(still?.at ?? null);
   const hoverF = shared ? shared.f : ownF;
   const setHoverF = shared ? shared.set : setOwnF;
-  // Text and lines are sized for a 640-unit-wide chart. On a narrow screen the chart is
-  // shrunk to fit, so scale them up by k to keep them readable (about 11 px on screen).
+  // A chart is drawn as wide as its box (text and lines keep their size), at least 640 units.
+  // In a narrower box the 640-unit drawing is shrunk to fit, so text and lines grow by k to stay
+  // readable (about 11 px on screen). Still images keep the 640 drawing.
   const svgRef = useRef<SVGSVGElement>(null);
-  const [k, setK] = useState(() => (still ? Math.min(2, Math.max(1, W / still.width)) : 1));
+  const [boxW, setBoxW] = useState(() => (still ? still.width : BASE_W));
   useEffect(() => {
     const el = svgRef.current;
     if (!el || still || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(([e]) => {
-      const w = e?.contentRect.width ?? W;
-      setK(w > 0 ? Math.min(2, Math.max(1, W / w)) : 1);
+      const w = e?.contentRect.width ?? 0;
+      // Hidden charts measure 0: keep the last width.
+      if (w > 0) setBoxW(Math.round(w));
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  const viewH = useViewHeight();
+  const exportW = useExportWidth();
+  const W = still ? BASE_W : exportW ?? drawWidth(boxW);
+  const k = exportW !== null ? 1 : Math.min(2, Math.max(1, BASE_W / boxW));
   // data-base-* keep the desktop sizes for the forum image export.
   const fs = (px: number) => ({ style: { fontSize: `${px * k}px` }, "data-base-fs": `${px}px` });
   const sw = (w: number) => ({ strokeWidth: w * k, "data-base-sw": w });
   // Phone-sized (shrunk well below its 640 units): taller, with lean margins.
   const tall = k > 1.3;
-  const H = heightOf(tall);
+  // Still images and the forum image keep the 640 chart's shape; live charts fit the window.
+  const H = tall ? TALL_H : still ? BASE_H : exportW !== null ? Math.round((W * BASE_H) / BASE_W) : plotHeight(W, viewH);
   const PAD = padOf(k, tall);
-  const [fullTitle, setFullTitle] = useState(false);
   const PW = W - PAD.l - PAD.r;
   const PH = H - PAD.t - PAD.b;
 
@@ -386,7 +408,8 @@ export function LogChart({
   if (yMin !== undefined) lo = yMin;
   if (yMax !== undefined) hi = yMax;
   if (hi - lo < 1e-9) hi = lo + 1;
-  const step = yStep ?? niceStep(hi - lo);
+  // Taller desktop plots get more y lines (about every 50 px); stills and phones keep five.
+  const step = yStep ?? niceStep(hi - lo, still || tall ? 5 : Math.max(5, Math.round((H - PAD.t - PAD.b) / 50)));
   lo = Math.floor(lo / step) * step;
   hi = Math.ceil(hi / step) * step;
   const yOf = (v: number) => PAD.t + (1 - (v - lo) / (hi - lo)) * PH;
@@ -442,6 +465,11 @@ export function LogChart({
     for (let i = 1; i < freq.length; i++) if (Math.abs(Math.log(freq[i]! / hoverF)) < Math.abs(Math.log(freq[hover]! / hoverF))) hover = i;
   }
 
+  // Frequency labels: the fixed set on the 640 drawing; more of them as a wide chart has room.
+  const xGrid =
+    still || k > 1
+      ? { labels: X_TICKS.filter((f) => f >= fMin && f <= fMax), minor: [] as number[] }
+      : freqTicks(fMin, fMax, PW / Math.log10(fMax / fMin));
   const yTicks: number[] = [];
   for (let v = lo; v <= hi + step / 2; v += step) yTicks.push(v);
 
@@ -612,31 +640,29 @@ export function LogChart({
   };
 
   return (
-    <figure className={`chart${editing ? " editing" : ""}`} hidden={hidden} data-chart={chartId} data-forum={forum ? "" : undefined}>
+    <figure className={`chart${editing ? " editing" : ""}`} hidden={hidden} data-chart={chartId} data-forum={forum ? "" : undefined} data-title={still ? undefined : title}>
       <div className={zone ? "edit-zone" : "chart-main"}>
       <figcaption>
         <span className="chart-head">
-        {!still && tall && shortTitle && shortTitle !== title && info ? (
-          <span className="chart-title">{shortTitle}</span>
-        ) : !still && tall && shortTitle && shortTitle !== title ? (
-          <button type="button" className="chart-title as-text" onClick={() => setFullTitle((v) => !v)} title={title} aria-expanded={fullTitle}>
-            {fullTitle ? title : shortTitle}
-            <span className="muted" aria-hidden="true">
-              {fullTitle ? " ▴" : " ▾"}
-            </span>
-          </button>
-        ) : (
+        {/* One line: the chart's name; what it's drawn at sits in the plot's top margin. */}
+        {!still && titleMenu && chartId ? (
+          titleMenu(chartId, shortTitle ?? title)
+        ) : still || !shortTitle ? (
           <span className="chart-title">{title}</span>
+        ) : (
+          <span className="chart-title" title={title} data-full-title={title}>
+            {shortTitle}
+          </span>
         )}
         {info && !still && (
           <InfoPopover label={title}>
-            {tall && shortTitle && shortTitle !== title && <p className="info-title">{title}</p>}
+            {shortTitle && shortTitle !== title && <p className="info-title">{title}</p>}
             {info}
           </InfoPopover>
         )}
         </span>
         {actions && !still && <span className="chart-actions">{actions}</span>}
-        {!still && <span className="chart-hint muted">{editing ? "Drag the handles" : "Hover or tap for values"}</span>}
+        {!still && editing && <span className="chart-hint muted">Drag the handles</span>}
       </figcaption>
       {below}
       {editing && (
@@ -802,7 +828,10 @@ export function LogChart({
         </defs>
 
         {/* grid */}
-        {X_TICKS.filter((f) => f >= fMin && f <= fMax).map((f) => (
+        {xGrid.minor.map((f) => (
+          <line key={`m${f}`} className="grid minor" x1={xOf(f)} x2={xOf(f)} y1={PAD.t} y2={PAD.t + PH} />
+        ))}
+        {xGrid.labels.map((f) => (
           <g key={f}>
             <line className="grid" x1={xOf(f)} x2={xOf(f)} y1={PAD.t} y2={PAD.t + PH} />
             <text
@@ -813,7 +842,7 @@ export function LogChart({
               textAnchor={xOf(f) > W - PAD.r - 12 * k ? "end" : xOf(f) < PAD.l + 12 * k ? "start" : "middle"}
               {...fs(11)}
             >
-              {f >= 1000 ? `${f / 1000}k` : f}
+              {f >= 1000 ? `${Number((f / 1000).toPrecision(3))}k` : f}
             </text>
           </g>
         ))}
@@ -835,6 +864,20 @@ export function LogChart({
         <text className="tick unit-label" x={PAD.l - 6} y={H - 8} textAnchor="end" {...fs(11)}>
           Hz
         </text>
+        {/* What the curves are drawn at, on the unit's line at the right (faded while the cursor's badge is near). */}
+        {detail && !still && (
+          <text
+            className="tick chart-detail"
+            x={W - PAD.r}
+            y={PAD.t - 8 * k}
+            textAnchor="end"
+            opacity={hover !== null && xOf(freq[hover]!) > W - PAD.r - (detail.length * 6.2 + 50) * k ? 0.2 : undefined}
+            {...fs(11)}
+          >
+            {fitText(detail, (W - PAD.r - PAD.l - 10) / (6.2 * k))}
+            {fitText(detail, (W - PAD.r - PAD.l - 10) / (6.2 * k)) !== detail && <title>{detail}</title>}
+          </text>
+        )}
 
         <g clipPath={`url(#${clipId})`}>
           {bands.map((b, bi) => (
@@ -1125,6 +1168,7 @@ export function LogChart({
           {...(summary ? { summaryHeadings: summary.headings, caption: summary.caption } : {})}
         />
       </div>
+      {foot && !still && <div className="chart-foot">{foot}</div>}
     </figure>
   );
 }

@@ -504,11 +504,41 @@ export interface InfiniteBaffleInput {
   qa?: number;
 }
 
+/**
+ * Open baffle (dipole): the driver on a free-standing board, its back open to the room. The rear
+ * wave comes round the edges inverted and late, so the bass falls 6 dB/octave below the dipole
+ * peak (on top of the driver's own roll-off); the system radiates into full space.
+ * - "flat": a plain board.
+ * - "h": an H-frame, the board in the middle of a frame open at the front and back (two short ducts).
+ * - "u": a U-frame, the board at the front of a frame open only at the back (one duct behind the cone).
+ * Sizes are the outside of the board / frame. Walls are `t_cm` thick.
+ */
+export interface OpenBaffleInput {
+  kind: "open-baffle";
+  frame?: "flat" | "h" | "u";
+  w_cm: number;
+  h_cm: number;
+  /** Driver centre from the left / bottom edge (cm). Default: centred. */
+  x_cm?: number;
+  y_cm?: number;
+  /** Board (and frame wall) thickness, cm. Default 1.8. */
+  t_cm?: number;
+  /** H/U frame: depth from the front edge to the back edge, board included (cm). */
+  depth_cm?: number;
+  /**
+   * How a frame's duct mouth radiates. Default "open": the end of a thin-walled pipe, as a frame is
+   * (checked against boundary-element runs). "baffled" (a hole in a wall) reproduces Hornresp's frame
+   * record, for comparisons with it.
+   */
+  ductMouth?: "open" | "baffled";
+}
+
 export type EnclosureInput =
   | BandpassInput
   | LineInput
   | ({ kind: "sealed"; vb_l: number } & Losses)
   | InfiniteBaffleInput
+  | OpenBaffleInput
   | ({
       kind: "vented";
       vb_l: number;

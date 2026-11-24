@@ -3,6 +3,7 @@ title: "Speaker break-in: what really changes, and what it does in a box"
 description: What break-in does to a woofer's suspension and T/S parameters, how much of it lasts, why a box hides most of it, how long it takes, the measuring mistake it causes, and a run-in routine before you measure your own drivers.
 path: guides/driver-break-in
 image: figure:break-in-difference
+art: A driver in cutaway with its surround and spider picked out, and a clock beside it.
 order: 29
 group: measuring
 ---

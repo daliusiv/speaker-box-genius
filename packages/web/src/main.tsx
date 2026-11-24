@@ -18,6 +18,10 @@ import "./headroom.css";
 import "./submit-dialog.css";
 import { referrerBucket } from "./telemetrySchema.ts";
 import { SHARED_LINK } from "./start.ts";
+import { guardDomForTranslation } from "./domGuard.ts";
+
+// Before the first render: a page the browser translates must not blank the app (see domGuard.ts).
+guardDomForTranslation();
 
 // A short link is compressed, and decompressing is asynchronous: read it before the first
 // render so a shared design never flashes the defaults first.
@@ -28,7 +32,7 @@ decodeStateAny(location.hash).then(
 
 function render(initial: Awaited<ReturnType<typeof decodeStateAny>>) {
   const referrer = referrerBucket(document.referrer, location.hostname);
-  track("app_opened", { entry: initial ? "share_link" : SHARED_LINK ? "shared_results" : "new", ...(referrer ? { referrer } : {}) });
+  track("app_opened", { entry: initial ? "share_link" : SHARED_LINK ? "shared_results" : "new", referrer });
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <App initial={initial} />

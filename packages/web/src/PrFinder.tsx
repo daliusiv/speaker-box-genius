@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkle } from "./Logo.tsx";
-import { Button } from "./ui/index.ts";
+import { Button, Chip, Select } from "./ui/index.ts";
 import { JobProgress } from "./components.tsx";
 import {
   largestPrFor,
@@ -10,6 +10,7 @@ import {
   type Losses,
   type PrCandidate,
   type PrFinderResult,
+  type SimilarTier,
   type SimulationOptions,
 } from "@sbg/engine";
 import { DRIVER_AS_PR, loadDriverAsPassiveRadiator, loadPassiveRadiator, type DbIndex } from "./library.ts";
@@ -17,6 +18,7 @@ import { ventedAlignmentFor } from "./presets.ts";
 import { useUnits } from "./units.ts";
 import { startSearch } from "./search.ts";
 import type { PrDesign, PrParams } from "./state.ts";
+import { orderFinderResults, prInUse } from "./similarPr.ts";
 
 /** What the finder needs from the app: the driver and how the boxes are driven. */
 export interface FinderContext {
@@ -87,6 +89,11 @@ function loadDriverCandidates(rows: DbIndex["drivers"], onProgress?: (done: numb
   ).then((xs) => xs.filter((x): x is Loaded => x !== null));
 }
 
+const TIER_CHIP: Partial<Record<SimilarTier, { label: string; tone: "accent" | "neutral" }>> = {
+  close: { label: "Close", tone: "accent" },
+  usable: { label: "Usable", tone: "neutral" },
+};
+
 const f1 = (v: number | null | undefined) => (v === null || v === undefined || !Number.isFinite(v) ? "–" : v.toFixed(1));
 
 /**
@@ -109,6 +116,7 @@ export function PrFinder(props: {
   // Only work while the window is open (it simulates every candidate).
   const [isOpen, setIsOpen] = useState(false);
   const [more, setMore] = useState(false);
+  const [orderBy, setOrderBy] = useState<"closest" | "best">("closest");
   const [why, setWhy] = useState(false);
   const [withDrivers, setWithDrivers] = useState(false);
   const [driverCands, setDriverCands] = useState<Loaded[] | null>(null);
@@ -248,9 +256,15 @@ export function PrFinder(props: {
     close();
   };
 
-  const ok = results?.filter((r) => r.ok) ?? [];
+  // With a PR already in the design, the list can be ordered by how alike each is to it.
+  const inUse = prInUse(props.design, props.db);
+  const ref = inUse ? { count: props.design.count, ...props.design.params } : null;
+  const order = ref ? orderBy : "best";
+  const loaded = [...(cands ?? []), ...(driverCands ?? [])];
+  const ok = orderFinderResults(results?.filter((r) => r.ok) ?? [], ref, inUse, (id) => loaded.find((x) => x.id === id)?.params, order);
   const bad = results?.filter((r) => !r.ok) ?? [];
   const shown = more ? ok : ok.slice(0, 5);
+  const isUsed = (r: PrFinderResult) => inUse !== null && r.id === inUse.id && r.count === inUse.count;
 
   return (
     <>
@@ -279,7 +293,8 @@ export function PrFinder(props: {
               ×
             </button>
           </header>
-          <div className="unit-switch finder-mode" role="group" aria-label="Box to fit">
+          <div className="finder-top">
+            <div className="unit-switch finder-mode" role="group" aria-label="Box to fit">
             <button aria-pressed={!useAlign} onClick={() => setMode("box")}>
               Your box
             </button>
@@ -297,10 +312,27 @@ export function PrFinder(props: {
             >
               Flat alignment
             </button>
+            </div>
+            {inUse && (
+              <label className="finder-order">
+                <span>Order</span>
+                <Select
+                  value={orderBy}
+                  onChange={setOrderBy}
+                  options={[
+                    { value: "closest", label: `Closest to ${inUse.label}` },
+                    { value: "best", label: "Best match" },
+                  ]}
+                />
+              </label>
+            )}
           </div>
           <p className="hint finder-target">
             1, 2 or 4 of each PR in the database ({props.db?.passiveRadiators.length ?? 0}){withDrivers ? `, and 1 or 2 of ${driverRows.length} drivers used as PRs,` : ""}{" "}
             tuned with added mass to {target.label}.
+            {order === "closest" && inUse
+              ? ` Ordered by how close each is to the ${inUse.label} you use (Sd, Xmax, Mms, Vas); all of them work in this box.`
+              : ""}
           </p>
           <label className="check finder-drivers" title="An unpowered woofer works as a passive radiator (terminals left unconnected)">
             <input type="checkbox" checked={withDrivers} onChange={(e) => setWithDrivers(e.currentTarget.checked)} /> Include drivers as PRs
@@ -333,7 +365,12 @@ export function PrFinder(props: {
                   <b>
                     {r.count} × {r.name}
                   </b>
-                  {i === 0 && <span className="finder-best">Best match</span>}
+                  {isUsed(r) ? (
+                    <span className="finder-best">In use</span>
+                  ) : (
+                    i === 0 && order === "best" && <span className="finder-best">Best match</span>
+                  )}
+                  {!isUsed(r) && r.tier && TIER_CHIP[r.tier] && <Chip tone={TIER_CHIP[r.tier]!.tone}>{TIER_CHIP[r.tier]!.label}</Chip>}
                   <span className="finder-facts">
                     {Math.round(r.addedMass_g)} g added{r.count > 1 ? " each" : ""} · F3 {f1(r.f3)} Hz · Fb {f1(r.fb)} Hz
                     {r.massRatio > 1.5 ? " · heavy added mass" : ""}
@@ -345,7 +382,7 @@ export function PrFinder(props: {
                     uses {Math.round(r.prUse * 100)} % of its travel at the driver's Xmax
                   </span>
                 </div>
-                <button type="button" onClick={() => use(r)}>
+                <button type="button" onClick={() => use(r)} disabled={isUsed(r)}>
                   Use
                 </button>
               </div>

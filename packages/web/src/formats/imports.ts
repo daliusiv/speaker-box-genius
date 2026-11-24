@@ -42,12 +42,15 @@ export function importKind(name: string, head: string): ImportKind | null {
   return null;
 }
 
-/** The uses a measurement file offers, most likely first. */
-export function importUses(name: string): ImportUse[] {
+/**
+ * The uses a measurement file offers, most likely first. `baffle` false (every box an open
+ * baffle: no baffle step) leaves out "Put the driver on my baffle".
+ */
+export function importUses(name: string, baffle = true): ImportUse[] {
   const ext = /\.([^.]+)$/.exec(name.toLowerCase())?.[1] ?? "";
-  if (ext === "zma") return ["measure-driver", "overlay-impedance"];
-  if (ext === "frd") return ["overlay-response", "driver-on-baffle"];
-  return ["measure-driver", "overlay-impedance", "overlay-response", "driver-on-baffle"];
+  const uses: ImportUse[] =
+    ext === "zma" ? ["measure-driver", "overlay-impedance"] : ext === "frd" ? ["overlay-response", "driver-on-baffle"] : ["measure-driver", "overlay-impedance", "overlay-response", "driver-on-baffle"];
+  return baffle ? uses : uses.filter((u) => u !== "driver-on-baffle");
 }
 
 /** "just now", "5 min ago", "3 h ago", "2 days ago", else the date. */

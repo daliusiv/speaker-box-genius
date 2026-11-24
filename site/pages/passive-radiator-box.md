@@ -3,6 +3,7 @@ title: How to design a passive radiator box
 description: Box size, tuning, added mass and excursion, step by step, with a worked example you can open and change in your browser.
 path: guides/passive-radiator-box
 image: chart:pr-example/response
+art: A box in cutaway with a driver and a passive radiator on its front, both moving, joined by the spring of the air inside.
 order: 2
 group: ported
 ---
@@ -61,6 +62,8 @@ Rather than checking every PR by hand, press **Find a PR for this driver…** in
 | 2 × SB Acoustics SB20PFC-00 (8″) | 48 g each | 50.4 Hz | 39 % |
 
 The bigger the PR (or the more of them), the more travel it has to spare and the deeper the box goes, but the dearer it gets and the more room it takes on the box. The rest of this guide uses the single DS215-PR: the cheapest and smallest option that still keeps up.
+
+Once the design has a PR from the database, the finder can also order the list by how alike each is to the one you use (**Order → Closest to …**: total cone area, travel, moving mass and Vas), with the one in use first, so you can see which others would do the same job if yours is out of stock. Driver pages list the next three PRs that work in their suggested PR box under it, each a link that opens the app with that PR in place.
 
 ## Step 3: tune it with added mass
 

@@ -16,7 +16,7 @@
     "validate:db": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts",
     "db:review": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/review.ts",
     "test": "node --experimental-strip-types --disable-warning=ExperimentalWarning --test \"packages/*/test/*.test.ts\" \"site/*.test.ts\"",
-    "typecheck": "tsc -p packages/schema && tsc -p packages/engine && tsc -p packages/db-tools && tsc -p packages/submit-worker && tsc -p packages/web",
+    "typecheck": "tsc -p packages/schema && tsc -p packages/engine && tsc -p packages/db-tools && tsc -p packages/headless && tsc -p packages/mcp && tsc -p packages/submit-worker && tsc -p packages/web",
     "tokens": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/web/scripts/tokens.ts",
     "lint": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/web/scripts/tokens.ts --check && pnpm --filter @sbg/web exec stylelint \"src/**/*.css\"",
     "test:ui": "pnpm --filter @sbg/web exec playwright test",
@@ -30,10 +30,18 @@
     "spice:ngspice": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/spice-cli.ts ngspice",
     "spice:summary": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/spice-cli.ts summary",
     "spice:report": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/spice-report.ts",
-    "spice:generate": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/spice/cases.ts"
+    "spice:generate": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/engine/validation/spice/cases.ts",
+    "mcp": "node --experimental-strip-types --disable-warning=ExperimentalWarning packages/mcp/src/main.ts mcp --db .",
+    "mcp:build": "pnpm --filter @sbg/mcp run build && pnpm --filter @sbg/mcp run package"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "typescript": "^7.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@anthropic-ai/mcpb>zod": "4.6.7",
+      "tmp": "0.2.7"
+    }
   }
 }

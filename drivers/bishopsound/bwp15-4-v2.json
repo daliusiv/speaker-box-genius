@@ -1,0 +1,34 @@
+{
+  "brand": "BishopSound",
+  "model": "BWP15/4/V2",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 15,
+  "ts": {
+    "fs": 44.1,
+    "qms": 16.124,
+    "qes": 0.488,
+    "vas_l": 89.18,
+    "re": 2.543,
+    "sd_cm2": 855.3,
+    "qts": 0.474,
+    "le_mh": 2.533,
+    "bl": 14.798,
+    "mms_g": 151.88,
+    "xmax_mm": 7,
+    "pe_w": 1000
+  },
+  "physical": {
+    "cutout_mm": 343,
+    "depth_mm": 168
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bishopsound.com/products/bishopsound-15-inch-lf-sub-bass-driver-woofer-loudspeaker-2000w-program-power-4-ohm-speaker-bwp15-4-v2",
+      "retrieved": "2026-11-19",
+      "note": "Values from BishopSound's published datasheets (bishopsound.com), used with BishopSound's permission (18 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without BishopSound's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

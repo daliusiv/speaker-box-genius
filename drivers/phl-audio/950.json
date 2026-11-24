@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "950",
+  "type": "midrange",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 200,
+    "qms": 5.99,
+    "qes": 0.7,
+    "vas_l": 1.3,
+    "re": 5.3,
+    "sd_cm2": 109,
+    "qts": 0.62,
+    "le_mh": 0.599,
+    "bl": 8.8,
+    "mms_g": 8.1,
+    "xmax_mm": 2,
+    "pe_w": 80
+  },
+  "physical": {
+    "cutout_mm": 124.5,
+    "depth_mm": 75,
+    "displacement_l": 0.38
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/950_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

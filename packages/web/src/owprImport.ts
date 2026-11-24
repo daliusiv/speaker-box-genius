@@ -23,6 +23,8 @@ export function withOpenisdDriver(s: AppState, d: OpenisdDriver, fallbackName: s
     fdd: undefined,
     xmax_mm: x.xmax_mm,
     pe_w: x.pe_w,
+    rth_k_w: 0,
+    tmax_C: 200,
     dvc: { ...s.dvc, on: false },
     volume: { ...s.volume, driverCutout_mm: 0, driverDepth_mm: 0 },
   };

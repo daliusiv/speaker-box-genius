@@ -13,6 +13,8 @@ const STAGES: EqStage[] = [
   { type: "peak", freq: 120, gain_db: 3, q: 0.8 },
   { type: "lowshelf", freq: 40, gain_db: 6, q: 0.707 },
   { type: "highshelf", freq: 200, gain_db: -3, q: 0.707 },
+  { type: "lowshelf1", freq: 60, gain_db: 9 },
+  { type: "lowshelf1", freq: 300, gain_db: -4 },
 ];
 const HPS: HighPass[] = [
   ...[1, 2, 3, 4].map((order): HighPass => ({ type: "butterworth", order, freq: 20 })),

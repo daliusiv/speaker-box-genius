@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { NUDGE_KEYS, nudgeKey } from "./nudge.ts";
 
 /** typed = the user's value (bold, accent edge); calculated = worked out (dashed, shown as a placeholder). */
 export type NumberState = "plain" | "typed" | "calculated";
@@ -53,6 +54,16 @@ export function NumberField(props: {
         placeholder={props.placeholder ?? "–"}
         aria-label={props["aria-label"]}
         aria-invalid={invalid || undefined}
+        aria-keyshortcuts={NUDGE_KEYS}
+        onKeyDown={(e) => {
+          // ↑/↓ nudge a valid number; an empty or invalid box stays put.
+          const cur = Number(text.replace(",", "."));
+          if (text.trim() === "" || invalid || !Number.isFinite(cur)) return;
+          const n = nudgeKey(e, cur, { min: props.min, max: props.max });
+          if (n === null) return;
+          e.preventDefault();
+          if (n !== cur && (!props.positive || n > 0)) commit(String(n));
+        }}
         onChange={(e) => commit(e.currentTarget.value)}
       />
       {props.unit && (

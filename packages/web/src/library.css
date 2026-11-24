@@ -90,6 +90,44 @@
   font-size: var(--text-sm);
 }
 
+/* Similar mode (Find similar drivers): "Like … ×", the box the changes come from, Match chips. */
+.lib-similar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.lib-similar .lib-chips {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.lib-similar-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.lib-similar-box .ui-select {
+  width: auto;
+  min-width: 0;
+  flex: none;
+}
+
+.lib-similar ~ .lib-status {
+  flex-wrap: wrap;
+  row-gap: var(--space-1);
+}
+
+.lib-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 /* The row's numbers under its name: phones only. */
 .lib-summary {
   display: none;
@@ -137,4 +175,12 @@
     color: var(--fg);
     font-weight: var(--weight-semibold);
   }
+}
+
+/* While a browser's rows are being built (seconds on a phone): a thin bar above the table. */
+.lib-loading {
+  width: 100%;
+  height: var(--space-1);
+  margin: 0;
+  accent-color: var(--accent);
 }

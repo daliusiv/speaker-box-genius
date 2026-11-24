@@ -9,11 +9,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { loadDatabase, REPO_ROOT } from "./load.ts";
-import { prTravel, type Source } from "../../schema/src/index.ts";
-
-/** Where the values came from, for the app's badges: measured beats datasheet beats community. */
-const sourceKind = (sources: Source[]) =>
-  sources.some((s) => s.kind === "measured") ? "measured" : sources.some((s) => s.kind === "datasheet") ? "datasheet" : "community";
+import { buildIndex, buildShards } from "./bundleData.ts";
 
 function argValue(name: string): string | undefined {
   const i = process.argv.indexOf(name);
@@ -30,55 +26,8 @@ if (db.errors.length > 0) {
   process.exit(1);
 }
 
-const index = {
-  generated: new Date().toISOString(),
-  brands: Object.fromEntries(db.brands),
-  drivers: db.drivers.map(({ id, data: d, flags }) => ({
-    id,
-    brand: d.brand,
-    model: d.model,
-    type: d.type,
-    ohms: d.nominal_ohms,
-    // DVC: per-coil impedance, for labels like "2+2 Ω".
-    coil_ohms: d.voice_coils === 2 ? (d.ts_wiring === "series" ? d.nominal_ohms / 2 : d.nominal_ohms * 2) : undefined,
-    size_in: d.size_in,
-    fs: d.ts.fs,
-    qts: d.ts.qts ?? (d.ts.qms * d.ts.qes) / (d.ts.qms + d.ts.qes),
-    // For EBP (Fs/Qes) in the picker's "Suits" filter.
-    qes: d.ts.qes,
-    vas_l: d.ts.vas_l,
-    xmax_mm: d.ts.xmax_mm,
-    pe_w: d.ts.pe_w,
-    // For "use a driver as a passive radiator".
-    sd_cm2: d.ts.sd_cm2,
-    status: d.status,
-    source: sourceKind(d.sources),
-    // Values to check against the datasheet (plausibility.ts); only when there are any.
-    flags: flags.length ? flags.map((f) => f.code) : undefined,
-  })),
-  passiveRadiators: db.passiveRadiators.map(({ id, data: p, flags }) => ({
-    id,
-    brand: p.brand,
-    model: p.model,
-    size_in: p.size_in,
-    sd_cm2: p.params.sd_cm2,
-    xmax_mm: prTravel(p.params).mm,
-    // No linear Xmax published: the figure is the mechanical limit.
-    xmech: prTravel(p.params).mechanical || undefined,
-    status: p.status,
-    source: sourceKind(p.sources),
-    flags: flags.length ? flags.map((f) => f.code) : undefined,
-  })),
-};
-
-const shards = new Map<string, { drivers: Record<string, unknown>; passiveRadiators: Record<string, unknown> }>();
-const shard = (brand: string) => {
-  let s = shards.get(brand);
-  if (!s) shards.set(brand, (s = { drivers: {}, passiveRadiators: {} }));
-  return s;
-};
-for (const e of db.drivers) shard(e.id.split("/")[0]!).drivers[e.id] = e.data;
-for (const e of db.passiveRadiators) shard(e.id.split("/")[0]!).passiveRadiators[e.id] = e.data;
+const index = buildIndex(db);
+const shards = buildShards(db);
 
 rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });

@@ -26,3 +26,28 @@ export function boxSuits(fs: number, qes: number, qms: number): { ebp: number; q
       : `${leans ? "leans" : "suits"} ${suits}${leans ? `, ${suits === "sealed" ? "ported" : "sealed"} can work too` : ""}`;
   return { ebp, qts, byEbp, byQts, suits, text };
 }
+
+/**
+ * A driver's own level at `f` (dB against its passband) with nothing loading its back: a
+ * second-order high-pass at Fs with Q = Qts, (f/Fs)² / √((1 − (f/Fs)²)² + (f/(Fs·Qts))²). On an
+ * open baffle the dipole's loss comes on top of it, the same for every driver on that board.
+ */
+export function driverLevelDb(f: number, fs: number, qts: number): number {
+  const x = f / fs;
+  return 20 * Math.log10((x * x) / Math.sqrt((1 - x * x) ** 2 + (x / qts) ** 2));
+}
+/** Passive open baffle: the driver's own level at OB_PASSIVE_HZ must be at least OB_PASSIVE_DB. */
+export const OB_PASSIVE_HZ = 40;
+export const OB_PASSIVE_DB = -2;
+
+/**
+ * Open baffle (a dipole loses bass below its peak, 6 dB/oct). Passive: the driver's own bass
+ * hump must fill some of it in where the bass is, so it's judged on Fs and Qts together: its own
+ * level at 40 Hz −2 dB or better (Qts alone says little: Qts 0.70 with Fs 43 Hz is −3.8 dB there,
+ * below a Qts 0.43, Fs 19.5 Hz DSP woofer's −2.7 dB). With DSP EQ (Boxes → Open baffle → Dipole EQ):
+ * Qts ≥ 0.35, enough travel for the boost (Xmax ≥ 8 mm) and a low resonance (Fs ≤ 45 Hz).
+ */
+export const suitsOpenBaffle = (r: { qts?: number; fs?: number }) =>
+  r.qts !== undefined && r.qts > 0 && r.fs !== undefined && r.fs > 0 && driverLevelDb(OB_PASSIVE_HZ, r.fs, r.qts) >= OB_PASSIVE_DB;
+export const suitsOpenBaffleDsp = (r: { qts?: number; xmax_mm?: number; fs?: number }) =>
+  (r.qts ?? 0) >= 0.35 && (r.xmax_mm ?? 0) >= 8 && r.fs !== undefined && r.fs <= 45;

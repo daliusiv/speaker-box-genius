@@ -1,0 +1,36 @@
+{
+  "brand": "PHL Audio",
+  "model": "4071NdS-19",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 46,
+    "qms": 7.17,
+    "qes": 0.13,
+    "vas_l": 59.7,
+    "re": 5,
+    "sd_cm2": 493,
+    "qts": 0.13,
+    "le_mh": 1.875,
+    "bl": 28,
+    "mms_g": 70,
+    "xmax_mm": 6,
+    "pe_w": 500
+  },
+  "physical": {
+    "cutout_mm": 282,
+    "depth_mm": 148.5,
+    "displacement_l": 2.1
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/4071NdS-19_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

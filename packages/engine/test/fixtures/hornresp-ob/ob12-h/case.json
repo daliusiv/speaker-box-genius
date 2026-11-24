@@ -1,0 +1,23 @@
+{
+  "title": "12-inch subwoofer, H-frame",
+  "record": "O4-ob12-h.txt",
+  "driver": {
+    "fs": 24,
+    "qms": 4.2,
+    "qes": 0.42,
+    "vas_l": 85,
+    "re": 3.4,
+    "sd_cm2": 480,
+    "le_mh": 2.4
+  },
+  "hornrespPath_cm": 57.8,
+  "text": "Hornresp: CH, S = 2025 cm², L12 = L56 = 15 cm. App: 45 × 45 cm frame, no wall thickness, 30 cm deep (15 cm each side). output1/2 are each mouth's power (Output 1 / Output 2).",
+  "box": {
+    "kind": "open-baffle",
+    "frame": "h",
+    "w_cm": 45,
+    "h_cm": 45,
+    "t_cm": 0,
+    "depth_cm": 30
+  }
+}

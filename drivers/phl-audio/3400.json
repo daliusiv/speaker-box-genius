@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "3400",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 53,
+    "qms": 6.11,
+    "qes": 0.29,
+    "vas_l": 30.6,
+    "re": 5.2,
+    "sd_cm2": 356,
+    "qts": 0.28,
+    "le_mh": 0.925,
+    "bl": 18.1,
+    "mms_g": 55,
+    "xmax_mm": 6.5,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 229,
+    "depth_mm": 109,
+    "displacement_l": 1.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/3400_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

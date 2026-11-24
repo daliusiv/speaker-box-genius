@@ -2,8 +2,12 @@ name: Import Dayton Audio drivers
 
 # Reads Dayton Audio product pages (with Dayton Audio's permission, see
 # docs/data-permissions.md) and opens a pull request with new and updated
-# entries plus a report of anything adjusted or skipped. Run by hand.
-on: workflow_dispatch
+# entries plus a report of anything adjusted or skipped. Run by hand, and once a
+# week (Saturday) so new and updated models turn up without anyone remembering to look.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 4 * * 6"
 
 permissions:
   contents: write

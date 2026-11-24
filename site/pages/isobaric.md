@@ -3,6 +3,7 @@ title: "Isobaric subwoofers: half the box, but what does it cost?"
 description: What an isobaric pair really does (and doesn't do) to box size, sensitivity, output, impedance and power handling, with numbers from a worked 10-inch example checked against WinISD.
 path: guides/isobaric
 image: chart:iso-pair/response
+art: A box in cutaway with two drivers one behind the other in a small chamber.
 order: 15
 group: sealed
 ---

@@ -1,5 +1,8 @@
 import {
   STANDARD_AIR,
+  programEquilibrium,
+  pinkWeights,
+  reAt,
   airAt,
   WINISD_AIR,
   baffleStepDb,
@@ -34,12 +37,16 @@ import {
 } from "@sbg/engine";
 import type { AppState, DesignKind, DesignState, LineDesign, PortFields, PrDesign, PrGroupState, Settings } from "./state.ts";
 import { compareView } from "./state.ts";
+import { crestOf } from "./programSignal.ts";
 import { qaGain, stuffFactor, stuffable, stuffingEffect } from "./stuffing.ts";
 
 export { KIND_COLORS } from "./palette.ts";
 import { KIND_COLORS } from "./palette.ts";
 
-export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators", bandpass: "Bandpass", line: "Transmission line", ib: "Infinite baffle" } as const;
+export const KIND_LABEL = { sealed: "Sealed", vented: "Ported", pr: "Passive radiators", bandpass: "Bandpass", line: "Transmission line", ib: "Infinite baffle", ob: "Open baffle" } as const;
+
+/** An open baffle's frame, as the folded card and the summary table name it. */
+export const OB_FRAME = { flat: "Flat board", h: "H-frame", u: "U-frame" } as const;
 
 /** Line style of the comparison driver's curves. */
 export const COMPARE_DASH = "7 4";
@@ -85,6 +92,8 @@ export interface Design {
    * gain keeps it from falling 3 dB in range.
    */
   f3Room?: number | null;
+  /** Settings → Voice coil → Heated by the drive: where this design's coil settled (the result is at that temperature). */
+  coil?: HeatedCoil;
   result: SimulationResult;
 }
 
@@ -386,6 +395,8 @@ export function enclosureOf(d: DesignState, vb: number, losses: Settings["losses
     case "ib":
       // The rear space's leak is never heard (engine); an open rear has no box at all.
       return d.rear === "open" ? { kind: "infinite-baffle" } : { kind: "infinite-baffle", rear_l: vb, ql, qa };
+    case "ob":
+      return { kind: "open-baffle", frame: d.frame, w_cm: d.w_cm, h_cm: d.h_cm, x_cm: d.x_cm, y_cm: d.y_cm, t_cm: d.t_cm, ...(d.frame === "flat" ? {} : { depth_cm: d.depth_cm }) };
     case "vented":
       return { kind: "vented", vb_l: vb, port: portOf(d), portCount: d.count, ql, qa, qp, ...at };
     case "pr":
@@ -465,6 +476,15 @@ export function driverInputOf(s: AppState, solved: SolveResult): DriverInput {
 /** The port end correction in use (Settings → Ports): K × the equivalent diameter. */
 export const endCorrectionOf = (s: Pick<AppState, "settings">): number => s.settings.endCorrection ?? DEFAULT_END_CORRECTION;
 
+/** Whether any design that's on is an open baffle. */
+export const hasOpenBaffle = (s: Pick<AppState, "designs">) => s.designs.some((d) => d.on && d.kind === "ob");
+
+/** Whether every design that's on is an open baffle (none boxed): the baffle step has nothing to act on. */
+export const onlyOpenBaffles = (s: Pick<AppState, "designs">) => hasOpenBaffle(s) && s.designs.every((d) => !d.on || d.kind === "ob");
+
+/** Shown where the baffle step or Driver curve would act on an open baffle. */
+export const OB_BAFFLE_HINT = "Open baffle: no baffle step; the dipole model covers it.";
+
 /**
  * How every design is driven and simulated (drive level, wiring, filters, air…), without EQ.
  * `search`: for runs over many boxes (assistant, presets, fits), where the box air's distortion
@@ -481,8 +501,9 @@ export function simOptionsOf(s: AppState, search = false) {
     isobaric: s.isobaric ? { coils: s.isoCoils } : null,
     fMin: 10,
     // The baffle step and its ripple, or port pipe resonances, sit higher up than the bass: show up to 1 kHz then.
-    fMax: s.baffle.on || s.settings.portModel === "pipe" ? 1000 : 500,
-    points: s.baffle.on || s.settings.portModel === "pipe" ? 400 : 300,
+    // So do an open baffle's dipole peak and first null.
+    fMax: s.baffle.on || s.settings.portModel === "pipe" || hasOpenBaffle(s) ? 1000 : 500,
+    points: s.baffle.on || s.settings.portModel === "pipe" || hasOpenBaffle(s) ? 400 : 300,
     highPass: s.highPass.on ? { type: s.highPass.type, order: s.highPass.order, freq: s.highPass.freq } : null,
     passive: s.passive.on ? { branches: s.passive.branches } : null,
     air: airOf(s),
@@ -498,8 +519,13 @@ export function simOptionsOf(s: AppState, search = false) {
     f3From: s.settings.f3From === "peak" ? ("peak" as const) : undefined,
     driveModel: s.settings.driveModel,
     coneLoad: s.settings.coneLoad === "piston" ? ("piston" as const) : undefined,
-    coilTemp_C: s.settings.coilTemp_C > 20 ? s.settings.coilTemp_C : undefined,
-    thermalLimit: s.settings.thermalLimit === "real" ? ("real" as const) : undefined,
+    coilTemp_C: s.settings.coilMode === "fixed" && s.settings.coilTemp_C > 20 ? s.settings.coilTemp_C : undefined,
+    thermalLimit: s.settings.thermalLimit === "nominal" ? undefined : s.settings.thermalLimit,
+    thermal: thermalOf(s),
+    // Coil limit + program: the coil's temperature depends on the signal, so the engine needs the crest.
+    ...(s.settings.thermalLimit === "coil" && s.settings.signal.program ? { crest_dB: crestOf(s.settings.signal) } : {}),
+    // The Power chart and the heated coil: where the power goes, and the coil's loop (not for searches).
+    ...(search ? {} : { powerBreakdown: true }),
     amp:
       s.settings.ampVolts > 0 || s.settings.ampAmps > 0 || s.settings.ampWatts > 0
         ? {
@@ -509,6 +535,29 @@ export function simOptionsOf(s: AppState, search = false) {
           }
         : null,
   };
+}
+
+/** The driver's reference efficiency η0 = 4π²·fs³·Vas / (c³·Qes) (half space), or null without those values. */
+export function eta0Of(v: { fs?: number; vas_l?: number; qes?: number }, c: number): number | null {
+  if (!(v.fs! > 0 && v.vas_l! > 0 && v.qes! > 0)) return null;
+  return (4 * Math.PI ** 2 * v.fs! ** 3 * (v.vas_l! / 1000)) / (c ** 3 * v.qes!);
+}
+
+/** The coil's thermal model for the engine: R_th typed in (else from Pe), T_max, the air around it. */
+export function thermalOf(s: AppState): { rth?: number; tmax_C: number; ambient_C: number } {
+  return { ...(s.rth_k_w > 0 ? { rth: s.rth_k_w } : {}), tmax_C: s.tmax_C, ambient_C: s.settings.ambient_C };
+}
+
+/** A design's heated coil (Settings → Voice coil → Heated by the drive): where it settles on the drive's pink noise. */
+export interface HeatedCoil {
+  tempC: number;
+  /** The coil couldn't settle (capped at 400 °C). */
+  runaway: boolean;
+  /** Re cold and hot (Ω, the bank's coil as one: an isobaric pair counts as one). */
+  re20: number;
+  reHot: number;
+  /** Output lost against a cold coil, averaged over the heating band (dB, ≤ 0). */
+  compressionDb: number;
 }
 
 /**
@@ -554,7 +603,7 @@ export interface PresetPreview {
 export function presetPreview(s: AppState, solved: SolveResult, d: DesignState): PresetPreview | null {
   if (solved.missing.length > 0) return null;
   const vb = builtVbOf(s, d) * actingFactor(s, d);
-  if (!(vb > 0)) return null;
+  if (!(vb > 0) && d.kind !== "ob") return null; // an open baffle has no box
   try {
     const r = simulate(driverInputOf(s, solved), enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm, s.volume, enclosureOptsOf(s)), { ...simOptionsOf(s), eq: [], highPass: null, passive: null });
     const freq: number[] = [];
@@ -616,22 +665,41 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
     if (!d.on) continue;
     const built = builtVbOf(s, d);
     const vb = built * actingFactor(s, d);
-    if (!(vb > 0)) continue;
+    if (!(vb > 0) && d.kind !== "ob") continue; // an open baffle has no box
     const eq = s.eq
       .filter((e) => e.on && (e.target === "all" || e.target === d.id))
       .map(({ id: _id, on: _on, target: _t, ...stage }) => stage as EqStage);
     try {
       // Settings → SPL applies to every design: in front of the box (default, like WinISD) or from radiated power (like Hornresp).
-      const result = simulate(driver, enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm, s.volume, enclosureOptsOf(s)), { ...opts, eq });
+      const encl = enclosureOf(d, vb, lossesFor(s, d), s.volume.wall_mm, s.volume, enclosureOptsOf(s));
+      let result = simulate(driver, encl, { ...opts, eq });
+      let coil: HeatedCoil | null = null;
+      if (s.settings.coilMode === "heated" && result.coilParts?.thermal) {
+        // Where the drive heats the coil, then the design again with the coil at that temperature.
+        // With WinISD's watts the drive's volts follow the hot Re, so settle that too (a few rounds).
+        let parts = result.coilParts;
+        for (let k = 0; k < 4; k++) {
+          const eq0 = programEquilibrium(parts, result.freq, parts.thermal!, s.settings.heatBand);
+          if (!eq0) break;
+          const again = simulate(driver, encl, { ...opts, eq, coilTemp_C: eq0.tempC });
+          coil = { tempC: eq0.tempC, runaway: eq0.runaway, re20: parts.re20, reHot: reAt(parts.re20, eq0.tempC), compressionDb: bandMean(result.freq, eq0.compressionDb, s.settings.heatBand) };
+          const moved = s.settings.driveModel === "winisd" && Math.abs(eq0.tempC - parts.simTemp_C) > 0.5;
+          result = again;
+          if (!moved || !again.coilParts) break;
+          parts = again.coilParts;
+        }
+      }
       if (s.settings.velocity === "rms") {
         if (result.portVelocity) result.portVelocity = result.portVelocity.map((v) => v / Math.SQRT2);
         if (result.rearPortVelocity) result.rearPortVelocity = result.rearPortVelocity.map((v) => v / Math.SQRT2);
       }
-      const step = baffleOf(s, driver.sd_cm2);
+      // An open baffle radiates into full space with its own edges: no baffle step on top.
+      const step = d.kind === "ob" ? null : baffleOf(s, driver.sd_cm2);
       if (step) {
         const db = baffleCache(result.freq, step);
         result.spl = result.spl.map((v, i) => v + db[i]!);
         result.maxSpl = result.maxSpl.map((v, i) => v + db[i]!);
+        if (result.programSpl) result.programSpl = result.programSpl.map((v, i) => v + db[i]!);
         result.ceilings = liftCeilings(result.ceilings, db);
         if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + db[i]!), mouth: result.parts.mouth.map((v, i) => v + db[i]!) };
         if (result.splSideBySide) result.splSideBySide = result.splSideBySide.map((v, i) => v + db[i]!);
@@ -646,6 +714,7 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
         f3Room = (d.kind === "line" ? lowEdge(result.freq, rel) : minus3Points(result.freq, rel, d.kind === "bandpass"))[0] ?? null;
         result.spl = result.spl.map((v, i) => v + lift[i]!);
         result.maxSpl = result.maxSpl.map((v, i) => v + lift[i]!);
+        if (result.programSpl) result.programSpl = result.programSpl.map((v, i) => v + lift[i]!);
         result.ceilings = liftCeilings(result.ceilings, lift);
         if (result.parts) result.parts = { cone: result.parts.cone.map((v, i) => v + lift[i]!), mouth: result.parts.mouth.map((v, i) => v + lift[i]!) };
         if (result.splSideBySide) result.splSideBySide = result.splSideBySide.map((v, i) => v + lift[i]!);
@@ -658,6 +727,7 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
         vb_l: built,
         ...(vb !== built ? { acting_l: vb } : {}),
         ...(f3Room !== undefined ? { f3Room } : {}),
+        ...(coil ? { coil } : {}),
         result,
       });
     } catch {
@@ -665,6 +735,15 @@ function runFor(s: AppState, solved: SolveResult, isCompare: boolean): Design[] 
     }
   }
   return out;
+}
+
+/** The mean of a curve over a band (log-frequency weights, as pink noise), dB. */
+function bandMean(freq: ArrayLike<number>, y: ArrayLike<number>, band: readonly [number, number]): number {
+  const w = pinkWeights(freq, band);
+  if (!w) return 0;
+  let m = 0;
+  for (let i = 0; i < w.length; i++) m += w[i]! * y[i]!;
+  return m;
 }
 
 /** Max SPL's two ceilings moved by the same dB as maxSpl (baffle step, room or cabin gain). */
@@ -979,7 +1058,8 @@ export function lowDrive(s: AppState): { watts: number; rated: number } | null {
 /** The drive level as people read it: "100 W" or "2.83 V". */
 export const driveLabel = (s: Pick<AppState, "drive" | "power" | "volts">) => (s.drive === "volts" ? `${s.volts} V` : `${s.power} W`);
 /** ", voice coil at 100 °C" when the coil is simulated hot; empty when cold. */
-export const coilLabel = (s: Pick<AppState, "settings">) => (s.settings.coilTemp_C > 20 ? `, voice coil at ${s.settings.coilTemp_C} °C` : "");
+export const coilLabel = (s: Pick<AppState, "settings">) =>
+  s.settings.coilMode === "heated" ? ", coil heated by the drive" : s.settings.coilMode === "fixed" && s.settings.coilTemp_C > 20 ? `, voice coil at ${s.settings.coilTemp_C} °C` : "";
 
 /** Golden-ratio box proportions (width : height : depth), a common choice to spread standing waves. */
 const GOLDEN = { w: 1, h: 1.618, d: 0.618 };

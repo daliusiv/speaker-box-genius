@@ -9,7 +9,7 @@ export const spiceFormat: ExportFormat = {
   icon: "circuit",
   help: "The circuit the validation tests check the app against, one netlist per box. Its header says what to plot.",
   scope: "designs",
-  supports: (d) => spiceExportable(d) || "Lines and horns: use Hornresp",
+  supports: (d) => spiceExportable(d) || (d.kind === "ob" ? "Open baffles have no circuit here" : "Lines and horns: use Hornresp"),
   run({ state, shareUrl }, ids) {
     const files: OutFile[] = [];
     const notes = new Set<string>();

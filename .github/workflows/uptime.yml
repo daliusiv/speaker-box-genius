@@ -1,0 +1,64 @@
+name: Uptime alert
+
+# Turns Uptime Kuma alerts (run on the maintainer's own server) into one GitHub issue per
+# monitor: "down" opens it (or comments on the open one), "up" comments and closes it. The
+# scheduled tasks and the morning digest pick up open `uptime` issues first.
+#
+# Uptime Kuma → Settings → Notifications → Webhook, POST to
+#   https://api.github.com/repos/<owner>/<dev repo>/dispatches
+# with headers `Authorization: Bearer <fine-grained token: this repo, Contents read/write>` and
+# `Accept: application/vnd.github+json`, and a custom body:
+#   {"event_type":"uptime","client_payload":{"status":"{{ heartbeatJSON.status }}",
+#    "monitor":"{{ monitorJSON.name }}","url":"{{ monitorJSON.url }}","msg":"{{ msg }}"}}
+# (status 0 = down, 1 = up; "down"/"up" also work). Private (dev) repo only.
+on:
+  repository_dispatch:
+    types: [uptime]
+
+permissions:
+  issues: write
+
+concurrency:
+  group: uptime-${{ github.event.client_payload.monitor }}
+  cancel-in-progress: false
+
+jobs:
+  alert:
+    if: ${{ github.event.repository.private == true }}
+    runs-on: [self-hosted, linux]
+    timeout-minutes: 5
+    steps:
+      - name: Open, update or close the monitor's issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          STATUS: ${{ github.event.client_payload.status }}
+          MONITOR: ${{ github.event.client_payload.monitor }}
+          URL: ${{ github.event.client_payload.url }}
+          MSG: ${{ github.event.client_payload.msg }}
+        run: |
+          set -euo pipefail
+          monitor=$(printf '%s' "${MONITOR:-site}" | tr -d '\r\n"\\' | cut -c1-80)
+          case "$STATUS" in 0|down|DOWN) state=down ;; 1|up|UP) state=up ;; *) echo "Ignoring status '$STATUS'"; exit 0 ;; esac
+          title="Uptime: $monitor down"
+          now=$(TZ=Europe/Rome date '+%Y-%m-%d %H:%M Rome')
+          gh api "repos/$GH_REPO/labels/uptime" >/dev/null 2>&1 \
+            || gh api "repos/$GH_REPO/labels" -f name=uptime -f color=B60205 -f description="Site down alerts from Uptime Kuma" >/dev/null
+          n=$(gh api "repos/$GH_REPO/issues?state=open&labels=uptime&per_page=100" \
+            --jq ".[] | select(.title == \"$title\") | .number" | head -n1)
+          detail=$(printf '%s' "${MSG:-}" | head -c 500)
+          if [ "$state" = down ]; then
+            if [ -n "$n" ]; then
+              gh api "repos/$GH_REPO/issues/$n/comments" -f body="Still down at $now: $detail" >/dev/null
+            else
+              body=$(printf '<!-- needs:start -->\n> [!IMPORTANT]\n> **Needs you:** %s is down (since %s). Check the site / Cloudflare / GitHub Pages; this closes itself when Uptime Kuma reports it up.\n<!-- needs:end -->\n\nMonitor: %s\nURL: %s\nMessage: %s\n' "$monitor" "$now" "$monitor" "${URL:-}" "$detail")
+              gh api "repos/$GH_REPO/issues" -f title="$title" -f body="$body" \
+                -f 'labels[]=uptime' -f 'labels[]=priority: high' -f 'labels[]=needs: you' --jq .html_url
+            fi
+          elif [ -n "$n" ]; then
+            gh api "repos/$GH_REPO/issues/$n/comments" -f body="Back up at $now: $detail" >/dev/null
+            gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/needs:%20you" >/dev/null 2>&1 || true
+            gh api -X PATCH "repos/$GH_REPO/issues/$n" -f state=closed -f state_reason=completed --jq .html_url
+          else
+            echo "Up, and no open issue for $monitor."
+          fi

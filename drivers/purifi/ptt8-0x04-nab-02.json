@@ -1,0 +1,34 @@
+{
+  "brand": "Purifi",
+  "model": "PTT8.0X04-NAB-02",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 26,
+    "qms": 5.3,
+    "qes": 0.38,
+    "vas_l": 70.4,
+    "re": 3.5,
+    "sd_cm2": 235.1,
+    "qts": 0.36,
+    "le_mh": 0.18,
+    "bl": 8.0,
+    "mms_g": 43.2,
+    "xmax_mm": 9.3,
+    "pe_w": 350
+  },
+  "physical": {
+    "cutout_mm": 193,
+    "depth_mm": 102
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/oem-transducers",
+      "retrieved": "2026-11-22",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community"
+}

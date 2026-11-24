@@ -76,6 +76,9 @@ export function HelpSheet(props: { open: boolean; onClose: () => void; title: st
       ) : (
         <p className="ui-help-empty">Nothing here needs explaining.</p>
       )}
+      <p className="ui-help-tip">
+        <kbd>↑</kbd>/<kbd>↓</kbd> nudge a number · <kbd>Shift</kbd> ×10 · <kbd>Alt</kbd> ÷10
+      </p>
     </Sheet>
   );
 }

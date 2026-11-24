@@ -56,3 +56,17 @@ test("EQ boost lowers the thermal power limit", () => {
   assert.equal(r.limitedBy[0], "thermal");
   near(r.maxPowerW[0]!, 200 / 10 ** (6 / 10), 1e-6, "thermal limit with +6 dB");
 });
+
+test("first-order low shelf: full gain below, flat above, half the dB at its frequency, 6 dB/oct between", () => {
+  const dB = (st: Parameters<typeof eqStageResponse>[0], f: number) => 20 * Math.log10(abs(eqStageResponse(st, f)));
+  for (const gain_db of [12, 6, -6]) {
+    const st = { type: "lowshelf1" as const, freq: 100, gain_db };
+    assert.ok(Math.abs(dB(st, 0.001) - gain_db) < 1e-6, `DC ${dB(st, 0.001)}`);
+    assert.ok(Math.abs(dB(st, 1e7)) < 1e-6, `HF ${dB(st, 1e7)}`);
+    assert.ok(Math.abs(dB(st, 100) - gain_db / 2) < 1e-9, `at freq ${dB(st, 100)}`);
+  }
+  // First order: with the corners far apart (36 dB, six octaves) the middle octave is 6 dB.
+  const st = { type: "lowshelf1" as const, freq: 100, gain_db: 36 };
+  const slope = dB(st, 100 / Math.SQRT2) - dB(st, 100 * Math.SQRT2);
+  assert.ok(slope > 5.8 && slope <= 6.0206, `middle octave ${slope}`);
+});

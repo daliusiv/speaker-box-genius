@@ -43,6 +43,8 @@ export interface ExportFormat {
   action?: string;
   /** A line under the help about the current project (what the export will use). */
   detail?: (s: AppState) => string;
+  /** Whether the format is listed for this project (all formats by default). */
+  shown?: (s: AppState) => boolean;
   /** The button picks a file instead of running the export: the app takes it from there (`onPick`). */
   pick?: { accept: string };
 }

@@ -39,14 +39,27 @@ export interface ChartPanel {
   at?: number;
 }
 const MAX_PANELS = 3;
-let renderer: Promise<{ chart: Renderer; plot: (p: FigurePlot, layout: "both" | "narrow") => string }> | null = null;
+/** The numbers behind one drawn chart, for the pages' Markdown twins (site/aiDocs.ts). */
+export interface ChartData {
+  /** The panel's label (a figure's, or a chart row's title), when it has one. */
+  label?: string;
+  kind: string;
+  title: string;
+  unit: string;
+  xUnit: string;
+  series: { label: string; x: number[] | null; y: number[] | null; over?: number; f3: number | null; f6: number | null }[];
+  limits: { label: string; value: number }[];
+}
+type RawData = { title: string; unit: string; freq: number[]; series: { label: string; y: number[] | null; over?: number; f3: number | null; f6: number | null }[]; limits: { label: string; value: number }[] };
+type Loaded = { chart: Renderer; plot: (p: FigurePlot, layout: "both" | "narrow") => string; data: (runs: Run[], kind: Kind) => RawData };
+let renderer: Promise<Loaded> | null = null;
 
 /** Builds the chart bundle (about a second) and loads it, once per process. */
-function load(): Promise<{ chart: Renderer; plot: (p: FigurePlot, layout: "both" | "narrow") => string }> {
+function load(): Promise<Loaded> {
   renderer ??= (async () => {
     execSync("pnpm --filter @sbg/web build:ssr", { cwd: ROOT, stdio: "pipe" });
-    const m = (await import(pathToFileURL(join(ROOT, "packages", "web", "ssr-dist", "guideCharts.mjs")).href)) as { renderGuideChart: Renderer; renderGuidePlot: (p: FigurePlot, layout: "both" | "narrow") => string };
-    return { chart: m.renderGuideChart, plot: m.renderGuidePlot };
+    const m = (await import(pathToFileURL(join(ROOT, "packages", "web", "ssr-dist", "guideCharts.mjs")).href)) as { renderGuideChart: Renderer; renderGuidePlot: (p: FigurePlot, layout: "both" | "narrow") => string; guideChartData: (runs: Run[], kind: Kind) => RawData };
+    return { chart: m.renderGuideChart, plot: m.renderGuidePlot, data: m.guideChartData };
   })();
   return renderer;
 }
@@ -88,10 +101,15 @@ function drawPanel(render: Renderer, p: ChartPanel, layout: "both" | "narrow", s
  * Draws every chart a page asks for (before the page's Markdown is turned into HTML, which is
  * synchronous); `draw` then hands each one over by its src.
  */
-export async function guideCharts(body: string, file = "page"): Promise<{ count: number; style: string; draw: (src: string, title?: string) => string }> {
+export async function guideCharts(body: string, file = "page"): Promise<{ count: number; style: string; draw: (src: string, title?: string) => string; chartData: (src: string, title?: string) => ChartData[] }> {
   const srcs = [...new Set([...body.matchAll(/!\[[^\]]*\]\(((?:chart|figure):[^)\s]+)(?: "[^"]*")?\)/g)].map((m) => m[1]!))];
   const drawn = new Map<string, string | string[]>();
   const labelled = new Map<string, string[]>();
+  const numbers = new Map<string, ChartData[]>();
+  const panelData = (r: Loaded, p: ChartPanel): ChartData => {
+    const d = r.data(p.runs.map((x) => ({ state: EXAMPLES[x.example]!(), ...(x.pick ? { pick: x.pick } : {}) })), p.kind);
+    return { kind: p.kind, title: d.title, unit: d.unit, xUnit: "Hz", series: d.series.map((x) => ({ ...x, x: d.freq.length ? d.freq : null })), limits: d.limits };
+  };
   if (srcs.length) {
     const r = await load();
     for (const src of srcs) {
@@ -108,15 +126,32 @@ export async function guideCharts(body: string, file = "page"): Promise<{ count:
         const html = f.panels.map((p) => ("plot" in p ? r.plot(p.plot, layout) : "xy" in p ? renderXY(p.xy, layout) : drawPanel(r.chart, parseChartSrc(`chart:${p.chart}`, file)[0]!, layout, src, file)));
         labelled.set(src, f.panels.map((p) => p.label ?? ""));
         drawn.set(src, f.panels.length === 1 ? html[0]! : html);
+        numbers.set(
+          src,
+          f.panels.map((p): ChartData => {
+            const label = p.label ? { label: p.label } : {};
+            if ("plot" in p) return { ...label, kind: "figure", title: p.plot.title, unit: p.plot.unit, xUnit: "Hz", series: p.plot.series.map((c) => ({ label: c.label, x: p.plot.freq, y: c.y, f3: null, f6: null })), limits: (p.plot.guides ?? []).map((g) => ({ label: g.label, value: g.value })) };
+            if ("xy" in p) return { ...label, kind: "figure", title: p.xy.title, unit: p.xy.yLabel, xUnit: p.xy.xLabel, series: p.xy.series.map((c) => ({ label: c.label, x: c.points.map((q) => q[0]), y: c.points.map((q) => q[1]), f3: null, f6: null })), limits: [] };
+            return { ...label, ...panelData(r, parseChartSrc(`chart:${p.chart}`, file)[0]!) };
+          }),
+        );
         continue;
       }
       const panels = parseChartSrc(src, file);
+      // Drawn first: a bad panel's error names the file and the chart.
       drawn.set(src, panels.length === 1 ? drawPanel(r.chart, panels[0]!, "both", src, file) : panels.map((p) => drawPanel(r.chart, p, "narrow", src, file)));
+      numbers.set(src, panels.map((p) => panelData(r, p)));
     }
   }
   return {
     count: srcs.length,
     style: srcs.length ? appChartCss([...drawn.values()].flat().join("")) + GUIDE_CHART_STYLE + XY_STYLE : "",
+    chartData: (src, title) => {
+      const data = numbers.get(src);
+      if (!data) throw new Error(`${file}: "${src}" wasn't drawn`);
+      const labels = title === undefined ? [] : title.split("|");
+      return data.map((d, i) => (d.label || !labels[i] ? d : { ...d, label: labels[i]! }));
+    },
     draw: (src, title) => {
       const html = drawn.get(src);
       if (html === undefined) throw new Error(`${file}: "${src}" wasn't drawn`);

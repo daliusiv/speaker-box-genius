@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "2420",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 72,
+    "qms": 3.77,
+    "qes": 0.37,
+    "vas_l": 13.3,
+    "re": 5.4,
+    "sd_cm2": 219,
+    "qts": 0.33,
+    "le_mh": 0.896,
+    "bl": 12.9,
+    "mms_g": 25,
+    "xmax_mm": 5.5,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 185,
+    "depth_mm": 87,
+    "displacement_l": 0.72
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/2420_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

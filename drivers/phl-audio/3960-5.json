@@ -1,0 +1,36 @@
+{
+  "brand": "PHL Audio",
+  "model": "3960-5",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 90,
+    "qms": 2.98,
+    "qes": 0.27,
+    "vas_l": 12.7,
+    "re": 5.5,
+    "sd_cm2": 330,
+    "qts": 0.24,
+    "le_mh": 1.154,
+    "bl": 21.1,
+    "mms_g": 38,
+    "xmax_mm": 2.5,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 229,
+    "depth_mm": 120,
+    "displacement_l": 2.3
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/3960-5_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

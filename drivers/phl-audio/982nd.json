@@ -1,0 +1,36 @@
+{
+  "brand": "PHL Audio",
+  "model": "982Nd",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 5,
+  "ts": {
+    "fs": 130,
+    "qms": 3.65,
+    "qes": 0.51,
+    "vas_l": 2.3,
+    "re": 5.7,
+    "sd_cm2": 96,
+    "qts": 0.45,
+    "le_mh": 0.59,
+    "bl": 8.8,
+    "mms_g": 8.5,
+    "xmax_mm": 4.5,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 124.5,
+    "depth_mm": 76,
+    "displacement_l": 0.18
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/982Nd_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

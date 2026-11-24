@@ -3,6 +3,7 @@ title: A free online Hornresp alternative for lines and horns
 description: Design transmission lines, MLTLs, tapped horns and front-loaded horns in your browser, checked against Hornresp, with Hornresp import and export.
 path: hornresp-alternative
 image: chart:tl-example/za
+art: A browser window showing a folded transmission line, with the air path through it.
 order: 5
 group: switching
 ---
@@ -79,7 +80,7 @@ Sealed, ported and passive radiator boxes go both ways too. **Save & Export → 
 
 ## What it adds
 
-- **A driver database** of about 1,800 drivers, so you don't need to type parameters in, each with [its own page](/drivers/).
+- **A driver database** of about 1,960 drivers, so you don't need to type parameters in, each with [its own page](/drivers/).
 - **Line types side by side:** **Compare types** makes and tunes a classic TL, TQWT, offset TL, MLTL and front horn for your driver, and ranks them by bass extension, size and smoothness.
 - **Tuning by simulation:** **Set line length** scales the whole line until it tunes where you ask; **Best line** searches the driver position and stuffing.
 - **Inside the line:** the cone and mouth contributions on their own, and the pressure and air speed along the line at any frequency.

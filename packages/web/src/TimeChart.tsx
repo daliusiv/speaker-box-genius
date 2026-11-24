@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { Transient } from "./sim.ts";
-import { CursorBadge, shortName } from "./LogChart.tsx";
+import { ChartTitleMenu, CursorBadge, shortName } from "./LogChart.tsx";
 import { ChartLegend, type LegendRow } from "./ChartLegend.tsx";
-
-const W = 640;
+import { BASE_H, BASE_W, drawWidth, plotHeight, useViewHeight } from "./chartSize.ts";
 
 /**
  * Impulse or step response of each design against time (ms), scaled to a peak of ±1. A plain
@@ -18,27 +17,33 @@ export function TimeChart(props: {
   to_ms: number;
   hidden?: boolean;
   actions?: ReactNode;
+  /** A note at the card's foot. */
+  foot?: ReactNode;
   /** Drawn once for a guide page: sized for this width, no switches, a cursor only at `at` (ms). */
   still?: { width: number; at?: number };
 }) {
   const still = props.still;
+  const titleMenu = useContext(ChartTitleMenu);
   const [hoverT, setHoverT] = useState<number | null>(still?.at ?? null);
-  // Like the frequency charts: on a phone the 640-unit chart shrinks, so text and lines grow by
-  // k to stay readable, and the chart gets taller.
+  // Like the frequency charts: drawn as wide as its box (at least 640 units); on a phone the
+  // 640-unit chart shrinks, so text and lines grow by k to stay readable, and it gets taller.
   const svgRef = useRef<SVGSVGElement>(null);
-  const [k, setK] = useState(() => (still ? Math.min(2, Math.max(1, W / still.width)) : 1));
+  const [boxW, setBoxW] = useState(() => (still ? still.width : BASE_W));
   useEffect(() => {
     const el = svgRef.current;
     if (!el || still || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(([e]) => {
-      const w = e?.contentRect.width ?? W;
-      setK(w > 0 ? Math.min(2, Math.max(1, W / w)) : 1);
+      const w = e?.contentRect.width ?? 0;
+      if (w > 0) setBoxW(Math.round(w));
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  const viewH = useViewHeight();
+  const W = still ? BASE_W : drawWidth(boxW);
+  const k = Math.min(2, Math.max(1, BASE_W / boxW));
   const tall = k > 1.3;
-  const H = tall ? 470 : 260;
+  const H = tall ? 470 : still ? BASE_H : plotHeight(W, viewH);
   const PAD = tall ? { l: 30 + 14 * (k - 1), r: 8 + 6 * (k - 1), t: 26 * k, b: 22 + 14 * (k - 1) } : { l: 44, r: 12, t: 30, b: 28 };
   const fs = { style: { fontSize: `${11 * k}px` } };
   const fsOf = (px: number) => ({ style: { fontSize: `${px * k}px` } });
@@ -48,7 +53,9 @@ export function TimeChart(props: {
   const yOf = (v: number) => PAD.t + (1 - (v + 1) / 2) * PH;
   const xTicks: number[] = [];
   const span = props.to_ms - props.from_ms;
-  const step = span > 120 ? 20 : span > 60 ? 10 : 5;
+  // Every 5, 10 or 20 ms on the 640 chart; a wide one gets a line about every 60 px.
+  const lines = PW / 60;
+  const step = still || k > 1 ? (span > 120 ? 20 : span > 60 ? 10 : 5) : span / lines > 15 ? 20 : span / lines > 6 ? 10 : span / lines > 3 ? 5 : 2;
   for (let t = Math.ceil(props.from_ms / step) * step; t <= props.to_ms; t += step) xTicks.push(t);
   const path = (c: Transient) => {
     const y = props.view === "impulse" ? c.impulse : c.step;
@@ -100,11 +107,11 @@ export function TimeChart(props: {
     cols: [],
   }));
   return (
-    <figure className="chart" hidden={props.hidden} data-chart="transient">
+    <figure className="chart" hidden={props.hidden} data-chart="transient" data-title={still ? undefined : props.title}>
       <figcaption>
-        <span className="chart-title">{props.title}</span>
+        {!still && titleMenu ? titleMenu("transient", props.title) : <span className="chart-title">{props.title}</span>}
         {props.actions && !still && <span className="chart-actions">{props.actions}</span>}
-        <span className="chart-hint muted">Peak scaled to 1</span>
+        {still && <span className="chart-hint muted">Peak scaled to 1</span>}
       </figcaption>
       <div className="chart-body">
         {hoverT !== null && (
@@ -165,6 +172,11 @@ export function TimeChart(props: {
             <text className="tick unit-label" x={PAD.l - 6} y={H - 9 * k} textAnchor="end" {...fs}>
               ms
             </text>
+            {!still && (
+              <text className="tick chart-detail" x={W - PAD.r} y={PAD.t - 8 * k} textAnchor="end" opacity={hoverT !== null && xOf(hoverT) > W - PAD.r - 160 * k ? 0.2 : undefined} {...fs}>
+                peak scaled to 1
+              </text>
+            )}
           </g>
           {props.curves.map((c) => (
             <path key={c.label} d={path(c)} fill="none" stroke={c.color} strokeWidth={1.8 * k} strokeDasharray={c.dash} strokeLinejoin="round" />
@@ -183,6 +195,7 @@ export function TimeChart(props: {
       <div className={still ? undefined : "legend-below"} role="status" aria-live="off">
         <ChartLegend atHeading={hoverT === null ? null : `@ ${hoverT.toFixed(1)} ms`} columns={[]} rows={rows} />
       </div>
+      {props.foot && !still && <div className="chart-foot">{props.foot}</div>}
     </figure>
   );
 }

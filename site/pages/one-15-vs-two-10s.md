@@ -3,6 +3,7 @@ title: "One 15-inch or two 10-inch subwoofers: which plays louder and deeper?"
 description: One 15″ against two 10″ from the same series, in the same sealed and ported boxes on the same amplifier, in one project. Displacement against power handling against a 2 Ω load, with the maximum SPL chart that settles each forum claim.
 path: guides/one-15-vs-two-10s
 image: chart:subs-example/maxspl
+art: One box with a single large cone beside one with two smaller cones, their cone areas filled in.
 order: 20
 group: start
 ---
@@ -139,7 +140,7 @@ The same goes for the two coils of one dual voice coil sub: see [DVC wiring](/gu
 
 **"Two 10s have more motor."** No: Bl²/Re 74.6 against 75 [6]. Each 10's Bl is lower; there are just two of them sharing the power. Per watt the two are within 0.2 dB. *Proof: in dB SPL at the same voltage the passbands are 2.5 dB apart: 2.3 dB from the extra watts the 2 Ω load draws, 0.2 dB of efficiency.*
 
-**"Two 10s are faster."** Not in any way that matters below a sub's crossover. The motors are equal, and moving mass per cone area is similar (0.34 against 0.37 g/cm²). How "fast" a sub sounds is its frequency response and group delay, set by the box and the filters, not cone mass (see the [group delay guide](/guides/group-delay/)). In the same box the pair has the lower Qtc, 0.68 against 0.77, so a slightly better-damped roll-off but 6.2 Hz less extension. Put the 15 in its own 133.3 L box and that difference goes. *Proof: Group delay tab.*
+**"Two 10s are faster."** Not in any way that matters below a sub's crossover. The motors are equal, and moving mass per cone area is similar (0.34 against 0.37 g/cm²). How "fast" a sub sounds is its frequency response and group delay, set by the box and the filters, not cone mass (see the [group delay guide](/guides/group-delay/)). In the same box the pair has the lower Qtc, 0.68 against 0.77, so a slightly better-damped roll-off but 6.2 Hz less extension. Put the 15 in its own 133.3 L box and that difference goes. *Proof: the Group delay chart.*
 
 **"Two subs at 2 Ω get double the power."** Only from an amplifier rated for 2 Ω, and real ones don't double: 350 W into 4 Ω becomes 550 W into 2 Ω on this Crown [8]. Wire the pair in series for an amp that isn't, and in the sealed box the 15 wins everywhere, by 3.1–5.2 dB. *Proof: Max SPL → Amps; the series link.*
 

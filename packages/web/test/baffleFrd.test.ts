@@ -105,3 +105,33 @@ test("links keep the baffle size and place with the step off", () => {
   const s: AppState = { ...DEFAULT_STATE, baffle: { on: false, fromBox: false, width_cm: 31, height_cm: 47, x_cm: 12, y_cm: 9 } };
   assert.deepEqual(decodeState(encodeState(s)).baffle, s.baffle);
 });
+
+test("open baffles: the Driver curve entry points go when every box on is an open baffle, and stay for a mix", async () => {
+  const { importUses } = await import("../src/formats/imports.ts");
+  const { newDesign } = await import("../src/state.ts");
+  const { hasOpenBaffle, onlyOpenBaffles, OB_BAFFLE_HINT } = await import("../src/sim.ts");
+  const frd = EXPORT_FORMATS.find((f) => f.id === "baffle-frd")!;
+  const ob = { ...newDesign("ob", []), on: true };
+  const sealed = { ...newDesign("sealed", [ob]), on: true };
+  const cases: { name: string; designs: AppState["designs"]; any: boolean; only: boolean }[] = [
+    { name: "boxed only", designs: [sealed], any: false, only: false },
+    { name: "open baffle only", designs: [ob], any: true, only: true },
+    { name: "mix", designs: [ob, sealed], any: true, only: false },
+    { name: "open baffle + a hidden box", designs: [ob, { ...sealed, on: false }], any: true, only: true },
+    { name: "a hidden open baffle", designs: [{ ...ob, on: false }, sealed], any: false, only: false },
+  ];
+  for (const c of cases) {
+    const s: AppState = { ...DEFAULT_STATE, designs: c.designs };
+    assert.equal(hasOpenBaffle(s), c.any, c.name);
+    assert.equal(onlyOpenBaffles(s), c.only, c.name);
+    // Save & Export → Driver on baffle
+    assert.equal(frd.shown?.(s) ?? true, !c.only, c.name);
+    // Open / Import → Put the driver on my baffle
+    assert.equal(importUses("a.frd", !onlyOpenBaffles(s)).includes("driver-on-baffle"), !c.only, c.name);
+    assert.equal(importUses("a.txt", !onlyOpenBaffles(s)).includes("driver-on-baffle"), !c.only, c.name);
+  }
+  assert.deepEqual(importUses("a.frd", false), ["overlay-response"]);
+  assert.match(OB_BAFFLE_HINT, /^Open baffle: no baffle step/);
+  // Every other format is always listed.
+  for (const f of EXPORT_FORMATS) if (f.id !== "baffle-frd") assert.equal(f.shown, undefined, f.id);
+});

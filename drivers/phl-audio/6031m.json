@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "6031M",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 39,
+    "qms": 4.1,
+    "qes": 0.25,
+    "vas_l": 124,
+    "re": 5.6,
+    "sd_cm2": 892,
+    "qts": 0.23,
+    "le_mh": 2.06,
+    "bl": 29,
+    "mms_g": 150,
+    "xmax_mm": 8.5,
+    "pe_w": 1000
+  },
+  "physical": {
+    "cutout_mm": 355,
+    "depth_mm": 159,
+    "displacement_l": 5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/6031M_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

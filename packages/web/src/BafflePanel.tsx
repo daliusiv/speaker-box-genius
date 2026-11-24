@@ -2,7 +2,7 @@ import { baffleStepFrequency } from "@sbg/engine";
 import { Fixed, Num, Select } from "./components.tsx";
 import { useUnits } from "./units.ts";
 import { Chip, Menu, RadioCards, Section, type MenuItem, helpEntries } from "./ui/index.ts";
-import { baffleOf } from "./sim.ts";
+import { baffleOf, hasOpenBaffle, OB_BAFFLE_HINT, onlyOpenBaffles } from "./sim.ts";
 import { BaffleFrdRow, DRIVER_CURVE_HELP } from "./BaffleFrd.tsx";
 import { newId, type AppState, type EqItem } from "./state.ts";
 
@@ -45,6 +45,9 @@ export function BaffleSection(props: {
     fStep = null;
   }
   const outside = b.x_cm <= 0 || b.x_cm >= w || b.y_cm <= 0 || b.y_cm >= h;
+  // Open baffles take no baffle step; with only open baffles on, the Driver curve row goes too.
+  const obHint = hasOpenBaffle(s) ? <p className="hint">{OB_BAFFLE_HINT}</p> : null;
+  const curveRow = onlyOpenBaffles(s) ? null : <BaffleFrdRow fileName={props.driverCurve} onOpen={props.onOpenDriverCurve} />;
 
   const addShelf = (gain_db: number) => {
     if (!fStep) return;
@@ -75,7 +78,8 @@ export function BaffleSection(props: {
         ]}
         onChange={(x) => set({ on: x === "on" })}
       />
-      {!b.on && <BaffleFrdRow fileName={props.driverCurve} onOpen={props.onOpenDriverCurve} />}
+      {!b.on && curveRow}
+      {!b.on && obHint}
       {b.on && (
         <>
           {isBox && (
@@ -109,7 +113,8 @@ export function BaffleSection(props: {
             value={fStep ? fStep.toFixed(0) : "–"}
             help={HELP["Step at"]}
           />
-          <BaffleFrdRow fileName={props.driverCurve} onOpen={props.onOpenDriverCurve} />
+          {curveRow}
+          {obHint}
           {outside && <p className="warn">The driver is off the baffle: check its position against the width and height.</p>}
           {fStep && (
             <>

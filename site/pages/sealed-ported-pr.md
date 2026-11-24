@@ -3,6 +3,7 @@ title: "Sealed, ported or passive radiator: which box for your driver?"
 description: One 10-inch sub at its full 350 W rating in all three boxes, side by side. Size, depth, output, cone travel with and without a subsonic filter, and what the Qts and EBP rules of thumb get right and wrong.
 path: guides/sealed-vs-ported
 image: chart:box-types-example/response
+art: Three boxes side by side: a sealed box, a ported box with its port and a box with a passive radiator.
 order: 6
 group: start
 ---

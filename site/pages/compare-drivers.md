@@ -3,6 +3,7 @@ title: How to compare two drivers for the same box
 description: Two 10-inch subs from the same family, the RSS265HF-4 and RSS265HO-4, in the same sealed and ported boxes from the same amplifier. Which one goes deeper, which one is louder, what stops each one, and what the forum rules of thumb get wrong.
 path: guides/compare-drivers
 image: chart:compare-example/spl
+art: One box with its driver, and a second driver beside it ready to swap in.
 order: 9
 group: start
 ---

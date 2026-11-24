@@ -1,0 +1,34 @@
+{
+  "brand": "BishopSound",
+  "model": "BWP18/4",
+  "type": "woofer",
+  "nominal_ohms": 4,
+  "size_in": 18,
+  "ts": {
+    "fs": 42.3,
+    "qms": 12.721,
+    "qes": 0.727,
+    "vas_l": 110.09,
+    "re": 3.5,
+    "sd_cm2": 1244.1,
+    "qts": 0.688,
+    "le_mh": 0.324,
+    "mms_g": 282.79,
+    "xmax_mm": 12,
+    "pe_w": 1800
+  },
+  "physical": {
+    "cutout_mm": 392,
+    "depth_mm": 202
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bishopsound.com/products/bwp18-4-sub-bass-driver",
+      "retrieved": "2026-11-19",
+      "note": "Values from BishopSound's published datasheets (bishopsound.com), used with BishopSound's permission (18 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without BishopSound's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Bl 10.915 T·m disagrees with Fs, Mms, Re and Qes, so it's left out (the app derives it)."
+}

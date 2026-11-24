@@ -15,6 +15,13 @@ export function Stepper(props: { id?: string; value: number; min?: number; max?:
         inputMode="numeric"
         aria-label={props.label}
         value={props.value}
+        aria-keyshortcuts="ArrowUp ArrowDown"
+        onKeyDown={(e) => {
+          // ↑/↓ one more or fewer, Shift ten.
+          if ((e.key !== "ArrowUp" && e.key !== "ArrowDown") || e.ctrlKey || e.metaKey) return;
+          e.preventDefault();
+          set(props.value + (e.key === "ArrowUp" ? 1 : -1) * (e.shiftKey ? 10 : 1));
+        }}
         onChange={(e) => {
           const v = Number(e.currentTarget.value);
           if (e.currentTarget.value.trim() !== "" && Number.isFinite(v)) set(v);

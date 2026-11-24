@@ -3,7 +3,7 @@
  * Export. It has no download of its own: its button picks the driver's .frd, and the window
  * (with its charts) makes the file, so the curve gets a look before it goes out.
  */
-import { baffleGeometry } from "../sim.ts";
+import { baffleGeometry, onlyOpenBaffles } from "../sim.ts";
 import type { AppState } from "../state.ts";
 import type { ExportFormat } from "./types.ts";
 
@@ -26,6 +26,8 @@ export const baffleFrdFormat: ExportFormat = {
   help: "Load a driver's half-space curve (.frd, from the datasheet or a ground-plane measurement) and save it with your baffle's diffraction and phase, for VituixCAD, XSim or another crossover tool.",
   detail: baffleLine,
   scope: "workspace",
+  // Open baffles have no baffle step (the dipole model covers the board): only listed with a boxed design on.
+  shown: (s) => !onlyOpenBaffles(s),
   action: "Choose a driver curve…",
   pick: { accept: ".frd,.txt,.csv,.dat" },
   run() {

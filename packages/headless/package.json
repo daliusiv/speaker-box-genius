@@ -1,0 +1,13 @@
+{
+  "name": "@sbg/headless",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Speaker Box Genius without the browser: requests in, the app's own numbers out. Used by the local MCP server.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@sbg/engine": "workspace:*"
+  }
+}

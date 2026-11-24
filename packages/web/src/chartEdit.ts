@@ -40,7 +40,8 @@ export function retune(s: AppState, id: string, fb: number): AppState {
 }
 
 /** EQ points that can be dragged: peaking and shelves (frequency and gain). */
-export const draggableEq = (e: EqItem): e is Extract<EqItem, { type: "peak" | "lowshelf" | "highshelf" }> => e.on && e.type !== "linkwitz";
+// The first-order shelf (Dipole EQ) has no Q and isn't dragged on the chart: edit it in Signal → EQ.
+export const draggableEq = (e: EqItem): e is Extract<EqItem, { type: "peak" | "lowshelf" | "highshelf" }> => e.on && e.type !== "linkwitz" && e.type !== "lowshelf1";
 
 /** Moves an EQ point to frequency f and gain g (dB), within 10–500 Hz and ±24 dB. */
 export function moveEq(s: AppState, id: string, f: number, g: number): AppState {

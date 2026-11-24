@@ -115,3 +115,33 @@ test("Build on phones: controls look at least 40 px and take taps across 44 px; 
   expect(bad).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
 });
+
+// Browser page translation (Firefox Translations, Google Translate) swaps the page's text nodes for
+// new ones. React still points at the old ones, so inserting text next to them used to throw
+// "insertBefore … not a child of this node" and blank the app (#406: Firefox in German,
+// Build → Shape → Car wedge).
+test("Build: a page translated by the browser keeps working when the shape changes", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await build(page);
+  await page.evaluate(() => {
+    const walk = document.createTreeWalker(document.getElementById("root")!, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    while (walk.nextNode()) if (walk.currentNode.nodeValue!.trim()) nodes.push(walk.currentNode as Text);
+    nodes.forEach((n, i) => {
+      // Half as a translator's <font> wrapper (Google), half as a fresh text node (Firefox).
+      if (i % 2) {
+        const f = document.createElement("font");
+        f.textContent = n.nodeValue;
+        n.replaceWith(f);
+      } else n.replaceWith(document.createTextNode(n.nodeValue!));
+    });
+  });
+  await row(page, "Shape").locator("summary").click();
+  for (const shape of ["Car wedge", "Cylinder", "Box", "Car wedge", "Sphere", "Tapered", "Box"]) {
+    await row(page, "Shape").getByText(shape, { exact: true }).click();
+  }
+  await expect(page.locator("#panel-build .ui-card-title").first()).toBeVisible();
+  await expect(page.locator(".cut-table")).toBeVisible();
+  expect(errors).toEqual([]);
+});

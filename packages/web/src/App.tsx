@@ -13,9 +13,10 @@ import {
   type SimulationResult,
   TS_PARAMS,
   type Assumed,
+  type SimDelta,
 } from "@sbg/engine";
 import { Icon } from "./Icon.tsx";
-import { ChartEmphasis, CrosshairProvider, LogChart, shortName, type ChartHandle, type Series } from "./LogChart.tsx";
+import { ChartEmphasis, ChartTitleMenu, CrosshairProvider, LogChart, shortName, type ChartHandle, type Series } from "./LogChart.tsx";
 import { TimeChart } from "./TimeChart.tsx";
 import { addFilterAt, applyFit, changeFilterType, combineLanes, draggableEq, eqOnlyDb, eqQ, excursionLane, fitToLimits, moveEq, moveHighPass, retune, tunable, worstLimit, type AddType, type Fit, type SealedRef } from "./chartEdit.ts";
 import { useUndoable } from "./useUndoable.ts";
@@ -40,6 +41,7 @@ import {
   type EqItem,
   type Settings,
   qText,
+  MAX_MEASURED,
 } from "./state.ts";
 import { applyOwpr, withOpenisdDriver } from "./owprImport.ts";
 import { applyWpr } from "./wprImport.ts";
@@ -54,7 +56,8 @@ import { PwaStatus, usePwa } from "./Pwa.tsx";
 import { GettingStarted, LinkNote, useWelcome } from "./Welcome.tsx";
 import { TsEditor } from "./TsEditor.tsx";
 import { DriverCard } from "./DriverCard.tsx";
-import { Button, Card as KitCard, Menu, Notice, Segmented } from "./ui/index.ts";
+import { Button, Card as KitCard, Menu, Notice, Segmented, type MenuItem } from "./ui/index.ts";
+import { CHART_GROUPS, defaultSlots, parseSlots, pickSlot, resolveSlots, SLOT_COUNT, slotPlace, type ChartKey } from "./chartSlots.ts";
 
 /** What Size all does: its button's tooltip and help. */
 const SIZE_ALL_HELP =
@@ -62,7 +65,7 @@ const SIZE_ALL_HELP =
 import { VolumePanel } from "./VolumePanel.tsx";
 import { BuildSheet } from "./BuildSheet.tsx";
 import { DriveSheet } from "./DriveSheet.tsx";
-import {
+import { OB_FRAME,
   airOf,
   shapeOf,
   endCorrectionOf,
@@ -82,7 +85,6 @@ import {
   roomGainOf,
   lowEdge,
   minus3Points,
-  runDesigns,
   transientsOf,
   compareShort,
   solveDriver,
@@ -105,8 +107,15 @@ import {
   LIMIT_NAME,
   type Design,
   type LimitKind,
+  onlyOpenBaffles,
 } from "./sim.ts";
+import { useDesigns } from "./designRunner.ts";
+import { PowerChart, POWER_VIEWS, type PowerView } from "./PowerChart.tsx";
+import { eta0Of } from "./sim.ts";
+import { candidateInput, similarBoxes, similarJob, targetInput } from "./similarApp.ts";
+import { startSearch } from "./search.ts";
 import { RoomGainSection } from "./RoomGain.tsx";
+import { dipoleEq } from "./dipoleEq.ts";
 import { BaffleSection } from "./BafflePanel.tsx";
 import { BaffleFrdSheet, loadFrd } from "./BaffleFrd.tsx";
 import type { FrdFile } from "./baffleFrd.ts";
@@ -180,7 +189,7 @@ function useOpened(open: boolean, fn: () => void) {
   }, [open]);
 }
 
-export type ChartId = "excursion" | "pr" | "port" | "maxspl" | "impedance" | "za" | "delay" | "transient" | "pressure" | "air";
+export type ChartId = "excursion" | "pr" | "port" | "maxspl" | "power" | "impedance" | "za" | "delay" | "transient" | "pressure" | "air";
 
 /** The picker's two-part label: the model bold, then brand · nominal Ω · size from the database row. */
 function chosenOf(
@@ -387,6 +396,23 @@ export function App(props: { initial: AppState | null }) {
       return { unit: "pct", at: "now" };
     }
   });
+  const [powerView, setPowerView] = useState<PowerView>(() => {
+    try {
+      const v = localStorage.getItem("sbg.power") as PowerView | null;
+      return v && POWER_VIEWS.includes(v) ? v : "eff";
+    } catch {
+      return "eff";
+    }
+  });
+  const choosePowerView = (v: PowerView) => {
+    setPowerView(v);
+    try {
+      localStorage.setItem("sbg.power", v);
+    } catch {
+      // not remembered
+    }
+  };
+  const [powerPick, setPowerPick] = useState<string | null>(null);
   const chooseAirView = (v: Partial<typeof airView>) => {
     const next = { ...airView, ...v };
     setAirView(next);
@@ -475,6 +501,47 @@ export function App(props: { initial: AppState | null }) {
       // not remembered
     }
   };
+  // Desktop: each chart slot shows the chart picked in its title's menu (two rows of two on a
+  // wide screen; one per row shows the first three). The old single pick seeds the third slot.
+  const [slots, setSlots] = useState<ChartKey[]>(() => {
+    try {
+      return parseSlots(localStorage.getItem("sbg.chartSlots")) ?? defaultSlots(localStorage.getItem("sbg.chart"));
+    } catch {
+      return defaultSlots();
+    }
+  });
+  // A measured response or impedance, picked from a chart's menu.
+  const measuredInput = useRef<HTMLInputElement>(null);
+  const measuredUse = useRef<"overlay-response" | "overlay-impedance">("overlay-response");
+  // What the slots show this render (for jumps to a chart from the summary and notes).
+  const shownRef = useRef<ChartKey[]>([]);
+  const saveSlots = (next: ChartKey[]) => {
+    setSlots(next);
+    try {
+      localStorage.setItem("sbg.chartSlots", JSON.stringify(next));
+    } catch {
+      // not remembered
+    }
+  };
+  // Two charts a row only fit when the charts column is at least 1280 px (a window about 1700 px wide).
+  const twoFit = useNarrow("(min-width: 1700px)");
+  const [perRowPick, setPerRowPick] = useState<1 | 2>(() => {
+    try {
+      return localStorage.getItem("sbg.chartsPerRow") === "1" ? 1 : 2;
+    } catch {
+      return 2;
+    }
+  });
+  const choosePerRow = (n: 1 | 2) => {
+    setPerRowPick(n);
+    track("setting_changed", { key: "charts_per_row" });
+    try {
+      localStorage.setItem("sbg.chartsPerRow", String(n));
+    } catch {
+      // not remembered
+    }
+  };
+  const perRow: 1 | 2 = twoFit ? perRowPick : 1;
   // Which group of controls the left column shows.
   const [panel, setPanel] = useState<PanelId>(initialPanel);
   const choosePanel = (p: PanelId) => {
@@ -506,7 +573,13 @@ export function App(props: { initial: AppState | null }) {
   const jumpTo = (kind: LimitKind | null, ids: string[]) => showChart(kind ? LIMIT_CHART[kind] : "response", ids);
   /** Bring a chart into view (switching to it, and to the charts on phones), flashing it with these designs emphasised. */
   const showChart = (chart: ChartId | "response", ids: string[]) => {
-    if (chart !== "response" && (chart !== "excursion" || narrow)) chooseChart(chart);
+    if (narrow) {
+      if (chart !== "response") chooseChart(chart);
+    } else if (!shownRef.current.includes(chart)) {
+      // Not on screen: it takes the third slot (the first two hold response and excursion by default).
+      saveSlots(pickSlot(slots, shownRef.current, 2, chart));
+      track("chart_viewed", { chart });
+    }
     setPhoneView("charts");
     setFocusIds(ids.length ? ids : null);
     setTimeout(() => {
@@ -566,7 +639,8 @@ export function App(props: { initial: AppState | null }) {
   const simRef = useRef<AppState | null>(null);
   const simState = simStateOf(simRef.current, state);
   simRef.current = simState;
-  const designs = useMemo(() => runDesigns(simState, solved), [simState, solved]);
+  // In a worker: the charts keep the last run until the new one lands (designRunner.ts).
+  const designs = useDesigns(simState, solved);
   const freq = designs[0]?.result.freq ?? new Float64Array();
 
   const set = <K extends keyof AppState>(k: K, v: AppState[K]) => setState((s) => ({ ...s, [k]: v }));
@@ -641,6 +715,8 @@ export function App(props: { initial: AppState | null }) {
         fdd: undefined,
         xmax_mm: x.xmax_mm,
         pe_w: x.pe_w,
+        rth_k_w: 0,
+        tmax_C: 200,
         dvc:
           (d.voiceCoils ?? 1) > 1
             ? { on: true, entered: d.raw.vccon === "2" ? "series" : "parallel", wired: d.raw.vccon === "2" ? "series" : "parallel" }
@@ -885,8 +961,9 @@ export function App(props: { initial: AppState | null }) {
   // The charts under the tab row: one at a time, the choice remembered; unavailable ones are left out.
   const hasPr = prDesigns.length > 0;
   const hasPort = designs.some((d) => d.result.portVelocity || d.result.rearPortVelocity);
-  const hasBoxPressure = designs.some((d) => d.result.boxPressurePa && !(d.design.kind === "ib" && d.design.rear === "open"));
+  const hasBoxPressure = designs.some((d) => d.result.boxPressurePa && !(d.design.kind === "ib" && d.design.rear === "open") && d.design.kind !== "ob");
   const hasAir = designs.some((d) => d.result.airHd2);
+  const hasPower = designs.some((d) => d.result.power);
   // A dot on the charts where a box is over its limit at this drive (as in the summary).
   const overCharts = new Set(
     designs.filter((d) => !d.compare).flatMap((d) => limitsOf(d.result, state.xmax_mm, state.highPass.on, portLimitOf(state), airLimitOf(state)).over.map((k) => LIMIT_CHART[k])),
@@ -896,6 +973,7 @@ export function App(props: { initial: AppState | null }) {
     ...(hasPr ? [{ id: "pr" as const, label: "PR excursion", alert: overCharts.has("pr") ? "A passive radiator is past its Xmax" : undefined }] : []),
     ...(hasPort ? [{ id: "port" as const, label: "Port speed", alert: overCharts.has("port") ? "A port is over the chuffing line" : undefined }] : []),
     { id: "maxspl", label: "Max SPL" },
+    ...(hasPower ? [{ id: "power" as const, label: "Power" }] : []),
     { id: "impedance", label: "Impedance" },
     ...(hasBoxPressure ? [{ id: "pressure" as const, label: "Box pressure" }] : []),
     ...(hasAir ? [{ id: "air" as const, label: "Air distortion", alert: overCharts.has("air") ? "A design's air distortion is over the limit" : undefined }] : []),
@@ -904,10 +982,73 @@ export function App(props: { initial: AppState | null }) {
     { id: "transient", label: "Impulse / step" },
   ];
   const chartTab: ChartId = chartTabs.some((t) => t.id === chartPick) ? chartPick : chartTabs[0]!.id;
+  // Desktop slots: what this project has to show, and what each slot shows.
+  const availableCharts = new Set<ChartKey>(["response", "excursion", "maxspl", "impedance", "delay", "transient"]);
+  if (hasPr) availableCharts.add("pr");
+  if (hasPort) availableCharts.add("port");
+  if (hasBoxPressure) availableCharts.add("pressure");
+  if (hasAir) availableCharts.add("air");
+  if (hasPower) availableCharts.add("power");
+  if (zaDesigns.length > 0) availableCharts.add("za");
+  const shown = resolveSlots(slots, availableCharts).slice(0, perRow === 2 ? SLOT_COUNT : 3);
+  shownRef.current = shown;
+  /** Whether a chart (with its notes) is on screen: phones by tab, desktops by slot. */
+  const onScreen = (k: ChartKey) => (narrow ? k === "response" || k === chartTab : shown.includes(k));
+  /** A desktop chart's place in the grid (its slot); phones keep the page order. */
+  const cellStyle = (k: ChartKey) => (narrow ? undefined : { order: shown.indexOf(k) });
+  const chooseSlot = (i: number, k: ChartKey) => {
+    saveSlots(pickSlot(slots, shown, i, k));
+    track("chart_viewed", { chart: k });
+  };
+  /** Desktop chart titles: a menu of every chart this project has; picking one shown elsewhere swaps the two. */
+  const titleMenu = (chartId: string, name: string) => {
+    const i = shown.indexOf(chartId as ChartKey);
+    if (i < 0) return <span className="chart-title">{name}</span>;
+    const items: MenuItem[] = CHART_GROUPS.flatMap((g) => {
+      const charts = g.charts.filter((c) => availableCharts.has(c.key));
+      if (charts.length === 0) return [];
+      return [
+        { kind: "heading" as const, label: g.heading },
+        ...charts.map((c) => {
+          const j = shown.indexOf(c.key);
+          return {
+            label: c.name,
+            detail: c.unit || undefined,
+            checked: j === i,
+            description: j >= 0 && j !== i ? `Shown ${slotPlace(j, perRow)}: picking it swaps` : undefined,
+            onSelect: () => chooseSlot(i, c.key),
+          };
+        }),
+      ];
+    });
+    // The charts a measurement is drawn on offer to add one (up to the limit).
+    const overlay = chartId === "response" ? "overlay-response" : chartId === "impedance" ? "overlay-impedance" : null;
+    if (overlay && state.measured.length < MAX_MEASURED) {
+      items.push(
+        { kind: "separator" },
+        {
+          label: overlay === "overlay-response" ? "Add a measured response (.frd)…" : "Add a measured impedance (.zma)…",
+          description: "Your finished box, over the simulation",
+          onSelect: () => {
+            const input = measuredInput.current;
+            if (!input) return;
+            measuredUse.current = overlay;
+            input.accept = overlay === "overlay-response" ? ".frd,.txt,.csv" : ".zma,.txt,.csv,.dat";
+            input.click();
+          },
+        },
+      );
+    }
+    // The menu's own name for the chart, whatever view it's on (SPL, velocity, amp volts): the view
+    // shows in its switch and the note in the plot's corner, so the title matches its menu item.
+    const label = CHART_GROUPS.flatMap((g) => g.charts).find((c) => c.key === chartId)?.name ?? name;
+    return <Menu label={label} ariaLabel={`Chart: ${label}`} variant="ghost" className="chart-pick" items={items} />;
+  };
   // Impulse and step: worked out only while that chart is showing (a few thousand frequencies per box).
   const transients = useMemo(
-    () => (chartTab === "transient" ? transientsOf(state, solved, mainDesigns) : []),
-    [chartTab, state, solved, mainDesigns],
+    () => (onScreen("transient") ? transientsOf(state, solved, mainDesigns) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [onScreen("transient"), state, solved, mainDesigns],
   );
 
   // Edit mode's handles: each ported or PR box's tuning (on its curve), and each EQ point.
@@ -1155,6 +1296,21 @@ export function App(props: { initial: AppState | null }) {
     };
   }, [chartInput, splMode, editing, mainDesigns, editTarget, eqOnly, editAt, atLabel, limitLane]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Settings → Voice coil → Heated by the drive: where each box's coil settled, under the response.
+  const heatedNote = (() => {
+    if (state.settings.coilMode !== "heated") return undefined;
+    const hot = mainDesigns.filter((d) => d.coil);
+    if (hot.length === 0)
+      return <p className="hint">Coil heated by the drive: needs the driver&rsquo;s Pe or thermal resistance (Driver → Large signal), so the coil is cold for now.</p>;
+    const one = (d: (typeof hot)[number]) => (d.coil!.runaway ? "can't settle" : `${Math.round(d.coil!.tempC)} °C, ${d.coil!.compressionDb.toFixed(1).replace("-", "−")} dB`);
+    return (
+      <p className="hint">
+        Coil heated by the drive (pink noise {state.settings.heatBand[0]}–{state.settings.heatBand[1]} Hz at {driveLabel(state)}):{" "}
+        {hot.length === 1 ? one(hot[0]!) : hot.map((d) => `${d.label} ${one(d)}`).join(" · ")}. Every chart shows the hot driver.
+      </p>
+    );
+  })();
+
   const signalOn = (state.highPass.on ? 1 : 0) + (state.passive.on ? 1 : 0) + state.eq.filter((e) => e.on).length + (state.roomGain.mode !== "off" ? 1 : 0);
   const tabBadges: Partial<Record<PanelId, string>> = {
     boxes: String(state.designs.filter((d) => d.on).length),
@@ -1295,6 +1451,7 @@ export function App(props: { initial: AppState | null }) {
             pending={pendingFile}
             onUse={(f, u) => void applyImport(f, u)}
             notify={(m) => notify(m)}
+            baffle={!onlyOpenBaffles(state)}
           />
           {dropping && (
             <div className="drop-overlay" aria-hidden="true">
@@ -1370,6 +1527,33 @@ export function App(props: { initial: AppState | null }) {
             )}
             {(() => {
               const fromDb = fromDatabase(state.driverName, driverSource);
+              // "Find similar drivers": the main driver as it is now (edits included) against the
+              // database (similarApp.ts); the same-box check runs in the search worker.
+              const dbRow = fromDb && driverSource!.id ? db?.drivers.find((r) => r.id === driverSource!.id) : undefined;
+              const likeTarget = db ? targetInput(state, dbRow) : null;
+              const similarSource = likeTarget
+                ? {
+                    name: chosenOf(state, driverSource, db).model,
+                    fullName: state.driverName.trim() || "this driver",
+                    target: likeTarget,
+                    boxes: similarBoxes(state),
+                    check: (ids: string[], box: ReturnType<typeof similarBoxes>[number], onDelta: (id: string, delta: SimDelta | null) => void) => {
+                      let stop: (() => void) | null = null;
+                      let stopped = false;
+                      const s = latest.current;
+                      Promise.all(ids.map((id) => loadDriver(id).then((d) => ({ id, driver: candidateInput(s, d, db?.drivers.find((r) => r.id === id)) }), () => null))).then((loaded) => {
+                        const candidates = loaded.filter((x) => x !== null);
+                        for (const id of ids) if (!candidates.some((c) => c.id === id)) onDelta(id, null);
+                        if (stopped) return;
+                        stop = startSearch({ kind: "similar", ...similarJob(s, box.box, candidates) }, { step: (st) => st.kind === "similar" && onDelta(st.id, st.delta), done: () => {}, error: () => {} });
+                      });
+                      return () => {
+                        stopped = true;
+                        stop?.();
+                      };
+                    },
+                  }
+                : undefined;
               // A database driver whose values look implausible (db-tools plausibility checks).
               const flag = fromDb && driverSource!.id ? flagText(db?.drivers.find((r) => r.id === driverSource!.id)) : undefined;
               const attention = pasting
@@ -1403,6 +1587,7 @@ export function App(props: { initial: AppState | null }) {
                     rows={db?.drivers}
                     current={state.driverName.trim() || "Unnamed driver"}
                     chosen={chosenOf(state, driverSource, db)}
+                    similar={similarSource}
                     onPick={(id) => {
                       // From the assistant's "I have a speaker driver": the project is still the untouched
                       // example, so every box is sized for the new driver (with a port and a PR to suit)
@@ -1486,6 +1671,8 @@ export function App(props: { initial: AppState | null }) {
                     fdd: undefined,
                     xmax_mm: extras.xmax_mm,
                     pe_w: extras.pe_w,
+                    rth_k_w: 0,
+                    tmax_C: 200,
                   }));
                 }}
               />
@@ -1659,6 +1846,7 @@ export function App(props: { initial: AppState | null }) {
                     qtc: r.summary.qtc,
                     f3: r.summary.f3,
                     over: limitsOf(r, state.xmax_mm, state.highPass.on, portLimitOf(state), airLimitOf(state)).over.length,
+                    ob: r.summary.ob,
                   };
                 })()}
                 design={d}
@@ -1671,6 +1859,16 @@ export function App(props: { initial: AppState | null }) {
                 onSizeBandpass={d.kind === "bandpass" ? () => sizeOneBandpass(d) : undefined}
                 pickPort={d.kind === "vented" ? (x, vb, fb) => bestVentedPort(state, x, vb, fb) : undefined}
                 lineFb={d.kind === "line" ? (designs.find((x) => x.design.id === d.id)?.result.summary.fb ?? null) : undefined}
+                onDipoleEq={
+                  d.kind === "ob"
+                    ? () => {
+                        const r = dipoleEq(state, solved, d.id);
+                        if (!r) return notify("Dipole EQ needs the driver's T/S values and a board the driver fits on.");
+                        setStep((s) => ({ ...s, eq: r.eq }));
+                        notify(r.note);
+                      }
+                    : undefined
+                }
                 driverDisp_l={state.volume.driverDisp_l * state.drivers * (state.isobaric ? 2 : 1)}
                 wall_mm={state.volume.wall_mm}
                 canDelete={state.designs.length > 1}
@@ -1733,6 +1931,8 @@ export function App(props: { initial: AppState | null }) {
                     fdd: x.fdd,
                     xmax_mm: extras.xmax_mm,
                     pe_w: extras.pe_w,
+                    rth_k_w: 0,
+                    tmax_C: 200,
                     nominal_ohms: extras.nominal_ohms,
                     ...(x.drivers ? { drivers: x.drivers.count, wiring: x.drivers.wiring } : {}),
                     dvc: { ...s.dvc, on: false },
@@ -1814,6 +2014,8 @@ export function App(props: { initial: AppState | null }) {
                 re={solved.values.re !== undefined ? solved.values.re * dvcFactors(state).re : undefined}
                 winisdWatts={winisdWatts}
                 ampLoad={amplifierLoad(state, solved)}
+                heated={designs.find((d) => !d.compare && d.coil)?.coil ?? null}
+                hasThermal={state.pe_w > 0 || state.rth_k_w > 0}
               />
             </KitFields>
           </div>
@@ -1842,9 +2044,36 @@ export function App(props: { initial: AppState | null }) {
         {designs.length > 0 && (
           <ChartEmphasis.Provider value={emphasis}>
           <CrosshairProvider>
+          <ChartTitleMenu.Provider value={narrow ? null : titleMenu}>
+            {twoFit && !narrow && (
+              <div className="charts-per-row">
+                <span className="muted">Charts per row</span>
+                <div className="unit-switch" role="group" aria-label="Charts per row">
+                  <button aria-pressed={perRow === 1} onClick={() => choosePerRow(1)} aria-label="One chart per row" title="One chart per row">
+                    <Icon name="rows1" size={18} />
+                  </button>
+                  <button aria-pressed={perRow === 2} onClick={() => choosePerRow(2)} aria-label="Two charts per row" title="Two charts per row">
+                    <Icon name="rows2" size={18} />
+                  </button>
+                </div>
+              </div>
+            )}
+            <input
+              ref={measuredInput}
+              type="file"
+              hidden
+              onChange={(e) => {
+                const f = e.currentTarget.files?.[0];
+                e.currentTarget.value = "";
+                if (f) void applyImport(f, measuredUse.current);
+              }}
+            />
+            <div className={`chart-grid${perRow === 2 && !narrow ? " two" : ""}`}>
+            <div className="chart-cell" hidden={!onScreen("response")} style={cellStyle("response")}>
             <LogChart
               forum
               {...responseProps}
+              hidden={!onScreen("response")}
               handles={chartHandles}
               onSelect={(id) => {
                 if (id !== null) {
@@ -1869,7 +2098,7 @@ export function App(props: { initial: AppState | null }) {
                           ...state.eq.map((e) => ({
                             key: e.id,
                             id: `eq-${e.id}`,
-                            text: `${e.type === "peak" ? "PEQ" : e.type === "lowshelf" ? "LS" : e.type === "highshelf" ? "HS" : "LT"} ${e.type === "linkwitz" ? e.fp : e.freq} Hz`,
+                            text: `${e.type === "peak" ? "PEQ" : e.type === "lowshelf" ? "LS" : e.type === "lowshelf1" ? "LS6" : e.type === "highshelf" ? "HS" : "LT"} ${e.type === "linkwitz" ? e.fp : e.freq} Hz`,
                             target: e.target,
                             off: !e.on,
                           })),
@@ -1960,7 +2189,7 @@ export function App(props: { initial: AppState | null }) {
                               <>
                                 <Num help="Centre (or corner) frequency of this EQ band." label="Freq" unit="Hz" value={pickedItem.freq} onChange={(freq) => patchEq(pickedItem.id, { freq: Math.min(500, Math.max(10, freq)) })} />
                                 <Num help="Boost (+) or cut (−) in dB. Every +6 dB needs four times the power and doubles the excursion." label="Gain" unit="dB" value={pickedItem.gain_db} min={-24} onChange={(gain_db) => patchEq(pickedItem.id, { gain_db: Math.min(24, gain_db) })} />
-                                <Num help="Width of the band: higher Q is narrower. About 0.7 for broad shaping, 2–5 to fix a peak." label="Q" value={pickedItem.q} onChange={(q) => patchEq(pickedItem.id, { q })} />
+                                {pickedItem.type !== "lowshelf1" && <Num help="Width of the band: higher Q is narrower. About 0.7 for broad shaping, 2–5 to fix a peak." label="Q" value={pickedItem.q} onChange={(q) => patchEq(pickedItem.id, { q })} />}
                               </>
                             ) : (
                               <>
@@ -2007,7 +2236,8 @@ export function App(props: { initial: AppState | null }) {
                   </button>
                 )}
                 <button
-                  className={`chip${editing ? " on" : ""}`}
+                  type="button"
+                  className="chart-edit"
                   aria-pressed={editing}
                   onClick={() => {
                     if (editing) return closeEditor();
@@ -2018,7 +2248,8 @@ export function App(props: { initial: AppState | null }) {
                   }}
                   title="Drag on the chart: a box's tuning, or an EQ point"
                 >
-                  ✎ Edit
+                  <Icon name="pencil" size={14} />
+                  Edit
                 </button>
                 {/* Editing works on the relative view, so the scale switch steps aside until Done. */}
                 {!editing && (
@@ -2033,7 +2264,9 @@ export function App(props: { initial: AppState | null }) {
                 )}
                 </>
               }
+              foot={heatedNote}
             />
+            </div>
             {phone && driveBar}
             {narrow && (
               <TabRow<ChartId>
@@ -2044,11 +2277,13 @@ export function App(props: { initial: AppState | null }) {
                 className="chart-tabs"
               />
             )}
+            <div className="chart-cell" hidden={!onScreen("excursion")} style={cellStyle("excursion")}>
             <LogChart
               forum
               {...excursionChart(chartInput, xView)}
-              hidden={narrow && chartTab !== "excursion"}
+              hidden={!onScreen("excursion")}
               info={motionInfo(xView, "cone", state.settings.excursion)}
+              foot={<LowDriveNote state={state} chart="excursion" hidden={false} onRated={useRatedPower} />}
               actions={
                 narrow ? (
                   <Menu
@@ -2073,40 +2308,53 @@ export function App(props: { initial: AppState | null }) {
                 )
               }
             />
-            <LowDriveNote state={state} chart="excursion" hidden={narrow && chartTab !== "excursion"} onRated={useRatedPower} />
-            {!narrow && (
-              <TabRow<ChartId>
-                tabs={chartTabs}
-                selected={chartTab}
-                onSelect={chooseChart}
-                ariaLabel="More charts"
-                className="chart-tabs"
-              />
-            )}
+            </div>
             {hasPr && (
-              <LogChart forum {...prChart(chartInput, xView)} hidden={chartTab !== "pr"} info={motionInfo(xView, "pr", state.settings.excursion)} />
+              <div className="chart-cell" hidden={!onScreen("pr")} style={cellStyle("pr")}>
+                <LogChart forum {...prChart(chartInput, xView)} hidden={!onScreen("pr")} info={motionInfo(xView, "pr", state.settings.excursion)} />
+              </div>
             )}
             {hasPort && (
-              <LogChart forum {...portChart(chartInput)} hidden={chartTab !== "port"} />
+              <div className="chart-cell" hidden={!onScreen("port")} style={cellStyle("port")}>
+                <LogChart
+                  forum
+                  {...portChart(chartInput)}
+                  hidden={!onScreen("port")}
+                  foot={<LowDriveNote state={state} chart="port" hidden={false} onRated={useRatedPower} />}
+                />
+              </div>
             )}
-            {hasPort && <LowDriveNote state={state} chart="port" hidden={chartTab !== "port"} onRated={useRatedPower} />}
             {hasBoxPressure && (
-              <LogChart forum {...pressureChart(chartInput)} hidden={chartTab !== "pressure"} />
+              <div className="chart-cell" hidden={!onScreen("pressure")} style={cellStyle("pressure")}>
+                <LogChart forum {...pressureChart(chartInput)} hidden={!onScreen("pressure")} />
+              </div>
             )}
             {hasAir && (
+              <div className="chart-cell" hidden={!onScreen("air")} style={cellStyle("air")}>
               <AirChart
                 designs={designs}
                 freq={freq}
-                hidden={chartTab !== "air"}
+                hidden={!onScreen("air")}
                 limit_pct={airLimitOf(state)}
                 highPassOn={state.highPass.on}
                 view={airView}
                 onView={chooseAirView}
               />
+              </div>
             )}
+            <div className="chart-cell" hidden={!onScreen("maxspl")} style={cellStyle("maxspl")}>
             <LogChart
               {...maxSplChart(chartInput, maxMode)}
-              hidden={chartTab !== "maxspl"}
+              hidden={!onScreen("maxspl")}
+              foot={
+                state.settings.signal.program ? (
+                  <p className="hint">
+                {signalLabel(state.settings.signal)}
+                {state.settings.signal.target_dB !== null ? `, target ${fmtCrest(state.settings.signal.target_dB)} dB` : ""}: each curve is the loudest that box plays on
+                this signal (average SPL); turn Program off for the sine curve. Headroom: plain = 3 dB or more spare, amber = under 3 dB, red = short.
+                  </p>
+                ) : undefined
+              }
               info={
                 winisdWatts ? (
                   <p>
@@ -2141,15 +2389,25 @@ export function App(props: { initial: AppState | null }) {
                 </>
               }
             />
-            {state.settings.signal.program && chartTab === "maxspl" && (
-              <p className="hint">
-                {signalLabel(state.settings.signal)}
-                {state.settings.signal.target_dB !== null ? `, target ${fmtCrest(state.settings.signal.target_dB)} dB` : ""}: each curve is the loudest that box plays on
-                this signal (average SPL); turn Program off for the sine curve. Headroom: plain = 3 dB or more spare, amber = under 3 dB, red = short.
-              </p>
+            </div>
+            {hasPower && (
+              <div className="chart-cell" hidden={!onScreen("power")} style={cellStyle("power")}>
+                <PowerChart
+                  designs={designs}
+                  hidden={!onScreen("power")}
+                  view={powerView}
+                  onView={choosePowerView}
+                  pick={powerPick}
+                  onPick={setPowerPick}
+                  eta0={eta0Of(solved.values, airOf(state).c)}
+                  heatBand={state.settings.heatBand}
+                  narrow={narrow}
+                />
+              </div>
             )}
+            <div className="chart-cell" hidden={!onScreen("impedance")} style={cellStyle("impedance")}>
             <LogChart
-              hidden={chartTab !== "impedance"}
+              hidden={!onScreen("impedance")}
               {...impedanceChart(chartInput, zMode, impedanceExtra)}
               actions={
                 <div className="unit-switch" role="group" aria-label="Show">
@@ -2166,19 +2424,25 @@ export function App(props: { initial: AppState | null }) {
                 </div>
               }
             />
+            </div>
             {zaDesigns.length > 0 && (
-              <LogChart {...zaChart(chartInput)} hidden={chartTab !== "za"} />
-            )}
-            {zaDesigns.length > 0 && chartTab === "za" && (
+              <div className="chart-cell" hidden={!onScreen("za")} style={cellStyle("za")}>
+              <LogChart
+                {...zaChart(chartInput)}
+                hidden={!onScreen("za")}
+                foot={
               <p className="hint">
                 Solid: resistance, dashed: reactance. The air load the line puts on the cone, as Hornresp&rsquo;s Za chart shows it: taken at the driver (at the
                 horn&rsquo;s throat for a front-loaded horn, without its chambers), divided by ρc/S there. Peaks are the
                 line&rsquo;s resonances; resistance near 1 over a wide band means the horn is loading the cone well, and
                 stuffing shows as the ripples shrinking towards 1.
               </p>
+                }
+              />
+              </div>
             )}
-            {chartTab === "transient" && (
-              <>
+            {onScreen("transient") && (
+              <div className="chart-cell" style={cellStyle("transient")}>
                 <TimeChart
                   title={transientView === "impulse" ? "Impulse response" : "Step response"}
                   curves={transients}
@@ -2197,20 +2461,27 @@ export function App(props: { initial: AppState | null }) {
                       className="chart-tabs"
                     />
                   }
-                />
+                  foot={
                 <p className="hint">
                   What each box puts out for a click (impulse) and for the voltage switched on and held (step), at 1 m, with
                   EQ and the high-pass filter, as Hornresp shows it (the response up to 20&nbsp;kHz, from radiated power).
                   The box alone: no baffle step or room gain. A positive start means the cone moves out. A sealed box&rsquo;s
                   step falls back quickly; a ported box&rsquo;s or a line&rsquo;s rings on as the port or line keeps sounding.
                 </p>
-              </>
+                  }
+                />
+              </div>
             )}
-            <LogChart {...delayChart(chartInput)} hidden={chartTab !== "delay"} />
+            <div className="chart-cell" hidden={!onScreen("delay")} style={cellStyle("delay")}>
+              <LogChart {...delayChart(chartInput)} hidden={!onScreen("delay")} />
+            </div>
+            </div>
+          </ChartTitleMenu.Provider>
           </CrosshairProvider>
           </ChartEmphasis.Provider>
         )}
-        {mainDesigns.length > 0 && <MeasuredCard measured={state.measured} designs={mainDesigns} onChange={(measured) => setStep((s) => ({ ...s, measured }))} />}
+        {/* Only once there's a measurement: adding one is in the Response and Impedance chart menus (and Open). */}
+        {mainDesigns.length > 0 && state.measured.length > 0 && <MeasuredCard measured={state.measured} designs={mainDesigns} onChange={(measured) => setStep((s) => ({ ...s, measured }))} />}
 
         <footer className="site-footer muted">
           <p className="footer-about">
@@ -2614,7 +2885,7 @@ function Summary({
                     <span className="dot" style={{ background: color }} aria-hidden="true" />
                     <span>{shortName(d.name)}</span>
                   </th>
-                  <td>{(d.kind === "ib" && d.rear === "open" ? "Open" : volCell(vb_l, acting_l, state.settings.units))}</td>
+                  <td>{(d.kind === "ib" && d.rear === "open" ? "Open" : d.kind === "ob" ? OB_FRAME[d.frame] : volCell(vb_l, acting_l, state.settings.units))}</td>
                   <td>
                     {fmt(r.summary.f3)}
                     {r.summary.f3High !== undefined && `–${fmt(r.summary.f3High)}`} Hz
@@ -2746,7 +3017,7 @@ function Summary({
                   <span title={label}>{shortName(label)}</span>
                 </th>
                 <td>
-                  {(d.kind === "ib" && d.rear === "open" ? "Open" : volCell(vb_l, acting_l, state.settings.units))}
+                  {(d.kind === "ib" && d.rear === "open" ? "Open" : d.kind === "ob" ? OB_FRAME[d.frame] : volCell(vb_l, acting_l, state.settings.units))}
                   {d.kind === "bandpass" && ` + ${fmtQ(d.frontVb_l, "vol", state.settings.units)}`}
                 </td>
                 <td>

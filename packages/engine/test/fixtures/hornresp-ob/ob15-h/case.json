@@ -1,0 +1,23 @@
+{
+  "title": "Dayton UMII15-22, H-frame",
+  "record": "O5-ob15-h.txt",
+  "driver": {
+    "fs": 29,
+    "qms": 2.34,
+    "qes": 1,
+    "vas_l": 96,
+    "re": 4.2,
+    "sd_cm2": 791,
+    "le_mh": 0.7
+  },
+  "hornrespPath_cm": 77.0,
+  "text": "Hornresp: CH, S = 3600 cm², L12 = L56 = 20 cm. App: 60 × 60 cm frame, no wall thickness, 40 cm deep.",
+  "box": {
+    "kind": "open-baffle",
+    "frame": "h",
+    "w_cm": 60,
+    "h_cm": 60,
+    "t_cm": 0,
+    "depth_cm": 40
+  }
+}

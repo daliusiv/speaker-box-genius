@@ -3,6 +3,7 @@ title: "Linkwitz Transform: deep bass from a small sealed box, and what it reall
 description: How the Linkwitz Transform works, how to choose f0, Q0, fp and Qp, how much boost, excursion and amplifier power it needs, and why it doesn't raise maximum output, with a worked 10-inch example.
 path: guides/linkwitz-transform
 image: chart:lt-example/response
+art: A small sealed box beside its falling response, the EQ boost that lifts it and the flat target.
 order: 14
 group: sealed
 ---

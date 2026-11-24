@@ -1,0 +1,35 @@
+{
+  "brand": "Accuton",
+  "model": "CL173-6-191",
+  "type": "midbass",
+  "nominal_ohms": 6,
+  "size_in": 7,
+  "ts": {
+    "fs": 51,
+    "qms": 3.92,
+    "qes": 0.43,
+    "vas_l": 17,
+    "re": 9.9,
+    "sd_cm2": 141.03,
+    "qts": 0.39,
+    "mms_g": 16.09,
+    "le_mh": 0.65,
+    "bl": 10.93,
+    "xmax_mm": 6,
+    "pe_w": 120
+  },
+  "physical": {
+    "cutout_mm": 146,
+    "depth_mm": 94.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://accuton.com/home-audio/drivers/crystalid/CL173-6-191",
+      "retrieved": "2026-11-19",
+      "note": "Values from the product pages on accuton.com, used with Accuton's permission (19 Nov 2026), re-read from the website each month. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Accuton's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Re 9.9 Ω is high for the 6 Ω in the model code; check against the product page."
+}

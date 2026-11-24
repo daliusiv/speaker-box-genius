@@ -3,6 +3,7 @@ title: "Box losses (Ql, Qa, Qp): what values should you use?"
 description: What leakage, absorption and port losses are, what values real boxes have, how much they change the response and the impedance, and how to measure your own box's losses.
 path: guides/box-losses
 image: chart:losses-ql10/impedance
+art: A box in cutaway with small leaks of air escaping through its seams.
 order: 13
 group: measuring
 ---
@@ -69,7 +70,7 @@ The other two losses, for comparison (with Ql 10):
 The losses show up most clearly in the **impedance** curve: more loss means **lower peaks**, while the dip stays at the tuning. Small described a full method for working out QL, QA and QP from impedance measurements [4]. In practice, there's an easier way with a simulator:
 
 1. Measure your box's impedance (DATS, REW, ARTA or similar) at a low level, after measuring the driver's own T/S parameters.
-2. Load the measurement into the app with the **Measured** card (`.zma`), and look at the **Impedance** chart.
+2. Load the measurement (`.zma`) into the app: **Add a measured impedance** in the **Impedance** chart's menu (on a phone, **Open / Import**), and look at the **Impedance** chart.
 3. Adjust **Leak Ql** in **Settings → Simulation → Box** until the simulated peaks are the same height as the measured ones. If the upper peak is too high and the lower one about right, lower **Absorb Qa** instead; if it's the lower peak, lower **Port Qp**.
 4. Keep those values for that box: the simulation now includes its real losses.
 

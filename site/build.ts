@@ -22,7 +22,7 @@
  * docs/validation/results.json), the sitemaps (site/sitemap.ts) and robots.txt, and copies
  * site/img to /guides/img/.
  */
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
@@ -33,19 +33,29 @@ import { cirPath } from "../packages/engine/validation/spice/fixtures.ts";
 import { validationLinks } from "./validationLinks.ts";
 import { CHART_STYLE, chart } from "./chart.ts";
 import { fillLive } from "./liveNumbers.ts";
-import { guideCardHtml, guideCharts } from "./guideCharts.ts";
+import { guideCardHtml, guideCharts, type ChartData } from "./guideCharts.ts";
+import { htmlToMarkdown, llmsFull, llmsTxt, toAiMarkdown, twinPath, type LlmsEntry, type Twin, type TwinPage } from "./aiDocs.ts";
 import { cardSvg, findChrome, Rasterizer } from "./og.ts";
 import { CardCache, cardSalt } from "./cardCache.ts";
-import { CALC_PAGES, CALC_STYLE, CALCULATORS, fillCalc, HUB_STYLE, hubCards, viteScript } from "./calculators.ts";
+import { CALC_PAGES, CALC_STYLE, CALCULATORS, fillCalc, HUB_STYLE, hubCards, liveChartCss, viteScript } from "./calculators.ts";
 import { LastmodStore, sitemapFiles, type SitemapEntry, type SitemapGroup } from "./sitemap.ts";
-import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, hubSizes, loadDb, prCandidate, relatedDrivers, sens283, shareLink, sizeContent, sizeLabel, sizePath, sizeSlug, type DriverPage, type PageLd, type VariantLink } from "./drivers.ts";
+import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, hubSizes, loadDb, prCandidate, refFreq, relatedDrivers, sens283, shareLink, sizeContent, sizeLabel, sizePath, sizeSlug, type DriverPage, type PageLd, type PageLinks, type VariantLink, withPr } from "./drivers.ts";
+import { substitutesFor } from "./similar.ts";
+import { asCompare } from "../packages/web/src/state.ts";
 import { variantFamilies, variantLabels } from "../packages/db-tools/src/variants.ts";
 
 export const SITE = "https://speakerboxgenius.com";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = "https://github.com/daliusiv/speaker-box-genius";
-/** Visit counts (no cookies; see site/privacy.md). The app's index.html has the same tag. */
-export const GOATCOUNTER = '<script data-goatcounter="https://speakerboxgenius.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>';
+/**
+ * Visit counts (no cookies; see site/privacy.md). The app's index.html has the same tag.
+ * GoatCounter's count.js doesn't check Do Not Track / Global Privacy Control, so this loads it only when
+ * the browser hasn't asked not to be tracked (same test as telemetrySchema.ts browserSaysNo) and
+ * Settings → Privacy → Help improve the app isn't off (telemetry.ts PREF, same origin as every site page).
+ * Not loaded → window.goatcounter is undefined, so the guarded event counts (ask-ai) stop too.
+ */
+export const GOATCOUNTER =
+  '<script>(function(){var n=navigator,w=window;if(n.globalPrivacyControl===true||n.doNotTrack==="1"||n.doNotTrack==="yes"||w.doNotTrack==="1")return;try{if(localStorage.getItem("sbg.usageStats")==="off")return}catch(e){}var s=document.createElement("script");s.async=true;s.src="https://gc.zgo.at/count.js";s.setAttribute("data-goatcounter","https://speakerboxgenius.goatcounter.com/count");document.head.appendChild(s)})()</script>';
 
 export interface Page {
   title: string;
@@ -55,6 +65,10 @@ export interface Page {
   order: number;
   /** Which section of the guides index it's listed in (an id from GUIDE_GROUPS). */
   group?: string;
+  /** The guide's illustration's alt text (`art:` in the front matter); the picture is site/img/guides/<slug>.svg. */
+  art?: string;
+  /** Where the illustration is served, when the guide has one (set by `withArt`). */
+  thumb?: string;
   body: string;
 }
 
@@ -80,7 +94,95 @@ export function parsePage(text: string, file = "page"): Page {
   for (const k of ["title", "description", "path"]) if (!meta[k]) throw new Error(`${file}: front matter needs "${k}"`);
   const path = `/${meta.path!.replace(/^\/+|\/+$/g, "")}/`;
   if (meta.group && !GUIDE_GROUPS.some((g) => g.id === meta.group)) throw new Error(`${file}: unknown group "${meta.group}" (one of ${GUIDE_GROUPS.map((g) => g.id).join(", ")})`);
-  return { title: meta.title!, description: meta.description!, path, image: meta.image, order: Number(meta.order ?? 99), group: meta.group, body: m[2]! };
+  return { title: meta.title!, description: meta.description!, path, image: meta.image, order: Number(meta.order ?? 99), group: meta.group, art: meta.art, body: m[2]! };
+}
+
+/** A guide's slug: the last part of its path (`/guides/port-chuffing/` → `port-chuffing`). */
+export const guideSlug = (p: Page) => p.path.split("/").filter(Boolean).pop()!;
+
+/**
+ * Finds the guide's illustration, site/img/guides/<slug>.svg. A picture needs its alt text (`art:`)
+ * and alt text needs its picture, so neither is forgotten when the other is added.
+ */
+export function withArt(page: Page, file = page.path): Page {
+  const svg = join(HERE, "img", "guides", `${guideSlug(page)}.svg`);
+  const has = existsSync(svg);
+  if (has && !page.art) throw new Error(`${file}: site/img/guides/${guideSlug(page)}.svg needs its alt text: add "art: <what the picture shows>" to the front matter`);
+  if (!has && page.art) throw new Error(`${file}: has "art:" but no site/img/guides/${guideSlug(page)}.svg`);
+  return has ? { ...page, thumb: `/guides/img/guides/${guideSlug(page)}.svg` } : page;
+}
+
+/** The guide's illustration as a banner, placed after the intro (the lede), before the open buttons. */
+export function withHero(content: string, page: Page): string {
+  if (!page.thumb) return content;
+  const hero = `<figure class="hero"><img src="${page.thumb}" alt="${escapeHtml(page.art!)}" width="1200" height="630"></figure>`;
+  const lede = /<p class="lede">[\s\S]*?<\/p>/.exec(content) ?? /<h1>[\s\S]*?<\/h1>/.exec(content);
+  if (!lede) return hero + "\n" + content;
+  const at = lede.index + lede[0].length;
+  return `${content.slice(0, at)}\n${hero}${content.slice(at)}`;
+}
+
+/** "Ask AI about this page" (#393): the borderless menu under a guide's or calculator's H1. */
+export const ASK_AI_STYLE = `
+.ask-ai{display:flex;justify-content:flex-end;margin:.2rem -.85rem 1rem 0}
+.ask-ai-d{position:relative}
+.ask-ai-btn{display:inline-flex;align-items:center;gap:.5rem;min-height:44px;padding:.45rem .85rem;border-radius:.6rem;color:var(--fg);font-size:.94rem;font-weight:600;cursor:pointer;list-style:none;user-select:none}
+.ask-ai-btn::-webkit-details-marker{display:none}
+.ask-ai-btn:hover,.ask-ai-d[open]>.ask-ai-btn{background:rgb(255 255 255 / .05)}
+.ask-ai-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ask-ai-btn svg{color:var(--muted)}
+.ask-ai-caret{color:var(--muted);font-size:.8rem}
+.ask-ai-menu{position:absolute;z-index:5;top:calc(100% + .4rem);right:0;width:20rem;padding:.35rem;background:var(--card);border:1px solid var(--border);border-radius:.7rem;display:flex;flex-direction:column}
+main a.ask-ai-item,.ask-ai-item{display:flex;align-items:center;gap:.75rem;min-height:52px;padding:.5rem .7rem;border-radius:.5rem;color:var(--fg);text-align:left;text-decoration:none;cursor:pointer;width:100%}
+.ask-ai-item:hover,.ask-ai-item:focus-visible{background:rgb(255 255 255 / .05);outline:none}
+.ask-ai-idle,.ask-ai-done{display:flex;align-items:center;gap:.75rem}
+.ask-ai-ic{display:flex;color:var(--muted)}
+.ask-ai-ic.ok{color:var(--accent)}
+.ask-ai-txt{display:flex;flex-direction:column;line-height:1.3}
+.ask-ai-label{font-size:.95rem;font-weight:600}
+.ask-ai-detail{font-size:.82rem;color:var(--muted)}
+@media (max-width:520px){.ask-ai-d{position:static}.ask-ai{position:relative}.ask-ai-menu{width:auto;left:.85rem;right:0}}
+`;
+
+const SVG = (w: number, d: string) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const ICON_CHAT = SVG(18, '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>');
+const ICON_COPY = SVG(18, '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>');
+const ICON_OK = SVG(18, '<path d="M20 6 9 17l-5-5"/>');
+const ICON_OUT = SVG(16, '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>');
+
+/** The prompt the Claude / ChatGPT links start a chat with. */
+export const askAiPrompt = (path: string) => `Read ${SITE}${twinPath(path)} from Speaker Box Genius so I can ask questions about it.`;
+
+/** Copy fetches the twin and puts it on the clipboard (else opens it); outside click / Escape closes; counts go to GoatCounter when it's loaded. */
+const ASK_AI_SCRIPT = `(()=>{const d=document.querySelector(".ask-ai-d");if(!d)return;const s=d.querySelector("summary");
+const count=(k)=>{try{window.goatcounter&&window.goatcounter.count&&window.goatcounter.count({path:"ask-ai-"+k,title:location.pathname,event:true})}catch(e){}};
+const c=d.querySelector('[data-ask-ai="copy"]');const done=c.querySelector(".ask-ai-done"),idle=c.querySelector(".ask-ai-idle");
+c.addEventListener("click",(e)=>{e.preventDefault();count("copy");const url=c.getAttribute("href");
+const text=()=>fetch(url).then((r)=>{if(!r.ok)throw new Error(r.status);return r.text()});
+const ok=()=>{idle.hidden=true;done.hidden=false};const fail=()=>{window.open(url,"_blank","noopener")};
+try{if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){navigator.clipboard.write([new ClipboardItem({"text/plain":text().then((t)=>new Blob([t],{type:"text/plain"}))})]).then(ok,()=>text().then((t)=>navigator.clipboard.writeText(t)).then(ok,fail));return}}catch(e){}
+if(navigator.clipboard&&navigator.clipboard.writeText){text().then((t)=>navigator.clipboard.writeText(t)).then(ok,fail)}else fail()});
+d.querySelectorAll("[data-ask-ai]:not([data-ask-ai=copy])").forEach((a)=>a.addEventListener("click",()=>{count(a.getAttribute("data-ask-ai"));d.open=false}));
+d.addEventListener("toggle",()=>{if(d.open){idle.hidden=false;done.hidden=true}});
+document.addEventListener("click",(e)=>{if(d.open&&!d.contains(e.target))d.open=false});
+document.addEventListener("keydown",(e)=>{if(e.key==="Escape"&&d.open){d.open=false;s.focus()}});})();`;
+
+/** The Ask AI menu for a page: a <details> (opens without JS) with Copy page as Markdown, Open in Claude, Open in ChatGPT. */
+export function askAi(path: string): string {
+  const twin = twinPath(path);
+  const q = encodeURIComponent(askAiPrompt(path));
+  const item = (key: string, href: string, icon: string, label: string, detail: string, ext = true) =>
+    `<a class="ask-ai-item" data-ask-ai="${key}" href="${href}"${ext ? ' target="_blank" rel="noopener"' : ""}><span class="ask-ai-ic">${icon}</span><span class="ask-ai-txt"><span class="ask-ai-label">${label}</span><span class="ask-ai-detail">${detail}</span></span></a>`;
+  const copy = `<a class="ask-ai-item" data-ask-ai="copy" href="${twin}"><span class="ask-ai-idle"><span class="ask-ai-ic">${ICON_COPY}</span><span class="ask-ai-txt"><span class="ask-ai-label">Copy page as Markdown</span><span class="ask-ai-detail">For any AI chat</span></span></span><span class="ask-ai-done" hidden><span class="ask-ai-ic ok">${ICON_OK}</span><span class="ask-ai-txt"><span class="ask-ai-label">Copied</span><span class="ask-ai-detail">Paste it into any AI chat</span></span></span></a>`;
+  return `<div class="ask-ai"><details class="ask-ai-d"><summary class="ask-ai-btn">${ICON_CHAT}<span>Ask AI about this page</span><span class="ask-ai-caret" aria-hidden="true">▾</span></summary><div class="ask-ai-menu" aria-label="Ask AI about this page">${copy}${item("claude", `https://claude.ai/new?q=${q}`, ICON_OUT, "Open in Claude", "Opens a chat that reads this page")}${item("chatgpt", `https://chatgpt.com/?q=${q}`, ICON_OUT, "Open in ChatGPT", "Opens a chat that reads this page")}</div></details></div>\n<script>${ASK_AI_SCRIPT}</script>`;
+}
+
+/** Puts the Ask AI menu right after the page's H1 (before the lede, hero and buttons). */
+export function withAskAi(content: string, path: string): string {
+  const h1 = /<h1>[\s\S]*?<\/h1>/.exec(content);
+  if (!h1) throw new Error(`${path}: no <h1> for the Ask AI menu`);
+  const at = h1.index + h1[0].length;
+  return `${content.slice(0, at)}\n${askAi(path)}${content.slice(at)}`;
 }
 
 export const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -92,7 +194,8 @@ function inline(s: string): string {
   out = out
     // Images live in site/img, served from /guides/img/ whatever page they're on.
     .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_, alt: string, src: string) => `<img src="${src.replace(/^img\//, "/guides/img/")}" alt="${alt}" loading="lazy">`)
-    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, text: string, href: string) => {
+    // A URL may hold one level of brackets (Wikipedia's `Passive_radiator_(speaker)`).
+    .replace(/\[([^\]]+)\]\(((?:[^()\s]|\([^()\s]*\))+)\)/g, (_, text: string, href: string) => {
       const external = /^https?:/.test(href) && URL.parse(href)?.origin !== SITE;
       return `<a href="${href}"${external ? ' rel="noopener"' : ""}>${text}</a>`;
     })
@@ -196,6 +299,9 @@ export function markdown(md: string, charts?: (src: string, title?: string) => s
   }
   // The paragraph right under the page title is its introduction.
   if (out[0]?.startsWith("<h1>") && out[1]?.startsWith("<p>")) out[1] = out[1].replace("<p>", '<p class="lede">');
+  // The numbered list under "## Sources" is set smaller and muted.
+  const src = out.findIndex((b) => b.startsWith('<h2 id="sources">'));
+  if (src >= 0 && out[src + 1]?.startsWith("<ol>")) out[src + 1] = out[src + 1]!.replace("<ol>", '<ol class="sources">');
   return out.join("\n");
 }
 
@@ -240,6 +346,8 @@ pre code{padding:0;background:none}
 figure{margin:1.5rem 0}
 figure img{display:block;width:100%;height:auto;border:1px solid var(--border);border-radius:.7rem}
 main img{max-width:100%;height:auto}
+.hero{margin:1.4rem 0 1.2rem}
+.hero img{aspect-ratio:1200/630}
 figcaption{margin-top:.4rem;color:var(--muted);font-size:.9rem}
 .note{margin:1.4rem 0;padding:.2rem 1rem;border-left:3px solid var(--draw);border-radius:.4rem;background:var(--card)}
 .table{overflow-x:auto;margin:1.2rem 0}
@@ -256,6 +364,9 @@ th{color:var(--muted);font-weight:600}
 .cards a:focus-visible{outline:none}
 .cards li:has(a:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
 .cards p{margin:.3rem 0 0;color:var(--muted)}
+.cards li:has(.thumb){display:flex;flex-direction:column}
+.cards .thumb{order:-1;display:block;width:calc(100% + 2.2rem);max-width:none;height:auto;aspect-ratio:1200/630;margin:-1rem -1.1rem .85rem;border-bottom:1px solid var(--border);border-radius:.8rem .8rem 0 0}
+@media (max-width:767px){.cards li:has(.thumb){display:flow-root}.cards li:has(.thumb)>a{display:block;margin-bottom:.55rem}.cards .thumb{float:left;width:6rem;height:4.5rem;aspect-ratio:auto;margin:.2rem .9rem .35rem 0;object-fit:cover;border:1px solid var(--border);border-radius:.5rem}.cards li:has(.thumb) p{margin-top:0}}
 .cards.small{grid-template-columns:repeat(auto-fill,minmax(min(15rem,100%),1fr));gap:.8rem}
 .cards.small a{font-size:1rem}
 .group-intro{color:var(--muted);margin:-.2rem 0 1rem}
@@ -264,6 +375,34 @@ th{color:var(--muted);font-weight:600}
 .related{margin-top:3rem}
 footer{max-width:46rem;margin:0 auto;padding:1.5rem 1.1rem 3rem;border-top:1px solid var(--border);color:var(--muted);font-size:.9rem}
 footer a{color:var(--muted)}
+/* Readability: body content only (top-level headings and plain lists), so forms, card grids and sections keep their look. */
+main>h2{margin:3rem 0 .8rem;padding-top:1.2rem;border-top:1px solid var(--border);scroll-margin-top:1rem}
+main>h2:first-of-type{margin-top:2.2rem;padding-top:0;border-top:0}
+main>h3{margin-top:1.9rem}
+main>:is(ul,ol):not([class]){padding-left:1.35rem;margin:.8rem 0 1.3rem}
+main>:is(ul,ol):not([class]) li{margin:.5rem 0}
+main>:is(ul,ol):not([class]) li::marker{color:var(--muted)}
+main strong{color:var(--fg)}
+main p,main li{overflow-wrap:break-word}
+main a:not(.button){text-underline-offset:3px;text-decoration-color:rgb(78 215 233 / .4)}
+main a:not(.button):hover{text-decoration-color:var(--accent)}
+/* A lone button is the page's action; a row of buttons is a set of equal choices. */
+.cta .button:not(:only-child){background:transparent;color:var(--fg);box-shadow:inset 0 0 0 1px var(--input-border,#343b4a)}
+.cta .button:not(:only-child):hover{box-shadow:inset 0 0 0 1px var(--accent)}
+.note{margin:1.8rem 0;padding:.9rem 1.15rem;border:1px solid var(--border);border-left:3px solid var(--draw);border-radius:.6rem}
+.note>:first-child{margin-top:0}
+.note>:last-child{margin-bottom:0}
+.table{margin:1.6rem 0;border:1px solid var(--border);border-radius:.7rem;background:var(--card)}
+.table table{font-variant-numeric:tabular-nums}
+.table th,.table td{padding:.65rem .85rem}
+.table thead th{background:rgb(255 255 255 / .03)}
+.table tbody tr:last-child>*{border-bottom:0}
+ol.sources{padding-left:1.35rem;font-size:.88rem}
+ol.sources li{margin:.4rem 0;color:var(--muted)}
+figure>figcaption{margin-top:.65rem;line-height:1.55}
+/* "On this page": the right-hand margin, wide screens only; the column stays centred. */
+.toc{display:none}
+@media (min-width:1240px){main{position:relative}.toc{display:block;position:absolute;top:0;bottom:0;left:calc(100% + 1.25rem);width:13rem}.toc-inner{position:sticky;top:1.5rem;max-height:calc(100vh - 3rem);overflow-y:auto;padding-top:1.35rem}.toc-h{margin:0 0 .5rem;color:var(--muted);font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}.toc ol{margin:0;padding:0;list-style:none;border-left:1px solid var(--border)}.toc li{margin:0}.toc a{display:block;margin-left:-1px;padding:.3rem 0 .3rem .8rem;border-left:2px solid transparent;color:var(--muted);font-size:.88rem;line-height:1.35;text-decoration:none}.toc a:hover{color:var(--fg);border-left-color:var(--accent)}}
 `;
 
 /** Speaker Box Genius as a schema.org Organization: every page's author and publisher. */
@@ -282,7 +421,35 @@ const NAV = [
   { href: "/validation/", label: "Validation", match: (p: string) => p === "/validation/", cls: "wider" },
 ];
 
-export function layout(o: { title: string; description: string; path: string; image?: string; imagePath?: string; content: string; guides: Page[]; style?: string; ld?: PageLd; scripts?: string[] }): string {
+/** Block elements whose h2s belong to them (index groups, related guides, calculator forms), not to the page. */
+const NESTS = new Set(["section", "form", "div", "aside", "figure", "nav", "details", "fieldset", "table", "ul", "ol", "header", "footer", "article"]);
+
+/** The page's own h2s (with ids, not inside a block such as a section or form), in order. */
+export function topHeadings(html: string): { id: string; text: string }[] {
+  const out: { id: string; text: string }[] = [];
+  let depth = 0;
+  const tag = /<(\/?)([a-z][a-z0-9-]*)\b([^>]*)>/gi;
+  for (let m = tag.exec(html); m; m = tag.exec(html)) {
+    const name = m[2]!.toLowerCase();
+    if (NESTS.has(name)) depth += m[1] ? -1 : 1;
+    else if (name === "h2" && !m[1] && depth === 0) {
+      const id = /\bid="([^"]+)"/.exec(m[3]!)?.[1];
+      const end = html.indexOf("</h2>", tag.lastIndex);
+      if (id && end >= 0) out.push({ id, text: html.slice(tag.lastIndex, end).replace(/<[^>]*>/g, "").trim() });
+    }
+  }
+  return out;
+}
+
+/** "On this page" for pages with three or more sections; shown beside the column on wide screens (STYLE). */
+export function contents(html: string): string {
+  const hs = topHeadings(html);
+  // Fewer than three sections, or the page already links to each one (the size pages' chips): none.
+  if (hs.length < 3 || hs.every((h) => html.includes(`href="#${h.id}"`))) return "";
+  return `<nav class="toc" aria-label="On this page"><div class="toc-inner"><p class="toc-h">On this page</p><ol>${hs.map((h) => `<li><a href="#${h.id}">${h.text}</a></li>`).join("")}</ol></div></nav>\n`;
+}
+
+export function layout(o: { title: string; description: string; path: string; image?: string; imagePath?: string; content: string; guides: Page[]; style?: string; ld?: PageLd; scripts?: string[]; alternate?: string }): string {
   const url = `${SITE}${o.path}`;
   const image = `${SITE}${o.imagePath ?? (o.image ? `/guides/img/${o.image}` : "/og-image.png")}`;
   const ld = {
@@ -316,7 +483,7 @@ export function layout(o: { title: string; description: string; path: string; im
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(o.title)} · Speaker Box Genius</title>
 <meta name="description" content="${escapeHtml(o.description)}">
-<link rel="canonical" href="${url}">
+<link rel="canonical" href="${url}">${o.alternate ? `\n<link rel="alternate" type="text/markdown" href="${SITE}${o.alternate}">` : ""}
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Speaker Box Genius">
 <meta property="og:title" content="${escapeHtml(o.title)}">
@@ -338,7 +505,7 @@ ${GOATCOUNTER}
 <nav class="nav">${NAV.map((n) => `<a href="${n.href}"${"cls" in n ? ` class="${n.cls}"` : ""}${n.match(o.path) ? ' aria-current="page"' : ""}>${n.label}</a>`).join("")}<a class="button" href="/">Open<span class="opt"> the</span> app</a></nav>
 </header>
 <main>
-${o.content}
+${contents(o.content)}${o.content}
 </main>
 <footer>
 <p><a href="/">Speaker Box Genius</a>: a free, browser-based loudspeaker enclosure simulator · <a href="/drivers/">Drivers</a> · <a href="/guides/">Guides</a> · <a href="/calculators/">Calculators</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a> · <a href="/changelog/">Changelog</a> · <a href="/privacy/">Privacy</a> · <a href="${REPO}">GitHub</a> · <a href="${REPO}/blob/main/docs/data-sources.md">Driver data credits</a></p>
@@ -400,9 +567,19 @@ async function buildDriverPages(write: (path: string, html: string) => void, gui
   const hubSet = new Set(hubs.map((h) => h.inches));
   const brandSlugs = new Set(pages.map((p) => p.brandSlug));
   for (const h of hubs) if (brandSlugs.has(sizeSlug(h.inches))) throw new Error(`Size page /drivers/${sizeSlug(h.inches)}/ has a brand's address`);
+  // Scored substitutes per page (site/similar.ts): ranked by parameters, then simulated in the page's lead box.
+  const subsStart = performance.now();
+  const substitutes = new Map<string, NonNullable<PageLinks["substitutes"]>>();
+  for (const p of pages) {
+    const all = substitutesFor(p, pages, { includeRisky: true, at: refFreq(p) });
+    const shown = all.filter((x) => x.tier !== "risky");
+    const rows = await Promise.all(shown.map(async (sub) => ({ sub, page: byId.get(sub.id)!, compare: await shareLink(SITE, { ...p.state, compare: asCompare(byId.get(sub.id)!.state) }) })));
+    substitutes.set(p.id, { rows, hidden: all.length - shown.length });
+  }
+  console.log(`Substitutes: ${pages.length} driver pages in ${((performance.now() - subsStart) / 1000).toFixed(1)} s`);
   for (const p of pages) {
     const family = families.get(p.id);
-    const page = driverContent(p, { all: await shareLink(SITE, p.state), variants: variantsOf(p.id), sizeHub: p.rec.size_in !== undefined && hubSet.has(p.rec.size_in), related: relatedDrivers(p, pages, family && new Set(family)) }, chart);
+    const page = driverContent(p, { all: await shareLink(SITE, p.state), variants: variantsOf(p.id), sizeHub: p.rec.size_in !== undefined && hubSet.has(p.rec.size_in), related: relatedDrivers(p, pages, family && new Set(family)), substitutes: substitutes.get(p.id), prOthers: p.prOthers && (await Promise.all(p.prOthers.map((o) => shareLink(SITE, withPr(p.state, o))))) }, chart);
     // The page's share card, next to it; pages without one keep the site's card.
     let imagePath: string | undefined;
     const jpg = await cards.jpeg(cardSvg(cardData(p)));
@@ -454,7 +631,8 @@ async function startCards(): Promise<Rasterizer | null> {
   }
 }
 
-const card = (g: Page) => `<li><a href="${g.path}">${escapeHtml(g.title)}</a><p>${escapeHtml(g.description)}</p></li>`;
+// Title first (on phones it runs above the picture); on wide screens CSS puts the picture on top.
+const card = (g: Page) => `<li><a href="${g.path}">${escapeHtml(g.title)}</a>${g.thumb ? `<img class="thumb" src="${g.thumb}" alt="" width="1200" height="630" loading="lazy">` : ""}<p>${escapeHtml(g.description)}</p></li>`;
 
 /**
  * The guides index: the guides in their sections (GUIDE_GROUPS), each sorted by `order`, with
@@ -507,7 +685,7 @@ function buildCommit(): string | undefined {
 export async function build(outDir: string): Promise<string[]> {
   const pagesDir = join(HERE, "pages");
   const files = readdirSync(pagesDir).filter((f) => f.endsWith(".md")).sort();
-  const pages = files.map((f) => ({ file: f, page: parsePage(readFileSync(join(pagesDir, f), "utf8"), f) }));
+  const pages = files.map((f) => ({ file: f, page: withArt(parsePage(readFileSync(join(pagesDir, f), "utf8"), f), f) }));
   const guides = pages.map((p) => p.page).sort((a, b) => a.order - b.order);
   const links = await exampleLinks(SITE);
   const written: string[] = [];
@@ -533,12 +711,23 @@ export async function build(outDir: string): Promise<string[]> {
     entries.push({ path, group: groupOf(path), lastmod: lastmods.date(path, html) });
   };
 
+  // Markdown twins (site/aiDocs.ts): one per page, written with llms.txt and llms-full.txt after the pages.
+  const twins = new Map<string, Twin>();
+  const noCharts = (src: string): ChartData[] => {
+    throw new Error(`${src}: charts are only in guides and calculators`);
+  };
+  const addTwin = (p: TwinPage, body: string, data: (src: string, title?: string) => ChartData[] = noCharts) => {
+    twins.set(p.path, { title: p.title, description: p.description, path: p.path, md: toAiMarkdown(p, body, data, { site: SITE, date: today }) });
+  };
+
   const cards = new Cards();
   try {
   for (const { file, page } of pages) {
     const body = fillLive(resolveExamples(page.body, links, file), file);
     const charts = await guideCharts(body, file);
-    const content = markdown(body, charts.draw) + relatedGuides(page, guides);
+    const related = relatedGuides(page, guides);
+    const content = withAskAi(withHero(markdown(body, charts.draw), page), page.path) + related;
+    addTwin(page, `${body}\n\n${htmlToMarkdown(related)}`, charts.chartData);
     // `image: chart:example/kind`: the page's share card is that chart, drawn now (else the site's card).
     let imagePath: string | undefined;
     if (page.image?.startsWith("chart:")) {
@@ -549,15 +738,26 @@ export async function build(outDir: string): Promise<string[]> {
         writeFileSync(join(outDir, imagePath), jpg);
       }
     }
-    write(page.path, layout({ ...page, ...(page.image?.startsWith("chart:") ? { image: undefined, imagePath } : {}), content, guides, ...(charts.count ? { style: charts.style } : {}) }));
+    write(page.path, layout({ ...page, ...(page.image?.startsWith("chart:") ? { image: undefined, imagePath } : {}), content, guides, alternate: twinPath(page.path), style: ASK_AI_STYLE + (charts.count ? charts.style : "") }));
   }
 
+  const guidesPage = {
+    title: "Speaker box design guides",
+    description: "Free guides to designing sealed, ported, passive radiator and transmission line speaker boxes, each with live examples you can open and change.",
+    path: "/guides/",
+  };
+  addTwin(
+    guidesPage,
+    `How to design speaker boxes, with live examples you can open and change in Speaker Box Genius. Each guide below is also a Markdown page (the link).\n\n${GUIDE_GROUPS.map((grp) => {
+      const list = guides.filter((g) => g.group === grp.id).sort((a, b) => a.order - b.order);
+      return list.length ? `## ${grp.title}\n\n${grp.intro}\n\n${list.map((g) => `- [${g.title}](${SITE}${twinPath(g.path)}): ${g.description}`).join("\n")}` : "";
+    }).filter(Boolean).join("\n\n")}`,
+  );
   write(
     "/guides/",
     layout({
-      title: "Speaker box design guides",
-      description: "Free guides to designing sealed, ported, passive radiator and transmission line speaker boxes, each with live examples you can open and change.",
-      path: "/guides/",
+      ...guidesPage,
+      alternate: twinPath("/guides/"),
       content: guidesIndex(guides),
       guides,
       ld: { list: guides.map((g) => ({ name: g.title, path: g.path })) },
@@ -565,13 +765,20 @@ export async function build(outDir: string): Promise<string[]> {
   );
 
   const report = readReport();
+  const validationPage = {
+    title: "Validation against WinISD, Hornresp and SPICE",
+    description: "Every WinISD, Hornresp and circuit-simulator comparison Speaker Box Genius is tested against: the cases, how far apart the results are, and the known differences.",
+    path: "/validation/",
+  };
+  const validationHtml = validationContent(report, { commit: buildCommit(), date: new Date(), links: await validationLinks(SITE, { winisd: report.winisd.cases, hornresp: report.hornresp.cases, boxes: report.hornresp.boxes.cases }) });
+  // The twin carries the summary and the known differences, not the hundreds of per-case tables (the page's, from #winisd on).
+  addTwin(validationPage, htmlToMarkdown(validationHtml.slice(0, validationHtml.indexOf('<h2 id="winisd">'))));
   write(
     "/validation/",
     layout({
-      title: "Validation against WinISD, Hornresp and SPICE",
-      description: "Every WinISD, Hornresp and circuit-simulator comparison Speaker Box Genius is tested against: the cases, how far apart the results are, and the known differences.",
-      path: "/validation/",
-      content: validationContent(report, { commit: buildCommit(), date: new Date(), links: await validationLinks(SITE, { winisd: report.winisd.cases, hornresp: report.hornresp.cases, boxes: report.hornresp.boxes.cases }) }),
+      ...validationPage,
+      alternate: twinPath("/validation/"),
+      content: validationHtml,
       guides,
       style: CHART_STYLE + VALIDATION_STYLE,
     }),
@@ -583,46 +790,53 @@ export async function build(outDir: string): Promise<string[]> {
     copyFileSync(cirPath(id), dest);
   }
 
-  write(
-    "/about/",
-    layout({
-      title: "About",
-      description: "A free speaker box simulator in your browser. What it is, who builds it, the licence in plain words (free for non-commercial use), and credits.",
-      path: "/about/",
-      content: markdown(readFileSync(join(HERE, "about.md"), "utf8")),
-      guides,
-    }),
-  );
+  const aboutPage = {
+    title: "About",
+    description: "A free speaker box simulator in your browser. What it is, who builds it, the licence in plain words (free for non-commercial use), and credits.",
+    path: "/about/",
+  };
+  addTwin(aboutPage, readFileSync(join(HERE, "about.md"), "utf8"));
+  write(aboutPage.path, layout({ ...aboutPage, alternate: twinPath(aboutPage.path), content: markdown(readFileSync(join(HERE, "about.md"), "utf8")), guides }));
 
-  write(
-    "/changelog/",
-    layout({
-      title: "Changelog",
-      description: "What's new in Speaker Box Genius: new features, fixes and driver data, by date.",
-      path: "/changelog/",
-      content: markdown(readFileSync(join(HERE, "..", "CHANGELOG.md"), "utf8")),
-      guides,
-    }),
-  );
+  const changelogPage = {
+    title: "Changelog",
+    description: "What's new in Speaker Box Genius: new features, fixes and driver data, by date.",
+    path: "/changelog/",
+  };
+  addTwin(changelogPage, readFileSync(join(HERE, "..", "CHANGELOG.md"), "utf8"));
+  write(changelogPage.path, layout({ ...changelogPage, alternate: twinPath(changelogPage.path), content: markdown(readFileSync(join(HERE, "..", "CHANGELOG.md"), "utf8")), guides }));
 
-  write(
-    "/privacy/",
-    layout({
-      title: "Privacy",
-      description: "No accounts, no cookies: your designs stay in your browser and your links. What the visit counter sees.",
-      path: "/privacy/",
-      content: markdown(readFileSync(join(HERE, "privacy.md"), "utf8")),
-      guides,
-    }),
-  );
+  const mcpPage = {
+    title: "Speaker Box Genius for AI assistants (MCP server)",
+    description: "Let Claude, Cursor or VS Code design speaker boxes with the simulator's own engine, on your computer: search drivers, size boxes, find passive radiators and get share links. Free, no account.",
+    path: "/mcp/",
+  };
+  addTwin(mcpPage, readFileSync(join(HERE, "mcp.md"), "utf8"));
+  write(mcpPage.path, layout({ ...mcpPage, alternate: twinPath(mcpPage.path), content: markdown(readFileSync(join(HERE, "mcp.md"), "utf8")), guides }));
+
+  const privacyPage = {
+    title: "Privacy",
+    description: "No accounts, no cookies: your designs stay in your browser and your links. What the visit counter sees.",
+    path: "/privacy/",
+  };
+  addTwin(privacyPage, readFileSync(join(HERE, "privacy.md"), "utf8"));
+  write(privacyPage.path, layout({ ...privacyPage, alternate: twinPath(privacyPage.path), content: markdown(readFileSync(join(HERE, "privacy.md"), "utf8")), guides }));
 
   // Calculators (site/calculators.ts): the page text here, the live part from the app's build.
+  const hubPage = {
+    title: "Speaker box calculators: subwoofer, sealed and ported box size, ports and PRs",
+    description: "Free speaker box calculators that run the simulator's own engine, checked against WinISD and Hornresp: subwoofer, sealed and ported box size, port length and air speed, passive radiator mass.",
+    path: "/calculators/",
+  };
+  addTwin(
+    hubPage,
+    `Quick answers for box size, ports and passive radiators. Each one runs the simulator's own engine, the one checked against WinISD and Hornresp.\n\n## The calculators\n\n${CALCULATORS.map((c) => `- [${c.name}](${SITE}${twinPath(c.path)}): ${c.blurb}`).join("\n")}\n\n${readFileSync(join(HERE, "calculators", "index.md"), "utf8")}`,
+  );
   write(
     "/calculators/",
     layout({
-      title: "Speaker box calculators: subwoofer, sealed and ported box size, ports and PRs",
-      description: "Free speaker box calculators that run the simulator's own engine, checked against WinISD and Hornresp: subwoofer, sealed and ported box size, port length and air speed, passive radiator mass.",
-      path: "/calculators/",
+      ...hubPage,
+      alternate: twinPath("/calculators/"),
       content: `<h1>Speaker box calculators</h1>\n<p class="lede">Quick answers for box size, ports and passive radiators. Each one runs the simulator's own engine, the one checked against WinISD and Hornresp on the <a href="/validation/">validation page</a>. Copy a link to share your numbers, or open the box in the simulator to see every chart.</p>\n${hubCards()}\n${markdown(readFileSync(join(HERE, "calculators", "index.md"), "utf8"))}`,
       guides,
       style: HUB_STYLE,
@@ -635,16 +849,23 @@ export async function build(outDir: string): Promise<string[]> {
     // A worked example may show the app's charts (![…](chart:example/response)), drawn as in the guides.
     const charts = await guideCharts(md, c.md);
     const extra = c.chartStyle?.() ?? "";
+    addTwin(
+      { title: c.h1, description: c.description, path: c.path },
+      `${c.lede.replace(/<[^>]+>/g, "")}\n\nThe interactive calculator is at ${SITE}${c.path}; this page has its text and worked example.\n\n${md}`,
+      charts.chartData,
+    );
     write(
       c.path,
       layout({
         title: c.title,
         description: c.description,
         path: c.path,
+        alternate: twinPath(c.path),
         ld: { crumbs: [{ name: "Calculators", path: "/calculators/" }, { name: c.crumb }] },
-        content: `<h1>${c.h1}</h1>\n<p class="lede">${c.lede}</p>\n${c.form()}\n${markdown(md, charts.draw)}`,
+        content: withAskAi(`<h1>${c.h1}</h1>\n<p class="lede">${c.lede}</p>\n${c.form()}\n${markdown(md, charts.draw)}`, c.path),
         guides,
-        style: CALC_STYLE + (charts.count ? charts.style : extra),
+        // A live chart's tip and cursor rules too (a still chart has neither).
+        style: CALC_STYLE + ASK_AI_STYLE + (charts.count ? charts.style : "") + extra + liveChartCss(),
         ...(script ? { scripts: [script] } : {}),
       }),
     );
@@ -655,10 +876,31 @@ export async function build(outDir: string): Promise<string[]> {
     await cards.close();
   }
 
+  // The twins and their indexes, in llms.txt order. Not in the sitemaps (they are copies of pages the sitemaps list).
+  const need = (path: string) => twins.get(path) ?? (() => { throw new Error(`no twin for ${path}`); })();
+  const entry = (section: LlmsEntry["section"], path: string): LlmsEntry => ({ section, title: need(path).title, description: need(path).description, link: twinPath(path) });
+  const entries2: LlmsEntry[] = [
+    ...["/guides/", ...guides.map((g) => g.path)].map((p) => entry("Guides", p)),
+    ...["/calculators/", ...CALCULATORS.map((c) => c.path)].map((p) => entry("Calculators", p)),
+    ...["/about/", "/validation/", "/changelog/", "/privacy/"].map((p) => entry("Reference", p)),
+    { section: "Optional", title: "Drivers", description: "Every driver in the database, by brand and size, with suggested boxes for each (web pages, not Markdown).", link: `${SITE}/drivers/` },
+    { section: "Optional", title: "Driver data credits", description: "Where the driver data comes from and how it is licensed.", link: `${REPO}/blob/main/docs/data-sources.md` },
+    ...(twins.has("/mcp/") ? [entry("Optional", "/mcp/")] : []),
+  ];
+  const ordered = entries2.map((e) => twins.get(e.link.startsWith("http") ? "" : e.link.replace(/\.md$/, "/"))).filter((t): t is Twin => !!t);
+  for (const t of ordered) {
+    const dest = join(outDir, twinPath(t.path));
+    mkdirSync(dirname(dest), { recursive: true });
+    writeFileSync(dest, t.md);
+  }
+  writeFileSync(join(outDir, "llms.txt"), llmsTxt(entries2, SITE));
+  writeFileSync(join(outDir, "llms-full.txt"), llmsFull(ordered));
+  console.log(`AI docs: ${ordered.length} Markdown twins, llms.txt, llms-full.txt (${Math.round(llmsFull(ordered).length / 1024)} KB)`);
+
   const imgDir = join(HERE, "img");
   if (existsSync(imgDir)) {
     mkdirSync(join(outDir, "guides/img"), { recursive: true });
-    for (const f of readdirSync(imgDir)) copyFileSync(join(imgDir, f), join(outDir, "guides/img", f));
+    cpSync(imgDir, join(outDir, "guides/img"), { recursive: true });
   }
 
   // The app's home page isn't built here: dated by the app's index.html when it's there (the deploy builds the app first).

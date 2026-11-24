@@ -1,0 +1,35 @@
+{
+  "brand": "Purifi",
+  "model": "PTT6.5W04-NLA-10",
+  "type": "midbass",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 33,
+    "qms": 6.0,
+    "qes": 0.3,
+    "vas_l": 25.3,
+    "re": 3.7,
+    "sd_cm2": 132.7,
+    "qts": 0.28,
+    "le_mh": 0.33,
+    "bl": 7.7,
+    "mms_g": 22.7,
+    "xmax_mm": 5.9,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 148,
+    "depth_mm": 85.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://purifi-audio.com/oem-transducers",
+      "retrieved": "2026-11-22",
+      "note": "T/S from Purifi's product page and datasheet on purifi-audio.com, used with Purifi's permission (5 Nov 2026); the link is the Purifi product page. See docs/data-permissions.md."
+    }
+  ],
+  "status": "community",
+  "notes": "The datasheet prints a nominal impedance of 8 Ω, but the model name (W04), Purifi's 4 Ω catalogue listing and Re 3.7 Ω all say 4 Ω, so 4 Ω is used."
+}

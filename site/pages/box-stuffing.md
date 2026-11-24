@@ -3,6 +3,7 @@ title: "Polyfill and box stuffing: does it really make a box bigger?"
 description: What polyfill and other stuffing really do inside a speaker box, how much bigger they make it act (measured), how much to use in sealed and ported boxes, how to model it in a simulator and how to measure it.
 path: guides/box-stuffing
 image: chart:stuffing-sealed/response
+art: A box in cutaway filled with tufts of stuffing.
 order: 16
 group: measuring
 ---

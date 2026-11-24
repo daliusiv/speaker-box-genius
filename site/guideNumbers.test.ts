@@ -372,6 +372,13 @@ test("amplifier matching guide: the text's claims about the amp's limits, the su
   near(20 * Math.log10(37.4 / 35.2), 0.53, 0.005, "XLS 1002 headroom");
   near(20 * Math.log10(45.8 / 35.2), 2.29, 0.005, "XLS 1502 headroom");
   near((2 * 37.4 ** 2) / 3.1, 902, 1, "clipped to a square wave, V²/Re");
+  // Headroom section: a sine's peak, pink noise (6 dB crest) under the same peak, its power on Re.
+  near(37.4 * Math.SQRT2, 52.9, 0.05, "XLS 1002 peak volts");
+  near((37.4 * Math.SQRT2) / 2, 26.4, 0.05, "pink noise (peaks twice the RMS) average under that peak");
+  near(((37.4 * Math.SQRT2) / 2) ** 2 / 3.1, 226, 1, "that average on the sub's Re");
+  near(45.8 * Math.SQRT2, 64.8, 0.05, "XLS 1502 peak volts");
+  near((45.8 * Math.SQRT2) / 2, 32.4, 0.05, "XLS 1502 pink average");
+  near(((45.8 * Math.SQRT2) / 2) ** 2 / 3.1, 338, 1, "XLS 1502 pink average on Re");
   const v = figure("amp-matching").values as Record<string, number>;
   const r = (name: string) => run(name)[0]!.result;
   const one = r("amp-one"), par = r("amp-parallel"), ser = r("amp-series"), bri = r("amp-bridged");
@@ -633,15 +640,15 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   assert.deepEqual(ported.over, ["port"]);
   assert.equal(ported.safe_w, 61);
   assert.equal(sealed.vb_l, 23.6);
-  assert.equal(ranked.findIndex((r) => r.driverId === "18-sound/18ntlw5000-8ohm" && r.box === "vented") + 1, 4);
-  assert.equal(ranked.indexOf(sealed) + 1, 3);
-  assert.equal(ranked.indexOf(ported) + 1, 576);
+  assert.equal(ranked.findIndex((r) => r.driverId === "18-sound/18ntlw5000-8ohm" && r.box === "vented") + 1, 6);
+  assert.equal(ranked.indexOf(sealed) + 1, 4);
+  assert.equal(ranked.indexOf(ported) + 1, 617);
   assert.equal(sealed.subsonic, undefined);
   // Re-sorted: Deepest and Loudest on the same results; Smallest sizes the boxes again.
   const deep = rankResults(res, { ...goal, priority: "deep" })[0]!;
   assert.deepEqual([deep.driverId, deep.box, deep.vb_l, Math.round(deep.f3 * 10) / 10, deep.pr?.name, deep.over], ["dayton-audio/rss315ho-44", "pr", 43.5, 24.9, "Dayton Audio RSS315-PR", []]);
   const loud = rankResults(res, { ...goal, priority: "loud" })[0]!;
-  assert.deepEqual([loud.driverId, loud.box, loud.vb_l, loud.loud_db, loud.pr?.name], ["18-sound/15ntls3500", "vented", 80, 110.0, undefined]);
+  assert.deepEqual([loud.driverId, loud.box, loud.vb_l, loud.loud_db, loud.pr?.name], ["peerless/sdf-375f75pr01-04", "pr", 80, 110.6, "Dayton Audio RSS460-PR"]);
   const sgoal = goalFor("home", "small");
   const scands = prefilter(rows as never, sgoal);
   let sres = scands.flatMap((r) => evaluateDriver(base, r, loaded(r.id) as never, sgoal));
@@ -651,7 +658,7 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   assert.ok(small.notes.some((n) => n.includes("won't all fit")));
   // The counts the guide gives for these defaults.
   const grade = (g: string) => ranked.filter((r) => (g === "over" ? r.over.length > 0 : g === "deep" ? !r.over.length && !!r.deep : !r.over.length && !r.deep)).length;
-  assert.deepEqual([cands.length, ranked.length, grade("ok"), grade("deep"), grade("over")], [854, 1654, 494, 80, 1080]);
+  assert.deepEqual([cands.length, ranked.length, grade("ok"), grade("deep"), grade("over")], [919, 1768, 530, 85, 1153]);
   // Opening it with ported too, plus the sealed box, gives the example's designs.
   const opened = openResults(DEFAULT_STATE, loaded(top.driverId) as never, [top, ported, sealed], goal);
   const ex = EXAMPLES["assistant-example"]!();
@@ -945,4 +952,64 @@ test("guide figures: the claims their captions and text make (the numbers come f
   near(n("shaped-cabinets-shortcuts", "wedgeMin"), 100 / 3, 0.01, "frustum on a wedge");
   // DVC: 0.15 Ω costs parallel about 1 dB, series a third of a dB at most; parallel loses least at resonance.
   assert.ok(n("dvc-wiring", "sealedSeriesMax") < 0.4 && n("dvc-wiring", "sealedParallelMax") > 0.9 && n("dvc-wiring", "sealedParallelMin") < 0.4, "who pays for the 0.15 Ω");
+});
+
+test("open baffle guide: what the text says about the board, the EQ, the drivers and the frames", async () => {
+  const { fillLive } = await import("./liveNumbers.ts");
+  const { dipoleEq } = await import("../packages/web/src/dipoleEq.ts");
+  const v = (ex: string, d: number, m: string) => {
+    const t = fillLive(`{{num:${ex}/${d}/${m}:3}}`).replace("−", "-");
+    return Number(t);
+  };
+  const word = (ex: string, d: number, m: string) => fillLive(`{{num:${ex}/${d}/${m}}}`);
+  const E = "ob-example";
+  // The dipole slope: the gap to the wall grows by about 6 dB from 80 to 40 Hz; above the peak the board is louder.
+  const gap = (f: number) => v(E, 3, `spl@${f}`) - v(E, 1, `spl@${f}`);
+  near(gap(40) - gap(80), 6.2, 1, "about 6 dB more lost an octave down");
+  assert.ok(v(E, 1, "spl@300") > v(E, 3, "spl@300"), "the board briefly plays louder than the wall above the peak");
+  // The textbook path is too long: front → edge → back is W + t = 51.8 cm; tools using it predict 1.5–5 dB more bass.
+  const d = v(E, 1, "obd");
+  assert.ok(d < 51.8 && 20 * Math.log10(51.8 / d) >= 1.4, `D ${d} cm is shorter than 51.8 cm`);
+  // The real peak: lower than c/2D and louder than +6 dB by about 5 dB; matches a free monopole below c/6D; cross over under ~180 Hz.
+  assert.ok(v(E, 1, "obpeak") < v(E, 1, "c2d") && v(E, 1, "cross") < v(E, 1, "c6d"), "peak and monopole-equal point below the textbook's");
+  near(v(E, 1, "rise") - 6, 5, 0.8, "the extra 5 dB at the peak");
+  near(v(E, 1, "obpeak") / 2, 178, 6, "half the dipole peak, about 180 Hz");
+  // Width matters (30 → 70 cm about doubles D, about 6 dB), height barely (90 → 120 cm well under 1 dB; 60 → 90 cm more).
+  near(v("ob-widths", 3, "obd") / v("ob-widths", 1, "obd"), 2, 0.2, "70 cm board's path about twice the 30 cm board's");
+  near(v("ob-widths", 3, "rel@40") - v("ob-widths", 1, "rel@40"), 6, 0.6, "6 dB for doubling D");
+  assert.ok(v("ob-heights", 3, "rel@40") - v("ob-heights", 2, "rel@40") < 0.6, "90 → 120 cm tall barely moves the bass");
+  assert.ok(v("ob-heights", 2, "rel@40") - v("ob-heights", 1, "rel@40") > 0.8, "60 → 90 cm tall still pays a little");
+  // Driver near a corner: lower, broader peak, less bass, shorter path.
+  assert.ok(v("ob-position", 2, "rise") < v("ob-position", 1, "rise") - 2 && v("ob-position", 2, "rel@40") < v("ob-position", 1, "rel@40") && v("ob-position", 2, "obd") < v("ob-position", 1, "obd"), "corner: lower peak, less bass");
+  // The Dipole EQ: wanted 12 dB, cut back to Xmax at 100 W; F3 drops; max SPL unchanged; the wall's ceiling about 18 dB higher at 30 Hz (eight drivers).
+  const s = EXAMPLES[E]!();
+  const plain = { ...s, eq: [] };
+  assert.match(dipoleEq(plain, solveDriver(plain), "d2")!.note, /cut from \+12 dB/);
+  near(v(E, 2, "xin"), 0, 0.05, "the EQ'd cone right at Xmax");
+  assert.ok(v(E, 2, "f3") < v(E, 1, "f3") - 20, "EQ lowers F3");
+  near(v(E, 2, "max@30"), v(E, 1, "max@30"), 0.05, "EQ doesn't move the ceiling");
+  near(v(E, 3, "max@30") - v(E, 1, "max@30"), 18.06, 1.2, "the wall's ceiling at 30 Hz: three doublings (8 drivers)");
+  assert.equal(word(E, 1, "limit@30"), "Xmax");
+  assert.equal(word(E, 1, "limit@36"), "power", "above about 35 Hz the 500 W rating is the limit");
+  // The board doesn't change the cone: same excursion, impedance and (bass) group delay as in the wall.
+  const runs = runDesigns(s, solveDriver(s));
+  const [b, , w] = runs.map((x) => x.result);
+  b!.excursionMm.forEach((x, i) => near(x, w!.excursionMm[i]!, 0.01, "same excursion on the board and in the wall"));
+  const zPeak = (r: typeof b) => r!.freq[r!.impedanceOhm.indexOf(Math.max(...r!.impedanceOhm.filter((_, i) => r!.freq[i]! < 100)))]!;
+  near(zPeak(b), 19.5, 0.3, "impedance peak at Fs on the board");
+  near(zPeak(w), 19.5, 0.3, "impedance peak at Fs in the wall");
+  for (const f of [30, 60, 100]) near(at(b!.freq, b!.groupDelayMs, f), at(w!.freq, w!.groupDelayMs, f), 0.5, `group delay at ${f} Hz`);
+  assert.ok(v(E, 2, "xmaxW") < v(E, 1, "xmaxW"), "the shelf brings Xmax down to a lower power");
+  // Drivers: Qts 0.70 gives no more bass than Qts 0.43; Qts 1.08 wins a few dB; the passive ones reach Xmax at tens of watts.
+  assert.ok(v("ob-qts-mid", 1, "rel@40") <= v("ob-qts-low", 1, "rel@40"), "Qts 0.70 no better than 0.43");
+  near(v("ob-qts-high", 1, "rel@40") - v("ob-qts-low", 1, "rel@40"), 4.5, 1.5, "Qts 1.08 wins a few dB");
+  for (const q of ["ob-qts-mid", "ob-qts-high"]) assert.ok(v(q, 1, "xmaxW") >= 10 && v(q, 1, "xmaxW") < 100, `${q}: Xmax at tens of watts`);
+  assert.ok(v("ob-qts-low", 1, "xmaxW") > 300, "the long-throw driver takes hundreds of watts");
+  // Frames: about 5 dB more bass, the path more than half as long again, a tall peak at the duct resonance.
+  for (const n of [2, 3]) {
+    near(v("ob-frames", n, "rel@40") - v("ob-frames", 1, "rel@40"), 5.5, 1, `frame ${n}: about 5 dB more bass`);
+    assert.ok(v("ob-frames", n, "obd") > 1.5 * v("ob-frames", 1, "obd"), `frame ${n}: path more than half as long again`);
+    assert.ok(v("ob-frames", n, "rise") > v("ob-frames", 1, "rise"), `frame ${n}: a taller peak`);
+  }
+  near(v("ob-frames", 2, "risef") / v("ob-frames", 2, "obq"), 1, 0.1, "U-frame's peak is its duct resonance");
 });

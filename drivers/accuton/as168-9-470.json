@@ -1,0 +1,34 @@
+{
+  "brand": "Accuton",
+  "model": "AS168-9-470",
+  "type": "woofer",
+  "nominal_ohms": 9,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 27,
+    "qms": 4.35,
+    "qes": 0.38,
+    "vas_l": 35.5,
+    "re": 9,
+    "sd_cm2": 161,
+    "qts": 0.35,
+    "mms_g": 36,
+    "le_mh": 1,
+    "bl": 12.1,
+    "xmax_mm": 8,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 148,
+    "depth_mm": 118
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://accuton.com/home-audio/drivers/aluminium-sandwich/AS168-9-470",
+      "retrieved": "2026-11-19",
+      "note": "Values from the product pages on accuton.com, used with Accuton's permission (19 Nov 2026), re-read from the website each month. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Accuton's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

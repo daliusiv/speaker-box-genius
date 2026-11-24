@@ -29,6 +29,11 @@ export const ICON_PATHS = {
   circuit: "M2 12h4l2-4 3 8 3-8 3 8 2-4h3",
   speaker: "M5 2h14a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z M12 10a4 4 0 1 0 0 8a4 4 0 1 0 0-8 M12 6h.01",
   sliders: "M4 21v-7 M4 10V3 M12 21v-9 M12 8V3 M20 21v-5 M20 12V3 M1 14h6 M9 8h6 M17 16h6",
+  // Edit on a chart: a pencil.
+  pencil: "M12 20h9 M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z",
+  // Charts per row: one wide chart a row, or two side by side.
+  rows1: "M4 4h16v7H4Z M4 13h16v7H4Z",
+  rows2: "M3 4h8v7H3Z M13 4h8v7h-8Z M3 13h8v7H3Z M13 13h8v7h-8Z",
   book: "M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z",
   verified: "M22 11.1V12a10 10 0 1 1-5.9-9.1 M22 4 12 14l-3-3",
   install: "M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z M12 7v7 M9 11l3 3 3-3 M11 18h2",
@@ -59,6 +64,8 @@ export const ICON_PATHS = {
   passive: "M2 12h4 M18 12h4 M6 12c0-2 1.5-3 3-3s3 1 3 3 1.5 3 3 3 3-1 3-3",
   room: "M3 10 12 3l9 7v11H3z M9 21v-6h6v6",
   baffle: "M6 3h12v18H6z M12 8a3 3 0 1 0 0 6a3 3 0 1 0 0-6",
+  /** Open baffle (dipole): a narrow board with the driver, sound leaving both sides. */
+  dipole: "M8 3h8v18H8z M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6 M3 9l2 3-2 3 M21 9l-2 3 2 3",
   foldAll: "m7 20 5-5 5 5 M7 4l5 5 5-5",
   inside: "M3 3h18v18H3z M7 14h4v4H7z M14 7h3v3h-3z",
   net: "M4 20h16 M6 20V10 M10 20V6 M14 20v-8 M18 20V4",

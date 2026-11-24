@@ -1,0 +1,36 @@
+{
+  "brand": "PHL Audio",
+  "model": "3481-14",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 55,
+    "qms": 6.56,
+    "qes": 0.27,
+    "vas_l": 25.2,
+    "re": 5.2,
+    "sd_cm2": 324,
+    "qts": 0.26,
+    "le_mh": 0.722,
+    "bl": 18.1,
+    "mms_g": 49.5,
+    "xmax_mm": 6,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 229,
+    "depth_mm": 109,
+    "displacement_l": 1.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/3481-14_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

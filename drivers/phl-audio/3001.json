@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "3001",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 57,
+    "qms": 5.35,
+    "qes": 0.34,
+    "vas_l": 31.5,
+    "re": 5.4,
+    "sd_cm2": 356,
+    "qts": 0.32,
+    "le_mh": 0.961,
+    "bl": 15.9,
+    "mms_g": 45,
+    "xmax_mm": 4.5,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 229,
+    "depth_mm": 109,
+    "displacement_l": 1.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/3001_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

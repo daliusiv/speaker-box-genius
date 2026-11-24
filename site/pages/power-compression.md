@@ -3,6 +3,7 @@ title: "Power compression: why doubling your amplifier's watts doesn't give you 
 description: What a hot voice coil does to a subwoofer, how much output it costs at 120 °C and 180 °C, why the bass shape changes, what it does (and doesn't do) to cone excursion, and how much a bigger amplifier really gains.
 path: guides/power-compression
 image: chart:coil-20+coil-120+coil-180/spl
+art: A driver in cutaway with its voice coil glowing hot and heat rising off it.
 order: 21
 group: measuring
 ---
@@ -57,7 +58,7 @@ The same table answers the amplifier question directly: going from half power to
 
 ## What a hot coil does to a ported subwoofer
 
-The example: a **Dayton Audio RSS315HF-4** 12″ in a flat ported box (Keele's alignment, 83.5 L tuned to 23.8 Hz, 12.5 cm port), driven at the same **25 V** with the coil at 20, 120 and 180 °C. Turn on the temperature in **Settings → Simulation → Voice coil**; the app's model matches Hornresp's Power Compression tool at 120 °C (see the [validation page](/validation/)).
+The example: a **Dayton Audio RSS315HF-4** 12″ in a flat ported box (Keele's alignment, 83.5 L tuned to 23.8 Hz, 12.5 cm port), driven at the same **25 V** with the coil at 20, 120 and 180 °C. Set the temperature in **Settings → Simulation → Voice coil → Coil temperature → Fixed**; the app's model matches Hornresp's Power Compression tool at 120 °C (see the [validation page](/validation/)).
 
 ![The RSS315HF-4 ported box at the same 25 V with the coil at 20 °C ({{color:coil-20+coil-120+coil-180/1}}), 120 °C ({{color:coil-20+coil-120+coil-180/2}}) and 180 °C ({{color:coil-20+coil-120+coil-180/3}}): the level drops, and the shape gains a hump around 40–45 Hz.](chart:coil-20+coil-120+coil-180/spl|coil-20+coil-120+coil-180/response "SPL|Shape: relative response")
 
@@ -119,11 +120,16 @@ But past a point, more watts mostly make heat. For sustained output, these help 
 
 ## Modelling it in the app
 
-1. Design your box as usual (the app's default, 20 °C, is the datasheet's cold values, as WinISD uses).
-2. In **Settings → Simulation → Voice coil**, set the **Voice coil** temperature to 100–130 °C for a subwoofer played hard at its rating, more for a driver pushed past it.
-3. Look at the response (the shape, not just the level), and at the **Impedance** chart to see where the loss will be largest: where the impedance is lowest.
-4. For a box that will be played hard for long periods, check it at both temperatures. A slightly lower-Q box when cold can sound right when hot.
-5. A measurement that doesn't match after loud playing may simply be a warm coil; see [why a measurement doesn't match the simulation](/guides/simulation-vs-measurement/).
+1. Design your box as usual (the app's default, **Cold**, is the datasheet's 20 °C values, as WinISD uses).
+2. In **Settings → Simulation → Voice coil → Coil temperature**, pick **Fixed** and set the temperature to 100–130 °C for a subwoofer played hard at its rating, more for a driver pushed past it.
+3. Or pick **Heated by the drive**: the app works out where each box's coil settles playing pink noise (20–200 Hz by default, after the high-pass and EQ) at the drive set above, and every chart shows the hot driver. A line under the response gives each box's coil temperature and lost output. It needs the driver's **Pe**: the app reads it as the power that holds the coil at its **Max coil temp** (200 °C unless you change it under **Driver → Large signal**), which sets how many degrees the coil rises per watt. If the datasheet gives the coil's thermal resistance, type it there instead. **Air around it** is the room, or a hot car.
+4. Look at the response (the shape, not just the level), and at the **Impedance** chart to see where the loss will be largest: where the impedance is lowest.
+5. The **Power & heat** chart shows where the amplifier's power goes: **Efficiency** against the driver's reference efficiency, **Where it goes** for one box (coil heat, the rest of the coil's losses, suspension and box, sound), **Coil °C** on a steady note at each frequency, and **Compression** at the drive set.
+6. For the Max SPL chart, **Power rating vs → Coil temperature** limits the driver by how hot its coil gets rather than by its watts, and checks the amplifier with the coil hot. With **Program** on, the program's average heats the coil.
+7. For a box that will be played hard for long periods, check it cold and hot. A slightly lower-Q box when cold can sound right when hot.
+8. A measurement that doesn't match after loud playing may simply be a warm coil; see [why a measurement doesn't match the simulation](/guides/simulation-vs-measurement/).
+
+The model is one heat path in steady state: the worst case for a long, loud passage. Short peaks heat the coil less; the magnet's own heating and the cooling from the cone's motion aren't modelled.
 
 The temperature applies to every box in the project, so the example uses one link per temperature.
 
@@ -135,7 +141,7 @@ The temperature applies to every box in the project, so the example uses one lin
 | "A hot coil loses 1.5–3 dB" | At 120 °C: 0.6–2.7 dB depending on frequency. At 180 °C: 0.9–4.0 dB. |
 | "A hot coil makes a mid-bass hump" | Yes, relative to the rest: +1.5 dB at 120 °C, +2.5 dB at 180 °C here, from the rising Qts. Absolute output still drops everywhere. |
 | "A hot coil makes the cone unload and pass Xmax sooner" | No: at the same voltage the cone moves less; at the same loudness it moves the same [9]. |
-| "Simulators can't show power compression" | WinISD uses cold values only; Hornresp has a Power Compression tool [9], and this app has **Voice coil °C**. |
+| "Simulators can't show power compression" | WinISD uses cold values only; Hornresp has a Power Compression tool [9], and this app has **Voice coil → Fixed** and **Heated by the drive**, and a **Power & heat** chart. |
 
 ## Sources
 

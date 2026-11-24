@@ -1,0 +1,34 @@
+{
+  "brand": "BishopSound",
+  "model": "BSP18",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 48,
+    "qms": 18.676,
+    "qes": 0.847,
+    "vas_l": 125.93,
+    "re": 7.6,
+    "sd_cm2": 1301,
+    "qts": 0.81,
+    "le_mh": 4.293,
+    "bl": 21.024,
+    "mms_g": 209.21,
+    "xmax_mm": 8,
+    "pe_w": 600
+  },
+  "physical": {
+    "cutout_mm": 420,
+    "depth_mm": 208
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.bishopsound.com/products/bsp18-sub-bass-driver",
+      "retrieved": "2026-11-19",
+      "note": "Values from BishopSound's published datasheets (bishopsound.com), used with BishopSound's permission (18 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without BishopSound's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

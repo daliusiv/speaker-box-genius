@@ -21,6 +21,13 @@ export interface DbIndex {
     xmax_mm?: number;
     pe_w?: number;
     sd_cm2?: number;
+    /** Baffle cutout and mounting depth, mm (datasheet), for the similar-drivers fit check. */
+    cutout_mm?: number;
+    depth_mm?: number;
+    /** Versions of one driver (impedance / voice coils) share this key: the family's first id. */
+    family?: string;
+    /** Xmax flagged as implausible (same as `flags` holding xmax-high / xmax-low). */
+    xmax_doubtful?: true;
   } & DataQuality)[];
   passiveRadiators: ({ id: string; brand: string; model: string; size_in?: number; sd_cm2?: number; xmax_mm?: number; xmech?: boolean } & DataQuality)[];
 }
@@ -45,13 +52,14 @@ export function flagText(r: DataQuality | undefined): string | undefined {
   return "The size doesn't match the cone area (Sd). Check the datasheet.";
 }
 
-interface Physical {
+export interface Physical {
   displacement_l?: number;
   cutout_mm?: number;
   depth_mm?: number;
 }
 
-interface DriverRecord {
+/** One driver as stored in a brand file (db/<brand>.json). */
+export interface DriverRecord {
   brand: string;
   model: string;
   nominal_ohms?: number;
@@ -62,7 +70,8 @@ interface DriverRecord {
   sources?: { url?: string; note?: string }[];
 }
 
-interface PrRecord {
+/** One passive radiator as stored in a brand file. */
+export interface PrRecord {
   brand: string;
   model: string;
   physical?: Physical;
@@ -80,7 +89,8 @@ interface PrRecord {
   };
 }
 
-interface Shard {
+/** A brand file: db/<brand-slug>.json, built by packages/db-tools/src/bundle.ts. */
+export interface Shard {
   drivers: Record<string, DriverRecord>;
   passiveRadiators: Record<string, PrRecord>;
 }
@@ -159,6 +169,11 @@ export function sourceOf(sources: { url?: string; note?: string }[] | undefined)
 export async function loadDriver(id: string): Promise<LoadedDriver> {
   const rec = (await loadShard(brandOf(id))).drivers[id];
   if (!rec) throw new Error(`Driver ${id} not found`);
+  return driverFromRecord(id, rec);
+}
+
+/** A brand file's driver record as the app loads it (also used by the local MCP server). */
+export function driverFromRecord(id: string, rec: DriverRecord): LoadedDriver {
   const ts: TsValues = {};
   for (const k of Object.keys(TS_PARAMS) as TsParam[]) {
     const v = rec.ts[k];
@@ -183,11 +198,16 @@ export async function loadDriver(id: string): Promise<LoadedDriver> {
   };
 }
 
-export async function loadPassiveRadiator(
-  id: string,
-): Promise<{ name: string; params: PrParams; displacement_l?: number; cutout_mm?: number; maxAdded_g?: number }> {
+export async function loadPassiveRadiator(id: string): Promise<LoadedPr> {
   const rec = (await loadShard(brandOf(id))).passiveRadiators[id];
   if (!rec) throw new Error(`Passive radiator ${id} not found`);
+  return passiveRadiatorFromRecord(rec);
+}
+
+export type LoadedPr = { name: string; params: PrParams; displacement_l?: number; cutout_mm?: number; maxAdded_g?: number };
+
+/** A brand file's passive radiator record as the app loads it. */
+export function passiveRadiatorFromRecord(rec: PrRecord): LoadedPr {
   const p = rec.params;
   const sd = p.sd_cm2 / 1e4;
   let vas = p.vas_l;
@@ -220,11 +240,14 @@ export const DRIVER_AS_PR = "driver:";
  * unconnected, so only its mechanical losses damp it: Q = Qms). Mms comes from the
  * datasheet or, if missing, from Fs, Vas and Sd. Its displacement (magnet and all) counts.
  */
-export async function loadDriverAsPassiveRadiator(
-  id: string,
-): Promise<{ name: string; params: PrParams; displacement_l?: number; cutout_mm?: number }> {
+export async function loadDriverAsPassiveRadiator(id: string): Promise<LoadedPr> {
   const rec = (await loadShard(brandOf(id))).drivers[id];
   if (!rec) throw new Error(`Driver ${id} not found`);
+  return driverAsPassiveRadiatorFromRecord(rec);
+}
+
+/** A driver record used as a passive radiator (throws when it lacks Sd, Vas or Xmax). */
+export function driverAsPassiveRadiatorFromRecord(rec: DriverRecord): LoadedPr {
   const t = rec.ts;
   const sd = t.sd_cm2!;
   const vas = t.vas_l!;

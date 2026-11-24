@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="#11141a"/>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+<path d="M560 110V540" stroke="#4ed7e9" stroke-width="10"/>
+<path d="M150 548H1050" stroke="#8b93a3" stroke-opacity=".45"/>
+<path d="M560 180.0V320.0" stroke="#4ed7e9" stroke-width="7"/>
+<path d="M560 190.0L604 226.0V274.0L560 310.0Z" stroke="#4ed7e9" fill="#4ed7e9" fill-opacity=".14"/>
+<rect x="574" y="222.0" width="30" height="56.0" rx="4" stroke="#4ed7e9" fill="#4ed7e9" fill-opacity="0.25"/>
+<path d="M560 350.0V490.0" stroke="#4ed7e9" stroke-width="7"/>
+<path d="M560 360.0L604 396.0V444.0L560 480.0Z" stroke="#4ed7e9" fill="#4ed7e9" fill-opacity=".14"/>
+<rect x="574" y="392.0" width="30" height="56.0" rx="4" stroke="#4ed7e9" fill="#4ed7e9" fill-opacity="0.25"/>
+<rect x="570" y="120" width="420" height="420" rx="4" stroke="#fb923c" fill="#fb923c" fill-opacity="0.04" stroke-dasharray="14 14"/>
+<path d="M560 110L780 60L990 110" stroke="#8b93a3" stroke-opacity=".5"/>
+<path d="M536 263.0A80.0 80.0 0 0 0 536 407.0" stroke="#8b93a3" stroke-opacity="0.55"/>
+<path d="M496 219.8A128.0 128.0 0 0 0 496 450.2" stroke="#8b93a3" stroke-opacity="0.55"/>
+<path d="M456 176.6A176.0 176.0 0 0 0 456 493.4" stroke="#8b93a3" stroke-opacity="0.55"/>
+</g>
+</svg>

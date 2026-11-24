@@ -24,6 +24,7 @@ const TYPE_LABEL: Record<EqStage["type"], string> = {
   peak: "Peaking",
   lowshelf: "Low shelf",
   highshelf: "High shelf",
+  lowshelf1: "Low shelf 6 dB/oct",
 };
 
 const signed = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}`;
@@ -31,6 +32,7 @@ const signed = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v)}
 /** A filter in a few words, for its closed row: "40 Hz · −3 dB · Q 2", "45 → 20 Hz · Q 0.707 · +14 dB". */
 export function eqSummary(e: EqItem): string {
   if (e.type === "linkwitz") return `${e.f0} → ${e.fp} Hz · Q ${e.qp} · +${(40 * Math.log10(e.f0 / e.fp)).toFixed(0)} dB`;
+  if (e.type === "lowshelf1") return `${e.freq} Hz · ${signed(e.gain_db)} dB · 6 dB/oct`;
   return `${e.freq} Hz · ${signed(e.gain_db)} dB · Q ${e.q}`;
 }
 
@@ -104,7 +106,11 @@ export function EqSection(props: { state: AppState; designs: Design[]; onChange:
               <>
                 <Num help={HELP["Freq"]} label="Freq" unit="Hz" value={e.freq} onChange={(freq) => set({ ...e, freq })} />
                 <Num help={HELP["Gain"]} label="Gain" unit="dB" value={e.gain_db} min={-30} onChange={(gain_db) => set({ ...e, gain_db: Math.min(24, gain_db) })} />
-                <Num help={HELP["Q"]} label="Q" value={e.q} onChange={(q) => set({ ...e, q })} />
+                {e.type === "lowshelf1" ? (
+                  <p className="hint">A gentle shelf, 6 dB/octave: half its gain at Freq. The Dipole EQ uses it for an open baffle.</p>
+                ) : (
+                  <Num help={HELP["Q"]} label="Q" value={e.q} onChange={(q) => set({ ...e, q })} />
+                )}
               </>
             )}
             <div className="sg-actions">

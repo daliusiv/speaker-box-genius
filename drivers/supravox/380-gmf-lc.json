@@ -1,0 +1,30 @@
+{
+  "brand": "Supravox",
+  "model": "380 GMF LC",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 38.5565,
+    "qms": 5.7779,
+    "qes": 0.3811,
+    "vas_l": 232.9744,
+    "re": 5.8,
+    "sd_cm2": 907.9,
+    "qts": 0.3576,
+    "le_mh": 0.9197,
+    "bl": 17.6167,
+    "mms_g": 84.1842,
+    "xmax_mm": 7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://supravox.fr/products/380-gmf-lc-haut-parleur-de-grave-98db-8-ohms",
+      "retrieved": "2026-11-22",
+      "note": "Values from the technical specifications on Supravox's product pages (supravox.fr), used with Supravox's permission (17 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Supravox's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "The page prints Sd as 9.079E-2 cm²; read as 9.079E-2 m² (907.9 cm²), as the 380-2000 pages give it."
+}

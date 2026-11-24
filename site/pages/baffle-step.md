@@ -3,6 +3,7 @@ title: "Baffle step loss explained: why your bookshelf speaker sounds thin"
 description: Why a free-standing speaker loses up to 6 dB of bass, where the step really falls for your baffle (often an octave below the 115/width rule), how much to compensate with EQ or a passive network, and what it costs, with a worked bookshelf example you can open and change.
 path: guides/baffle-step
 image: chart:baffle-ib+baffle-free+baffle-eq3+baffle-passive/spl
+art: A narrow speaker with its sound wrapping round the cabinet, beside a response that steps down in the bass.
 order: 25
 group: measuring
 ---
@@ -23,6 +24,7 @@ You simulate a bookshelf woofer, the bass looks flat down to 45 Hz, you build it
   - **Active EQ** boosts the bass: 4 times the power and twice the excursion for 6 dB.
   - **A passive network** cuts the rest instead: the whole speaker's sensitivity drops by the amount you compensate, 88 dB to 83 dB here.
   - **Neither gets back output.** A free-standing speaker's maximum bass is up to 6 dB below what an infinite-baffle simulation promises.
+- **Open baffles are different.** A driver on a board with its back open (Boxes → + Box → Open baffle) already has its board's edges in the simulation: its bass falls 6 dB/octave below the dipole peak instead of stepping down 6 dB, so Signal → Baffle step doesn't apply to it.
 
 ## The example
 
@@ -125,7 +127,7 @@ The baffle step also lowers the **maximum** bass. On an infinite baffle the app'
 
 ## Use it on a driver's curve
 
-For crossover work you want the woofer's (or tweeter's) whole response on your baffle, not just the bass. The **Driver curve** window does that, and it opens three ways: **Save & Export → Crossover tools → Driver on baffle** (pick the file and the window opens with it), opening or dropping an .frd and choosing **Put the driver on my baffle**, or **Signal → Baffle step → Driver curve**. It works with the baffle step on or off: the charts only change when Baffle step is set to Free-standing.
+For crossover work you want the woofer's (or tweeter's) whole response on your baffle, not just the bass. The **Driver curve** window does that, and it opens three ways: **Save & Export → Crossover tools → Driver on baffle** (pick the file and the window opens with it), opening or dropping an .frd and choosing **Put the driver on my baffle**, or **Signal → Baffle step → Driver curve**. It works with the baffle step on or off: the charts only change when Baffle step is set to Free-standing. With only open baffles on, the three ways in aren't shown (an open baffle has no baffle step: the dipole model covers its board); with open baffles and boxes together they stay, for the boxes.
 
 1. **Load the driver's curve**: an .frd or text file of frequency, dB and (if you have it) phase, from the datasheet's half-space or infinite-baffle curve or your own ground-plane measurement. A curve measured on a test baffle already has some of that baffle's diffraction in it; it isn't taken out.
 2. **Check the baffle and the cone**: the baffle's size (from the box, or typed in) and the driver's place on it are Baffle step's own fields, so changing them here changes them there too. The cone diameter starts from the driver's Sd; type another if the curve is a different driver's.

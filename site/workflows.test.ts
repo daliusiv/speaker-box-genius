@@ -77,3 +77,23 @@ test("data-only changes from public merge themselves; anything else waits for a 
   const sync = readFileSync(join(REPO_ROOT, ".github", "workflows", "sync-public.yml"), "utf8");
   assert.ok(sync.includes("INCOMING_BRANCH: sync/from-public"));
 });
+
+test("the Search Console report runs in the private repo only, read-only, with the key in a secret", () => {
+  const wf = readFileSync(join(REPO_ROOT, ".github", "workflows", "search-console.yml"), "utf8");
+  assert.ok(wf.includes("if: ${{ github.event.repository.private == true }}"), "dev repo only");
+  assert.ok(wf.includes("${{ secrets.GSC_SERVICE_ACCOUNT }}"));
+  assert.match(wf, /permissions:\n  contents: read\n  issues: write\n/);
+  assert.doesNotMatch(wf, /daliusiv|speaker-box-genius-dev|workers\.dev/);
+  const script = readFileSync(join(REPO_ROOT, "scripts", "search-console.ts"), "utf8");
+  assert.ok(script.includes("auth/webmasters.readonly"), "read-only scope");
+});
+
+test("uptime alerts run in the private repo only and pass the payload through env, never inline", () => {
+  const wf = readFileSync(join(REPO_ROOT, ".github", "workflows", "uptime.yml"), "utf8");
+  assert.ok(wf.includes("if: ${{ github.event.repository.private == true }}"), "dev repo only");
+  assert.match(wf, /repository_dispatch:\n    types: \[uptime\]/);
+  assert.match(wf, /permissions:\n  issues: write\n/);
+  const run = wf.slice(wf.indexOf("        run: |"));
+  assert.doesNotMatch(run, /\$\{\{/, "no ${{ }} inside the script (payload is untrusted)");
+  assert.doesNotMatch(wf, /daliusiv|speaker-box-genius-dev|workers\.dev/);
+});

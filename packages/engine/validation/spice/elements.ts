@@ -304,6 +304,12 @@ export function chainSections(o: CaseOptions): Section[] {
       out.push({ num: [1, w0 / st.q0, w0 * w0], den: [1, wp / st.qp, wp * wp] });
       continue;
     }
+    if (st.type === "lowshelf1") {
+      // (s + ωz)/(s + ωp), ωz/ωp = g: the engine's first-order shelf, written out here (no engine import).
+      const r = Math.sqrt(10 ** (st.gain_db / 20));
+      out.push({ num: [0, 1, TAU * st.freq * r], den: [0, 1, (TAU * st.freq) / r] });
+      continue;
+    }
     const w0 = TAU * st.freq;
     const A = 10 ** (st.gain_db / 40);
     if (st.type === "peak") out.push({ num: [1, (A * w0) / st.q, w0 * w0], den: [1, w0 / (A * st.q), w0 * w0] });

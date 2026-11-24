@@ -79,7 +79,8 @@ p {
     "top top"
     "panel charts";
   gap: 1rem;
-  max-width: 90rem;
+  /* Wide screens: the charts column grows (two charts a row from ~1700 px); past 2400 px lines get too long to read. */
+  max-width: 2400px;
   margin: 0 auto;
   padding: 1rem;
 }
@@ -310,6 +311,11 @@ td.over {
 .grid {
   stroke: var(--grid);
   stroke-width: 1;
+}
+
+/* Whole-step lines between the labelled frequencies, on charts wide enough for them. */
+.grid.minor {
+  opacity: 0.45;
 }
 
 .tick {
@@ -1514,7 +1520,7 @@ button.icon:disabled {
   }
 }
 
-/* More charts: one at a time under a tab row. One line that scrolls sideways (never wraps),
+/* Phones: charts one at a time under a tab row. One line that scrolls sideways (never wraps),
    fading at an edge that has more. */
 .chart-tabs {
   margin-bottom: -0.5rem;
@@ -1561,6 +1567,120 @@ button.icon:disabled {
 
 figure.chart[hidden] {
   display: none;
+}
+
+/* The charts under the drive bar and summary: one column, or two charts a row on a wide desktop.
+   Each cell is a chart with its notes; a desktop cell's place is its slot (order). */
+.chart-grid,
+.chart-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.chart-grid.two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Two a row: the cards in a row stretch to the taller one, so both rows line up (the plots
+   already start level: headers are one line). */
+.chart-grid.two > .chart-cell > figure.chart:not([hidden]) {
+  flex: 1 1 auto;
+}
+
+/* A chart's note (low drive, program signal, Za, impulse) inside its card, under the plot. */
+.chart-foot {
+  margin-top: 0.5rem;
+}
+
+.chart-foot:empty {
+  display: none;
+}
+
+.chart-foot .hint {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.chart-cell[hidden] {
+  display: none;
+}
+
+.charts-per-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-bottom: -0.5rem;
+  font-size: 0.8rem;
+}
+
+.charts-per-row .unit-switch button {
+  display: inline-flex;
+  padding: 0.3rem 0.5rem;
+}
+
+/* Desktop chart title: a menu of charts, as quiet as the title it replaces. */
+.chart .chart-pick > .ui-button {
+  margin-left: -0.5rem;
+  padding-inline: 0.5rem;
+  color: var(--fg);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.chart-pick .ui-menu-list {
+  min-width: 17rem;
+}
+
+/* Edit on the response chart: a borderless pencil + Edit, as tall as the scale switch beside it. */
+.chart-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: calc(0.25rem + 3px) 0.6rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--inactive);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: normal;
+}
+
+/* Not the chart's own SVG rule (.chart svg fills the width). */
+.chart-edit svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.chart-edit:hover {
+  color: var(--fg);
+}
+
+.chart-edit[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Touch: as tall as the scale switch (40 px), with the tap reaching 44 px. */
+@media (pointer: coarse) {
+  .chart-edit {
+    position: relative;
+    flex: none;
+    min-height: 40px;
+    padding-block: 0;
+  }
+
+  .chart-edit::after {
+    position: absolute;
+    inset: -2px 0;
+    content: "";
+  }
 }
 
 /* ---- Phone and narrow tablet layout: one screen at a time, bottom tab bar ---- */
@@ -2635,6 +2755,26 @@ button.add-section {
 .wedge-label {
   fill: var(--muted);
   letter-spacing: 0.04em;
+}
+.ob-drawing {
+  display: block;
+  width: 100%;
+  max-height: 18rem;
+  margin: 0.25rem auto 0.5rem;
+}
+.ob-cone {
+  fill: color-mix(in srgb, var(--fg) 12%, transparent);
+  stroke: var(--fg);
+}
+.ob-cone line {
+  fill: none;
+}
+.ob-ext {
+  opacity: 0.6;
+}
+.ob-drawing .wedge-wall.on {
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
 }
 .wedge-driver polygon {
   fill: color-mix(in srgb, var(--fg) 12%, transparent);
@@ -5700,4 +5840,26 @@ button.menu-button {
 .drive-sheet-actions button {
   min-height: 44px;
   min-width: 6rem;
+}
+
+/* PR finder: box switch and the Order select on one row (wraps on phones). */
+.finder-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.finder-order {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.finder-order .ui-select {
+  width: auto;
+  flex: none;
 }

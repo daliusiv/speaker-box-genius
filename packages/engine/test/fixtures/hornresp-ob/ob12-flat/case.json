@@ -1,0 +1,22 @@
+{
+  "title": "12-inch subwoofer, flat open baffle",
+  "record": "O1-ob12-flat.txt",
+  "driver": {
+    "fs": 24,
+    "qms": 4.2,
+    "qes": 0.42,
+    "vas_l": 85,
+    "re": 3.4,
+    "sd_cm2": 480,
+    "le_mh": 2.4
+  },
+  "hornrespPath_cm": 38.8,
+  "text": "Hornresp: CH, S1 = S2 = S5 = S6 = 2025 cm², L12 = L56 = 0.1 cm (its flat baffle), Vrc = Vtc = 0, Ang = 2π; its path is 0.862·√S = 38.8 cm. App: the 45 × 45 cm square board of that area, centred driver, no thickness; its own path D comes from edge diffraction (29.4 cm with this cone), so the bass differs by 20·log(D ratio).",
+  "box": {
+    "kind": "open-baffle",
+    "frame": "flat",
+    "w_cm": 45,
+    "h_cm": 45,
+    "t_cm": 0
+  }
+}

@@ -15,7 +15,8 @@ import { portArea, portEffectiveLength, portMouthArea, type PortInput } from "./
  * Tapered pieces are a chain of thin uniform slices (any taper; converges to Webster's
  * horn equation). The driver's rear sits at `driverAt_cm` from the closed end and sees the
  * two branches in parallel: the closed end behind it and the open end in front. The open
- * end radiates as a baffled piston, optionally through a port (a mass-loaded line).
+ * end radiates as a baffled piston, optionally through a port (a mass-loaded line), or as an
+ * unflanged pipe end (`mouth: "open"`, open-baffle frames).
  *
  * Stuffing: fibre fill in a piece makes the air lossy. Wilson's relaxation model (as in
  * Hornresp) gives the wave number and characteristic impedance from the flow resistivity,
@@ -66,6 +67,11 @@ export interface LineInput {
    * radiated power it's the distance between the two sources, as Hornresp's Acoustic Path Length.
    */
   mouthDistance_cm?: number;
+  /**
+   * How the open mouth radiates: "baffled" (default) as a piston in a wall, the usual box-front
+   * mouth; "open" as the end of a thin-walled pipe in free air, e.g. an open-baffle frame's duct.
+   */
+  mouth?: "baffled" | "open";
 }
 
 /** One uniform slice. */
@@ -194,6 +200,25 @@ export function baffledPistonImpedance(area: number, w: number, air: Air = STAND
   const z0 = (air.rho * air.c) / area;
   if (x < 1e-3) return scale(cx((x * x) / 8, (4 * x) / (3 * Math.PI)), z0); // small-x limits
   return scale(cx(1 - (2 * besselJ1(x)) / x, (2 * struveH1(x)) / x), z0);
+}
+
+/**
+ * Radiation impedance (acoustic, Pa·s/m³) of the open end of a thin-walled pipe of area S in free
+ * air (unflanged; Levine & Schwinger 1948). Silva et al. (J. Sound Vib. 322, 2009) fit its
+ * reflection coefficient R and end correction δ for ka ≤ 3.5; above that R and δ stay at their
+ * ka = 3.5 values (|R| ≈ 0.1, so the mouth is almost matched). Low ka: (ka)²/4 + j·0.6133·ka,
+ * half the resistance and about 0.72× the end correction of the same mouth in a wall.
+ */
+export function openPipeImpedance(area: number, w: number, air: Air = STANDARD_AIR): Complex {
+  const a = Math.sqrt(area / Math.PI);
+  const ka = (w * a) / air.c;
+  const z0 = (air.rho * air.c) / area;
+  if (ka < 1e-4) return scale(cx((ka * ka) / 4, 0.6133 * ka), z0);
+  const kc = Math.min(ka, 3.5);
+  const mag = (1 + 0.2 * kc - 0.084 * kc * kc) / (1 + 0.2 * kc + (0.5 - 0.084) * kc * kc);
+  const delta = (0.6133 * (1 + 0.044 * kc * kc)) / (1 + 0.19 * kc * kc) - 0.02 * Math.sin(2.5 * kc) ** 2;
+  const r = scale(cx(Math.cos(2 * ka * delta), -Math.sin(2 * ka * delta)), -mag); // R = −|R|·e^{−2jkδ}
+  return scale(div(add(cx(1), r), sub(cx(1), r)), z0);
 }
 
 // ---------------------------------------------------------------------------
@@ -402,7 +427,8 @@ export function lineNetwork(line: LineInput, air: Air = STANDARD_AIR): LineNetwo
     for (const s of middle) tMiddle = mm(tMiddle, sliceMatrix(s, w, air));
     tAhead = ONE;
     for (const s of ahead) tAhead = mm(tAhead, sliceMatrix(s, w, air));
-    zRad = add(baffledPistonImpedance(exitArea, w, air), cx(exitLoss));
+    const open = line.mouth === "open" && !port;
+    zRad = add(open ? openPipeImpedance(exitArea, w, air) : baffledPistonImpedance(exitArea, w, air), cx(exitLoss));
   };
   const zAheadIn = () => div(add(mul(tAhead[0], zRad), tAhead[1]), add(mul(tAhead[2], zRad), tAhead[3]));
   // Admittance of the closed stub behind the rear tap (0 when there is none).

@@ -13,7 +13,7 @@ import { downloadMacro, freecadFor } from "./freecadExport.ts";
 import { designProgram, headroomCell } from "./chartProps.ts";
 import { fmtCrest, signalLabel, type SideHeadroom } from "./programSignal.ts";
 
-const KIND: Record<DesignState["kind"], string> = { sealed: "Sealed", vented: "Ported", pr: "Passive radiator", bandpass: "Bandpass", line: "Transmission line", ib: "Infinite baffle" };
+const KIND: Record<DesignState["kind"], string> = { sealed: "Sealed", vented: "Ported", pr: "Passive radiator", bandpass: "Bandpass", line: "Transmission line", ib: "Infinite baffle", ob: "Open baffle" };
 
 
 /** "18 1/4" style inches to the nearest 1/16. */
@@ -287,15 +287,16 @@ export function BuildSheet(props: {
                 </span>
               </div>
             )}
+            {/* One string, not text pieces around {conditions}: a page the browser translates swaps
+                text nodes, and React then can't insert a new piece next to a swapped one (#406). */}
             <p className="hint">
-              Outside {len(outside.width)} × {len(outside.height)} × {depthText(lenUnit)} (W × H × D{wedge ? ", top/bottom" : ""}), {len(v.wall_mm)}
-              {lenUnit} walls.{" "}
-              {wedge
-                ? `The sides cover the whole outside; top, bottom, back and baffle fit between them. ${
-                    v.joinery === "miter" ? "Mitred corners: sizes are to the long points." : "Butt joints: one bevel setting for every sloped edge."
-                  }${v.slopeWall_mm !== null && v.slopeWall_mm !== v.wall_mm ? ` Sloped panel ${len(v.slopeWall_mm)}${lenUnit} thick.` : ""}`
-                : "Front and back cover the full size, top and bottom fit between them, the sides fit inside all four."}
-              {fold && fold.runs.length > 1 ? " Dividers run the full inside width, glued between the sides, alternately from the top and the bottom; set each as listed below." : ""}
+              {`Outside ${len(outside.width)} × ${len(outside.height)} × ${depthText(lenUnit)} (W × H × D${wedge ? ", top/bottom" : ""}), ${len(v.wall_mm)}${lenUnit} walls. ${
+                wedge
+                  ? `The sides cover the whole outside; top, bottom, back and baffle fit between them. ${
+                      v.joinery === "miter" ? "Mitred corners: sizes are to the long points." : "Butt joints: one bevel setting for every sloped edge."
+                    }${v.slopeWall_mm !== null && v.slopeWall_mm !== v.wall_mm ? ` Sloped panel ${len(v.slopeWall_mm)}${lenUnit} thick.` : ""}`
+                  : "Front and back cover the full size, top and bottom fit between them, the sides fit inside all four."
+              }${fold && fold.runs.length > 1 ? " Dividers run the full inside width, glued between the sides, alternately from the top and the bottom; set each as listed below." : ""}`}
             </p>
 
             <table className="cut-table">

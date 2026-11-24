@@ -177,12 +177,35 @@ export function DriverCard(p: DriverCardProps) {
         {p.modified && !tsOpen && <ModifiedNote modified={p.modified} what="the driver" />}
       </div>
 
-      <Section icon="signal" title="Large signal" value={`Xmax ${s.xmax_mm > 0 ? `${num(s.xmax_mm)} mm` : "not set"} · Pe ${s.pe_w > 0 ? `${num(s.pe_w)} W` : "not set"}`} {...sec("large")}>
+      <Section
+        icon="signal"
+        title="Large signal"
+        value={`Xmax ${s.xmax_mm > 0 ? `${num(s.xmax_mm)} mm` : "not set"} · Pe ${s.pe_w > 0 ? `${num(s.pe_w)} W` : "not set"}${s.rth_k_w > 0 ? ` · R_th ${num(s.rth_k_w)}` : ""}`}
+        {...sec("large")}
+      >
         <FieldRow label="Xmax" help="Maximum one-way excursion the cone can make while staying linear (from the datasheet). The excursion chart turns red above it. Empty when an imported file didn't have it: no redline until you enter it.">
           {(id) => <NumberField id={id} value={s.xmax_mm > 0 ? s.xmax_mm : undefined} placeholder="not set" unit="mm" positive onChange={(v) => set("xmax_mm", v ?? 0)} />}
         </FieldRow>
         <FieldRow label="Pe" help="Thermal power rating: how much power the voice coil can take continuously. Sets the thermal limit in the Max SPL chart. Empty when an imported file didn't have it.">
           {(id) => <NumberField id={id} value={s.pe_w > 0 ? s.pe_w : undefined} placeholder="not set" unit="W" positive onChange={(v) => set("pe_w", v ?? 0)} />}
+        </FieldRow>
+        <FieldRow
+          label="Thermal resistance"
+          help="How many °C the voice coil rises per watt it takes (R_th, K/W), to the air around the driver. Leave it empty to work it out from Pe: the power that holds the coil at its max temperature, (max − 20) / Pe. Used by Settings → Voice coil (Heated by the drive, and Power rating vs Coil temperature)."
+        >
+          {(id) => (
+            <NumberField
+              id={id}
+              value={s.rth_k_w > 0 ? s.rth_k_w : undefined}
+              placeholder={s.pe_w > 0 ? `≈ ${num(Math.round(((s.tmax_C - 20) / s.pe_w) * 100) / 100)}` : "not set"}
+              unit="K/W"
+              positive
+              onChange={(v) => set("rth_k_w", v === undefined ? 0 : Math.min(50, Math.max(0.05, v)))}
+            />
+          )}
+        </FieldRow>
+        <FieldRow label="Max coil temp" help="The highest temperature the voice coil is taken to stand (°C): its rated power Pe is the power that holds it there. 200 °C unless the datasheet says otherwise (some quote 150–300 °C).">
+          {(id) => <NumberField id={id} value={s.tmax_C} unit="°C" min={100} onChange={(v) => v !== undefined && set("tmax_C", Math.min(350, Math.max(100, v)))} />}
         </FieldRow>
       </Section>
 

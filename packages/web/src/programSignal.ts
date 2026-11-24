@@ -84,7 +84,7 @@ const cache = new WeakMap<object, Map<string, DesignProgram>>();
  * crest factor or target is cheap (cached per result).
  */
 export function programOf(
-  r: Pick<SimulationResult, "freq" | "spl" | "ceilings" | "summary">,
+  r: Pick<SimulationResult, "freq" | "spl" | "ceilings" | "summary" | "programSpl">,
   f3: number | null | undefined,
   crest_dB: number,
   target_dB: number | null,
@@ -94,6 +94,8 @@ export function programOf(
   const hit = byKey?.get(key);
   if (hit) return hit;
   const env = programEnvelope(r.ceilings, crest_dB);
+  // Coil temperature limit: the coil's heat depends on the signal, so the engine worked the curve out (programSpl).
+  if (r.programSpl) env.spl = r.programSpl;
   const freq = r.freq;
   const top = upperBandEdge(freq, r.spl) ?? freq[freq.length - 1]!;
   const band: [number, number] = [f3 ?? freq[0]!, top];
@@ -128,6 +130,8 @@ export function fmtHeadroom(db: number): string {
 export function simStateOf<S extends { settings: { signal: ProgramSignal } }>(prev: S | null, next: S): S {
   if (!prev || prev === next) return next;
   if (prev.settings.signal === next.settings.signal) return next;
+  // With the coil temperature limit the program's crest heats the coil: that needs a new run.
+  if ((next.settings as { thermalLimit?: string }).thermalLimit === "coil") return next;
   for (const k of Object.keys(next) as (keyof S)[]) if (k !== "settings" && prev[k] !== next[k]) return next;
   if (Object.keys(prev).length !== Object.keys(next).length) return next;
   const a = prev.settings as Record<string, unknown>;

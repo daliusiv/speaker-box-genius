@@ -4,7 +4,7 @@ import { Icon } from "./Icon.tsx";
 import { LogChart } from "./LogChart.tsx";
 import { baffleOnly, baffleOnlyDownload, baffleTrustedTo, coneFromSd, fitProblem, frdDownload, onBaffle, readFrd, withCone, type FrdFile } from "./baffleFrd.ts";
 import { downloadFile } from "./formats/download.ts";
-import { baffleGeometry, driverOffBaffle } from "./sim.ts";
+import { baffleGeometry, driverOffBaffle, hasOpenBaffle, OB_BAFFLE_HINT } from "./sim.ts";
 import type { AppState } from "./state.ts";
 import { Button, FieldRow, FileButton, Menu, Sheet, type MenuItem } from "./ui/index.ts";
 import "./baffleFrd.css";
@@ -214,6 +214,7 @@ export function BaffleFrdSheet(props: {
           <Fixed label="Distance" value={String(b?.distance ?? 1)} unit="m" help="Listening distance on axis, as the baffle step uses." />
           {problem && <p className="warn">{problem}</p>}
           <p className="hint">{sb.on ? "Same baffle as Baffle step on the charts." : "The charts stay in a wall (half space): this window doesn't turn the baffle step on."}</p>
+          {hasOpenBaffle(s) && <p className="hint">{OB_BAFFLE_HINT}</p>}
           <p className="hint">Expects a half-space (infinite-baffle) curve. Curves measured on a test baffle already include some of its diffraction.</p>
           <p className="hint">Approximate above {kHz(trusted)}: the cone&rsquo;s beaming isn&rsquo;t modelled (ripple there is usually ≤ 1 dB).</p>
           {f && !f.curve.phase && <p className="hint">No phase in this file: the export carries only the baffle&rsquo;s phase. Use minimum phase in your crossover tool.</p>}

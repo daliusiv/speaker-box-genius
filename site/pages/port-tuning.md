@@ -3,6 +3,7 @@ title: "My port tunes higher (or lower) than designed: why, and how to fix it"
 description: Why a built ported box tunes away from its design (net volume, end corrections, port position, flares, losses), how to measure the real tuning from the impedance curve, and how to correct it.
 path: guides/port-tuning
 image: chart:port-tuning-example/impedance
+art: A ported box in cutaway, its port drawn with the extra length the air behaves as if it had at each end.
 order: 12
 group: ported
 ---
@@ -74,7 +75,7 @@ For a cross-check, Small showed that the two peak frequencies (fL and fH) and th
 
 A second check: measure the port's output in the near field (the microphone at the port's mouth). It peaks at the tuning frequency, and the cone's near-field output has a deep notch there, where the cone barely moves.
 
-In the app, load your impedance measurement (`.zma`) with the **Measured** card and lay it over the simulated impedance chart: if the dips don't line up, the box isn't tuned where the simulation thinks.
+In the app, load your impedance measurement (`.zma`) with **Add a measured impedance** in the **Impedance** chart's menu (on a phone, **Open / Import**) and lay it over the simulated impedance chart: if the dips don't line up, the box isn't tuned where the simulation thinks.
 
 ## How to correct it
 

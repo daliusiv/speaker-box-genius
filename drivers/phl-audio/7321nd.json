@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "7321Nd",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 34,
+    "qms": 3.86,
+    "qes": 0.31,
+    "vas_l": 221,
+    "re": 5.2,
+    "sd_cm2": 1250,
+    "qts": 0.28,
+    "le_mh": 1.914,
+    "bl": 28,
+    "mms_g": 217,
+    "xmax_mm": 10,
+    "pe_w": 1200
+  },
+  "physical": {
+    "cutout_mm": 422,
+    "depth_mm": 185,
+    "displacement_l": 6.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/7321Nd_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

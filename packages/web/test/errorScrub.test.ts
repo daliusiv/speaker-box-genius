@@ -35,7 +35,6 @@ test("the reporter is cookieless, EU-hosted, masks clicks and records no screens
   const src = readFileSync(new URL("../src/telemetry.ts", import.meta.url), "utf8");
   for (const s of [
     'api_host: "https://eu.i.posthog.com"',
-    'cookieless_mode: "always"',
     'persistence: "memory"',
     'person_profiles: "never"',
     "capture_exceptions: true",
@@ -44,15 +43,24 @@ test("the reporter is cookieless, EU-hosted, masks clicks and records no screens
     "mask_all_element_attributes: true",
     "capture_copied_text: false",
     "network_timing: false",
-    "disable_session_recording: true",
+    "disable_session_recording: !usage",
+    "session_recording: REPLAY",
+    "enable_recording_console_log: false",
+    "maskAllInputs: true",
+    'blockSelector: \'a[href*="#"], input[type="range"]\'',
+    "recordBody: false",
     "disable_surveys: true",
-    "advanced_disable_flags: true",
+    "advanced_disable_flags: false",
+    "advanced_disable_feature_flags: true",
+    "advanced_disable_feature_flags_on_first_load: true",
     "save_referrer: false",
     "respect_dnt: true",
     "before_send: (event) => cleanEvent(event, usage)",
   ]) {
     assert.ok(src.includes(s), s);
   }
+  assert.doesNotMatch(src, /maskTextSelector/, "replays show the app's text; only inputs are masked");
+  assert.doesNotMatch(src, /cookieless_mode:/, "replay needs it off; memory persistence keeps cookies and storage out");
   assert.doesNotMatch(src, /phc_/, "the project token comes from the build, not the code");
   const main = readFileSync(new URL("../src/main.tsx", import.meta.url), "utf8");
   assert.match(main, /^(\/\/.*\n)*import [^\n]*"\.\/telemetry\.ts";/, "loaded before anything else");

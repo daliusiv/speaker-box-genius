@@ -1,0 +1,35 @@
+{
+  "brand": "PHL Audio",
+  "model": "1426NdU",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 72,
+    "qms": 2.14,
+    "qes": 0.29,
+    "vas_l": 12.4,
+    "re": 5.8,
+    "sd_cm2": 145,
+    "qts": 0.26,
+    "le_mh": 0.652,
+    "bl": 10.3,
+    "mms_g": 11.8,
+    "xmax_mm": 4,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 146,
+    "depth_mm": 74,
+    "displacement_l": 0.35
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.phlaudio.com/fileadmin/user_upload/phl_audio/1426NdU_SpecSheet.pdf",
+      "retrieved": "2026-11-19",
+      "note": "Values from PHL Audio's published datasheets (phlaudio.com), used with PHL Audio's permission (18 Nov 2026); the link is the datasheet. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without PHL Audio's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

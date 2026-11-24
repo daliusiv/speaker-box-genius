@@ -1,0 +1,33 @@
+{
+  "brand": "Supravox",
+  "model": "215 RTF 64 Bi-cône",
+  "type": "full-range",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 57,
+    "qms": 7.6,
+    "qes": 0.53,
+    "vas_l": 80,
+    "re": 6.5,
+    "sd_cm2": 254.5,
+    "le_mh": 0.43,
+    "bl": 6.48,
+    "mms_g": 8.9,
+    "xmax_mm": 2.3
+  },
+  "physical": {
+    "cutout_mm": 212,
+    "depth_mm": 100
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://supravox.fr/products/215-rtf-64-bi-cone-haut-parleur-large-bande-25w-98db-8-ohms",
+      "retrieved": "2026-11-22",
+      "note": "Values from the technical specifications on Supravox's product pages (supravox.fr), used with Supravox's permission (17 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Supravox's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "The page's Qts 0,46 disagrees with its Qms 7,6 and Qes 0,53 (which give 0.495), so the published Qts is left out and the app works it out from Qms and Qes. The page gives no power rating."
+}

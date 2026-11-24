@@ -29,14 +29,17 @@
  * power ratio), v10@F (level at F with
  * 10 V in), zmin (lowest impedance 60–500 Hz), rel@F (level at F against the passband), zpk (a tuned
  * box's upper impedance peak, its tuning to 200 Hz; zpkf where), zlo and zlof (its lower peak, 10 Hz to
- * the tuning, and where).
+ * the tuning, and where). Open baffles: obd (path D, cm), obpeak, obnull and obq (dipole peak, first
+ * null, a frame's quarter-wave, Hz), c2d and c6d (the point-dipole peak c/2D and equal-to-monopole c/6D for that D), cross (the lowest frequency where the
+ * response reaches its passband level); shelf, shelff, cut, cutf and cutq (the design's own 6 dB/oct
+ * shelf and peaking cut, as the Dipole EQ sets them).
  *
  *   {{diff:car-example/2/1/spl@30}}  design 2's value minus design 1's ("5.9")
  *   {{diff:a-example/1/b-example/1/f3}}  …or a design of another example
  *   {{lead:subs-example/1/3/max@30|15″|10s| dB}}  who's ahead, by how much: "15″ +2.5 dB", "10s +0.5 dB" or "same"
  */
 import { EXAMPLES } from "./examples.ts";
-import { driverInputOf, runDesigns, simOptionsOf, solveDriver, type Design } from "../packages/web/src/sim.ts";
+import { airOf, driverInputOf, runDesigns, simOptionsOf, solveDriver, type Design } from "../packages/web/src/sim.ts";
 import { scoreLine } from "../packages/web/src/lineopt.ts";
 import { combineRuns, parseRunSpec } from "../packages/web/src/guideRuns.ts";
 import { figure } from "./figures.ts";
@@ -253,6 +256,46 @@ function metric(r: { state: AppState; designs: Design[] }, d: Design, name: stri
         if (q >= 60 && q <= 500) m = Math.min(m, d.result.impedanceOhm[i]!);
       });
       return [m, 1];
+    }
+    case "obd":
+    case "obpeak":
+    case "obnull":
+    case "obq":
+    case "c2d":
+    case "c6d": {
+      // The Open baffle card's numbers: path D (cm), dipole peak, first null, a frame's quarter-wave;
+      // c2d and c6d are the textbook point-dipole frequencies for that D: the peak c/2D, and c/6D
+      // where a point dipole matches a monopole.
+      const ob = summary.ob;
+      if (!ob) throw new Error(`${name} needs an open baffle`);
+      if (name === "obd") return [ob.d_m * 100, 1];
+      if (name === "c2d" || name === "c6d") return [airOf(r.state).c / ((name === "c2d" ? 2 : 6) * ob.d_m), 0];
+      const f = name === "obpeak" ? ob.fPeak : name === "obnull" ? ob.fNull : ob.fQuarter;
+      if (f === null) throw new Error("obq needs an H- or U-frame");
+      return [f, 0];
+    }
+    case "cross": {
+      // The lowest frequency (from 10 Hz) where the response reaches its passband level: for an
+      // open baffle, where it first matches a free monopole of the same cone.
+      for (let i = 1; i < freq.length; i++) {
+        const a = spl[i - 1]! - summary.referenceSpl;
+        const b = spl[i]! - summary.referenceSpl;
+        if (freq[i - 1]! >= 10 && a < 0 && b >= 0) return [freq[i - 1]! * (freq[i]! / freq[i - 1]!) ** (-a / (b - a)), 0];
+      }
+      return [NaN, 0];
+    }
+    case "shelf":
+    case "shelff":
+    case "cut":
+    case "cutf":
+    case "cutq": {
+      // The design's own EQ: its first-order low shelf (the Dipole EQ's) and its peaking cut.
+      const mine = r.state.eq.filter((e) => e.on && e.target === d.design.id);
+      const e = mine.find((x) => (name.startsWith("shelf") ? x.type === "lowshelf1" : x.type === "peak" && x.gain_db < 0));
+      if (!e || !("gain_db" in e)) throw new Error(`${name}: design ${d.design.name} has no ${name.startsWith("shelf") ? "6 dB/oct shelf" : "cut"}`);
+      if (name === "shelff" || name === "cutf") return [e.freq, 0];
+      if (name === "cutq") return ["q" in e ? e.q : NaN, 2];
+      return [e.gain_db, 1];
     }
     default:
       throw new Error(`unknown metric "${name}"`);

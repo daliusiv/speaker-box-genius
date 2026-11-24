@@ -1,0 +1,34 @@
+{
+  "brand": "Accuton",
+  "model": "S220-6-221",
+  "type": "woofer",
+  "nominal_ohms": 6,
+  "size_in": 8.5,
+  "ts": {
+    "fs": 22.1,
+    "qms": 5.73,
+    "qes": 0.39,
+    "vas_l": 112.9,
+    "re": 5.9,
+    "sd_cm2": 224,
+    "qts": 0.37,
+    "mms_g": 32.8,
+    "le_mh": 0.81,
+    "bl": 8.28,
+    "xmax_mm": 5,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 191,
+    "depth_mm": 105
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://accuton.com/home-audio/drivers/sandwich/S220-6-221",
+      "retrieved": "2026-11-19",
+      "note": "Values from the product pages on accuton.com, used with Accuton's permission (19 Nov 2026), re-read from the website each month. Not covered by CC BY-NC-SA 4.0 while the licence question is open: do not reuse outside Speaker Box Genius without Accuton's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

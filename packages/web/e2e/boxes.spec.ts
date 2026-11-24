@@ -25,7 +25,7 @@ test("Boxes: top row is + Box, Size all and fold all; + Box lists the kinds", as
   await expect(top.getByRole("button", { name: "Add a box" })).toBeVisible();
   await expect(top.getByRole("button", { name: /Size all/ })).toBeVisible();
   await top.getByRole("button", { name: "Add a box" }).click();
-  await expect(page.getByRole("menu", { name: "Box type" }).getByRole("menuitem")).toHaveText(["Sealed", "Ported", "Passive radiators", "Bandpass", "Transmission line", "Infinite baffle"]);
+  await expect(page.getByRole("menu", { name: "Box type" }).getByRole("menuitem")).toHaveText(["Sealed", "Ported", "Passive radiators", "Bandpass", "Transmission line", "Infinite baffle", "Open baffle"]);
   await page.keyboard.press("Escape");
   await top.getByRole("button", { name: "Fold all boxes" }).click();
   await expect(page.locator("#panel-boxes .bx-body")).toHaveCount(0);
@@ -126,4 +126,25 @@ test("Boxes: the preset picker opened from the keyboard shows the curves and lan
   const menu = page.getByRole("menu", { name: "Preset" });
   await expect(menu.locator("svg.ui-mini-response")).toHaveCount(3);
   await expect(page.getByRole("menuitemradio", { name: /^Qtc 0\.577/ })).toBeFocused();
+});
+
+test("Boxes: ↑/↓ nudge Vb (Shift ×10, snapped), one held burst is one undo step, Ctrl+arrow is left alone", async ({ page }, info) => {
+  test.skip(info.project.name !== "desktop", "keyboard: desktop");
+  await boxes(page);
+  const vb = card(page, "vented").getByLabel("Vb");
+  await vb.fill("50");
+  // Let the typed value settle into its own undo step.
+  await page.waitForTimeout(900);
+  await vb.press("ArrowUp");
+  await vb.press("ArrowUp");
+  await vb.press("ArrowUp");
+  await expect(vb).toHaveValue("53");
+  await vb.press("Shift+ArrowUp");
+  await expect(vb).toHaveValue("60");
+  await vb.press("ArrowDown");
+  await expect(vb).toHaveValue("59");
+  await vb.press("Control+ArrowUp");
+  await expect(vb).toHaveValue("59");
+  await page.keyboard.press("Control+z");
+  await expect(vb).toHaveValue("50");
 });

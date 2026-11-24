@@ -12,7 +12,7 @@ export const hornrespFormat: ExportFormat = {
   icon: "file",
   help: "One record per box or line, for Hornresp's File → Import. Sealed, ported and passive radiator boxes, lines and horns; a port's distance from the cone is its Acoustic Path Length.",
   scope: "designs",
-  supports: (d) => d.kind === "line" || hornrespBoxKind(d) || "Bandpass boxes are set up in Hornresp's wizard",
+  supports: (d) => d.kind === "line" || hornrespBoxKind(d) || (d.kind === "ob" ? "Open baffles aren't exported to Hornresp yet" : "Bandpass boxes are set up in Hornresp's wizard"),
   run({ state }, ids) {
     const solved = solveDriver(state);
     if (solved.missing.length > 0) return "Enter enough driver parameters to simulate first.";
