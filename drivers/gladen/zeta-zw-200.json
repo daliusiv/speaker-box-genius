@@ -1,0 +1,32 @@
+{
+  "brand": "GLADEN",
+  "model": "ZETA ZW 200",
+  "type": "car-audio",
+  "nominal_ohms": 3,
+  "size_in": 8,
+  "ts": {
+    "fs": 46.8,
+    "qms": 5.4,
+    "qes": 0.75,
+    "vas_l": 29.89,
+    "re": 2.67,
+    "sd_cm2": 216.42,
+    "qts": 0.66,
+    "bl": 5.18,
+    "mms_g": 25.7,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 183,
+    "depth_mm": 80
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/gladen-lautsprecher/gladen-zeta-lautsprecher/gladen-zeta-200",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "FTX1025",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 71.5,
+    "qms": 2.788,
+    "qes": 0.523,
+    "vas_l": 25.85,
+    "re": 5.42,
+    "sd_cm2": 346.36,
+    "qts": 0.44,
+    "le_mh": 0.48,
+    "bl": 12.3,
+    "mms_g": 32.55,
+    "xmax_mm": 5,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 235,
+    "depth_mm": 123
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/ftx1025/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on celestion.com, used with Celestion's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Celestion's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

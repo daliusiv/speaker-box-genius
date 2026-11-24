@@ -1,0 +1,35 @@
+{
+  "brand": "HELIX",
+  "model": "Q 10W",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "size_in": 10,
+  "ts": {
+    "fs": 35,
+    "qms": 4.17,
+    "qes": 0.42,
+    "vas_l": 13.8,
+    "re": 3.9,
+    "sd_cm2": 333,
+    "qts": 0.38,
+    "bl": 21.5,
+    "mms_g": 220,
+    "xmax_mm": 14,
+    "pe_w": 750
+  },
+  "physical": {
+    "cutout_mm": 234,
+    "depth_mm": 163
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/subwoofers/q-10w",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

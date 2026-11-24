@@ -642,7 +642,7 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   assert.equal(sealed.vb_l, 23.6);
   assert.equal(ranked.findIndex((r) => r.driverId === "18-sound/18ntlw5000-8ohm" && r.box === "vented") + 1, 6);
   assert.equal(ranked.indexOf(sealed) + 1, 4);
-  assert.equal(ranked.indexOf(ported) + 1, 617);
+  assert.equal(ranked.indexOf(ported) + 1, 633);
   assert.equal(sealed.subsonic, undefined);
   // Re-sorted: Deepest and Loudest on the same results; Smallest sizes the boxes again.
   const deep = rankResults(res, { ...goal, priority: "deep" })[0]!;
@@ -654,11 +654,11 @@ test("design assistant guide: the home-subwoofer defaults still put the example'
   let sres = scands.flatMap((r) => evaluateDriver(base, r, loaded(r.id) as never, sgoal));
   sres = [...sres, ...prShortlist(rankResults(sres, sgoal), scands).flatMap((r) => evaluateDriver(base, r, loaded(r.id) as never, sgoal, "pr", db.passiveRadiators.map(prCandidate)))];
   const small = rankResults(sres, sgoal)[0]!;
-  assert.deepEqual([small.driverId, small.box, small.vb_l, small.pr?.name, small.pr?.count, small.pr?.addedMass_g], ["peerless/stw-350f188pr01-04", "pr", 31.7, "SEAS SL26R", 1, 640]);
+  assert.deepEqual([small.driverId, small.box, small.vb_l, small.pr?.name, small.pr?.count, small.pr?.addedMass_g], ["gladen/sigma-sswx10", "pr", 18.4, "SEAS SL26R", 2, 628]);
   assert.ok(small.notes.some((n) => n.includes("won't all fit")));
   // The counts the guide gives for these defaults.
   const grade = (g: string) => ranked.filter((r) => (g === "over" ? r.over.length > 0 : g === "deep" ? !r.over.length && !!r.deep : !r.over.length && !r.deep)).length;
-  assert.deepEqual([cands.length, ranked.length, grade("ok"), grade("deep"), grade("over")], [919, 1768, 530, 85, 1153]);
+  assert.deepEqual([cands.length, ranked.length, grade("ok"), grade("deep"), grade("over")], [965, 1853, 545, 85, 1223]);
   // Opening it with ported too, plus the sealed box, gives the example's designs.
   const opened = openResults(DEFAULT_STATE, loaded(top.driverId) as never, [top, ported, sealed], goal);
   const ex = EXAMPLES["assistant-example"]!();

@@ -1,0 +1,33 @@
+{
+  "brand": "HELIX",
+  "model": "Ci7 W200FM-S3",
+  "type": "car-audio",
+  "nominal_ohms": 3,
+  "size_in": 8,
+  "ts": {
+    "fs": 52,
+    "qms": 6.04,
+    "qes": 0.78,
+    "vas_l": 20.8,
+    "re": 3,
+    "sd_cm2": 201,
+    "qts": 0.69,
+    "bl": 5.6,
+    "mms_g": 25.6,
+    "xmax_mm": 3.9,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 173.5,
+    "depth_mm": 65.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/speakers/compose/i7/ci7-w200fm-s3",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

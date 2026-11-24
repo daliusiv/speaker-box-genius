@@ -1,0 +1,34 @@
+{
+  "brand": "Volt",
+  "model": "RV2501",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 39,
+    "qms": 3.19,
+    "qes": 0.37,
+    "vas_l": 47.03,
+    "re": 5.3,
+    "sd_cm2": 330,
+    "qts": 0.33,
+    "le_mh": 1.02,
+    "bl": 13.9,
+    "xmax_mm": 5,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 241,
+    "depth_mm": 149,
+    "displacement_l": 2.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://voltloudspeakers.co.uk/speaker/rv2501-10inch/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on voltloudspeakers.co.uk, used with Volt Loudspeakers' permission (23 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Volt's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

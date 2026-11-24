@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "FTX1530",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 15,
+  "ts": {
+    "fs": 42.5,
+    "qms": 3.809,
+    "qes": 0.297,
+    "vas_l": 172.07,
+    "re": 5.36,
+    "sd_cm2": 855.3,
+    "qts": 0.276,
+    "le_mh": 0.82,
+    "bl": 20.16,
+    "mms_g": 84.29,
+    "xmax_mm": 6,
+    "pe_w": 400
+  },
+  "physical": {
+    "cutout_mm": 351,
+    "depth_mm": 176
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/ftx1530/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on celestion.com, used with Celestion's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Celestion's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

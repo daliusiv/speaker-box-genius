@@ -1,0 +1,31 @@
+{
+  "brand": "HELIX",
+  "model": "IQ W8-DVC2 (+1 weight)",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "ts": {
+    "fs": 37,
+    "qms": 5.3,
+    "qes": 0.56,
+    "vas_l": 8.5,
+    "re": 3.85,
+    "sd_cm2": 222,
+    "qts": 0.51,
+    "le_mh": 2.78,
+    "bl": 15.5,
+    "xmax_mm": 12,
+    "pe_w": 750
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/subwoofers/iq-w8-dvc2",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 115 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}

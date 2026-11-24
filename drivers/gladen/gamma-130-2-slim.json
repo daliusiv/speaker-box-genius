@@ -1,0 +1,27 @@
+{
+  "brand": "GLADEN",
+  "model": "GAMMA 130.2 SLIM",
+  "type": "car-audio",
+  "nominal_ohms": 3,
+  "size_in": 5.25,
+  "ts": {
+    "fs": 108,
+    "qms": 4.97,
+    "qes": 1.65,
+    "vas_l": 4.36,
+    "re": 2.6,
+    "sd_cm2": 85,
+    "qts": 1.24,
+    "mms_g": 5.01,
+    "pe_w": 80
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/gladen-lautsprecher/gladen-gamma-lautsprecher/gladen-gamma-130-2-slim",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

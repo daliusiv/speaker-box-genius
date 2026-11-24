@@ -45,7 +45,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 
 - **A T/S parameter editor that never overwrites what you typed.** Type any set of parameters in any order; the rest are calculated (shown in grey), and contradictions are flagged. Change a database driver or passive radiator and a line says what was edited, with **Reset** to get the published values back (shared links remember which database entry it was). A box-type hint (EBP and Qts) says whether the driver leans sealed or ported
 - **Paste straight from a datasheet**: the parameters are picked out of the text, with units like "1.9 ft³" or "35630 mm²" converted
-- **A driver database of about 1,960 drivers from 26 brands**, plus 62 passive radiators, searchable and filterable, with links to each manufacturer's datasheet. Values that look wrong for a driver (an Xmax too large for its cone, say) are marked "check" until someone confirms them against the datasheet, and the design assistant leaves those drivers out
+- **A driver database of about 2,070 drivers from 31 brands**, plus 62 passive radiators, searchable and filterable, with links to each manufacturer's datasheet. Values that look wrong for a driver (an Xmax too large for its cone, say) are marked "check" until someone confirms them against the datasheet, and the design assistant leaves those drivers out
 - **A page for every driver** on the site ([speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/)), with suggested sealed, ported and passive radiator boxes (none over 300 L) at the driver's power rating, their charts, a link that opens them in the app, and scored substitutes: the drivers with the closest T/S parameters, simulated in the same box
 - **Find similar drivers**: the drivers with the closest T/S parameters to yours (edited ones too), checked in your own box (F3 and max SPL against yours), straight from the driver picker (how it's scored: [`docs/similar-drivers.md`](docs/similar-drivers.md))
 - **Compare with another driver**: a second driver drawn dashed in every box, with its own number of drivers and wiring if you like (one 15″ against two 10″s), and **Swap** to make it the main one
@@ -108,7 +108,7 @@ The model is small-signal and lumped (one-dimensional for lines). Port compressi
 
 ## The driver database
 
-The database lives in this repo, in [`drivers/`](drivers) and [`passive-radiators/`](passive-radiators): about 1,960 drivers and 62 passive radiators. Sources and credits are in [`docs/data-sources.md`](docs/data-sources.md). Every driver with enough parameters also gets a page on the site with suggested sealed, ported and passive radiator boxes: [speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/). It isn't affiliated with or endorsed by any manufacturer. Spotted a mistake? [Ask for a correction or removal](../../issues/new?template=data-correction.yml).
+The database lives in this repo, in [`drivers/`](drivers) and [`passive-radiators/`](passive-radiators): about 2,070 drivers and 62 passive radiators. Sources and credits are in [`docs/data-sources.md`](docs/data-sources.md). Every driver with enough parameters also gets a page on the site with suggested sealed, ported and passive radiator boxes: [speakerboxgenius.com/drivers](https://speakerboxgenius.com/drivers/). It isn't affiliated with or endorsed by any manufacturer. Spotted a mistake? [Ask for a correction or removal](../../issues/new?template=data-correction.yml).
 
 ## Contributing
 

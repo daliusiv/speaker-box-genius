@@ -23,7 +23,7 @@ group: ported
 - **title**: the question or topic in the reader's words, ideally the phrase they'd search for. Put it in quotes if it has a colon.
 - **description**: one or two sentences: what the guide covers and the worked example it uses. It shows on the guides list and in search results.
 - **path**: `guides/<slug>`. The slug is short, lower case and hyphenated, and it names the picture file.
-- **image**: the share card, usually the chart that answers the question (`chart:example/kind`). Every guide needs one; the build test checks this.
+- **image**: the share card for a guide without a picture, usually the chart that answers the question (`chart:example/kind`). Every guide needs one; the build test checks this. A guide with a picture is shared with the picture instead (drawn as a 1200 × 630 JPEG at build).
 - **art**: one sentence saying what the guide's picture shows (its alt text). See [The picture](#the-picture).
 - **order**, **group**: where it sits on the guides list (`start`, `switching`, `ported`, `sealed`, `lines`, `measuring`).
 
@@ -75,7 +75,7 @@ Draw it last, once the guide is written, so it shows what the guide is really ab
 - **Phones**: the list crops it to a small 4:3 thumbnail, so keep the subject in the middle 70 % (x 180–1020) with a few bold shapes. Fine detail disappears.
 - **Size**: hand-written SVG, under 20 KB (a few KB is typical). No `<text>`, `<image>`, `<style>`, scripts, filters, gradients or links.
 
-Calculators get a picture too, for their card on the `/calculators/` hub only (not on the calculator page): `site/img/calculators/<slug>.svg`, where the slug is the calculator's path (`/calculators/port-length/` → `port-length.svg`), drawn to the same rules. Orange is the thing the calculator works out (the port's length, the PR's added mass, the air left in the box).
+Calculators get a picture too, for their card on the `/calculators/` hub (not shown on the calculator page itself): `site/img/calculators/<slug>.svg`, where the slug is the calculator's path (`/calculators/port-length/` → `port-length.svg`), drawn to the same rules. It's also the calculator page's share card (drawn as a 1200 × 630 JPEG at build), so a shared link previews with it. Orange is the thing the calculator works out (the port's length, the PR's added mass, the air left in the box).
 
 `site/guideArt.test.ts` checks the canvas, colours, stroke widths, banned elements, size and that `art:` is a full sentence. Look at the picture at full size and as a 96 px thumbnail before you commit (`rsvg-convert -w 96 file.svg -o thumb.png`).
 

@@ -1,0 +1,32 @@
+{
+  "brand": "GLADEN",
+  "model": "ZETA 165",
+  "type": "car-audio",
+  "nominal_ohms": 3,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 56.3,
+    "qms": 7.79,
+    "qes": 0.62,
+    "vas_l": 11.98,
+    "re": 2.57,
+    "sd_cm2": 138.93,
+    "qts": 0.58,
+    "bl": 5.15,
+    "mms_g": 18.21,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 144,
+    "depth_mm": 71
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/gladen-lautsprecher/gladen-zeta-lautsprecher/gladen-zeta-165",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

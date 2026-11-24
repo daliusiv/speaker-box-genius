@@ -1,0 +1,33 @@
+{
+  "brand": "HELIX",
+  "model": "PR W165",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 57,
+    "qms": 5.35,
+    "qes": 0.63,
+    "vas_l": 10.8,
+    "re": 3.1,
+    "sd_cm2": 133,
+    "qts": 0.57,
+    "bl": 6.1,
+    "mms_g": 17.9,
+    "xmax_mm": 3,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 141,
+    "depth_mm": 66.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/speakers/pure/pr-w165",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

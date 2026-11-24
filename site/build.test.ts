@@ -851,7 +851,9 @@ test("size pages: one per size with enough drivers, listing each driver once", a
   const woofers = html.slice(html.indexOf('id="woofer"'), html.indexOf("</table>", html.indexOf('id="woofer"')));
   const fs = [...woofers.matchAll(/<td class="n">([\d.]+) Hz<\/td>/g)].map((m) => Number(m[1]));
   assert.deepEqual(fs, [...fs].sort((a, b) => a - b));
-  assert.match(html, /Other sizes: <a href="\/drivers\/2.5-inch\/">2.5″<\/a> · /);
+  // The smallest size with a page comes first (2″ since the BRAX, HELIX and GLADEN imports).
+  const first = hubs[0]!.inches;
+  assert.match(html, new RegExp(`Other sizes: <a href="${sizePath(first).replace(/[./]/g, "\\$&")}">${String(first).replace(".", "\\.")}″</a> · `));
   assert.doesNotMatch(html.slice(html.indexOf("Other sizes")), /href="\/drivers\/12-inch\/"/);
   assert.match(html, /"@type":"ItemList"/);
 });

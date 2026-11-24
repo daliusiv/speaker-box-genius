@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "TFX0515-16",
+  "type": "midbass",
+  "nominal_ohms": 16,
+  "size_in": 5,
+  "ts": {
+    "fs": 110,
+    "qms": 14.326,
+    "qes": 0.847,
+    "vas_l": 3,
+    "re": 10.18,
+    "sd_cm2": 95,
+    "qts": 0.8,
+    "le_mh": 0.459,
+    "bl": 8.557,
+    "mms_g": 8.717,
+    "xmax_mm": 3.75,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 116,
+    "depth_mm": 72
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/tfx0515-16/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on celestion.com, used with Celestion's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Celestion's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Vas 2.05 L disagrees with Fs, Mms, Cms and Sd; Vas recalculated as 3 L from Cms. Coaxial driver; values are for the woofer section."
+}

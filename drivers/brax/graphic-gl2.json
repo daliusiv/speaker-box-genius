@@ -1,0 +1,33 @@
+{
+  "brand": "BRAX",
+  "model": "GRAPHIC GL2",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "size_in": 2,
+  "ts": {
+    "fs": 165,
+    "qms": 8.9,
+    "qes": 0.55,
+    "vas_l": 0.24,
+    "re": 3.1,
+    "sd_cm2": 15,
+    "qts": 0.52,
+    "bl": 2.6,
+    "xmax_mm": 1,
+    "pe_w": 80
+  },
+  "physical": {
+    "cutout_mm": 53,
+    "depth_mm": 26.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/brax/speakers/graphic-gl2",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 1.6 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}

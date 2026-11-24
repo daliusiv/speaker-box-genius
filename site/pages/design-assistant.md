@@ -33,7 +33,7 @@ Not sure which driver to buy, or which box to put it in? The design assistant as
 
 ## A worked run: the home-subwoofer defaults
 
-Leave everything at **Home subwoofer**'s defaults and the assistant tries **919** of the database's drivers (the rest are outside the size range, aren't woofers, resonate above 60 Hz, lack the parameters or can't be wired to the amplifier's minimum load) and returns **1,768 boxes**. **530** are within their limits at 300 W, **85** more only pass Xmax in deep bass (amber, below), and **1,153** are over a limit. The top of the list, Balanced:
+Leave everything at **Home subwoofer**'s defaults and the assistant tries **965** of the database's drivers (the rest are outside the size range, aren't woofers, resonate above 60 Hz, lack the parameters or can't be wired to the amplifier's minimum load) and returns **1,853 boxes**. **545** are within their limits at 300 W, **85** more only pass Xmax in deep bass (amber, below), and **1,223** are over a limit. The top of the list, Balanced:
 
 ![The home-sub results, best first. The Dayton RSS315HO-44 with two RSS315-PR radiators leads: F3 24.9 Hz, 107 dB at 30 Hz, 43.5 L. Each card gives the F3, the output at your frequency, the box, the grade, and where a subsonic filter is needed.](img/assistant-results.png)
 
@@ -123,7 +123,7 @@ When filling the space reaches at least 3 % lower F3 than the flat alignment, a 
 
 ## Assistant myths, checked
 
-**"The top result is the best driver."** It's the best by the measure you picked, among those within their limits at your power. Balanced is a sum of ranks, not your target. Set the power to what your amplifier really gives, and re-sort if depth or size matters more. *Proof: on the same list, Balanced puts the RSS315HO-44 PR box first, Deepest the same RSS315HO-44 PR box (F3 24.9 Hz), and Loudest a Peerless SDF-375F75PR01-04 in 80 L with a Dayton Audio RSS460-PR (110.6 dB at 30 Hz). Smallest box puts a Peerless STW-350F188PR01-04 in 31.7 L, but with a SEAS SL26R carrying 640 g, and its card warns the driver and radiator won't all fit a cube that size.*
+**"The top result is the best driver."** It's the best by the measure you picked, among those within their limits at your power. Balanced is a sum of ranks, not your target. Set the power to what your amplifier really gives, and re-sort if depth or size matters more. *Proof: on the same list, Balanced puts the RSS315HO-44 PR box first, Deepest the same RSS315HO-44 PR box (F3 24.9 Hz), and Loudest a Peerless SDF-375F75PR01-04 in 80 L with a Dayton Audio RSS460-PR (110.6 dB at 30 Hz). Smallest box puts a GLADEN SIGMA SSWX10 in 18.4 L, but with two SEAS SL26R carrying 628 g, and its card warns the driver and radiators won't all fit a cube that size.*
 
 **"A ported box always beats a PR box."** In the same box and tuning the port goes a little deeper here ({{num:assistant-example/2/f3}} Hz against {{num:assistant-example/1/f3}} Hz). But only the PR box can play at 300 W, because the port that fits a 43.5 L box at 23 Hz chuffs above about 61 W. *Proof: the response and Port speed charts of the worked example.*
 

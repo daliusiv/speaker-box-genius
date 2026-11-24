@@ -1,0 +1,33 @@
+{
+  "brand": "GLADEN",
+  "model": "GS10-SLIM",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "size_in": 10,
+  "ts": {
+    "fs": 31.5,
+    "qms": 6.33,
+    "qes": 0.45,
+    "vas_l": 37.5,
+    "re": 3.24,
+    "sd_cm2": 360,
+    "qts": 0.42,
+    "bl": 13.29,
+    "mms_g": 124
+  },
+  "physical": {
+    "cutout_mm": 236,
+    "depth_mm": 89
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/subwoofer/gladen-gamma-subwoofer/gladen-gamma-gs10-slim",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,29 @@
+{
+  "brand": "HELIX",
+  "model": "IK S12-SVC2",
+  "type": "car-audio",
+  "nominal_ohms": 2,
+  "ts": {
+    "fs": 34,
+    "qms": 5.37,
+    "qes": 0.5,
+    "vas_l": 37,
+    "re": 2,
+    "sd_cm2": 523,
+    "qts": 0.46,
+    "le_mh": 1.86,
+    "bl": 14.1,
+    "mms_g": 229,
+    "xmax_mm": 8,
+    "pe_w": 300
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/subwoofers/ik-s12",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

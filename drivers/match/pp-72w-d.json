@@ -1,0 +1,35 @@
+{
+  "brand": "MATCH",
+  "model": "PP 72W-D",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "size_in": 6.5,
+  "ts": {
+    "fs": 53,
+    "qms": 3.3,
+    "qes": 0.41,
+    "vas_l": 7.9,
+    "re": 3.2,
+    "sd_cm2": 125,
+    "qts": 0.37,
+    "bl": 8,
+    "mms_g": 25,
+    "xmax_mm": 5,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 133,
+    "depth_mm": 79
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/match/subwoofers/pp-72w-d",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

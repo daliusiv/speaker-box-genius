@@ -1,0 +1,35 @@
+{
+  "brand": "Volt",
+  "model": "SB2550",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 21,
+    "qms": 1.9,
+    "qes": 0.34,
+    "vas_l": 111,
+    "re": 6,
+    "sd_cm2": 337,
+    "qts": 0.29,
+    "le_mh": 1.46,
+    "bl": 14,
+    "xmax_mm": 11,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 253,
+    "depth_mm": 122.5,
+    "displacement_l": 1.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://voltloudspeakers.co.uk/speaker/sb2550-10inch/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on voltloudspeakers.co.uk, used with Volt Loudspeakers' permission (23 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Volt's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 96 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}

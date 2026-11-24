@@ -2,6 +2,18 @@
 
 What's new in Speaker Box Genius. Each numbered section below is one update of the live site: a new minor version (1.1.0) adds features, a new patch (1.0.1) has only changes and fixes. The dated sections are from before 1.0.
 
+## 1.3.0 (2026-11-24)
+
+### Added
+- Volt Loudspeakers drivers in the database: 16 British-made bass, sub-bass and coaxial drive units from 6.5" to 18", read from voltloudspeakers.co.uk with Volt's permission. Each links to its product page.
+- Celestion pro audio drivers from celestion.com, with Celestion's permission: 82 LF, coaxial, full-range and legacy drivers (15 new models, the rest updated to Celestion's own values), each linking to its product page.
+- BRAX, HELIX and MATCH car audio drivers from Audiotec Fischer, with their permission: 82 woofers, midranges, coaxials (woofer values) and subwoofers, current and archived, from the technical data on audiotec-fischer.de and the WinISD files Audiotec Fischer sent (including the HELIX IQ subwoofers with their add-on weights fitted). Each links to its product page.
+- GLADEN car audio drivers from gladen.com, with Gladen's permission: 34 AEROSPACE, ZETA, SIGMA, GAMMA, BETA and ENA woofers, midranges and subwoofers, each linking to its product page.
+
+### Changed
+- A shared guide link now previews with the guide's own picture (on forums, Reddit, chat apps), instead of a chart card that could show up empty.
+- A shared calculator link now previews with the calculator's picture (on forums, Reddit, chat apps), instead of the site's general image.
+
 ## 1.2.0 (2026-11-24)
 
 ### Changed

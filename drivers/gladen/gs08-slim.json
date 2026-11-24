@@ -1,0 +1,33 @@
+{
+  "brand": "GLADEN",
+  "model": "GS08-SLIM",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "size_in": 8,
+  "ts": {
+    "fs": 36.2,
+    "qms": 6.22,
+    "qes": 0.53,
+    "vas_l": 10.1,
+    "re": 3.26,
+    "sd_cm2": 216,
+    "qts": 0.49,
+    "bl": 13.32,
+    "mms_g": 125.9
+  },
+  "physical": {
+    "cutout_mm": 183,
+    "depth_mm": 76
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/subwoofer/gladen-gamma-subwoofer/gladen-gamma-gs08-slim",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,28 @@
+{
+  "brand": "HELIX",
+  "model": "IK W10-SVC2",
+  "type": "car-audio",
+  "nominal_ohms": 2,
+  "ts": {
+    "fs": 32,
+    "qms": 5.09,
+    "qes": 0.45,
+    "vas_l": 40.15649,
+    "re": 2,
+    "sd_cm2": 333,
+    "qts": 0.41,
+    "le_mh": 1.68,
+    "xmax_mm": 8,
+    "pe_w": 300
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/subwoofers/ik-w10",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 126 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it). Published Bl 12.1 T·m disagrees with Fs, Mms, Re and Qes, so it's left out (the app derives it)."
+}

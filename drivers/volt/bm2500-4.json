@@ -1,0 +1,35 @@
+{
+  "brand": "Volt",
+  "model": "BM2500.4",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 45,
+    "qms": 2.43,
+    "qes": 0.3,
+    "vas_l": 37,
+    "re": 4.8,
+    "sd_cm2": 337,
+    "qts": 0.27,
+    "le_mh": 0.9,
+    "bl": 15.5,
+    "mms_g": 54,
+    "xmax_mm": 8,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 253,
+    "depth_mm": 111.5,
+    "displacement_l": 2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://voltloudspeakers.co.uk/speaker/bm2500-4-10inch/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on voltloudspeakers.co.uk, used with Volt Loudspeakers' permission (23 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Volt's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

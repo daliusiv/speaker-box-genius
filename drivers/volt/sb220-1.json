@@ -1,0 +1,35 @@
+{
+  "brand": "Volt",
+  "model": "SB220.1",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 27,
+    "qms": 5.94,
+    "qes": 0.53,
+    "vas_l": 37.35,
+    "re": 4.8,
+    "sd_cm2": 227,
+    "qts": 0.49,
+    "le_mh": 0.85,
+    "bl": 9.72,
+    "xmax_mm": 12,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 192,
+    "depth_mm": 108.5,
+    "displacement_l": 0.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://voltloudspeakers.co.uk/speaker/sb220-1-8inch/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on voltloudspeakers.co.uk, used with Volt Loudspeakers' permission (23 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Volt's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 50.3 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}

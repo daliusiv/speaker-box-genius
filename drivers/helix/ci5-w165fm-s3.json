@@ -1,0 +1,33 @@
+{
+  "brand": "HELIX",
+  "model": "Ci5 W165FM-S3",
+  "type": "car-audio",
+  "nominal_ohms": 3,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 50,
+    "qms": 2.38,
+    "qes": 0.5,
+    "vas_l": 17.9,
+    "re": 3.1,
+    "sd_cm2": 131,
+    "qts": 0.41,
+    "bl": 5.2,
+    "mms_g": 14,
+    "xmax_mm": 3.9,
+    "pe_w": 125
+  },
+  "physical": {
+    "cutout_mm": 142,
+    "depth_mm": 66.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/speakers/compose/i5/ci5-w165fm-s3",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

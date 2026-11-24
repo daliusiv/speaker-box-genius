@@ -1,0 +1,34 @@
+{
+  "brand": "HELIX",
+  "model": "CB C165.2-S3",
+  "type": "car-audio",
+  "nominal_ohms": 3,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 65,
+    "qms": 4.78,
+    "qes": 0.93,
+    "vas_l": 12.9,
+    "re": 3,
+    "sd_cm2": 139,
+    "qts": 0.78,
+    "bl": 4.1,
+    "mms_g": 12.5,
+    "xmax_mm": 2.5,
+    "pe_w": 80
+  },
+  "physical": {
+    "cutout_mm": 143,
+    "depth_mm": 61.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/speakers/compose/basic/cb-c165-2-s3",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

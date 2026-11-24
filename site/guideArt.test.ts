@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { guideSlug, parsePage, withArt, withHero } from "./build.ts";
+import { guideSlug, parsePage, shareCardSource, withArt, withHero } from "./build.ts";
 
 // The guides' illustrations (site/img/guides/<slug>.svg): one look for all of them.
 // The rules are in docs/writing-guides.md; this test is what holds them.
@@ -55,4 +55,19 @@ test("guide art: the banner goes after the intro, before the open buttons", () =
   const html = withHero('<h1>T</h1>\n<p class="lede">Intro.</p>\n<p class="cta"><a class="button" href="#">Open</a></p>', page);
   assert.match(html, /<p class="lede">Intro\.<\/p>\n<figure class="hero"><img src="\/guides\/img\/guides\/x\.svg" alt="A box &amp; a port\." width="1200" height="630"><\/figure>\n<p class="cta">/);
   assert.equal(withHero("<h1>T</h1>", { ...page, thumb: undefined }), "<h1>T</h1>");
+});
+
+test("guide art: a guide's share card is its picture; without one, its chart or a file", async () => {
+  const page = withArt(parsePage(readFileSync(join(PAGES, "open-baffle.md"), "utf8"), "open-baffle.md"));
+  const art = await shareCardSource(page);
+  assert.deepEqual(art, { source: readFileSync(join(ART, "open-baffle.svg"), "utf8"), html: false });
+  const chart = await shareCardSource({ ...page, thumb: undefined }, "open-baffle.md");
+  assert.equal(chart?.html, true);
+  assert.equal(await shareCardSource({ ...page, thumb: undefined, image: "shaped-cabinets.png" }), null);
+});
+
+test("calculator art: each calculator page is shared with its picture", async () => {
+  const { CALC_PAGES, calcCardSvg, calcSlug } = await import("./calculators.ts");
+  assert.ok(CALC_PAGES.length > 0);
+  for (const c of CALC_PAGES) assert.equal(calcCardSvg(c.path), readFileSync(join(CALC_ART, `${calcSlug(c.path)}.svg`), "utf8"), c.path);
 });

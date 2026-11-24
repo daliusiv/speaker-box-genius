@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "CNX0820",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 94.6,
+    "qms": 3.293,
+    "qes": 0.448,
+    "vas_l": 9.89,
+    "re": 5.1,
+    "sd_cm2": 226.98,
+    "qts": 0.395,
+    "le_mh": 0.46,
+    "bl": 12.02,
+    "mms_g": 20.9,
+    "xmax_mm": 6,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 187,
+    "depth_mm": 115
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/cnx0820/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on celestion.com, used with Celestion's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Celestion's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

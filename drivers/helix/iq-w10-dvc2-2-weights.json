@@ -1,0 +1,31 @@
+{
+  "brand": "HELIX",
+  "model": "IQ W10-DVC2 (+2 weights)",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "ts": {
+    "fs": 30,
+    "qms": 6,
+    "qes": 0.61,
+    "vas_l": 21,
+    "re": 3.85,
+    "sd_cm2": 363,
+    "qts": 0.55,
+    "le_mh": 2.9,
+    "bl": 17.8,
+    "mms_g": 264,
+    "xmax_mm": 12,
+    "pe_w": 750
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/subwoofers/iq-w10-dvc2",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

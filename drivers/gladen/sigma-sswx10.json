@@ -1,0 +1,34 @@
+{
+  "brand": "GLADEN",
+  "model": "SIGMA SSWX10",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "size_in": 10,
+  "ts": {
+    "fs": 31,
+    "qms": 6.96,
+    "qes": 0.52,
+    "vas_l": 13.1,
+    "re": 3.6,
+    "sd_cm2": 367,
+    "qts": 0.49,
+    "bl": 21,
+    "xmax_mm": 15
+  },
+  "physical": {
+    "cutout_mm": 223,
+    "depth_mm": 152
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/subwoofer/gladen-sigma-subwoofer/gladen-sigma-sswx10",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 259 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}

@@ -1,0 +1,33 @@
+{
+  "brand": "HELIX",
+  "model": "S 6B",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 67,
+    "qms": 3.87,
+    "qes": 0.96,
+    "vas_l": 10.3,
+    "re": 3.4,
+    "sd_cm2": 141,
+    "qts": 0.77,
+    "bl": 4.8,
+    "mms_g": 14.8,
+    "xmax_mm": 3,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 143,
+    "depth_mm": 65
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/speakers/s-6b",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

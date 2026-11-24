@@ -1,0 +1,34 @@
+{
+  "brand": "GLADEN",
+  "model": "ZETA 10",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "size_in": 10,
+  "ts": {
+    "fs": 26.5,
+    "qms": 8.8,
+    "qes": 0.43,
+    "vas_l": 29.3,
+    "re": 3.8,
+    "sd_cm2": 312,
+    "qts": 0.40997,
+    "bl": 15.8,
+    "mms_g": 170,
+    "xmax_mm": 11.5
+  },
+  "physical": {
+    "cutout_mm": 231,
+    "depth_mm": 147
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/subwoofer/gladen-zeta/zeta-10",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

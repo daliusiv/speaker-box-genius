@@ -40,7 +40,7 @@ To use only the saved copy of the driver database, add `--offline` after `mcp`.
 
 | Tool | What it does |
 | --- | --- |
-| `search_drivers` | Searches about 1,960 drivers by name, size, Fs, Qts and Xmax |
+| `search_drivers` | Searches about 2,070 drivers by name, size, Fs, Qts and Xmax |
 | `get_driver` | A driver's full T/S values, where they came from and the data's licence |
 | `simulate` | Up to eight boxes of any type: F3, tuning, cone and PR excursion, port air speed, max SPL and what limits it, with a share link |
 | `suggest_boxes` | Sizes sealed, ported and passive radiator boxes as the app's **Size all boxes** does, and picks a passive radiator |

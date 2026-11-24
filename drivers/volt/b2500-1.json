@@ -1,0 +1,35 @@
+{
+  "brand": "Volt",
+  "model": "B2500.1",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 39,
+    "qms": 2.21,
+    "qes": 0.41,
+    "vas_l": 26,
+    "re": 5.7,
+    "sd_cm2": 337,
+    "qts": 0.34,
+    "le_mh": 0.9,
+    "bl": 18.7,
+    "mms_g": 104,
+    "xmax_mm": 5.5,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 253,
+    "depth_mm": 111.5,
+    "displacement_l": 2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://voltloudspeakers.co.uk/speaker/b2500-1-10inch/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on voltloudspeakers.co.uk, used with Volt Loudspeakers' permission (23 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Volt's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

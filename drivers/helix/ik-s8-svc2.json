@@ -1,0 +1,29 @@
+{
+  "brand": "HELIX",
+  "model": "IK S8-SVC2",
+  "type": "car-audio",
+  "nominal_ohms": 2,
+  "ts": {
+    "fs": 43,
+    "qms": 7.79,
+    "qes": 0.53,
+    "vas_l": 11,
+    "re": 2,
+    "sd_cm2": 222,
+    "qts": 0.5,
+    "le_mh": 1.33,
+    "bl": 9.1,
+    "mms_g": 81,
+    "xmax_mm": 6.5,
+    "pe_w": 300
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/subwoofers/ik-s8",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

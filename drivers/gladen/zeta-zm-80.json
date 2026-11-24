@@ -1,0 +1,28 @@
+{
+  "brand": "GLADEN",
+  "model": "ZETA ZM 80",
+  "type": "car-audio",
+  "nominal_ohms": 3,
+  "size_in": 3,
+  "ts": {
+    "fs": 91.9,
+    "qms": 2.92,
+    "qes": 0.42,
+    "vas_l": 1.14,
+    "re": 2.5,
+    "sd_cm2": 34.2,
+    "qts": 0.37,
+    "bl": 3.85,
+    "mms_g": 4.3,
+    "pe_w": 80
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/gladen-lautsprecher/gladen-zeta-lautsprecher/ga-zm80",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

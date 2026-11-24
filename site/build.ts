@@ -5,8 +5,9 @@
  *
  * Each `site/pages/*.md` file becomes `<outDir>/<path>/index.html`. A page starts with a
  * front-matter block (`---` lines) giving its `title`, `description` and `path`, and
- * optionally `image` (its share card: a file in site/img, or `chart:example/kind` for that chart
- * drawn as a 1200 × 630 card with the page's title, site/guideCharts.ts) and `order` (its place in lists).
+ * optionally `image` (its share card when it has no picture in site/img/guides: a file in site/img, or
+ * `chart:example/kind` for that chart drawn as a 1200 × 630 card with the page's title, site/guideCharts.ts)
+ * and `order` (its place in lists). A guide with a picture is shared with that picture.
  * The body is Markdown (the subset in `markdown` below); the paragraph under the # title is
  * shown as the page's introduction. Extras:
  *
@@ -37,7 +38,7 @@ import { guideCardHtml, guideCharts, type ChartData } from "./guideCharts.ts";
 import { htmlToMarkdown, llmsFull, llmsTxt, toAiMarkdown, twinPath, type LlmsEntry, type Twin, type TwinPage } from "./aiDocs.ts";
 import { cardSvg, findChrome, Rasterizer } from "./og.ts";
 import { CardCache, cardSalt } from "./cardCache.ts";
-import { CALC_PAGES, CALC_STYLE, CALCULATORS, fillCalc, HUB_STYLE, hubCards, liveChartCss, viteScript } from "./calculators.ts";
+import { CALC_PAGES, CALC_STYLE, CALCULATORS, calcCardSvg, fillCalc, HUB_STYLE, hubCards, liveChartCss, viteScript } from "./calculators.ts";
 import { LastmodStore, sitemapFiles, type SitemapEntry, type SitemapGroup } from "./sitemap.ts";
 import { cardData, brandContent, brandPath, designDriver, driverContent, driverPath, driversIndexContent, DRIVERS_STYLE, hubSizes, loadDb, prCandidate, refFreq, relatedDrivers, sens283, shareLink, sizeContent, sizeLabel, sizePath, sizeSlug, type DriverPage, type PageLd, type PageLinks, type VariantLink, withPr } from "./drivers.ts";
 import { substitutesFor } from "./similar.ts";
@@ -120,6 +121,17 @@ export function withHero(content: string, page: Page): string {
   if (!lede) return hero + "\n" + content;
   const at = lede.index + lede[0].length;
   return `${content.slice(0, at)}\n${hero}${content.slice(at)}`;
+}
+
+/**
+ * What a guide's share card is drawn from: its picture (site/img/guides/<slug>.svg, already
+ * 1200 × 630) when it has one, so link previews show the same drawing as the page; else its
+ * `image: chart:example/kind` chart with the title; else null (a file `image:`, or the site's card).
+ */
+export async function shareCardSource(page: Page, file = page.path): Promise<{ source: string; html: boolean } | null> {
+  if (page.thumb) return { source: readFileSync(join(HERE, "img", "guides", `${guideSlug(page)}.svg`), "utf8"), html: false };
+  if (page.image?.startsWith("chart:")) return { source: await guideCardHtml(page.title, page.image, file), html: true };
+  return null;
 }
 
 /** "Ask AI about this page" (#393): the borderless menu under a guide's or calculator's H1. */
@@ -728,17 +740,18 @@ export async function build(outDir: string): Promise<string[]> {
     const related = relatedGuides(page, guides);
     const content = withAskAi(withHero(markdown(body, charts.draw), page), page.path) + related;
     addTwin(page, `${body}\n\n${htmlToMarkdown(related)}`, charts.chartData);
-    // `image: chart:example/kind`: the page's share card is that chart, drawn now (else the site's card).
+    // The page's share card (shareCardSource): its picture, else its `image: chart:…`, drawn now; without Chrome, a file `image:` or the site's card.
     let imagePath: string | undefined;
-    if (page.image?.startsWith("chart:")) {
-      const jpg = await cards.jpeg(await guideCardHtml(page.title, page.image, file), true);
+    const source = await shareCardSource(page, file);
+    if (source) {
+      const jpg = await cards.jpeg(source.source, source.html);
       if (jpg) {
         imagePath = `${page.path}card.jpg`;
         mkdirSync(join(outDir, page.path), { recursive: true });
         writeFileSync(join(outDir, imagePath), jpg);
       }
     }
-    write(page.path, layout({ ...page, ...(page.image?.startsWith("chart:") ? { image: undefined, imagePath } : {}), content, guides, alternate: twinPath(page.path), style: ASK_AI_STYLE + (charts.count ? charts.style : "") }));
+    write(page.path, layout({ ...page, image: page.image?.startsWith("chart:") ? undefined : page.image, imagePath, content, guides, alternate: twinPath(page.path), style: ASK_AI_STYLE + (charts.count ? charts.style : "") }));
   }
 
   const guidesPage = {
@@ -854,12 +867,21 @@ export async function build(outDir: string): Promise<string[]> {
       `${c.lede.replace(/<[^>]+>/g, "")}\n\nThe interactive calculator is at ${SITE}${c.path}; this page has its text and worked example.\n\n${md}`,
       charts.chartData,
     );
+    // The page's share card: its picture (the hub's), drawn now; without Chrome, the site's card.
+    let imagePath: string | undefined;
+    const jpg = await cards.jpeg(calcCardSvg(c.path));
+    if (jpg) {
+      imagePath = `${c.path}card.jpg`;
+      mkdirSync(join(outDir, c.path), { recursive: true });
+      writeFileSync(join(outDir, imagePath), jpg);
+    }
     write(
       c.path,
       layout({
         title: c.title,
         description: c.description,
         path: c.path,
+        imagePath,
         alternate: twinPath(c.path),
         ld: { crumbs: [{ name: "Calculators", path: "/calculators/" }, { name: c.crumb }] },
         content: withAskAi(`<h1>${c.h1}</h1>\n<p class="lede">${c.lede}</p>\n${c.form()}\n${markdown(md, charts.draw)}`, c.path),

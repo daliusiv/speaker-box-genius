@@ -1,0 +1,35 @@
+{
+  "brand": "HELIX",
+  "model": "Ci5 S200FM-D2",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "size_in": 8,
+  "ts": {
+    "fs": 55,
+    "qms": 8.31,
+    "qes": 0.88,
+    "vas_l": 13.5,
+    "re": 3.6,
+    "sd_cm2": 194,
+    "qts": 0.8,
+    "bl": 6.7,
+    "mms_g": 32,
+    "xmax_mm": 7.5,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 173.5,
+    "depth_mm": 47
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/speakers/compose/i5/ci5-s200fm-d2",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

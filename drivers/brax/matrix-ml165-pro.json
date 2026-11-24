@@ -1,0 +1,33 @@
+{
+  "brand": "BRAX",
+  "model": "MATRIX ML165 PRO",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 48,
+    "qms": 6.8,
+    "qes": 0.5,
+    "vas_l": 14.6,
+    "re": 3.4,
+    "sd_cm2": 137,
+    "qts": 0.47,
+    "bl": 6.3,
+    "mms_g": 19.1,
+    "xmax_mm": 8,
+    "pe_w": 120
+  },
+  "physical": {
+    "cutout_mm": 143,
+    "depth_mm": 64
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/brax/speakers/matrix-ml165-pro",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

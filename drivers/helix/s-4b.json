@@ -1,0 +1,33 @@
+{
+  "brand": "HELIX",
+  "model": "S 4B",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "size_in": 4,
+  "ts": {
+    "fs": 120,
+    "qms": 4.24,
+    "qes": 1.11,
+    "vas_l": 1.2,
+    "re": 3.4,
+    "sd_cm2": 61,
+    "qts": 0.88,
+    "bl": 4.1,
+    "xmax_mm": 3,
+    "pe_w": 70
+  },
+  "physical": {
+    "cutout_mm": 92.3,
+    "depth_mm": 46.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/speakers/s-4b",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Published Mms 5.9 g disagrees with Fs, Vas and Sd, so it's left out (the app derives it)."
+}

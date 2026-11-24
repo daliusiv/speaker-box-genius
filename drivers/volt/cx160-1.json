@@ -1,0 +1,36 @@
+{
+  "brand": "Volt",
+  "model": "CX160.1",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 40,
+    "qms": 9.53,
+    "qes": 0.36,
+    "vas_l": 22.6,
+    "re": 5.6,
+    "sd_cm2": 154,
+    "qts": 0.35,
+    "le_mh": 0.67,
+    "bl": 9.5,
+    "mms_g": 23,
+    "xmax_mm": 6,
+    "pe_w": 100
+  },
+  "physical": {
+    "cutout_mm": 160,
+    "depth_mm": 119,
+    "displacement_l": 0.7
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://voltloudspeakers.co.uk/speaker/cx160-1-6-5/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on voltloudspeakers.co.uk, used with Volt Loudspeakers' permission (23 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Volt's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

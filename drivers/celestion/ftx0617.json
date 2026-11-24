@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "FTX0617",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 100,
+    "qms": 3.651,
+    "qes": 0.925,
+    "vas_l": 7.37,
+    "re": 5.52,
+    "sd_cm2": 153.94,
+    "qts": 0.738,
+    "le_mh": 0.27,
+    "bl": 6.59,
+    "mms_g": 11.58,
+    "xmax_mm": 3.5,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 150,
+    "depth_mm": 93
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/ftx0617/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on celestion.com, used with Celestion's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Celestion's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

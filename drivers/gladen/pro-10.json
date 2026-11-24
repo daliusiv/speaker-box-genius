@@ -1,0 +1,32 @@
+{
+  "brand": "GLADEN",
+  "model": "PRO 10",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "size_in": 10,
+  "ts": {
+    "fs": 31.44,
+    "qms": 8.13,
+    "qes": 0.55,
+    "vas_l": 34.23,
+    "re": 3.4,
+    "sd_cm2": 346,
+    "qts": 0.51,
+    "bl": 11.54,
+    "mms_g": 108.83,
+    "xmax_mm": 15
+  },
+  "physical": {
+    "cutout_mm": 236,
+    "depth_mm": 142
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/subwoofer/gladen-high-end-subwoofer/gladen-pro-10",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

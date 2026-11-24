@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "TF1225CX",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 12,
+  "ts": {
+    "fs": 63.5,
+    "qms": 3.119,
+    "qes": 0.405,
+    "vas_l": 45.12,
+    "re": 5.57,
+    "sd_cm2": 530.93,
+    "qts": 0.358,
+    "le_mh": 1.2,
+    "bl": 17.46,
+    "mms_g": 55.59,
+    "xmax_mm": 4.5,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 286,
+    "depth_mm": 172
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/tf1225cx/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on celestion.com, used with Celestion's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Celestion's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}

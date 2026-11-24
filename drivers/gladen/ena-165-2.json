@@ -1,0 +1,27 @@
+{
+  "brand": "GLADEN",
+  "model": "ENA 165.2",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 86,
+    "qms": 4.88,
+    "qes": 1.74,
+    "vas_l": 8,
+    "re": 3.27,
+    "sd_cm2": 136.8,
+    "qts": 1.28,
+    "mms_g": 11.05,
+    "pe_w": 30
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/gladen-lautsprecher/gladen-ena-lautsprecher/gladen-ena-165-2",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

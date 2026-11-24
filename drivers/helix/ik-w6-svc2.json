@@ -1,0 +1,29 @@
+{
+  "brand": "HELIX",
+  "model": "IK W6-SVC2",
+  "type": "car-audio",
+  "nominal_ohms": 2,
+  "ts": {
+    "fs": 48,
+    "qms": 3.85,
+    "qes": 0.33,
+    "vas_l": 11.4,
+    "re": 2,
+    "sd_cm2": 123,
+    "qts": 0.3,
+    "le_mh": 0.55,
+    "bl": 6.4,
+    "mms_g": 23,
+    "xmax_mm": 6,
+    "pe_w": 150
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/subwoofers/ik-w6",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

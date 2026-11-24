@@ -1,0 +1,46 @@
+name: Import BRAX, HELIX and MATCH drivers
+
+# Reads the product pages on audiotec-fischer.de (with Audiotec Fischer's permission, see
+# docs/data-permissions.md) and opens a pull request with new and updated entries plus a
+# report per brand of anything adjusted or skipped. Run it by hand when Audiotec Fischer
+# updates its range. (The models that come only from their WinISD files are added by
+# running audiotec.ts locally with --wdr; this workflow keeps them as they are.)
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  import:
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read audiotec-fischer.de
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/audiotec.ts
+
+      - name: Check the database
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts
+
+      - name: One report for the pull request
+        run: cat brax-import-report.md helix-import-report.md match-import-report.md > audiotec-import-report.md
+
+      - name: Open or update the pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: db/audiotec-import
+          add-paths: |
+            drivers/brax/**
+            drivers/helix/**
+            drivers/match/**
+          commit-message: "Database: import BRAX, HELIX and MATCH drivers from audiotec-fischer.de (with permission)"
+          title: "Database: Audiotec Fischer import"
+          labels: database
+          body-path: audiotec-import-report.md

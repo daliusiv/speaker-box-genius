@@ -1,0 +1,39 @@
+name: Import Volt drivers
+
+# Reads the product pages on voltloudspeakers.co.uk (with Volt Loudspeakers' permission, see
+# docs/data-permissions.md) and opens a pull request with new and updated entries plus a
+# report of anything adjusted or skipped. Run it by hand when Volt updates its range.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  import:
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read voltloudspeakers.co.uk
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/volt.ts
+
+      - name: Check the database
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts
+
+      - name: Open or update the pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: db/volt-import
+          add-paths: |
+            drivers/volt/**
+          commit-message: "Database: import Volt drivers from voltloudspeakers.co.uk (with permission)"
+          title: "Database: Volt import"
+          labels: database
+          body-path: volt-import-report.md

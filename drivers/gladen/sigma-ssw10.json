@@ -1,0 +1,34 @@
+{
+  "brand": "GLADEN",
+  "model": "SIGMA SSW10",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "size_in": 10,
+  "ts": {
+    "fs": 36,
+    "qms": 6.64,
+    "qes": 0.51,
+    "vas_l": 18.4,
+    "re": 3.7,
+    "sd_cm2": 330,
+    "qts": 0.47,
+    "bl": 16.62,
+    "mms_g": 153.2,
+    "xmax_mm": 11.5
+  },
+  "physical": {
+    "cutout_mm": 230,
+    "depth_mm": 140
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/subwoofer/gladen-sigma-subwoofer/gladen-sigma-ssw10",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

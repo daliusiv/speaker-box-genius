@@ -1,0 +1,35 @@
+{
+  "brand": "HELIX",
+  "model": "IK W8-DVC2",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "size_in": 8,
+  "ts": {
+    "fs": 37,
+    "qms": 3.56,
+    "qes": 0.46,
+    "vas_l": 17,
+    "re": 3.2,
+    "sd_cm2": 219,
+    "qts": 0.41,
+    "bl": 10.7,
+    "mms_g": 69,
+    "xmax_mm": 8,
+    "pe_w": 300
+  },
+  "physical": {
+    "cutout_mm": 182,
+    "depth_mm": 101
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/subwoofers/ik-w8",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

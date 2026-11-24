@@ -949,6 +949,9 @@ const escHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").re
 /** A calculator's picture on the hub: site/img/calculators/<slug>.svg (same rules as the guides' pictures). */
 export const calcSlug = (path: string): string => path.replace(/^\/calculators\/|\/$/g, "");
 
+/** A calculator page's share card: its picture (already 1200 × 630), drawn as a JPEG at build, so link previews show it. */
+export const calcCardSvg = (path: string): string => readFileSync(join(import.meta.dirname, "img", "calculators", `${calcSlug(path)}.svg`), "utf8");
+
 /** The hub's card grid. The picture is decorative (the link names the calculator), so its alt is empty, as on the guides list. */
 export function hubCards(): string {
   return `<ul class="calc-hub">\n${CALCULATORS.map(

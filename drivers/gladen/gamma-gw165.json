@@ -1,0 +1,27 @@
+{
+  "brand": "GLADEN",
+  "model": "GAMMA GW165",
+  "type": "car-audio",
+  "nominal_ohms": 3,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 59,
+    "qms": 2.7,
+    "qes": 0.55,
+    "vas_l": 16.2,
+    "re": 2.63,
+    "sd_cm2": 135,
+    "qts": 0.45,
+    "mms_g": 10.9,
+    "pe_w": 100
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/gladen-lautsprecher/gladen-gamma-lautsprecher/gladen-gamma-gw165",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

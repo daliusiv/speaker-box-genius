@@ -1,0 +1,39 @@
+name: Import Celestion drivers
+
+# Reads the product pages on celestion.com (with Celestion's permission, see
+# docs/data-permissions.md) and opens a pull request with new and updated entries plus a
+# report of anything adjusted or skipped. Run it by hand when Celestion updates its range.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  import:
+    runs-on: ${{ github.event.repository.private && fromJSON('["self-hosted", "linux"]') || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Read celestion.com
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/celestion.ts
+
+      - name: Check the database
+        run: node --experimental-strip-types --disable-warning=ExperimentalWarning packages/db-tools/src/validate.ts
+
+      - name: Open or update the pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: db/celestion-import
+          add-paths: |
+            drivers/celestion/**
+          commit-message: "Database: import Celestion drivers from celestion.com (with permission)"
+          title: "Database: Celestion import"
+          labels: database
+          body-path: celestion-import-report.md

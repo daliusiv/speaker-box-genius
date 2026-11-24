@@ -1,0 +1,33 @@
+{
+  "brand": "GLADEN",
+  "model": "GS12-SLIM",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "voice_coils": 2,
+  "ts_wiring": "series",
+  "size_in": 12,
+  "ts": {
+    "fs": 22.4,
+    "qms": 4.16,
+    "qes": 0.39,
+    "vas_l": 100.7,
+    "re": 3.39,
+    "sd_cm2": 556,
+    "qts": 0.35,
+    "bl": 16.35,
+    "mms_g": 216.7
+  },
+  "physical": {
+    "cutout_mm": 285,
+    "depth_mm": 100
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.gladen.com/de/gladen/subwoofer/gladen-gamma-subwoofer/gladen-gamma-gs12-slim",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on gladen.com, used with Gladen Europe's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Gladen's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

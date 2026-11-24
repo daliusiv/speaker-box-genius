@@ -1,0 +1,35 @@
+{
+  "brand": "Volt",
+  "model": "RV2550",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 28,
+    "qms": 2.58,
+    "qes": 0.38,
+    "vas_l": 71.78,
+    "re": 5.9,
+    "sd_cm2": 330,
+    "qts": 0.33,
+    "le_mh": 1.45,
+    "bl": 13.9,
+    "mms_g": 69,
+    "xmax_mm": 12,
+    "pe_w": 250
+  },
+  "physical": {
+    "cutout_mm": 241,
+    "depth_mm": 161,
+    "displacement_l": 2.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://voltloudspeakers.co.uk/speaker/rv2550-10/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on voltloudspeakers.co.uk, used with Volt Loudspeakers' permission (23 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Volt's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

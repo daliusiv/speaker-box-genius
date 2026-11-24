@@ -1,0 +1,35 @@
+{
+  "brand": "Volt",
+  "model": "RV4564",
+  "type": "subwoofer",
+  "nominal_ohms": 8,
+  "size_in": 18,
+  "ts": {
+    "fs": 26,
+    "qms": 3.94,
+    "qes": 0.34,
+    "vas_l": 238,
+    "re": 5.8,
+    "sd_cm2": 1029,
+    "qts": 0.31,
+    "le_mh": 3.8,
+    "bl": 25.7,
+    "mms_g": 235,
+    "xmax_mm": 12.5,
+    "pe_w": 750
+  },
+  "physical": {
+    "cutout_mm": 417,
+    "depth_mm": 215,
+    "displacement_l": 13
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://voltloudspeakers.co.uk/speaker/rv4564-18inch/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on voltloudspeakers.co.uk, used with Volt Loudspeakers' permission (23 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Volt's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,33 @@
+{
+  "brand": "HELIX",
+  "model": "Ci5 M80FM-S3",
+  "type": "car-audio",
+  "nominal_ohms": 3,
+  "size_in": 3,
+  "ts": {
+    "fs": 156,
+    "qms": 3.68,
+    "qes": 0.75,
+    "vas_l": 0.7,
+    "re": 3.1,
+    "sd_cm2": 36,
+    "qts": 0.63,
+    "bl": 3.2,
+    "mms_g": 2.6,
+    "xmax_mm": 4.5,
+    "pe_w": 90
+  },
+  "physical": {
+    "cutout_mm": 69.5,
+    "depth_mm": 30.2
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/speakers/compose/i5/ci5-m80fm-s3",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

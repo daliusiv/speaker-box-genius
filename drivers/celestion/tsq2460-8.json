@@ -1,0 +1,34 @@
+{
+  "brand": "Celestion",
+  "model": "TSQ2460-8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 24,
+  "ts": {
+    "fs": 29,
+    "qms": 11.34,
+    "qes": 0.354,
+    "vas_l": 310.59,
+    "re": 5.29,
+    "sd_cm2": 2239,
+    "qts": 0.343,
+    "le_mh": 3.13,
+    "bl": 42.71,
+    "mms_g": 648,
+    "xmax_mm": 18.75,
+    "pe_w": 2500
+  },
+  "physical": {
+    "cutout_mm": 573,
+    "depth_mm": 280
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/tsq2460-8/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on celestion.com, used with Celestion's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Celestion's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

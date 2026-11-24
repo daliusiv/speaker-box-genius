@@ -1,0 +1,33 @@
+{
+  "brand": "HELIX",
+  "model": "CB W165-S3",
+  "type": "car-audio",
+  "nominal_ohms": 3,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 62,
+    "qms": 4.5,
+    "qes": 0.9,
+    "vas_l": 14.5,
+    "re": 3,
+    "sd_cm2": 141,
+    "qts": 0.75,
+    "bl": 4.1,
+    "mms_g": 13.2,
+    "xmax_mm": 2.5,
+    "pe_w": 80
+  },
+  "physical": {
+    "cutout_mm": 143,
+    "depth_mm": 61.4
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/helix/speakers/compose/basic/cb-w165-s3",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

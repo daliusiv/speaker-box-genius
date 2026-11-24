@@ -1,0 +1,35 @@
+{
+  "brand": "Volt",
+  "model": "B251.8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 10,
+  "ts": {
+    "fs": 31,
+    "qms": 1.82,
+    "qes": 0.45,
+    "vas_l": 72.56,
+    "re": 5.8,
+    "sd_cm2": 323,
+    "qts": 0.36,
+    "le_mh": 0.94,
+    "bl": 11.74,
+    "mms_g": 53.67,
+    "xmax_mm": 5,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 253,
+    "depth_mm": 109.5,
+    "displacement_l": 1.1
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://voltloudspeakers.co.uk/speaker/b251-8-10inch/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on voltloudspeakers.co.uk, used with Volt Loudspeakers' permission (23 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Volt's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

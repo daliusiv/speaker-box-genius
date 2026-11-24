@@ -1,0 +1,35 @@
+{
+  "brand": "Volt",
+  "model": "BM228.8",
+  "type": "woofer",
+  "nominal_ohms": 8,
+  "size_in": 8,
+  "ts": {
+    "fs": 35,
+    "qms": 5.8,
+    "qes": 0.38,
+    "vas_l": 32,
+    "re": 5.8,
+    "sd_cm2": 213.82,
+    "qts": 0.35,
+    "le_mh": 1.26,
+    "bl": 11.7,
+    "mms_g": 40,
+    "xmax_mm": 4,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 192,
+    "depth_mm": 96.5,
+    "displacement_l": 0.8
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://voltloudspeakers.co.uk/speaker/bm228-8-8inch/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on voltloudspeakers.co.uk, used with Volt Loudspeakers' permission (23 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Volt's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

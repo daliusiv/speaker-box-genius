@@ -1,0 +1,33 @@
+{
+  "brand": "BRAX",
+  "model": "MATRIX ML8 MID",
+  "type": "car-audio",
+  "nominal_ohms": 4,
+  "size_in": 8,
+  "ts": {
+    "fs": 45,
+    "qms": 12.14,
+    "qes": 0.61,
+    "vas_l": 24,
+    "re": 3.4,
+    "sd_cm2": 219,
+    "qts": 0.58,
+    "bl": 7.4,
+    "mms_g": 33.9,
+    "xmax_mm": 6,
+    "pe_w": 200
+  },
+  "physical": {
+    "cutout_mm": 191,
+    "depth_mm": 92
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://www.audiotec-fischer.de/en/brax/speakers/matrix-ml8-mid",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on audiotec-fischer.de (and Audiotec Fischer's WinISD files, 24 Nov 2026), used with Audiotec Fischer's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Audiotec Fischer's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community"
+}

@@ -1,0 +1,35 @@
+{
+  "brand": "Celestion",
+  "model": "TFX0615",
+  "type": "midbass",
+  "nominal_ohms": 8,
+  "size_in": 6.5,
+  "ts": {
+    "fs": 96.8,
+    "qms": 3.038,
+    "qes": 0.429,
+    "vas_l": 7.18,
+    "re": 5.39,
+    "sd_cm2": 153.94,
+    "qts": 0.376,
+    "le_mh": 0.46,
+    "bl": 9.82,
+    "mms_g": 12.62,
+    "xmax_mm": 5.25,
+    "pe_w": 150
+  },
+  "physical": {
+    "cutout_mm": 145,
+    "depth_mm": 75.5
+  },
+  "sources": [
+    {
+      "kind": "datasheet",
+      "url": "https://celestion.com/product/tfx0615/",
+      "retrieved": "2026-11-24",
+      "note": "Values from the product pages on celestion.com, used with Celestion's permission (24 Nov 2026); the link is the product page. Not covered by CC BY-NC-SA 4.0: do not reuse outside Speaker Box Genius without Celestion's permission. See LICENSE-DATA."
+    }
+  ],
+  "status": "community",
+  "notes": "Coaxial driver; values are for the woofer section."
+}
