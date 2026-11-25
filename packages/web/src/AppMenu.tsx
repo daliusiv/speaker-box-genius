@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { REPO } from "./components.tsx";
-import { Icon } from "./Icon.tsx";
+import { Icon, type IconName } from "./Icon.tsx";
 
 /** "Ctrl+S" or "⌘S", for the menu's shortcut hints. */
 export const shortcut = (key: string) =>
@@ -13,6 +13,39 @@ const isIos = () =>
 const isStandalone = () =>
   typeof window !== "undefined" &&
   (window.matchMedia?.("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true);
+
+/** The site pages the menu links to (the service worker saves these with the app). */
+const SITE_LINKS = ["/drivers/", "/guides/", "/validation/", "/about/", "/privacy/"];
+
+/**
+ * Offline: which of the menu's site pages are saved on this device (they still open).
+ * Online: null (everything opens).
+ */
+function useSavedPages(online: boolean, open: boolean): Set<string> | null {
+  const [saved, setSaved] = useState<Set<string> | null>(null);
+  useEffect(() => {
+    if (online || !open) return setSaved(null);
+    let live = true;
+    setSaved(new Set());
+    if (typeof caches === "undefined") return;
+    void Promise.all(SITE_LINKS.map(async (href) => ((await caches.match(href).catch(() => undefined)) ? href : null))).then((hits) => {
+      if (live) setSaved(new Set(hits.filter((h): h is string => h !== null)));
+    });
+    return () => {
+      live = false;
+    };
+  }, [online, open]);
+  return saved;
+}
+
+/** Offline and not saved: greyed out with a crossed Wi-Fi icon, and a tap does nothing. */
+const OFFLINE_TITLE = "Needs a connection: not saved on this device";
+const offlineProps = {
+  "aria-disabled": true,
+  className: "is-offline",
+  title: OFFLINE_TITLE,
+  onClick: (e: { preventDefault: () => void }) => e.preventDefault(),
+} as const;
 
 /**
  * The ☰ menu: everything that isn't Share or the controls. The project (new, open, save: the
@@ -33,6 +66,8 @@ export function AppMenu(props: {
   onExport: () => void;
   /** Open the Open / Import window. */
   onImport: () => void;
+  /** False while offline: links that can't open are greyed out. */
+  online: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [iosHelp, setIosHelp] = useState(false);
@@ -76,6 +111,35 @@ export function AppMenu(props: {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  const saved = useSavedPages(props.online, open);
+  /** Offline and not saved on this device (external links never are). */
+  const off = (href: string) => saved !== null && !saved.has(href);
+  /** A menu row linking to a site page (or out). */
+  const link = (href: string, icon: IconName, label: string, external = false) =>
+    off(href) ? (
+      <a role="menuitem" {...offlineProps} className="menu-link is-offline" href={href}>
+        <Icon name="wifiOff" />
+        {label}
+      </a>
+    ) : (
+      <a role="menuitem" className="menu-link" href={href} {...(external ? { target: "_blank", rel: "noopener", onClick: () => close(false) } : {})}>
+        <Icon name={icon} />
+        {label}
+      </a>
+    );
+  /** A footer link (text only). */
+  const foot = (href: string, label: string, external = true) =>
+    off(href) ? (
+      <a role="menuitem" {...offlineProps} href={href}>
+        <Icon name="wifiOff" size={14} />
+        {label}
+      </a>
+    ) : (
+      <a role="menuitem" href={href} {...(external ? { target: "_blank", rel: "noopener", onClick: () => close(false) } : {})}>
+        {label}
+      </a>
+    );
 
   const canInstall = props.install !== null;
   const iosInstall = !canInstall && isIos() && !isStandalone();
@@ -122,18 +186,9 @@ export function AppMenu(props: {
 
             <hr />
             <p className="menu-label">Explore</p>
-            <a role="menuitem" className="menu-link" href="/drivers/">
-              <Icon name="speaker" />
-              Drivers database
-            </a>
-            <a role="menuitem" className="menu-link" href="/guides/">
-              <Icon name="book" />
-              Guides
-            </a>
-            <a role="menuitem" className="menu-link" href="/validation/">
-              <Icon name="verified" />
-              Validation
-            </a>
+            {link("/drivers/", "speaker", "Drivers database")}
+            {link("/guides/", "book", "Guides")}
+            {link("/validation/", "verified", "Validation")}
 
             <hr />
             <p className="menu-label">App</p>
@@ -154,31 +209,16 @@ export function AppMenu(props: {
               <Icon name="tip" />
               Getting started tips
             </button>
-            <a role="menuitem" className="menu-link" href={props.reportUrl()} target="_blank" rel="noopener" onClick={() => close(false)}>
-              <Icon name="bug" />
-              Report a problem
-            </a>
+            {link(props.reportUrl(), "bug", "Report a problem", true)}
 
             <hr />
             <nav className="menu-footer" aria-label="About">
-              <a role="menuitem" href={REPO} target="_blank" rel="noopener" onClick={() => close(false)}>
-                GitHub
-              </a>
-              <a role="menuitem" href={`${REPO}#whats-next`} target="_blank" rel="noopener" onClick={() => close(false)}>
-                Roadmap
-              </a>
-              <a role="menuitem" href="/about/">
-                About
-              </a>
-              <a role="menuitem" href="/privacy/">
-                Privacy
-              </a>
-              <a role="menuitem" href={`${REPO}/blob/main/LICENSE`} target="_blank" rel="noopener" onClick={() => close(false)}>
-                Licence
-              </a>
-              <a role="menuitem" href={`${REPO}/blob/main/docs/data-sources.md`} target="_blank" rel="noopener" onClick={() => close(false)}>
-                Credits
-              </a>
+              {foot(REPO, "GitHub")}
+              {foot(`${REPO}#whats-next`, "Roadmap")}
+              {foot("/about/", "About", false)}
+              {foot("/privacy/", "Privacy", false)}
+              {foot(`${REPO}/blob/main/LICENSE`, "Licence")}
+              {foot(`${REPO}/blob/main/docs/data-sources.md`, "Credits")}
             </nav>
           </div>
         </>

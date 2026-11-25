@@ -87,3 +87,18 @@ test("Help: no ⓘ opens an empty sheet; a field's option cards join its own ent
   expect(labels.filter((l, i) => labels.indexOf(l) !== i)).toEqual([]);
   expect(labels).toContain("Coil model");
 });
+
+test("Getting started: never opens by itself on a first visit; the footer opens it", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => (d as HTMLDialogElement).close()));
+  const card = page.getByRole("region", { name: "Getting started" });
+  await expect(page.locator(".chart-cell").first()).toBeVisible();
+  await expect(card).toHaveCount(0);
+  await page.locator(".site-footer").getByRole("button", { name: "Getting started tips" }).click();
+  await expect(card).toBeVisible();
+  await card.getByRole("button", { name: "Got it" }).click();
+  await expect(card).toHaveCount(0);
+});

@@ -2,7 +2,7 @@
 
 Ask Claude, ChatGPT-style coding assistants in Cursor or VS Code, or any app that speaks the Model Context Protocol (MCP) to design a speaker box, and it runs Speaker Box Genius's own simulator to answer. The numbers are the app's, checked against WinISD, Hornresp and SPICE on the [validation page](/validation/), and every design comes back with a link that opens it here.
 
-It's a small program that runs on your computer. There's no account, and nothing about your designs is sent anywhere: the only thing it downloads is the public driver database, which it keeps so it also works offline.
+It's a small program that runs on your computer. There's no account, and nothing about your designs is sent anywhere: the only thing it downloads is the public driver database, which it keeps so it also works offline. Its share links end in `?ref=mcp` before the `#`, so the site can count visits that came from an AI answer (only that, never the design; see [Privacy](/privacy/)).
 
 ## What you can ask
 
@@ -26,7 +26,13 @@ You need [Node.js](https://nodejs.org) 20 or newer.
 }
 ```
 
-**Claude Code:**
+**Claude Code:** install the plugin, which adds the server and a skill that shows Claude how to design a box with it:
+
+```
+/plugin install speaker-box-genius --marketplace daliusiv/speaker-box-genius
+```
+
+Or add just the server:
 
 ```
 claude mcp add speaker-box-genius -- npx -y speaker-box-genius mcp
@@ -35,6 +41,8 @@ claude mcp add speaker-box-genius -- npx -y speaker-box-genius mcp
 **Cursor, VS Code and other MCP apps:** add a server with the command `npx` and the arguments `-y speaker-box-genius mcp`.
 
 To use only the saved copy of the driver database, add `--offline` after `mcp`.
+
+It's listed in the official [MCP Registry](https://registry.modelcontextprotocol.io/) as `com.speakerboxgenius/mcp`, so apps that browse the Registry can find it there too.
 
 ## What it can do
 

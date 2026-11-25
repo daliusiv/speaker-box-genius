@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { EXPORT_FORMATS } from "../src/formats/registry.ts";
-import { browserSaysNo, cleanEvent, EXPORT_FORMAT_IDS, referrerBucket, USAGE_EVENTS } from "../src/telemetrySchema.ts";
+import { browserSaysNo, cleanEvent, EXPORT_FORMAT_IDS, linkRef, referrerBucket, USAGE_EVENTS, withoutRef } from "../src/telemetrySchema.ts";
 
 const sdk = { $current_url: "https://speakerboxgenius.com/app/#v2.design", $browser: "Firefox", token: "phc_x", distinct_id: "$posthog_cookieless" };
 
@@ -99,4 +99,14 @@ test("replay snapshots leave only with usage stats on, with the design stripped 
   assert.equal(cleanEvent(snap, false), null);
   const e = cleanEvent(snap, true)!;
   assert.doesNotMatch(JSON.stringify(e), /#v2/);
+});
+
+test("a link from the MCP server is counted as ref mcp, and the tag is dropped from the address", () => {
+  assert.equal(linkRef("?ref=mcp"), "mcp");
+  assert.equal(linkRef("?a=1&ref=mcp"), "mcp");
+  assert.equal(linkRef("?ref=other"), null);
+  assert.equal(linkRef(""), null);
+  assert.equal(withoutRef("?ref=mcp"), "");
+  assert.equal(withoutRef("?a=1&ref=mcp"), "?a=1");
+  assert.ok(cleanEvent({ event: "app_opened", properties: { entry: "share_link", referrer: "mcp" } }, true)?.properties?.referrer === "mcp");
 });

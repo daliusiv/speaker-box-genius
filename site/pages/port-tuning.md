@@ -80,7 +80,7 @@ In the app, load your impedance measurement (`.zma`) with **Add a measured imped
 ## How to correct it
 
 1. **Fix the model first.** Enter the **net** volume (use the volume calculator, which subtracts the driver, port and bracing), so the simulation shows what you really built.
-2. **Then recut the port.** Type the tuning you want and press **Set port length**: the app gives the new length for the real volume.
+2. **Then recut the port.** Type the tuning you want in **Tune to** and press **Set length** under it: the app gives the new length for the real volume.
 3. **If it still disagrees with your measurement**, adjust the simulated volume until its impedance dip matches the measured one. That tells you the box's **effective** volume, including stuffing and flex, and from then on the simulation will match your box.
 4. **Leave some spare.** Make the port a little long, measure, and trim it: it's easy to shorten a port and hard to lengthen one. As a rule, cutting 10 % off a port raises the tuning by a little under 5 % (the end correction doesn't change).
 

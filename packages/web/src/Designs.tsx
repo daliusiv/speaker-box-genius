@@ -99,25 +99,26 @@ const PATH_HELP =
 /** Where a box's port or passive radiators sit relative to the cone: next to it, on the back, or a set distance away. */
 function VentPosition(p: { at: VentedDesign["ventAt"]; distance_cm: number | undefined; what: "port" | "PRs"; backDepth_cm: number | null; onChange: (patch: Pick<VentedDesign, "ventAt" | "ventDistance_cm">) => void }) {
   const value = p.at ?? "front";
-  const back = p.backDepth_cm !== null ? ` (${Math.round(p.backDepth_cm)} cm further)` : "";
+  const back = p.backDepth_cm !== null ? ` · ${Math.round(p.backDepth_cm)} cm further` : "";
   return (
-    <>
-      <Select<"front" | "back" | "custom">
-        help={`Where the ${p.what} sit${p.what === "port" ? "s" : ""} relative to the driver. ${PATH_HELP}`}
-        label="Position"
+    <div data-help={`Where the ${p.what} sit${p.what === "port" ? "s" : ""} relative to the driver. ${PATH_HELP}`} data-help-title="Position">
+      <RadioCards<"front" | "back" | "custom">
+        legend="Position"
         value={value}
         options={[
-          { value: "front", text: "Beside driver" },
-          { value: "back", text: `On the back${back}` },
-          { value: "custom", text: "Further away by…" },
+          { value: "front", title: "Beside driver", description: "On the front baffle, next to the cone" },
+          { value: "back", title: "On the back", description: `On the rear panel${back}` },
+          { value: "custom", title: "Further away by…", description: "Your own distance from the cone" },
         ]}
         onChange={(at) => p.onChange(at === "front" ? { ventAt: undefined } : at === "custom" ? { ventAt: at, ventDistance_cm: p.distance_cm ?? (p.backDepth_cm !== null ? Math.round(p.backDepth_cm) : 30) } : { ventAt: at })}
-      />
-      {value === "custom" && (
-        <Num label="Distance" q="len" value={p.distance_cm ?? 0} min={0} title={`How far the ${p.what} ${p.what === "port" ? "is" : "are"} from the cone. ${PATH_HELP}`} onChange={(x) => p.onChange({ ventAt: "custom", ventDistance_cm: x })} />
-      )}
-      {value === "back" && p.backDepth_cm === null && <p className="hint full">On the back: link the volume calculator (box or wedge) to this design for its depth, or use “Further away by…”. Until then it counts as next to the driver.</p>}
-    </>
+      >
+        {value === "custom" ? (
+          <Num label="Distance" q="len" value={p.distance_cm ?? 0} min={0} title={`How far the ${p.what} ${p.what === "port" ? "is" : "are"} from the cone. ${PATH_HELP}`} onChange={(x) => p.onChange({ ventAt: "custom", ventDistance_cm: x })} />
+        ) : value === "back" && p.backDepth_cm === null ? (
+          <p className="hint">Link the volume calculator (box or wedge) to this design for its depth, or use “Further away by…”. Until then it counts as next to the driver.</p>
+        ) : undefined}
+      </RadioCards>
+    </div>
   );
 }
 
@@ -313,19 +314,51 @@ function VbField(props: { vb_l: number; value: number; linked: boolean; label?: 
   );
 }
 
-function TuneRow(props: { target: number; onTarget: (v: number) => void; button: string; title?: string; onApply: () => void }) {
+/**
+ * "Tune to" in the control column like every other box, then (optionally) the mixed-PR group
+ * choice, then its button (Set length / Set mass) under it, as wide as the column, and the
+ * button's message, if any.
+ */
+function TuneRow(props: { target: number; onTarget: (v: number) => void; button: string; title: string; onApply: () => void; message?: string; after?: ReactNode }) {
   return (
     <>
       <hr className="bx-div" />
-      <Num help="The tuning frequency you want. Press the button to size the port (or PR mass) for it." label="Tune to" unit="Hz" value={props.target} onChange={props.onTarget} />
-      <div className="bx-actions">
-        <Button variant="ghost" onClick={props.onApply} title={props.title}>
-          <Sparkle />
+      <Num
+        help="The tuning frequency you want. Press the button under it to size the port (or the PRs' added mass) for it."
+        label="Tune to"
+        unit="Hz"
+        value={props.target}
+        onChange={props.onTarget}
+      />
+      {props.after}
+      <div className="ui-field">
+        <span className="ui-field-label" aria-hidden="true" />
+        <Button variant="secondary" className="bx-row-btn" onClick={props.onApply} title={props.title}>
           {props.button}
         </Button>
       </div>
+      {props.message && <p className="warn">{props.message}</p>}
     </>
   );
+}
+
+/** Mixed PRs: which group Set mass puts the added mass on (the others keep theirs). */
+function MassGroupSelect(props: { count: number; value: number; onChange: (i: number) => void }) {
+  return (
+    <Select<number>
+      label="Add mass to"
+      help="With several kinds of PR, Set mass changes the added mass on this group only; the other groups keep theirs."
+      value={props.value}
+      options={Array.from({ length: props.count }, (_, i) => ({ value: i, text: `Group ${i + 1}` }))}
+      onChange={props.onChange}
+    />
+  );
+}
+
+/** The PR section's one line: "EX10-PR × 2 · +100 g", or each group's "EX10-PR × 2 · EX12-PR × 1". */
+function prSectionValue(pr: PrDesign): string {
+  if (pr.extra.length === 0) return `${prShort(pr.prName)} × ${pr.count}${pr.addedMass_g > 0 ? ` · +${short(pr.addedMass_g)} g` : ""}`;
+  return [pr, ...pr.extra].map((g) => `${prShort(g.prName)} × ${g.count}`).join(" · ");
 }
 
 function SealedBody(p: CommonProps<DesignState & { kind: "sealed" }>) {
@@ -743,6 +776,7 @@ function CheckChips({ notes }: { notes: CheckNote[] }) {
 function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext; pickPort?: PortPicker }) {
   const v = p.design;
   const [msg, setMsg] = useState("");
+  const [tuneMsg, setTuneMsg] = useState("");
   const { fmt } = useUnits();
   const set = (patch: Partial<VentedDesign>) => p.onChange({ ...v, ...patch });
   /** A hand edit to the box or port: it no longer is the preset it was sized with. */
@@ -752,10 +786,10 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext; pickP
   const tune = () => {
     const len = portLengthForFb(p.vb_l, portOf(v, 0), v.targetFb, v.count, p.ec, p.air);
     if (!(len > 0)) {
-      setMsg(`Even a zero-length port tunes below ${v.targetFb} Hz with this port area. Use a bigger port (or more ports), or a lower tuning.`);
+      setTuneMsg(`Even a zero-length port tunes below ${v.targetFb} Hz with this port area. Use a bigger port (or more ports), or a lower tuning.`);
       return;
     }
-    setMsg("");
+    setTuneMsg("");
     edit({ length_cm: Math.round(len * 10) / 10 });
   };
 
@@ -811,7 +845,7 @@ function VentedBody(p: CommonProps<VentedDesign> & { portCtx: PortContext; pickP
           shapeHelp="Round tube, or a slot (rectangular, often along a wall). Slots are easy to build and less prone to chuffing at the same area."
         />
         <VentPosition at={v.ventAt} distance_cm={v.ventDistance_cm} what="port" backDepth_cm={p.backDepth_cm} onChange={set} />
-        <TuneRow target={v.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set port length" onApply={tune} />
+        <TuneRow target={v.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set length" title="Set the port length for this tuning" onApply={tune} message={tuneMsg} />
         {v.shape === "round" && v.flare_cm > 0 && v.length_cm < 2 * v.flare_cm && <p className="warn">The port is shorter than its two flares: lengthen it or use a smaller radius.</p>}
         <PortChecks v={v} vb_l={p.vb_l} air={p.air} ec={p.ec} ctx={p.portCtx} />
       </Section>
@@ -882,26 +916,35 @@ function PrBody(
 ) {
   const pr = p.design;
   const [msg, setMsg] = useState("");
+  const [tuneMsg, setTuneMsg] = useState("");
   const submitPr = useContext(SubmitPrContext);
   const set = (patch: Partial<PrDesign>) => p.onChange({ ...pr, ...patch });
   /** A hand edit to the box or its PRs: it no longer is the preset it was sized with. */
   const edit = (patch: Partial<PrDesign>) => set({ ...patch, preset: undefined });
   const setGroup = (i: number, patch: Partial<PrGroupState>) => edit({ extra: pr.extra.map((g, k) => (k === i ? { ...g, ...patch } : g)) });
   const t = prTuning(pr, p.vb_l, p.air);
-  const unreachable = (target: number) =>
-    `Added mass on the first group can't bring the tuning down to ${target} Hz: past a point those PRs just stop moving and the other group sets the tuning. Add mass to the other group, use fewer of them, or a bigger box.`;
+  const groupCount = 1 + pr.extra.length;
+  // Which group "Set mass" puts the added mass on (mixed PRs): 0 = group 1. Not saved.
+  const [massGroupRaw, setMassGroup] = useState(0);
+  const massGroup = Math.min(massGroupRaw, groupCount - 1);
+  const unreachable = (target: number, group = 0) =>
+    `Added mass on group ${group + 1} can't bring the tuning down to ${target} Hz: past a point those PRs just stop moving and the other groups set the tuning. Add mass to another group, use fewer of them, or a bigger box.`;
 
   const tune = () => {
-    const add = t.massFor(pr.targetFb);
-    if (add === Infinity) return setMsg(unreachable(pr.targetFb));
+    const add = t.massFor(pr.targetFb, p.vb_l, massGroup);
+    if (add === Infinity) return setTuneMsg(unreachable(pr.targetFb, massGroup));
     if (add < 0) {
-      setMsg(
-        `With no added mass on the first group these PRs already tune to ${f1(t.bare())} Hz, below ${pr.targetFb} Hz. Use a lighter or stiffer PR, fewer PRs, or a smaller box.`,
+      setTuneMsg(
+        t.mixed
+          ? `With no added mass on group ${massGroup + 1} these PRs already tune to ${f1(t.bare(p.vb_l, massGroup))} Hz, below ${pr.targetFb} Hz. Put the mass on another group, use a lighter or stiffer PR, fewer PRs, or a smaller box.`
+          : `With no added mass these PRs already tune to ${f1(t.bare())} Hz, below ${pr.targetFb} Hz. Use a lighter or stiffer PR, fewer PRs, or a smaller box.`,
       );
       return;
     }
-    setMsg("");
-    edit({ addedMass_g: Math.round(add) });
+    setTuneMsg("");
+    const mass = Math.round(add);
+    if (massGroup === 0) edit({ addedMass_g: mass });
+    else setGroup(massGroup - 1, { addedMass_g: mass });
   };
 
   /** A vented alignment's box and tuning, reached with added mass on these PRs. */
@@ -930,7 +973,15 @@ function PrBody(
           ...(flat ? [prOption(flat, flatPresetHelp(p.align, true))] : []),
           ...moreVentedFor(p.align, p.drivers).map((a) => prOption(a, `${alignmentHelp(a)} Reached with added mass.`)),
         ];
-  const count = pr.count + pr.extra.reduce((n, g) => n + g.count, 0);
+
+  const addGroup = () =>
+    edit({ extra: [...pr.extra, { prName: pr.prName, ...(pr.prId ? { prId: pr.prId } : {}), count: 1, addedMass_g: pr.addedMass_g, params: { ...pr.params } }] });
+  const submit =
+    submitPr && !pr.prId ? (
+      <Button variant="secondary" icon="upload" className="bx-submit" title="Add these values to the passive radiator database (no GitHub account needed)" onClick={() => submitPr(pr.prName, pr.params)}>
+        Submit to database…
+      </Button>
+    ) : null;
 
   return (
     <>
@@ -953,13 +1004,12 @@ function PrBody(
               ? "Approximate tuning of all the PRs together. With different PRs the response has more than one resonance; this sits between them. The charts show the real behaviour."
               : "Box tuning frequency with the added mass"
           }
+          action={<PrTuning compact ctx={p.finder} design={pr} vb_l={p.vb_l} linked={p.linked} onApply={(patch, summary) => p.onFound(patch, summary)} />}
         />
-        <div className="bx-actions">
-          <PrTuning ctx={p.finder} design={pr} vb_l={p.vb_l} linked={p.linked} onApply={(patch, summary) => p.onFound(patch, summary)} />
-        </div>
         {msg && <p className="warn">{msg}</p>}
       </div>
-      <Section icon="radiator" title={t.mixed ? "Passive radiators" : "Passive radiator"} value={`${prShort(pr.prName)} × ${count}${pr.addedMass_g > 0 ? ` · +${short(pr.addedMass_g)} g` : ""}`}>
+      <Section icon="radiator" title={t.mixed ? "Passive radiators" : "Passive radiator"} value={prSectionValue(pr)}>
+        {t.mixed && <VentPosition at={pr.ventAt} distance_cm={pr.ventDistance_cm} what="PRs" backDepth_cm={p.backDepth_cm} onChange={set} />}
         <PrGroupFields
           title={t.mixed ? "Group 1" : undefined}
           group={pr}
@@ -967,7 +1017,10 @@ function PrBody(
           air={p.air}
           countHelp="Number of identical passive radiators. More PRs means more cone area: less excursion each."
           massHelp="Mass glued onto each PR cone (grams, per passive radiator). More mass tunes the box lower."
-          noParams
+          noParams={!t.mixed}
+          paramsFooter={t.mixed ? submit : undefined}
+          finder={<PrFinder compact ctx={p.finder} design={pr} vb_l={p.vb_l} linked={p.linked} db={p.db} onUse={(patch, summary, physical) => p.onFound(patch, summary, physical)} />}
+          afterMass={t.mixed ? undefined : <VentPosition at={pr.ventAt} distance_cm={pr.ventDistance_cm} what="PRs" backDepth_cm={p.backDepth_cm} onChange={set} />}
           onPick={(id) =>
             loadPrChoice(id).then(
               ({ name, params, displacement_l, cutout_mm }) => {
@@ -979,16 +1032,7 @@ function PrBody(
           }
           onChange={(patch) => edit(patch)}
         />
-        <VentPosition at={pr.ventAt} distance_cm={pr.ventDistance_cm} what="PRs" backDepth_cm={p.backDepth_cm} onChange={set} />
-        <TuneRow
-          target={pr.targetFb}
-          onTarget={(x) => set({ targetFb: x })}
-          button="Set added mass"
-          title={t.mixed ? "Sets the added mass on group 1's PRs; the other groups stay as they are" : undefined}
-          onApply={tune}
-        />
-        <PrModifiedNote group={pr} onReset={(patch) => edit(patch)} />
-        <PrParams params={pr.params} air={p.air} onChange={(patch) => edit({ params: { ...pr.params, ...patch } })} />
+        {!t.mixed && <PrModifiedNote group={pr} onReset={(patch) => edit(patch)} />}
         {pr.extra.map((g, i) => (
           <PrGroupFields
             key={i}
@@ -1000,23 +1044,20 @@ function PrBody(
             onRemove={() => edit({ extra: pr.extra.filter((_, k) => k !== i) })}
           />
         ))}
-        {t.mixed && <p className="hint">With mixed PRs each group gets its own excursion curve and Xmax line; the tuning helpers adjust group 1's added mass.</p>}
-        <div className="bx-actions">
-          <PrFinder ctx={p.finder} design={pr} vb_l={p.vb_l} linked={p.linked} db={p.db} onUse={(patch, summary, physical) => p.onFound(patch, summary, physical)} />
-          <Button
-            variant="ghost"
-            icon="plus"
-            title="Put a second kind of passive radiator in the same box (or the same PR with a different added mass)"
-            onClick={() => edit({ extra: [...pr.extra, { prName: pr.prName, ...(pr.prId ? { prId: pr.prId } : {}), count: 1, addedMass_g: pr.addedMass_g, params: { ...pr.params } }] })}
-          >
-            Add a different PR
-          </Button>
-          {submitPr && !pr.prId && (
-            <Button variant="ghost" title="Add these values to the passive radiator database (no GitHub account needed)" onClick={() => submitPr(pr.prName, pr.params)}>
-              Submit to database…
-            </Button>
-          )}
-        </div>
+        <TuneRow
+          target={pr.targetFb}
+          onTarget={(x) => set({ targetFb: x })}
+          button="Set mass"
+          title={t.mixed ? `Set the added mass on group ${massGroup + 1}'s PRs for this tuning; the other groups stay as they are` : "Set the PRs' added mass for this tuning"}
+          onApply={tune}
+          message={tuneMsg}
+          after={t.mixed ? <MassGroupSelect count={groupCount} value={massGroup} onChange={(i) => (setMassGroup(i), setTuneMsg(""))} /> : undefined}
+        />
+        {!t.mixed && <PrParams params={pr.params} air={p.air} footer={submit} onChange={(patch) => edit({ params: { ...pr.params, ...patch } })} />}
+        {t.mixed && <p className="hint">Each group gets its own excursion curve and Xmax line. Fb ≈ is all the groups together.</p>}
+        <Button variant="secondary" icon="plus" className="bx-add-pr" title="Put a second kind of passive radiator in the same box (or the same PR with a different added mass)" onClick={addGroup}>
+          Add a different PR
+        </Button>
       </Section>
     </>
   );
@@ -1084,6 +1125,12 @@ function PrGroupFields(props: {
   onRemove?: () => void;
   /** Leave the parameters out (the PR box shows group 1's after its tuning rows). */
   noParams?: boolean;
+  /** The ✦ Find button, beside the picker. */
+  finder?: ReactNode;
+  /** At the end of the open PR parameters (Submit to database…). */
+  paramsFooter?: ReactNode;
+  /** Rows after Added mass (the box's Position, one group only). */
+  afterMass?: ReactNode;
   air: Air;
 }) {
   const g = props.group;
@@ -1106,14 +1153,16 @@ function PrGroupFields(props: {
             )(id);
           }}
         />
+        {props.finder}
       </div>
       <div className="ui-field" data-help={props.countHelp ?? "Number of identical passive radiators in this group."} data-help-title="PRs">
         <span className="ui-field-label">PRs</span>
         <Stepper label="Passive radiators" value={g.count} min={1} max={16} onChange={(count) => props.onChange({ count })} />
       </div>
       <Num help={props.massHelp ?? "Mass glued onto each PR cone in this group (grams). More mass tunes lower."} label="Added mass" unit="g" value={g.addedMass_g} min={0} onChange={(v) => props.onChange({ addedMass_g: v })} />
+      {props.afterMass}
       {!props.noParams && <PrModifiedNote group={g} onReset={props.onChange} />}
-      {!props.noParams && <PrParams params={g.params} air={props.air} onChange={(patch) => props.onChange({ params: { ...g.params, ...patch } })} />}
+      {!props.noParams && <PrParams params={g.params} air={props.air} footer={props.paramsFooter} onChange={(patch) => props.onChange({ params: { ...g.params, ...patch } })} />}
     </>
   );
   if (!props.title) return body;
@@ -1129,7 +1178,7 @@ function PrGroupFields(props: {
 }
 
 /** A PR's datasheet parameters behind one row that shows them while closed. */
-function PrParams(props: { params: PrDesign["params"]; air: Air; onChange: (patch: Partial<PrDesign["params"]>) => void }) {
+function PrParams(props: { params: PrDesign["params"]; air: Air; footer?: ReactNode; onChange: (patch: Partial<PrDesign["params"]>) => void }) {
   const q = props.params;
   const f = prFreeAirFs(q, props.air);
   const fp = Number.isFinite(f) && f > 0 ? f : null;
@@ -1140,6 +1189,7 @@ function PrParams(props: { params: PrDesign["params"]; air: Air; onChange: (patc
     >
       <PrParamFields params={q} onChange={props.onChange} />
       {fp !== null && <p className="hint">Fp {fp.toFixed(1)} Hz: the PR's free-air resonance, from Mmp, Vap and Sdp. Check it against the datasheet's Fs.</p>}
+      {props.footer}
     </Disclosure>
   );
 }
@@ -1163,18 +1213,20 @@ function ChamberPrs(props: {
   const mixed = gs.length > 1;
   const fb = mixed ? prGroupsFb(props.vb_l, engine, props.air) : prFb(props.vb_l, gs[0]!.params, gs[0]!.count, gs[0]!.addedMass_g, props.air);
   const setGroup = (i: number, patch: Partial<PrGroupState>) => props.onChange(gs.map((g, k) => (k === i ? { ...g, ...patch } : g)));
+  const [massGroupRaw, setMassGroup] = useState(0);
+  const massGroup = Math.min(massGroupRaw, gs.length - 1);
   const tune = () => {
     const add = mixed
-      ? prGroupsAddedMassForFb(props.vb_l, engine, props.target, 0, props.air)
+      ? prGroupsAddedMassForFb(props.vb_l, engine, props.target, massGroup, props.air)
       : prAddedMassForFb(props.vb_l, gs[0]!.params, props.target, gs[0]!.count, props.air);
     if (add === Infinity) {
       return setMsg(
-        `Added mass on group 1 can't bring this chamber down to ${props.target} Hz: past a point those PRs stop moving and the other group sets the tuning.`,
+        `Added mass on group ${massGroup + 1} can't bring this chamber down to ${props.target} Hz: past a point those PRs stop moving and the other groups set the tuning.`,
       );
     }
-    if (add < 0) return setMsg(`With no added mass these PRs already tune this chamber below ${props.target} Hz. Use a lighter or stiffer PR, fewer PRs, or a smaller chamber.`);
+    if (add < 0) return setMsg(`With no added mass ${mixed ? `on group ${massGroup + 1} ` : ""}these PRs already tune this chamber below ${props.target} Hz. Use a lighter or stiffer PR, fewer PRs, or a smaller chamber.`);
     setMsg("");
-    setGroup(0, { addedMass_g: Math.round(add) });
+    setGroup(massGroup, { addedMass_g: Math.round(add) });
   };
   return (
     <>
@@ -1198,16 +1250,15 @@ function ChamberPrs(props: {
       <TuneRow
         target={props.target}
         onTarget={props.onTarget}
-        button="Set added mass"
-        title={mixed ? "Sets the added mass on group 1's PRs" : undefined}
+        button="Set mass"
+        title={mixed ? `Set the added mass on group ${massGroup + 1}'s PRs for this tuning` : "Set the PRs' added mass for this tuning"}
         onApply={tune}
+        message={msg}
+        after={mixed ? <MassGroupSelect count={gs.length} value={massGroup} onChange={(i) => (setMassGroup(i), setMsg(""))} /> : undefined}
       />
-      {msg && <p className="warn">{msg}</p>}
-      <div className="bx-actions">
-        <Button variant="ghost" icon="plus" onClick={() => props.onChange([...gs, { ...gs[gs.length - 1]!, count: 1, params: { ...gs[gs.length - 1]!.params } }])}>
-          Add a different PR
-        </Button>
-      </div>
+      <Button variant="secondary" icon="plus" className="bx-add-pr" onClick={() => props.onChange([...gs, { ...gs[gs.length - 1]!, count: 1, params: { ...gs[gs.length - 1]!.params } }])}>
+        Add a different PR
+      </Button>
     </>
   );
 }
@@ -1261,8 +1312,7 @@ function PortEditor(props: {
     <>
       <PortRows port={v} what="chamber's port" shapeHelp="Round tube, or a slot (rectangular, often along a wall)." onChange={set} />
       <Fixed label="Fb" unit="Hz" value={f1(fb)} title="Tuning of this chamber with its port" />
-      <TuneRow target={v.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set port length" onApply={tune} />
-      {msg && <p className="warn">{msg}</p>}
+      <TuneRow target={v.targetFb} onTarget={(x) => set({ targetFb: x })} button="Set length" title="Set the port length for this tuning" onApply={tune} message={msg} />
     </>
   );
 }

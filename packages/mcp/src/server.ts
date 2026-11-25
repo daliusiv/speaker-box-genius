@@ -5,7 +5,7 @@
  */
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, GetPromptRequestSchema, ListPromptsRequestSchema, ListResourcesRequestSchema, ListToolsRequestSchema, ReadResourceRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { simRequestSchema, SITE, type Database } from "@sbg/headless";
+import { simRequestSchema, SITE, type Database, type LinkRef } from "@sbg/headless";
 import { TOOLS, ToolError, type ToolContext } from "./tools.ts";
 
 declare const __SBG_VERSION__: string | undefined;
@@ -19,7 +19,7 @@ const ABOUT = `# Speaker Box Genius MCP server
 Runs the app's own simulation code on your machine (version ${VERSION}). Results match the web app at ${SITE} exactly; the app is validated against WinISD, Hornresp and SPICE (${SITE}/validation/).
 
 - Nothing about your designs leaves this machine. The only requests are GETs of the public driver database (${SITE}/db/), cached locally.
-- No account, no telemetry.
+- No account, no telemetry. Share links end in ?ref=mcp (before the #) so the site can count visits from AI answers; never the design.
 - Source: https://github.com/daliusiv/speaker-box-genius (PolyForm Noncommercial 1.0.0). Driver data: CC BY-NC-SA 4.0, with some brands under their own terms (see get_driver).`;
 
 const RESOURCES = [
@@ -40,8 +40,8 @@ const PROMPTS = [
 ];
 
 /** The MCP server for a database (the caller connects a transport). */
-export function createServer(db: Database, opts: { site?: string } = {}): Server {
-  const ctx: ToolContext = { db, site: opts.site };
+export function createServer(db: Database, opts: { site?: string; ref?: LinkRef | null } = {}): Server {
+  const ctx: ToolContext = { db, site: opts.site, ref: opts.ref === null ? undefined : (opts.ref ?? "mcp") };
   const server = new Server({ name: "speaker-box-genius", title: "Speaker Box Genius", version: VERSION, websiteUrl: SITE }, { capabilities: { tools: {}, resources: {}, prompts: {} }, instructions: INSTRUCTIONS });
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({

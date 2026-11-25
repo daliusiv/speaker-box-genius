@@ -145,3 +145,21 @@ test("Build: a page translated by the browser keeps working when the shape chang
   await expect(page.locator(".cut-table")).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test("Build: the cut list's Export menu stays on screen, clear of the phone tab bar", async ({ page }) => {
+  await build(page);
+  const exportButton = page.locator("#panel-build .bd-actions").getByRole("button", { name: /Export/ });
+  await exportButton.scrollIntoViewIfNeeded();
+  await page.evaluate(() => window.scrollBy(0, 4000));
+  await exportButton.click();
+  const list = page.getByRole("menu", { name: "Export" });
+  await expect(list.getByRole("menuitem")).toHaveCount(3);
+  const box = (await list.boundingBox())!;
+  const floor = await page.evaluate(() => {
+    const bar = document.querySelector("[data-bottom-bar]")?.getBoundingClientRect();
+    return bar && bar.height > 0 ? bar.top : innerHeight;
+  });
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.y + box.height).toBeLessThanOrEqual(floor);
+  await expect(list.getByRole("menuitem", { name: "FreeCAD macro" })).toBeInViewport();
+});

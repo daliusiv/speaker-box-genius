@@ -2,30 +2,11 @@ import { useState } from "react";
 import { Sparkle } from "./Logo.tsx";
 
 /**
- * First-visit help. New visitors get a short "Getting started" card; people who open
- * a shared link get a one-line note that the design is theirs to change. Both can be
- * dismissed; the card can be brought back from the footer or the menu. Phones don't open it by
- * themselves (see PHONE).
+ * First-visit help. The "Getting started" card never opens by itself (on a first visit it
+ * filled most of the screen with text before any chart): it opens from Getting started tips
+ * in the footer or the menu. People who open a shared link get a one-line note that the
+ * design is theirs to change.
  */
-
-const KEY = "sbg.tips-dismissed";
-
-// Browser storage can be unavailable (private modes, embedded views): treat it as empty.
-const read = () => {
-  try {
-    return localStorage.getItem(KEY) === "1";
-  } catch {
-    return false;
-  }
-};
-const write = (v: boolean) => {
-  try {
-    if (v) localStorage.setItem(KEY, "1");
-    else localStorage.removeItem(KEY);
-  } catch {
-    /* not remembered: fine */
-  }
-};
 
 /**
  * Whether the page was opened from a link carrying a design. Read once, before the app
@@ -48,26 +29,17 @@ try {
   /* unavailable */
 }
 
-/**
- * Phones (the one-column layout): the card would fill the first screen, and the launcher has
- * just offered the ways in. There it waits in the menu (Getting started tips) until asked for.
- */
-const PHONE = typeof window !== "undefined" && !!window.matchMedia?.("(max-width: 860px)").matches;
 /** A keyboard and mouse (not a touch screen): shortcuts like Ctrl+Z are worth mentioning. */
 const KEYBOARD = typeof window !== "undefined" && !!window.matchMedia?.("(pointer: fine)").matches;
 
 export function useWelcome() {
-  const [tips, setTips] = useState(() => !OPENED_FROM_LINK && !PHONE && !read());
+  const [tips, setTips] = useState(false);
   const [linkNote, setLinkNote] = useState(OPENED_FROM_LINK);
   return {
     tips,
     linkNote,
-    dismissTips: () => {
-      write(true);
-      setTips(false);
-    },
+    dismissTips: () => setTips(false),
     showTips: () => {
-      write(false);
       setLinkNote(false);
       setTips(true);
     },

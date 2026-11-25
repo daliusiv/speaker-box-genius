@@ -1,0 +1,22 @@
+{
+  "name": "speaker-box-genius",
+  "displayName": "Speaker Box Genius",
+  "version": "1.4.0",
+  "description": "Design loudspeaker boxes with Speaker Box Genius's simulator: drivers, sealed, ported and passive radiator boxes, limits and share links. Runs locally.",
+  "author": {
+    "name": "Speaker Box Genius",
+    "url": "https://speakerboxgenius.com"
+  },
+  "homepage": "https://speakerboxgenius.com/mcp/",
+  "repository": "https://github.com/daliusiv/speaker-box-genius",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "keywords": [
+    "loudspeaker",
+    "speaker-box",
+    "subwoofer",
+    "enclosure",
+    "passive-radiator",
+    "thiele-small",
+    "diy-audio"
+  ]
+}

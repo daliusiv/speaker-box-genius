@@ -40,8 +40,11 @@ test("search → get → simulate → read the link back", async () => {
   assert.ok(!sim.isError);
   const r = sim.structuredContent as { share_link: string; designs: { fb_hz: number; f3_hz: number }[] };
   assert.ok(Math.abs(r.designs[0]!.fb_hz - 25) < 0.1);
+  // Tagged so the site can count visits from AI answers (/privacy/); the design is still after the #.
+  assert.match(r.share_link, /^https:\/\/speakerboxgenius\.com\/\?ref=mcp#z=/);
   const back = json(await c.callTool({ name: "read_share_link", arguments: { url: r.share_link } }));
   assert.equal(back.result.designs[0].f3_hz, r.designs[0]!.f3_hz);
+  assert.match(back.result.share_link, /\?ref=mcp#z=/);
   assert.equal(back.request.driver.id, "dayton-audio/rss315hf-4");
 });
 

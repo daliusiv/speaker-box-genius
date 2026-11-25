@@ -21,6 +21,7 @@ import {
   driverSchema,
   type Database,
   type DesignSpec,
+  type LinkRef,
   type SimRequest,
 } from "@sbg/headless";
 import { driverInputOf, simOptionsOf, solveDriver, vbOf } from "../../web/src/sim.ts";
@@ -28,6 +29,8 @@ import { driverInputOf, simOptionsOf, solveDriver, vbOf } from "../../web/src/si
 export interface ToolContext {
   db: Database;
   site?: string;
+  /** Tag on share links (`?ref=mcp`), so the site can count visits from AI answers (see /privacy/). */
+  ref?: LinkRef;
 }
 
 export class ToolError extends Error {}
@@ -53,7 +56,7 @@ async function simulateChecked(req: unknown, ctx: ToolContext, notes: string[] =
   const errors = validateRequest(req);
   if (errors.length) throw new ToolError(`The request has ${errors.length === 1 ? "an error" : "errors"}:\n- ${errors.join("\n- ")}`);
   try {
-    const r = await simulateRequest(req as SimRequest, { db: ctx.db, prCandidates: () => prCandidates(ctx.db), site: ctx.site });
+    const r = await simulateRequest(req as SimRequest, { db: ctx.db, prCandidates: () => prCandidates(ctx.db), site: ctx.site, ref: ctx.ref });
     r.notes.unshift(...notes);
     return r;
   } catch (e) {
@@ -78,7 +81,7 @@ const searchDriversTool: Tool = {
   name: "search_drivers",
   title: "Search drivers",
   description:
-    "Search Speaker Box Genius's driver database (about 1,900 woofers, subwoofers and full-range drivers, mostly manufacturer data used with permission) by name and/or filters. Returns ids to use in simulate, suggest_boxes and get_driver.",
+    `Search Speaker Box Genius's driver database (about 1,900 woofers, subwoofers and full-range drivers, mostly manufacturer data used with permission) by name and/or filters. Returns ids to use in simulate, suggest_boxes and get_driver. Example: {"query": "dayton rss315"} or {"type": "subwoofer", "size_in": 12, "xmax_min": 15}.`,
   inputSchema: {
     type: "object",
     properties: {
@@ -128,7 +131,7 @@ const simulateTool: Tool = {
   name: "simulate",
   title: "Simulate boxes",
   description:
-    "Simulate up to 8 boxes for one driver with Speaker Box Genius's engine (validated against WinISD, Hornresp and SPICE). Returns per box: F3/F6/F10, tuning, Qtc, cone and PR excursion and port air speed against their limits at the drive, the highest safe drive, max SPL and what limits it, sampled curves, and a share link that opens the same design in the app (give it to the user). Defaults match WinISD (1 W, Ql 10).",
+    `Simulate up to 8 boxes for one driver with Speaker Box Genius's engine (validated against WinISD, Hornresp and SPICE). Returns per box: F3/F6/F10, tuning, Qtc, cone and PR excursion and port air speed against their limits at the drive, the highest safe drive, max SPL and what limits it, sampled curves, and a share link that opens the same design in the app (give it to the user). Defaults match WinISD (1 W, Ql 10). Example: {"driver": {"id": "dayton-audio/rss315hf-4"}, "drive": "rated", "designs": [{"kind": "sealed", "vb_l": 40}, {"kind": "vented", "vb_l": 60, "fb_hz": 25}]}.`,
   inputSchema: simRequestSchema as unknown as Record<string, unknown>,
   run: (args, ctx) => simulateChecked(args, ctx),
 };
@@ -139,7 +142,7 @@ const suggestBoxesTool: Tool = {
   name: "suggest_boxes",
   title: "Suggest boxes",
   description:
-    "Size boxes for a driver as the app's Size all boxes does: sealed at Qtc 0.707, ported and PR at WinISD's flat alignment (QB3), bandpass by its own rule; a port that fits and a database PR chosen by the PR finder. Judged at the driver's power rating unless a drive is given. Returns the same as simulate, plus why a box type was skipped.",
+    `Size boxes for a driver as the app's Size all boxes does: sealed at Qtc 0.707, ported and PR at WinISD's flat alignment (QB3), bandpass by its own rule; a port that fits and a database PR chosen by the PR finder. Judged at the driver's power rating unless a drive is given. Returns the same as simulate, plus why a box type was skipped. Example: {"driver": {"id": "dayton-audio/rss315hf-4"}}.`,
   inputSchema: {
     type: "object",
     properties: {
@@ -178,7 +181,7 @@ const findPrTool: Tool = {
   name: "find_passive_radiators",
   title: "Find passive radiators",
   description:
-    "The app's PR finder: every passive radiator in the database (and how many, with how much added mass) that tunes a box of vb_l litres to fb_hz for this driver, best first, with why the others fail (too much added mass, runs out of travel before the woofer, too big for the box). Judged at the driver's power rating unless a drive is given.",
+    `The app's PR finder: every passive radiator in the database (and how many, with how much added mass) that tunes a box of vb_l litres to fb_hz for this driver, best first, with why the others fail (too much added mass, runs out of travel before the woofer, too big for the box). Judged at the driver's power rating unless a drive is given. Example: {"driver": {"id": "dayton-audio/rss315hf-4"}, "vb_l": 60, "fb_hz": 24}.`,
   inputSchema: {
     type: "object",
     properties: {
@@ -256,7 +259,7 @@ const readShareLinkTool: Tool = {
     if (!s) throw new ToolError("That isn't a Speaker Box Genius share link (it should have #z=… or #s=… after the address), or it's damaged.");
     const off = s.designs.filter((d) => !d.on).map((d) => d.name);
     const shown = { ...s, designs: s.designs.map((d) => ({ ...d, on: true })) };
-    const result = await simulateState(shown, isObj(args.output) ? args.output : undefined, off.length ? [`Hidden in the link, shown here: ${off.join(", ")}`] : [], ctx.site);
+    const result = await simulateState(shown, isObj(args.output) ? args.output : undefined, off.length ? [`Hidden in the link, shown here: ${off.join(", ")}`] : [], ctx.site, ctx.ref);
     return { request: fromState(s), result };
   },
 };
@@ -265,7 +268,7 @@ const boxVolumeTool: Tool = {
   name: "box_volume",
   title: "Box volume",
   description:
-    "The app's volume calculator: internal volume of a box, wedge, tapered box, cylinder or sphere from its outside sizes and wall thickness, minus what's inside it (drivers, PRs, port tubes, bracing, crossover). Use the net volume as vb_l.",
+    `The app's volume calculator: internal volume of a box, wedge, tapered box, cylinder or sphere from its outside sizes and wall thickness, minus what's inside it (drivers, PRs, port tubes, bracing, crossover). Use the net volume as vb_l. Example: {"shape": {"kind": "box", "width_cm": 40, "height_cm": 50, "depth_cm": 45}, "wall_mm": 18, "drivers": {"count": 1, "displacement_l": 3.2}}.`,
   inputSchema: {
     type: "object",
     properties: {

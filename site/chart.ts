@@ -38,6 +38,8 @@ export function chart(o: {
   yMax?: number;
   /** "linear" for a time axis (ms); default log frequency. */
   xScale?: "log" | "linear";
+  /** Labelled vertical lines, e.g. the driver's Fs. */
+  markers?: { x: number; label: string }[];
 }): string {
   const lin = o.xScale === "linear";
   const all = o.series.flatMap((s) => s.points).filter((p) => Number.isFinite(p[1]) && (o.yMin === undefined || p[1] >= o.yMin) && (o.yMax === undefined || p[1] <= o.yMax));
@@ -88,7 +90,8 @@ export function chart(o: {
     })
     .join("");
 
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}"><g class="grid">${grid}</g><g class="ax">${labels}<text x="${PAD.l}" y="${PAD.t - 2}" class="unit">${esc(o.unit)}</text></g>${body}</svg>`;
+  const marks = (o.markers ?? []).map((m) => `<line class="mk" x1="${r1(x(m.x))}" x2="${r1(x(m.x))}" y1="${PAD.t}" y2="${H - PAD.b}"/><text class="mk" x="${r1(x(m.x) + 4)}" y="${H - PAD.b - 6}">${esc(m.label)}</text>`).join("");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}"><g class="grid">${grid}</g><g class="ax">${labels}<text x="${PAD.l}" y="${PAD.t - 2}" class="unit">${esc(o.unit)}</text></g>${body}${marks}</svg>`;
 }
 
 
@@ -98,6 +101,8 @@ export const CHART_STYLE = `
 .chart .ax text{fill:#8e96aa;font:13px system-ui,sans-serif}
 .chart .line{fill:none;stroke:var(--draw);stroke-width:1.8;stroke-linejoin:round}
 .chart .ref{fill:none;stroke:#d3d8e2;stroke-opacity:.5;stroke-width:6;stroke-linejoin:round;stroke-linecap:round}
+.chart line.mk{stroke:#8e96aa;stroke-width:1;stroke-dasharray:3 3}
+.chart text.mk{fill:#8e96aa;font:12px system-ui,sans-serif}
 .chart .pt{fill:#e6e9ef;stroke:#11141a;stroke-width:1.5}
 .charts{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr))}
 .charts figure{margin:0;padding:.5rem .5rem .3rem;border:1px solid var(--border);border-radius:.7rem;background:var(--card)}

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "speaker-box-genius": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "speaker-box-genius@1.4.0",
+        "mcp"
+      ]
+    }
+  }
+}

@@ -27,7 +27,7 @@ export const START_IN_ASSISTANT = (() => {
   try {
     const before =
       localStorage.getItem("sbg.visited") !== null ||
-      localStorage.getItem("sbg.tips-dismissed") !== null ||
+      localStorage.getItem("sbg.tips-dismissed") !== null || // set by older versions
       localStorage.getItem("speaker-box-genius.projects") !== null;
     localStorage.setItem("sbg.visited", "1");
     return !before;

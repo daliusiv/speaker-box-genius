@@ -362,7 +362,7 @@ export function SettingsPanel(props: {
             onChange={(ventPlacement) => set({ ventPlacement })}
           />
           <Num
-            help="How much longer than its physical length a port acts, as K × its diameter (a slot: the diameter of a circle of the same area). 0.732 is one end in the baffle and one free inside the box, like WinISD; 0.85 both ends flanged. A slot built along the box walls acts longer still, by an amount nobody can calculate well: leave 0.732 and use the slot's tuning range, or enter the K you measured on your own builds. Used for the ports of ported and bandpass boxes: their tuning, Set port length and sizing (transmission lines model their port ends themselves)."
+            help="How much longer than its physical length a port acts, as K × its diameter (a slot: the diameter of a circle of the same area). 0.732 is one end in the baffle and one free inside the box, like WinISD; 0.85 both ends flanged. A slot built along the box walls acts longer still, by an amount nobody can calculate well: leave 0.732 and use the slot's tuning range, or enter the K you measured on your own builds. Used for the ports of ported and bandpass boxes: their tuning, Set length and sizing (transmission lines model their port ends themselves)."
             label="End correction K"
             unit="× Ø"
             value={s.endCorrection}

@@ -332,6 +332,8 @@ export function App(props: { initial: AppState | null }) {
   const [exportFor, setExportFor] = useState<string | null>(null);
   /** Open / Import window, and a measurement file waiting for "use as…". */
   const [openWin, setOpenWin] = useState(false);
+  /** A file Open / Import couldn't read: shown in the window (a toast would be behind it). */
+  const [openError, setOpenError] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [dropping, setDropping] = useState(false);
   // SPL chart scale: relative to each design's passband (default) or absolute dB SPL. A view
@@ -786,8 +788,11 @@ export function App(props: { initial: AppState | null }) {
     const kind = importKind(f.name, head);
     if (kind === null) {
       track("import_failed", { reason: "unknown_type" });
-      return notify(`${f.name}: not a file Speaker Box Genius reads.`);
+      const message = `${f.name}: not a file Speaker Box Genius reads.`;
+      // In Open / Import the window would hide a toast: say it there, under Choose a file.
+      return openWin ? setOpenError(message) : notify(message);
     }
+    setOpenError(null);
     if (kind === "measurement") {
       setPendingFile(f);
       setOpenWin(true);
@@ -1416,6 +1421,7 @@ export function App(props: { initial: AppState | null }) {
           <Logo />
           <div>
             <h1>Speaker Box Genius</h1>
+            <PwaStatus pwa={pwa} />
           </div>
         </div>
         <div className="top-actions">
@@ -1435,12 +1441,14 @@ export function App(props: { initial: AppState | null }) {
             reportUrl={() => reportUrl(shareUrl())}
             onExport={() => setExportFor("")}
             onImport={() => setOpenWin(true)}
+            online={pwa.online}
           />
           <OpenWindow
             open={openWin}
             onClose={() => {
               setOpenWin(false);
               setPendingFile(null);
+              setOpenError(null);
             }}
             onOpen={(s, name) => {
               setOpenWin(false);
@@ -1450,7 +1458,8 @@ export function App(props: { initial: AppState | null }) {
             onFile={(f) => void importFile(f)}
             pending={pendingFile}
             onUse={(f, u) => void applyImport(f, u)}
-            notify={(m) => notify(m)}
+            error={openError}
+            setError={setOpenError}
             baffle={!onlyOpenBaffles(state)}
           />
           {dropping && (
@@ -1482,7 +1491,6 @@ export function App(props: { initial: AppState | null }) {
             error={frdError}
             setError={setFrdError}
           />
-          <PwaStatus pwa={pwa} />
           {/* Always one tap away: start a new project (the launcher; a new tab once this one is in use). */}
           <button type="button" className="secondary new-btn" onClick={launchAssistant} title="Start a new project" aria-label="New project">
             <span aria-hidden="true">+</span>
@@ -2592,7 +2600,7 @@ export function App(props: { initial: AppState | null }) {
           showChart("response", []);
         }}
       />
-      <nav className="phone-nav" aria-label="Screens">
+      <nav className="phone-nav" aria-label="Screens" data-bottom-bar>
         <PanelTabs
           value={panel}
           onChange={(p) => showOnPhone("panel", p)}

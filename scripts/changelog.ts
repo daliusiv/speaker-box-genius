@@ -117,7 +117,23 @@ export function lint(md: string): string[] {
     // Also shown on GitHub and in release notes, where a site path like /privacy/ points into the repo and 404s.
     if (/\]\(\//.test(line)) problems.push(`line ${i + 1}: link to the site with https://speakerboxgenius.com/…, not a bare /path`);
   }
+  // Unreleased entries are one-line summaries; how it works and where every button moved go in the
+  // guides, the Validation page or the PR. Released sections are left as they were.
+  const unreleased = sections.find((x) => x.heading === "Unreleased");
+  for (const line of unreleased?.body.split("\n") ?? []) {
+    if (!line.startsWith("- ")) continue;
+    const n = visibleLength(line.slice(2));
+    if (n > MAX_ENTRY) problems.push(`Unreleased entry is ${n} characters (max ${MAX_ENTRY}): summarise it in one sentence and link to a guide for details: "${line.slice(2, 60)}…"`);
+  }
   return problems;
+}
+
+/** Longest Unreleased entry, in characters as read (link URLs and markdown marks not counted). */
+export const MAX_ENTRY = 200;
+
+/** Length of an entry as the reader sees it: link text without its URL, no ** or ` marks. */
+export function visibleLength(text: string): number {
+  return text.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/\*\*|`/g, "").length;
 }
 
 if (import.meta.main) {

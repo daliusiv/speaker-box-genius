@@ -6,9 +6,9 @@
  */
 import { sealedVolumeForAlignment } from "@sbg/engine";
 import { newDesign, type AppState, type DesignState, type VentedDesign } from "../state.ts";
-import { airOf, alignmentDriver, endCorrectionOf, limitsOf, PORT_LIMIT, runDesigns, solveDriver, type Design } from "../sim.ts";
-import { bestVentedPort, moreVentedFor, SEALED_MAX_VAS, sealedPreset, sealedQtc, ventedAlignmentFor } from "../presets.ts";
-import { portCandidates, portFieldsOf, portSpeedFor, type AssistantPort } from "../ports.ts";
+import { alignmentDriver, limitsOf, PORT_LIMIT, runDesigns, solveDriver, type Design } from "../sim.ts";
+import { bestVentedPort, FLAT_PEAK_DB, flatTuning, moreVentedFor, SEALED_MAX_VAS, sealedPreset, sealedQtc, ventedAlignmentFor } from "../presets.ts";
+import { portSpeedFor, type AssistantPort } from "../ports.ts";
 import { relRefOf, valueAt } from "../chartProps.ts";
 import { driverQuery } from "./driverInput.ts";
 import type { QuerySpec } from "./query.ts";
@@ -35,7 +35,7 @@ export const PICK_KEYS: PickKey[] = ["compact", "balanced", "deep"];
 /** The deep ported box is the balanced one's size times this. */
 export const DEEP_SIZE = 1.5;
 /** The deep box is tuned as low as the response stays within this peak (dB above its passband). */
-export const DEEP_PEAK_DB = 0.5;
+export const DEEP_PEAK_DB = FLAT_PEAK_DB;
 /** What the deep ported box's tuning is called (it isn't one of the families). */
 export const TUNED_LOW = "tuned low";
 /** Chuffing line shown on the cards (m/s). */
@@ -96,13 +96,6 @@ export function sealedPlans(a: NonNullable<ReturnType<typeof alignOf>>, drivers 
   ];
 }
 
-/** A vented design for a box and tuning, with a port that fits (the simplest, as the app's presets pick it), for finding the deep box's tuning. */
-function plainVented(s: AppState, vb_l: number, fb: number): VentedDesign | null {
-  const port = portCandidates(vb_l, fb, airOf(s), null, endCorrectionOf(s))[0];
-  if (!port) return null;
-  return { ...(newDesign("vented", []) as VentedDesign), vb_l, targetFb: fb, ...portFieldsOf(port) };
-}
-
 /** The response's highest point above its passband reference (dB). */
 export function peakDb(d: Design): number {
   const ref = relRefOf(d.result);
@@ -111,27 +104,8 @@ export function peakDb(d: Design): number {
   return m;
 }
 
-/**
- * The deep ported box's tuning: of the tunings from the balanced box's down in 0.1 Hz steps that
- * keep the response from peaking over DEEP_PEAK_DB in the bigger box, the one with the lowest F3
- * (the highest of any that tie within 0.05 Hz). Tuned lower than that the response sags above
- * the tuning and F3 climbs again, so the search stops once F3 is 0.5 Hz past its best. Null if no
- * tuning stays flat enough.
- */
-export function deepTuning(s: AppState, vb_l: number, from: number): number | null {
-  let best: { fb: number; f3: number } | null = null;
-  for (let fb = r1(from); fb >= 5; fb = r1(fb - 0.1)) {
-    const d = plainVented(s, vb_l, fb);
-    if (!d) break;
-    const [run] = runDesigns({ ...s, designs: [d] }, solveDriver(s));
-    const f3 = run?.result.summary.f3;
-    if (!run || f3 === null || f3 === undefined) break;
-    if (best && f3 > best.f3 + 0.5) break;
-    if (peakDb(run) > DEEP_PEAK_DB) continue;
-    if (!best || f3 < best.f3 - 0.05) best = { fb, f3 };
-  }
-  return best?.fb ?? null;
-}
+/** The deep ported box's tuning: the flattest low tuning (presets.ts flatTuning) of the bigger box, searched from the balanced box's tuning down. */
+export const deepTuning = (s: AppState, vb_l: number, from: number): number | null => flatTuning(s, vb_l, from);
 
 /** The ported picks' boxes: BB4 (SBB4 when WinISD's is flat), QB3 (as WinISD sizes them), and 1.5 × QB3's box tuned as low as stays flat. */
 export function ventedPlans(s: AppState, a: NonNullable<ReturnType<typeof alignOf>>, drivers = 1): Plan[] {

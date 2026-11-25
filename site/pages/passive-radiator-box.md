@@ -53,7 +53,7 @@ The PR has to move more air than the woofer, because near Fb most of the sound c
 
 One DS215-PR has twice the woofer's displacement, which is about right. If a PR falls short, use two of them, or a bigger one if it fits on a face of the box.
 
-Rather than checking every PR by hand, press **Find a PR for this driver…** in the passive radiator design. It tries every PR in the database (and, if you tick the box, woofers used as PRs) in groups of 1, 2 or 4, tunes each one to your target, and ranks them by bass extension and spare travel. For this box, three of the top results:
+Rather than checking every PR by hand, press the ✦ button beside the PR picker (**Find a PR for this driver**) in the passive radiator design. It tries every PR in the database (and, if you tick the box, woofers used as PRs) in groups of 1, 2 or 4, tunes each one to your target, and ranks them by bass extension and spare travel. For this box, three of the top results:
 
 | PRs | Added mass | F3 | Travel used when the woofer reaches its Xmax |
 |---|---|---|---|
@@ -73,7 +73,7 @@ A PR's tuning depends on its moving mass and the box volume. Out of the box, one
 
 Keep the added mass reasonable. Past about **1.5 times the PR's own moving mass**, the cone can sag and rock, and the finder flags it; past three times, it's ruled out. If the tuning needs more mass than that, use a PR with a heavier cone, or two PRs (two PRs in the same box need more mass each, because the box air is shared).
 
-The app does the sums: type the target Fb and press **Set added mass**, or use **Best tuning…** for the added mass that gives the flattest response, the deepest bass or the smallest box.
+The app does the sums: type the target Fb in **Tune to** and press **Set mass** under it, or use the ✦ **Best tuning** button beside Fb for the added mass that gives the flattest response, the deepest bass or the smallest box.
 
 ![The worked example: the PR box ({{color:pr-example/2}}) next to a ported box of the same size ({{color:pr-example/1}}), both behind the 30 Hz high-pass filter. The PR box rolls off a little higher.](chart:pr-example/response)
 

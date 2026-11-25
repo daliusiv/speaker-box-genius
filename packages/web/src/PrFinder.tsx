@@ -108,6 +108,8 @@ export function PrFinder(props: {
   linked: boolean;
   db: DbIndex | null;
   onUse: (patch: Partial<PrDesign>, summary: string, physical?: { displacement_l?: number; cutout_mm?: number }) => void;
+  /** A square ✦ button (beside the PR picker) instead of the text button. */
+  compact?: boolean;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [cands, setCands] = useState<Loaded[] | null>(null);
@@ -269,13 +271,15 @@ export function PrFinder(props: {
   return (
     <>
       <Button
-        variant="ghost"
+        variant={props.compact ? "secondary" : "ghost"}
+        className={props.compact ? "bx-icon-btn" : undefined}
+        aria-label={props.compact ? "Find a PR for this driver…" : undefined}
         onClick={open}
         disabled={!ctx.driver || !props.db}
-        title={ctx.driver ? "Try every passive radiator in the database for this driver and box" : "Enter the driver's parameters and Xmax first"}
+        title={ctx.driver ? "Find a PR for this driver: try every passive radiator in the database for this driver and box" : "Enter the driver's parameters and Xmax first"}
       >
         <Sparkle />
-        Find a PR for this driver…
+        {!props.compact && "Find a PR for this driver…"}
       </Button>
       <dialog
         ref={dlg}

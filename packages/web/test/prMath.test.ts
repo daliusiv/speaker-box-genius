@@ -51,3 +51,19 @@ test("PR calculator: the keep-up check matches the simulator's own peaks, and mo
   const f = fewestThatKeepUp(s, one, AIR);
   if (f) assert.ok(f.c.prUse <= 1 && f.count >= 1);
 });
+
+test("prTuning: with mixed PRs the added mass goes on the chosen group and tunes the box to the target", () => {
+  const d = prDesignOf(base, prCalc(base, AIR)!, "PR");
+  const mixed = { ...d, extra: [{ prName: d.prName, count: 1, addedMass_g: 50, params: { ...d.params, mms_g: d.params.mms_g * 1.3 } }] };
+  const t = prTuning(mixed, mixed.vb_l, AIR);
+  assert.ok(t.mixed);
+  for (const index of [0, 1]) {
+    const add = t.massFor(31, mixed.vb_l, index);
+    assert.ok(add > 0 && Number.isFinite(add), `group ${index + 1}: ${add}`);
+    const tuned = index === 0 ? { ...mixed, addedMass_g: add } : { ...mixed, extra: [{ ...mixed.extra[0]!, addedMass_g: add }] };
+    assert.ok(Math.abs(prTuning(tuned, mixed.vb_l, AIR).fb - 31) < 1e-6);
+  }
+  // The default is still group 1; an index past the last group means the last one.
+  assert.equal(t.massFor(31), t.massFor(31, mixed.vb_l, 0));
+  assert.equal(t.massFor(31, mixed.vb_l, 5), t.massFor(31, mixed.vb_l, 1));
+});

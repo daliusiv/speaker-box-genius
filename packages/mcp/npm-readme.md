@@ -2,7 +2,9 @@
 
 Lets an AI assistant (Claude, Cursor, VS Code…) design speaker boxes with [Speaker Box Genius](https://speakerboxgenius.com)'s own simulator, on your computer. It can search about 1,900 drivers, size sealed, ported and passive radiator boxes, find passive radiators, simulate any box type (validated against WinISD, Hornresp and SPICE), work out a box's net volume, and read Speaker Box Genius share links. Every design comes back with a link that opens it in the app.
 
-**Private:** runs locally, no account, no telemetry. The only thing it downloads is the public driver database (cached, so it also works offline).
+**Private:** runs locally, no account, no telemetry. The only thing it downloads is the public driver database (cached, so it also works offline). Share links it returns end in `?ref=mcp` before the `#`, so speakerboxgenius.com can count visits from AI answers (only that tag, never the design).
+
+MCP Registry: `com.speakerboxgenius/mcp`.
 
 ## Add it to your AI app
 

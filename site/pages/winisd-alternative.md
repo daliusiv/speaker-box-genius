@@ -68,6 +68,28 @@ For like-for-like comparisons, set **Air** to **WinISD defaults** in Settings, a
 4. **Share it:** the **Share** button gives you the link, a forum image and posts ready to paste.
 5. **Check it in WinISD if you like:** **Save & Export → WinISD project** (☰ menu) saves a box as a `.wpr` project with the driver and settings, and says what WinISD can't hold (EQ, passive parts, baffle step, room gain).
 
+## Questions
+
+### Is it really free?
+
+Yes, for non-commercial use: no account, no sign-up, and nothing to pay. The code is on [GitHub](https://github.com/daliusiv/speaker-box-genius) under the PolyForm Noncommercial licence (source-available, not open source).
+
+### Does it work offline?
+
+Yes. Once the app has opened, it keeps working without a connection, and you can install it from the browser like an app on a computer or phone.
+
+### Can I open my WinISD drivers and projects?
+
+Yes: `.wdr` drivers and `.wpr` projects open with their box and settings, and any box can be saved back as a `.wpr` for WinISD.
+
+### Does it model two passive radiators?
+
+Yes: two or more passive radiators per box, with added mass, each radiator's excursion against its Xmax, and tools that find a PR and the added mass for a tuning.
+
+### Is it as accurate as WinISD?
+
+It's tested against WinISD's own results: the response agrees within about 0.01 dB for sealed, ported, passive radiator and bandpass boxes. The cases are on the [validation page](/validation/#winisd).
+
 [[Open the example|winisd-example]]
 
 > Speaker Box Genius isn't affiliated with WinISD or its authors. WinISD is still a great tool, and the reference these results are checked against.

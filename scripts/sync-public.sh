@@ -138,6 +138,15 @@ else
       blob=$(git hash-object -w "$tmp/new.md")
       GIT_INDEX_FILE="$tmp/index" git read-tree "$dev"
       GIT_INDEX_FILE="$tmp/index" git update-index --cacheinfo "100644,$blob,CHANGELOG.md"
+      # The plugin (plugin/) runs the MCP server pinned to the newest release: move the pin with it
+      # (scripts/plugin-version.ts); release-mcp.yml then publishes that version to npm.
+      if [ -n "$version" ] && git cat-file -e "$dev:plugin/.mcp.json" 2>/dev/null && git cat-file -e "$dev:plugin/.claude-plugin/plugin.json" 2>/dev/null; then
+        git show "$dev:plugin/.claude-plugin/plugin.json" > "$tmp/plugin.json"
+        git show "$dev:plugin/.mcp.json" > "$tmp/mcp.json"
+        node --experimental-strip-types --disable-warning=ExperimentalWarning "$HERE/plugin-version.ts" set "$version" "$tmp/plugin.json" "$tmp/mcp.json"
+        GIT_INDEX_FILE="$tmp/index" git update-index --cacheinfo "100644,$(git hash-object -w "$tmp/plugin.json"),plugin/.claude-plugin/plugin.json"
+        GIT_INDEX_FILE="$tmp/index" git update-index --cacheinfo "100644,$(git hash-object -w "$tmp/mcp.json"),plugin/.mcp.json"
+      fi
       dev_tree=$(GIT_INDEX_FILE="$tmp/index" git write-tree)
       if [ -n "$version" ]; then what="v${version} (${SYNC_DATE})"; else what="empty Unreleased heading removed"; fi
       dated=$(bot git commit-tree "$dev_tree" -p "$dev" -m "Changelog: $what")

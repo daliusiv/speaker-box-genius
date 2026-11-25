@@ -148,3 +148,93 @@ test("Boxes: ↑/↓ nudge Vb (Shift ×10, snapped), one held burst is one undo 
   await page.keyboard.press("Control+z");
   await expect(vb).toHaveValue("50");
 });
+
+/** Add a passive-radiator box (if there's none yet) and open its Passive radiator section. */
+async function prCard(page: Page) {
+  await boxes(page);
+  if ((await card(page, "pr").count()) === 0) {
+    await page.locator("#panel-boxes .bx-top").getByRole("button", { name: "Add a box" }).click();
+    await page.getByRole("menu", { name: "Box type" }).getByRole("menuitem", { name: "Passive radiators" }).click();
+  }
+  const pr = card(page, "pr").first();
+  const mass = pr.getByLabel("Added mass").first();
+  if (!(await mass.isVisible())) await pr.getByText(/^Passive radiators?$/).first().click();
+  await mass.waitFor();
+  return pr;
+}
+
+test("Boxes: the PR card keeps each action in its row", async ({ page }) => {
+  const pr = await prCard(page);
+  // ✦ Best tuning sits in the Fb row; ✦ Find beside the PR picker, on its line; Set mass right under Tune to.
+  await expect(pr.locator(".ui-field", { has: page.locator(".ui-field-label", { hasText: /^Fb/ }) }).getByRole("button", { name: "Best tuning…" })).toBeVisible();
+  await expect(pr.locator(".bx-picker").getByRole("button", { name: "Find a PR for this driver…" })).toBeVisible();
+  const picker = await pr.locator(".bx-picker > .picker").boundingBox();
+  const find = await pr.getByRole("button", { name: "Find a PR for this driver…" }).boundingBox();
+  expect(Math.abs(picker!.y - find!.y)).toBeLessThan(1);
+  expect(Math.abs(picker!.height - find!.height)).toBeLessThan(1);
+  const tune = pr.locator(".ui-field", { has: page.getByLabel("Tune to") });
+  await expect(tune.locator("+ .ui-field").getByRole("button", { name: "Set mass" })).toBeVisible();
+  // The Hz box keeps the control column like Added mass: same right edge and width.
+  const tuneBox = await tune.locator(".ui-number").boundingBox();
+  const massBox = await pr.locator(".ui-field", { has: page.getByLabel("Added mass") }).first().locator(".ui-number").boundingBox();
+  expect(Math.abs(tuneBox!.x - massBox!.x)).toBeLessThan(1);
+  expect(Math.abs(tuneBox!.width - massBox!.width)).toBeLessThan(1);
+  // One group: Position is a radio group under Added mass.
+  const position = pr.getByRole("group", { name: "Position" });
+  await expect(position.getByRole("radio")).toHaveCount(3);
+  expect((await position.boundingBox())!.y).toBeGreaterThan(massBox!.y);
+  // No floating rows of text buttons are left in the card.
+  await expect(pr.locator(".bx-actions")).toHaveCount(0);
+  // One full-width Add button: as wide as the section's rows.
+  const add = await pr.getByRole("button", { name: "Add a different PR" }).boundingBox();
+  const row = await pr.locator(".ui-field", { has: page.getByLabel("Added mass") }).first().boundingBox();
+  expect(Math.abs(add!.width - row!.width)).toBeLessThan(2);
+  await expect(pr).toHaveScreenshot("pr-card.png");
+});
+
+test("Boxes: Set mass's message shows right under Tune to", async ({ page }) => {
+  const pr = await prCard(page);
+  const tuneTo = pr.getByLabel("Tune to");
+  await tuneTo.fill("200");
+  await pr.getByRole("button", { name: "Set mass" }).click();
+  const warn = pr.locator(".ui-field:has(#" + (await tuneTo.getAttribute("id"))!.replace(/:/g, "\\:") + ") + .ui-field + p.warn");
+  await expect(warn).toContainText("already tune");
+});
+
+test("Boxes: mixed PRs are group panels with one Tune to; Add mass to picks the group Set mass changes", async ({ page }) => {
+  const pr = await prCard(page);
+  await pr.getByRole("button", { name: "Add a different PR" }).click();
+  const groups = pr.locator(".bx-group");
+  await expect(groups).toHaveCount(2);
+  // Position once, above the groups; group 1 can't be removed, group 2 can.
+  await expect(pr.getByRole("group", { name: "Position" })).toHaveCount(1);
+  expect((await pr.getByRole("group", { name: "Position" }).boundingBox())!.y).toBeLessThan((await groups.nth(0).boundingBox())!.y);
+  await expect(groups.nth(0).getByRole("button", { name: /Remove/ })).toHaveCount(0);
+  await expect(groups.nth(1).getByRole("button", { name: "Remove Group 2" })).toBeVisible();
+  await expect(pr.getByLabel("Tune to")).toHaveCount(1);
+  // Set mass on group 2 only.
+  const mass1 = groups.nth(0).getByLabel("Added mass");
+  const mass2 = groups.nth(1).getByLabel("Added mass");
+  const before1 = await mass1.inputValue();
+  const before2 = await mass2.inputValue();
+  await pr.getByLabel("Add mass to").selectOption({ label: "Group 2" });
+  await pr.getByLabel("Tune to").fill("33");
+  await pr.getByRole("button", { name: "Set mass" }).click();
+  await expect(mass2).not.toHaveValue(before2);
+  await expect(mass1).toHaveValue(before1);
+  // No sideways scroll with the group panels.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await expect(pr).toHaveScreenshot("pr-card-mixed.png");
+});
+
+test("Boxes: the ported card's Position is a radio group and Set length sits under Tune to", async ({ page }) => {
+  await boxes(page);
+  const ported = card(page, "vented").first();
+  const port = ported.getByRole("group", { name: "Position" });
+  if (!(await port.isVisible())) await ported.getByText(/^Port$/).first().click();
+  await expect(port.getByRole("radio", { name: /Beside driver/ })).toBeChecked();
+  await port.getByRole("radio", { name: /Further away by/ }).check();
+  await expect(port.getByLabel("Distance").first()).toBeVisible();
+  const tune = ported.locator(".ui-field", { has: page.getByLabel("Tune to") });
+  await expect(tune.locator("+ .ui-field").getByRole("button", { name: "Set length" })).toBeVisible();
+});

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { REPO_ROOT } from "../packages/db-tools/src/load.ts";
 import { tempDir } from "./tempDir.ts";
@@ -189,6 +189,22 @@ test("sync: changelog entries become the next version on dev main, the public co
   assert.equal(patch.outputs.version, "1.0.1", patch.log);
   assert.equal(git(s.pub, "tag"), "v1.0.0\nv1.0.1");
   assert.match(git(s.pub, "log", "-1", "--format=%s", "main"), /^Release v1\.0\.1$/);
+});
+
+test("sync: a new release moves the plugin's pinned npm version with it", () => {
+  const s = setup();
+  git(s.devWork, "pull", "-q", "--ff-only");
+  mkdirSync(join(s.devWork, "plugin/.claude-plugin"), { recursive: true });
+  writeFileSync(join(s.devWork, "plugin/.claude-plugin/plugin.json"), '{ "name": "speaker-box-genius", "version": "0.9.0" }\n');
+  writeFileSync(join(s.devWork, "plugin/.mcp.json"), '{ "mcpServers": { "speaker-box-genius": { "command": "npx", "args": ["-y", "speaker-box-genius@0.9.0", "mcp"] } } }\n');
+  writeFileSync(join(s.devWork, "CHANGELOG.md"), "# Changelog\n\nIntro.\n\n## Unreleased\n\n### Added\n- Plugin.\n\n## Earlier\n\nOlder.\n");
+  git(s.devWork, "add", "."); git(s.devWork, "commit", "-qm", "plugin"); git(s.devWork, "push", "-q");
+  const r = run(s.sync);
+  assert.equal(r.outputs.version, "1.0.0", r.log);
+  for (const repo of [s.dev, s.pub]) {
+    assert.equal(JSON.parse(read(repo, "main", "plugin/.claude-plugin/plugin.json")).version, "1.0.0");
+    assert.deepEqual(JSON.parse(read(repo, "main", "plugin/.mcp.json")).mcpServers["speaker-box-genius"].args, ["-y", "speaker-box-genius@1.0.0", "mcp"]);
+  }
 });
 
 test("sync: an older \"Sync from dev\" commit on public still counts as the last release", () => {

@@ -2,6 +2,7 @@
  * Lay out what gets published, from dist/sbg.mjs (vite build):
  *   dist/npm/   the npm package "speaker-box-genius" (bin: speaker-box-genius)
  *   dist/mcpb/  the Claude Desktop extension folder (pack it with `mcpb pack dist/mcpb`)
+ *   dist/registry/server.json  the official MCP Registry entry (`mcp-publisher publish`, release-mcp.yml)
  *
  *   node --experimental-strip-types packages/mcp/scripts/pack.ts [--version x.y.z]
  */
@@ -24,6 +25,10 @@ if (!readFileSync(bundle, "utf8").includes(`"${version}"`)) {
 const DESCRIPTION = "Speaker Box Genius as a local MCP server: AI assistants design speaker boxes with the simulator's own engine, on your machine.";
 const REPO = "https://github.com/daliusiv/speaker-box-genius";
 const HOME = "https://speakerboxgenius.com/mcp/";
+/** The server's name in the official MCP Registry: speakerboxgenius.com, proven by a DNS TXT record. */
+const MCP_NAME = "com.speakerboxgenius/mcp";
+/** The Registry's short description (100 characters at most). */
+const REGISTRY_DESCRIPTION = "Simulate sealed, ported and passive-radiator speaker boxes with a 1,900+ driver database.";
 const TOOLS = [
   ["search_drivers", "Search the driver database by name and filters"],
   ["get_driver", "A driver's full record, sources and licence"],
@@ -48,6 +53,7 @@ writeFileSync(
       name: "speaker-box-genius",
       version,
       description: DESCRIPTION,
+      mcpName: MCP_NAME,
       type: "module",
       bin: { "speaker-box-genius": "sbg.mjs" },
       files: ["sbg.mjs", "README.md", "LICENSE"],
@@ -102,4 +108,26 @@ writeFileSync(
     2,
   ) + "\n",
 );
-console.log(`speaker-box-genius ${version}: dist/npm and dist/mcpb ready`);
+// Official MCP Registry entry (same version as npm; the Registry checks npm's mcpName matches).
+if (REGISTRY_DESCRIPTION.length > 100) throw new Error("REGISTRY_DESCRIPTION is over 100 characters");
+const registry = join(DIST, "registry");
+rmSync(registry, { recursive: true, force: true });
+mkdirSync(registry, { recursive: true });
+writeFileSync(
+  join(registry, "server.json"),
+  JSON.stringify(
+    {
+      $schema: "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+      name: MCP_NAME,
+      title: "Speaker Box Genius",
+      description: REGISTRY_DESCRIPTION,
+      websiteUrl: HOME,
+      repository: { url: REPO, source: "github", subfolder: "packages/mcp" },
+      version,
+      packages: [{ registryType: "npm", registryBaseUrl: "https://registry.npmjs.org", identifier: "speaker-box-genius", version, transport: { type: "stdio" }, packageArguments: [{ type: "positional", value: "mcp" }] }],
+    },
+    null,
+    2,
+  ) + "\n",
+);
+console.log(`speaker-box-genius ${version}: dist/npm, dist/mcpb and dist/registry ready`);

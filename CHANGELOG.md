@@ -2,6 +2,30 @@
 
 What's new in Speaker Box Genius. Each numbered section below is one update of the live site: a new minor version (1.1.0) adds features, a new patch (1.0.1) has only changes and fixes. The dated sections are from before 1.0.
 
+## 1.4.0 (2026-11-25)
+
+### Added
+- Driver pages for car audio and mid-bass drivers also show an infinite baffle (free-air) response.
+- Driver pages mark the driver's Fs on the response chart.
+- The [MCP server for AI assistants](https://speakerboxgenius.com/mcp/) is in the official MCP Registry and comes as a plugin with a box-design skill.
+
+### Changed
+- The [WinISD alternative](https://speakerboxgenius.com/winisd-alternative/) and [Hornresp alternative](https://speakerboxgenius.com/hornresp-alternative/) pages end with answers to common questions.
+- About 280 more driver pages now show ported and passive radiator boxes; when the flattest ported box is very large, it's listed as **Deep ported**.
+- The passive radiator suggested on a driver page is sized to the driver, so a 6.5" woofer no longer gets a 12" one.
+- Tidier passive radiator and port cards: each button sits next to the value it changes.
+- Passive radiator boxes with different PRs: each group has its own panel, and **Set mass** can change any group, not just the first.
+- The app opens straight onto the charts; **Getting started** tips are in the menu.
+- Share links from the MCP server are tagged `?ref=mcp` so visit stats can count them (never the design). See [Privacy](https://speakerboxgenius.com/privacy/).
+
+### Fixed
+- Car audio drivers under 8" are called woofers, not subwoofers, on their pages.
+- Offline: opening site pages no longer breaks the installed app, and pages you've read open offline.
+- Offline: menu links that need a connection are greyed out.
+- Offline: the **Offline** badge no longer takes a line of its own on phones.
+- **Open / Import**: a file the app can't read now shows its error in the window, also on phones.
+- Menus near the bottom of the screen open upward instead of off the screen.
+
 ## 1.3.0 (2026-11-24)
 
 ### Added

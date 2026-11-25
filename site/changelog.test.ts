@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { REPO_ROOT } from "../packages/db-tools/src/load.ts";
-import { latestVersion, lint, newNotes, nextVersion, parse, release } from "../scripts/changelog.ts";
+import { latestVersion, lint, MAX_ENTRY, newNotes, nextVersion, parse, release, visibleLength } from "../scripts/changelog.ts";
 
 const SAMPLE = `# Changelog
 
@@ -90,4 +90,12 @@ test("lint: site links are absolute, so they work on GitHub and in release notes
   const md = (link: string) => `# Changelog\n\n## Unreleased\n\n- See [Privacy](${link}).\n\n## Earlier\n\nOld.\n`;
   assert.ok(lint(md("/privacy/")).some((p) => /bare \/path/.test(p)));
   assert.deepEqual(lint(md("https://speakerboxgenius.com/privacy/")), []);
+});
+
+test("Unreleased entries are one-line summaries; released ones are left alone", () => {
+  const long = "x".repeat(MAX_ENTRY + 1);
+  const md = (head: string) => `# Changelog\n\nIntro.\n\n${head}\n\n### Added\n- ${long}\n\n## Earlier\n\nOlder.\n`;
+  assert.ok(lint(md("## Unreleased")).some((p) => /Unreleased entry is \d+ characters/.test(p)));
+  assert.deepEqual(lint(md("## 1.0.0 (2026-11-15)")), []);
+  assert.equal(visibleLength("The [MCP server](https://speakerboxgenius.com/mcp/) has **Set mass** and `?ref=mcp`"), "The MCP server has Set mass and ?ref=mcp".length);
 });

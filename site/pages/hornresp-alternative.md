@@ -91,6 +91,20 @@ Sealed, ported and passive radiator boxes go both ways too. **Save & Export → 
 
 Hornresp is a specialist's tool, developed over many years: more horn shapes and flare types (hyperbolic, tractrix, oblate spheroidal), more segments, chamber ports, other radiation angles, multiple drivers in many arrangements, and many more charts and tools. If you design horns for a living, keep it. Speaker Box Genius covers the designs most DIY builders make, and shows them next to ordinary boxes, so it's a quick place to start, compare and share.
 
+## Questions
+
+### Can I open my Hornresp records?
+
+Yes: a record's `.txt` file, or a record pasted from a forum post, opens as a new design with its driver. Lines, horns and ordinary boxes export back to Hornresp too.
+
+### Is it as accurate as Hornresp for lines?
+
+For every line and horn record in the table above, the response is within 0.05 dB of Hornresp on average and the impedance within 0.35 %. Every case is on the [validation page](/validation/#hornresp).
+
+### Is it free, and does it work offline?
+
+Yes: free for non-commercial use, no account, and it keeps working without a connection once opened, on a computer or a phone.
+
 [[Open the example|tl-example]]
 
 > Speaker Box Genius isn't affiliated with Hornresp or its author, David McBean.

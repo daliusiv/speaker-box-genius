@@ -153,12 +153,15 @@ function designResult(s: AppState, d: Design, freqs: number[], curves: CurveName
   return out;
 }
 
-export async function shareLink(s: AppState, site = SITE): Promise<string> {
-  return `${site}/#${await encodeStateShort(s)}`;
+/** Where a link was made, as the app's `?ref=` (counted as where the visit came from, then dropped from the address). */
+export type LinkRef = "mcp";
+
+export async function shareLink(s: AppState, site = SITE, ref?: LinkRef): Promise<string> {
+  return `${site}/${ref ? `?ref=${ref}` : ""}#${await encodeStateShort(s)}`;
 }
 
 /** Simulate an AppState as the app does. */
-export async function simulateState(s: AppState, output: SimRequest["output"] = {}, notes: string[] = [], site = SITE): Promise<SimResponse> {
+export async function simulateState(s: AppState, output: SimRequest["output"] = {}, notes: string[] = [], site = SITE, ref?: LinkRef): Promise<SimResponse> {
   const solved = solveDriver(s);
   if (solved.missing.length) throw new RequestError(`The driver's parameters aren't complete: missing ${solved.missing.join(", ")}`);
   const o = outputOf({ output });
@@ -169,16 +172,16 @@ export async function simulateState(s: AppState, output: SimRequest["output"] = 
     drive: driveAt(s, 1),
     designs: designs.map((d) => designResult(s, d, freqs, o.curves)),
     freq_hz: freqs,
-    share_link: await shareLink(s, site),
+    share_link: await shareLink(s, site, ref),
     notes,
     units: "SPL dB at 1 m at the drive given; excursion mm one way, peak; air speed m/s peak; volumes L; frequencies Hz",
   };
 }
 
 /** Build a request into the app's state and simulate it. */
-export async function simulateRequest(req: SimRequest, opts: BuildOptions & { site?: string } = {}): Promise<SimResponse> {
+export async function simulateRequest(req: SimRequest, opts: BuildOptions & { site?: string; ref?: LinkRef } = {}): Promise<SimResponse> {
   const { state, notes } = await buildState(req, opts);
-  return simulateState(state, req.output, notes, opts.site);
+  return simulateState(state, req.output, notes, opts.site, opts.ref);
 }
 
 /** The app's state from a share link (or just its #… part); null when it isn't one. */

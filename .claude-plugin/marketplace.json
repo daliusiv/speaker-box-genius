@@ -1,0 +1,15 @@
+{
+  "name": "speaker-box-genius",
+  "description": "Speaker Box Genius's loudspeaker box simulator for AI assistants.",
+  "owner": {
+    "name": "Speaker Box Genius",
+    "url": "https://speakerboxgenius.com"
+  },
+  "plugins": [
+    {
+      "name": "speaker-box-genius",
+      "source": "./plugin",
+      "description": "Design loudspeaker boxes with Speaker Box Genius's simulator: drivers, sealed, ported and passive radiator boxes, limits and share links. Runs locally."
+    }
+  ]
+}

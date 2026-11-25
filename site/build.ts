@@ -53,10 +53,11 @@ const REPO = "https://github.com/daliusiv/speaker-box-genius";
  * GoatCounter's count.js doesn't check Do Not Track / Global Privacy Control, so this loads it only when
  * the browser hasn't asked not to be tracked (same test as telemetrySchema.ts browserSaysNo) and
  * Settings → Privacy → Help improve the app isn't off (telemetry.ts PREF, same origin as every site page).
- * Not loaded → window.goatcounter is undefined, so the guarded event counts (ask-ai) stop too.
+ * A share link from the MCP server (?ref=mcp) is counted with referrer "mcp" and without the tag in the path
+ * (the app then drops it from the address, main.tsx). Not loaded → window.goatcounter is undefined, so the guarded event counts (ask-ai) stop too.
  */
 export const GOATCOUNTER =
-  '<script>(function(){var n=navigator,w=window;if(n.globalPrivacyControl===true||n.doNotTrack==="1"||n.doNotTrack==="yes"||w.doNotTrack==="1")return;try{if(localStorage.getItem("sbg.usageStats")==="off")return}catch(e){}var s=document.createElement("script");s.async=true;s.src="https://gc.zgo.at/count.js";s.setAttribute("data-goatcounter","https://speakerboxgenius.goatcounter.com/count");document.head.appendChild(s)})()</script>';
+  '<script>(function(){var n=navigator,w=window;if(n.globalPrivacyControl===true||n.doNotTrack==="1"||n.doNotTrack==="yes"||w.doNotTrack==="1")return;try{if(localStorage.getItem("sbg.usageStats")==="off")return}catch(e){}if(/[?&]ref=mcp(&|$)/.test(location.search))w.goatcounter={referrer:"mcp",path:location.pathname};var s=document.createElement("script");s.async=true;s.src="https://gc.zgo.at/count.js";s.setAttribute("data-goatcounter","https://speakerboxgenius.goatcounter.com/count");document.head.appendChild(s)})()</script>';
 
 export interface Page {
   title: string;
@@ -417,8 +418,25 @@ figure>figcaption{margin-top:.65rem;line-height:1.55}
 @media (min-width:1240px){main{position:relative}.toc{display:block;position:absolute;top:0;bottom:0;left:calc(100% + 1.25rem);width:13rem}.toc-inner{position:sticky;top:1.5rem;max-height:calc(100vh - 3rem);overflow-y:auto;padding-top:1.35rem}.toc-h{margin:0 0 .5rem;color:var(--muted);font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}.toc ol{margin:0;padding:0;list-style:none;border-left:1px solid var(--border)}.toc li{margin:0}.toc a{display:block;margin-left:-1px;padding:.3rem 0 .3rem .8rem;border-left:2px solid transparent;color:var(--muted);font-size:.88rem;line-height:1.35;text-decoration:none}.toc a:hover{color:var(--fg);border-left-color:var(--accent)}}
 `;
 
-/** Speaker Box Genius as a schema.org Organization: every page's author and publisher. */
-const ORG = { "@type": "Organization", name: "Speaker Box Genius", url: SITE };
+/**
+ * Speaker Box Genius as a schema.org Organization: every page's author and publisher. The
+ * @id, logo and sameAs match packages/web/index.html, so search engines tie the name to this
+ * site and its repo (not to the Genius speaker brand).
+ */
+export const ORG = { "@type": "Organization", "@id": `${SITE}/#organization`, name: "Speaker Box Genius", url: `${SITE}/`, logo: `${SITE}/icons/icon-512.png`, sameAs: [REPO] };
+
+/** The app (same @id as packages/web/index.html): what the WinISD and Hornresp alternative pages are about. */
+export const APP_LD = {
+  "@type": "WebApplication",
+  "@id": `${SITE}/#app`,
+  name: "Speaker Box Genius",
+  url: `${SITE}/`,
+  applicationCategory: "DesignApplication",
+  operatingSystem: "Any (runs in a web browser)",
+  isAccessibleForFree: true,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "GBP" },
+  publisher: { "@id": `${SITE}/#organization` },
+};
 
 /** JSON for a <script> tag: "<" escaped so a name can never close the tag. */
 const jsonLd = (x: unknown) => JSON.stringify(x).replace(/</g, "\\u003c");
@@ -591,7 +609,7 @@ async function buildDriverPages(write: (path: string, html: string) => void, gui
   console.log(`Substitutes: ${pages.length} driver pages in ${((performance.now() - subsStart) / 1000).toFixed(1)} s`);
   for (const p of pages) {
     const family = families.get(p.id);
-    const page = driverContent(p, { all: await shareLink(SITE, p.state), variants: variantsOf(p.id), sizeHub: p.rec.size_in !== undefined && hubSet.has(p.rec.size_in), related: relatedDrivers(p, pages, family && new Set(family)), substitutes: substitutes.get(p.id), prOthers: p.prOthers && (await Promise.all(p.prOthers.map((o) => shareLink(SITE, withPr(p.state, o))))) }, chart);
+    const page = driverContent(p, { all: await shareLink(SITE, p.state), variants: variantsOf(p.id), sizeHub: p.rec.size_in !== undefined && hubSet.has(p.rec.size_in), related: relatedDrivers(p, pages, family && new Set(family)), substitutes: substitutes.get(p.id), prOthers: p.prOthers && (await Promise.all(p.prOthers.map((o) => shareLink(SITE, withPr(p.state, o))))), deep: p.deep && (await shareLink(SITE, p.deep.state)) }, chart);
     // The page's share card, next to it; pages without one keep the site's card.
     let imagePath: string | undefined;
     const jpg = await cards.jpeg(cardSvg(cardData(p)));
@@ -751,7 +769,9 @@ export async function build(outDir: string): Promise<string[]> {
         writeFileSync(join(outDir, imagePath), jpg);
       }
     }
-    write(page.path, layout({ ...page, image: page.image?.startsWith("chart:") ? undefined : page.image, imagePath, content, guides, alternate: twinPath(page.path), style: ASK_AI_STYLE + (charts.count ? charts.style : "") }));
+    // The "switching" pages (WinISD / Hornresp alternative) are about the app itself.
+    const ld = page.group === "switching" ? { about: APP_LD } : undefined;
+    write(page.path, layout({ ...page, ld, image: page.image?.startsWith("chart:") ? undefined : page.image, imagePath, content, guides, alternate: twinPath(page.path), style: ASK_AI_STYLE + (charts.count ? charts.style : "") }));
   }
 
   const guidesPage = {

@@ -98,6 +98,31 @@ export function Menu(props: {
     const vw = document.documentElement.clientWidth;
     setShift(left < margin ? margin - left : right > vw - margin ? Math.max(margin - left, vw - margin - right) : 0);
   }, [open, place]); // eslint-disable-line react-hooks/exhaustive-deps
+  // A list that would run off the window's bottom (or under a bar fixed there, `data-bottom-bar`)
+  // opens upward when there's more room above, and scrolls if it fits neither way.
+  const [vertical, setVertical] = useState<CSSProperties | undefined>();
+  useLayoutEffect(() => {
+    if (!open || place) {
+      setVertical(undefined);
+      return;
+    }
+    const list = root.current?.querySelector<HTMLElement>(".ui-menu-list");
+    const b = root.current?.querySelector("button")?.getBoundingClientRect();
+    if (!list || !b) return;
+    const margin = 8;
+    const gap = list.getBoundingClientRect().top - b.bottom;
+    const bar = [...document.querySelectorAll<HTMLElement>("[data-bottom-bar]")].map((e) => e.getBoundingClientRect()).find((r) => r.height > 0);
+    const floor = Math.min(innerHeight, bar ? bar.top : innerHeight) - margin;
+    // Only for a button on screen (one just tapped), not a list shown open off screen (/ui catalogue).
+    if (b.top < 0 || b.bottom > floor + margin) return setVertical(undefined);
+    const below = floor - b.bottom - Math.max(gap, 0);
+    const above = b.top - margin - Math.max(gap, 0);
+    const h = list.scrollHeight;
+    if (h <= below) return setVertical(undefined);
+    const up = above > below;
+    const room = Math.max(120, up ? above : below);
+    setVertical({ ...(up ? { top: "auto", bottom: `calc(100% + ${Math.max(gap, 0)}px)` } : {}), ...(h > room ? { maxHeight: room, overflowY: "auto" } : {}) });
+  }, [open, place]); // eslint-disable-line react-hooks/exhaustive-deps
   const focusTrigger = () => root.current?.querySelector<HTMLButtonElement>("button")?.focus();
 
   useEffect(() => {
@@ -180,7 +205,7 @@ export function Menu(props: {
         </Button>
       )}
       {open && (
-        <div className="ui-menu-list" role="menu" id={id} aria-label={props.ariaLabel ?? props.label} style={place ?? (shift ? { transform: `translateX(${shift}px)` } : undefined)}>
+        <div className="ui-menu-list" role="menu" id={id} aria-label={props.ariaLabel ?? props.label} style={place ?? (shift || vertical ? { ...vertical, ...(shift ? { transform: `translateX(${shift}px)` } : {}) } : undefined)}>
           {props.items.map((it, i) =>
             it.kind === "separator" ? (
               <hr key={i} className="ui-menu-sep" />

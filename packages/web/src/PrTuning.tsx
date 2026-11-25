@@ -28,6 +28,8 @@ export function PrTuning(props: {
   linked: boolean;
   /** Apply as one undo step. `summary` is for the confirmation toast. */
   onApply: (patch: Partial<PrDesign>, summary: string) => void;
+  /** A square ✦ button (in the Fb row) instead of the text button. */
+  compact?: boolean;
 }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -135,19 +137,21 @@ export function PrTuning(props: {
   return (
     <>
       <Button
-        variant="ghost"
+        variant={props.compact ? "secondary" : "ghost"}
+        className={props.compact ? "bx-icon-btn" : undefined}
+        aria-label={props.compact ? "Best tuning…" : undefined}
         onClick={open}
         disabled={!usable}
         title={
           mixed
-            ? "Works with one kind of PR (remove the other groups)"
+            ? "Best tuning works with one kind of PR (remove the other groups)"
             : ctx.driver
-              ? "The added mass (or box) that gives the flattest response, the deepest bass, or the smallest box"
+              ? "Best tuning: the added mass (or box) that gives the flattest response, the deepest bass, or the smallest box"
               : "Enter the driver's parameters first"
         }
       >
         <Sparkle />
-        Best tuning…
+        {!props.compact && "Best tuning…"}
       </Button>
       <dialog
         ref={dlg}

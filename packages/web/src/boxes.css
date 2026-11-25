@@ -100,6 +100,7 @@
 
 .bx-card .ui-section-body {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 /* Legacy field wrappers inside a box lay their (kit) rows out in one column. */
@@ -130,12 +131,50 @@
   font-size: var(--text-sm);
 }
 
+/* The PR picker with its ✦ Find button on the same line. */
 .bx-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   margin: var(--space-2) 0;
+}
+
+.bx-picker > :first-child {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+/* A row's own button under its field (Set mass, Set length): in the control column, as wide as it. */
+.bx-row-btn {
+  width: 100%;
+}
+
+/* A ✦ helper as a square icon button (Find, Best tuning). */
+.bx-icon-btn {
+  flex: none;
+  width: var(--size-control);
+  min-width: var(--size-control);
+  padding: 0;
+}
+
+.bx-icon-btn .sparkle {
+  width: var(--size-icon);
+  height: var(--size-icon);
+  color: var(--accent);
+}
+
+/* + Add a different PR: one full-width dashed button at the end of the PR section. */
+.bx-add-pr {
+  width: 100%;
+  margin: var(--space-2) 0;
+  border-style: dashed;
+  background: transparent;
 }
 
 /* Extra PR groups: a bordered block inside the section. */
 .bx-group {
+  min-width: 0;
   margin: var(--space-1) 0 var(--space-2);
   padding: 0 var(--space-3) var(--space-2);
   border: var(--border-hairline) solid var(--border);

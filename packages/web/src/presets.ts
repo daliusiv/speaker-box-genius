@@ -17,8 +17,8 @@ import {
   winisdC4Alignment,
   winisdQb3Alignment,
 } from "@sbg/engine";
-import { actingFactor, enclosureOptsOf, airLimitOf, airOf, endCorrectionOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, portOf, portRoom_cm, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
-import type { AppState, BandpassDesign, DesignState, PrDesign, VentedDesign } from "./state.ts";
+import { actingFactor, runDesigns, enclosureOptsOf, airLimitOf, airOf, endCorrectionOf, alignmentDriver, driverInputOf, enclosureOf, limitsOf, lossesFor, portLimitOf, portOf, portRoom_cm, prGroupsOf, ratedPowerOf, simOptionsOf, solveDriver } from "./sim.ts";
+import { newDesign, type AppState, type BandpassDesign, type DesignState, type PrDesign, type VentedDesign } from "./state.ts";
 import { sizeBandpass } from "./bandpassSize.ts";
 import { choosePortCount, portCandidates, portFieldsOf, portSpeedFor, type AssistantPort } from "./ports.ts";
 import { stuffFactor } from "./stuffing.ts";
@@ -39,18 +39,23 @@ export const presetInName = (name: string) => PRESET_SUFFIX.exec(name)?.[1];
 /** A preset applied to a design: the name stays (minus any old suffix), the preset becomes its tag. */
 export const withPreset = (name: string, preset: string) => ({ name: stripPreset(name), preset });
 
-/** Tuning helpers for a PR box (one or several groups); added mass goes on group 1. */
+/**
+ * Tuning helpers for a PR box (one or several groups). The added mass goes on one group
+ * (`index`, 0 = group 1, the default); the other groups keep theirs.
+ */
 export function prTuning(d: PrDesign, vb_l: number, air: Air) {
   const groups = prGroupsOf(d);
   const mixed = groups.length > 1;
+  const at = (index: number) => Math.min(Math.max(0, Math.round(index)), groups.length - 1);
   return {
     mixed,
     fb: mixed ? prGroupsFb(vb_l, groups, air) : prFb(vb_l, d.params, d.count, d.addedMass_g, air),
-    /** Added mass per PR in the first group for `fb` (NaN-free; may be negative or Infinity). */
-    massFor: (fb: number, vb = vb_l) =>
-      mixed ? prGroupsAddedMassForFb(vb, groups, fb, 0, air) : prAddedMassForFb(vb, d.params, fb, d.count, air),
-    bare: (vb = vb_l) =>
-      mixed ? prGroupsFb(vb, groups.map((g, i) => (i === 0 ? { ...g, addedMass_g: 0 } : g)), air) : prFb(vb, d.params, d.count, 0, air),
+    /** Added mass per PR in group `index` for `fb` (NaN-free; may be negative or Infinity). */
+    massFor: (fb: number, vb = vb_l, index = 0) =>
+      mixed ? prGroupsAddedMassForFb(vb, groups, fb, at(index), air) : prAddedMassForFb(vb, d.params, fb, d.count, air),
+    /** The tuning with no added mass on group `index`. */
+    bare: (vb = vb_l, index = 0) =>
+      mixed ? prGroupsFb(vb, groups.map((g, i) => (i === at(index) ? { ...g, addedMass_g: 0 } : g)), air) : prFb(vb, d.params, d.count, 0, air),
   };
 }
 
@@ -337,4 +342,35 @@ export function ventedPresetPatch(
   const best = pick?.(v, a.vb_l, a.fb);
   if (!best) return { patch: null, msg: `${a.name}: ${a.vb_l.toFixed(1)} L tuned to ${a.fb.toFixed(1)} Hz, but this port ${why} and no simple port fits. Try a bent port or a different box.` };
   return { patch: { ...box, ...best.fields }, msg: `${a.name}: this port ${why}, so it's now ${best.text}.` };
+}
+
+/** A flat tuning may peak this much above the passband (dB). */
+export const FLAT_PEAK_DB = 0.5;
+
+/**
+ * The flattest low tuning for a vented box of `vb_l` litres: of the tunings from `from` Hz down in
+ * 0.1 Hz steps (to `floor` Hz) whose response peaks no more than FLAT_PEAK_DB over its passband
+ * reference, the one with the lowest F3 (the highest of any that tie within 0.05 Hz). Tuned lower
+ * than that the response sags above the tuning and F3 climbs again, so the search stops once F3 is
+ * 0.5 Hz past its best. Each tuning is simulated with the simplest port that fits. Null if none
+ * stays flat enough. Used by the subwoofer calculator's Deep box and the driver pages' Compact box.
+ */
+export function flatTuning(s: AppState, vb_l: number, from: number, floor = 5): number | null {
+  const r1 = (v: number) => Math.round(v * 10) / 10;
+  const solved = solveDriver(s);
+  let best: { fb: number; f3: number } | null = null;
+  for (let fb = r1(from); fb >= floor; fb = r1(fb - 0.1)) {
+    const port = portCandidates(vb_l, fb, airOf(s), null, endCorrectionOf(s))[0];
+    if (!port) break;
+    const d = { ...(newDesign("vented", []) as VentedDesign), vb_l, targetFb: fb, ...portFieldsOf(port) };
+    const [run] = runDesigns({ ...s, designs: [d] }, solved);
+    const f3 = run?.result.summary.f3;
+    if (!run || f3 === null || f3 === undefined) break;
+    if (best && f3 > best.f3 + 0.5) break;
+    let peak = -Infinity;
+    for (const v of run.result.spl) if (Number.isFinite(v) && v - run.result.summary.f3RefSpl > peak) peak = v - run.result.summary.f3RefSpl;
+    if (peak > FLAT_PEAK_DB) continue;
+    if (!best || f3 < best.f3 - 0.05) best = { fb, f3 };
+  }
+  return best?.fb ?? null;
 }

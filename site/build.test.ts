@@ -4,7 +4,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { runInNewContext } from "node:vm";
 import { askAi, askAiPrompt, build, contents, GOATCOUNTER, markdown, parsePage, resolveExamples, topHeadings, withAskAi } from "./build.ts";
-import { cardData, designDriver, driverContent, driverState, driverTitle, hubSizes, loadDb, PAGE_MAX_L, prCandidate, PR_OTHERS, SIZE_HUB_MIN, sizeLabel, sizePath, sizeSlug, withPr, type DriverPage } from "./drivers.ts";
+import { cardData, COMPACT, DEEP_MIN_GAIN_HZ, describe, designDriver, driverContent, driverState, driverTitle, hubSizes, loadDb, mergeNotes, PAGE_MAX_L, prCandidate, PR_MAX_SD, PR_OTHERS, prsFor, typeLabel, SIZE_HUB_MIN, sizeLabel, sizePath, sizeSlug, withPr, type DriverPage } from "./drivers.ts";
 import { chart } from "./chart.ts";
 import { cardSvg } from "./og.ts";
 import { twinPath } from "./aiDocs.ts";
@@ -221,7 +221,7 @@ test("driver and brand pages: search titles and structured data (subject and bre
   const lds = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g)].map((m) => JSON.parse(m[1]!));
   assert.equal(lds.length, 2);
   assert.equal(lds[0].about.name, "Dayton Audio DSA215-8");
-  assert.deepEqual(lds[0].author, { "@type": "Organization", name: "Speaker Box Genius", url: "https://speakerboxgenius.com" });
+  assert.deepEqual(lds[0].author, { "@type": "Organization", "@id": "https://speakerboxgenius.com/#organization", name: "Speaker Box Genius", url: "https://speakerboxgenius.com/", logo: "https://speakerboxgenius.com/icons/icon-512.png", sameAs: ["https://github.com/daliusiv/speaker-box-genius"] });
   assert.doesNotMatch(html, /"@type":"Person"/);
   assert.deepEqual(
     lds[1].itemListElement.map((x: { name: string; item: string }) => [x.name, x.item]),
@@ -236,6 +236,17 @@ test("driver and brand pages: search titles and structured data (subject and bre
   assert.match(brand, /"@type":"BreadcrumbList"/);
   // Guides keep one block, without breadcrumbs.
   assert.equal((readFileSync(join(out, "guides/passive-radiator-box/index.html"), "utf8").match(/application\/ld\+json/g) ?? []).length, 1);
+  // The publisher ties the name to the site and repo; the alternative pages are about the app (same @ids as the app's index.html).
+  const alt = readFileSync(join(out, "winisd-alternative/index.html"), "utf8");
+  const altLd = JSON.parse(alt.match(/<script type="application\/ld\+json">(.*?)<\/script>/)![1]);
+  assert.equal(altLd.publisher["@id"], "https://speakerboxgenius.com/#organization");
+  assert.deepEqual(altLd.publisher.sameAs, ["https://github.com/daliusiv/speaker-box-genius"]);
+  assert.equal(altLd.about["@type"], "WebApplication");
+  assert.equal(altLd.about["@id"], "https://speakerboxgenius.com/#app");
+  assert.match(alt, /<h2 id="questions">Questions<\/h2>/);
+  const appHtml = readFileSync(new URL("../packages/web/index.html", import.meta.url), "utf8");
+  for (const id of ["#organization", "#app"]) assert.ok(appHtml.includes(`"@id": "https://speakerboxgenius.com/${id}"`), `index.html defines ${id}`);
+  assert.match(appHtml, /href="\/hornresp-alternative\/"/);
 });
 
 test("driver designs follow the app's presets, with a port that fits and a PR that keeps up", () => {
@@ -294,12 +305,13 @@ test("no driver page suggests a box over the page limit, and a high-Qts driver's
     const sealed = p?.designs.find((d) => d.design.kind === "sealed")?.design;
     assert.ok(sealed && sealed.vb_l <= Math.min(PAGE_MAX_L, 2.01 * hiQ.data.ts.vas_l!) && sealed.preset !== "Qtc 0.707", `${sealed?.vb_l} L, ${sealed?.preset}`);
   }
-  // A high-Qts mid-bass driver (Qts 0.55): no ported or PR box over twice Vas; the page says it suits a sealed box.
+  // A high-Qts mid-bass driver (Qts 0.55): its ported and PR boxes are kept, no bigger than twice Vas when QB3 is over it.
   const midbass = db.drivers.find((x) => x.id === "beyma/12cmv3");
   if (midbass) {
     const p = designDriver(midbass, prs)!;
-    assert.ok(p.designs.every((d) => d.design.kind === "sealed" || d.design.vb_l <= 2 * midbass.data.ts.vas_l!));
-    assert.ok(p.notes.some((n) => /suits a sealed box/.test(n)), p.notes.join("; "));
+    assert.ok(p.designs.some((d) => d.design.kind === "vented"), p.notes.join("; "));
+    assert.ok(p.designs.every((d) => d.design.preset !== COMPACT || d.design.vb_l <= 2.01 * midbass.data.ts.vas_l!));
+    assert.ok(!p.notes.some((n) => /suits a sealed box/.test(n)), p.notes.join("; "));
   }
   // Big QB3 boxes for 18-inch drivers are left off, with a reason on the page.
   const big = db.drivers.find((x) => x.id === "dayton-audio/umii18-22");
@@ -416,7 +428,7 @@ test("home page: title, canonical, structured data, and its links go to built pa
   const desc = /<meta name="description" content="([^"]+)"/.exec(index)?.[1] ?? "";
   assert.ok(desc.length >= 100 && desc.length <= 170, `description is ${desc.length} characters`);
   const ld = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(index)![1]!) as { "@graph": { "@type": string }[] };
-  assert.deepEqual(ld["@graph"].map((g) => g["@type"]), ["WebSite", "WebApplication"]);
+  assert.deepEqual(ld["@graph"].map((g) => g["@type"]), ["WebSite", "Organization", "WebApplication"]);
   // The loading text (read by crawlers without JavaScript) and the app's footer link to site pages.
   const app = readFileSync(new URL("../packages/web/src/App.tsx", import.meta.url), "utf8");
   const links = [...`${index}\n${app}`.matchAll(/href="(\/[a-z0-9/-]*)"/g)].map((m) => m[1]!).filter((h) => h !== "/");
@@ -1203,11 +1215,11 @@ test("ask AI: on every guide and calculator page, right under the H1 and not in 
 
 test("the visit counter loads only without Do Not Track / GPC and with Help improve the app on", () => {
   const code = GOATCOUNTER.replace(/^<script>/, "").replace(/<\/script>$/, "");
-  const loads = (nav: Record<string, unknown>, win: Record<string, unknown> = {}, stored: string | null = null, storageThrows = false) => {
+  const loads = (nav: Record<string, unknown>, win: Record<string, unknown> = {}, stored: string | null = null, storageThrows = false, search = "") => {
     const added: { src?: string; async?: boolean; attrs: Record<string, string> }[] = [];
     const localStorage = { getItem: (k: string) => { if (storageThrows) throw new Error("blocked"); return k === "sbg.usageStats" ? stored : null; } };
     const document = { createElement: () => ({ attrs: {}, setAttribute(k: string, v: string) { this.attrs[k] = v; } }), head: { appendChild: (el: (typeof added)[0]) => added.push(el) } };
-    runInNewContext(code, { navigator: nav, window: win, localStorage, document });
+    runInNewContext(code, { navigator: nav, window: win, localStorage, document, location: { pathname: "/", search } });
     return added;
   };
   const [s] = loads({});
@@ -1221,7 +1233,78 @@ test("the visit counter loads only without Do Not Track / GPC and with Help impr
   assert.equal(loads({}, {}, "off").length, 0, "Help improve the app off");
   assert.equal(loads({ doNotTrack: "0" }).length, 1, "DNT 0 still counts");
   assert.equal(loads({}, {}, null, true).length, 1, "no storage: can't have switched it off");
+  // A share link from the MCP server (?ref=mcp): counted as coming from "mcp", the path without the tag.
+  const fromMcp: Record<string, unknown> = {};
+  assert.equal(loads({}, fromMcp, null, false, "?ref=mcp").length, 1);
+  assert.equal(JSON.stringify(fromMcp.goatcounter), JSON.stringify({ referrer: "mcp", path: "/" }));
+  const plain: Record<string, unknown> = {};
+  loads({}, plain, null, false, "?ref=other");
+  assert.equal(plain.goatcounter, undefined);
   // Same switch and same browser test as the app's usage stats.
   assert.match(readFileSync(new URL("../packages/web/src/telemetry.ts", import.meta.url), "utf8"), /const PREF = "sbg\.usageStats";/);
   assert.match(readFileSync(new URL("../packages/web/src/telemetrySchema.ts", import.meta.url), "utf8"), /nav\.globalPrivacyControl === true \|\| nav\.doNotTrack === "1" \|\| nav\.doNotTrack === "yes" \|\| win\?\.doNotTrack === "1"/);
 });
+
+test("a high-Qts car-audio woofer gets a Compact ported box, a PR in it, a Deep row, an infinite baffle and the Fs line", () => {
+  const db = loadDb();
+  const prs = db.passiveRadiators.map(prCandidate);
+  const e = db.drivers.find((x) => x.id === "gladen/aerospace-165-dc");
+  if (!e) return;
+  const p = designDriver(e, prs)!;
+  const by = (k: string) => p.designs.find((d) => d.design.kind === k);
+  const vas = e.data.ts.vas_l!;
+  const ported = by("vented")!;
+  assert.equal(ported.design.preset, COMPACT);
+  assert.ok(Math.abs(ported.vb_l - 2 * vas) < 0.2, `${ported.vb_l} L`);
+  assert.ok(ported.result.summary.f3! < e.data.ts.fs, `ported F3 ${ported.result.summary.f3} should be below Fs`);
+  assert.equal(by("pr")?.vb_l, ported.vb_l);
+  assert.ok(by("ib"), "infinite baffle for a car-audio driver");
+  // Deep: QB3, meaningfully deeper, as a row and not a curve.
+  assert.ok(p.deep && p.deep.vb_l > ported.vb_l && p.deep.f3 <= ported.result.summary.f3! - DEEP_MIN_GAIN_HZ);
+  assert.equal(p.designs.length, 4);
+  // The PR is sized to a 6.5-inch driver.
+  const sd = e.data.ts.sd_cm2!;
+  assert.ok(prs.find((x) => x.name === p.pr!.name)!.pr.sd_cm2 <= PR_MAX_SD * sd, p.pr!.name);
+  assert.ok(p.notes.length === 0, p.notes.join("; "));
+  const { content, description } = driverContent(p, { all: "https://x/#a", deep: "https://x/#deep", related: [] }, chart);
+  assert.match(content, /<tr class="main deep"><td>Deep ported<\/td>/);
+  assert.match(content, /href="https:\/\/x\/#deep"/);
+  assert.match(content, /<line class="mk"[^>]*\/><text class="mk"[^>]*>Fs 49 Hz<\/text>/);
+  assert.match(content, /A sealed box can't go below the driver's Fs \(49 Hz\)/);
+  assert.match(content, /Free air/);
+  assert.match(description, /infinite baffle \(F3 \d+ Hz\)/);
+  assert.equal(describe(e.data).split(",")[0], "6.5-inch car audio woofer");
+});
+
+test("car-audio drivers under 8 inches are woofers, from 8 inches subwoofers", () => {
+  assert.equal(typeLabel({ type: "car-audio", size_in: 6.5 }), "car audio woofer");
+  assert.equal(typeLabel({ type: "car-audio", size_in: 10 }), "car audio subwoofer");
+  assert.equal(typeLabel({ type: "car-audio", size_in: undefined }), "car audio subwoofer");
+  assert.equal(typeLabel({ type: "woofer", size_in: 6.5 }), "woofer");
+});
+
+test("a page offers PRs up to PR_MAX_SD times the driver's cone area", () => {
+  const prs = [{ pr: { sd_cm2: 130 } }, { pr: { sd_cm2: 337 } }, { pr: { sd_cm2: 500 } }];
+  assert.deepEqual(prsFor(prs, 135).map((x) => x.pr.sd_cm2), [130, 337]);
+  assert.equal(prsFor(prs, undefined).length, 3);
+});
+
+test("the same reason for the ported and PR boxes is said once", () => {
+  assert.deepEqual(mergeNotes(["a ported box (X)", "a passive radiator box (X)", "a sealed box (Y)", "a sealed box (Y)"]), ["a ported or passive radiator box (X)", "a sealed box (Y)"]);
+  assert.deepEqual(mergeNotes(["a ported box (X)", "a passive radiator box (Z)"]), ["a ported box (X)", "a passive radiator box (Z)"]);
+});
+
+test("no driver page shows a ported or PR curve bigger than twice Vas when it is the Compact box, and Deep rows are deeper", () => {
+  const db = loadDb();
+  const prs = db.passiveRadiators.map(prCandidate);
+  for (const e of db.drivers.filter((x) => x.data.type === "car-audio").slice(0, 60)) {
+    const p = designDriver(e, prs);
+    if (!p) continue;
+    for (const d of p.designs) if (d.design.preset === COMPACT) assert.ok(d.vb_l <= 2.01 * (p.state.designs.length ? solveVas(p) : Infinity), `${e.id} ${d.vb_l}`);
+    if (p.deep) {
+      const c = p.designs.find((d) => d.design.kind === "vented")!;
+      assert.ok(p.deep.f3 <= c.result.summary.f3! - DEEP_MIN_GAIN_HZ && p.deep.vb_l <= PAGE_MAX_L, e.id);
+    }
+  }
+});
+const solveVas = (p: DriverPage) => (p.rec.ts.vas_l ?? Infinity) * p.state.drivers;

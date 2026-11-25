@@ -27,7 +27,8 @@ export const IMPORT_KINDS = all<ImportKind>()(["project", "winisd", "hornresp", 
 export const IMPORT_USES = all<ImportUse>()(["measure-driver", "overlay-impedance", "overlay-response", "driver-on-baffle"]);
 /** `EXPORT_FORMATS` ids (formats/registry.ts); a test keeps the two lists equal. */
 export const EXPORT_FORMAT_IDS = ["browser", "json", "csv", "wpr", "wdr", "hornresp", "spice", "baffle-frd", "dsp"] as const;
-export const REFERRERS = ["reddit", "diyaudio", "google", "site", "other", "none"] as const;
+/** "mcp": a share link made by the MCP server for an AI assistant (`?ref=mcp`, see linkRef). */
+export const REFERRERS = ["reddit", "diyaudio", "google", "site", "mcp", "other", "none"] as const;
 export const SETTING_KEYS = all<keyof Settings>()([
   "units", "air", "airConditions", "velocity", "excursion", "rg", "thermalLimit", "ampVolts", "ampAmps", "ampWatts", "signal",
   "inductance", "losses", "portCompression", "lineSpl", "portModel", "endCorrection", "leakage", "driveModel", "coneLoad",
@@ -130,6 +131,19 @@ export function referrerBucket(referrer: string, ownHost: string): (typeof REFER
   if (host === "diyaudio.com" || host.endsWith(".diyaudio.com")) return "diyaudio";
   if (/(^|\.)google\.[a-z.]+$/.test(host)) return "google";
   return "other";
+}
+
+/** A share link's own tag of where it was made (`?ref=mcp` from the MCP server), or null. */
+export function linkRef(search: string): "mcp" | null {
+  return new URLSearchParams(search).get("ref") === "mcp" ? "mcp" : null;
+}
+
+/** The query without the link tag, so a link copied from the address bar isn't counted again. */
+export function withoutRef(search: string): string {
+  const q = new URLSearchParams(search);
+  q.delete("ref");
+  const rest = q.toString();
+  return rest ? `?${rest}` : "";
 }
 
 /** The browser asked not to be tracked: Do Not Track or Global Privacy Control. Nothing is sent then, crash reports included. */

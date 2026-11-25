@@ -73,6 +73,8 @@ export function Num(props: {
   icon?: { name: IconName; title: string };
   /** Inside <KitFields>: one line under the field (a conversion or consequence of the value). */
   hint?: ReactNode;
+  /** Inside <KitFields>: a button beside the field, in the control column (the row's own action). */
+  action?: ReactNode;
 }) {
   const units = useUnits();
   const u = props.q ? units.unit(props.q) : { unit: props.unit ?? "", k: 1 };
@@ -132,7 +134,12 @@ export function Num(props: {
   );
   if (kit)
     return (
-      <div className="ui-field" data-help={props.help ?? props.title} data-help-title={props.help ?? props.title ? props.label : undefined}>
+      <div
+        className="ui-field"
+        data-wide={props.action ? true : undefined}
+        data-help={props.help ?? props.title}
+        data-help-title={props.help ?? props.title ? props.label : undefined}
+      >
         <label className="ui-field-label" htmlFor={id} title={props.icon?.title}>
           {props.icon ? (
             <span className="ui-field-label-icon">
@@ -143,10 +150,14 @@ export function Num(props: {
             props.label
           )}
         </label>
-        <span className="ui-number" data-state="plain">
-          {input}
-          {u.unit && <span className="ui-number-unit">{u.unit}</span>}
-        </span>
+        {props.action ? (
+          <span className="ui-field-ctl">
+            {numberBox(input, u.unit)}
+            {props.action}
+          </span>
+        ) : (
+          numberBox(input, u.unit)
+        )}
         {props.hint && <p className="ui-field-hint">{props.hint}</p>}
       </div>
     );
@@ -159,8 +170,26 @@ export function Num(props: {
   );
 }
 
+/** A kit number box: the input with its unit inside. */
+const numberBox = (input: ReactNode, unit: string) => (
+  <span className="ui-number" data-state="plain">
+    {input}
+    {unit && <span className="ui-number-unit">{unit}</span>}
+  </span>
+);
+
 /** A read-only value laid out like a Num field. Give `num` + `q` to convert units. */
-export function Fixed(props: { label: string; unit?: string; value?: string; num?: number; q?: Quantity; title?: string; help?: string }) {
+export function Fixed(props: {
+  label: string;
+  unit?: string;
+  value?: string;
+  num?: number;
+  q?: Quantity;
+  title?: string;
+  help?: string;
+  /** Inside <KitFields>: a button after the value (the row's own action). */
+  action?: ReactNode;
+}) {
   const units = useUnits();
   const u = props.q ? units.unit(props.q) : null;
   const text = props.num !== undefined && u ? (props.num * u.k).toFixed(u.digits) : (props.value ?? "–");
@@ -169,10 +198,20 @@ export function Fixed(props: { label: string; unit?: string; value?: string; num
     return (
       <div className="ui-field ui-readout" data-wide data-help={props.help ?? props.title} data-help-title={props.help ?? props.title ? props.label : undefined}>
         <span className="ui-field-label">{props.label}</span>
-        <output>
-          {text}
-          {unit && text !== "–" ? ` ${unit}` : ""}
-        </output>
+        {props.action ? (
+          <span className="ui-field-ctl">
+            <output>
+              {text}
+              {unit && text !== "–" ? ` ${unit}` : ""}
+            </output>
+            {props.action}
+          </span>
+        ) : (
+          <output>
+            {text}
+            {unit && text !== "–" ? ` ${unit}` : ""}
+          </output>
+        )}
       </div>
     );
   return (
@@ -190,6 +229,8 @@ export function Select<T extends string | number>(props: {
   options: { value: T; text: string }[];
   /** What the choice does: listed in its row's (or card's) ⓘ help sheet. */
   help?: string;
+  /** Inside <KitFields>: let the box grow past the control column to show its longest option. */
+  wide?: boolean;
   onChange: (v: T) => void;
 }) {
   const kit = useContext(KitContext);
@@ -213,7 +254,7 @@ export function Select<T extends string | number>(props: {
   );
   if (kit)
     return (
-      <div className="ui-field" data-help={props.help} data-help-title={props.help ? props.label : undefined}>
+      <div className="ui-field" data-wide={props.wide || undefined} data-help={props.help} data-help-title={props.help ? props.label : undefined}>
         <label className="ui-field-label" htmlFor={id}>
           {props.label}
         </label>

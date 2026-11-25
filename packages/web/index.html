@@ -23,9 +23,9 @@
     <meta name="color-scheme" content="dark" />
     <title>Speaker Box Genius: free speaker box simulator and WinISD alternative</title>
     <!-- Dark before the stylesheet arrives, so slow in-app browsers don't flash white. -->
-    <style>html{background:#11141a;color:#e6e9ef;color-scheme:dark}.boot{max-width:34rem;margin:0 auto;padding:20vh 1.25rem 0;font:16px/1.5 system-ui,sans-serif;color:#8b93a3}.boot h1{color:#e6e9ef;font-size:1.4rem;margin:0 0 .5rem}.boot a{color:#4ed7e9}</style>
+    <style>html{background:#11141a;color:#e6e9ef;color-scheme:dark}.boot{max-width:34rem;margin:0 auto;padding:20vh 1.25rem 0;font:16px/1.5 system-ui,sans-serif;color:#8b93a3}.boot h1{color:#e6e9ef;font-size:1.4rem;margin:0 0 .5rem}.boot a{color:#4ed7e9}.boot ul{margin:0 0 1rem;padding-left:1.2rem}</style>
     <!-- Visit counts: no cookies, and never the design (it's after the #). Skipped on Do Not Track / GPC or with Help improve the app off. Same string as site/build.ts GOATCOUNTER. See /privacy/. -->
-    <script>(function(){var n=navigator,w=window;if(n.globalPrivacyControl===true||n.doNotTrack==="1"||n.doNotTrack==="yes"||w.doNotTrack==="1")return;try{if(localStorage.getItem("sbg.usageStats")==="off")return}catch(e){}var s=document.createElement("script");s.async=true;s.src="https://gc.zgo.at/count.js";s.setAttribute("data-goatcounter","https://speakerboxgenius.goatcounter.com/count");document.head.appendChild(s)})()</script>
+    <script>(function(){var n=navigator,w=window;if(n.globalPrivacyControl===true||n.doNotTrack==="1"||n.doNotTrack==="yes"||w.doNotTrack==="1")return;try{if(localStorage.getItem("sbg.usageStats")==="off")return}catch(e){}if(/[?&]ref=mcp(&|$)/.test(location.search))w.goatcounter={referrer:"mcp",path:location.pathname};var s=document.createElement("script");s.async=true;s.src="https://gc.zgo.at/count.js";s.setAttribute("data-goatcounter","https://speakerboxgenius.goatcounter.com/count");document.head.appendChild(s)})()</script>
     <!-- Structured data: what this page is (a free web app) and the site's name in search results. -->
     <script type="application/ld+json">
       {
@@ -35,10 +35,21 @@
             "@type": "WebSite",
             "@id": "https://speakerboxgenius.com/#website",
             "name": "Speaker Box Genius",
-            "url": "https://speakerboxgenius.com/"
+            "alternateName": "speakerboxgenius.com",
+            "url": "https://speakerboxgenius.com/",
+            "publisher": { "@id": "https://speakerboxgenius.com/#organization" }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://speakerboxgenius.com/#organization",
+            "name": "Speaker Box Genius",
+            "url": "https://speakerboxgenius.com/",
+            "logo": "https://speakerboxgenius.com/icons/icon-512.png",
+            "sameAs": ["https://github.com/daliusiv/speaker-box-genius"]
           },
           {
             "@type": "WebApplication",
+            "@id": "https://speakerboxgenius.com/#app",
             "name": "Speaker Box Genius",
             "url": "https://speakerboxgenius.com/",
             "description": "A free, browser-based loudspeaker enclosure simulator: sealed, ported, passive radiator, bandpass, transmission line and horn boxes, with cone and passive radiator excursion, port air speed and maximum SPL, checked against WinISD and Hornresp.",
@@ -57,7 +68,7 @@
               "Shareable links to live designs"
             ],
             "isPartOf": { "@id": "https://speakerboxgenius.com/#website" },
-            "publisher": { "@type": "Organization", "name": "Speaker Box Genius", "url": "https://speakerboxgenius.com/" }
+            "publisher": { "@id": "https://speakerboxgenius.com/#organization" }
           }
         ]
       }
@@ -68,7 +79,13 @@
     <div id="root"><div class="boot">
       <h1>Speaker Box Genius</h1>
       <p>A free speaker box simulator in your browser: sealed, ported, passive radiator, bandpass and transmission line boxes, with cone and passive radiator excursion, port air speed and maximum SPL. Checked against WinISD and Hornresp. Loading the simulator…</p>
-      <p><a href="/guides/">Box design guides</a> · <a href="/drivers/">Driver box designs</a> · <a href="/winisd-alternative/">WinISD alternative</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a></p>
+      <ul>
+        <li>Up to eight boxes on one chart, with Xmax and port chuffing lines at your amplifier's power</li>
+        <li>Thousands of drivers built in, or open WinISD, Hornresp and .zma files</li>
+        <li>Net volume after drivers, ports and bracing, for boxes, wedges, cylinders and spheres</li>
+        <li>Share a live design with a link; no account, works offline once opened</li>
+      </ul>
+      <p><a href="/guides/">Box design guides</a> · <a href="/drivers/">Driver box designs</a> · <a href="/calculators/">Calculators</a> · <a href="/winisd-alternative/">WinISD alternative</a> · <a href="/hornresp-alternative/">Hornresp alternative</a> · <a href="/validation/">Validation</a> · <a href="/about/">About</a></p>
       <noscript><p>The simulator needs JavaScript. The guides and driver pages work without it.</p></noscript>
     </div></div>
     <script type="module" src="/src/main.tsx"></script>

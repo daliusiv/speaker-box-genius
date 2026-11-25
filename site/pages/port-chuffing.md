@@ -58,7 +58,7 @@ The [design assistant](/guides/design-assistant/) works through the same choices
 
 **Bend the port.** A round port can have an elbow or two. The air speed and tuning barely change with gentle bends; keep the open end at least one port diameter away from the walls.
 
-**Make the box bigger or tune it higher.** A bigger box needs a shorter port for the same area and tuning, and so does a higher tuning (at the cost of less deep bass). Try it in the example: change the volume, then press **Set port length** to recut the port.
+**Make the box bigger or tune it higher.** A bigger box needs a shorter port for the same area and tuning, and so does a higher tuning (at the cost of less deep bass). Try it in the example: change the volume, then press **Set length** (under **Tune to**) to recut the port.
 
 **Accept a little less power.** The air speed rises with the drive level, so halving the power (−3 dB) cuts the peak speed by about 30 %. Sometimes the honest answer is that the box is too small for that power.
 
@@ -69,7 +69,7 @@ A long port is also a pipe, with its own resonance at about the speed of sound d
 ## Checklist
 
 1. Keep the peak port speed under about 17 m/s at your real power (the red line on the Port speed chart), or the line you've set in **Settings → Limits → Port speed & excursion**.
-2. Make the port bigger before anything else; press **Set port length** to recut it for the tuning.
+2. Make the port bigger before anything else; press **Set length** to recut it for the tuning.
 3. If it won't fit, use a slot along a wall, bend it, or flare its ends.
 4. Check a long port's pipe resonance if the speaker plays above about 100 Hz.
 5. If nothing fits, make the box bigger, tune it higher, or play it a little quieter.

@@ -88,7 +88,7 @@ Everything runs in your browser. There's nothing to install, no account and no s
 - **Open / Import** window (☰ menu): your latest browser saves, and one drop zone for project, WinISD, OpenISD and measurement files; or drop a file anywhere on the page. An impedance sweep asks whether to measure the driver or show it on the charts
 - ↑/↓ nudge any number box (Shift ×10, Alt/Option ÷10), with the charts following each step; undo and redo, and help for every setting: the ⓘ on an open row explains its fields, and each card has one for the rest
 - Installable as an app on phones and computers
-- **From an AI assistant:** a local MCP server (`npx -y speaker-box-genius mcp`, or a one-click Claude Desktop extension) lets Claude, Cursor, VS Code and other MCP apps search drivers, size boxes, find passive radiators and simulate with this engine on your computer, and hand back share links ([how to add it](https://speakerboxgenius.com/mcp/))
+- **From an AI assistant:** a local MCP server (`npx -y speaker-box-genius mcp`, or a one-click Claude Desktop extension) lets Claude, Cursor, VS Code and other MCP apps search drivers, size boxes, find passive radiators and simulate with this engine on your computer, and hand back share links ([how to add it](https://speakerboxgenius.com/mcp/)). Listed in the MCP Registry as `com.speakerboxgenius/mcp`; Claude Code users can install it as a plugin with a box-design skill (`plugin/`)
 
 ### Settings
 
@@ -114,7 +114,7 @@ The database lives in this repo, in [`drivers/`](drivers) and [`passive-radiator
 
 There are two ways to help:
 
-1. **Add drivers and passive radiators.** No coding and no GitHub account needed: enter the datasheet values in [the app](https://speakerboxgenius.com/), then **Edit T/S → ⋯ → Submit to database…** and paste the datasheet link (a passive radiator you typed has the same button on its card). With GitHub you can also use the [new driver form](../../issues/new?template=new-driver.yml). See [`drivers/README.md`](drivers/README.md).
+1. **Add drivers and passive radiators.** No coding and no GitHub account needed: enter the datasheet values in [the app](https://speakerboxgenius.com/), then **Edit T/S → ⋯ → Submit to database…** and paste the datasheet link (a passive radiator you typed has the same button under its **PR parameters**). With GitHub you can also use the [new driver form](../../issues/new?template=new-driver.yml). See [`drivers/README.md`](drivers/README.md).
 2. **Work on the code.** See [`CONTRIBUTING.md`](CONTRIBUTING.md). Code and docs contributions need a one-time [Contributor License Agreement](CLA.md), signed with a comment on your first pull request; adding drivers doesn't.
 
 ## Development

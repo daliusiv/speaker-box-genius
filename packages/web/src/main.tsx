@@ -16,7 +16,7 @@ import "./settings.css";
 import "./library.css";
 import "./headroom.css";
 import "./submit-dialog.css";
-import { referrerBucket } from "./telemetrySchema.ts";
+import { linkRef, referrerBucket, withoutRef } from "./telemetrySchema.ts";
 import { SHARED_LINK } from "./start.ts";
 import { guardDomForTranslation } from "./domGuard.ts";
 
@@ -30,8 +30,13 @@ decodeStateAny(location.hash).then(
   () => render(null),
 );
 
+// A link from the MCP server carries ?ref=mcp: count it as where the visit came from (GoatCounter gets it
+// from the tag in index.html), then drop it so the address bar is the plain share link again.
+const REF = linkRef(location.search);
+if (REF) history.replaceState(history.state, "", `${location.pathname}${withoutRef(location.search)}${location.hash}`);
+
 function render(initial: Awaited<ReturnType<typeof decodeStateAny>>) {
-  const referrer = referrerBucket(document.referrer, location.hostname);
+  const referrer = REF ?? referrerBucket(document.referrer, location.hostname);
   track("app_opened", { entry: initial ? "share_link" : SHARED_LINK ? "shared_results" : "new", referrer });
   createRoot(document.getElementById("root")!).render(
     <StrictMode>

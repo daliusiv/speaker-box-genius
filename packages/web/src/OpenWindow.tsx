@@ -21,7 +21,9 @@ export function OpenWindow(props: {
   /** A measurement waiting for "use as…". */
   pending: File | null;
   onUse: (f: File, use: ImportUse) => void;
-  notify: (m: string) => void;
+  /** A file that couldn't be opened: shown under Choose a file (a toast would sit behind this window). */
+  error: string | null;
+  setError: (m: string | null) => void;
   /** False when every box is an open baffle: no "Put the driver on my baffle". */
   baffle?: boolean;
 }) {
@@ -39,7 +41,7 @@ export function OpenWindow(props: {
   const shown = all ? saved : saved.slice(0, RECENT);
   const open = (x: Saved) => {
     const s = openSavedState(x);
-    if (!s) return props.notify("That project couldn't be read.");
+    if (!s) return props.setError(`“${x.name}” couldn't be read.`);
     props.onOpen(s, x.name);
   };
 
@@ -103,6 +105,11 @@ export function OpenWindow(props: {
               </button>
               <p className="drop-only">or drop it here</p>
               <p className="hint">Project (.sbgenius) · WinISD (.wpr, .wdr) · OpenISD (.owpr, .owdr) · Hornresp record (.txt) · impedance (.zma) · response (.frd)</p>
+              {props.error && (
+                <p className="open-error" role="alert">
+                  {props.error}
+                </p>
+              )}
               <input
                 ref={input}
                 type="file"
