@@ -33,9 +33,17 @@ test("plugin: meets the directories' checks", () => {
   assert.equal(server.command, "npx");
   assert.deepEqual(server.args.filter((a: string) => a !== "-y"), [`speaker-box-genius@${pinnedVersion(read(".mcp.json"))}`, "mcp"]);
   for (const f of files(PLUGIN)) {
+    if (f === ".claude-plugin/icon.png") continue;
     assert.match(f, /\.(md|json)$|^LICENSE$/, `${f}: only text files (no binaries, no .npmrc)`);
     assert.ok(statSync(join(PLUGIN, f)).size < 256 * 1024, `${f} under 256 KiB`);
   }
+  // Claude directory listing icon: square PNG, 512–2048 px a side, under 2 MB. The portal takes it only on the
+  // first save or submit of the plugin, so it must be on public before then.
+  const icon = readFileSync(join(PLUGIN, ".claude-plugin/icon.png"));
+  assert.equal(icon.subarray(1, 4).toString(), "PNG");
+  const [w, h] = [icon.readUInt32BE(16), icon.readUInt32BE(20)];
+  assert.ok(w === h && w >= 512 && w <= 2048, `icon ${w}×${h}`);
+  assert.ok(icon.length < 2 * 1024 * 1024);
   const skill = read("skills/design-speaker-box/SKILL.md");
   assert.match(skill, /^---\nname: design-speaker-box\ndescription: [^\n]+\n---\n/);
 });

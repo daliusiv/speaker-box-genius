@@ -114,7 +114,7 @@ So a PA driver isn't "unable to do deep bass": it does the same deep bass per wa
 Every trick moves you along the law; none breaks it:
 
 - **EQ (a [Linkwitz Transform](/guides/linkwitz-transform/) or a bass boost).** Deep bass from a small box at the cost of efficiency: every octave of extension costs about 9 dB of amplifier power, and the cone must be able to move that far. KEF's KC62 white paper puts it as iron laws that can't be broken, but can be bent [14].
-- **A ported box or passive radiator** raises kη by about 3 dB over sealed, at the cost of a steeper roll-off and port noise or a radiator to fit (see [sealed, ported or passive radiator](/guides/sealed-ported-pr/)).
+- **A ported box or passive radiator** raises kη by about 3 dB over sealed, at the cost of a steeper roll-off and port noise or a radiator to fit (see [sealed, ported or passive radiator](/guides/sealed-vs-ported/)).
 - **Horns** buy efficiency with a lot of volume [9].
 - **More drivers.** Two drivers in two boxes are twice the volume; the law applies to the total.
 - **Room and cabin gain.** A small room or a car boosts the deep bass for free, but it's the room, not the box (see [car subwoofers](/guides/car-subwoofer/)).
